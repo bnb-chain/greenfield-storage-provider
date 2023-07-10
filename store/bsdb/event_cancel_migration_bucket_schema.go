@@ -13,7 +13,7 @@ type EventCancelMigrationBucket struct {
 	CreateTime   int64       `gorm:"column:create_time"` // seconds
 }
 
-// TableName is used to set EventCancelMigrationBucket table name in database
+// TableName is used to set EventCancelMigrationTableName table name in database
 func (*EventCancelMigrationBucket) TableName() string {
 	return EventCancelMigrationTableName
 }

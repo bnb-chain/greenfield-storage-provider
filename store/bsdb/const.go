@@ -53,9 +53,10 @@ const (
 	// ObjectIDMapTableName defines the name of object id map table
 	ObjectIDMapTableName = "object_id_map"
 	// EventCancelSwapOutTableName defines the name of event cancel swap out table
+	// EventCompleteSwapOutTableName defines the name of event swap out complete table
+	EventCompleteSwapOutTableName = "event_swap_out_complete"
+	// EventCancelSwapOutTableName defines the name of event swap out cancel table
 	EventCancelSwapOutTableName = "event_cancel_swap_out"
-	// EventCompleteSwapOutTableName defines the name of event complete swap out table
-	EventCompleteSwapOutTableName = "event_complete_swap_out"
 )
 
 // define the list objects const
