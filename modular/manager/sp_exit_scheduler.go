@@ -318,6 +318,15 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 		plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
 	}
 
+	if len(plan.swapOutUnitMap) == 0 {
+		// the sp is empty, directly complete sp.
+		msg := &virtualgrouptypes.MsgCompleteStorageProviderExit{
+			StorageProvider: plan.manager.baseApp.OperatorAddress(),
+		}
+		txHash, err := plan.manager.baseApp.GfSpClient().CompleteSPExit(context.Background(), msg)
+		log.Infow("send complete sp exit tx", "tx_hash", txHash, "error", err)
+	}
+
 	log.Infow("succeed to produce swap out plan")
 	err = plan.storeToDB()
 	return plan, err
