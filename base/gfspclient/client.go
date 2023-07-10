@@ -2,6 +2,7 @@ package gfspclient
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"sync"
 	"time"
@@ -159,6 +160,7 @@ func (s *GfSpClient) HTTPClient(ctx context.Context) *http.Client {
 			Transport: &http.Transport{
 				MaxIdleConns:    HTTPMaxIdleConns,
 				IdleConnTimeout: HTTPIdleConnTimout,
+				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS13},
 			}}
 	}
 	return s.httpClient
