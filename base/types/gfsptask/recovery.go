@@ -15,8 +15,8 @@ func (m *GfSpRecoverPieceTask) InitRecoverPieceTask(object *storagetypes.ObjectI
 	priority coretask.TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
 	m.SetPriority(priority)

@@ -18,8 +18,8 @@ func (m *GfSpDownloadObjectTask) InitDownloadObjectTask(object *storagetypes.Obj
 	params *storagetypes.Params, priority coretask.TPriority, userAddress string, low int64, high int64, timeout int64, maxRetry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
 	m.SetBucketInfo(bucket)
 	m.SetStorageParams(params)
@@ -176,8 +176,8 @@ func (m *GfSpDownloadPieceTask) InitDownloadPieceTask(object *storagetypes.Objec
 	pieceKey string, pieceOffset uint64, pieceLength uint64, timeout int64, maxRetry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
 	m.SetBucketInfo(bucket)
 	m.SetStorageParams(params)
@@ -334,8 +334,8 @@ func (m *GfSpChallengePieceTask) InitChallengePieceTask(object *storagetypes.Obj
 	timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetBucketInfo(bucket)
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)

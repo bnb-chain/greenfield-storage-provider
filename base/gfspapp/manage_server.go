@@ -107,12 +107,12 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		}
 		if t.GetRetry() == 1 {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_replicate_schedule_cost").Observe(
-				time.Since(time.UnixMilli(t.GetCreateTime())).Seconds())
+				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_wait_replicate_first_schedule_cost").Observe(
-				time.Since(time.UnixMilli(t.GetUpdateTime())).Seconds())
+				time.Since(time.Unix(t.GetUpdateTime(), 0)).Seconds())
 		} else {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_replicate_retry_schedule_cost").Observe(
-				time.Since(time.UnixMilli(t.GetCreateTime())).Seconds())
+				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 		}
 		metrics.ReqCounter.WithLabelValues(ManagerDispatchReplicateTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerDispatchReplicateTask).Observe(time.Since(startTime).Seconds())
@@ -123,10 +123,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		}
 		if t.GetRetry() == 1 {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_seal_schedule_cost").Observe(
-				time.Since(time.UnixMilli(t.GetCreateTime())).Seconds())
+				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 		} else {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_seal_retry_schedule_cost").Observe(
-				time.Since(time.UnixMilli(t.GetCreateTime())).Seconds())
+				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 		}
 		metrics.ReqCounter.WithLabelValues(ManagerDispatchSealTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerDispatchSealTask).Observe(time.Since(startTime).Seconds())
@@ -136,10 +136,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		}
 		if t.GetRetry() == 1 {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_receive_schedule_cost").Observe(
-				time.Since(time.UnixMilli(t.GetCreateTime())).Seconds())
+				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 		} else {
 			metrics.PerfPutObjectTime.WithLabelValues("manager_put_object_receive_retry_schedule_cost").Observe(
-				time.Since(time.UnixMilli(t.GetCreateTime())).Seconds())
+				time.Since(time.Unix(t.GetCreateTime(), 0)).Seconds())
 		}
 		metrics.ReqCounter.WithLabelValues(ManagerDispatchReceiveTask).Inc()
 		metrics.ReqTime.WithLabelValues(ManagerDispatchReceiveTask).Observe(time.Since(startTime).Seconds())

@@ -18,8 +18,8 @@ func (m *GfSpGCObjectTask) InitGCObjectTask(priority coretask.TPriority, start, 
 	m.SetStartBlockNumber(start)
 	m.SetEndBlockNumber(end)
 	m.SetPriority(priority)
-	m.SetCreateTime(time.Now().UnixMilli())
-	m.SetUpdateTime(time.Now().UnixMilli())
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
 	m.SetTimeout(timeout)
 }
 
