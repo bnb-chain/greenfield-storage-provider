@@ -174,6 +174,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	task.SetError(nil)
 
 	reportTime := time.Now()
+	// TODO:  bucket migration doesn't need to report task, because it is not scheduled by manager
 	if err = r.baseApp.GfSpClient().ReportTask(ctx, task); err != nil {
 		log.CtxErrorw(ctx, "failed to report receive task for confirming seal", "error", err)
 		// ignore the error,let the request go, the background task will gc the unsealed data later

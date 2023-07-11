@@ -95,6 +95,13 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		log.CtxErrorw(ctx, "failed to query bucket info by bucket name", "bucketName", bucketName, "error", err)
 		return err
 	}
+	// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another SP
+	if bucketID != 0 {
+		if err = e.checkGvgConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
+			log.Errorw("failed to check gvg conflict", "error", err)
+			return err
+		}
+	}
 	if bucketID != bucketInfo.Id.Uint64() {
 		bucketID = bucketInfo.Id.Uint64()
 	}
@@ -121,6 +128,96 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		return err
 	}
 	return nil
+}
+
+func (e *ExecuteModular) checkGvgConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,
+	objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params) error {
+	index := util.ContainOnlyOneDifferentElement(srcGvg.GetSecondarySpIds(), destGvg.GetSecondarySpIds())
+	if index == -1 {
+		return fmt.Errorf("invalid gvg secondary sp id list")
+	}
+	// srcSecondarySPID := srcGvg.GetSecondarySpIds()[index]
+	if e.spID != srcGvg.GetSecondarySpIds()[index] {
+		return fmt.Errorf("invalid secondary sp id in src gvg")
+	}
+	destSecondarySPID := destGvg.GetSecondarySpIds()[index]
+	spInfo, err := e.baseApp.Consensus().QuerySPByID(ctx, destSecondarySPID)
+	if err != nil {
+		log.Errorw("failed to query dest sp info", "dest_sp_id", destSecondarySPID, "error", err)
+	}
+
+	var (
+		segmentCount = e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
+			params.VersionedParams.GetMaxSegmentSize())
+		pieceKey string
+	)
+	for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
+		if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
+			pieceKey = e.baseApp.PieceOp().ECPieceKey(objectInfo.Id.Uint64(), segIdx, uint32(index))
+		} else {
+			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
+		}
+		pieceData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err)
+			return err
+		}
+		err = e.doBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), segIdx, uint32(index), pieceData)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to do bucket migration to replicate pieces", "error", err)
+		}
+	}
+
+	log.Debugw("bucket migration replicates piece", "dest_sp_endpoint", spInfo.GetEndpoint())
+	return nil
+}
+
+func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gvgID uint32, objectInfo *storagetypes.ObjectInfo,
+	params *storagetypes.Params, destSPEndpoint string, segmentIdx, redundancyIdx uint32, data []byte) error {
+	receive := &gfsptask.GfSpReceivePieceTask{}
+	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx,
+		int32(redundancyIdx), int64(len(data)))
+	receive.SetPieceChecksum(hash.GenerateChecksum(data))
+	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
+	signature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign receive task", "segment_idx", segmentIdx,
+			"redundancy_idx", redundancyIdx, "error", err)
+		return err
+	}
+	receive.SetSignature(signature)
+	if err := e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, destSPEndpoint, receive, data); err != nil {
+		log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx,
+			"redundancy_idx", redundancyIdx, "error", err)
+	}
+	return nil
+}
+
+func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, gvgID uint32, objectInfo *storagetypes.ObjectInfo,
+	params *storagetypes.Params, destSPEndpoint string, segmentIdx uint32) ([]byte, error) {
+	receive := &gfsptask.GfSpReceivePieceTask{}
+	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx, -1, 0)
+	taskSignature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign done receive task", "segment_idx", segmentIdx, "error", err)
+		return nil, err
+	}
+	receive.SetSignature(taskSignature)
+	signature, err := e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, destSPEndpoint, receive)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to done replicate piece", "dest_sp_endpoint", destSPEndpoint,
+			"segment_idx", segmentIdx, "error", err)
+		return nil, err
+	}
+	if int(segmentIdx+1) >= len(objectInfo.GetChecksums()) {
+		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "segment_idx", segmentIdx)
+		return nil, ErrReplicateIdsOutOfBounds
+	}
+	// var blsPubKey bls.PublicKey
+	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
+	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
+	log.CtxDebugw(ctx, "succeed to done replicate", "dest_sp_endpoint", destSPEndpoint, "segment_idx", segmentIdx)
+	return signature, nil
 }
 
 // HandleMigratePieceTask handles the migrate piece task
@@ -194,33 +291,6 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 	log.Infow("migrate all pieces successfully", "objectID", task.GetObjectInfo().Id.Uint64(),
 		"object_name", task.GetObjectInfo().GetObjectName(), "SP endpoint", task.GetSrcSpEndpoint())
 	return nil
-}
-
-func checkGvg(oldGvg, newGvg *virtualgrouptypes.GlobalVirtualGroup) error {
-	index := containsOnlyOneDifferentElement(oldGvg.GetSecondarySpIds(), newGvg.GetSecondarySpIds())
-	if index == -1 {
-		return fmt.Errorf("invalid gvg secondary sp id list")
-	}
-	return nil
-}
-
-func containsOnlyOneDifferentElement(slice1, slice2 []uint32) int {
-	if len(slice1) != len(slice2) {
-		return -1
-	}
-
-	count := 0
-	index := -1
-	for i := 0; i < len(slice1); i++ {
-		if slice1[i] != slice2[i] {
-			count++
-			index = i
-		}
-	}
-	if count == 1 {
-		return index
-	}
-	return -1
 }
 
 func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {

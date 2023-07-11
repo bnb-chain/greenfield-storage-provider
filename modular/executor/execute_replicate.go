@@ -126,7 +126,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to get segment data form piece store", "error", err)
+			log.CtxErrorw(ctx, "failed to get segment data from piece store", "error", err)
 			rTask.SetError(err)
 			return err
 		}

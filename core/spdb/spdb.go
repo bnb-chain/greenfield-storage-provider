@@ -46,7 +46,7 @@ type SignatureDB interface {
 	/*
 		Object Signature is used to get challenge info.
 	*/
-	// GetObjectIntegrity gets integrity meta info by object id.
+	// GetObjectIntegrity gets integrity meta info by object id and redundancy index.
 	GetObjectIntegrity(objectID uint64, redundancyIndex int32) (*IntegrityMeta, error)
 	// SetObjectIntegrity sets(maybe overwrite) integrity hash info to db.
 	SetObjectIntegrity(integrity *IntegrityMeta) error
