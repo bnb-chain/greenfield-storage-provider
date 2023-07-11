@@ -29,7 +29,7 @@ func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *type
 
 func (r *MetadataModular) GfSpQueryResumableUploadSegment(ctx context.Context, req *types.GfSpQueryResumableUploadSegmentRequest) (
 	*types.GfSpQueryResumableUploadSegmentResponse, error) {
-	integrityMeta, err := r.baseApp.GfSpDB().GetObjectIntegrity(req.GetObjectId())
+	integrityMeta, err := r.baseApp.GfSpDB().GetObjectIntegrity(req.GetObjectId(), -1)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &types.GfSpQueryResumableUploadSegmentResponse{

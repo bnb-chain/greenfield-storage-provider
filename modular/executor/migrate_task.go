@@ -7,15 +7,14 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -79,33 +78,6 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 			return
 		}
 	}
-}
-
-func checkGvg(oldGvg, newGvg *virtualgrouptypes.GlobalVirtualGroup) error {
-	index := containsOnlyOneDifferentElement(oldGvg.GetSecondarySpIds(), newGvg.GetSecondarySpIds())
-	if index == -1 {
-		return fmt.Errorf("invalid gvg secondary sp id list")
-	}
-	return nil
-}
-
-func containsOnlyOneDifferentElement(slice1, slice2 []uint32) int {
-	if len(slice1) != len(slice2) {
-		return -1
-	}
-
-	count := 0
-	index := -1
-	for i := 0; i < len(slice1); i++ {
-		if slice1[i] != slice2[i] {
-			count++
-			index = i
-		}
-	}
-	if count == 1 {
-		return index
-	}
-	return -1
 }
 
 func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.MigrateGVGTask, object *metadatatypes.Object,
@@ -201,7 +173,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 		log.CtxErrorw(ctx, "failed to get pieces from another SP")
 	}
 
-	if err := e.setMigratePiecesMetadata(task.GetObjectInfo(), pieceDataList, int(task.GetRedundancyIdx())); err != nil {
+	if err := e.setMigratePiecesMetadata(task.GetObjectInfo(), pieceDataList, task.GetRedundancyIdx()); err != nil {
 		log.CtxErrorw(ctx, "failed to set piece checksum and integrity hash into spdb", "objectID",
 			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "error", err)
 		return err
@@ -222,6 +194,33 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 	log.Infow("migrate all pieces successfully", "objectID", task.GetObjectInfo().Id.Uint64(),
 		"object_name", task.GetObjectInfo().GetObjectName(), "SP endpoint", task.GetSrcSpEndpoint())
 	return nil
+}
+
+func checkGvg(oldGvg, newGvg *virtualgrouptypes.GlobalVirtualGroup) error {
+	index := containsOnlyOneDifferentElement(oldGvg.GetSecondarySpIds(), newGvg.GetSecondarySpIds())
+	if index == -1 {
+		return fmt.Errorf("invalid gvg secondary sp id list")
+	}
+	return nil
+}
+
+func containsOnlyOneDifferentElement(slice1, slice2 []uint32) int {
+	if len(slice1) != len(slice2) {
+		return -1
+	}
+
+	count := 0
+	index := -1
+	for i := 0; i < len(slice1); i++ {
+		if slice1[i] != slice2[i] {
+			count++
+			index = i
+		}
+	}
+	if count == 1 {
+		return index
+	}
+	return -1
 }
 
 func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
@@ -252,7 +251,7 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMig
 // setMigratePiecesMetadata writes piece checksum and integrity hash into db
 // 1. generate piece checksum list and integrity hash
 // 2. compare generated integrity hash to chain integrity hash, if they are equal write to db
-func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.ObjectInfo, pieceData [][]byte, redundancyIdx int) error {
+func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.ObjectInfo, pieceData [][]byte, redundancyIdx int32) error {
 	pieceChecksumList := make([][]byte, len(pieceData))
 	for i, v := range pieceData {
 		pieceChecksumList[i] = nil
@@ -280,6 +279,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 
 	if err := e.baseApp.GfSpDB().SetObjectIntegrity(&corespdb.IntegrityMeta{
 		ObjectID:          objectInfo.Id.Uint64(),
+		RedundancyIndex:   redundancyIdx,
 		IntegrityChecksum: migratedIntegrityHash,
 		PieceChecksumList: pieceChecksumList,
 	}); err != nil {

@@ -47,13 +47,13 @@ type SignatureDB interface {
 		Object Signature is used to get challenge info.
 	*/
 	// GetObjectIntegrity gets integrity meta info by object id.
-	GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
+	GetObjectIntegrity(objectID uint64, redundancyIndex int32) (*IntegrityMeta, error)
 	// SetObjectIntegrity sets(maybe overwrite) integrity hash info to db.
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	// DeleteObjectIntegrity deletes the integrity hash.
 	DeleteObjectIntegrity(objectID uint64) error
 	// AppendObjectChecksumIntegrity gets integrity meta info by object id.
-	AppendObjectChecksumIntegrity(objectID uint64, checksum []byte) error
+	AppendObjectChecksumIntegrity(objectID uint64, redundancyIndex int32, checksum []byte) error
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/

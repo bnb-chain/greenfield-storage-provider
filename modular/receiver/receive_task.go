@@ -150,6 +150,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
+		RedundancyIndex:   task.GetPieceIdx(),
 		IntegrityChecksum: hash.GenerateIntegrityHash(pieceChecksums),
 		PieceChecksumList: pieceChecksums,
 	}
