@@ -11,6 +11,7 @@ import (
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
@@ -226,6 +227,24 @@ func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, e
 	}
 	recoverAcc := sdk.AccAddress(pk.Address().Bytes())
 	return recoverAcc, pk, nil
+}
+
+// VerifyTaskSignature verify the task signature and return the sender address
+func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature []byte) (sdk.AccAddress, error) {
+	if len(taskMsgBytes) != 32 {
+		taskMsgBytes = crypto.Keccak256(taskMsgBytes)
+	}
+
+	addr, pk, err := RecoverAddr(taskMsgBytes, taskSignature)
+	if err != nil {
+		log.CtxErrorw(r.Context(), "failed to recover address", "error", err)
+		return nil, err
+	}
+	if !secp256k1.VerifySignature(pk.Bytes(), taskMsgBytes, taskSignature[:len(taskSignature)-1]) {
+		log.CtxErrorw(r.ctx, "failed to verify task signature")
+		return nil, err
+	}
+	return addr, nil
 }
 
 // verifyOffChainSignature used to verify off-chain-auth signature, return (address, nil) if check succeed
