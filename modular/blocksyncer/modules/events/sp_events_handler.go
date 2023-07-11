@@ -181,6 +181,7 @@ func (m *Module) handleCompleteSwapOut(ctx context.Context, block *tmctypes.Resu
 
 	eventCompleteSwapOut := &bsdb.EventCompleteSwapOut{
 		StorageProviderId:          completeSwapOut.StorageProviderId,
+		SrcStorageProviderId:       completeSwapOut.SrcStorageProviderId,
 		GlobalVirtualGroupFamilyId: completeSwapOut.GlobalVirtualGroupFamilyId,
 		GlobalVirtualGroupIds:      completeSwapOut.GlobalVirtualGroupIds,
 

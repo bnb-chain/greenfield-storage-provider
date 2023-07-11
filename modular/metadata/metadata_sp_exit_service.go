@@ -2,7 +2,6 @@ package metadata
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"cosmossdk.io/math"
@@ -236,6 +235,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		completeEventsMap map[string]*virtual_types.EventCompleteSwapOut
 		cancelEventsMap   map[string]*virtual_types.EventCancelSwapOut
 		res               []*types.ListSwapOutEvents
+		idx               string
 	)
 
 	ctx = log.Context(ctx, req)
@@ -259,8 +259,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 			SuccessorSpId:              event.SuccessorSpId,
 		}
 		spEvent[i] = e
-		// StorageProviderId and GlobalVirtualGroupFamilyId can be identified continuous event
-		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		idx = model.CreateSwapOutIdx(event.GlobalVirtualGroupFamilyId, event.StorageProviderId, event.GlobalVirtualGroupIds)
 		eventsMap[idx] = e
 	}
 
@@ -269,11 +268,12 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	for i, event := range completeEvents {
 		e := &virtual_types.EventCompleteSwapOut{
 			StorageProviderId:          event.StorageProviderId,
+			SrcStorageProviderId:       event.SrcStorageProviderId,
 			GlobalVirtualGroupFamilyId: event.GlobalVirtualGroupFamilyId,
 			GlobalVirtualGroupIds:      event.GlobalVirtualGroupIds,
 		}
 		spCompleteEvents[i] = e
-		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		idx = model.CreateSwapOutIdx(event.GlobalVirtualGroupFamilyId, event.SrcStorageProviderId, event.GlobalVirtualGroupIds)
 		completeEventsMap[idx] = e
 	}
 
@@ -286,13 +286,13 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 			GlobalVirtualGroupIds:      event.GlobalVirtualGroupIds,
 		}
 		spCancelEvents[i] = e
-		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		idx = model.CreateSwapOutIdx(event.GlobalVirtualGroupFamilyId, event.StorageProviderId, event.GlobalVirtualGroupIds)
 		cancelEventsMap[idx] = e
 	}
 
 	res = make([]*types.ListSwapOutEvents, 0)
 	for _, event := range eventsMap {
-		idx := fmt.Sprintf("%d+%d", event.StorageProviderId, event.GlobalVirtualGroupFamilyId)
+		idx = model.CreateSwapOutIdx(event.GlobalVirtualGroupFamilyId, event.StorageProviderId, event.GlobalVirtualGroupIds)
 		complete := completeEventsMap[idx]
 		cancel := cancelEventsMap[idx]
 		res = append(res, &types.ListSwapOutEvents{
