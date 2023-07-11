@@ -43,10 +43,10 @@ type UploadObjectProgressDB interface {
 	GetUploadState(objectID uint64) (storetypes.TaskState, error)
 	// GetUploadMetasToReplicate queries the latest upload_done/replicate_doing object to continue replicate.
 	// It is only used in startup.
-	GetUploadMetasToReplicate(limit int) ([]*UploadObjectMeta, error)
+	GetUploadMetasToReplicate(limit int, timeout int64) ([]*UploadObjectMeta, error)
 	// GetUploadMetasToSeal queries the latest replicate_done/seal_doing object to continue seal.
 	// It is only used in startup.
-	GetUploadMetasToSeal(limit int) ([]*UploadObjectMeta, error)
+	GetUploadMetasToSeal(limit int, timeout int64) ([]*UploadObjectMeta, error)
 	// InsertPutEvent inserts a new upload event progress.
 	InsertPutEvent(task coretask.Task) error
 }
