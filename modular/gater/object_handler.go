@@ -386,6 +386,22 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	queryParams := r.URL.Query()
+	gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
+	gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
+	gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+
+	// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
+	if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" {
+		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
+		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
+		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
+	}
+
+	//todo: to be removed after testing in qa
+	log.Debugw("Check passed in params", "gnfdUserParam", gnfdUserParam, "gnfdOffChainAuthAppDomainParam", gnfdOffChainAuthAppDomainParam, "gnfdAuthorizationParam", gnfdAuthorizationParam)
+
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
