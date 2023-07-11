@@ -412,7 +412,7 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMig
 		GlobalVirtualGroupIds:      s.swapOut.GetGlobalVirtualGroupIds(),
 	}
 	txHash, err := runner.manager.baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg)
-	log.Infow("send complete swap out tx", "tx_hash", txHash, "error", err)
+	log.Infow("send complete swap out tx", "swap_out", msg, "tx_hash", txHash, "error", err)
 	return err
 }
 
@@ -525,7 +525,7 @@ func (plan *SrcSPSwapOutPlan) checkAllCompletedAndSendCompleteSPExitTx() error {
 		StorageProvider: plan.manager.baseApp.OperatorAddress(),
 	}
 	txHash, err := plan.manager.baseApp.GfSpClient().CompleteSPExit(context.Background(), msg)
-	log.Infow("send complete sp exit tx", "tx_hash", txHash, "error", err)
+	log.Infow("send complete sp exit tx", "sp_exit", msg, "tx_hash", txHash, "error", err)
 	return err
 }
 
@@ -629,7 +629,7 @@ func (plan *SrcSPSwapOutPlan) notifyDestSPSwapOut() {
 			}
 
 			err = plan.manager.baseApp.GfSpClient().NotifyDestSPMigrateSwapOut(context.Background(), sp.GetEndpoint(), swapOut)
-			log.Infow("notify dest sp swap out", "swap_out", swapOut, "error", err)
+			log.Infow("notify dest sp swap out", "dest_sp_endpoint", sp.GetEndpoint(), "swap_out", swapOut, "error", err)
 
 		}
 		log.Infow("notify swap out to dest sp", "loop_number", notifyLoopNumber, "notify_number", notifyUnitNumber)
@@ -877,6 +877,7 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
 				}
 				unit.migrateStatus = Migrating
+				log.Infow("succeed to push migrate gvg task into task dispatcher", "migrate_gvg_task", migrateGVGTask)
 				break
 			}
 		}
