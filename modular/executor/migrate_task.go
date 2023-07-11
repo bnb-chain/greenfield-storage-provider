@@ -8,6 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -27,7 +28,7 @@ const (
 // srcSP is a sp who wants to exit or need to migrate bucket, destSP is used to accept data from srcSP
 func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) {
 	var (
-		gvgID                = task.GetGvg().GetId()
+		oldGvgID             = task.GetSrcGvg().GetId()
 		bucketID             = task.GetBucketID()
 		lastMigratedObjectID = task.GetLastMigratedObjectID()
 		objectList           []*metadatatypes.Object
@@ -37,21 +38,21 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 	for {
 		if bucketID == 0 {
 			// if bucketID is 0, it indicates that it is a sp exiting task
-			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVG(ctx, gvgID, lastMigratedObjectID+1, queryLimit)
+			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVG(ctx, oldGvgID, lastMigratedObjectID+1, queryLimit)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to list objects in gvg", "gvg_id", gvgID,
+				log.CtxErrorw(ctx, "failed to list objects in gvg", "old_gvg_id", oldGvgID,
 					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
 			}
 			log.Infow("sp exiting", "objectList", objectList)
 		} else {
 			// if bucketID is not equal to 0, it indicates that it is a bucket migration task
-			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, lastMigratedObjectID, queryLimit)
+			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, oldGvgID, bucketID, lastMigratedObjectID, queryLimit)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
-					"current_migrated_object_id", lastMigratedObjectID, "error", err)
+				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "old_gvg_id", oldGvgID,
+					"bucket_id", bucketID, "current_migrated_object_id", lastMigratedObjectID, "error", err)
 			}
-			log.CtxDebugw(ctx, "succeed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
-				"current_migrated_object_id", lastMigratedObjectID, "error", err)
+			log.CtxDebugw(ctx, "succeed to list objects in gvg and bucket", "old_gvg_id", oldGvgID,
+				"bucket_id", bucketID, "current_migrated_object_id", lastMigratedObjectID, "error", err)
 			log.Infow("migrate bucket", "objectList", objectList)
 		}
 		for index, object := range objectList {
@@ -78,6 +79,33 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 			return
 		}
 	}
+}
+
+func checkGvg(oldGvg, newGvg *virtualgrouptypes.GlobalVirtualGroup) error {
+	index := containsOnlyOneDifferentElement(oldGvg.GetSecondarySpIds(), newGvg.GetSecondarySpIds())
+	if index == -1 {
+		return fmt.Errorf("invalid gvg secondary sp id list")
+	}
+	return nil
+}
+
+func containsOnlyOneDifferentElement(slice1, slice2 []uint32) int {
+	if len(slice1) != len(slice2) {
+		return -1
+	}
+
+	count := 0
+	index := -1
+	for i := 0; i < len(slice1); i++ {
+		if slice1[i] != slice2[i] {
+			count++
+			index = i
+		}
+	}
+	if count == 1 {
+		return index
+	}
+	return -1
 }
 
 func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.MigrateGVGTask, object *metadatatypes.Object,

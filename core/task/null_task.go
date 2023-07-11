@@ -144,18 +144,20 @@ func (*NullTask) SetPieceHash([][]byte)                  {}
 func (*NullTask) GetPieceDataSize() int64                { return 0 }
 func (*NullTask) SetPieceDataSize(int64)                 {}
 func (*NullTask) GetSignBytes() []byte                   { return nil }
-func (*NullTask) InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
+func (*NullTask) InitMigrateGVGTask(priority TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup,
 	redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider, timeout int64, retry int64) {
 }
-func (*NullTask) GetGvg() *virtualgrouptypes.GlobalVirtualGroup { return nil }
-func (*NullTask) SetGvg(*virtualgrouptypes.GlobalVirtualGroup)  {}
-func (*NullTask) GetSrcSp() *sptypes.StorageProvider            { return nil }
-func (*NullTask) SetSrcSp(*sptypes.StorageProvider)             {}
-func (*NullTask) GetDestSp() *sptypes.StorageProvider           { return nil }
-func (*NullTask) SetDestSp(*sptypes.StorageProvider)            {}
-func (*NullTask) GetBucketID() uint64                           { return 0 }
-func (*NullTask) SetBucketID(uint64)                            {}
-func (*NullTask) GetLastMigratedObjectID() uint64               { return 0 }
-func (*NullTask) SetLastMigratedObjectID(uint64)                {}
-func (*NullTask) GetFinished() bool                             { return false }
-func (*NullTask) SetFinished(bool)                              {}
+func (*NullTask) GetSrcGvg() *virtualgrouptypes.GlobalVirtualGroup  { return nil }
+func (*NullTask) SetSrcGvg(*virtualgrouptypes.GlobalVirtualGroup)   {}
+func (*NullTask) GetDestGvg() *virtualgrouptypes.GlobalVirtualGroup { return nil }
+func (*NullTask) SetDestGvg(*virtualgrouptypes.GlobalVirtualGroup)  {}
+func (*NullTask) GetSrcSp() *sptypes.StorageProvider                { return nil }
+func (*NullTask) SetSrcSp(*sptypes.StorageProvider)                 {}
+func (*NullTask) GetDestSp() *sptypes.StorageProvider               { return nil }
+func (*NullTask) SetDestSp(*sptypes.StorageProvider)                {}
+func (*NullTask) GetBucketID() uint64                               { return 0 }
+func (*NullTask) SetBucketID(uint64)                                {}
+func (*NullTask) GetLastMigratedObjectID() uint64                   { return 0 }
+func (*NullTask) SetLastMigratedObjectID(uint64)                    {}
+func (*NullTask) GetFinished() bool                                 { return false }
+func (*NullTask) SetFinished(bool)                                  {}

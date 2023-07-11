@@ -526,12 +526,16 @@ type RecoveryPieceTask interface {
 type MigrateGVGTask interface {
 	Task
 	// InitMigrateGVGTask inits migrate gvg task by bucket id, gvg.
-	InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
+	InitMigrateGVGTask(priority TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup,
 		redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider, timeout int64, retry int64)
-	// GetGvg returns the global virtual group
-	GetGvg() *virtualgrouptypes.GlobalVirtualGroup
-	// SetGvg sets the global virtual group
-	SetGvg(*virtualgrouptypes.GlobalVirtualGroup)
+	// GetSrcGvg returns the src global virtual group
+	GetSrcGvg() *virtualgrouptypes.GlobalVirtualGroup
+	// SetSrcGvg sets the src global virtual group
+	SetSrcGvg(*virtualgrouptypes.GlobalVirtualGroup)
+	// GetDestGvg returns the dest global virtual group
+	GetDestGvg() *virtualgrouptypes.GlobalVirtualGroup
+	// SetDestGvg sets the dest global virtual group
+	SetDestGvg(*virtualgrouptypes.GlobalVirtualGroup)
 	// GetSrcSp returns the src storage provider
 	GetSrcSp() *sptypes.StorageProvider
 	// SetSrcSp sets the src storage provider

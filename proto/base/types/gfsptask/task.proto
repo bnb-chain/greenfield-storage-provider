@@ -176,8 +176,8 @@ message GfSpGCMetaTask {
 message GfSpMigrateGVGTask {
   GfSpTask task = 1;
   uint64 bucket_id = 2;
-  greenfield.virtualgroup.GlobalVirtualGroup old_gvg = 3;
-  greenfield.virtualgroup.GlobalVirtualGroup new_gvg = 4;
+  greenfield.virtualgroup.GlobalVirtualGroup src_gvg = 3;
+  greenfield.virtualgroup.GlobalVirtualGroup dest_gvg = 4;
   int32 redundancy_idx = 5;
   greenfield.sp.StorageProvider src_sp = 6;
   greenfield.sp.StorageProvider dest_sp = 7;
