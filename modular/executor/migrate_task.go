@@ -50,7 +50,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
 					"current_migrated_object_id", lastMigratedObjectID, "error", err)
 			}
-			log.CtxDebugw(ctx, "success to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
+			log.CtxDebugw(ctx, "succeed to list objects in gvg and bucket", "gvg_id", gvgID, "bucket_id", bucketID,
 				"current_migrated_object_id", lastMigratedObjectID, "error", err)
 			log.Infow("migrate bucket", "objectList", objectList)
 		}
@@ -88,11 +88,6 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 			object.GetObjectInfo().Id.String(), "object_name", object.GetObjectInfo().GetObjectName(), "error", err)
 		return err
 	}
-	spInfo, err := e.baseApp.Consensus().QuerySP(ctx, e.baseApp.OperatorAddress())
-	if err != nil {
-		log.Errorw("failed to query sp info on chain", "error", err)
-		return err
-	}
 
 	bucketName := object.GetObjectInfo().GetBucketName()
 	bucketInfo, err := e.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
@@ -105,7 +100,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 	}
 
 	redundancyIdx, isPrimary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, e.baseApp.GfSpClient(),
-		spInfo.GetId(), bucketID, object.GetObjectInfo().GetLocalVirtualGroupId())
+		task.GetSrcSp().GetId(), bucketID, object.GetObjectInfo().GetLocalVirtualGroupId())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to validate and get sp index within gvg secondary sps", "error", err)
 		return err
@@ -114,7 +109,6 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		ObjectInfo:    object.GetObjectInfo(),
 		StorageParams: params,
 		SrcSpEndpoint: task.GetSrcSp().GetEndpoint(),
-		RedundancyIdx: task.GetRedundancyIdx(),
 	}
 	if redundancyIdx == primarySPRedundancyIdx && !isPrimary {
 		migratePieceTask.RedundancyIdx = primarySPRedundancyIdx
@@ -129,10 +123,11 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 	return nil
 }
 
-// HandleMigratePieceTask handles the migrate piece task, it will send requests to the exiting SP to get piece data
-// integrity hash and piece checksum to migrate the receiving SP. PieceData would be written to PieceStore, integrity hash
-// and piece checksum will be written sql db.
-// currently get and handle data one by one; in the future, use concurrency
+// HandleMigratePieceTask handles the migrate piece task
+// It will send requests to the src SP(exiting SP or bucket migration) to get piece data. Using piece data to generate
+// piece checksum and integrity hash, if integrity hash is similar to chain's, piece data would be written into PieceStore,
+// generated piece checksum and integrity hash will be written into sql db.
+//
 // storagetypes.ObjectInfo struct contains LocalVirtualGroupId field which we can use it to get a GVG consisting of
 // one PrimarySP and six ordered secondarySP(the order cannot be changed). Therefore, we can know what kinds of object
 // we want to migrate: primary or secondary. Now we cannot use objectInfo operator address or secondaryAddress straightly.
@@ -143,7 +138,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 		segmentCount = e.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 			task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 		pieceDataList = make([][]byte, segmentCount)
-		quitCh        = make(chan bool)
+		doneCh        = make(chan bool)
 		pieceCount    = int32(0)
 		redundancyIdx = task.GetRedundancyIdx()
 	)
@@ -152,7 +147,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 		return ErrDanglingPointer
 	}
 	defer func() {
-		close(quitCh)
+		close(doneCh)
 	}()
 
 	for i := 0; i < int(segmentCount); i++ {
@@ -168,12 +163,12 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 			}
 			pieceDataList[segIdx] = pieceData
 			if atomic.AddInt32(&pieceCount, 1) == int32(segmentCount) {
-				quitCh <- true
+				doneCh <- true
 			}
 		}(task, i)
 	}
 
-	ok := <-quitCh
+	ok := <-doneCh
 	if !ok {
 		log.CtxErrorw(ctx, "failed to get pieces from another SP")
 	}
