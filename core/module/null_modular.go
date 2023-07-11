@@ -205,11 +205,8 @@ func (*NilModular) HandleGCMetaTask(context.Context, task.GCMetaTask)           
 func (*NilModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask, int32, int32, int64) ([]task.ApprovalReplicatePieceTask, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error {
-	return ErrNilModular
-}
-func (*NilModular) HandleQueryBootstrap(context.Context) ([]string, error) { return nil, ErrNilModular }
-
+func (*NilModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) {}
+func (*NilModular) HandleQueryBootstrap(context.Context) ([]string, error)                { return nil, ErrNilModular }
 func (*NilModular) SignCreateBucketApproval(context.Context, *storagetypes.MsgCreateBucket) ([]byte, error) {
 	return nil, ErrNilModular
 }

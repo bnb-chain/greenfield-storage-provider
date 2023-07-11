@@ -156,7 +156,7 @@ type TaskExecutor interface {
 	// HandleGCMetaTask handles the GCMetaTask that is asked from manager module.
 	HandleGCMetaTask(ctx context.Context, task task.GCMetaTask)
 	// HandleMigrateGVGTask handles the MigrateGVGTask that is asked from manager module
-	HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error
+	HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask)
 	// ReportTask reports the results or status of running task to manager module.
 	ReportTask(ctx context.Context, task task.Task) error
 }
