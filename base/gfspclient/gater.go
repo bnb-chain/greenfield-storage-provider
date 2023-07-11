@@ -38,8 +38,8 @@ const (
 	MigratePiecePath = "/greenfield/migrate/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
-	// NotifyMigrateGVGTaskPath defines dispatch migrate gvg task from src sp to dest sp.
-	NotifyMigrateGVGTaskPath = "/greenfield/migrate/v1/notify-migrate-gvg-task"
+	// NotifyMigrateSwapOutTaskPath defines dispatch migrate gvg task from src sp to dest sp.
+	NotifyMigrateSwapOutTaskPath = "/greenfield/migrate/v1/notify-migrate-swap-out-task"
 	// GnfdMigrateSwapOutMsgHeader defines migrate swap out msg header
 	GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg"
 	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
@@ -175,16 +175,16 @@ func (s *GfSpClient) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigrat
 
 // NotifyDestSPMigrateSwapOut is used to notify dest sp start migrate swap out task.
 func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtualgrouptypes.MsgSwapOut) error {
-	req, err := http.NewRequest(http.MethodPost, destEndpoint+NotifyMigrateGVGTaskPath, nil)
+	req, err := http.NewRequest(http.MethodPost, destEndpoint+NotifyMigrateSwapOutTaskPath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", destEndpoint, "error", err)
 		return err
 	}
-	msg, err := json.Marshal(swapOut)
+	marshalSwapOut, err := json.Marshal(swapOut)
 	if err != nil {
 		return err
 	}
-	req.Header.Add(GnfdMigrateSwapOutMsgHeader, hex.EncodeToString(msg))
+	req.Header.Add(GnfdMigrateSwapOutMsgHeader, hex.EncodeToString(marshalSwapOut))
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to notify migrate swap out msg", "error", err)
@@ -193,7 +193,7 @@ func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoin
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to notify migrate gvg, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destEndpoint)
+		return fmt.Errorf("failed to notify migrate swap out, status_code(%d), endpoint(%s)", resp.StatusCode, destEndpoint)
 	}
 	return nil
 }

@@ -321,12 +321,12 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 	}
 
 	if len(plan.swapOutUnitMap) == 0 {
-		// the sp is empty, directly complete sp.
+		// the sp is empty, directly complete sp exit.
 		msg := &virtualgrouptypes.MsgCompleteStorageProviderExit{
 			StorageProvider: plan.manager.baseApp.OperatorAddress(),
 		}
-		txHash, err := plan.manager.baseApp.GfSpClient().CompleteSPExit(context.Background(), msg)
-		log.Infow("send complete sp exit tx", "tx_hash", txHash, "error", err)
+		txHash, sendTxError := plan.manager.baseApp.GfSpClient().CompleteSPExit(context.Background(), msg)
+		log.Infow("sp is empty, send complete sp exit tx directly", "tx_hash", txHash, "error", sendTxError)
 	}
 
 	log.Infow("succeed to produce swap out plan")
@@ -1034,12 +1034,13 @@ func GetApprovalAndSendTx(client *gfspclient.GfSpClient, destSP *sptypes.Storage
 	ctx := context.Background()
 	approvalSwapOut, err := client.GetSwapOutApproval(ctx, destSP.GetEndpoint(), originMsg)
 	if err != nil {
-		log.Errorw("cdt sp", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut, "error", err)
+		log.Errorw("failed to get swap out approval from dest sp", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
 	if _, err = client.SwapOut(ctx, approvalSwapOut); err != nil {
 		log.Errorw("failed to send swap out tx to chain", "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
+	log.Infow("succeed to get approval and send swap out tx", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut)
 	return approvalSwapOut, nil
 }

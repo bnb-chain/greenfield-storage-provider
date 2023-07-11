@@ -190,6 +190,7 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyMigrateSwapOut(ctx, req)
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to notify migrate swap out", "request", req, "error", err)
 		return err
 	}
 	return resp.GetErr()
