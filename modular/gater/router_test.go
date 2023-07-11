@@ -80,6 +80,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: migratePieceRouterName,
 		},
 		{
+			name:             "Get secondary migrate bucket approval",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + SecondarySPMigrationBucketApprovalPath,
+			shouldMatch:      true,
+			wantedRouterName: migrationBucketApprovalName,
+		},
+		{
 			name:             "Put object router，virtual host style",
 			router:           gwRouter,
 			method:           http.MethodPut,
