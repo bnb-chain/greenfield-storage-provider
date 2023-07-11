@@ -5,6 +5,7 @@ import "github.com/forbole/juno/v4/common"
 type EventCompleteSwapOut struct {
 	ID                         uint64      `gorm:"column:id;primaryKey"`
 	StorageProviderId          uint32      `gorm:"column:storage_provider_id;index:idx_sp_id"`
+	SrcStorageProviderId       uint32      `gorm:"column:src_storage_provider_id;index:src_idx_sp_id"`
 	GlobalVirtualGroupFamilyId uint32      `gorm:"column:global_virtual_group_family_id;index:idx_vgf_id"`
 	GlobalVirtualGroupIds      Uint32Array `gorm:"column:global_virtual_group_ids;type:TEXT"`
 
