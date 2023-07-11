@@ -385,7 +385,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 				ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
-				ErrorDescription: "exceed_retry",
+				ErrorDescription: "exceed_replicate_retry",
 			}); err != nil {
 				log.Errorw("failed to update object task state", "task_info", handleTask.Info(), "error", err)
 				return
@@ -460,7 +460,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 				ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
-				ErrorDescription: "exceed_retry",
+				ErrorDescription: "exceed_seal_retry",
 			}); err != nil {
 				log.Errorw("failed to update object task state", "task_info", handleTask.Info(), "error", err)
 				return

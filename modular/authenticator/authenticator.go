@@ -168,18 +168,6 @@ func (a *AuthenticationModular) VerifyAuthentication(
 	authType coremodule.AuthOpType,
 	account, bucket, object string) (
 	bool, error) {
-	startTime := time.Now()
-	has, err := a.baseApp.Consensus().HasAccount(ctx, account)
-	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_check_has_account_time").Observe(time.Since(startTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to check account from consensus", "error", err)
-		return false, ErrConsensus
-	}
-	if !has {
-		log.CtxErrorw(ctx, "no such account from consensus")
-		return false, ErrNoSuchAccount
-	}
-
 	switch authType {
 	case coremodule.AuthOpAskCreateBucketApproval:
 		queryTime := time.Now()
@@ -235,7 +223,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetUploadingState:
@@ -267,7 +255,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetObject:
@@ -299,7 +287,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_stream_time").Observe(time.Since(streamTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to query payment stream record from consensus", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
 			log.CtxErrorw(ctx, "failed to check payment due to account status is not active", "status", streamRecord.Status)
@@ -312,7 +300,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from meta", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		if *permission == permissiontypes.EFFECT_ALLOW {
 			allow = true
@@ -352,7 +340,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		permission, err = a.baseApp.GfSpClient().VerifyPermission(ctx, account, bucket, object, permissiontypes.ACTION_GET_OBJECT)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from meta", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		if *permission == permissiontypes.EFFECT_ALLOW {
 			allow = true
