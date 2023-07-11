@@ -308,7 +308,8 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 func (s *BucketMigrateScheduler) subscribeEvents() {
-	subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Second)
+	// TODO replace to time.second
+	subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * 100 * time.Millisecond)
 	for {
 		<-subscribeBucketMigrateEventsTicker.C
 		var (
@@ -442,7 +443,8 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		return nil, errors.New("failed to list gvg")
 	}
 
-	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(s.selfSP.GetId())
+	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), event.BucketName)
+	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketInfo.GetPrimarySpId())
 	if err != nil {
 		log.Errorw("failed to query sp", "error", err)
 		return nil, err
