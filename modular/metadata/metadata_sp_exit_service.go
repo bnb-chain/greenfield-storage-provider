@@ -239,6 +239,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpListSwapOutEvents", "block-id", req.BlockId, "sp-id", req.SpId)
 	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListSwapOutEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
