@@ -425,6 +425,15 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 	})
 }
 
+func isDestSPConflictWithSecondarySPs(destSPID uint32, secondarySPIDs []uint32) (int, uint32) {
+	for i, id := range secondarySPIDs {
+		if id == destSPID {
+			return i, id
+		}
+	}
+	return -1, 0
+}
+
 func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_types.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
 	var (
 		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
@@ -463,7 +472,22 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 	destFamilyID = 0
 	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "len:", len(primarySPGVGList))
 	for _, srcGVG := range primarySPGVGList {
-		destGVG, err = s.pickGlobalVirtualGroupForBucketMigrate(NewPickDestGVGFilter(destFamilyID, srcGVG.GetSecondarySpIds(), srcGVG.StoredSize))
+		secondarySPIDs := srcGVG.GetSecondarySpIds()
+		// check conflicts.
+		isConflicted, id := isDestSPConflictWithSecondarySPs(destSP.GetId(), srcGVG.GetSecondarySpIds())
+		if isConflicted != -1 {
+			// gvg has conflicts.
+			excludedSPIDs := srcGVG.GetSecondarySpIds()
+			excludedSPIDs = append(excludedSPIDs, srcSP.GetId())
+			replacedSP, pickErr := s.manager.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(excludedSPIDs))
+			if pickErr != nil {
+				log.Errorw("failed to pick new sp to replace conflict secondary sp", "srcGVG", srcGVG, "excludedSPIDs", excludedSPIDs, "error", pickErr)
+				return nil, pickErr
+			}
+			secondarySPIDs[id] = replacedSP.GetId()
+		}
+		log.Debugw("produceBucketMigrateExecutePlan prepare to pick new gvg", "secondarySPIDs", secondarySPIDs)
+		destGVG, err = s.pickGlobalVirtualGroupForBucketMigrate(NewPickDestGVGFilter(destFamilyID, secondarySPIDs, srcGVG.StoredSize))
 		if err != nil {
 			log.Errorw("failed to pick gvg for migrate bucket", "error", err)
 			return nil, err
