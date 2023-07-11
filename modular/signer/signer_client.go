@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/greenfield/types/common"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 
@@ -504,6 +505,10 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 
 	msgSwapOut := virtualgrouptypes.NewMsgSwapOut(km.GetAddr(), swapOut.GetGlobalVirtualGroupFamilyId(), swapOut.GetGlobalVirtualGroupIds(),
 		swapOut.GetSuccessorSpId())
+	msgSwapOut.SuccessorSpApproval = &common.Approval{
+		ExpiredHeight: swapOut.SuccessorSpApproval.GetExpiredHeight(),
+		Sig:           swapOut.SuccessorSpApproval.GetSig(),
+	}
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
 		Mode:      &mode,
