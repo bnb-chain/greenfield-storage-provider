@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -255,14 +256,17 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		err = ErrValidateMsg
 		return
 	}
+
+	swapOutApproval.SuccessorSpApproval = &common.Approval{
+		ExpiredHeight: 100,
+	}
+	log.Infow("get swap out approval", "msg", swapOutApproval)
 	signature, err := g.baseApp.GfSpClient().SignSwapOut(reqCtx.Context(), swapOutApproval)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to sign swap out", "error", err)
-		// TODO: define an error
+		err = ErrMigrateApproval
 		return
 	}
-	// TODO: optimize expired height
-	swapOutApproval.SuccessorSpApproval.ExpiredHeight = 10
 	swapOutApproval.SuccessorSpApproval.Sig = signature
 	bz := storagetypes.ModuleCdc.MustMarshalJSON(swapOutApproval)
 	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
