@@ -239,7 +239,6 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	)
 
 	ctx = log.Context(ctx, req)
-	log.Debugw("GfSpListSwapOutEvents", "block-id", req.BlockId, "sp-id", req.SpId)
 	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListSwapOutEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
@@ -304,7 +303,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	}
 
 	resp = &types.GfSpListSwapOutEventsResponse{Events: res}
-	log.CtxInfow(ctx, "succeed to list migrate swap out events")
+	log.CtxInfow(ctx, "succeed to list migrate swap out events", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -384,7 +383,7 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 	ctx = log.Context(ctx, req)
 	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
+		log.CtxErrorw(ctx, "failed to list sp exit events", "error", err)
 		return nil, err
 	}
 
@@ -407,6 +406,6 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		Event:         spEvent,
 		CompleteEvent: spCompleteEvent,
 	}}
-	log.CtxInfow(ctx, "succeed to list migrate swap out events")
+	log.CtxInfow(ctx, "succeed to list sp exit events")
 	return resp, nil
 }

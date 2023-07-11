@@ -180,6 +180,14 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 
 func (s *SPExitScheduler) subscribeEvents() {
 	go func() {
+		UpdateSPExitSubscribeProgressFunc := func() {
+			updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
+			if updateErr != nil {
+				log.Errorw("failed to update sp exit progress", "error", updateErr)
+			}
+			s.lastSubscribedSPExitBlockHeight++
+			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
+		}
 		// subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
 		subscribeSPExitEventsTicker := time.NewTicker(100 * time.Millisecond)
 		defer subscribeSPExitEventsTicker.Stop()
@@ -190,8 +198,12 @@ func (s *SPExitScheduler) subscribeEvents() {
 				continue
 			}
 			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents, "block_id", s.lastSubscribedSPExitBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
+			if spExitEvents.CompleteEvent != nil {
+				s.isExited = true
+			}
 			if spExitEvents.Event != nil {
 				if s.isExiting || s.isExited {
+					UpdateSPExitSubscribeProgressFunc()
 					continue
 				}
 				plan, err := s.produceSwapOutPlan(false)
@@ -203,20 +215,10 @@ func (s *SPExitScheduler) subscribeEvents() {
 					log.Errorw("failed to start sp exit execute plan", "error", startErr)
 					continue
 				}
-
 				s.swapOutPlan = plan
 				s.isExiting = true
 			}
-			if spExitEvents.CompleteEvent != nil {
-				s.isExited = true
-			}
-			updateErr := s.manager.baseApp.GfSpDB().UpdateSPExitSubscribeProgress(s.lastSubscribedSPExitBlockHeight + 1)
-			if updateErr != nil {
-				log.Errorw("failed to update sp exit progress", "error", updateErr)
-				continue
-			}
-			s.lastSubscribedSPExitBlockHeight++
-			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
+			UpdateSPExitSubscribeProgressFunc()
 		}
 	}()
 
@@ -237,7 +239,9 @@ func (s *SPExitScheduler) subscribeEvents() {
 			log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents, "block_id", s.lastSubscribedSwapOutBlockHeight+1, "sp_id", s.selfSP.GetId())
 			for _, swapOutEvent := range swapOutEvents {
 				if swapOutEvent.GetCompleteEvents() != nil {
-					s.updateSPExitExecutePlan(swapOutEvent.GetCompleteEvents())
+					if err := s.updateSPExitExecutePlan(swapOutEvent.GetCompleteEvents()); err != nil {
+						continue
+					}
 				}
 				// TODO: support cancel event.
 			}
@@ -548,6 +552,7 @@ func (plan *SrcSPSwapOutPlan) CheckAndSendCompleteSPExitTx(event *virtualgroupty
 			return err
 		}
 	}
+	plan.completedSwapOut[GetEventSwapOutKey(event)] = unit
 	return plan.checkAllCompletedAndSendCompleteSPExitTx()
 }
 
