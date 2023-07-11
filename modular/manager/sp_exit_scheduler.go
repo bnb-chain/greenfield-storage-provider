@@ -136,7 +136,8 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 
 	if swapOutFamilyID != 0 {
 		if gvgList, err = s.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), srcSP.GetId(), swapOutFamilyID); err != nil {
-			log.Errorw("failed to add swap out to task runner due to list virtual groups by family id", "error", err)
+			log.Errorw("failed to add swap out to task runner due to list virtual groups by family id",
+				"src_sp_id", srcSP.GetId(), "family_id", swapOutFamilyID, "error", err)
 			return err
 		}
 	} else {
@@ -185,7 +186,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
 				continue
 			}
-			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents)
+			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents, "block_id", s.lastSubscribedSPExitBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
 			if spExitEvents.Event != nil {
 				if s.isExiting || s.isExited {
 					continue
@@ -230,7 +231,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				log.Errorw("failed to subscribe swap out event", "error", subscribeError)
 				continue
 			}
-			log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents)
+			log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents, "block_id", s.lastSubscribedSwapOutBlockHeight+1, "sp_id", s.selfSP.GetId())
 			for _, swapOutEvent := range swapOutEvents {
 				if swapOutEvent.GetCompleteEvents() != nil {
 					s.updateSPExitExecutePlan(swapOutEvent.GetCompleteEvents())
@@ -266,6 +267,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 	}
 	plan = NewSrcSPSwapOutPlan(s.manager, s, s.manager.virtualGroupManager)
 	for _, f := range vgfList {
+		log.Infow("list vgf", "family", f)
 		conflictChecker := NewFamilyConflictChecker(f, plan, s.selfSP)
 		swapOutUnits, getFamilySwapOutErr := conflictChecker.GenerateSwapOutUnits(buildMetaByDB)
 		if getFamilySwapOutErr != nil {
@@ -415,18 +417,18 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMig
 }
 
 func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
-	if swapOut.GetGlobalVirtualGroupFamilyId() == 0 {
-		return util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
+	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
+		return "familyID" + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
 	} else {
-		return util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
+		return "gvgIDList" + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
 	}
 }
 
 func GetEventSwapOutKey(swapOut *virtualgrouptypes.EventCompleteSwapOut) string {
-	if swapOut.GetGlobalVirtualGroupFamilyId() == 0 {
-		return util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
+	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
+		return "familyID" + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
 	} else {
-		return util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
+		return "gvgIDList" + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
 	}
 }
 
