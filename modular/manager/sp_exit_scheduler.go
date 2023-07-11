@@ -69,7 +69,6 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 	}
 	spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(),
 		s.lastSubscribedSPExitBlockHeight, s.manager.baseApp.OperatorAddress())
-	log.Infow("print blockID", "lastSubscribedSPExitBlockHeight", s.lastSubscribedSwapOutBlockHeight)
 	if subscribeError != nil {
 		log.Errorw("failed to init due to subscribe sp exit", "error", subscribeError)
 		return subscribeError
