@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -26,10 +27,12 @@ func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtu
 		selfSPID uint32
 	)
 	if m.spExitScheduler == nil {
+		log.CtxError(ctx, "sp exit scheduler has no init")
 		return ErrNotifyMigrateSwapOut
 	}
 	selfSPID, err = m.getSPID()
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to get self sp id", "error", err)
 		return err
 	}
 	if selfSPID != swapOut.SuccessorSpId {

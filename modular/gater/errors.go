@@ -49,6 +49,7 @@ var (
 	ErrRecoveryRedundancyType = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50031, "The redundancy type of the recovering piece is not EC")
 	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50032, "System busy, try to request later")
 	ErrMigrateApproval        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50033, "server slipped away, try again later")
+	ErrNotifySwapOut          = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50034, "server slipped away, try again later")
 )
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {
