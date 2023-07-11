@@ -229,7 +229,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetUploadingState:
@@ -261,7 +261,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetObject:
@@ -277,7 +277,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			if strings.Contains(err.Error(), "No such object") {
 				return false, ErrNoSuchObject
 			}
-			return false, ErrConsensus
+			return false, err
 		}
 		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
@@ -293,7 +293,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_stream_time").Observe(time.Since(streamTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to query payment stream record from consensus", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		if streamRecord.Status != paymenttypes.STREAM_ACCOUNT_STATUS_ACTIVE {
 			log.CtxErrorw(ctx, "failed to check payment due to account status is not active", "status", streamRecord.Status)
@@ -304,7 +304,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			return false, ErrConsensus
+			return false, err
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetBucketQuota, coremodule.AuthOpTypeListBucketReadRecord:
