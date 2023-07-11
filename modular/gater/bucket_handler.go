@@ -37,7 +37,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthentication() {
+	if !reqCtx.SkipVerifyAuthentication() {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetBucketQuota, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
@@ -122,7 +122,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	if err != nil {
 		return
 	}
-	if reqCtx.NeedVerifyAuthentication() {
+	if !reqCtx.SkipVerifyAuthentication() {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeListBucketReadRecord, reqCtx.Account(), reqCtx.bucketName, "")
 		if err != nil {
