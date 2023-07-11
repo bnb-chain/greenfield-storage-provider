@@ -67,6 +67,9 @@ const (
 	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
 	// the interval, buckets will be discontinued, used for test net.
 	DefaultDiscontinueBucketKeepAliveDays = 7
+
+	DefaultLoadReplicateTimeout int64 = 60
+	DefaultLoadSealTimeout      int64 = 180
 )
 
 const (
@@ -142,9 +145,14 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.DiscontinueBucketKeepAliveDays == 0 {
 		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
 	}
-
 	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
 		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+	if cfg.Parallel.LoadReplicateTimeout == 0 {
+		cfg.Parallel.LoadReplicateTimeout = DefaultLoadReplicateTimeout
+	}
+	if cfg.Parallel.LoadSealTimeout == 0 {
+		cfg.Parallel.LoadSealTimeout = DefaultLoadSealTimeout
 	}
 
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
@@ -161,6 +169,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
 	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval
 	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
+	manager.loadReplicateTimeout = cfg.Parallel.LoadReplicateTimeout
+	manager.loadSealTimeout = cfg.Parallel.LoadSealTimeout
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(

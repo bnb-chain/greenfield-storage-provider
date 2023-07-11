@@ -73,6 +73,9 @@ type ManageModular struct {
 	discontinueBucketEnabled       bool
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
+
+	loadReplicateTimeout int64
+	loadSealTimeout      int64
 }
 
 func (m *ManageModular) Name() string {
@@ -100,10 +103,10 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		return err
 	}
 	m.scope = scope
-	//err = m.LoadTaskFromDB()
-	//if err != nil {
-	//	return err
-	//}
+	err = m.LoadTaskFromDB()
+	if err != nil {
+		return err
+	}
 
 	go m.eventLoop(ctx)
 	return nil
@@ -234,7 +237,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 
 	log.Info("start to load task from sp db")
 
-	replicateMetas, err = m.baseApp.GfSpDB().GetUploadMetasToReplicate(m.loadTaskLimitToReplicate)
+	replicateMetas, err = m.baseApp.GfSpDB().GetUploadMetasToReplicate(m.loadTaskLimitToReplicate, m.loadReplicateTimeout)
 	if err != nil {
 		log.Errorw("failed to load replicate task from sp db", "error", err)
 		return err
@@ -266,7 +269,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		generateReplicateTaskCounter++
 	}
 
-	sealMetas, err = m.baseApp.GfSpDB().GetUploadMetasToSeal(m.loadTaskLimitToSeal)
+	sealMetas, err = m.baseApp.GfSpDB().GetUploadMetasToSeal(m.loadTaskLimitToSeal, m.loadSealTimeout)
 	if err != nil {
 		log.Errorw("failed to load seal task from sp db", "error", err)
 		return err
