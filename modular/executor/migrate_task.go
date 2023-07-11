@@ -22,7 +22,7 @@ const (
 	queryLimit             = 100
 )
 
-// HandleMigrateGVGTask handles the migrate gvg task.
+// HandleMigrateGVGTask handles migrate gvg task.
 // There are two cases: sp exit and bucket migration
 // srcSP is a sp who wants to exit or need to migrate bucket, destSP is used to accept data from srcSP
 func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) {
