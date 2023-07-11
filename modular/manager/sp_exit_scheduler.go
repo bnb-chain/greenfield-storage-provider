@@ -1034,7 +1034,7 @@ func GetApprovalAndSendTx(client *gfspclient.GfSpClient, destSP *sptypes.Storage
 	ctx := context.Background()
 	approvalSwapOut, err := client.GetSwapOutApproval(ctx, destSP.GetEndpoint(), originMsg)
 	if err != nil {
-		log.Errorw("failed to get swap out approval from dest sp", "dest_sp", destSP.GetEndpoint(), "error", err)
+		log.Errorw("cdt sp", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
 	if _, err = client.SwapOut(ctx, approvalSwapOut); err != nil {
