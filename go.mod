@@ -289,7 +289,7 @@ require (
 replace (
 	cosmossdk.io/api => github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe9
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.2.3-0.20230711080541-103da620f517 // feat_sp_exit_develop branch
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.2.3-0.20230711112213-f847ad5053fd // feat_sp_exit_develop
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.23.0
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.0-20230706104359-7fd423a5762d
 	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.0.0-20230706092249-b0e93377dd4d
