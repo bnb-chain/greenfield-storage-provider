@@ -6,6 +6,11 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -14,10 +19,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ vgmgr.GVGPickFilter = &PickDestGVGFilter{}
@@ -319,7 +320,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 		)
 
 		// Mock
-		//{
+		// {
 		//	migrationBucketEvent := &types.ListMigrateBucketEvents{Events: &storage_types.EventMigrationBucket{
 		//		Operator:       "0x5D2D31e29441425E9b9C1851D638d0B682719417",
 		//		BucketName:     "spbucket",
@@ -327,7 +328,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 		//		DstPrimarySpId: 8,
 		//	}}
 		//	migrationBucketEvents = append(migrationBucketEvents, migrationBucketEvent)
-		//}
+		// }
 
 		// 1. subscribe migrate bucket events
 		migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())

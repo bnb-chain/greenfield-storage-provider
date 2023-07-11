@@ -6,6 +6,9 @@ import (
 	"sync"
 	"time"
 
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -13,8 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var _ vgmgr.SPPickFilter = &PickDestSPFilter{}
@@ -66,7 +67,9 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		log.Errorw("failed to init sp exit scheduler due to init subscribe sp exit progress", "error", err)
 		return err
 	}
-	spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight, s.manager.baseApp.OperatorAddress())
+	spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(),
+		s.lastSubscribedSPExitBlockHeight, s.manager.baseApp.OperatorAddress())
+	log.Infow("print blockID", "lastSubscribedSPExitBlockHeight", s.lastSubscribedSwapOutBlockHeight)
 	if subscribeError != nil {
 		log.Errorw("failed to init due to subscribe sp exit", "error", subscribeError)
 		return subscribeError
