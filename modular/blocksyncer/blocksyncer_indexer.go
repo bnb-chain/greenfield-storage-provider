@@ -50,7 +50,7 @@ type Impl struct {
 
 // ExportBlock accepts a finalized block and persists then inside the database.
 // An error is returned if write fails.
-func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, vals *coretypes.ResultValidators) error {
+func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, getTmcValidators modules.GetTmcValidators) error {
 	return nil
 }
 
@@ -201,7 +201,7 @@ func (i *Impl) ExportValidators(block *coretypes.ResultBlock, vals *coretypes.Re
 
 // ExportCommit accepts ResultValidators and persists validator commit signatures inside the database.
 // An error is returned if write fails.
-func (i *Impl) ExportCommit(block *coretypes.ResultBlock, vals *coretypes.ResultValidators) error {
+func (i *Impl) ExportCommit(block *coretypes.ResultBlock, getTmcValidators modules.GetTmcValidators) error {
 	return nil
 }
 
@@ -257,10 +257,10 @@ func (i *Impl) HandleGenesis(genesisDoc *tmtypes.GenesisDoc, appState map[string
 }
 
 // HandleBlock accepts block and calls the block handlers.
-func (i *Impl) HandleBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, vals *coretypes.ResultValidators) {
+func (i *Impl) HandleBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, getTmcValidators modules.GetTmcValidators) {
 	for _, module := range i.Modules {
 		if blockModule, ok := module.(modules.BlockModule); ok {
-			err := blockModule.HandleBlock(block, events, txs, vals)
+			err := blockModule.HandleBlock(block, events, txs, getTmcValidators)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "height", block.Block.Height, "error", err)
 			}
