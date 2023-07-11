@@ -209,6 +209,12 @@ func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 		default:
 			log.Debugw("BucketMigrateExecutePlan Start startSPSchedule", "gvgUnitMap", plan.gvgUnitMap)
 			for _, migrateGVGUnit := range plan.gvgUnitMap {
+
+				// Skipping units that have already been scheduled
+				if migrateGVGUnit.migrateStatus != WaitForMigrate {
+					continue
+				}
+
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
 					plan.bucketID, migrateGVGUnit.gvg, migrateGVGUnit.redundancyIndex,
@@ -302,7 +308,8 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 func (s *BucketMigrateScheduler) subscribeEvents() {
-	subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Second)
+	// TODO replace to time.second
+	subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * 100 * time.Millisecond)
 	for {
 		<-subscribeBucketMigrateEventsTicker.C
 		var (
@@ -326,11 +333,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 		migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
 		if err != nil {
 			log.Errorw("failed to list migrate bucket events", "error", err)
-			return
-		}
-		// debug
-		if len(migrationBucketEvents) != 0 {
-			log.Debugw("BucketMigrateScheduler subscribeEvents  ", "migrationBucketEvents", migrationBucketEvents, "lastSubscribedBlockHeight", s.lastSubscribedBlockHeight)
+			continue
 		}
 
 		// 2. make plan, start plan
@@ -345,6 +348,13 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				continue
 			}
 			if migrateBucketEvents.Events != nil {
+				// TODO migrating, switch to db
+				if s.executePlanIDMap[migrateBucketEvents.Events.BucketId.Uint64()] != nil {
+					continue
+				}
+				// debug
+				log.Debugw("BucketMigrateScheduler subscribeEvents  ", "migrationBucketEvents", migrateBucketEvents.Events, "lastSubscribedBlockHeight", s.lastSubscribedBlockHeight)
+
 				if s.isExited {
 					return
 				}
@@ -352,11 +362,11 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				executePlan, err = s.produceBucketMigrateExecutePlan(migrateBucketEvents.Events)
 				if err != nil {
 					log.Errorw("failed to produce bucket migrate execute plan", "error", err)
-					return
+					continue
 				}
 				if err = executePlan.Start(); err != nil {
 					log.Errorw("failed to start bucket migrate execute plan", "error", err)
-					return
+					continue
 				}
 				s.executePlanIDMap[executePlan.bucketID] = executePlan
 			}
@@ -366,15 +376,10 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 		updateErr := s.manager.baseApp.GfSpDB().UpdateBucketMigrateSubscribeProgress(s.lastSubscribedBlockHeight + 1)
 		if updateErr != nil {
 			log.Errorw("failed to update sp exit progress", "error", updateErr)
-			return
+			continue
 		}
 
 		s.lastSubscribedBlockHeight++
-		{
-			//// mock
-			//log.Debugw("BucketMigrateScheduler subscribeEvents  sleep 1 hour ")
-			//time.Sleep(1 * time.Hour)
-		}
 	}
 }
 
@@ -426,6 +431,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		err              error
 		destFamilyID     uint32
 		destGVG          *vgmgr.GlobalVirtualGroupMeta
+		bucketInfo       *storage_types.BucketInfo
 	)
 
 	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
@@ -438,7 +444,11 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		return nil, errors.New("failed to list gvg")
 	}
 
-	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(s.selfSP.GetId())
+	bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), event.BucketName)
+	if err != nil {
+		return nil, err
+	}
+	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketInfo.GetPrimarySpId())
 	if err != nil {
 		log.Errorw("failed to query sp", "error", err)
 		return nil, err

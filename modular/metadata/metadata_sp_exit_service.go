@@ -144,12 +144,12 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 // GfSpListMigrateBucketEvents list migrate bucket events
 func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *types.GfSpListMigrateBucketEventsRequest) (resp *types.GfSpListMigrateBucketEventsResponse, err error) {
 	var (
-		events            []*model.EventMigrationBucket
-		completeEvents    []*model.EventCompleteMigrationBucket
-		cancelEvents      []*model.EventCancelMigrationBucket
-		spEvent           []*storage_types.EventMigrationBucket
-		spCompleteEvents  []*storage_types.EventCompleteMigrationBucket
-		spCancelEvents    []*storage_types.EventCancelMigrationBucket
+		events           []*model.EventMigrationBucket
+		completeEvents   []*model.EventCompleteMigrationBucket
+		cancelEvents     []*model.EventCancelMigrationBucket
+		spEvent          []*storage_types.EventMigrationBucket
+		spCompleteEvents []*storage_types.EventCompleteMigrationBucket
+		//spCancelEvents    []*storage_types.EventCancelMigrationBucket
 		eventsMap         map[storage_types.Uint]*storage_types.EventMigrationBucket
 		completeEventsMap map[storage_types.Uint]*storage_types.EventCompleteMigrationBucket
 		cancelEventsMap   map[storage_types.Uint]*storage_types.EventCancelMigrationBucket
@@ -195,17 +195,17 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		completeEventsMap[e.BucketId] = e
 	}
 
-	cancelEventsMap = make(map[storage_types.Uint]*storage_types.EventCancelMigrationBucket)
-	spCancelEvents = make([]*storage_types.EventCancelMigrationBucket, len(cancelEvents))
-	for i, event := range cancelEvents {
-		e := &storage_types.EventCancelMigrationBucket{
-			Operator:   event.Operator.String(),
-			BucketName: event.BucketName,
-			BucketId:   math.NewUintFromBigInt(event.BucketID.Big()),
-		}
-		spCancelEvents[i] = e
-		cancelEventsMap[e.BucketId] = e
-	}
+	//cancelEventsMap = make(map[storage_types.Uint]*storage_types.EventCancelMigrationBucket)
+	//spCancelEvents = make([]*storage_types.EventCancelMigrationBucket, len(cancelEvents))
+	//for i, event := range cancelEvents {
+	//	e := &storage_types.EventCancelMigrationBucket{
+	//		Operator:   event.Operator.String(),
+	//		BucketName: event.BucketName,
+	//		BucketId:   math.NewUintFromBigInt(event.BucketID.Big()),
+	//	}
+	//	spCancelEvents[i] = e
+	//	cancelEventsMap[e.BucketId] = e
+	//}
 
 	res = make([]*types.ListMigrateBucketEvents, 0)
 	for _, event := range eventsMap {
