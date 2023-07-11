@@ -55,13 +55,13 @@ func (s *SpDBImpl) UpdateUploadProgress(uploadMeta *corespdb.UploadObjectMeta) e
 	return nil
 }
 
-func (s *SpDBImpl) GetUploadState(objectID uint64) (storetypes.TaskState, error) {
+func (s *SpDBImpl) GetUploadState(objectID uint64) (storetypes.TaskState, string, error) {
 	queryReturn := &UploadObjectProgressTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
-		return storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED, fmt.Errorf("failed to query upload table: %s", result.Error)
+		return storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED, "failed to query upload table", fmt.Errorf("failed to query upload table: %s", result.Error)
 	}
-	return storetypes.TaskState(queryReturn.TaskState), nil
+	return storetypes.TaskState(queryReturn.TaskState), queryReturn.ErrorDescription, nil
 }
 
 func (s *SpDBImpl) GetUploadMetasToReplicate(limit int) ([]*corespdb.UploadObjectMeta, error) {

@@ -329,6 +329,7 @@ message GfSpQueryUploadProgressResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // state defines the state of put object.
   store.types.TaskState state = 2;
+  string err_description = 3;
 }
 
 // GfSpQueryResumableUploadSegmentRequest is request type for the QueryObjectPutState RPC method.

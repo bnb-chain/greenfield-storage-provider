@@ -40,7 +40,7 @@ type UploadObjectProgressDB interface {
 	// UpdateUploadProgress updates the upload object progress state.
 	UpdateUploadProgress(uploadMeta *UploadObjectMeta) error
 	// GetUploadState queries the task state by object id.
-	GetUploadState(objectID uint64) (storetypes.TaskState, error)
+	GetUploadState(objectID uint64) (storetypes.TaskState, string, error)
 	// GetUploadMetasToReplicate queries the latest upload_done/replicate_doing object to continue replicate.
 	// It is only used in startup.
 	GetUploadMetasToReplicate(limit int) ([]*UploadObjectMeta, error)

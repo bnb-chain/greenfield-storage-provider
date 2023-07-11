@@ -116,6 +116,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
 				metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(startTime).Seconds())
 				if err != nil {
+					err = ErrPieceStore
 					log.CtxErrorw(ctx, "failed to put segment piece to piece store",
 						"piece_key", pieceKey, "error", err)
 					return ErrPieceStore
@@ -148,6 +149,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_cost").Observe(time.Since(startUpdateSignature).Seconds())
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 			if err != nil {
+				err = ErrGfSpDB
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 				return ErrGfSpDB
 			}
@@ -155,6 +157,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			return nil
 		}
 		if err != nil {
+			err = ErrClosedStream
 			log.CtxErrorw(ctx, "stream closed abnormally", "piece_key", pieceKey, "error", err)
 			return ErrClosedStream
 		}
@@ -165,6 +168,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
+			err = ErrPieceStore
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
 			return ErrPieceStore
 		}
