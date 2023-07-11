@@ -431,6 +431,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		err              error
 		destFamilyID     uint32
 		destGVG          *vgmgr.GlobalVirtualGroupMeta
+		bucketInfo       *storage_types.BucketInfo
 	)
 
 	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
@@ -443,7 +444,10 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		return nil, errors.New("failed to list gvg")
 	}
 
-	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), event.BucketName)
+	bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), event.BucketName)
+	if err != nil {
+		return nil, err
+	}
 	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketInfo.GetPrimarySpId())
 	if err != nil {
 		log.Errorw("failed to query sp", "error", err)
