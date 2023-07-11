@@ -40,9 +40,9 @@ const (
 	AWSSessionToken = "AWS_SESSION_TOKEN"
 
 	// AliyunRoleARN defines env variable for aws role arn
-	AliyunRoleARN = "ALIYUN_ROLE_ARN"
+	AliyunRoleARN = "ALIBABA_CLOUD_ROLE_ARN"
 	// AliyunWebIdentityTokenFile defines env variable for aws identity token file
-	AliyunWebIdentityTokenFile = "ALIYUN_WEB_IDENTITY_TOKEN_FILE"
+	AliyunWebIdentityTokenFile = "ALIBABA_CLOUD_OIDC_TOKEN_FILE"
 	// AliyunAccessKey defines env variable name for aws access key
 	AliyunAccessKey = "ALIYUN_ACCESS_KEY"
 	// AliyunSecretKey defines env variable name for aws secret key
