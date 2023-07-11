@@ -353,11 +353,11 @@ func (s *GfSpClient) ListBucketReadRecord(ctx context.Context, bucket *storage_t
 	return resp.GetReadRecords(), resp.GetNextStartTimestampUs(), nil
 }
 
-func (s *GfSpClient) GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, error) {
+func (s *GfSpClient) GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return 0, ErrRpcUnknown
+		return 0, "", ErrRpcUnknown
 	}
 	defer conn.Close()
 	req := &types.GfSpQueryUploadProgressRequest{
@@ -366,12 +366,12 @@ func (s *GfSpClient) GetUploadObjectState(ctx context.Context, objectID uint64, 
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpQueryUploadProgress(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to get uploading object state", "error", err)
-		return 0, ErrRpcUnknown
+		return 0, "", ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return 0, resp.GetErr()
+		return 0, "", resp.GetErr()
 	}
-	return int32(resp.GetState()), nil
+	return int32(resp.GetState()), resp.GetErrDescription(), nil
 }
 
 func (s *GfSpClient) GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error) {
