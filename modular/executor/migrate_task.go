@@ -7,14 +7,15 @@ import (
 	"sync/atomic"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -165,7 +166,14 @@ func (e *ExecuteModular) checkGvgConflict(ctx context.Context, srcGvg, destGvg *
 		err = e.doBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), segIdx, uint32(index), pieceData)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to do bucket migration to replicate pieces", "error", err)
+			return err
 		}
+	}
+
+	err = e.doneBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), uint32(index))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to done bucket migration replicate piece", "error", err)
+		return err
 	}
 
 	log.Debugw("bucket migration replicates piece", "dest_sp_endpoint", spInfo.GetEndpoint())
@@ -194,30 +202,31 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 }
 
 func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, gvgID uint32, objectInfo *storagetypes.ObjectInfo,
-	params *storagetypes.Params, destSPEndpoint string, segmentIdx uint32) ([]byte, error) {
+	params *storagetypes.Params, destSPEndpoint string, segmentIdx uint32) error {
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx, -1, 0)
 	taskSignature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign done receive task", "segment_idx", segmentIdx, "error", err)
-		return nil, err
+		return err
 	}
 	receive.SetSignature(taskSignature)
-	signature, err := e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, destSPEndpoint, receive)
+	receive.SetBucketMigration(true)
+	_, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, destSPEndpoint, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece", "dest_sp_endpoint", destSPEndpoint,
 			"segment_idx", segmentIdx, "error", err)
-		return nil, err
+		return err
 	}
 	if int(segmentIdx+1) >= len(objectInfo.GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "segment_idx", segmentIdx)
-		return nil, ErrReplicateIdsOutOfBounds
+		return ErrReplicateIdsOutOfBounds
 	}
 	// var blsPubKey bls.PublicKey
 	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
 	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
 	log.CtxDebugw(ctx, "succeed to done replicate", "dest_sp_endpoint", destSPEndpoint, "segment_idx", segmentIdx)
-	return signature, nil
+	return nil
 }
 
 // HandleMigratePieceTask handles the migrate piece task

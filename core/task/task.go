@@ -325,6 +325,12 @@ type ReceivePieceTask interface {
 	SetSealed(bool)
 	// GetGlobalVirtualGroupId returns the object's global virtual group id.
 	GetGlobalVirtualGroupId() uint32
+	// SetGlobalVirtualGroupId sets the object's global virtual group id.
+	SetGlobalVirtualGroupID(uint32)
+	// GetBucketMigration returns whether receiver does bucket migration
+	GetBucketMigration() bool
+	// SetBucketMigration sets the bucket migration
+	SetBucketMigration(migration bool)
 }
 
 // SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.

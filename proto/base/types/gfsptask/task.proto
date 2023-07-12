@@ -102,6 +102,7 @@ message GfSpReceivePieceTask {
   bytes signature = 8;
   bool sealed = 9;
   uint32 global_virtual_group_id = 10;
+  bool bucket_migration = 11;
 }
 
 message GfSpSealObjectTask {

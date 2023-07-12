@@ -89,11 +89,12 @@ func (*NullTask) InitUploadObjectTask(uint32, *storagetypes.ObjectInfo, *storage
 func (*NullTask) GetVirtualGroupFamilyId() uint32 {
 	return 0
 }
-
 func (*NullTask) GetGlobalVirtualGroupId() uint32 {
 	return 0
 }
-
+func (*NullTask) SetGlobalVirtualGroupID(uint32)    {}
+func (*NullTask) GetBucketMigration() bool          { return false }
+func (*NullTask) SetBucketMigration(migration bool) {}
 func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
 }
 func (*NullTask) InitRecoverPieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, uint64, int64, int64) {
