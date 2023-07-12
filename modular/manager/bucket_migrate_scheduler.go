@@ -301,17 +301,6 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			executePlan           *BucketMigrateExecutePlan
 		)
 
-		// Mock
-		// {
-		//	migrationBucketEvent := &types.ListMigrateBucketEvents{Events: &storage_types.EventMigrationBucket{
-		//		Operator:       "0x5D2D31e29441425E9b9C1851D638d0B682719417",
-		//		BucketName:     "spbucket",
-		//		BucketId:       sdkmath.NewUint(1),
-		//		DstPrimarySpId: 8,
-		//	}}
-		//	migrationBucketEvents = append(migrationBucketEvents, migrationBucketEvent)
-		// }
-
 		// 1. subscribe migrate bucket events
 		migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
 		if err != nil {
@@ -324,9 +313,18 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			// when receive chain CompleteMigrationBucket event
 			if migrateBucketEvents.CompleteEvents != nil {
 				executePlan, err = s.getExecutePlanByBucketID(migrateBucketEvents.CompleteEvents.BucketId.Uint64())
+				// TODO check db should be migrated
 				if err != nil {
-					return
+					log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket")
+					continue
 				}
+
+				for _, unit := range executePlan.gvgUnitMap {
+					if unit.migrateStatus != Migrated {
+						log.Errorw("report task may error, unit should be migrated", "unit", unit)
+					}
+				}
+				// TODO when receive CompleteMigrationBucket event, we should delete memory & db's status
 				executePlan.stopSPSchedule()
 				continue
 			}
