@@ -150,6 +150,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
+		RedundancyIndex:   task.GetPieceIdx(),
 		IntegrityChecksum: hash.GenerateIntegrityHash(pieceChecksums),
 		PieceChecksumList: pieceChecksums,
 	}
@@ -173,7 +174,9 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		Observe(time.Since(deletePieceHashTime).Seconds())
 	// the manager dispatch the task to confirm whether seal on chain as secondary sp.
 	task.SetError(nil)
-
+	if task.GetBucketMigration() {
+		return signature, nil
+	}
 	go func() {
 		reportTime := time.Now()
 		if reportErr := r.baseApp.GfSpClient().ReportTask(context.Background(), task); reportErr != nil {

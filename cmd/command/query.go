@@ -294,17 +294,17 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 	}
 	replicateIdx := -1
 	// TODO: use meta client to get GVG by bucketId and lvgId from objectInfo
-	//for i, addr := range objectInfo.GetSecondarySpAddresses() {
+	// for i, addr := range objectInfo.GetSecondarySpAddresses() {
 	//	if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
 	//		replicateIdx = i
 	//		break
 	//	}
-	//}
+	// }
 	objectID, err := strconv.ParseUint(objectIDStr, 10, 64)
 	if err != nil {
 		return err
 	}
-	integrity, err := db.GetObjectIntegrity(objectID)
+	integrity, err := db.GetObjectIntegrity(objectID, -1)
 	if err != nil {
 		return err
 	}

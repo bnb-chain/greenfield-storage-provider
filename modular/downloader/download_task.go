@@ -358,7 +358,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 		downloadPieceTask.GetSegmentIdx(),
 		downloadPieceTask.GetRedundancyIdx())
 	getIntegrityTime := time.Now()
-	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(downloadPieceTask.GetObjectInfo().Id.Uint64())
+	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(downloadPieceTask.GetObjectInfo().Id.Uint64(), downloadPieceTask.GetRedundancyIdx())
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_integrity_time").Observe(time.Since(getIntegrityTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash", "error", err)

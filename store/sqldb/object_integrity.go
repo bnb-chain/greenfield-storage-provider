@@ -56,7 +56,7 @@ const (
 )
 
 // GetObjectIntegrity returns the integrity hash info
-func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (meta *corespdb.IntegrityMeta, err error) {
+func (s *SpDBImpl) GetObjectIntegrity(objectID uint64, redundancyIndex int32) (meta *corespdb.IntegrityMeta, err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -72,8 +72,8 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (meta *corespdb.Integrity
 
 	queryReturn := &IntegrityMetaTable{}
 	shardTableName := GetIntegrityMetasTableName(objectID)
-	result := s.db.Table(shardTableName).
-		Where("object_id = ?", objectID).
+	result := s.db.Table(shardTableName).Model(&IntegrityMetaTable{}).
+		Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
 		First(queryReturn)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		err = result.Error
@@ -90,6 +90,7 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (meta *corespdb.Integrity
 
 	meta = &corespdb.IntegrityMeta{
 		ObjectID:          queryReturn.ObjectID,
+		RedundancyIndex:   queryReturn.RedundancyIndex,
 		IntegrityChecksum: integrityChecksum,
 	}
 	meta.PieceChecksumList, err = util.StringToBytesSlice(queryReturn.PieceChecksumList)
@@ -128,6 +129,7 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 
 	insertIntegrityMetaRecord := &IntegrityMetaTable{
 		ObjectID:          meta.ObjectID,
+		RedundancyIndex:   meta.RedundancyIndex,
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
 	}
@@ -166,7 +168,7 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64) (err error) {
 }
 
 // AppendObjectChecksumIntegrity append checksum
-func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, checksum []byte) (err error) {
+func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, redundancyIndex int32, checksum []byte) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -180,7 +182,7 @@ func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, checksum []byt
 			time.Since(startTime).Seconds())
 	}()
 
-	integrityMeta, err := s.GetObjectIntegrity(objectID)
+	integrityMeta, err := s.GetObjectIntegrity(objectID, redundancyIndex)
 	var checksums [][]byte
 	var integrity []byte
 	if err == gorm.ErrRecordNotFound {

@@ -113,9 +113,9 @@ func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGfSpGCMetaTask + CombineKey("time"+fmt.Sprint(time)))
 }
 
-func GfSpMigrateGVGTaskKey(gvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {
+func GfSpMigrateGVGTaskKey(oldGvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {
 	return task.TKey(KeyPrefixGfSpMigrateGVGTask + CombineKey(
-		"gvgID"+fmt.Sprint(gvgID), "bucketID"+fmt.Sprint(bucketID), "redundancyIndex"+fmt.Sprint(redundancyIndex)))
+		"oldGvgID"+fmt.Sprint(oldGvgID), "bucketID"+fmt.Sprint(bucketID), "redundancyIndex"+fmt.Sprint(redundancyIndex)))
 }
 
 func GfSpMigratePieceTaskKey(object, id string, redundancyIdx uint32, ecIdx int32) task.TKey {

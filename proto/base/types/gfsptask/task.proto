@@ -103,6 +103,7 @@ message GfSpReceivePieceTask {
   bytes signature = 8;
   bool sealed = 9;
   uint32 global_virtual_group_id = 10;
+  bool bucket_migration = 11;
 }
 
 message GfSpSealObjectTask {
@@ -174,12 +175,13 @@ message GfSpGCMetaTask {
 message GfSpMigrateGVGTask {
   GfSpTask task = 1;
   uint64 bucket_id = 2;
-  greenfield.virtualgroup.GlobalVirtualGroup gvg = 3;
-  int32 redundancy_idx = 4;
-  greenfield.sp.StorageProvider src_sp = 5;
-  greenfield.sp.StorageProvider dest_sp = 6;
-  uint64 last_migrated_object_id = 7;
-  bool finished = 8;
+  greenfield.virtualgroup.GlobalVirtualGroup src_gvg = 3;
+  greenfield.virtualgroup.GlobalVirtualGroup dest_gvg = 4;
+  int32 redundancy_idx = 5;
+  greenfield.sp.StorageProvider src_sp = 6;
+  greenfield.sp.StorageProvider dest_sp = 7;
+  uint64 last_migrated_object_id = 8;
+  bool finished = 9;
 }
 
 message GfSpMigratePieceTask {
