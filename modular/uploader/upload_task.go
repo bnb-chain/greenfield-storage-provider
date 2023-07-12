@@ -213,6 +213,9 @@ func (u *UploadModular) PreResumableUploadObject(
 	return nil
 }
 
+// primarySPRedundancyIdx represents this object info belongs to primary SP
+const primarySPRedundancyIdx = -1
+
 func (u *UploadModular) HandleResumableUploadObjectTask(
 	ctx context.Context,
 	task coretask.ResumableUploadObjectTask,
@@ -267,14 +270,14 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 						"piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
-				err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), -1, hash.GenerateChecksum(data))
+				err = u.baseApp.GfSpDB().AppendObjectChecksumIntegrity(task.GetObjectInfo().Id.Uint64(), primarySPRedundancyIdx, hash.GenerateChecksum(data))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
 					return ErrGfSpDB
 				}
 			}
 			if task.GetCompleted() {
-				integrityMeta, err = u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), -1)
+				integrityMeta, err = u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), primarySPRedundancyIdx)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to get object integrity hash", "error", err)
 					return err
@@ -315,7 +318,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		}
 		segIdx++
 	}
-
 }
 
 func (*UploadModular) PostResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask) {

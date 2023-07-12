@@ -181,7 +181,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			"expect", gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())],
 			"current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
-		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64(), int32(task.GetReplicateIdx()))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delete integrity")
 		}
@@ -296,8 +296,10 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		if err != nil {
 			return
 		}
+		var redundancyIndex int32 = -1
 		for rIdx, sspId := range gvg.GetSecondarySpIds() {
 			if spId == sspId {
+				redundancyIndex = int32(rIdx)
 				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
 					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
@@ -310,8 +312,8 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				}
 			}
 		}
-		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64())
+		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index
+		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64(), redundancyIndex)
 		log.CtxDebugw(ctx, "delete the object integrity meta", "object_info", objectInfo, "error", deleteErr)
 		task.SetCurrentBlockNumber(currentGCBlockID)
 		task.SetLastDeletedObjectId(currentGCObjectID)

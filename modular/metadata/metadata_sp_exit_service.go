@@ -196,7 +196,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				BucketId:                   math.NewUintFromBigInt(complete.BucketID.Big()),
 				GlobalVirtualGroupFamilyId: complete.GlobalVirtualGroupFamilyId,
 				// TODO BARRY
-				//GvgMappings:                event.GvgMappings,
+				// GvgMappings:                event.GvgMappings,
 			}
 		}
 		if cancel != nil && cancel.CreateAt >= event.CreateAt && complete == nil {
