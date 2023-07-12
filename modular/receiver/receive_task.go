@@ -165,19 +165,25 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount); err != nil {
 		log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "error", err)
 		// ignore the error,let the request go, the background task will gc the meta again later
-		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").Observe(time.Since(deletePieceHashTime).Seconds())
+		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
+			Observe(time.Since(deletePieceHashTime).Seconds())
 	}
-	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").Observe(time.Since(deletePieceHashTime).Seconds())
+	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
+		Observe(time.Since(deletePieceHashTime).Seconds())
 	// the manager dispatch the task to confirm whether seal on chain as secondary sp.
 	task.SetError(nil)
 
-	reportTime := time.Now()
-	if err = r.baseApp.GfSpClient().ReportTask(ctx, task); err != nil {
-		log.CtxErrorw(ctx, "failed to report receive task for confirming seal", "error", err)
-		// ignore the error,let the request go, the background task will gc the unsealed data later
-		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_report_time").Observe(time.Since(reportTime).Seconds())
-	}
-	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_report_time").Observe(time.Since(reportTime).Seconds())
+	go func() {
+		reportTime := time.Now()
+		if reportErr := r.baseApp.GfSpClient().ReportTask(context.Background(), task); reportErr != nil {
+			log.CtxErrorw(ctx, "failed to report receive task for confirming seal", "error", reportErr)
+			// ignore the error,let the request go, the background task will gc the unsealed data later
+			metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_report_time").
+				Observe(time.Since(reportTime).Seconds())
+		}
+		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_report_time").
+			Observe(time.Since(reportTime).Seconds())
+	}()
 	log.CtxDebugw(ctx, "succeed to done receive piece")
 	return integrity, signature, nil
 }

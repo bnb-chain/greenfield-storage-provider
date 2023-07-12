@@ -63,7 +63,9 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		// ignore the access db error, it is the system's inner error, will be let the request go.
 	}
 	// report the task to the manager for monitor the download task
-	_ = d.baseApp.GfSpClient().ReportTask(ctx, downloadObjectTask)
+	go func() {
+		_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadObjectTask)
+	}()
 	return nil
 }
 
@@ -174,7 +176,9 @@ func (d *DownloadModular) PostDownloadObject(ctx context.Context, downloadObject
 func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask) error {
 	defer func() {
 		// report the task to the manager for monitor the download piece task
-		d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+		go func() {
+			_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadPieceTask)
+		}()
 	}()
 
 	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil || downloadPieceTask.GetStorageParams() == nil {
@@ -315,7 +319,9 @@ func (d *DownloadModular) PreChallengePiece(ctx context.Context, downloadPieceTa
 		log.CtxErrorw(ctx, "failed to pre challenge piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
-	_ = d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+	go func() {
+		_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadPieceTask)
+	}()
 	return nil
 }
 
