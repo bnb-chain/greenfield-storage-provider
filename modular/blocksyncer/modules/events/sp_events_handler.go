@@ -168,6 +168,7 @@ func (m *Module) handleCancelSwapOut(ctx context.Context, block *tmctypes.Result
 		StorageProviderId:          cancelSwapOut.StorageProviderId,
 		GlobalVirtualGroupFamilyId: cancelSwapOut.GlobalVirtualGroupFamilyId,
 		GlobalVirtualGroupIds:      cancelSwapOut.GlobalVirtualGroupIds,
+		SuccessorSpId:              cancelSwapOut.SuccessorSpId,
 
 		CreateAt:     block.Block.Height,
 		CreateTxHash: txHash,
