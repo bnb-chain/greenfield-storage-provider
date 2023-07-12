@@ -888,7 +888,7 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
 					0, unit.gvg, unit.redundancyIndex,
-					unit.srcSP, unit.destSP,
+					unit.srcSP,
 					// TODO if add add a new tasktimeout
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					runner.manager.baseApp.TaskMaxRetry(migrateGVGTask))
