@@ -13,13 +13,14 @@ import (
 
 var _ coretask.MigrateGVGTask = &GfSpMigrateGVGTask{}
 
-func (m *GfSpMigrateGVGTask) InitMigrateGVGTask(priority coretask.TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup,
+func (m *GfSpMigrateGVGTask) InitMigrateGVGTask(priority coretask.TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup, destGvg *virtualgrouptypes.GlobalVirtualGroup,
 	redundancyIndex int32, srcSP, destSP *sptypes.StorageProvider, timeout, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetPriority(priority)
 	m.BucketId = bucketID
 	m.SrcGvg = srcGvg
+	m.DestGvg = destGvg
 	m.RedundancyIdx = redundancyIndex
 	m.SrcSp = srcSP
 	m.DestSp = destSP

@@ -870,7 +870,7 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 				var err error
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
-					0, unit.gvg, unit.redundancyIndex,
+					0, unit.gvg, unit.destGVG, unit.redundancyIndex,
 					unit.srcSP, unit.destSP,
 					// TODO if add add a new tasktimeout
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),

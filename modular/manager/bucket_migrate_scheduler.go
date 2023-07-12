@@ -218,7 +218,7 @@ func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
-					plan.bucketID, migrateGVGUnit.gvg, migrateGVGUnit.redundancyIndex,
+					plan.bucketID, migrateGVGUnit.gvg, migrateGVGUnit.destGVG, migrateGVGUnit.redundancyIndex,
 					migrateGVGUnit.srcSP, migrateGVGUnit.destSP,
 					// TODO if add add a new tasktimeout
 					plan.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
