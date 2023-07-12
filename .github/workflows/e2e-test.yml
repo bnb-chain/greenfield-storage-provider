@@ -39,6 +39,22 @@ jobs:
       - name: Run MySQL
         run: |
           sudo /etc/init.d/mysql start
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+      - name: Install dependencies
+        run: npm install ethers
+      # generate test private key
+      - name: Generate private key
+        run: node ./.github/workflows/generate-private-key.js
+        id: generate-private-key
+      - name: set private key and account address as job variables
+        run: |
+          echo "Private key: ${{ steps.generate-private-key.outputs.private_key }}"
+          echo "Account address: ${{ steps.generate-private-key.outputs.account_address }}"
+          echo "PRIVATE_KEY=${{ steps.generate-private-key.outputs.private_key }}" >> "$GITHUB_ENV"
+          echo "ACCOUNT_ADDR=${{ steps.generate-private-key.outputs.account_address }}" >> "$GITHUB_ENV"
       # Build and Start Greenfield Blockchain
       - name: Build and Start Greenfield Blockchain
         run: |

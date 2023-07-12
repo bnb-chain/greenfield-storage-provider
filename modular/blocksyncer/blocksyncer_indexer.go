@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"sync/atomic"
+	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/prefixtree"
 	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -15,6 +18,12 @@ import (
 	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
+	"github.com/forbole/juno/v4/modules/bucket"
+	"github.com/forbole/juno/v4/modules/group"
+	"github.com/forbole/juno/v4/modules/object"
+	"github.com/forbole/juno/v4/modules/payment"
+	"github.com/forbole/juno/v4/modules/permission"
+	storageprovider "github.com/forbole/juno/v4/modules/storage_provider"
 	"github.com/forbole/juno/v4/node"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
@@ -41,7 +50,6 @@ type Impl struct {
 	DB      database.Database
 
 	LatestBlockHeight atomic.Value
-	CatchUpFlag       atomic.Value
 	ProcessedHeight   uint64
 
 	ServiceName string
@@ -75,49 +83,29 @@ func (i *Impl) Process(height uint64) error {
 	var events *coretypes.ResultBlockResults
 	var txs []*types.Tx
 	var err error
-	flagAny := i.GetCatchUpFlag().Load()
-	flag := flagAny.(int64)
 	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
-	if flag == -1 || flag >= int64(height) {
-		blockAny, okb := blockMap.Load(heightKey)
-		eventsAny, oke := eventMap.Load(heightKey)
-		txsAny, okt := txMap.Load(heightKey)
-		block, _ = blockAny.(*coretypes.ResultBlock)
-		events, _ = eventsAny.(*coretypes.ResultBlockResults)
-		txs, _ = txsAny.([]*types.Tx)
-		if !okb || !oke || !okt {
-			log.Warnf("failed to get map data height: %d", height)
-			return ErrBlockNotFound
-		}
-	} else {
-		// get block info
-		block, err = i.Node.Block(int64(height))
-		if err != nil {
-			log.Errorf("failed to get block from node: %s", err)
-			return err
-		}
-
-		// get txs
-		txs, err = i.Node.Txs(block)
-		if err != nil {
-			log.Errorf("failed to get transactions for block: %s", err)
-			return err
-		}
-
-		// get block results
-		events, err = i.Node.BlockResults(int64(height))
-		if err != nil {
-			log.Errorf("failed to get block results from node: %s", err)
-			return err
-		}
+	blockAny, okb := blockMap.Load(heightKey)
+	eventsAny, oke := eventMap.Load(heightKey)
+	txsAny, okt := txMap.Load(heightKey)
+	block, _ = blockAny.(*coretypes.ResultBlock)
+	events, _ = eventsAny.(*coretypes.ResultBlockResults)
+	txs, _ = txsAny.([]*types.Tx)
+	if !okb || !oke || !okt {
+		log.Warnf("failed to get map data height: %d", height)
+		return ErrBlockNotFound
 	}
+
+	startTime := time.Now().UnixMilli()
 
 	beginBlockEvents := events.BeginBlockEvents
 	endBlockEvents := events.EndBlockEvents
+	txCount := len(txs)
+	eventCount := 0
 
 	// 1. handle events in startBlock
 
 	if len(beginBlockEvents) > 0 {
+		eventCount += len(beginBlockEvents)
 		err = i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
@@ -134,6 +122,7 @@ func (i *Impl) Process(height uint64) error {
 
 	// 3. handle events in endBlock
 	if len(endBlockEvents) > 0 {
+		eventCount += len(endBlockEvents)
 		err = i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
@@ -147,10 +136,19 @@ func (i *Impl) Process(height uint64) error {
 		return err
 	}
 
+	log.Infof("handle&write data cost: %d", time.Now().UnixMilli()-startTime)
+	log.Infof("height :%d tx count:%d event count:%c", height, txCount, eventCount)
+
 	blockMap.Delete(heightKey)
 	eventMap.Delete(heightKey)
 	txMap.Delete(heightKey)
 	i.ProcessedHeight = height
+
+	cost := time.Now().UnixMilli() - startTime
+	log.Infof("total cost: %d", cost)
+	metrics.ProcessBlockTime.WithLabelValues("process_block_time").Observe(float64(cost))
+	metrics.ProcessBlockTime.WithLabelValues("event_avg_time").Observe(float64(cost) / float64(eventCount))
+	metrics.ProcessBlockTime.WithLabelValues("tx_avg_time").Observe(float64(cost) / float64(txCount))
 
 	return nil
 }
@@ -207,29 +205,111 @@ func (i *Impl) ExportEvents(ctx context.Context, block *coretypes.ResultBlock, e
 	return nil
 }
 
+type TxHashEvent struct {
+	Event  sdk.Event
+	TxHash common.Hash
+}
+
 // ExportEventsInTxs accepts a slice of events in tx in order to save in database.
 func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs []*types.Tx) error {
+	bucketEvent := make([]TxHashEvent, 0)
+	groupEvent := make([]TxHashEvent, 0)
+	objectEvent := make([]TxHashEvent, 0)
+	paymentEvent := make([]TxHashEvent, 0)
+	permissionEvent := make([]TxHashEvent, 0)
+	spEvent := make([]TxHashEvent, 0)
+	prefixEvent := make([]TxHashEvent, 0)
+
 	for _, tx := range txs {
 		txHash := common.HexToHash(tx.TxHash)
 		for _, event := range tx.Events {
-			if err := i.HandleEvent(ctx, block, txHash, sdk.Event(event)); err != nil {
-				return err
+			e := TxHashEvent{Event: sdk.Event(event), TxHash: txHash}
+			if bucket.BucketEvents[event.Type] {
+				bucketEvent = append(bucketEvent, e)
+			} else if group.GroupEvents[event.Type] {
+				groupEvent = append(groupEvent, e)
+			} else if object.ObjectEvents[event.Type] {
+				objectEvent = append(objectEvent, e)
+			} else if payment.PaymentEvents[event.Type] {
+				paymentEvent = append(paymentEvent, e)
+			} else if permission.PolicyEvents[event.Type] {
+				permissionEvent = append(permissionEvent, e)
+			} else if storageprovider.StorageProviderEvents[event.Type] {
+				spEvent = append(spEvent, e)
+			} else if prefixtree.BuildPrefixTreeEvents[event.Type] {
+				prefixEvent = append(prefixEvent, e)
 			}
 		}
 	}
-	return nil
+	allEvents := make([][]TxHashEvent, 0)
+	allEvents = append(allEvents, bucketEvent)
+	allEvents = append(allEvents, groupEvent)
+	allEvents = append(allEvents, objectEvent)
+	allEvents = append(allEvents, paymentEvent)
+	allEvents = append(allEvents, permissionEvent)
+	allEvents = append(allEvents, spEvent)
+	allEvents = append(allEvents, prefixEvent)
+	return i.concurrenceHandleEvent(ctx, block, allEvents)
+}
+
+func (i *Impl) concurrenceHandleEvent(ctx context.Context, block *coretypes.ResultBlock, allEvents [][]TxHashEvent) error {
+	wg := &sync.WaitGroup{}
+	wg.Add(len(allEvents))
+	var handleErr error
+	for _, events := range allEvents {
+		go func(event []TxHashEvent) {
+			defer wg.Done()
+			for _, e := range event {
+				if err := i.HandleEvent(ctx, block, e.TxHash, e.Event); err != nil {
+					log.Errorw("failed to HandleEvent err:%v", err)
+					handleErr = err
+					return
+				}
+			}
+		}(events)
+	}
+	wg.Wait()
+	return handleErr
 }
 
 // ExportEventsWithoutTx accepts a slice of events not in tx in order to save in database.
 // events here don't have txHash
 func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.ResultBlock, events []abci.Event) error {
-	// call the event handlers
+	bucketEvent := make([]TxHashEvent, 0)
+	groupEvent := make([]TxHashEvent, 0)
+	objectEvent := make([]TxHashEvent, 0)
+	paymentEvent := make([]TxHashEvent, 0)
+	permissionEvent := make([]TxHashEvent, 0)
+	spEvent := make([]TxHashEvent, 0)
+	prefixEvent := make([]TxHashEvent, 0)
+
 	for _, event := range events {
-		if err := i.HandleEvent(ctx, block, common.Hash{}, sdk.Event(event)); err != nil {
-			return err
+		e := TxHashEvent{Event: sdk.Event(event)}
+		if bucket.BucketEvents[event.Type] {
+			bucketEvent = append(bucketEvent, e)
+		} else if group.GroupEvents[event.Type] {
+			groupEvent = append(groupEvent, e)
+		} else if object.ObjectEvents[event.Type] {
+			objectEvent = append(objectEvent, e)
+		} else if payment.PaymentEvents[event.Type] {
+			paymentEvent = append(paymentEvent, e)
+		} else if permission.PolicyEvents[event.Type] {
+			permissionEvent = append(permissionEvent, e)
+		} else if storageprovider.StorageProviderEvents[event.Type] {
+			spEvent = append(spEvent, e)
+		} else if prefixtree.BuildPrefixTreeEvents[event.Type] {
+			prefixEvent = append(prefixEvent, e)
 		}
 	}
-	return nil
+	allEvents := make([][]TxHashEvent, 0)
+	allEvents = append(allEvents, bucketEvent)
+	allEvents = append(allEvents, groupEvent)
+	allEvents = append(allEvents, objectEvent)
+	allEvents = append(allEvents, paymentEvent)
+	allEvents = append(allEvents, permissionEvent)
+	allEvents = append(allEvents, spEvent)
+	allEvents = append(allEvents, prefixEvent)
+	return i.concurrenceHandleEvent(ctx, block, allEvents)
 }
 
 // HandleGenesis accepts a GenesisDoc and calls all the registered genesis handlers in the order in which they have been registered.
@@ -296,10 +376,6 @@ func (i *Impl) GetLastBlockRecordHeight(ctx context.Context) (uint64, error) {
 func (i *Impl) GetLatestBlockHeight() *atomic.Value {
 	return &(i.LatestBlockHeight)
 
-}
-
-func (i *Impl) GetCatchUpFlag() *atomic.Value {
-	return &(i.CatchUpFlag)
 }
 
 func (i *Impl) CreateMasterTable() error {

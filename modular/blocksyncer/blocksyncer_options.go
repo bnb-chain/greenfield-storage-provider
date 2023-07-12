@@ -160,7 +160,6 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 	latestBlockHeight := mustGetLatestHeight(b.parserCtx)
 	Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(int64(latestBlockHeight))
-	Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(-1))
 	go b.getLatestBlockHeight(ctx)
 
 	lastDbBlockHeight := uint64(0)
@@ -233,34 +232,47 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 	count := uint64(b.config.Parser.Workers)
 	cycle := uint64(0)
+	startBlock := uint64(0)
+	endBlock := uint64(0)
 	for {
 		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 		latestBlockHeight := latestBlockHeightAny.(int64)
-		if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
-			log.Infof("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
-			Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
-			break
-		}
-		processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
-		if processedHeight != 0 && count*cycle+startHeight-processedHeight > MaxHeightGapFactor*count {
-			time.Sleep(time.Second)
+		//if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
+		//	log.Infof("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
+		//	Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
+		//	break
+		//}
+		if latestBlockHeight == int64(endBlock) {
 			continue
 		}
-		b.fetchData(count, cycle, startHeight, latestBlockHeight)
+		log.Info(count*(cycle+1) + startHeight - 1)
+		log.Info(latestBlockHeight)
+		if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
+			startBlock = count*cycle + startHeight
+			endBlock = count*(cycle+1) + startHeight - 1
+		} else {
+			startBlock = endBlock + 1
+			endBlock = uint64(latestBlockHeight)
+		}
+
+		//processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
+		//if processedHeight != 0 && startBlock-processedHeight > MaxHeightGapFactor*count {
+		//	time.Sleep(time.Second)
+		//	continue
+		//}
+		b.fetchData(startBlock, endBlock)
 		cycle++
 	}
 }
 
-func (b *BlockSyncerModular) fetchData(count, cycle, startHeight uint64, latestBlockHeight int64) {
+func (b *BlockSyncerModular) fetchData(start, end uint64) {
+	log.Infof("fetch data start:%d end:%d", start, end)
 	wg := &sync.WaitGroup{}
-	wg.Add(int(count))
-	for i := uint64(0); i < count; i++ {
-		go func(idx, c uint64) {
+	wg.Add(int(end - start + 1))
+	for i := start; i <= end; i++ {
+		go func(height uint64) {
 			defer wg.Done()
-			height := idx + count*c + startHeight
-			if height > uint64(latestBlockHeight) {
-				return
-			}
+
 			for {
 				block, err := b.parserCtx.Node.Block(int64(height))
 				if err != nil {
@@ -284,7 +296,7 @@ func (b *BlockSyncerModular) fetchData(count, cycle, startHeight uint64, latestB
 				txMap.Store(heightKey, txs)
 				break
 			}
-		}(i, cycle)
+		}(i)
 	}
 	wg.Wait()
 }
