@@ -870,11 +870,12 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 				var err error
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
-					0, unit.gvg, unit.destGVG, unit.redundancyIndex,
-					unit.srcSP, unit.destSP,
+					0, unit.gvg, unit.redundancyIndex,
+					unit.srcSP,
 					// TODO if add add a new tasktimeout
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					runner.manager.baseApp.TaskMaxRetry(migrateGVGTask))
+				migrateGVGTask.SetDestGvg(unit.destGVG)
 				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying

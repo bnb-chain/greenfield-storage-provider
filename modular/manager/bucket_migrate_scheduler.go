@@ -200,11 +200,12 @@ func (plan *BucketMigrateExecutePlan) startSPSchedule() {
 
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
-					plan.bucketID, migrateGVGUnit.gvg, migrateGVGUnit.destGVG, migrateGVGUnit.redundancyIndex,
-					migrateGVGUnit.srcSP, migrateGVGUnit.destSP,
+					plan.bucketID, migrateGVGUnit.gvg, migrateGVGUnit.redundancyIndex,
+					migrateGVGUnit.srcSP,
 					// TODO if add add a new tasktimeout
 					plan.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					plan.manager.baseApp.TaskMaxRetry(migrateGVGTask))
+				migrateGVGTask.SetDestGvg(migrateGVGUnit.destGVG)
 				err := plan.manager.migrateGVGQueue.Push(migrateGVGTask)
 				if err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)

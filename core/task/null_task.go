@@ -145,8 +145,8 @@ func (*NullTask) SetPieceHash([][]byte)                  {}
 func (*NullTask) GetPieceDataSize() int64                { return 0 }
 func (*NullTask) SetPieceDataSize(int64)                 {}
 func (*NullTask) GetSignBytes() []byte                   { return nil }
-func (*NullTask) InitMigrateGVGTask(priority TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup, destGvg *virtualgrouptypes.GlobalVirtualGroup,
-	redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider, timeout int64, retry int64) {
+func (*NullTask) InitMigrateGVGTask(priority TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup,
+	redundancyIndex int32, srcSP *sptypes.StorageProvider, timeout int64, retry int64) {
 }
 func (*NullTask) GetSrcGvg() *virtualgrouptypes.GlobalVirtualGroup  { return nil }
 func (*NullTask) SetSrcGvg(*virtualgrouptypes.GlobalVirtualGroup)   {}

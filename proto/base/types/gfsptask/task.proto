@@ -181,9 +181,8 @@ message GfSpMigrateGVGTask {
   greenfield.virtualgroup.GlobalVirtualGroup dest_gvg = 4;
   int32 redundancy_idx = 5;
   greenfield.sp.StorageProvider src_sp = 6;
-  greenfield.sp.StorageProvider dest_sp = 7;
-  uint64 last_migrated_object_id = 8;
-  bool finished = 9;
+  uint64 last_migrated_object_id = 7;
+  bool finished = 8;
 }
 
 message GfSpMigratePieceTask {
