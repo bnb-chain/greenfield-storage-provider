@@ -324,7 +324,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 				UsedStorageSize:      gvg.GetStoredSize(),
 				StakingStorageSize:   util.TotalStakingStoreSizeOfGVG(gvg, vgParams.GvgStakingPerBytes),
 			}
-			log.Infow("query global virtual group info", "gvg_info", gvg, "gvg_meta", gvgMeta)
+			// log.Infow("query global virtual group info", "gvg_info", gvg, "gvg_meta", gvgMeta)
 			vgfm.vgfIDToVgf[vgf.Id].GVGMap[gvg.GetId()] = gvgMeta
 			vgfm.vgfIDToVgf[vgf.Id].FamilyUsedStorageSize += gvgMeta.UsedStorageSize
 			vgfm.vgfIDToVgf[vgf.Id].FamilyStakingStorageSize += gvgMeta.StakingStorageSize
