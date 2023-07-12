@@ -5,15 +5,19 @@ on:
     branches:
       - main
       - develop
+      - ci-*
       - release*
       - fix-release*
+      - feat-*
 
   pull_request:
     branches:
       - master
       - develop
       - release*
+      - ci-*
       - fix-release*
+      - feat-*
 
 jobs:
   gosec:

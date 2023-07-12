@@ -3,7 +3,6 @@ package command
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -60,10 +59,11 @@ func recoverObjectAction(ctx *cli.Context) error {
 		return err
 	}
 
-	bucketInfo, err := chain.QueryBucketInfo(context.Background(), bucketName)
-	if err != nil {
-		return err
-	}
+	// TODO: refine it
+	//bucketInfo, err := chain.QueryBucketInfo(context.Background(), bucketName)
+	//if err != nil {
+	//	return err
+	//}
 
 	storageParams, err := chain.QueryStorageParams(context.Background())
 	if err != nil {
@@ -72,18 +72,20 @@ func recoverObjectAction(ctx *cli.Context) error {
 
 	replicateIdx := 0
 
-	if strings.EqualFold(bucketInfo.PrimarySpAddress, cfg.SpAccount.SpOperatorAddress) {
-		replicateIdx = -1
-	}
-
-	var isSecondarySP bool
-	for i, addr := range objectInfo.GetSecondarySpAddresses() {
-		if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
-			replicateIdx = i
-			isSecondarySP = true
-			break
-		}
-	}
+	// TODO: refine it
+	isSecondarySP := true
+	//if strings.EqualFold(bucketInfo.PrimarySpAddress, cfg.SpAccount.SpOperatorAddress) {
+	//	replicateIdx = -1
+	//}
+	//
+	//var isSecondarySP bool
+	//for i, addr := range objectInfo.GetSecondarySpAddresses() {
+	//	if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
+	//		replicateIdx = i
+	//		isSecondarySP = true
+	//		break
+	//	}
+	//}
 	if replicateIdx != -1 && !isSecondarySP {
 		return fmt.Errorf(" it is not primary SP nor secondarySP of the object, pls choose the right SP")
 	}

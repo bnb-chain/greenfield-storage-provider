@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
@@ -39,8 +40,9 @@ var (
 	ErrPieceStore              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
 	ErrRecoveryPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
 	ErrRecoveryPieceLength     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45207, "get secondary piece data length error")
-	ErrPrimaryNotFound         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recoverying")
+	ErrPrimaryNotFound         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recovering")
 	ErrRecoveryPieceIndex      = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
+	ErrMigratedPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
 )
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
@@ -49,13 +51,17 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		task.SetError(ErrDanglingPointer)
 		return
 	}
+	blsSig, err := bls.MultipleSignaturesFromBytes(task.GetSecondarySignatures())
+	if err != nil {
+		return
+	}
 	task.AppendLog("executor-begin-handle-seal-task")
 	sealMsg := &storagetypes.MsgSealObject{
-		Operator:              e.baseApp.OperatorAddress(),
-		BucketName:            task.GetObjectInfo().GetBucketName(),
-		ObjectName:            task.GetObjectInfo().GetObjectName(),
-		SecondarySpAddresses:  task.GetSecondaryAddresses(),
-		SecondarySpSignatures: task.GetSecondarySignatures(),
+		Operator:                    e.baseApp.OperatorAddress(),
+		BucketName:                  task.GetObjectInfo().GetBucketName(),
+		ObjectName:                  task.GetObjectInfo().GetObjectName(),
+		GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
+		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
 	task.AppendLog("executor-end-handle-seal-task")
@@ -148,19 +154,33 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	// regardless of whether the sp is as secondary or not, it needs to be set to the
 	// sealed state to let the manager clear the task.
 	task.SetSealed(true)
-	if int(task.GetReplicateIdx()) >= len(offChainObject.GetSecondarySpAddresses()) {
+	// TODO: might add api GetGvgByObjectId in meta
+	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, offChainObject.BucketName, true)
+	if err != nil || bucketInfo == nil {
+		log.Errorf("failed to get bucket by bucket name", "error", err)
+		return
+	}
+	gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), offChainObject.LocalVirtualGroupId)
+	if err != nil {
+		return
+	}
+	if int(task.GetReplicateIdx()) >= len(gvg.GetSecondarySpIds()) {
 		log.CtxErrorw(ctx, "failed to confirm receive task, replicate idx out of bounds",
 			"replicate_idx", task.GetReplicateIdx(),
-			"secondary_sp_len", len(offChainObject.GetSecondarySpAddresses()))
+			"secondary_sp_len", len(gvg.GetSecondarySpIds()))
 		task.SetError(ErrReplicateIdsOutOfBounds)
 		return
 	}
-	if offChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())] != e.baseApp.OperatorAddress() {
+	// TODO get sp id from config
+	spID, err := e.getSPID()
+	if err != nil {
+		return
+	}
+	if gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())] != spID {
 		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
-			"expect", offChainObject.GetSecondarySpAddresses()[int(task.GetReplicateIdx())],
+			"expect", gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())],
 			"current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
-		// TODO:: gc zombie task will gc the zombie piece, it is a conservative plan
 		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delete integrity")
@@ -262,8 +282,22 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			log.CtxDebugw(ctx, "delete the primary sp pieces",
 				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 		}
-		for rIdx, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.Compare(e.baseApp.OperatorAddress(), address) == 0 {
+		bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
+		if err != nil || bucketInfo == nil {
+			log.Errorf("failed to get bucket by bucket name", "error", err)
+			return
+		}
+		gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		if err != nil {
+			return
+		}
+		// TODO get sp id from config
+		spId, err := e.getSPID()
+		if err != nil {
+			return
+		}
+		for rIdx, sspId := range gvg.GetSecondarySpIds() {
+			if spId == sspId {
 				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
 					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
@@ -349,7 +383,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 	if ecIndex >= 0 {
 		objectId := task.GetObjectInfo().Id.Uint64()
 		segmentIdx := task.GetSegmentIdx()
-		primarySPEndpoint, err := e.getObjectPrimarySPEndpoint(ctx, task.GetObjectInfo().BucketName)
+		primarySPEndpoint, err := e.getBucketPrimarySPEndpoint(ctx, task.GetObjectInfo().BucketName)
 		if err != nil {
 			task.SetError(err)
 			return
@@ -362,7 +396,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 			return
 		}
 		// compare integrity hash
-		if err = e.checkRecoveryCheckSum(ctx, task, hash.GenerateChecksum(pieceData)); err != nil {
+		if err = e.checkRecoveryChecksum(ctx, task, hash.GenerateChecksum(pieceData)); err != nil {
 			return
 		}
 
@@ -445,7 +479,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 			return
 		}
 		// compare integrity hash
-		if err = e.checkRecoveryCheckSum(ctx, task, hash.GenerateChecksum(recoverySegData)); err != nil {
+		if err = e.checkRecoveryChecksum(ctx, task, hash.GenerateChecksum(recoverySegData)); err != nil {
 			return
 		}
 
@@ -462,7 +496,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 	log.CtxDebugw(ctx, "primary SP recovery successfully", "pieceKey:", recoveryKey)
 }
 
-func (e *ExecuteModular) checkRecoveryCheckSum(ctx context.Context, task coretask.RecoveryPieceTask, recoveryChecksum []byte) error {
+func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretask.RecoveryPieceTask, recoveryChecksum []byte) error {
 	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
@@ -490,7 +524,7 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 		return
 	}
 	rTask.SetSignature(signature)
-	// recovery primary sp segment pr secondary piece
+	// recovery primary sp segment or secondary piece
 	respBody, err := e.baseApp.GfSpClient().GetPieceFromECChunks(ctx, endpoint, rTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to recovery piece", "objectID", rTask.GetObjectInfo().Id,
@@ -506,49 +540,53 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 		return nil, err
 	}
 
-	log.CtxDebugw(ctx, "success to recovery piece from sp", "objectID", rTask.GetObjectInfo().Id,
+	log.CtxDebugw(ctx, "succeed to recovery piece from sp", "objectID", rTask.GetObjectInfo().Id,
 		"segment_idx", rTask.GetSegmentIdx(), "secondary endpoint", endpoint)
 
 	return pieceData, nil
 }
 
 // getObjectSecondaryEndpoints return the secondary sp endpoints list of the specific object
-func (e *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, error) {
-	secondarySPAddrs := objectInfo.GetSecondarySpAddresses()
-	spList, err := e.baseApp.Consensus().ListSPs(ctx)
+func (g *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, error) {
+	// TODO: might add api GetGvgByObjectId in meta
+	bucketInfo, err := g.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
+	if err != nil {
+		log.Errorf("failed to get bucket by bucket name", "error", err)
+		return nil, err
+	}
+	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 	if err != nil {
 		return nil, err
 	}
-
-	secondaryEndpointList := make([]string, len(secondarySPAddrs))
-	for idx, addr := range secondarySPAddrs {
+	secondarySPIds := gvg.GetSecondarySpIds()
+	spList, err := g.baseApp.Consensus().ListSPs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	secondaryEndpointList := make([]string, len(secondarySPIds))
+	for idx, sspId := range secondarySPIds {
 		for _, info := range spList {
-			if addr == info.GetOperatorAddress() {
+			if sspId == info.Id {
 				secondaryEndpointList[idx] = info.Endpoint
 			}
 		}
 	}
-
 	return secondaryEndpointList, nil
 }
 
-func (e *ExecuteModular) getObjectPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
-	spList, err := e.baseApp.Consensus().ListSPs(ctx)
+func (g *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
+	bucketMeta, _, err := g.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
 	if err != nil {
 		return "", err
 	}
-
-	bucketInfo, err := e.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
+	spList, err := g.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return "", err
 	}
-
-	primarySP := bucketInfo.GetPrimarySpAddress()
 	for _, info := range spList {
-		if primarySP == info.GetOperatorAddress() {
+		if bucketMeta.BucketInfo.PrimarySpId == info.Id {
 			return info.Endpoint, nil
 		}
 	}
-
 	return "", ErrPrimaryNotFound
 }

@@ -32,6 +32,7 @@ func (s *SpDBImpl) UpdateAllSp(spList []*sptypes.StorageProvider) error {
 				Where("operator_address = ? and is_own = false", value.GetOperatorAddress()).Updates(&SpInfoTable{
 				OperatorAddress: value.GetOperatorAddress(),
 				IsOwn:           false,
+				ID:              value.GetId(),
 				FundingAddress:  value.GetFundingAddress(),
 				SealAddress:     value.GetSealAddress(),
 				ApprovalAddress: value.GetApprovalAddress(),
@@ -57,6 +58,7 @@ func (s *SpDBImpl) insertNewRecordInSpInfoTable(sp *sptypes.StorageProvider) err
 	insertRecord := &SpInfoTable{
 		OperatorAddress: sp.GetOperatorAddress(),
 		IsOwn:           false,
+		ID:              sp.GetId(),
 		FundingAddress:  sp.GetFundingAddress(),
 		SealAddress:     sp.GetSealAddress(),
 		ApprovalAddress: sp.GetApprovalAddress(),
@@ -101,6 +103,7 @@ func (s *SpDBImpl) FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvi
 			return records, fmt.Errorf("failed to parse int")
 		}
 		records = append(records, &sptypes.StorageProvider{
+			Id:              value.ID,
 			OperatorAddress: value.OperatorAddress,
 			FundingAddress:  value.FundingAddress,
 			SealAddress:     value.SealAddress,
@@ -150,6 +153,7 @@ func (s *SpDBImpl) FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.
 			return records, fmt.Errorf("failed to parse int")
 		}
 		records = append(records, &sptypes.StorageProvider{
+			Id:              value.ID,
 			OperatorAddress: value.OperatorAddress,
 			FundingAddress:  value.FundingAddress,
 			SealAddress:     value.SealAddress,
@@ -185,6 +189,7 @@ func (s *SpDBImpl) GetSpByAddress(address string, addressType corespdb.SpAddress
 		return nil, fmt.Errorf("failed to parse int")
 	}
 	return &sptypes.StorageProvider{
+		Id:              queryReturn.ID,
 		OperatorAddress: queryReturn.OperatorAddress,
 		FundingAddress:  queryReturn.FundingAddress,
 		SealAddress:     queryReturn.SealAddress,
@@ -232,6 +237,7 @@ func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, e
 		return nil, fmt.Errorf("failed to parse int")
 	}
 	return &sptypes.StorageProvider{
+		Id:              queryReturn.ID,
 		OperatorAddress: queryReturn.OperatorAddress,
 		FundingAddress:  queryReturn.FundingAddress,
 		SealAddress:     queryReturn.SealAddress,
@@ -261,6 +267,7 @@ func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 		return nil, fmt.Errorf("failed to parse int")
 	}
 	return &sptypes.StorageProvider{
+		Id:              queryReturn.ID,
 		OperatorAddress: queryReturn.OperatorAddress,
 		FundingAddress:  queryReturn.FundingAddress,
 		SealAddress:     queryReturn.SealAddress,
@@ -286,6 +293,7 @@ func (s *SpDBImpl) SetOwnSpInfo(sp *sptypes.StorageProvider) error {
 	}
 
 	insertRecord := &SpInfoTable{
+		ID:              sp.GetId(),
 		OperatorAddress: sp.GetOperatorAddress(),
 		IsOwn:           true,
 		FundingAddress:  sp.GetFundingAddress(),

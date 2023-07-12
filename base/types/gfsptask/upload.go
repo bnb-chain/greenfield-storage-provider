@@ -20,9 +20,10 @@ var _ coretask.ReplicatePieceTask = &GfSpReplicatePieceTask{}
 var _ coretask.SealObjectTask = &GfSpSealObjectTask{}
 var _ coretask.ReceivePieceTask = &GfSpReceivePieceTask{}
 
-func (m *GfSpUploadObjectTask) InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64) {
+func (m *GfSpUploadObjectTask) InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.VirtualGroupFamilyId = vgfID
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetTimeout(timeout)
@@ -158,10 +159,11 @@ func (m *GfSpUploadObjectTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 
-func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
 	timeout int64, complete bool, offset uint64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.VirtualGroupFamilyId = vgfID
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetTimeout(timeout)
@@ -481,10 +483,12 @@ func (m *GfSpReplicatePieceTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpSealObjectTask) InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority coretask.TPriority,
-	addresses []string, signatures [][]byte, timeout int64, retry int64) {
+func (m *GfSpSealObjectTask) InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority coretask.TPriority,
+	endpoints []string, signatures [][]byte, timeout int64, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.GlobalVirtualGroupId = vgfID
+	m.SecondaryEndpoints = endpoints
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)
@@ -492,7 +496,6 @@ func (m *GfSpSealObjectTask) InitSealObjectTask(object *storagetypes.ObjectInfo,
 	m.SetPriority(priority)
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
-	m.SetSecondaryAddresses(addresses)
 	m.SetSecondarySignatures(signatures)
 }
 
@@ -627,10 +630,11 @@ func (m *GfSpSealObjectTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpReceivePieceTask) InitReceivePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
+func (m *GfSpReceivePieceTask) InitReceivePieceTask(gvgID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
 	priority coretask.TPriority, replicateIdx uint32, pieceIdx int32, pieceSize int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.GlobalVirtualGroupId = gvgID
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)

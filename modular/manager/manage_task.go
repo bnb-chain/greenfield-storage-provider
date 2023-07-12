@@ -7,25 +7,35 @@ import (
 	"strings"
 	"time"
 
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
+	"cosmossdk.io/math"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	ErrDanglingTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60001, "OoooH... request lost")
-	ErrRepeatedTask  = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60002, "request repeated")
-	ErrExceedTask    = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60003, "OoooH... request exceed, try again later")
-	ErrCanceledTask  = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
-	ErrFutureSupport = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "future support")
-	ErrGfSpDB        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 65201, "server slipped away, try again later")
+	ErrDanglingTask     = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60001, "OoooH... request lost")
+	ErrRepeatedTask     = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60002, "request repeated")
+	ErrExceedTask       = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60003, "OoooH... request exceed, try again later")
+	ErrCanceledTask     = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
+	ErrFutureSupport    = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "future support")
+	ErrNotifyMigrateGVG = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60006, "failed to notify migrate gvg")
+	ErrGfSpDB           = gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 65201, "server slipped away, try again later")
 )
 
 func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error) {
@@ -76,8 +86,13 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			"task_limit", task.EstimateLimit().String())
 		backupTasks = append(backupTasks, task)
 	}
-	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
+	task = m.migrateGVGQueue.TopByLimit(limit)
+	if task != nil {
+		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
+		backupTasks = append(backupTasks, task)
+	}
 
+	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
 	go func() {
 		if len(reservedTasks) == 0 {
 			return
@@ -86,25 +101,28 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			switch t := reservedTask.(type) {
 			case *gfsptask.GfSpReplicatePieceTask:
 				err := m.replicateQueue.Push(t)
-				log.Errorw("failed to retry push replicate task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpSealObjectTask:
 				err := m.sealQueue.Push(t)
-				log.Errorw("failed to retry push seal task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpReceivePieceTask:
 				err := m.receiveQueue.Push(t)
-				log.Errorw("failed to retry push receive task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCObjectTask:
 				err := m.gcObjectQueue.Push(t)
-				log.Errorw("failed to retry push gc object task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCZombiePieceTask:
 				err := m.gcZombieQueue.Push(t)
-				log.Errorw("failed to retry push gc zombie task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpGCMetaTask:
 				err := m.gcMetaQueue.Push(t)
-				log.Errorw("failed to retry push gc meta task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
 			case *gfsptask.GfSpRecoverPieceTask:
 				err := m.recoveryQueue.Push(t)
-				log.Errorw("failed to retry push recovery task to queue after dispatch", "error", err)
+				log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
+			case *gfsptask.GfSpMigrateGVGTask:
+				err := m.migrateGVGQueue.Push(t)
+				log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
 			}
 		}
 	}()
@@ -171,15 +189,26 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+	// TODO: refine it.
+	startPickGVGTime := time.Now()
+	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "error", err)
+		return err
+	}
+
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
+	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
+	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
 	replicateTask.SetCreateTime(task.GetCreateTime())
 	replicateTask.SetLogs(task.GetLogs())
 	replicateTask.AppendLog("manager-create-replicate-task")
-	err := m.replicateQueue.Push(replicateTask)
+	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
@@ -253,15 +282,33 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 			log.CtxErrorw(ctx, "reports failed resumable update object task", "task_info", task.Info(), "error", task.Error())
 			return nil
 		}()
+		metrics.ManagerCounter.WithLabelValues(ManagerFailureUpload).Inc()
+		metrics.ManagerTime.WithLabelValues(ManagerFailureUpload).Observe(
+			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		return nil
+	} else {
+		metrics.ManagerCounter.WithLabelValues(ManagerSuccessUpload).Inc()
+		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
+			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+
+	// TODO: refine it.
+	startPickGVGTime := time.Now()
+	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "error", err)
+		return err
+	}
+
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
 		m.baseApp.TaskMaxRetry(replicateTask))
+	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
+	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 
-	err := m.replicateQueue.Push(replicateTask)
+	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
@@ -330,7 +377,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
 	sealObject := &gfsptask.GfSpSealObjectTask{}
-	sealObject.InitSealObjectTask(task.GetObjectInfo(), task.GetStorageParams(),
+	sealObject.InitSealObjectTask(task.GetGlobalVirtualGroupId(), task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(sealObject), task.GetSecondaryAddresses(), task.GetSecondarySignatures(),
 		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
 	sealObject.SetCreateTime(task.GetCreateTime())
@@ -343,11 +390,12 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	}
 	go func() {
 		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:            task.GetObjectInfo().Id.Uint64(),
-			TaskState:           types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
-			SecondaryAddresses:  task.GetSecondaryAddresses(),
-			SecondarySignatures: task.GetSecondarySignatures(),
-			ErrorDescription:    "",
+			ObjectID:             task.GetObjectInfo().Id.Uint64(),
+			TaskState:            types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
+			GlobalVirtualGroupID: task.GetGlobalVirtualGroupId(),
+			SecondaryEndpoints:   task.GetSecondaryEndpoints(),
+			SecondarySignatures:  task.GetSecondarySignatures(),
+			ErrorDescription:     "",
 		}); err != nil {
 			log.Errorw("failed to update object task state", "task_info", task.Info(), "task_info", task.Info(), "error", err)
 			return
@@ -626,6 +674,20 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 	return nil
 }
 
+func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error {
+	if task == nil {
+		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
+		return ErrDanglingTask
+	}
+	var err error
+	if task.GetBucketID() != 0 {
+		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
+	} else {
+		err = m.spExitScheduler.UpdateMigrateProgress(task)
+	}
+	return err
+}
+
 func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
@@ -637,6 +699,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	downloadTasks, _ := taskqueue.ScanTQueueBySubKey(m.downloadQueue, subKey)
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
 	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
+	migrateGVGTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.migrateGVGQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -649,5 +712,149 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, downloadTasks...)
 	tasks = append(tasks, challengeTasks...)
 	tasks = append(tasks, recoveryTasks...)
+	tasks = append(tasks, migrateGVGTasks...)
 	return tasks, nil
+}
+
+// PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
+func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
+	var (
+		err error
+		vgf *vgmgr.VirtualGroupFamilyMeta
+	)
+
+	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
+			return 0, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
+			return 0, err
+		}
+		return vgf.ID, nil
+	}
+	return vgf.ID, nil
+}
+
+// PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
+func (m *ManageModular) PickVirtualGroupFamilyForBucketMigrate(ctx context.Context) (uint32, error) {
+	var (
+		err error
+		vgf *vgmgr.VirtualGroupFamilyMeta
+	)
+
+	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group", "error", err)
+			return 0, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", "error", err)
+			return 0, err
+		}
+		return vgf.ID, nil
+	}
+	return vgf.ID, nil
+}
+
+func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagetypes.Params) error {
+	var err error
+	if params == nil {
+		if params, err = m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix()); err != nil {
+			return err
+		}
+	}
+	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	if err != nil {
+		return err
+	}
+	log.Infow("begin to create a gvg", "gvg_meta", gvgMeta)
+	virtualGroupParams, err := m.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
+	if err != nil {
+		return err
+	}
+	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
+		VirtualGroupFamilyId: vgfID,
+		PrimarySpAddress:     m.baseApp.OperatorAddress(), // it is useless
+		SecondarySpIds:       gvgMeta.SecondarySPIDs,
+		Deposit: &sdk.Coin{
+			Denom:  virtualGroupParams.GetDepositDenom(),
+			Amount: virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(gvgMeta.StakingStorageSize)),
+		},
+	})
+}
+
+func (m *ManageModular) createGlobalVirtualGroupForBucketMigrate(vgfID uint32, params *storagetypes.Params, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) error {
+	var err error
+	_ = params
+	// TODO dest sp corresponding SecondarySpIds ?
+	log.Infow("begin to create a gvg", "srcGVG", srcGVG)
+	virtualGroupParams, err := m.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
+	if err != nil {
+		return err
+	}
+	return m.baseApp.GfSpClient().CreateGlobalVirtualGroup(context.Background(), &gfspserver.GfSpCreateGlobalVirtualGroup{
+		VirtualGroupFamilyId: vgfID,
+		// TODO m.baseApp.OperatorAddress()?
+		PrimarySpAddress: destSP.OperatorAddress, // it is useless
+		SecondarySpIds:   srcGVG.SecondarySpIds,
+		Deposit: &sdk.Coin{
+			Denom: virtualGroupParams.GetDepositDenom(),
+			// TODO if correct
+			Amount: virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(srcGVG.GetStoredSize())),
+		},
+	})
+}
+
+// pickGlobalVirtualGroup is used to pick a suitable gvg for replicating object.
+func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
+	var (
+		err error
+		gvg *vgmgr.GlobalVirtualGroupMeta
+	)
+
+	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroup(vgfID, param); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		return gvg, nil
+	}
+	log.CtxDebugw(ctx, "succeed to pick gvg", "gvg", gvg)
+	return gvg, nil
+}
+
+// pickGlobalVirtualGroupForBucketMigrate is used to pick a suitable gvg for replicating object.
+func (m *ManageModular) pickGlobalVirtualGroupForBucketMigrate(ctx context.Context, vgfID uint32, param *storagetypes.Params, srcGVG *virtualgrouptypes.GlobalVirtualGroup, destSP *sptypes.StorageProvider) (*vgmgr.GlobalVirtualGroupMeta, error) {
+	var (
+		err error
+		gvg *vgmgr.GlobalVirtualGroupMeta
+	)
+
+	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP); err != nil {
+		// create a new gvg, and retry pick.
+		if err = m.createGlobalVirtualGroupForBucketMigrate(vgfID, param, srcGVG, destSP); err != nil {
+			log.CtxErrorw(ctx, "failed to create global virtual group for bucket migrate", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		m.virtualGroupManager.ForceRefreshMeta()
+		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(vgfID, srcGVG, destSP); err != nil {
+			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
+			return gvg, err
+		}
+		return gvg, nil
+	}
+	log.CtxDebugw(ctx, "succeed to pick gvg", "gvg", gvg)
+	return gvg, nil
 }

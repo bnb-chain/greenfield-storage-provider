@@ -15,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -59,6 +60,7 @@ type ManageModular struct {
 	downloadQueue         taskqueue.TQueueOnStrategy
 	challengeQueue        taskqueue.TQueueOnStrategy
 	recoveryQueue         taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueue       taskqueue.TQueueOnStrategyWithLimit
 
 	maxUploadObjectNumber int
 
@@ -73,6 +75,14 @@ type ManageModular struct {
 	discontinueBucketEnabled       bool
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
+
+	virtualGroupManager    vgmgr.VirtualGroupManager
+	bucketMigrateScheduler *BucketMigrateScheduler
+	spExitScheduler        *SPExitScheduler
+
+	subscribeSPExitEventInterval        int
+	subscribeBucketMigrateEventInterval int
+	subscribeSwapOutEventInterval       int
 }
 
 func (m *ManageModular) Name() string {
@@ -94,19 +104,37 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.recoveryQueue.SetRetireTaskStrategy(m.GCRecoverQueue)
 	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
+	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
+	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
 	}
 	m.scope = scope
-	//err = m.LoadTaskFromDB()
-	//if err != nil {
-	//	return err
-	//}
 
+	if err = m.LoadTaskFromDB(); err != nil {
+		return err
+	}
+
+	go m.delayStartMigrateScheduler()
 	go m.eventLoop(ctx)
 	return nil
+}
+
+func (m *ManageModular) delayStartMigrateScheduler() {
+	// delay start to wait metadata service ready.
+	// migrate scheduler init depend metadata.
+	time.Sleep(60 * time.Second)
+
+	var err error
+	if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
+		log.Errorw("failed to new bucket migrate scheduler", "error", err)
+	}
+	if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
+		log.Errorw("failed to new sp exit scheduler", "error", err)
+	}
+	log.Info("succeed to start migrate scheduler")
 }
 
 func (m *ManageModular) eventLoop(ctx context.Context) {
@@ -167,8 +195,9 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
+	// TODO: Arthur Li/Will needs to get operator ID by getSpIDbySpAddress or add one more attribute in GfSpBaseApp
 	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
-		createAt.Unix(), m.baseApp.OperatorAddress(), DiscontinueBucketLimit)
+		createAt.Unix(), 0, DiscontinueBucketLimit)
 	if err != nil {
 		log.Errorw("failed to query expired buckets", "error", err)
 		return
@@ -258,6 +287,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
 			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
+		// TODO: set gvg info
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
@@ -287,8 +317,8 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			continue
 		}
 		sealTask := &gfsptask.GfSpSealObjectTask{}
-		sealTask.InitSealObjectTask(objectInfo, storageParams, m.baseApp.TaskPriority(sealTask), meta.SecondaryAddresses,
-			meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask))
+		sealTask.InitSealObjectTask(meta.GlobalVirtualGroupID, objectInfo, storageParams, m.baseApp.TaskPriority(sealTask),
+			meta.SecondaryEndpoints, meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask))
 		pushErr := m.sealQueue.Push(sealTask)
 		if pushErr != nil {
 			log.Errorw("failed to push seal object task to queue", "object_info", objectInfo, "error", pushErr)
@@ -431,6 +461,10 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 	return qTask.ExceedRetry() || qTask.ExceedTimeout()
 }
 
+func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
+	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+}
+
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
 	task := qTask.(task.GCObjectTask)
 	if task.Expired() {
@@ -552,9 +586,9 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
-		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(),
+		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
 		m.gcBlockHeight, m.gcSafeBlockDistance)
 }

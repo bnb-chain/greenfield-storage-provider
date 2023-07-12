@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
@@ -11,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // Modular is a common interface for submodules that are scheduled by the GfSp framework.
@@ -32,6 +34,8 @@ const (
 	AuthOpTypeUnKnown AuthOpType = iota
 	// AuthOpAskCreateBucketApproval defines the AskCreateBucketApproval operator
 	AuthOpAskCreateBucketApproval
+	// AuthOpAskMigrateBucketApproval defines the AskMigrateBucketApproval operator
+	AuthOpAskMigrateBucketApproval
 	// AuthOpAskCreateObjectApproval defines the AskCreateObjectApproval operator
 	AuthOpAskCreateObjectApproval
 	// AuthOpTypeGetChallengePieceInfo defines the GetChallengePieceInfo operator
@@ -75,6 +79,15 @@ type Approver interface {
 	// PostCreateBucketApproval is called after HandleCreateBucketApprovalTask, it can recycle resources, make statistics
 	// and do some other operations.
 	PostCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask)
+
+	// PreMigrateBucketApproval prepares to handle MigrateBucketApproval, it can do some
+	// checks such as checking for duplicates, if limitation of SP has been reached, etc.
+	PreMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask) error
+	// HandleMigrateBucketApprovalTask handles the MigrateBucketApproval, it can set expired height, sign the MsgMigrateBucket and so on.
+	HandleMigrateBucketApprovalTask(ctx context.Context, task task.ApprovalMigrateBucketTask) (bool, error)
+	// PostMigrateBucketApproval is called after HandleMigrateBucketApprovalTask, it can recycle resources, make statistics
+	// and do some other operations.
+	PostMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask)
 
 	// PreCreateObjectApproval prepares to handle CreateObjectApproval, it can do some
 	// checks such as check for duplicates, if limitation of SP has been reached, etc.
@@ -142,6 +155,8 @@ type TaskExecutor interface {
 	HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask)
 	// HandleGCMetaTask handles the GCMetaTask that is asked from manager module.
 	HandleGCMetaTask(ctx context.Context, task task.GCMetaTask)
+	// HandleMigrateGVGTask handles the MigrateGVGTask that is asked from manager module
+	HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error
 	// ReportTask reports the results or status of running task to manager module.
 	ReportTask(ctx context.Context, task task.Task) error
 }
@@ -193,8 +208,14 @@ type Manager interface {
 	HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error
 	// HandleChallengePieceTask handles ChallengePieceTask, the request comes from Downloader.
 	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
+	// PickVirtualGroupFamily is used to pick vgf for the new bucket.
+	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
 	// HandleRecoverPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
 	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
+	// NotifyMigrateGVG is used to notify dest sp migrate gvg.
+	NotifyMigrateGVG(ctx context.Context, task task.MigrateGVGTask) error
+	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
+	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -216,9 +237,9 @@ type Receiver interface {
 	Modular
 	// HandleReceivePieceTask stores piece data into secondary SP.
 	HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error
-	// HandleDoneReceivePieceTask calculates the integrity hash of the object and sign it, returns to the primary
+	// HandleDoneReceivePieceTask calculates the secondary bls of the object and sign it, returns to the primary
 	// SP for sealed object.
-	HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, []byte, error)
+	HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
 	// QueryTasks queries replicate piece tasks that running on receiver by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
@@ -229,16 +250,18 @@ type Signer interface {
 	Modular
 	// SignCreateBucketApproval signs the MsgCreateBucket for asking create bucket approval.
 	SignCreateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) ([]byte, error)
+	// SignMigrateBucketApproval signs the MsgMigrateBucket for asking migrate bucket approval
+	SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgMigrateBucket) ([]byte, error)
 	// SignCreateObjectApproval signs the MsgCreateObject for asking create object approval.
 	SignCreateObjectApproval(ctx context.Context, task *storagetypes.MsgCreateObject) ([]byte, error)
 	// SignReplicatePieceApproval signs the ApprovalReplicatePieceTask for asking replicate pieces to secondary SPs.
 	SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)
 	// SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data between SPs.
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
-	//SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
+	// SignSecondaryBls signs the secondary bls for sealing object.
+	SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
+	// SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
 	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
-	// SignIntegrityHash signs the integrity hash of object for sealing object.
-	SignIntegrityHash(ctx context.Context, objectID uint64, hash [][]byte) ([]byte, []byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
 	// SignP2PPongMsg signs the pong msg for p2p to response ping msg.
@@ -249,6 +272,10 @@ type Signer interface {
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
+	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
+	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
+	SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
+	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

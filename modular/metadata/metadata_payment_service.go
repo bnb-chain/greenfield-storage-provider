@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	jsoniter "github.com/json-iterator/go"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 )
 
 // GfSpGetPaymentByBucketName get bucket payment info by a bucket name
@@ -17,7 +16,6 @@ func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 	var (
 		streamRecord *model.StreamRecord
 		res          *payment_types.StreamRecord
-		outflows     []payment_types.OutFlow
 	)
 
 	ctx = log.Context(ctx, req)
@@ -29,21 +27,17 @@ func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 	}
 
 	if streamRecord != nil {
-		err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
-			return
-		}
 		res = &payment_types.StreamRecord{
-			Account:         streamRecord.Account.String(),
-			CrudTimestamp:   streamRecord.CrudTimestamp,
-			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
-			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
-			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
-			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
-			Status:          payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
-			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        outflows,
+			Account:           streamRecord.Account.String(),
+			CrudTimestamp:     streamRecord.CrudTimestamp,
+			NetflowRate:       math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
+			StaticBalance:     math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
+			BufferBalance:     math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
+			LockBalance:       math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
+			Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
+			SettleTimestamp:   streamRecord.SettleTimestamp,
+			OutFlowCount:      streamRecord.OutFlowCount,
+			FrozenNetflowRate: math.NewIntFromBigInt(streamRecord.FrozenNetflowRate.Raw()),
 		}
 	}
 
@@ -57,7 +51,6 @@ func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *typ
 	var (
 		streamRecord *model.StreamRecord
 		res          *payment_types.StreamRecord
-		outflows     []payment_types.OutFlow
 	)
 
 	ctx = log.Context(ctx, req)
@@ -69,21 +62,17 @@ func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *typ
 	}
 
 	if streamRecord != nil {
-		err = jsoniter.Unmarshal(streamRecord.OutFlows, &outflows)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to unmarshal out flows", "error", err)
-			return
-		}
 		res = &payment_types.StreamRecord{
-			Account:         streamRecord.Account.String(),
-			CrudTimestamp:   streamRecord.CrudTimestamp,
-			NetflowRate:     math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
-			StaticBalance:   math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
-			BufferBalance:   math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
-			LockBalance:     math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
-			Status:          payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
-			SettleTimestamp: streamRecord.SettleTimestamp,
-			OutFlows:        outflows,
+			Account:           streamRecord.Account.String(),
+			CrudTimestamp:     streamRecord.CrudTimestamp,
+			NetflowRate:       math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
+			StaticBalance:     math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
+			BufferBalance:     math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
+			LockBalance:       math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
+			Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
+			SettleTimestamp:   streamRecord.SettleTimestamp,
+			OutFlowCount:      streamRecord.OutFlowCount,
+			FrozenNetflowRate: math.NewIntFromBigInt(streamRecord.FrozenNetflowRate.Raw()),
 		}
 	}
 

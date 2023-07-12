@@ -58,8 +58,7 @@ type Impl struct {
 // ExportBlock accepts a finalized block and persists then inside the database.
 // An error is returned if write fails.
 func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, getTmcValidators modules.GetTmcValidators) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 // HandleEvent accepts the transaction and handles events contained inside the transaction.
@@ -176,12 +175,6 @@ func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
 // ExportTxs accepts a slice of transactions and persists then inside the database.
 // An error is returned if write fails.
 func (i *Impl) ExportTxs(block *coretypes.ResultBlock, txs []*types.Tx) error {
-	return nil
-}
-
-// ExportValidators accepts ResultValidators and persists validators inside the database.
-// An error is returned if write fails.
-func (i *Impl) ExportValidators(block *coretypes.ResultBlock, vals *coretypes.ResultValidators) error {
 	return nil
 }
 
@@ -330,7 +323,7 @@ func (i *Impl) HandleBlock(block *coretypes.ResultBlock, events *coretypes.Resul
 		if blockModule, ok := module.(modules.BlockModule); ok {
 			err := blockModule.HandleBlock(block, events, txs, getTmcValidators)
 			if err != nil {
-				log.Errorw("failed to handle event", "module", module.Name(), "height", block.Block.Height, "error", err)
+				log.Errorw("error while handling block", "module", module.Name(), "height", block.Block.Height, "err", err)
 			}
 		}
 	}

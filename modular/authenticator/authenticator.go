@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -49,6 +51,19 @@ var _ module.Authenticator = &AuthenticationModular{}
 type AuthenticationModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
+	spID    uint32
+}
+
+func (a *AuthenticationModular) getSPID() (uint32, error) {
+	if a.spID != 0 {
+		return a.spID, nil
+	}
+	spInfo, err := a.baseApp.Consensus().QuerySP(context.Background(), a.baseApp.OperatorAddress())
+	if err != nil {
+		return 0, err
+	}
+	a.spID = spInfo.GetId()
+	return a.spID, nil
 }
 
 func (a *AuthenticationModular) Name() string {
@@ -136,7 +151,7 @@ func (a *AuthenticationModular) VerifyOffChainSignature(ctx context.Context, acc
 	// signedMsg must be formatted as `${actionContent}_${expiredTimestamp}` and timestamp must be within $OffChainAuthSigExpiryAgeInSec seconds, actionContent could be any string
 	signedMsgParts := strings.Split(realMsgToSign, "_")
 	if len(signedMsgParts) < 2 {
-		log.CtxErrorw(ctx, "signed msg must be formated as ${actionContent}_${expiredTimestamp}")
+		log.CtxErrorw(ctx, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
 		return false, ErrSignedMsgFormat
 	}
 
@@ -221,9 +236,15 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
+
+		// TODO get sp id from config
+		spID, err := a.getSPID()
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketInfo.GetPrimarySpId() != spID {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
+				"expected_sp_id", bucketInfo.GetPrimarySpId())
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
@@ -253,9 +274,13 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
+		spID, err := a.getSPID()
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketInfo.GetPrimarySpId() != spID {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
+				"expected_sp_id", bucketInfo.GetPrimarySpId())
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
@@ -285,9 +310,13 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
+		spID, err := a.getSPID()
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketInfo.GetPrimarySpId() != spID {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
+				"expected_sp_id", bucketInfo.GetPrimarySpId())
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
@@ -319,7 +348,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		}
 		return allow, nil
 	case coremodule.AuthOpTypeGetRecoveryPiece:
-		_, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
 			if strings.Contains(err.Error(), "No such bucket") {
@@ -330,16 +359,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-
-		var isObjectSecondarySP bool
-		for _, addr := range objectInfo.SecondarySpAddresses {
-			if a.baseApp.OperatorAddress() == addr {
-				isObjectSecondarySP = true
-			}
+		spID, err := a.getSPID()
+		if err != nil {
+			return false, ErrConsensus
 		}
-		if !isObjectSecondarySP {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", objectInfo.SecondarySpAddresses)
+		_, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, a.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
+			return false, ErrConsensus
+		}
+		if !isSecondarySp {
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
@@ -370,9 +399,13 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpAddress() != a.baseApp.OperatorAddress() {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress(),
-				"require", bucketInfo.GetPrimarySpAddress())
+		spID, err := a.getSPID()
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketInfo.GetPrimarySpId() != spID {
+			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
+				"expected_sp_id", bucketInfo.GetPrimarySpId())
 			return false, ErrMismatchSp
 		}
 		if bucketInfo.GetOwner() != account {
@@ -415,16 +448,22 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensus
 		}
-		if strings.EqualFold(bucketInfo.GetPrimarySpAddress(), a.baseApp.OperatorAddress()) {
+		spID, err := a.getSPID()
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketInfo.GetPrimarySpId() == spID {
 			return true, nil
 		}
-		for _, address := range objectInfo.GetSecondarySpAddresses() {
-			if strings.EqualFold(address, a.baseApp.OperatorAddress()) {
-				return true, nil
-			}
+		_, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, a.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
+			return false, ErrConsensus
 		}
-		log.CtxErrorw(ctx, "sp operator address mismatch", "current", a.baseApp.OperatorAddress())
-		return false, ErrMismatchSp
+		if !isSecondarySp {
+			return false, ErrMismatchSp
+		}
+		return true, nil
 	default:
 		return false, ErrUnsupportedAuthType
 	}

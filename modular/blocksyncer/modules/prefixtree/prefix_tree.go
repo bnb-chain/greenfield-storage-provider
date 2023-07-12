@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +14,6 @@ import (
 	"github.com/forbole/juno/v4/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
