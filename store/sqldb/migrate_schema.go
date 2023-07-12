@@ -13,10 +13,10 @@ func (MigrateSubscribeProgressTable) TableName() string {
 
 // SwapOutTable table schema.
 type SwapOutTable struct {
-	SwapOutKey    string `gorm:"primary_key"`
-	IsDestSP      bool   `gorm:"primary_key"`
-	SwapOutMsg    string
-	CompletedGVGs string
+	SwapOutKey       string `gorm:"primary_key"`
+	IsDestSP         bool   `gorm:"primary_key"`
+	SwapOutMsg       string
+	CompletedGVGList string
 }
 
 func (SwapOutTable) TableName() string {

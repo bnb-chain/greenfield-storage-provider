@@ -127,9 +127,12 @@ type MigrateDB interface {
 
 	// InsertSwapOutUnit is used to insert new swap out unit.
 	InsertSwapOutUnit(meta *SwapOutMeta) error
+	// UpdateSwapOutUnitCompletedGVGList is used to record dest swap out progress, manager restart can load it.
+	UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error
 	// QuerySwapOutUnitInSrcSP is used to rebuild swap out plan at startup.
 	QuerySwapOutUnitInSrcSP(swapOutKey string) (*SwapOutMeta, error)
-	ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) // runner load
+	// ListDestSPSwapOutUnits is used to rebuild swap out plan at startup.
+	ListDestSPSwapOutUnits() ([]*SwapOutMeta, error)
 
 	// InsertMigrateGVGUnit inserts a new gvg migrate unit.
 	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error

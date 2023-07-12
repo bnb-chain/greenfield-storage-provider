@@ -372,7 +372,6 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		spEvent         *virtual_types.EventStorageProviderExit
 		spCompleteEvent *virtual_types.EventCompleteStorageProviderExit
 	)
-	log.Debugw("GfSpListSpExitEvents", "block-id", req.BlockId, "operator-address", req.OperatorAddress)
 	ctx = log.Context(ctx, req)
 	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
 	if err != nil {
@@ -399,6 +398,6 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		Event:         spEvent,
 		CompleteEvent: spCompleteEvent,
 	}}
-	log.CtxInfow(ctx, "succeed to list sp exit events")
+	log.CtxInfow(ctx, "succeed to list sp exit events", "request", req, "response", resp)
 	return resp, nil
 }

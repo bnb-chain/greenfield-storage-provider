@@ -185,10 +185,10 @@ func (s *SpDBImpl) InsertSwapOutUnit(meta *spdb.SwapOutMeta) error {
 	}
 
 	insertSwapOut = &SwapOutTable{
-		SwapOutKey:    meta.SwapOutKey,
-		IsDestSP:      meta.IsDestSP,
-		SwapOutMsg:    hex.EncodeToString(swapOutMarshal),
-		CompletedGVGs: util.Uint32SliceToString(meta.CompletedGVGs),
+		SwapOutKey:       meta.SwapOutKey,
+		IsDestSP:         meta.IsDestSP,
+		SwapOutMsg:       hex.EncodeToString(swapOutMarshal),
+		CompletedGVGList: util.Uint32SliceToString(meta.CompletedGVGs),
 	}
 	result = s.db.Create(insertSwapOut)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -196,6 +196,13 @@ func (s *SpDBImpl) InsertSwapOutUnit(meta *spdb.SwapOutMeta) error {
 		return err
 	}
 	return nil
+}
+
+func (s *SpDBImpl) UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error {
+	result := s.db.Model(&SwapOutTable{}).
+		Where("swap_out_key = ? and is_dest_sp = 1", swapOutKey).
+		Update("completed_gvg_list", util.Uint32SliceToString(completedGVGList))
+	return result.Error
 }
 
 func (s *SpDBImpl) QuerySwapOutUnitInSrcSP(swapOutKey string) (*spdb.SwapOutMeta, error) {
@@ -219,7 +226,7 @@ func (s *SpDBImpl) QuerySwapOutUnitInSrcSP(swapOutKey string) (*spdb.SwapOutMeta
 	if err = json.Unmarshal(swapOutMarshal, &swapOut); err != nil {
 		return nil, err
 	}
-	if completedGVGs, err = util.StringToUint32Slice(queryReturn.CompletedGVGs); err != nil {
+	if completedGVGs, err = util.StringToUint32Slice(queryReturn.CompletedGVGList); err != nil {
 		return nil, err
 	}
 
@@ -251,7 +258,7 @@ func (s *SpDBImpl) ListDestSPSwapOutUnits() ([]*spdb.SwapOutMeta, error) {
 		if err = json.Unmarshal(swapOutMarshal, &swapOut); err != nil {
 			return nil, err
 		}
-		if completedGVGs, err = util.StringToUint32Slice(queryReturn.CompletedGVGs); err != nil {
+		if completedGVGs, err = util.StringToUint32Slice(queryReturn.CompletedGVGList); err != nil {
 			return nil, err
 		}
 		returns = append(returns, &spdb.SwapOutMeta{
