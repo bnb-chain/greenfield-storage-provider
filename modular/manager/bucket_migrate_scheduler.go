@@ -425,15 +425,6 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 	})
 }
 
-func isDestSPConflictWithSecondarySPs(destSPID uint32, secondarySPIDs []uint32) (int, uint32) {
-	for index, id := range secondarySPIDs {
-		if id == destSPID {
-			return index, id
-		}
-	}
-	return -1, 0
-}
-
 func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_types.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
 	var (
 		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
@@ -474,8 +465,8 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 	for _, srcGVG := range primarySPGVGList {
 		secondarySPIDs := srcGVG.GetSecondarySpIds()
 		// check conflicts.
-		conflictedIndex, _ := isDestSPConflictWithSecondarySPs(destSP.GetId(), srcGVG.GetSecondarySpIds())
-		if conflictedIndex != -1 {
+		conflictedIndex, errNotInSecondarySPs := util.GetSecondarySPIndexFromGVG(srcGVG, destSP.GetId())
+		if errNotInSecondarySPs != nil {
 			// gvg has conflicts.
 			excludedSPIDs := srcGVG.GetSecondarySpIds()
 			excludedSPIDs = append(excludedSPIDs, srcSP.GetId())
