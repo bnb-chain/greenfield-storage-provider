@@ -185,6 +185,7 @@ func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, redundancyInde
 	if err == gorm.ErrRecordNotFound {
 		integrityMetaNew := &corespdb.IntegrityMeta{
 			ObjectID:          objectID,
+			RedundancyIndex:   redundancyIndex,
 			PieceChecksumList: append(checksums, checksum),
 			IntegrityChecksum: integrity,
 		}
