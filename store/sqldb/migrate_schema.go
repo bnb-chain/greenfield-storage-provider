@@ -31,13 +31,11 @@ type MigrateGVGTable struct {
 	GlobalVirtualGroupID uint32 `gorm:"index:gvg_index"`        // is used by sp exit/bucket migrate
 	VirtualGroupFamilyID uint32 `gorm:"index:vgf_index"`        // is used by sp exit
 	BucketID             uint64 `gorm:"index:bucket_index"`     // is used by bucket migrate
-	IsRemoted            bool   `gorm:"index:remoted_index"`    // is used by sp exit
 	RedundancyIndex      int32  `gorm:"index:redundancy_index"` // is used by sp exit
 	SrcSPID              uint32
 	DestSPID             uint32
 	LastMigratedObjectID uint64
 	MigrateStatus        int `gorm:"index:migrate_status_index"`
-	CheckStatus          int
 }
 
 // TableName is used to set MigrateGVGTable Schema's table name in database.

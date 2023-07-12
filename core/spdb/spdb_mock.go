@@ -270,17 +270,17 @@ func (mr *MockSignatureDBMockRecorder) DeleteAllReplicatePieceChecksum(objectID,
 }
 
 // DeleteObjectIntegrity mocks base method.
-func (m *MockSignatureDB) DeleteObjectIntegrity(objectID uint64) error {
+func (m *MockSignatureDB) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteObjectIntegrity", objectID)
+	ret := m.ctrl.Call(m, "DeleteObjectIntegrity", objectID, redundancyIndex)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteObjectIntegrity indicates an expected call of DeleteObjectIntegrity.
-func (mr *MockSignatureDBMockRecorder) DeleteObjectIntegrity(objectID interface{}) *gomock.Call {
+func (mr *MockSignatureDBMockRecorder) DeleteObjectIntegrity(objectID, redundancyIndex interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).DeleteObjectIntegrity), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).DeleteObjectIntegrity), objectID, redundancyIndex)
 }
 
 // GetAllReplicatePieceChecksum mocks base method.
@@ -718,21 +718,6 @@ func (mr *MockMigrateDBMockRecorder) InsertSwapOutUnit(meta interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSwapOutUnit", reflect.TypeOf((*MockMigrateDB)(nil).InsertSwapOutUnit), meta)
 }
 
-// ListConflictedMigrateGVGUnitsByFamilyID mocks base method.
-func (m *MockMigrateDB) ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListConflictedMigrateGVGUnitsByFamilyID", familyID)
-	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListConflictedMigrateGVGUnitsByFamilyID indicates an expected call of ListConflictedMigrateGVGUnitsByFamilyID.
-func (mr *MockMigrateDBMockRecorder) ListConflictedMigrateGVGUnitsByFamilyID(familyID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListConflictedMigrateGVGUnitsByFamilyID", reflect.TypeOf((*MockMigrateDB)(nil).ListConflictedMigrateGVGUnitsByFamilyID), familyID)
-}
-
 // ListDestSPSwapOutUnits mocks base method.
 func (m *MockMigrateDB) ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) {
 	m.ctrl.T.Helper()
@@ -761,36 +746,6 @@ func (m *MockMigrateDB) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*Migra
 func (mr *MockMigrateDBMockRecorder) ListMigrateGVGUnitsByBucketID(bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsByBucketID", reflect.TypeOf((*MockMigrateDB)(nil).ListMigrateGVGUnitsByBucketID), bucketID)
-}
-
-// ListMigrateGVGUnitsByFamilyID mocks base method.
-func (m *MockMigrateDB) ListMigrateGVGUnitsByFamilyID(familyID, srcSP uint32) ([]*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListMigrateGVGUnitsByFamilyID", familyID, srcSP)
-	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListMigrateGVGUnitsByFamilyID indicates an expected call of ListMigrateGVGUnitsByFamilyID.
-func (mr *MockMigrateDBMockRecorder) ListMigrateGVGUnitsByFamilyID(familyID, srcSP interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsByFamilyID", reflect.TypeOf((*MockMigrateDB)(nil).ListMigrateGVGUnitsByFamilyID), familyID, srcSP)
-}
-
-// ListMigrateGVGUnitsBySwapOutKey mocks base method.
-func (m *MockMigrateDB) ListMigrateGVGUnitsBySwapOutKey(swapOutKey string) ([]*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListMigrateGVGUnitsBySwapOutKey", swapOutKey)
-	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListMigrateGVGUnitsBySwapOutKey indicates an expected call of ListMigrateGVGUnitsBySwapOutKey.
-func (mr *MockMigrateDBMockRecorder) ListMigrateGVGUnitsBySwapOutKey(swapOutKey interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsBySwapOutKey", reflect.TypeOf((*MockMigrateDB)(nil).ListMigrateGVGUnitsBySwapOutKey), swapOutKey)
 }
 
 // QueryBucketMigrateSubscribeProgress mocks base method.
@@ -938,6 +893,20 @@ func (mr *MockMigrateDBMockRecorder) UpdateSwapOutSubscribeProgress(blockHeight 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutSubscribeProgress", reflect.TypeOf((*MockMigrateDB)(nil).UpdateSwapOutSubscribeProgress), blockHeight)
 }
 
+// UpdateSwapOutUnitCompletedGVGList mocks base method.
+func (m *MockMigrateDB) UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSwapOutUnitCompletedGVGList", swapOutKey, completedGVGList)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSwapOutUnitCompletedGVGList indicates an expected call of UpdateSwapOutUnitCompletedGVGList.
+func (mr *MockMigrateDBMockRecorder) UpdateSwapOutUnitCompletedGVGList(swapOutKey, completedGVGList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutUnitCompletedGVGList", reflect.TypeOf((*MockMigrateDB)(nil).UpdateSwapOutUnitCompletedGVGList), swapOutKey, completedGVGList)
+}
+
 // MockSPDB is a mock of SPDB interface.
 type MockSPDB struct {
 	ctrl     *gomock.Controller
@@ -1032,17 +1001,17 @@ func (mr *MockSPDBMockRecorder) DeleteMigrateGVGUnit(meta interface{}) *gomock.C
 }
 
 // DeleteObjectIntegrity mocks base method.
-func (m *MockSPDB) DeleteObjectIntegrity(objectID uint64) error {
+func (m *MockSPDB) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteObjectIntegrity", objectID)
+	ret := m.ctrl.Call(m, "DeleteObjectIntegrity", objectID, redundancyIndex)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteObjectIntegrity indicates an expected call of DeleteObjectIntegrity.
-func (mr *MockSPDBMockRecorder) DeleteObjectIntegrity(objectID interface{}) *gomock.Call {
+func (mr *MockSPDBMockRecorder) DeleteObjectIntegrity(objectID, redundancyIndex interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).DeleteObjectIntegrity), objectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).DeleteObjectIntegrity), objectID, redundancyIndex)
 }
 
 // DeleteUploadProgress mocks base method.
@@ -1406,21 +1375,6 @@ func (mr *MockSPDBMockRecorder) InsertUploadProgress(objectID interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUploadProgress", reflect.TypeOf((*MockSPDB)(nil).InsertUploadProgress), objectID)
 }
 
-// ListConflictedMigrateGVGUnitsByFamilyID mocks base method.
-func (m *MockSPDB) ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListConflictedMigrateGVGUnitsByFamilyID", familyID)
-	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListConflictedMigrateGVGUnitsByFamilyID indicates an expected call of ListConflictedMigrateGVGUnitsByFamilyID.
-func (mr *MockSPDBMockRecorder) ListConflictedMigrateGVGUnitsByFamilyID(familyID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListConflictedMigrateGVGUnitsByFamilyID", reflect.TypeOf((*MockSPDB)(nil).ListConflictedMigrateGVGUnitsByFamilyID), familyID)
-}
-
 // ListDestSPSwapOutUnits mocks base method.
 func (m *MockSPDB) ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) {
 	m.ctrl.T.Helper()
@@ -1449,36 +1403,6 @@ func (m *MockSPDB) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVG
 func (mr *MockSPDBMockRecorder) ListMigrateGVGUnitsByBucketID(bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsByBucketID", reflect.TypeOf((*MockSPDB)(nil).ListMigrateGVGUnitsByBucketID), bucketID)
-}
-
-// ListMigrateGVGUnitsByFamilyID mocks base method.
-func (m *MockSPDB) ListMigrateGVGUnitsByFamilyID(familyID, srcSP uint32) ([]*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListMigrateGVGUnitsByFamilyID", familyID, srcSP)
-	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListMigrateGVGUnitsByFamilyID indicates an expected call of ListMigrateGVGUnitsByFamilyID.
-func (mr *MockSPDBMockRecorder) ListMigrateGVGUnitsByFamilyID(familyID, srcSP interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsByFamilyID", reflect.TypeOf((*MockSPDB)(nil).ListMigrateGVGUnitsByFamilyID), familyID, srcSP)
-}
-
-// ListMigrateGVGUnitsBySwapOutKey mocks base method.
-func (m *MockSPDB) ListMigrateGVGUnitsBySwapOutKey(swapOutKey string) ([]*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListMigrateGVGUnitsBySwapOutKey", swapOutKey)
-	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListMigrateGVGUnitsBySwapOutKey indicates an expected call of ListMigrateGVGUnitsBySwapOutKey.
-func (mr *MockSPDBMockRecorder) ListMigrateGVGUnitsBySwapOutKey(swapOutKey interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsBySwapOutKey", reflect.TypeOf((*MockSPDB)(nil).ListMigrateGVGUnitsBySwapOutKey), swapOutKey)
 }
 
 // QueryBucketMigrateSubscribeProgress mocks base method.
@@ -1708,6 +1632,20 @@ func (m *MockSPDB) UpdateSwapOutSubscribeProgress(blockHeight uint64) error {
 func (mr *MockSPDBMockRecorder) UpdateSwapOutSubscribeProgress(blockHeight interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateSwapOutSubscribeProgress), blockHeight)
+}
+
+// UpdateSwapOutUnitCompletedGVGList mocks base method.
+func (m *MockSPDB) UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSwapOutUnitCompletedGVGList", swapOutKey, completedGVGList)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSwapOutUnitCompletedGVGList indicates an expected call of UpdateSwapOutUnitCompletedGVGList.
+func (mr *MockSPDBMockRecorder) UpdateSwapOutUnitCompletedGVGList(swapOutKey, completedGVGList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutUnitCompletedGVGList", reflect.TypeOf((*MockSPDB)(nil).UpdateSwapOutUnitCompletedGVGList), swapOutKey, completedGVGList)
 }
 
 // UpdateUploadProgress mocks base method.

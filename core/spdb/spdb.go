@@ -141,17 +141,11 @@ type MigrateDB interface {
 
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
-	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID
+	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
 	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
 
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
-	// ListMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
-	ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*MigrateGVGUnitMeta, error)
-	// ListConflictedMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
-	ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error)
-	// ListMigrateGVGUnitsBySwapOutKey is used to load at dest sp startup(sp exit).
-	ListMigrateGVGUnitsBySwapOutKey(swapOutKey string) ([]*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 }
