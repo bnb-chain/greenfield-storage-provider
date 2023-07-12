@@ -232,7 +232,7 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 	count := uint64(b.config.Parser.Workers)
 	cycle := uint64(0)
-	startBlock := uint64(0)
+	startBlock := startHeight
 	endBlock := uint64(0)
 	for {
 		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
