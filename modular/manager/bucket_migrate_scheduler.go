@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -100,39 +101,20 @@ func (plan *BucketMigrateExecutePlan) storeToDB() error {
 	return nil
 }
 
-// UpdateProgress persistent user updates and periodic progress reporting by Executor
-func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) error {
+// UpdateMigrateGVGLastMigratedObjectID persistent user updates and periodic progress reporting by Executor
+func (plan *BucketMigrateExecutePlan) UpdateMigrateGVGLastMigratedObjectID(migrateKey string, lastMigratedObjectID uint64) error {
 	var (
 		err error
 	)
-
-	// update migrate gvg progress
-	gvgID := task.GetSrcGvg().GetId()
-	migrateExecuteUnit, ok := plan.gvgUnitMap[gvgID]
-	if ok {
-		migrateExecuteUnit.lastMigratedObjectID = task.GetLastMigratedObjectID()
-	} else {
-		return errors.New("no such migrate gvg task")
-	}
-	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.bucketID, migrateExecuteUnit.gvg.GetId())
-	err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, task.GetLastMigratedObjectID())
+	err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, lastMigratedObjectID)
 	if err != nil {
 		log.Errorw("failed to update migrate gvg progress", "migrate_key", migrateKey, "error", err)
 		return err
 	}
-
-	// update migrate gvg status
-	if task.GetFinished() {
-		err = plan.updateMigrateStatus(migrateKey, migrateExecuteUnit, Migrated)
-		if err != nil {
-			log.Errorw("failed to update migrate gvg status", "migrate_key", migrateKey, "error", err)
-			return err
-		}
-	}
 	return nil
 }
 
-func (plan *BucketMigrateExecutePlan) updateMigrateStatus(migrateKey string, migrateExecuteUnit *GlobalVirtualGroupMigrateExecuteUnitByBucket, migrateStatus MigrateStatus) error {
+func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, migrateExecuteUnit *GlobalVirtualGroupMigrateExecuteUnitByBucket, migrateStatus MigrateStatus) error {
 	var (
 		err   error
 		vgfID uint32
@@ -466,13 +448,14 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 		secondarySPIDs := srcGVG.GetSecondarySpIds()
 		// check conflicts.
 		conflictedIndex, errNotInSecondarySPs := util.GetSecondarySPIndexFromGVG(srcGVG, destSP.GetId())
-		if errNotInSecondarySPs != nil {
+		log.Debugw("produceBucketMigrateExecutePlan prepare to check conflicts", "srcGVG", srcGVG, "destSP", destSP, "conflictedIndex", conflictedIndex, "errNotInSecondarySPs", errNotInSecondarySPs)
+		if errNotInSecondarySPs == nil {
 			// gvg has conflicts.
 			excludedSPIDs := srcGVG.GetSecondarySpIds()
 			excludedSPIDs = append(excludedSPIDs, srcSP.GetId())
 			replacedSP, pickErr := s.manager.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(excludedSPIDs))
 			if pickErr != nil {
-				log.Errorw("failed to pick new sp to replace conflict secondary sp", "srcGVG", srcGVG, "excludedSPIDs", excludedSPIDs, "error", pickErr)
+				log.Errorw("failed to pick new sp to replace conflict secondary sp", "srcGVG", srcGVG, "destSP", destSP, "excludedSPIDs", excludedSPIDs, "error", pickErr)
 				return nil, pickErr
 			}
 			secondarySPIDs[conflictedIndex] = replacedSP.GetId()
@@ -507,10 +490,29 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 
 func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error {
 	executePlan, err := s.getExecutePlanByBucketID(task.GetBucketID())
-	if err != nil {
-		return err
+	gvgID := task.GetSrcGvg().GetId()
+
+	migrateExecuteUnit, ok := executePlan.gvgUnitMap[gvgID]
+	if !ok {
+		return fmt.Errorf("gvg unit is not found")
 	}
-	executePlan.UpdateProgress(task)
+	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.bucketID, migrateExecuteUnit.gvg.GetId())
+
+	if task.GetFinished() {
+		migrateExecuteUnit.migrateStatus = Migrated
+		err = executePlan.updateMigrateGVGStatus(migrateKey, migrateExecuteUnit, Migrated)
+		if err != nil {
+			log.Errorw("failed to update migrate gvg status", "migrate_key", migrateKey, "error", err)
+			return err
+		}
+	} else {
+		migrateExecuteUnit.lastMigratedObjectID = task.GetLastMigratedObjectID()
+		err = executePlan.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
+		if err != nil {
+			log.Errorw("failed to update migrate gvg last migrate object id", "migrate_key", migrateKey, "error", err)
+			return err
+		}
+	}
 	return nil
 }
 
