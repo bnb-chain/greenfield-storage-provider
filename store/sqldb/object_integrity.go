@@ -144,7 +144,7 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 }
 
 // DeleteObjectIntegrity deletes integrity meta info.
-func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64) (err error) {
+func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -159,7 +159,8 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64) (err error) {
 	}()
 
 	err = s.db.Delete(&IntegrityMetaTable{
-		ObjectID: objectID, // should be the primary key
+		ObjectID:        objectID, // should be the primary key
+		RedundancyIndex: redundancyIndex,
 	}).Error
 	return err
 }
@@ -198,10 +199,12 @@ func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, redundancyInde
 	} else {
 		newChecksums := append(integrityMeta.PieceChecksumList, checksum)
 		integrityMeta.PieceChecksumList = newChecksums
-		s.DeleteObjectIntegrity(objectID)
-		err = s.SetObjectIntegrity(integrityMeta)
-		if err != nil {
-			return err
+		result := s.db.Model(&IntegrityMetaTable{}).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
+			Updates(&IntegrityMetaTable{
+				PieceChecksumList: util.BytesSliceToString(newChecksums),
+			})
+		if result.Error != nil {
+			return fmt.Errorf("failed to update integrity meta table: %s", result.Error)
 		}
 	}
 

@@ -121,6 +121,7 @@ func (s *SpDBImpl) QuerySwapOutSubscribeProgress() (uint64, error) {
 	}
 	return queryReturn.LastSubscribedBlockHeight, nil
 }
+
 func (s *SpDBImpl) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error {
 	var (
 		result       *gorm.DB
