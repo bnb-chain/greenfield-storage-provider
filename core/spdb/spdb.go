@@ -51,7 +51,7 @@ type SignatureDB interface {
 	// SetObjectIntegrity sets(maybe overwrite) integrity hash info to db.
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	// DeleteObjectIntegrity deletes the integrity hash.
-	DeleteObjectIntegrity(objectID uint64) error
+	DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error
 	// AppendObjectChecksumIntegrity gets integrity meta info by object id.
 	AppendObjectChecksumIntegrity(objectID uint64, redundancyIndex int32, checksum []byte) error
 	/*

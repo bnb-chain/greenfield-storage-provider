@@ -200,7 +200,7 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 			"piece_idx", pieceIdx, "error", err)
 		return
 	}
-	log.CtxDebugw(ctx, "success to replicate piece", "replicate_idx", replicateIdx,
+	log.CtxDebugw(ctx, "succeed to replicate piece", "replicate_idx", replicateIdx,
 		"piece_idx", pieceIdx)
 	return
 }
