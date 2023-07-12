@@ -402,6 +402,19 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
+	queryParams := r.URL.Query()
+	gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
+	gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
+	gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+
+	// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
+	if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" {
+		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
+		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
+		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
+	}
+
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
@@ -701,11 +714,13 @@ func (g *GateModular) getRecoveryPieceHandler(w http.ResponseWriter, r *http.Req
 // queryUploadProgressHandler handles the query uploaded object progress request.
 func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		authenticated bool
-		objectInfo    *storagetypes.ObjectInfo
-		taskState     int32
+		err                  error
+		reqCtx               *RequestContext
+		authenticated        bool
+		objectInfo           *storagetypes.ObjectInfo
+		errDescription       string
+		taskStateDescription string
+		taskState            int32
 	)
 	startTime := time.Now()
 	defer func() {
@@ -748,21 +763,32 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		err = ErrConsensus
 		return
 	}
-
-	taskState, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
-		return
+	if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_CREATED {
+		taskState, errDescription, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+			taskState = int32(servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED)
+			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
+		} else {
+			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
+		}
+	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+		taskState = int32(servicetypes.TaskState_TASK_STATE_SEAL_OBJECT_DONE)
+		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
+	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_DISCONTINUED {
+		taskState = int32(servicetypes.TaskState_TASK_STATE_OBJECT_DISCONTINUED)
+		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 	}
-	taskStateDescription := servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 
 	var xmlInfo = struct {
 		XMLName             xml.Name `xml:"QueryUploadProgress"`
 		Version             string   `xml:"version,attr"`
 		ProgressDescription string   `xml:"ProgressDescription"`
+		ErrorDescription    string   `xml:"ErrorDescription"`
 	}{
 		Version:             GnfdResponseXMLVersion,
 		ProgressDescription: taskStateDescription,
+		ErrorDescription:    errDescription,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	DefaultBlockInterval = 2
+	DefaultBlockInterval = 3
 
 	DefaultApprovalExpiredTimeout = int64(DefaultBlockInterval * 20)
 )
@@ -84,6 +84,7 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 			current, err := a.baseApp.Consensus().CurrentHeight(context.Background())
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to get current block number", "error", err)
+				current = atomic.LoadUint64(&a.currentBlockHeight) + 1
 			}
 			a.SetCurrentBlockHeight(current)
 		}
@@ -108,8 +109,5 @@ func (a *ApprovalModular) GetCurrentBlockHeight() uint64 {
 }
 
 func (a *ApprovalModular) SetCurrentBlockHeight(height uint64) {
-	if height <= a.GetCurrentBlockHeight() {
-		return
-	}
 	atomic.StoreUint64(&a.currentBlockHeight, height)
 }
