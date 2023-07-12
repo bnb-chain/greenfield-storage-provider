@@ -89,8 +89,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 	// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another SP
 	if bucketID != 0 {
 		if err = e.checkGvgConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
-			log.Errorw("failed to check gvg conflict", "error", err)
-			return err
+			log.Debugw("no gvg conflict", "error", err)
 		}
 	}
 	if bucketID != bucketInfo.Id.Uint64() {
