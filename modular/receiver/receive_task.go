@@ -148,6 +148,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
 		return nil, err
 	}
+	log.Infow("print receiver redundancy index", "RedundancyIndex", task.GetPieceIdx())
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
 		RedundancyIndex:   task.GetPieceIdx(),

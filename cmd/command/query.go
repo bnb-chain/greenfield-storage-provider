@@ -304,6 +304,8 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	// TODO: get object integrity method now should transfer objectID and redundancyIndex
+	// TODO: -1 represents this is a primarySP; secondarySP should firstly query its order in secondary sp list
 	integrity, err := db.GetObjectIntegrity(objectID, -1)
 	if err != nil {
 		return err
