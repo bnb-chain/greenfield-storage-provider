@@ -399,9 +399,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
 	}
 
-	//todo: to be removed after testing in qa
-	log.Debugw("Check passed in params", "gnfdUserParam", gnfdUserParam, "gnfdOffChainAuthAppDomainParam", gnfdOffChainAuthAppDomainParam, "gnfdAuthorizationParam", gnfdAuthorizationParam)
-
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
