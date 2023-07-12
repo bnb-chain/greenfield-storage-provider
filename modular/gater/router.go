@@ -110,7 +110,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(queryUploadProgressRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryUploadProgressHandler).Queries(
 			UploadProgressQuery, "")
 
-		r.NewRoute().Name(getPieceFromSecondaryRouterName).Methods(http.MethodGet).Path("/{object:.+}").Queries(GetSecondaryPieceData, "").HandlerFunc(g.getRecoveryPieceHandler)
 		// Get Bucket Meta
 		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
 
