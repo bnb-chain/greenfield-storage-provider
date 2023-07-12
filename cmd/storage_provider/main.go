@@ -115,6 +115,7 @@ func init() {
 		command.DebugPutObjectCmd,
 		// recovery commands
 		command.RecoverObjectCmd,
+		command.RecoverPieceCmd,
 	}
 	registerModular()
 }
