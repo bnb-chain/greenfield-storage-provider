@@ -234,6 +234,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 	cycle := uint64(0)
 	startBlock := startHeight
 	endBlock := uint64(0)
+
 	for {
 		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 		latestBlockHeight := latestBlockHeightAny.(int64)
