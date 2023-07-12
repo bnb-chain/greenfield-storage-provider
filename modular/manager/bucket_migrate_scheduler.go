@@ -103,10 +103,7 @@ func (plan *BucketMigrateExecutePlan) storeToDB() error {
 
 // UpdateMigrateGVGLastMigratedObjectID persistent user updates and periodic progress reporting by Executor
 func (plan *BucketMigrateExecutePlan) UpdateMigrateGVGLastMigratedObjectID(migrateKey string, lastMigratedObjectID uint64) error {
-	var (
-		err error
-	)
-	err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, lastMigratedObjectID)
+	err := plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, lastMigratedObjectID)
 	if err != nil {
 		log.Errorw("failed to update migrate gvg progress", "migrate_key", migrateKey, "error", err)
 		return err
@@ -489,6 +486,9 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 
 func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error {
 	executePlan, err := s.getExecutePlanByBucketID(task.GetBucketID())
+	if err != nil {
+		return fmt.Errorf("bucket execute plan is not found")
+	}
 	gvgID := task.GetSrcGvg().GetId()
 
 	migrateExecuteUnit, ok := executePlan.gvgUnitMap[gvgID]
