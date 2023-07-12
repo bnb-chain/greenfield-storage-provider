@@ -185,7 +185,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				log.Errorw("failed to update sp exit progress", "error", updateErr)
 			}
 			s.lastSubscribedSPExitBlockHeight++
-			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
+			// log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
 		}
 		// subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
 		subscribeSPExitEventsTicker := time.NewTicker(100 * time.Millisecond)
