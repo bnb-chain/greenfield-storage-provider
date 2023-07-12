@@ -18,7 +18,58 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
+const (
+	SwapOutFamilyKeyPrefix  = "familyID-"
+	SwapOutGVGListKeyPrefix = "gvgIDList-"
+)
+
+func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
+	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
+		return SwapOutFamilyKeyPrefix + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
+	} else {
+		return SwapOutGVGListKeyPrefix + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
+	}
+}
+
+func GetEventSwapOutKey(swapOut *virtualgrouptypes.EventCompleteSwapOut) string {
+	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
+		return SwapOutFamilyKeyPrefix + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
+	} else {
+		return SwapOutGVGListKeyPrefix + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
+	}
+}
+
 var _ vgmgr.SPPickFilter = &PickDestSPFilter{}
+
+// PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
+// which is used by src sp to pick dest sp.
+type PickDestSPFilter struct {
+	excludedSPIDs []uint32
+}
+
+// NewPickDestSPFilterWithMap returns a PickDestSPFilter instance.
+func NewPickDestSPFilterWithMap(m map[uint32]int) *PickDestSPFilter {
+	spIDs := make([]uint32, 0)
+	for spID := range m {
+		spIDs = append(spIDs, spID)
+	}
+	return &PickDestSPFilter{excludedSPIDs: spIDs}
+}
+
+// NewPickDestSPFilterWithSlice returns a PickDestSPFilter instance.
+func NewPickDestSPFilterWithSlice(s []uint32) *PickDestSPFilter {
+	return &PickDestSPFilter{excludedSPIDs: s}
+}
+
+// Check returns true when candidate sp meets the check condition.
+func (f *PickDestSPFilter) Check(spID uint32) bool {
+	for _, v := range f.excludedSPIDs {
+		if v == spID {
+			return false
+		}
+	}
+	return true
+}
 
 // SPExitScheduler is used to manage and schedule sp exit process.
 type SPExitScheduler struct {
@@ -146,7 +197,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 		var gvg *virtualgrouptypes.GlobalVirtualGroup
 		for _, gvgID := range swapOut.GetGlobalVirtualGroupIds() {
 			if gvg, err = s.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID); err != nil {
-				log.Errorw("failed to add swap out to task runner due to query gvg", "error", err)
+				log.Errorw("failed to add swap out to task runner due to query gvg", "gvg_id", gvgID, "error", err)
 				return err
 			}
 			gvgList = append(gvgList, gvg)
@@ -157,7 +208,8 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 		redundancyIndex := int32(-1)
 		if gvg.GetFamilyId() == 0 {
 			if redundancyIndex, err = util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId()); err != nil {
-				log.Errorw("failed to add swap out to task runner due to get redundancy index", "error", err)
+				log.Errorw("failed to add swap out to task runner due to get redundancy index",
+					"gvg_info", gvg, "sp_id", srcSP.GetId(), "error", err)
 				return err
 			}
 		}
@@ -170,7 +222,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			migrateStatus:   WaitForMigrate,
 		}
 		if err = s.taskRunner.AddNewMigrateGVGUnit(gUnit); err != nil {
-			log.Errorw("failed to add swap out to task runner", "error", err)
+			log.Errorw("failed to add swap out to task runner", "gvg_unit", gUnit, "error", err)
 			return err
 		}
 	}
@@ -200,7 +252,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 			if spExitEvents.CompleteEvent != nil {
 				s.isExited = true
 			}
-			if spExitEvents.Event != nil {
+			if spExitEvents.Event != nil { // focus on the start event.
 				if s.isExiting || s.isExited {
 					UpdateSPExitSubscribeProgressFunc()
 					continue
@@ -237,12 +289,11 @@ func (s *SPExitScheduler) subscribeEvents() {
 			}
 			log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents, "block_id", s.lastSubscribedSwapOutBlockHeight+1, "sp_id", s.selfSP.GetId())
 			for _, swapOutEvent := range swapOutEvents {
-				if swapOutEvent.GetCompleteEvents() != nil {
+				if swapOutEvent.GetCompleteEvents() != nil { // focus on the complete event.
 					if err := s.updateSPExitExecutePlan(swapOutEvent.GetCompleteEvents()); err != nil {
 						continue
 					}
 				}
-				// TODO: support cancel event.
 			}
 			updateErr := s.manager.baseApp.GfSpDB().UpdateSwapOutSubscribeProgress(s.lastSubscribedSwapOutBlockHeight + 1)
 			if updateErr != nil {
@@ -273,7 +324,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 	}
 	plan = NewSrcSPSwapOutPlan(s.manager, s, s.manager.virtualGroupManager)
 	for _, f := range vgfList {
-		log.Infow("list vgf", "family", f)
+		log.Infow("list sp vgf", "family_info", f)
 		conflictChecker := NewFamilyConflictChecker(f, plan, s.selfSP)
 		swapOutUnits, getFamilySwapOutErr := conflictChecker.GenerateSwapOutUnits(buildMetaByDB)
 		if getFamilySwapOutErr != nil {
@@ -289,7 +340,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 		return plan, err
 	}
 	for _, g := range secondaryGVGList {
-		log.Infow("list secondary gvg", "gvg", g)
+		log.Infow("list sp secondary gvg", "gvg_info", g)
 		var destSecondarySP *sptypes.StorageProvider
 		excludedSPList := make([]uint32, 0)
 		excludedSPList = append(excludedSPList, g.GetPrimarySpId())
@@ -346,33 +397,6 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 	return plan, err
 }
 
-// PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
-// which is used by src sp to pick dest sp.
-type PickDestSPFilter struct {
-	excludedSPIDs []uint32
-}
-
-func NewPickDestSPFilterWithMap(m map[uint32]int) *PickDestSPFilter {
-	spIDs := make([]uint32, 0)
-	for spID := range m {
-		spIDs = append(spIDs, spID)
-	}
-	return &PickDestSPFilter{excludedSPIDs: spIDs}
-}
-
-func NewPickDestSPFilterWithSlice(s []uint32) *PickDestSPFilter {
-	return &PickDestSPFilter{excludedSPIDs: s}
-}
-
-func (f *PickDestSPFilter) Check(spID uint32) bool {
-	for _, v := range f.excludedSPIDs {
-		if v == spID {
-			return false
-		}
-	}
-	return true
-}
-
 // SwapOutUnit is used by swap out plan and task runner.
 type SwapOutUnit struct {
 	isFamily           bool                          // is used by src sp.
@@ -398,7 +422,7 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMig
 	}
 
 	if err := runner.manager.baseApp.GfSpDB().UpdateSwapOutUnitCompletedGVGList(gUnit.swapOutKey, hasCompletedGVGList); err != nil {
-		log.Errorw("failed to update swap out completed gvg list", "error", err)
+		log.Errorw("failed to update swap out completed gvg list", "swap_out_key", gUnit.swapOutKey, "error", err)
 		return err
 	}
 
@@ -406,10 +430,12 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMig
 	if s.isFamily {
 		srcSP, err := runner.manager.baseApp.Consensus().QuerySP(context.Background(), s.swapOut.GetStorageProvider())
 		if err != nil {
+			log.Errorw("failed to query sp", "swap_out_src_sp", s.swapOut.GetStorageProvider(), "error", err)
 			return err
 		}
 		familyGVGs, err := runner.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), srcSP.GetId(), s.swapOut.GetGlobalVirtualGroupFamilyId())
 		if err != nil {
+			log.Errorw("failed to query family gvg", "family_id", s.swapOut.GetGlobalVirtualGroupFamilyId(), "error", err)
 			return err
 		}
 		for _, g := range familyGVGs {
@@ -421,6 +447,7 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMig
 
 	for _, gvgID := range needCompleted {
 		if _, found := s.completedGVG[gvgID]; !found { // not completed
+			log.Infow("swap out gvgs are not all completed", "swap_out_key", gUnit.swapOutKey, "not_completed_gvg", gvgID)
 			return nil
 		}
 	}
@@ -434,22 +461,6 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *GlobalVirtualGroupMig
 	txHash, err := runner.manager.baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg)
 	log.Infow("send complete swap out tx", "swap_out", msg, "tx_hash", txHash, "error", err)
 	return err
-}
-
-func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
-	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
-		return "familyID-" + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
-	} else {
-		return "gvgIDList-" + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
-	}
-}
-
-func GetEventSwapOutKey(swapOut *virtualgrouptypes.EventCompleteSwapOut) string {
-	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
-		return "familyID-" + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
-	} else {
-		return "gvgIDList-" + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
-	}
 }
 
 // SrcSPSwapOutPlan is used to record the execution of swap out.
@@ -484,6 +495,7 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 	)
 	if familyGVGs, err = plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(),
 		plan.scheduler.selfSP.GetId(), s.conflictedFamilyID); err != nil {
+		log.Errorw("failed to query family gvg", "family_id", s.conflictedFamilyID, "error", err)
 		return err
 	}
 	for _, gvg := range familyGVGs {
@@ -531,10 +543,13 @@ func (plan *SrcSPSwapOutPlan) checkAllCompletedAndSendCompleteSPExitTx() error {
 	// check completed
 	for key, runningSwapOut := range plan.swapOutUnitMap {
 		if _, found := plan.completedSwapOut[key]; !found { // not completed
+			log.Infow("swap out list are not all completed", "not_completed_swap_out", key)
 			return nil
 		}
 		if runningSwapOut.isConflicted {
-			if _, found := plan.completedSwapOut[util.Uint32ToString(runningSwapOut.conflictedFamilyID)]; !found { // not completed
+			swapKey := SwapOutFamilyKeyPrefix + util.Uint32ToString(runningSwapOut.conflictedFamilyID)
+			if _, found := plan.completedSwapOut[swapKey]; !found { // not completed
+				log.Infow("swap out list are not all completed", "not_completed_swap_out", swapKey)
 				return nil
 			}
 		}
