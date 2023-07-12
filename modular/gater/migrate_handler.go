@@ -63,7 +63,7 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 	}
 }
 
-// migratePieceHandler handles the migrate piece request between SPs which is used in SP exiting case.
+// migratePieceHandler handles migrate piece request between SPs which is used in SP exiting case.
 // First, gateway should verify Authorization header to ensure the requests are from correct SPs.
 // Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
 // Third, transfer data to client which is a selected SP.

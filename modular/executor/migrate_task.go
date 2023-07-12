@@ -23,12 +23,12 @@ const (
 	queryLimit             = 100
 )
 
-// HandleMigrateGVGTask handles the migrate gvg task.
-// There are two cases: sp exit and bucket migration
-// srcSP is a sp who wants to exit or need to migrate bucket, destSP is used to accept data from srcSP
+// HandleMigrateGVGTask handles migrate gvg task.
+// There are two cases: sp exit and bucket migration.
+// srcSP is a sp who wants to exit or need to migrate bucket, destSP is used to accept data from srcSP.
 func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) {
 	var (
-		oldGvgID             = task.GetSrcGvg().GetId()
+		srcGvgID             = task.GetSrcGvg().GetId()
 		bucketID             = task.GetBucketID()
 		lastMigratedObjectID = task.GetLastMigratedObjectID()
 		objectList           []*metadatatypes.Object
@@ -36,24 +36,15 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 	)
 
 	for {
-		if bucketID == 0 {
-			// if bucketID is 0, it indicates that it is a sp exiting task
-			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVG(ctx, oldGvgID, lastMigratedObjectID+1, queryLimit)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to list objects in gvg", "old_gvg_id", oldGvgID,
-					"current_migrated_object_id", lastMigratedObjectID+1, "error", err)
-			}
-			log.Infow("sp exiting", "objectList", objectList)
-		} else {
-			// if bucketID is not equal to 0, it indicates that it is a bucket migration task
-			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, oldGvgID, bucketID, lastMigratedObjectID, queryLimit)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to list objects in gvg and bucket", "old_gvg_id", oldGvgID,
-					"bucket_id", bucketID, "current_migrated_object_id", lastMigratedObjectID, "error", err)
-			}
-			log.CtxDebugw(ctx, "succeed to list objects in gvg and bucket", "old_gvg_id", oldGvgID,
-				"bucket_id", bucketID, "current_migrated_object_id", lastMigratedObjectID, "error", err)
-			log.Infow("migrate bucket", "objectList", objectList)
+		if bucketID == 0 { // sp exit task
+			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVG(ctx, srcGvgID, lastMigratedObjectID, queryLimit)
+		} else { // bucket migrate task
+			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, srcGvgID, bucketID, lastMigratedObjectID, queryLimit)
+		}
+		log.Infow("migrate gvg task", "objectList", objectList, "bucket_id", bucketID, "src_gvg_id", srcGvgID,
+			"last_migrated_object_id", lastMigratedObjectID, "error", err)
+		if err != nil {
+			return
 		}
 		for index, object := range objectList {
 			if object.GetRemoved() || object.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
@@ -66,15 +57,14 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 				log.CtxErrorw(ctx, "failed to do migration gvg task", "error", err)
 				return
 			}
-			if index%10 == 0 {
-				// report task per 10 objects
+			if index%10 == 0 { // report task per 10 objects
 				if err = e.ReportTask(ctx, task); err != nil {
 					log.CtxErrorw(ctx, "failed to report task", "index", index, "error", err)
 				}
 			}
 		}
 		if len(objectList) < queryLimit {
-			// When the total count of objectList is less than 100, it indicates that this gvg has finished
+			// When the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
 			task.SetFinished(true)
 			return
 		}

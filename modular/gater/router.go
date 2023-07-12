@@ -104,11 +104,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// dest sp receive swap out notify from src sp.
 	router.Path(NotifyMigrateSwapOutTaskPath).Name(notifyMigrateSwapOutRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateSwapOutHandler)
-	// migrate pieces between SPs which is used for SP exiting case
+	// dest sp pull piece data from src sp, for sp exit and bucket migrate.
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
-	// migration bucket approval for secondary sp bls signature
+	// migration bucket approval for secondary sp bls signature.
 	router.Path(SecondarySPMigrationBucketApprovalPath).Name(migrationBucketApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSecondaryBlsMigrationBucketApprovalHandler)
-	// swap out approval for sp exiting
+	// swap out approval for sp exiting.
 	router.Path(SwapOutApprovalPath).Name(swapOutApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSwapOutApproval)
 
 	// universal endpoint download
