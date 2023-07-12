@@ -41,8 +41,8 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		} else { // bucket migrate task
 			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, srcGvgID, bucketID, lastMigratedObjectID, queryLimit)
 		}
-		log.Infow("migrate gvg task", "objectList", objectList, "bucket_id", bucketID, "src_gvg_id", srcGvgID,
-			"last_migrated_object_id", lastMigratedObjectID, "error", err)
+		log.Infow("migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
+			"last_migrated_object_id", lastMigratedObjectID, "object_list", objectList, "error", err)
 		if err != nil {
 			return
 		}
