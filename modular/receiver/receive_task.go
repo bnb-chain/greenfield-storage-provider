@@ -150,6 +150,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
+		RedundancyIndex:   task.GetPieceIdx(),
 		IntegrityChecksum: hash.GenerateIntegrityHash(pieceChecksums),
 		PieceChecksumList: pieceChecksums,
 	}
@@ -172,6 +173,10 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	// the manager dispatch the task to confirm whether seal on chain as secondary sp.
 	task.SetError(nil)
 
+	// bucket migration doesn't need to report task, because it's not scheduled by manager
+	if task.GetBucketMigration() {
+		return signature, nil
+	}
 	reportTime := time.Now()
 	if err = r.baseApp.GfSpClient().ReportTask(ctx, task); err != nil {
 		log.CtxErrorw(ctx, "failed to report receive task for confirming seal", "error", err)

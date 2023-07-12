@@ -69,7 +69,6 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 	}
 	spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(),
 		s.lastSubscribedSPExitBlockHeight, s.manager.baseApp.OperatorAddress())
-	log.Infow("print blockID", "lastSubscribedSPExitBlockHeight", s.lastSubscribedSwapOutBlockHeight)
 	if subscribeError != nil {
 		log.Errorw("failed to init due to subscribe sp exit", "error", subscribeError)
 		return subscribeError
@@ -113,7 +112,7 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err        error
 		migrateKey string
 	)
-	migrateKey = MakeGVGMigrateKey(task.GetGvg().GetId(), task.GetGvg().GetFamilyId(), task.GetRedundancyIdx())
+	migrateKey = MakeGVGMigrateKey(task.GetSrcGvg().GetId(), task.GetSrcGvg().GetFamilyId(), task.GetRedundancyIdx())
 	if task.GetFinished() {
 		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
 	} else {

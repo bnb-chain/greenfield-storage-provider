@@ -39,6 +39,7 @@ type GCObjectMeta struct {
 // IntegrityMeta defines the payload integrity hash and piece checksum with objectID.
 type IntegrityMeta struct {
 	ObjectID          uint64
+	RedundancyIndex   int32
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
 }

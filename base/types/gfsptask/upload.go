@@ -807,3 +807,15 @@ func (m *GfSpReceivePieceTask) SetSealed(seal bool) {
 func (m *GfSpReceivePieceTask) SetSignature(signature []byte) {
 	m.Signature = signature
 }
+
+func (m *GfSpReceivePieceTask) GetGlobalVirtualGroupID() uint32 {
+	return m.GetGlobalVirtualGroupId()
+}
+
+func (m *GfSpReceivePieceTask) SetGlobalVirtualGroupID(gvgID uint32) {
+	m.GlobalVirtualGroupId = gvgID
+}
+
+func (m *GfSpReceivePieceTask) SetBucketMigration(migration bool) {
+	m.BucketMigration = migration
+}

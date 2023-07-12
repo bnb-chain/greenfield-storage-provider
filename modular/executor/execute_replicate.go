@@ -119,14 +119,14 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	}
 
 	startReplicatePieceTime := time.Now()
-	for pIdx := uint32(0); pIdx < segmentPieceCount; pIdx++ {
-		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), pIdx)
+	for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
+		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
 		startGetPieceTime := time.Now()
 		segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to get segment data form piece store", "error", err)
+			log.CtxErrorw(ctx, "failed to get segment data from piece store", "error", err)
 			rTask.SetError(err)
 			return err
 		}
@@ -142,9 +142,9 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 				rTask.SetError(err)
 				return err
 			}
-			doReplicateECPiece(pIdx, ecData)
+			doReplicateECPiece(segIdx, ecData)
 		} else {
-			doReplicateSegmentPiece(pIdx, segData)
+			doReplicateSegmentPiece(segIdx, segData)
 		}
 	}
 	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())

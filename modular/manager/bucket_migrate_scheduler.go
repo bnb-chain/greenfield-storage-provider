@@ -107,7 +107,7 @@ func (plan *BucketMigrateExecutePlan) UpdateProgress(task task.MigrateGVGTask) e
 	)
 
 	// update migrate gvg progress
-	gvgID := task.GetGvg().GetId()
+	gvgID := task.GetSrcGvg().GetId()
 	migrateExecuteUnit, ok := plan.gvgUnitMap[gvgID]
 	if ok {
 		migrateExecuteUnit.lastMigratedObjectID = task.GetLastMigratedObjectID()

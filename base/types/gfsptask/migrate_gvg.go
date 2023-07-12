@@ -3,22 +3,23 @@ package gfsptask
 import (
 	"fmt"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
 
 var _ coretask.MigrateGVGTask = &GfSpMigrateGVGTask{}
 
-func (m *GfSpMigrateGVGTask) InitMigrateGVGTask(priority coretask.TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
-	redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider, timeout int64, retry int64) {
+func (m *GfSpMigrateGVGTask) InitMigrateGVGTask(priority coretask.TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup,
+	redundancyIndex int32, srcSP, destSP *sptypes.StorageProvider, timeout, retry int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetPriority(priority)
 	m.BucketId = bucketID
-	m.Gvg = gvg
+	m.SrcGvg = srcGvg
 	m.RedundancyIdx = redundancyIndex
 	m.SrcSp = srcSP
 	m.DestSp = destSP
@@ -28,7 +29,7 @@ func (m *GfSpMigrateGVGTask) InitMigrateGVGTask(priority coretask.TPriority, buc
 }
 
 func (m *GfSpMigrateGVGTask) Key() coretask.TKey {
-	return GfSpMigrateGVGTaskKey(m.GetGvg().GetId(), m.GetBucketId(), m.GetRedundancyIdx())
+	return GfSpMigrateGVGTaskKey(m.GetSrcGvg().GetId(), m.GetBucketId(), m.GetRedundancyIdx())
 }
 
 func (m *GfSpMigrateGVGTask) Type() coretask.TType {
@@ -37,9 +38,9 @@ func (m *GfSpMigrateGVGTask) Type() coretask.TType {
 
 func (m *GfSpMigrateGVGTask) Info() string {
 	return fmt.Sprintf(
-		"key[%s], type[%s], priority[%d], limit[%s], gvg_id[%d], bucket_id[%d], redundancy_index[%d], last_migrated_object_id[%d], %s",
+		"key[%s], type[%s], priority[%d], limit[%s], src_gvg_id[%d], bucket_id[%d], redundancy_index[%d], last_migrated_object_id[%d], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetGvg().GetId(), m.GetBucketId(), m.GetRedundancyIdx(),
+		m.GetSrcGvg().GetId(), m.GetBucketId(), m.GetRedundancyIdx(),
 		m.GetLastMigratedObjectId(), m.GetTask().Info())
 }
 
@@ -139,8 +140,12 @@ func (m *GfSpMigrateGVGTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpMigrateGVGTask) SetGvg(gvg *virtualgrouptypes.GlobalVirtualGroup) {
-	m.Gvg = gvg
+func (m *GfSpMigrateGVGTask) SetSrcGvg(gvg *virtualgrouptypes.GlobalVirtualGroup) {
+	m.SrcGvg = gvg
+}
+
+func (m *GfSpMigrateGVGTask) SetDestGvg(gvg *virtualgrouptypes.GlobalVirtualGroup) {
+	m.DestGvg = gvg
 }
 
 func (m *GfSpMigrateGVGTask) SetSrcSp(srcSP *sptypes.StorageProvider) {
