@@ -2,21 +2,15 @@ package metadata
 
 import (
 	"context"
-	"net/http"
 
 	"cosmossdk.io/math"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/forbole/juno/v4/common"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-)
-
-var (
-	ErrNoEvents = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90004, "not found events")
 )
 
 // GfSpListVirtualGroupFamiliesBySpID list virtual group families by sp id
@@ -27,6 +21,7 @@ func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpListVirtualGroupFamiliesBySpID", "sp-id", req.SpId)
 	families, err = r.baseApp.GfBsDB().ListVirtualGroupFamiliesBySpID(req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list virtual group families by sp id", "error", err)
@@ -43,7 +38,7 @@ func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context
 	}
 
 	resp = &types.GfSpListVirtualGroupFamiliesBySpIDResponse{GlobalVirtualGroupFamilies: res}
-	log.CtxInfow(ctx, "succeed to list virtual group families by sp id")
+	log.CtxInfow(ctx, "succeed to list virtual group families by sp id", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -55,6 +50,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpGetGlobalVirtualGroupByGvgID", "gvg-id", req.GvgId)
 	gvg, err = r.baseApp.GfBsDB().GetGlobalVirtualGroupByGvgID(req.GvgId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get global virtual group by gvg id", "error", err)
@@ -78,7 +74,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 	}
 
 	resp = &types.GfSpGetGlobalVirtualGroupByGvgIDResponse{GlobalVirtualGroup: res}
-	log.CtxInfow(ctx, "succeed to get global virtual group by gvg id")
+	log.CtxInfow(ctx, "succeed to get global virtual group by gvg id", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -90,6 +86,7 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *ty
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpGetVirtualGroupFamily", "vgf-id", req.VgfId)
 	family, err = r.baseApp.GfBsDB().GetVirtualGroupFamiliesByVgfID(req.VgfId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get virtual group families by vgf id", "error", err)
@@ -105,7 +102,7 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *ty
 	}
 
 	resp = &types.GfSpGetVirtualGroupFamilyResponse{Vgf: res}
-	log.CtxInfow(ctx, "succeed to get virtual group families by vgf id")
+	log.CtxInfow(ctx, "succeed to get virtual group families by vgf id", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -117,6 +114,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpGetGlobalVirtualGroup", "lvg-id", req.LvgId, "bucket-id", req.BucketId)
 	gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.LvgId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get global virtual group by lvg id and bucket id", "error", err)
@@ -136,7 +134,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroup(ctx context.Context, req *ty
 	}
 
 	resp = &types.GfSpGetGlobalVirtualGroupResponse{Gvg: res}
-	log.CtxInfow(ctx, "succeed to get global virtual group by lvg id and bucket id")
+	log.CtxInfow(ctx, "succeed to get global virtual group by lvg id and bucket id", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -156,6 +154,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpListMigrateBucketEvents", "sp-id", req.SpId, "block-id", req.BlockId)
 	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
@@ -214,7 +213,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	}
 
 	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
-	log.CtxInfow(ctx, "succeed to list migrate bucket events")
+	log.CtxInfow(ctx, "succeed to list migrate bucket events", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -235,6 +234,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpListSwapOutEvents", "sp-id", req.SpId, "block-id", req.BlockId)
 	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListSwapOutEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
@@ -308,6 +308,7 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.C
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpListGlobalVirtualGroupsBySecondarySP", "sp-id", req.SpId)
 	groups, err = r.baseApp.GfBsDB().ListGvgBySecondarySpID(req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get global virtual group by lvg id and bucket id", "error", err)
@@ -328,7 +329,7 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.C
 	}
 
 	resp = &types.GfSpListGlobalVirtualGroupsBySecondarySPResponse{Groups: res}
-	log.CtxInfow(ctx, "succeed to get global virtual group by secondary sp id")
+	log.CtxInfow(ctx, "succeed to get global virtual group by secondary sp id", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -340,6 +341,7 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Contex
 	)
 
 	ctx = log.Context(ctx, req)
+	log.Debugw("GfSpListGlobalVirtualGroupsByBucket", "bucket-id", req.BucketId)
 	groups, err = r.baseApp.GfBsDB().ListGvgByBucketID(common.BigToHash(math.NewUint(req.BucketId).BigInt()))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "error", err)
@@ -360,7 +362,7 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsByBucket(ctx context.Contex
 	}
 
 	resp = &types.GfSpListGlobalVirtualGroupsByBucketResponse{Groups: res}
-	log.CtxInfow(ctx, "succeed to list global virtual group by bucket id")
+	log.CtxInfow(ctx, "succeed to list global virtual group by bucket id", "request", req, "response", resp)
 	return resp, nil
 }
 
