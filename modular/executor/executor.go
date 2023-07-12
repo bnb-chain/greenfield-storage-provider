@@ -147,8 +147,10 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	metrics.RunningTaskNumberGauge.WithLabelValues("running_task_num").Set(float64(atomic.LoadInt64(&e.executingNum)))
 	metrics.MaxTaskNumberGauge.WithLabelValues("max_task_num").Set(float64(atomic.LoadInt64(&e.maxExecuteNum)))
 
-	defer e.ReleaseResource(ctx, span)
-	defer e.ReportTask(ctx, askTask)
+	defer func() {
+		e.ReleaseResource(ctx, span)
+		go e.ReportTask(context.Background(), askTask)
+	}()
 
 	runTime := time.Now()
 	defer func() {
