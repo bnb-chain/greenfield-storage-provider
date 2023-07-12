@@ -275,6 +275,7 @@ func (i *Impl) concurrenceHandleEvent(ctx context.Context, block *coretypes.Resu
 			}
 		}(events)
 	}
+	wg.Wait()
 	return handleErr
 }
 
