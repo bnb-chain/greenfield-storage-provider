@@ -97,7 +97,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		bucketID = bucketInfo.Id.Uint64()
 	}
 
-	redundancyIdx, isPrimary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, e.baseApp.GfSpClient(),
+	redundancyIdx, isSecondary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, e.baseApp.GfSpClient(),
 		task.GetSrcSp().GetId(), bucketID, object.GetObjectInfo().GetLocalVirtualGroupId())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to validate and get sp index within gvg secondary sps", "error", err)
@@ -108,7 +108,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		StorageParams: params,
 		SrcSpEndpoint: task.GetSrcSp().GetEndpoint(),
 	}
-	if redundancyIdx == primarySPRedundancyIdx && !isPrimary {
+	if redundancyIdx == primarySPRedundancyIdx && !isSecondary {
 		migratePieceTask.RedundancyIdx = primarySPRedundancyIdx
 	} else {
 		migratePieceTask.RedundancyIdx = int32(redundancyIdx)

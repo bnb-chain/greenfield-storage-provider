@@ -196,7 +196,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
 				continue
 			}
-			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents, "block_id", s.lastSubscribedSPExitBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
+			// log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents, "block_id", s.lastSubscribedSPExitBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
 			if spExitEvents.CompleteEvent != nil {
 				s.isExited = true
 			}
@@ -235,7 +235,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				log.Errorw("failed to subscribe swap out event", "error", subscribeError)
 				continue
 			}
-			log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents, "block_id", s.lastSubscribedSwapOutBlockHeight+1, "sp_id", s.selfSP.GetId())
+			// log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents, "block_id", s.lastSubscribedSwapOutBlockHeight+1, "sp_id", s.selfSP.GetId())
 			for _, swapOutEvent := range swapOutEvents {
 				if swapOutEvent.GetCompleteEvents() != nil {
 					if err := s.updateSPExitExecutePlan(swapOutEvent.GetCompleteEvents()); err != nil {
@@ -250,7 +250,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 				continue
 			}
 			s.lastSubscribedSwapOutBlockHeight++
-			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
+			// log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
 		}
 	}()
 }
@@ -337,7 +337,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 		log.Infow("sp is empty, send complete sp exit tx directly", "tx_hash", txHash, "error", sendTxError)
 	}
 
-	log.Infow("succeed to produce swap out plan")
+	// log.Infow("succeed to produce swap out plan")
 	err = plan.storeToDB()
 	return plan, err
 }

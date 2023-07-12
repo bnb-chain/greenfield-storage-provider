@@ -6,6 +6,7 @@ import (
 	"math"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
@@ -40,6 +41,7 @@ func TotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, staki
 func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfspclient.GfSpClient, selfSpID uint32,
 	bucketID uint64, lvgID uint32) (int, bool, error) {
 	gvg, err := client.GetGlobalVirtualGroup(ctx, bucketID, lvgID)
+	log.Infow("print gvg", "gvg", gvg)
 	if err != nil {
 		return -1, false, err
 	}
