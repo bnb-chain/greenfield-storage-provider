@@ -2,16 +2,14 @@ package storage
 
 import (
 	"fmt"
+	credentials_aliyun "github.com/aliyun/credentials-go/credentials"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"net/url"
 	"os"
 	"strings"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -61,6 +59,9 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		Credentials:      creds,
 		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
+	log.Debugw("aliyun env", "AliyunRegion", key.region, "AliyunAccessKey", key.accessKey,
+		"AliyunSecretKey", key.secretKey, "AliyunSessionToken", key.sessionToken)
+
 	var sess *session.Session
 	switch cfg.IAMType {
 	case AKSKIAMType:
@@ -73,21 +74,26 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		sess = session.Must(session.NewSession(awsConfig))
 		log.Debugw("use aksk to access aliyunfs", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
 	case SAIAMType:
-		sess = session.Must(session.NewSession())
 		irsa, roleARN, tokenPath := checkAliyunAvailable()
+		log.Debugw("aliyun env", "irsa", irsa, "roleARN", roleARN, "tokenPath", tokenPath)
 		if irsa {
-			awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(credentials.NewChainCredentials(
-				[]credentials.Provider{
-					&credentials.EnvProvider{},
-					&credentials.SharedCredentialsProvider{},
-					stscreds.NewWebIdentityRoleProviderWithOptions(
-						sts.New(sess), roleARN, "",
-						stscreds.FetchTokenPath(tokenPath)),
-				}))
-			log.Debug("use sa to access aliyunfs")
+			cred, err := credentials_aliyun.NewCredential(nil)
+
+			if err != nil {
+				panic(err)
+			}
+
+			accessKeyId, err := cred.GetAccessKeyId()
+			accessKeySecret, err := cred.GetAccessKeySecret()
+			securityToken, err := cred.GetSecurityToken()
+
+			log.Debugw("aliyun env", "accessKeyId", accessKeyId, "accessKeySecret", accessKeySecret, "securityToken", securityToken)
+
+			awsConfig.Credentials = credentials.NewStaticCredentials(*accessKeyId, *accessKeySecret, *securityToken)
 		} else {
 			return nil, "", fmt.Errorf("failed to use sa to access aliyunfs")
 		}
+		sess = session.Must(session.NewSession(awsConfig))
 	default:
 		log.Errorf("unknown IAM type: %s", cfg.IAMType)
 		return nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
