@@ -9,6 +9,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.2.3-0.20230714012924-df6781d93afa
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
+	github.com/bnb-chain/greenfield-go-sdk v0.2.3-alpha.3.0.20230713131910-4bd8180676b8
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.1
 	github.com/consensys/gnark-crypto v0.7.0
@@ -34,6 +35,7 @@ require (
 	github.com/ulule/limiter/v3 v3.11.1
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
+	github.com/wealdtech/go-eth2-wallet-types/v2 v2.8.2
 	go.opentelemetry.io/otel/trace v1.11.0
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0

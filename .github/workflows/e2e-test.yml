@@ -71,3 +71,7 @@ jobs:
       - name: Run Greenfield E2E Test
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --runTest
+      #     # Use Greenfield SDK Running E2E Test
+      - name: Run Greenfield E2E Test
+        run: |
+          go test -p 1 -failfast -v ./test/e2e/spworkflow/... -timeout 99999s
