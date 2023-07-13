@@ -125,7 +125,7 @@ type MigrateDB interface {
 	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
 	QueryBucketMigrateSubscribeProgress() (uint64, error)
 
-	// InsertSwapOutUnit is used to insert new swap out unit.
+	// InsertSwapOutUnit is used to insert a swap out unit.
 	InsertSwapOutUnit(meta *SwapOutMeta) error
 	// UpdateSwapOutUnitCompletedGVGList is used to record dest swap out progress, manager restart can load it.
 	UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error

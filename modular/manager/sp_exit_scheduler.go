@@ -139,7 +139,16 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 	}
 
 	s.taskRunner = NewDestSPTaskRunner(s.manager, s.manager.virtualGroupManager)
-	return s.taskRunner.LoadFromDB()
+	if err = s.taskRunner.LoadFromDB(); err != nil {
+		log.Errorw("failed to load task runner db", "error", err)
+		return err
+	}
+	log.Infow("succeed to init sp exit scheduler", "is_exiting", s.isExiting, "is_exited", s.isExited,
+		"last_subscribed_sp_exit_block_height", s.lastSubscribedSPExitBlockHeight,
+		"last_subscribed_bucket_migrate_block_height", s.lastSubscribedSwapOutBlockHeight,
+		"src_sp_swap_out_plan", s.swapOutPlan,
+		"dest_sp_task_runner", s.taskRunner)
+	return nil
 }
 
 // Start function is used to subscribe sp exit event from metadata and produces a gvg migrate plan.
@@ -250,6 +259,8 @@ func (s *SPExitScheduler) subscribeEvents() {
 			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents, "block_id", s.lastSubscribedSPExitBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
 			if spExitEvents.CompleteEvent != nil {
 				s.isExited = true
+				UpdateSPExitSubscribeProgressFunc()
+				continue
 			}
 			if spExitEvents.Event != nil { // focus on the start event.
 				if s.isExiting || s.isExited {
@@ -273,6 +284,15 @@ func (s *SPExitScheduler) subscribeEvents() {
 	}()
 
 	go func() {
+		UpdateSwapOutSubscribeProgressFunc := func() {
+			updateErr := s.manager.baseApp.GfSpDB().UpdateSwapOutSubscribeProgress(s.lastSubscribedSwapOutBlockHeight + 1)
+			if updateErr != nil {
+				log.Errorw("failed to update swap out progress", "error", updateErr)
+			}
+			s.lastSubscribedSwapOutBlockHeight++
+			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
+		}
+
 		// subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
 		subscribeSwapOutEventsTicker := time.NewTicker(100 * time.Millisecond)
 		defer subscribeSwapOutEventsTicker.Stop()
@@ -286,6 +306,10 @@ func (s *SPExitScheduler) subscribeEvents() {
 				log.Errorw("failed to subscribe swap out event", "error", subscribeError)
 				continue
 			}
+			if s.isExited {
+				UpdateSwapOutSubscribeProgressFunc()
+				continue
+			}
 			log.Infow("loop subscribe swap out event", "swap_out_events", swapOutEvents, "block_id", s.lastSubscribedSwapOutBlockHeight+1, "sp_id", s.selfSP.GetId())
 			for _, swapOutEvent := range swapOutEvents {
 				if swapOutEvent.GetCompleteEvents() != nil { // focus on the complete event.
@@ -294,13 +318,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 					}
 				}
 			}
-			updateErr := s.manager.baseApp.GfSpDB().UpdateSwapOutSubscribeProgress(s.lastSubscribedSwapOutBlockHeight + 1)
-			if updateErr != nil {
-				log.Errorw("failed to update swap out progress", "error", updateErr)
-				continue
-			}
-			s.lastSubscribedSwapOutBlockHeight++
-			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
+			UpdateSwapOutSubscribeProgressFunc()
 		}
 	}()
 }
@@ -392,7 +410,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 	}
 
 	log.Infow("succeed to produce swap out plan")
-	err = plan.storeToDB()
+	err = plan.storeToDB(buildMetaByDB)
 	return plan, err
 }
 
@@ -587,14 +605,14 @@ func (plan *SrcSPSwapOutPlan) CheckAndSendCompleteSPExitTx(event *virtualgroupty
 }
 
 // it is called at start of the execute plan.
-func (plan *SrcSPSwapOutPlan) storeToDB() error {
+func (plan *SrcSPSwapOutPlan) storeToDB(buildMetaByDB bool) error {
 	var err error
 	for key, swapOutUnit := range plan.swapOutUnitMap {
 		if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
 			SwapOutKey: key,
 			IsDestSP:   false,
 			SwapOutMsg: swapOutUnit.swapOut,
-		}); err != nil {
+		}); !buildMetaByDB && err != nil {
 			log.Infow("failed to store swap out plan to db", "error", err)
 			return err
 		}
