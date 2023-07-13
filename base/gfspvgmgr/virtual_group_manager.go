@@ -51,31 +51,31 @@ type FreeStorageSizeWeightPicker struct {
 	freeStorageSizeWeightMap map[uint32]float64
 }
 
-func (vgfp *FreeStorageSizeWeightPicker) addVirtualGroupFamily(vgf *vgmgr.VirtualGroupFamilyMeta) {
+func (picker *FreeStorageSizeWeightPicker) addVirtualGroupFamily(vgf *vgmgr.VirtualGroupFamilyMeta) {
 	if float64(vgf.FamilyUsedStorageSize) >= MaxStorageUsageRatio*float64(vgf.FamilyStakingStorageSize) || vgf.FamilyStakingStorageSize == 0 {
 		return
 	}
-	vgfp.freeStorageSizeWeightMap[vgf.ID] = float64(vgf.FamilyStakingStorageSize-vgf.FamilyUsedStorageSize) / float64(vgf.FamilyStakingStorageSize)
+	picker.freeStorageSizeWeightMap[vgf.ID] = float64(vgf.FamilyStakingStorageSize-vgf.FamilyUsedStorageSize) / float64(vgf.FamilyStakingStorageSize)
 }
 
-func (vgfp *FreeStorageSizeWeightPicker) addGlobalVirtualGroup(gvg *vgmgr.GlobalVirtualGroupMeta) {
+func (picker *FreeStorageSizeWeightPicker) addGlobalVirtualGroup(gvg *vgmgr.GlobalVirtualGroupMeta) {
 	if float64(gvg.UsedStorageSize) >= MaxStorageUsageRatio*float64(gvg.StakingStorageSize) {
 		return
 	}
-	vgfp.freeStorageSizeWeightMap[gvg.ID] = float64(gvg.StakingStorageSize-gvg.UsedStorageSize) / float64(gvg.StakingStorageSize)
+	picker.freeStorageSizeWeightMap[gvg.ID] = float64(gvg.StakingStorageSize-gvg.UsedStorageSize) / float64(gvg.StakingStorageSize)
 }
 
-func (vgfp *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
+func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	var (
 		sumWeight     float64
 		pickWeight    float64
 		tempSumWeight float64
 	)
-	for _, value := range vgfp.freeStorageSizeWeightMap {
+	for _, value := range picker.freeStorageSizeWeightMap {
 		sumWeight += value
 	}
 	pickWeight = rand.Float64() * sumWeight
-	for key, value := range vgfp.freeStorageSizeWeightMap {
+	for key, value := range picker.freeStorageSizeWeightMap {
 		tempSumWeight += value
 		if tempSumWeight > pickWeight {
 			return key, nil
