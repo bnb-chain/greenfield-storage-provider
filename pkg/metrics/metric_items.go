@@ -64,6 +64,11 @@ var MetricsItems = []prometheus.Collector{
 	PerfReceivePieceTimeHistogram,
 	PerfGetObjectTimeHistogram,
 	PerfChallengeTimeHistogram,
+
+	// blocksyncer metrics category
+	ProcessBlockTime,
+	//EventAvgTime,
+	//TxAvgTime,
 }
 
 // basic metrics items
@@ -250,4 +255,22 @@ var (
 		Help:    "Track challenge piece workflow costs.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"perf_challenge_piece_time"})
+)
+
+var (
+	ProcessBlockTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "process_block_time",
+		Help:    "Track process block workflow costs.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"process_block_time"})
+	//EventAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	//	Name:    "process_block_time",
+	//	Help:    "Track process block workflow costs.",
+	//	Buckets: prometheus.DefBuckets,
+	//}, []string{"event_avg_time"})
+	//TxAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	//	Name:    "process_block_time",
+	//	Help:    "Track process block workflow costs.",
+	//	Buckets: prometheus.DefBuckets,
+	//}, []string{"tx_avg_time"})
 )
