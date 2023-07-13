@@ -42,6 +42,7 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
+	spID    uint32
 
 	// loading task at startup.
 	enableLoadTask           bool
@@ -195,9 +196,13 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
-	// TODO: Arthur Li/Will needs to get operator ID by getSpIDbySpAddress or add one more attribute in GfSpBaseApp
+	spID, err := m.getSPID()
+	if err != nil {
+		log.Errorw("failed to query sp id", "error", err)
+		return
+	}
 	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
-		createAt.Unix(), 0, DiscontinueBucketLimit)
+		createAt.Unix(), spID, DiscontinueBucketLimit)
 	if err != nil {
 		log.Errorw("failed to query expired buckets", "error", err)
 		return
