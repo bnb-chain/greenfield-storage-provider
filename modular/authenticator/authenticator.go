@@ -14,6 +14,7 @@ import (
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -31,7 +32,7 @@ var (
 	ErrNotCreatedState     = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20003, "object has not been created state")
 	ErrNotSealedState      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20004, "object has not been sealed state")
 	ErrPaymentState        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20005, "payment account is not active")
-	ErrNoSuchAccount       = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20006, "no such account")
+	ErrInvalidAddress      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20006, "the user address format is invalid")
 	ErrNoSuchBucket        = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20007, "no such bucket")
 	ErrNoSuchObject        = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20008, "no such object")
 	ErrRepeatedBucket      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20009, "repeated bucket")
@@ -183,6 +184,12 @@ func (a *AuthenticationModular) VerifyAuthentication(
 	authType coremodule.AuthOpType,
 	account, bucket, object string) (
 	bool, error) {
+	// check the account if it is a valid address
+	_, err := sdk.AccAddressFromHexUnsafe(account)
+	if err != nil {
+		return false, ErrInvalidAddress
+	}
+
 	switch authType {
 	case coremodule.AuthOpAskCreateBucketApproval:
 		queryTime := time.Now()

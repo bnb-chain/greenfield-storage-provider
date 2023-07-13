@@ -98,8 +98,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
 	// data recovery
-	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
-
+	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.getRecoverDataHandler)
 	// dest sp receive migrate gvg notify from src sp.
 	router.Path(NotifyMigrateGVGTaskPath).Name(notifyMigrateGVGRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
 	// migrate pieces between SPs which is used for SP exiting case
@@ -131,7 +130,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(queryUploadProgressRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryUploadProgressHandler).Queries(
 			UploadProgressQuery, "")
 
-		r.NewRoute().Name(getPieceFromSecondaryRouterName).Methods(http.MethodGet).Path("/{object:.+}").Queries(GetSecondaryPieceData, "").HandlerFunc(g.getRecoveryPieceHandler)
 		// Get Bucket Meta
 		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
 
