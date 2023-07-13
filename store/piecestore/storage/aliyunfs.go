@@ -84,9 +84,9 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 				panic(err)
 			}
 
-			accessKeyId, err := cred.GetAccessKeyId()
-			accessKeySecret, err := cred.GetAccessKeySecret()
-			securityToken, err := cred.GetSecurityToken()
+			accessKeyId, _ := cred.GetAccessKeyId()
+			accessKeySecret, _ := cred.GetAccessKeySecret()
+			securityToken, _ := cred.GetSecurityToken()
 
 			log.Debugw("aliyun env", "accessKeyId", accessKeyId, "accessKeySecret", accessKeySecret, "securityToken", securityToken)
 
