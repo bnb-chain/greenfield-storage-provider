@@ -2,14 +2,15 @@ package storage
 
 import (
 	"fmt"
+	"net/url"
+	"os"
+	"strings"
+
 	credentials_aliyun "github.com/aliyun/credentials-go/credentials"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"net/url"
-	"os"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
