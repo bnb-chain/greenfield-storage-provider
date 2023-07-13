@@ -5,6 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.1
+	github.com/aliyun/credentials-go v1.3.0
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.2.3-0.20230629100544-51467d2002e3
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
@@ -43,7 +44,11 @@ require (
 	gorm.io/gorm v1.24.5
 )
 
-require github.com/linxGnu/grocksdb v1.7.16 // indirect
+require (
+	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
+	github.com/alibabacloud-go/tea v1.1.8 // indirect
+	github.com/linxGnu/grocksdb v1.7.16 // indirect
+)
 
 require (
 	cosmossdk.io/api v0.4.0 // indirect

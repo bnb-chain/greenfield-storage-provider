@@ -221,6 +221,12 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		err = ErrConsensus
 		return
 	}
+	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
+	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > params.GetMaxPayloadSize() {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+		err = ErrInvalidPayloadSize
+		return
+	}
 
 	var (
 		complete        bool
