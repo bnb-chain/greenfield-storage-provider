@@ -42,7 +42,6 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
-	spID    uint32
 
 	// loading task at startup.
 	enableLoadTask           bool
