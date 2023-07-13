@@ -83,7 +83,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
-	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.recoverPrimaryHandler)
+	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.getRecoverDataHandler)
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
@@ -110,7 +110,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(queryUploadProgressRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryUploadProgressHandler).Queries(
 			UploadProgressQuery, "")
 
-		r.NewRoute().Name(getPieceFromSecondaryRouterName).Methods(http.MethodGet).Path("/{object:.+}").Queries(GetSecondaryPieceData, "").HandlerFunc(g.getRecoveryPieceHandler)
 		// Get Bucket Meta
 		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
 

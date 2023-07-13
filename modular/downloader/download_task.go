@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -373,8 +372,6 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
-		// if read piece store error, try to recover the error data
-		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
 		return nil, nil, nil, ErrPieceStore
 	}
 
@@ -387,25 +384,4 @@ func (d *DownloadModular) PostChallengePiece(ctx context.Context, downloadPieceT
 func (d *DownloadModular) QueryTasks(ctx context.Context, subKey task.TKey) (
 	[]task.Task, error) {
 	return nil, nil
-}
-
-// recoverChallengePiece recover challenge piece by generating recovery background task if challenge task get piece fail
-func (d *DownloadModular) recoverChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask, pieceKey string) {
-	// TODO check if it need to recovery if the piece data is not correct
-	var segmentIndex uint32
-	segmentIndex, ECIndex, parseErr := d.baseApp.PieceOp().ParseChallengeIdx(pieceKey)
-	if parseErr != nil {
-		// no need to return recovery error to user
-		log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", parseErr)
-	}
-	recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
-	recoveryTask.InitRecoverPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
-		d.baseApp.TaskPriority(recoveryTask),
-		segmentIndex,
-		ECIndex,
-		uint64(0),
-		d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
-		2)
-
-	d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 }
