@@ -79,17 +79,26 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		log.Debugw("aliyun env", "irsa", irsa, "roleARN", roleARN, "tokenPath", tokenPath)
 		if irsa {
 			cred, err := credentials_aliyun.NewCredential(nil)
-
 			if err != nil {
 				panic(err)
 			}
 
 			accessKeyId, err := cred.GetAccessKeyId()
+			if err != nil {
+				panic(err)
+			}
+
 			accessKeySecret, err := cred.GetAccessKeySecret()
+			if err != nil {
+				panic(err)
+			}
+
 			securityToken, err := cred.GetSecurityToken()
+			if err != nil {
+				panic(err)
+			}
 
 			log.Debugw("aliyun env", "accessKeyId", accessKeyId, "accessKeySecret", accessKeySecret, "securityToken", securityToken)
-
 			awsConfig.Credentials = credentials.NewStaticCredentials(*accessKeyId, *accessKeySecret, *securityToken)
 		} else {
 			return nil, "", fmt.Errorf("failed to use sa to access aliyunfs")
