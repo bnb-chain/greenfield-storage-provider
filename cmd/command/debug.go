@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/urfave/cli/v2"
@@ -90,7 +91,7 @@ func createBucketApproval(ctx *cli.Context) error {
 
 	msg := &storagetypes.MsgCreateBucket{
 		BucketName:        DebugCommandPrefix + util.GetRandomBucketName(),
-		PrimarySpApproval: &storagetypes.Approval{},
+		PrimarySpApproval: &common.Approval{},
 	}
 	task := &gfsptask.GfSpCreateBucketApprovalTask{}
 	task.InitApprovalCreateBucketTask("cmd_debug", msg, coretask.UnSchedulingPriority)
@@ -117,7 +118,7 @@ func createObjectApproval(ctx *cli.Context) error {
 	msg := &storagetypes.MsgCreateObject{
 		BucketName:        DebugCommandPrefix + util.GetRandomBucketName(),
 		ObjectName:        DebugCommandPrefix + util.GetRandomObjectName(),
-		PrimarySpApproval: &storagetypes.Approval{},
+		PrimarySpApproval: &common.Approval{},
 	}
 	task := &gfsptask.GfSpCreateObjectApprovalTask{}
 	task.InitApprovalCreateObjectTask("cmd_debug", msg, coretask.UnSchedulingPriority)
@@ -205,7 +206,8 @@ func putObjectAction(ctx *cli.Context) error {
 	}
 	stream := bytes.NewReader(data)
 	task := &gfsptask.GfSpUploadObjectTask{}
-	task.InitUploadObjectTask(objectInfo, params, 0)
+	// TODO: refine it
+	task.InitUploadObjectTask(0, objectInfo, params, 0)
 	err = client.UploadObject(context.Background(), task, stream)
 	if err != nil {
 		return fmt.Errorf("failed to upload %s to uploader, error: %v", filePath, err)

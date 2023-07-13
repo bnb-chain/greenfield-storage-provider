@@ -1,9 +1,10 @@
 package task
 
 import (
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // Task is an abstract interface to describe the smallest unit of SP service how to interact.
@@ -125,6 +126,23 @@ type ApprovalCreateBucketTask interface {
 	SetCreateBucketInfo(*storagetypes.MsgCreateBucket)
 }
 
+// ApprovalMigrateBucketTask is an abstract interface to record the ask migrate bucket approval information.
+// The user account will migrate MsgMigrateBucket, SP
+// should decide whether approved the request based on the MsgMigrateBucket.
+// If so, SP will SetExpiredHeight and signs the MsgMigrateBucket.
+type ApprovalMigrateBucketTask interface {
+	ApprovalTask
+	// InitApprovalMigrateBucketTask inits the ApprovalMigrateBucketTask by
+	// MsgCreateBucket and task priority. SP only fill the MsgCreateBucket's
+	// PrimarySpApproval field, can not change other fields.
+	InitApprovalMigrateBucketTask(*storagetypes.MsgMigrateBucket, TPriority)
+	// GetMigrateBucketInfo returns the user's MsgCreateBucket.
+	GetMigrateBucketInfo() *storagetypes.MsgMigrateBucket
+	// SetMigrateBucketInfo sets the MsgCreateBucket. Should try to avoid calling
+	// this method, it will change the approval information.
+	SetMigrateBucketInfo(*storagetypes.MsgMigrateBucket)
+}
+
 // ApprovalCreateObjectTask is an abstract interface to record the ask create object
 // approval information. The user account will create MsgCreateObject, SP
 // should decide whether approved the request based on the MsgCreateObject.
@@ -214,7 +232,9 @@ type ObjectTask interface {
 type UploadObjectTask interface {
 	ObjectTask
 	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
+	InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
+	// GetVirtualGroupFamilyId returns the object's virtual group family which is bind in bucket.
+	GetVirtualGroupFamilyId() uint32
 }
 
 // The ResumableUploadObjectTask is the interface to record the information for uploading object
@@ -222,7 +242,9 @@ type UploadObjectTask interface {
 type ResumableUploadObjectTask interface {
 	ObjectTask
 	// InitResumableUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitResumableUploadObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	InitResumableUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	// GetVirtualGroupFamilyId returns the object's virtual group family which is bind in bucket.
+	GetVirtualGroupFamilyId() uint32
 	// GetResumeOffset return resumable offset user-supplied parameters
 	GetResumeOffset() uint64
 	// SetResumeOffset Set the `ResumeOffset` provided by the user for subsequent processing in the `HandleResumableUploadObjectTask`.
@@ -260,6 +282,10 @@ type ReplicatePieceTask interface {
 	GetSecondarySignatures() [][]byte
 	// SetSecondarySignatures sets the secondary SP's signatures.
 	SetSecondarySignatures([][]byte)
+	// GetGlobalVirtualGroupId returns the object's global virtual group id.
+	GetGlobalVirtualGroupId() uint32
+	// GetSecondaryEndpoints return the secondary sp domain.
+	GetSecondaryEndpoints() []string
 }
 
 // ReceivePieceTask is an abstract interface to record the information for receiving pieces
@@ -267,7 +293,7 @@ type ReplicatePieceTask interface {
 type ReceivePieceTask interface {
 	ObjectTask
 	// InitReceivePieceTask init the ReceivePieceTask.
-	InitReceivePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
+	InitReceivePieceTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
 		replicateIdx uint32, pieceIdx int32, pieceSize int64)
 	// GetReplicateIdx returns the replicate index. The replicate index identifies the
 	// serial number of the secondary SP for object piece copy.
@@ -302,19 +328,23 @@ type ReceivePieceTask interface {
 	GetSealed() bool
 	// SetSealed sets the object of receiving piece data whether is successfully sealed.
 	SetSealed(bool)
+	// GetGlobalVirtualGroupId returns the object's global virtual group id.
+	GetGlobalVirtualGroupId() uint32
 }
 
 // SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.
 type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
-	InitSealObjectTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
+	InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
 		signatures [][]byte, timeout int64, retry int64)
 	// GetSecondaryAddresses return the secondary SP's addresses.
 	GetSecondaryAddresses() []string
 	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
 	// MsgSealObject.
 	GetSecondarySignatures() [][]byte
+	// GetGlobalVirtualGroupId returns the object's global virtual group id.
+	GetGlobalVirtualGroupId() uint32
 }
 
 // DownloadObjectTask is an abstract interface to record the information for downloading
@@ -472,7 +502,7 @@ type GCMetaTask interface {
 // TODO consider recovery secondary SP task
 type RecoveryPieceTask interface {
 	ObjectTask
-	// InitRecoveryPieceTask inits the RecoveryPieceTask by ObjectInfo, params,
+	// InitRecoverPieceTask inits the RecoveryPieceTask by ObjectInfo, params,
 	// task priority, pieceIndex, timeout and max retry.
 	InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
 		priority TPriority, pieceIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64)
@@ -490,4 +520,40 @@ type RecoveryPieceTask interface {
 	GetRecovered() bool
 	// SetRecoverDone set the recovery status as finish
 	SetRecoverDone()
+}
+
+// MigrateGVGTask is an abstract interface to record migrate gvg information.
+type MigrateGVGTask interface {
+	Task
+	// InitMigrateGVGTask inits migrate gvg task by bucket id, gvg.
+	InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
+		redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider)
+	// GetGvg returns the global virtual group
+	GetGvg() *virtualgrouptypes.GlobalVirtualGroup
+	// SetGvg sets the global virtual group
+	SetGvg(*virtualgrouptypes.GlobalVirtualGroup)
+	// GetSrcSp returns the src storage provider
+	GetSrcSp() *sptypes.StorageProvider
+	// SetSrcSp sets the src storage provider
+	SetSrcSp(*sptypes.StorageProvider)
+	// GetDestSp returns the dest storage provider
+	GetDestSp() *sptypes.StorageProvider
+	// SetDestSp sets the dest storage provider
+	SetDestSp(*sptypes.StorageProvider)
+	// GetBucketID returns the bucketID
+	GetBucketID() uint64
+	// SetBucketID sets the bucketID
+	SetBucketID(uint64)
+	// GetRedundancyIdx returns the redundancy index
+	GetRedundancyIdx() int32
+	// SetRedundancyIdx sets the redundancy index
+	SetRedundancyIdx(int32)
+	// GetLastMigratedObjectID returns the last modified objectID
+	GetLastMigratedObjectID() uint64
+	// SetLastMigratedObjectID sets the last migrated objectID
+	SetLastMigratedObjectID(uint64)
+	// GetFinished returns the task whether finished
+	GetFinished() bool
+	// SetFinished sets the migrated gvg task status when finished
+	SetFinished(bool)
 }

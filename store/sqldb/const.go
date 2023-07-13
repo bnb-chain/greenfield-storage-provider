@@ -38,4 +38,8 @@ const (
 	SealTimeoutTableName = "seal_timeout_event_log"
 	// SealFailedTableName defines the event of unsuccessfully sealing object timeout
 	SealFailedTableName = "seal_failed_event_log"
+	// MigrateSubscribeProgressTableName defines the progress of subscribe migrate event.
+	MigrateSubscribeProgressTableName = "migrate_subscribe_progress"
+	// MigrateGVGTableName defines the progress of subscribe migrate event.
+	MigrateGVGTableName = "migrate_gvg"
 )

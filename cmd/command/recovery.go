@@ -3,8 +3,9 @@ package command
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -158,23 +159,22 @@ func recoverPieceAction(ctx *cli.Context) error {
 
 func getReplicateIdxBySP(bucketInfo *types.BucketInfo, objectInfo *types.ObjectInfo, cfg *gfspconfig.GfSpConfig) (int, error) {
 	replicateIdx := 0
-
-	if strings.EqualFold(bucketInfo.PrimarySpAddress, cfg.SpAccount.SpOperatorAddress) {
-		replicateIdx = -1
+	chain, err := utils.MakeGnfd(cfg)
+	if err != nil {
+		return 0, err
 	}
-
-	var isSecondarySP bool
-	for i, addr := range objectInfo.GetSecondarySpAddresses() {
-		if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
-			replicateIdx = i
-			isSecondarySP = true
-			break
-		}
+	spClient := utils.MakeGfSpClient(cfg)
+	sp, err := chain.QuerySP(context.Background(), cfg.SpAccount.SpOperatorAddress)
+	if err != nil {
+		return 0, err
 	}
-	if replicateIdx != -1 && !isSecondarySP {
+	replicateIdx, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), spClient, sp.Id, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+	if err != nil {
+		return 0, err
+	}
+	if !isSecondarySp {
 		return 0, fmt.Errorf(" it is not primary SP nor secondarySP of the object, pls choose the right SP")
 	}
-
 	return replicateIdx, nil
 }
 

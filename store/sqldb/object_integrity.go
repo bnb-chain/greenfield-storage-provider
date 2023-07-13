@@ -87,15 +87,10 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64) (meta *corespdb.Integrity
 	if err != nil {
 		return nil, err
 	}
-	signature, err := hex.DecodeString(queryReturn.Signature)
-	if err != nil {
-		return nil, err
-	}
 
 	meta = &corespdb.IntegrityMeta{
 		ObjectID:          queryReturn.ObjectID,
 		IntegrityChecksum: integrityChecksum,
-		Signature:         signature,
 	}
 	meta.PieceChecksumList, err = util.StringToBytesSlice(queryReturn.PieceChecksumList)
 	if err != nil {
@@ -135,7 +130,6 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 		ObjectID:          meta.ObjectID,
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
-		Signature:         hex.EncodeToString(meta.Signature),
 	}
 	shardTableName := GetIntegrityMetasTableName(meta.ObjectID)
 	result := s.db.Table(shardTableName).Create(insertIntegrityMetaRecord)
@@ -189,13 +183,11 @@ func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, checksum []byt
 	integrityMeta, err := s.GetObjectIntegrity(objectID)
 	var checksums [][]byte
 	var integrity []byte
-	var signature []byte
 	if err == gorm.ErrRecordNotFound {
 		integrityMetaNew := &corespdb.IntegrityMeta{
 			ObjectID:          objectID,
 			PieceChecksumList: append(checksums, checksum),
 			IntegrityChecksum: integrity,
-			Signature:         signature,
 		}
 		err = s.SetObjectIntegrity(integrityMetaNew)
 		if err != nil {

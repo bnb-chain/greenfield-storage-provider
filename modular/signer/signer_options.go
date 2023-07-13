@@ -13,15 +13,14 @@ import (
 )
 
 const (
-	// DefaultGasLimit defines the default gas limit
-	DefaultSealGasLimit  = 1200 // fix gas limit for msgSealObject is 1200
-	DefaultSealFeeAmount = 6000000000000
-
-	DefaultRejectSealGasLimit  = 12000 // fix gas limit for MsgRejectSealObject is 12000
-	DefaultRejectSealFeeAmount = 60000000000000
-
-	DefaultDiscontinueBucketGasLimit  = 2400 // fix gas limit for MsgDiscontinueBucket is 2400
-	DefaultDiscontinueBucketFeeAmount = 12000000000000
+	DefaultSealGasLimit                      = 1200 // fix gas limit for msgSealObject is 1200
+	DefaultSealFeeAmount                     = 6000000000000
+	DefaultRejectSealGasLimit                = 12000 // fix gas limit for MsgRejectSealObject is 12000
+	DefaultRejectSealFeeAmount               = 60000000000000
+	DefaultDiscontinueBucketGasLimit         = 2400 // fix gas limit for MsgDiscontinueBucket is 2400
+	DefaultDiscontinueBucketFeeAmount        = 12000000000000
+	DefaultCreateGlobalVirtualGroupGasLimit  = 1200 // fix gas limit for MsgCreateGlobalVirtualGroup is 1200
+	DefaultCreateGlobalVirtualGroupFeeAmount = 6000000000000
 
 	// SpOperatorPrivKey defines env variable name for sp operator private key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
@@ -31,6 +30,8 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal private key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
+	// SpSealBlsPrivKey defines env variable name for sp seal bls private key
+	SpSealBlsPrivKey = "SIGNER_SEAL_BLS_PRIV_KEY"
 	// SpGcPrivKey defines env variable name for sp gc private key
 	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 )
@@ -65,6 +66,12 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Chain.DiscontinueBucketFeeAmount == 0 {
 		cfg.Chain.DiscontinueBucketFeeAmount = DefaultDiscontinueBucketFeeAmount
 	}
+	if cfg.Chain.CreateGlobalVirtualGroupGasLimit == 0 {
+		cfg.Chain.CreateGlobalVirtualGroupGasLimit = DefaultCreateGlobalVirtualGroupGasLimit
+	}
+	if cfg.Chain.CreateGlobalVirtualGroupFeeAmount == 0 {
+		cfg.Chain.CreateGlobalVirtualGroupFeeAmount = DefaultCreateGlobalVirtualGroupFeeAmount
+	}
 	if val, ok := os.LookupEnv(SpOperatorPrivKey); ok {
 		cfg.SpAccount.OperatorPrivateKey = val
 	}
@@ -73,6 +80,9 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	}
 	if val, ok := os.LookupEnv(SpSealPrivKey); ok {
 		cfg.SpAccount.SealPrivateKey = val
+	}
+	if val, ok := os.LookupEnv(SpSealBlsPrivKey); ok {
+		cfg.SpAccount.SealBlsPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpApprovalPrivKey); ok {
 		cfg.SpAccount.ApprovalPrivateKey = val
@@ -94,10 +104,14 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 		GasLimit:  cfg.Chain.DiscontinueBucketGasLimit,
 		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.DiscontinueBucketFeeAmount)))),
 	}
+	gasInfo[CreateGlobalVirtualGroup] = GasInfo{
+		GasLimit:  cfg.Chain.CreateGlobalVirtualGroupGasLimit,
+		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.CreateGlobalVirtualGroupFeeAmount)))),
+	}
 
 	client, err := NewGreenfieldChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.ChainID,
 		gasInfo, cfg.SpAccount.OperatorPrivateKey, cfg.SpAccount.FundingPrivateKey,
-		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey)
+		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey, cfg.SpAccount.SealBlsPrivateKey)
 	if err != nil {
 		return err
 	}

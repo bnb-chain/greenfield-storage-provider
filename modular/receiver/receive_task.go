@@ -93,7 +93,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	return nil
 }
 
-func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, []byte, error) {
+func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -105,13 +105,13 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	if task == nil || task.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to pre receive piece due to pointer dangling")
 		err = ErrDanglingTask
-		return nil, nil, ErrDanglingTask
+		return nil, ErrDanglingTask
 	}
 	pushTime := time.Now()
 	if err = r.receiveQueue.Push(task); err != nil {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_push_time").Observe(time.Since(pushTime).Seconds())
 		log.CtxErrorw(ctx, "failed to push receive task", "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_push_time").Observe(time.Since(pushTime).Seconds())
 
@@ -119,38 +119,38 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	if task == nil || task.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to done receive task, pointer dangling")
 		err = ErrDanglingTask
-		return nil, nil, ErrDanglingTask
+		return nil, ErrDanglingTask
 	}
 	segmentCount := r.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 
 	getChecksumsTime := time.Now()
-	checksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
+	pieceChecksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
 		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount)
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_get_checksums_time").Observe(time.Since(getChecksumsTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get checksum from db", "error", err)
 		err = ErrGfSpDB
-		return nil, nil, ErrGfSpDB
+		return nil, ErrGfSpDB
 	}
-	if len(checksums) != int(segmentCount) {
+	if len(pieceChecksums) != int(segmentCount) {
 		log.CtxErrorw(ctx, "replicate piece unfinished")
 		err = ErrUnfinishedTask
-		return nil, nil, ErrUnfinishedTask
+		return nil, ErrUnfinishedTask
 	}
 	signTime := time.Now()
-	signature, integrity, err := r.baseApp.GfSpClient().SignIntegrityHash(ctx,
-		task.GetObjectInfo().Id.Uint64(), checksums)
+	signature, err := r.baseApp.GfSpClient().SignSecondaryBls(ctx,
+		task.GetObjectInfo().Id.Uint64(), task.GetGlobalVirtualGroupId(), task.GetObjectInfo().GetChecksums())
+
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_sign_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
-		IntegrityChecksum: integrity,
-		PieceChecksumList: checksums,
-		Signature:         signature,
+		IntegrityChecksum: hash.GenerateIntegrityHash(pieceChecksums),
+		PieceChecksumList: pieceChecksums,
 	}
 	setIntegrityTime := time.Now()
 	err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
@@ -158,7 +158,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to write integrity meta to db", "error", err)
 		err = ErrGfSpDB
-		return nil, nil, ErrGfSpDB
+		return nil, ErrGfSpDB
 	}
 	deletePieceHashTime := time.Now()
 	if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksum(
@@ -185,13 +185,10 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 			Observe(time.Since(reportTime).Seconds())
 	}()
 	log.CtxDebugw(ctx, "succeed to done receive piece")
-	return integrity, signature, nil
+	return signature, nil
 }
 
-func (r *ReceiveModular) QueryTasks(
-	ctx context.Context,
-	subKey task.TKey) (
-	[]task.Task, error) {
+func (r *ReceiveModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
 	receiveTasks, _ := taskqueue.ScanTQueueBySubKey(r.receiveQueue, subKey)
 	return receiveTasks, nil
 }

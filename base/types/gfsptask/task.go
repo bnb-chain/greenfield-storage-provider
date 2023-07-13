@@ -108,6 +108,14 @@ func (m *GfSpTask) SetError(err error) {
 	m.Err = gfsperrors.MakeGfSpError(err)
 }
 
+func (m *GfSpMigrateGVGTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpMigrateGVGTask) SetUserAddress(s string) {
+	m.GetTask().SetUserAddress(s)
+}
+
 func LimitEstimateByPriority(priority coretask.TPriority) rcmgr.Limit {
 	if priority < coretask.DefaultSmallerPriority {
 		return &gfsplimit.GfSpLimit{Tasks: 1, TasksLowPriority: 1}

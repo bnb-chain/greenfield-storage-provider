@@ -35,6 +35,8 @@ const (
 	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
 	// system.
 	DefaultGlobalRecoveryPieceParallel int = 7
+	// DefaultGlobalMigrateGVGParallel defines the default max parallel migrating gvg in SP system.
+	DefaultGlobalMigrateGVGParallel int = 10
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
 	// object tasks in manager.
 	DefaultGlobalDownloadObjectTaskCacheSize int = 4096
@@ -70,6 +72,12 @@ const (
 
 	DefaultLoadReplicateTimeout int64 = 60
 	DefaultLoadSealTimeout      int64 = 180
+	// DefaultSubscribeSPExitEventIntervalSec define the default time interval to subscribe sp exit event from metadata.
+	DefaultSubscribeSPExitEventIntervalSec = 1
+	// DefaultSubscribeBucketMigrateEventIntervalSec define the default time interval to subscribe bucket migrate event from metadata.
+	DefaultSubscribeBucketMigrateEventIntervalSec = 1
+	// DefaultSubscribeSwapOutEventIntervalSec define the default time interval to subscribe gvg swap out event from metadata.
+	DefaultSubscribeSwapOutEventIntervalSec = 1
 )
 
 const (
@@ -96,7 +104,7 @@ func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (cor
 	return manager, nil
 }
 
-func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) error {
+func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (err error) {
 	if cfg.Parallel.GlobalMaxUploadingParallel == 0 {
 		cfg.Parallel.GlobalMaxUploadingParallel = DefaultGlobalMaxUploadingNumber
 	}
@@ -121,12 +129,20 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.GlobalGCMetaParallel == 0 {
 		cfg.Parallel.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
 	}
+	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
+		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+	if cfg.Parallel.GlobalMigrateGVGParallel == 0 {
+		cfg.Parallel.GlobalMigrateGVGParallel = DefaultGlobalMigrateGVGParallel
+	}
+
 	if cfg.Parallel.GlobalDownloadObjectTaskCacheSize == 0 {
 		cfg.Parallel.GlobalDownloadObjectTaskCacheSize = DefaultGlobalDownloadObjectTaskCacheSize
 	}
 	if cfg.Parallel.GlobalChallengePieceTaskCacheSize == 0 {
 		cfg.Parallel.GlobalChallengePieceTaskCacheSize = DefaultGlobalChallengePieceTaskCacheSize
 	}
+
 	if cfg.Parallel.GlobalBatchGcObjectTimeInterval == 0 {
 		cfg.Parallel.GlobalBatchGcObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
 	}
@@ -187,11 +203,27 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 		manager.Name()+"-gc-object", cfg.Parallel.GlobalGCObjectParallel)
 	manager.gcZombieQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-zombie", cfg.Parallel.GlobalGCZombieParallel)
+	manager.migrateGVGQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-migrate-gvg", cfg.Parallel.GlobalMigrateGVGParallel)
 	manager.gcMetaQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-meta", cfg.Parallel.GlobalGCMetaParallel)
 	manager.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-download-object", cfg.Parallel.GlobalDownloadObjectTaskCacheSize)
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
+
+	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus()); err != nil {
+		return err
+	}
+	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
+	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
+	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSec
+	}
+
 	return nil
 }

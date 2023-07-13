@@ -29,13 +29,14 @@ func (s *SpDBImpl) DeleteUploadProgress(objectID uint64) error {
 }
 
 func (s *SpDBImpl) UpdateUploadProgress(uploadMeta *corespdb.UploadObjectMeta) error {
-	if len(uploadMeta.SecondaryAddresses) != 0 {
+	if len(uploadMeta.SecondaryEndpoints) != 0 {
 		if result := s.db.Model(&UploadObjectProgressTable{}).Where("object_id = ?", uploadMeta.ObjectID).
 			Updates(&UploadObjectProgressTable{
 				TaskState:             int32(uploadMeta.TaskState),
 				TaskStateDescription:  uploadMeta.TaskState.String(),
+				GlobalVirtualGroupID:  uploadMeta.GlobalVirtualGroupID,
 				ErrorDescription:      uploadMeta.ErrorDescription,
-				SecondaryAddresses:    util.JoinWithComma(uploadMeta.SecondaryAddresses),
+				SecondaryEndpoints:    util.JoinWithComma(uploadMeta.SecondaryEndpoints),
 				SecondarySignatures:   util.BytesSliceToString(uploadMeta.SecondarySignatures),
 				UpdateTimestampSecond: GetCurrentUnixTime(),
 			}); result.Error != nil || result.RowsAffected != 1 {
@@ -112,9 +113,10 @@ func (s *SpDBImpl) GetUploadMetasToSeal(limit int, timeoutSecond int64) ([]*core
 			return nil, err
 		}
 		returnUploadObjectMetas = append(returnUploadObjectMetas, &corespdb.UploadObjectMeta{
-			ObjectID:            u.ObjectID,
-			SecondaryAddresses:  util.SplitByComma(u.SecondaryAddresses),
-			SecondarySignatures: secondarySignatures,
+			ObjectID:             u.ObjectID,
+			GlobalVirtualGroupID: u.GlobalVirtualGroupID,
+			SecondaryEndpoints:   util.SplitByComma(u.SecondaryEndpoints),
+			SecondarySignatures:  secondarySignatures,
 		})
 	}
 	return returnUploadObjectMetas, nil

@@ -111,20 +111,19 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 
 func (m *Module) handleCreateObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, createObject *storagetypes.EventCreateObject) error {
 	object := &models.Object{
-		BucketID:         common.BigToHash(createObject.BucketId.BigInt()),
-		BucketName:       createObject.BucketName,
-		ObjectID:         common.BigToHash(createObject.ObjectId.BigInt()),
-		ObjectName:       createObject.ObjectName,
-		Creator:          common.HexToAddress(createObject.Creator),
-		Owner:            common.HexToAddress(createObject.Owner),
-		PrimarySpAddress: common.HexToAddress(createObject.PrimarySpAddress),
-		PayloadSize:      createObject.PayloadSize,
-		Visibility:       createObject.Visibility.String(),
-		ContentType:      createObject.ContentType,
-		Status:           createObject.Status.String(),
-		RedundancyType:   createObject.RedundancyType.String(),
-		SourceType:       createObject.SourceType.String(),
-		CheckSums:        createObject.Checksums,
+		BucketID:       common.BigToHash(createObject.BucketId.BigInt()),
+		BucketName:     createObject.BucketName,
+		ObjectID:       common.BigToHash(createObject.ObjectId.BigInt()),
+		ObjectName:     createObject.ObjectName,
+		Creator:        common.HexToAddress(createObject.Creator),
+		Owner:          common.HexToAddress(createObject.Owner),
+		PayloadSize:    createObject.PayloadSize,
+		Visibility:     createObject.Visibility.String(),
+		ContentType:    createObject.ContentType,
+		Status:         createObject.Status.String(),
+		RedundancyType: createObject.RedundancyType.String(),
+		SourceType:     createObject.SourceType.String(),
+		CheckSums:      createObject.Checksums,
 
 		CreateTxHash: txHash,
 		CreateAt:     block.Block.Height,
@@ -140,13 +139,12 @@ func (m *Module) handleCreateObject(ctx context.Context, block *tmctypes.ResultB
 
 func (m *Module) handleSealObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, sealObject *storagetypes.EventSealObject) error {
 	object := &models.Object{
-		BucketName:           sealObject.BucketName,
-		ObjectName:           sealObject.ObjectName,
-		ObjectID:             common.BigToHash(sealObject.ObjectId.BigInt()),
-		Operator:             common.HexToAddress(sealObject.Operator),
-		SecondarySpAddresses: sealObject.SecondarySpAddresses,
-		Status:               sealObject.Status.String(),
-		SealedTxHash:         txHash,
+		BucketName:   sealObject.BucketName,
+		ObjectName:   sealObject.ObjectName,
+		ObjectID:     common.BigToHash(sealObject.ObjectId.BigInt()),
+		Operator:     common.HexToAddress(sealObject.Operator),
+		Status:       sealObject.Status.String(),
+		SealedTxHash: txHash,
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
@@ -159,15 +157,14 @@ func (m *Module) handleSealObject(ctx context.Context, block *tmctypes.ResultBlo
 
 func (m *Module) handleCancelCreateObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelCreateObject *storagetypes.EventCancelCreateObject) error {
 	object := &models.Object{
-		BucketName:       cancelCreateObject.BucketName,
-		ObjectName:       cancelCreateObject.ObjectName,
-		ObjectID:         common.BigToHash(cancelCreateObject.ObjectId.BigInt()),
-		Operator:         common.HexToAddress(cancelCreateObject.Operator),
-		PrimarySpAddress: common.HexToAddress(cancelCreateObject.PrimarySpAddress),
-		UpdateAt:         block.Block.Height,
-		UpdateTxHash:     txHash,
-		UpdateTime:       block.Block.Time.UTC().Unix(),
-		Removed:          true,
+		BucketName:   cancelCreateObject.BucketName,
+		ObjectName:   cancelCreateObject.ObjectName,
+		ObjectID:     common.BigToHash(cancelCreateObject.ObjectId.BigInt()),
+		Operator:     common.HexToAddress(cancelCreateObject.Operator),
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+		Removed:      true,
 	}
 
 	return m.db.UpdateObject(ctx, object)
@@ -196,12 +193,9 @@ func (m *Module) handleCopyObject(ctx context.Context, block *tmctypes.ResultBlo
 
 func (m *Module) handleDeleteObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, deleteObject *storagetypes.EventDeleteObject) error {
 	object := &models.Object{
-		BucketName:           deleteObject.BucketName,
-		ObjectName:           deleteObject.ObjectName,
-		ObjectID:             common.BigToHash(deleteObject.ObjectId.BigInt()),
-		PrimarySpAddress:     common.HexToAddress(deleteObject.PrimarySpAddress),
-		SecondarySpAddresses: deleteObject.SecondarySpAddresses,
-
+		BucketName:   deleteObject.BucketName,
+		ObjectName:   deleteObject.ObjectName,
+		ObjectID:     common.BigToHash(deleteObject.ObjectId.BigInt()),
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),

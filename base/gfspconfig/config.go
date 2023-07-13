@@ -1,6 +1,7 @@
 package gfspconfig
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -29,6 +30,7 @@ type Customize struct {
 	NewTQueueWithLimit             coretaskqueue.NewTQueueWithLimit
 	NewStrategyTQueueFunc          coretaskqueue.NewTQueueOnStrategy
 	NewStrategyTQueueWithLimitFunc coretaskqueue.NewTQueueOnStrategyWithLimit
+	NewVirtualGroupManagerFunc     vgmgr.NewVirtualGroupManager
 }
 
 // GfSpConfig defines the GfSp configuration.
@@ -85,14 +87,16 @@ func (cfg *GfSpConfig) String() string {
 }
 
 type ChainConfig struct {
-	ChainID                    string
-	ChainAddress               []string
-	SealGasLimit               uint64
-	SealFeeAmount              uint64
-	RejectSealGasLimit         uint64
-	RejectSealFeeAmount        uint64
-	DiscontinueBucketGasLimit  uint64
-	DiscontinueBucketFeeAmount uint64
+	ChainID                           string
+	ChainAddress                      []string
+	SealGasLimit                      uint64
+	SealFeeAmount                     uint64
+	RejectSealGasLimit                uint64
+	RejectSealFeeAmount               uint64
+	DiscontinueBucketGasLimit         uint64
+	DiscontinueBucketFeeAmount        uint64
+	CreateGlobalVirtualGroupGasLimit  uint64
+	CreateGlobalVirtualGroupFeeAmount uint64
 }
 
 type SpAccountConfig struct {
@@ -100,6 +104,7 @@ type SpAccountConfig struct {
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
+	SealBlsPrivateKey  string
 	ApprovalPrivateKey string
 	GcPrivateKey       string
 }
@@ -163,9 +168,10 @@ type ParallelConfig struct {
 	GlobalGCObjectParallel             int
 	GlobalGCZombieParallel             int
 	GlobalGCMetaParallel               int
+	GlobalRecoveryPieceParallel        int
+	GlobalMigrateGVGParallel           int
 	GlobalDownloadObjectTaskCacheSize  int
 	GlobalChallengePieceTaskCacheSize  int
-	GlobalRecoveryPieceParallel        int
 	GlobalBatchGcObjectTimeInterval    int
 	GlobalGcObjectBlockInterval        uint64
 	GlobalGcObjectSafeBlockDistance    uint64
@@ -235,5 +241,7 @@ type MetadataConfig struct {
 }
 
 type ManagerConfig struct {
-	EnableLoadTask bool
+	EnableLoadTask                         bool
+	SubscribeSPExitEventIntervalSec        int
+	SubscribeBucketMigrateEventIntervalSec int
 }

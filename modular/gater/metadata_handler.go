@@ -15,6 +15,7 @@ import (
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -1011,16 +1012,17 @@ func (g *GateModular) getUserBucketsCountHandler(w http.ResponseWriter, r *http.
 // listExpiredBucketsBySpHandler handle list buckets that are expired by specific sp
 func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                     error
-		b                       bytes.Buffer
-		reqCtx                  *RequestContext
-		requestLimit            string
-		requestCreateAt         string
-		requestPrimarySpAddress string
-		limit                   int64
-		createAt                int64
-		buckets                 []*types.Bucket
-		queryParams             url.Values
+		err                error
+		b                  bytes.Buffer
+		reqCtx             *RequestContext
+		requestLimit       string
+		requestCreateAt    string
+		requestPrimarySpID string
+		limit              int64
+		createAt           int64
+		spID               uint32
+		buckets            []*types.Bucket
+		queryParams        url.Values
 	)
 
 	defer func() {
@@ -1037,7 +1039,7 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 	queryParams = reqCtx.request.URL.Query()
 	requestLimit = queryParams.Get(LimitQuery)
 	requestCreateAt = queryParams.Get(CreateAtQuery)
-	requestPrimarySpAddress = queryParams.Get(PrimarySpAddressQuery)
+	requestPrimarySpID = queryParams.Get(PrimarySpIDQuery)
 
 	if limit, err = util.StringToInt64(requestLimit); err != nil || limit <= 0 {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", requestLimit, "error", err)
@@ -1050,12 +1052,18 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 	}
 
 	if createAt, err = util.StringToInt64(requestCreateAt); err != nil || createAt < 0 {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse or check create at", "create-at", requestLimit, "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check create at", "create-at", requestCreateAt, "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
-	buckets, err = g.baseApp.GfSpClient().ListExpiredBucketsBySp(reqCtx.Context(), createAt, requestPrimarySpAddress, limit)
+	if spID, err = util.StringToUint32(requestPrimarySpID); err != nil || createAt < 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestPrimarySpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	buckets, err = g.baseApp.GfSpClient().ListExpiredBucketsBySp(reqCtx.Context(), createAt, spID, limit)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", "error", err)
 		return
@@ -1066,6 +1074,640 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listVirtualGroupFamiliesBySpIDHandler list virtual group families by sp id
+func (g *GateModular) listVirtualGroupFamiliesBySpIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		b           bytes.Buffer
+		reqCtx      *RequestContext
+		requestSpID string
+		spID        uint32
+		families    []*virtual_types.GlobalVirtualGroupFamily
+		queryParams url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list virtual group families by sp id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestSpID = queryParams.Get(SpIDQuery)
+
+	if spID, err = util.StringToUint32(requestSpID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestSpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	families, err = g.baseApp.GfSpClient().ListVirtualGroupFamiliesSpID(reqCtx.Context(), spID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list virtual group families by sp id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListVirtualGroupFamiliesBySpIDResponse{GlobalVirtualGroupFamilies: families}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list virtual group families by sp id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getVirtualGroupFamilyHandler get virtual group families by vgf id
+func (g *GateModular) getVirtualGroupFamilyHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err          error
+		b            bytes.Buffer
+		reqCtx       *RequestContext
+		requestVgfID string
+		vgfID        uint32
+		family       *virtual_types.GlobalVirtualGroupFamily
+		queryParams  url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get virtual group families by vgf id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestVgfID = queryParams.Get(VgfIDQuery)
+
+	if vgfID, err = util.StringToUint32(requestVgfID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check vgf id", "vgf-id", requestVgfID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	family, err = g.baseApp.GfSpClient().GetVirtualGroupFamily(reqCtx.Context(), vgfID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get virtual group families by vgf id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetVirtualGroupFamilyResponse{Vgf: family}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get virtual group families by vgf id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getGlobalVirtualGroupByGvgIDHandler get global virtual group by gvg id
+func (g *GateModular) getGlobalVirtualGroupByGvgIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err          error
+		b            bytes.Buffer
+		reqCtx       *RequestContext
+		requestGvgID string
+		gvgID        uint32
+		group        *virtual_types.GlobalVirtualGroup
+		queryParams  url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by gvg id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGvgID = queryParams.Get(GvgIDQuery)
+
+	if gvgID, err = util.StringToUint32(requestGvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "gvg-id", requestGvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	group, err = g.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(reqCtx.Context(), gvgID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by gvg id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetGlobalVirtualGroupByGvgIDResponse{GlobalVirtualGroup: group}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by gvg id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getGlobalVirtualGroupHandler get global virtual group by lvg id and bucket id
+func (g *GateModular) getGlobalVirtualGroupHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err          error
+		b            bytes.Buffer
+		reqCtx       *RequestContext
+		requestLvgID string
+		bucketIDStr  string
+		bucketID     uint64
+		lvgID        uint32
+		group        *virtual_types.GlobalVirtualGroup
+		queryParams  url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by lvg id and bucket id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestLvgID = queryParams.Get(LvgIDQuery)
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+
+	if bucketID, err = util.StringToUint64(bucketIDStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if lvgID, err = util.StringToUint32(requestLvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check lvg id", "lvg-id", requestLvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	group, err = g.baseApp.GfSpClient().GetGlobalVirtualGroup(reqCtx.Context(), bucketID, lvgID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by lvg id and bucket id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetGlobalVirtualGroupResponse{Gvg: group}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by lvg id and bucket id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listGlobalVirtualGroupsBySecondarySPHandler list global virtual group by secondary sp id
+func (g *GateModular) listGlobalVirtualGroupsBySecondarySPHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		b           bytes.Buffer
+		reqCtx      *RequestContext
+		requestSpID string
+		spID        uint32
+		groups      []*virtual_types.GlobalVirtualGroup
+		queryParams url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by secondary sp id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestSpID = queryParams.Get(SpIDQuery)
+
+	if spID, err = util.StringToUint32(requestSpID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestSpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	groups, err = g.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(reqCtx.Context(), spID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by secondary sp id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListGlobalVirtualGroupsBySecondarySPResponse{Groups: groups}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by secondary sp id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listGlobalVirtualGroupsByBucketHandler list global virtual group by bucket id
+func (g *GateModular) listGlobalVirtualGroupsByBucketHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		b           bytes.Buffer
+		reqCtx      *RequestContext
+		bucketIDStr string
+		bucketID    uint64
+		groups      []*virtual_types.GlobalVirtualGroup
+		queryParams url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by bucket id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+
+	if bucketID, err = util.StringToUint64(bucketIDStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	groups, err = g.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(reqCtx.Context(), bucketID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by bucket id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListGlobalVirtualGroupsByBucketResponse{Groups: groups}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by bucket id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listObjectsInGVGAndBucketHandler list objects by gvg and bucket id
+func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		b                 bytes.Buffer
+		reqCtx            *RequestContext
+		requestGvgID      string
+		gvgID             uint32
+		bucketIDStr       string
+		bucketID          uint64
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		objects           []*types.Object
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGvgID = queryParams.Get(GvgIDQuery)
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if bucketID, err = util.StringToUint64(bucketIDStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if gvgID, err = util.StringToUint32(requestGvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "gvg-id", requestGvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	objects, err = g.baseApp.GfSpClient().ListObjectsInGVGAndBucket(reqCtx.Context(), gvgID, bucketID, startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectsInGVGResponse{Objects: objects}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listObjectsInGVGHandler list objects by gvg id
+func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		b                 bytes.Buffer
+		reqCtx            *RequestContext
+		requestGvgID      string
+		gvgID             uint32
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		objects           []*types.Object
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGvgID = queryParams.Get(GvgIDQuery)
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if gvgID, err = util.StringToUint32(requestGvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "gvg-id", requestGvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	objects, err = g.baseApp.GfSpClient().ListObjectsInGVG(reqCtx.Context(), gvgID, startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectsInGVGResponse{Objects: objects}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listMigrateBucketEventsHandler list migrate bucket events
+func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		b              bytes.Buffer
+		reqCtx         *RequestContext
+		requestSpID    string
+		requestBlockID string
+		spID           uint32
+		blockID        uint64
+		events         []*types.ListMigrateBucketEvents
+		queryParams    url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestSpID = queryParams.Get(SpIDQuery)
+	requestBlockID = queryParams.Get(BlockIDQuery)
+
+	if spID, err = util.StringToUint32(requestSpID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestSpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if blockID, err = util.StringToUint64(requestBlockID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check block id", "block-id", requestBlockID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	events, err = g.baseApp.GfSpClient().ListMigrateBucketEvents(reqCtx.Context(), blockID, spID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListMigrateBucketEventsResponse{Events: events}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listSwapOutEventsHandler list swap out events
+func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		b              bytes.Buffer
+		reqCtx         *RequestContext
+		requestSpID    string
+		requestBlockID string
+		spID           uint32
+		blockID        uint64
+		events         []*types.ListSwapOutEvents
+		queryParams    url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list swap out events", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestSpID = queryParams.Get(SpIDQuery)
+	requestBlockID = queryParams.Get(BlockIDQuery)
+
+	if spID, err = util.StringToUint32(requestSpID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestSpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if blockID, err = util.StringToUint64(requestBlockID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check block id", "block-id", requestBlockID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	events, err = g.baseApp.GfSpClient().ListSwapOutEvents(reqCtx.Context(), blockID, spID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list swap out events", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListSwapOutEventsResponse{Events: events}
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list swap out events", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// listSpExitEventsHandler list sp exit events
+func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                    error
+		b                      bytes.Buffer
+		reqCtx                 *RequestContext
+		requestOperatorAddress string
+		requestBlockID         string
+		blockID                uint64
+		events                 *types.ListSpExitEvents
+		queryParams            url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestOperatorAddress = queryParams.Get(OperatorAddressQuery)
+	requestBlockID = queryParams.Get(BlockIDQuery)
+
+	if blockID, err = util.StringToUint64(requestBlockID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check block id", "block-id", requestBlockID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if ok := common.IsHexAddress(requestOperatorAddress); !ok {
+		log.Errorw("failed to check operator", "operator-address", requestOperatorAddress, "error", err)
+		return
+	}
+
+	events, err = g.baseApp.GfSpClient().ListSpExitEvents(reqCtx.Context(), blockID, requestOperatorAddress)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list sp exit events", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListSpExitEventsResponse{Events: events}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list sp exit events", "error", err)
 		return
 	}
 

@@ -65,6 +65,8 @@ function generate_sp_db_info() {
     echo "APPROVAL_PRIVATE_KEY=\"${apk}\"" >> sp.info
     gpk=$(jq -r ".sp${i}.GcPrivateKey" ${sp_json_file})
     echo "GC_PRIVATE_KEY=\"${gpk}\"" >> sp.info
+    bpk=$(jq -r ".sp${i}.BlsPrivateKey" ${sp_json_file})
+    echo "BLS_PRIVATE_KEY=\"${bpk}\"" >> sp.info
 
     # generate db info
     {
@@ -110,6 +112,8 @@ function make_config() {
     sed -i -e "s/SealPrivateKey = '.*'/SealPrivateKey = '${SEAL_PRIVATE_KEY}'/g" config.toml
     sed -i -e "s/ApprovalPrivateKey = '.*'/ApprovalPrivateKey = '${APPROVAL_PRIVATE_KEY}'/g" config.toml
     sed -i -e "s/GcPrivateKey = '.*'/GcPrivateKey = '${GC_PRIVATE_KEY}'/g" config.toml
+    sed -i -e "s/BlsPrivateKey = '.*'/BlsPrivateKey = '${BLS_PRIVATE_KEY}'/g" config.toml
+
 
     # gateway
     sed -i -e "s/DomainName = '.*'/DomainName = 'gnfd.test-sp.com'/g" config.toml
@@ -141,7 +145,7 @@ function make_config() {
     sed -i -e "s/PProfHTTPAddress = '.*'/PProfHTTPAddress = '${pprof_address}'/g" config.toml
 
     # blocksyncer
-    sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\]/g" config.toml
+    sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\]/g" config.toml
     sed -i -e "s/RecreateTables = false/RecreateTables = true/g" config.toml
     WORKERS=50
     sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml

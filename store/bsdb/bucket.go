@@ -97,7 +97,7 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address, includeRemoved 
 }
 
 // ListExpiredBucketsBySp lists expired buckets
-func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error) {
+func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, limit int64) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket
 		err     error
@@ -109,7 +109,7 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpAddress strin
 
 	err = b.db.Table((&Bucket{}).TableName()).
 		Select("*").
-		Where("primary_sp_address = ? and status = 'BUCKET_STATUS_CREATED' and create_time < ? and removed = false", common.HexToAddress(primarySpAddress), createAt).
+		Where("primary_sp_id = ? and status = 'BUCKET_STATUS_CREATED' and create_time < ? and removed = false", primarySpID, createAt).
 		Limit(int(limit)).
 		Order("create_at").
 		Find(&buckets).Error
@@ -156,6 +156,109 @@ func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool)
 	err = b.db.Table((&Bucket{}).TableName()).
 		Select("*").
 		Where("bucket_id in (?)", ids).
+		Scopes(filters...).
+		Find(&buckets).Error
+	return buckets, err
+}
+
+// ListBucketsBindingOnPrimarySP list buckets by primary sp id
+func (b *BsDBImpl) ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
+	var (
+		groups   []*GlobalVirtualGroup
+		families []*VirtualGroupFamily
+		buckets  []*Bucket
+		gvgIDs   []uint32
+		vgfIDs   []uint32
+		err      error
+	)
+
+	groups, err = b.ListGvgByPrimarySpID(spID)
+	if err != nil || groups == nil {
+		return nil, err
+	}
+
+	gvgIDs = make([]uint32, len(groups))
+	for i, group := range groups {
+		gvgIDs[i] = group.GlobalVirtualGroupId
+	}
+
+	families, err = b.ListVgfByGvgID(gvgIDs)
+	if err != nil || families == nil {
+		return nil, err
+	}
+
+	vgfIDs = make([]uint32, len(families))
+	for i, family := range families {
+		vgfIDs[i] = family.GlobalVirtualGroupFamilyId
+	}
+
+	buckets, err = b.ListBucketsByVgfID(vgfIDs, startAfter, limit)
+	return buckets, err
+}
+
+// ListBucketsBindingOnSecondarySP list buckets by secondary sp id
+func (b *BsDBImpl) ListBucketsBindingOnSecondarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
+	var (
+		groups   []*GlobalVirtualGroup
+		families []*VirtualGroupFamily
+		buckets  []*Bucket
+		gvgIDs   []uint32
+		vgfIDs   []uint32
+		err      error
+	)
+
+	groups, err = b.ListGvgBySecondarySpID(spID)
+	if err != nil || groups == nil {
+		return nil, err
+	}
+
+	gvgIDs = make([]uint32, len(groups))
+	for i, group := range groups {
+		gvgIDs[i] = group.GlobalVirtualGroupId
+	}
+
+	families, err = b.ListVgfByGvgID(gvgIDs)
+	if err != nil || families == nil {
+		return nil, err
+	}
+
+	vgfIDs = make([]uint32, len(groups))
+	for i, family := range families {
+		vgfIDs[i] = family.GlobalVirtualGroupFamilyId
+	}
+
+	buckets, err = b.ListBucketsByVgfID(vgfIDs, startAfter, limit)
+	return buckets, err
+}
+
+// ListBucketsByVgfID list buckets by vgf ids
+//
+//	func (b *BsDBImpl) ListBucketsByVgfID(vgfIDs []common.Hash, startAfter common.Hash, limit int) ([]*Bucket, error) {
+//		var (
+//			buckets []*Bucket
+//			filters []func(*gorm.DB) *gorm.DB
+//			err     error
+//		)
+//
+//		filters = append(filters, RemovedFilter(false), BucketIDStartAfterFilter(startAfter))
+//		err = b.db.Table((&Bucket{}).TableName()).
+//			Select("*").
+//			Where("global_virtual_group_family_id in (?)", vgfIDs).
+//			Scopes(filters...).
+//			Limit(limit).
+//			Find(&buckets).Error
+//		return buckets, err
+//	}
+func (b *BsDBImpl) ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
+	var (
+		buckets []*Bucket
+		err     error
+		filters []func(*gorm.DB) *gorm.DB
+	)
+	filters = append(filters, ObjectIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("*").
+		Where("global_virtual_group_family_id in (?)", vgfIDs).
 		Scopes(filters...).
 		Find(&buckets).Error
 	return buckets, err

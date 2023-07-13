@@ -87,6 +87,8 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 		return t.GcMetaTask, nil
 	case *gfspserver.GfSpAskTaskResponse_RecoverPieceTask:
 		return t.RecoverPieceTask, nil
+	case *gfspserver.GfSpAskTaskResponse_MigrateGvgTask:
+		return t.MigrateGvgTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}
@@ -144,6 +146,10 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{
 			RecoverPieceTask: t,
 		}
+	case *gfsptask.GfSpMigrateGVGTask:
+		req.Request = &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{
+			MigrateGvgTask: t,
+		}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type to report")
 		return ErrTypeMismatch
@@ -157,4 +163,36 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		return resp.GetErr()
 	}
 	return nil
+}
+
+func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return 0, ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpPickVirtualGroupFamilyRequest{
+		CreateBucketApprovalTask: task.(*gfsptask.GfSpCreateBucketApprovalTask),
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpPickVirtualGroupFamily(ctx, req)
+	if err != nil {
+		return 0, err
+	}
+	return resp.VgfId, nil
+}
+
+func (s *GfSpClient) NotifyMigrateGVG(ctx context.Context, migrateTask coretask.MigrateGVGTask) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpNotifyMigrateGVGRequest{
+		MigrateGvgTask: migrateTask.(*gfsptask.GfSpMigrateGVGTask),
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyMigrateGVG(ctx, req)
+	if err != nil {
+		return err
+	}
+	return resp.GetErr()
 }

@@ -137,6 +137,14 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create off-chain authKey table", "error", err)
 		return nil, err
 	}
+	if err = db.AutoMigrate(&MigrateSubscribeProgressTable{}); err != nil {
+		log.Errorw("failed to migrate subscribe progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&MigrateGVGTable{}); err != nil {
+		log.Errorw("failed to migrate gvg table", "error", err)
+		return nil, err
+	}
 	return db, nil
 }
 
