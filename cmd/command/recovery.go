@@ -3,9 +3,9 @@ package command
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"strings"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -164,13 +164,6 @@ func getReplicateIdxBySP(bucketInfo *types.BucketInfo, objectInfo *types.ObjectI
 		return 0, err
 	}
 	spClient := utils.MakeGfSpClient(cfg)
-	bucketPrimarySP, err := chain.QuerySPByID(context.Background(), bucketInfo.PrimarySpId)
-	if err != nil {
-		return 0, err
-	}
-	if strings.EqualFold(bucketPrimarySP.OperatorAddress, cfg.SpAccount.SpOperatorAddress) {
-		replicateIdx = -1
-	}
 	sp, err := chain.QuerySP(context.Background(), cfg.SpAccount.SpOperatorAddress)
 	if err != nil {
 		return 0, err
@@ -179,7 +172,7 @@ func getReplicateIdxBySP(bucketInfo *types.BucketInfo, objectInfo *types.ObjectI
 	if err != nil {
 		return 0, err
 	}
-	if replicateIdx != -1 && !isSecondarySp {
+	if !isSecondarySp {
 		return 0, fmt.Errorf(" it is not primary SP nor secondarySP of the object, pls choose the right SP")
 	}
 	return replicateIdx, nil
