@@ -7,7 +7,7 @@ FEATURES
 * [#681](https://github.com/bnb-chain/greenfield-storage-provider/pull/681) feat: implement aliyun oss storage
 * [#706](https://github.com/bnb-chain/greenfield-storage-provider/pull/706) feat: verify object permission by meta service
 * [#699](https://github.com/bnb-chain/greenfield-storage-provider/pull/699) feat: SP database sharding
-* [#795](https://github.com/bnb-chain/greenfield-storage-provider/pull/795) fix: basic workflow adaptation in sp exit
+* [#795](https://github.com/bnb-chain/greenfield-storage-provider/pull/795) feat: basic workflow adaptation in sp exit
 
 REFACTOR
 * [#709](https://github.com/bnb-chain/greenfield-storage-provider/pull/709) refactor: manager dispatch task
