@@ -239,11 +239,6 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 	for {
 		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 		latestBlockHeight := latestBlockHeightAny.(int64)
-		//if latestBlockHeight < int64(count*(cycle+1)+startHeight-1) {
-		//	log.Infof("quick fetch ended latestBlockHeight: %d", latestBlockHeight)
-		//	Cast(b.parserCtx.Indexer).GetCatchUpFlag().Store(int64(count*cycle + startHeight - 1))
-		//	break
-		//}
 		if latestBlockHeight == int64(endBlock) {
 			continue
 		}
@@ -252,6 +247,12 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 		if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 			startBlock = count*cycle + startHeight
 			endBlock = count*(cycle+1) + startHeight - 1
+			processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
+			if processedHeight != 0 && startBlock-processedHeight > MaxHeightGapFactor*count {
+				time.Sleep(time.Second)
+				continue
+			}
+			cycle++
 		} else if flag != 0 {
 			startBlock = endBlock + 1
 			endBlock = uint64(latestBlockHeight)
@@ -261,13 +262,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 			endBlock = uint64(latestBlockHeight)
 		}
 
-		//processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
-		//if processedHeight != 0 && startBlock-processedHeight > MaxHeightGapFactor*count {
-		//	time.Sleep(time.Second)
-		//	continue
-		//}
 		b.fetchData(startBlock, endBlock)
-		cycle++
 	}
 }
 
