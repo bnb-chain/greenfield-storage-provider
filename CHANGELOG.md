@@ -17,6 +17,7 @@ BUGFIX
 * [#690](https://github.com/bnb-chain/greenfield-storage-provider/pull/690) fix: re-enable the off chain auth api and add related ut
 * [#810](https://github.com/bnb-chain/greenfield-storage-provider/pull/810) fix: fix aliyunfs by fetching credentials with AliCloud SDK
 * [#808](https://github.com/bnb-chain/greenfield-storage-provider/pull/808) fix: fix authenticator
+* [#817](https://github.com/bnb-chain/greenfield-storage-provider/pull/817) fix: resumable upload max payload size
 
 ## v0.2.3-alpha.1
 
