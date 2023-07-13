@@ -287,26 +287,46 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	objectIDStr := ctx.String(objectIDFlag.Name)
-	_, _ = chain.QueryObjectInfoByID(context.Background(), objectIDStr)
-	if err != nil {
-		return fmt.Errorf("failed to query object info, error: %v", err)
-	}
-	replicateIdx := -1
-	// TODO: use meta client to get GVG by bucketId and lvgId from objectInfo
-	// for i, addr := range objectInfo.GetSecondarySpAddresses() {
-	//	if strings.EqualFold(addr, cfg.SpAccount.SpOperatorAddress) {
-	//		replicateIdx = i
-	//		break
-	//	}
-	// }
 	objectID, err := strconv.ParseUint(objectIDStr, 10, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid object id, it should be an unsigned integer")
 	}
-	// TODO: get object integrity method now should transfer objectID and redundancyIndex
-	// TODO: -1 represents this is a primarySP; secondarySP should firstly query its order in secondary sp list
-	integrity, err := db.GetObjectIntegrity(objectID, -1)
+	client := utils.MakeGfSpClient(cfg)
+	objectInfo, err := client.GetObjectByID(ctx.Context, objectID)
+	if err != nil {
+		return fmt.Errorf("failed to query object info, error: %v\n", err)
+	}
+	bucket, err := client.GetBucketByBucketName(ctx.Context, objectInfo.GetBucketName(), true)
+	gvg, err := client.GetGlobalVirtualGroup(ctx.Context, bucket.BucketInfo.Id.Uint64(), objectInfo.GetLocalVirtualGroupId())
+	if err != nil {
+		return fmt.Errorf("failed to query global virtual group, error: %v\n", err)
+	}
+
+	spInfo, err := chain.QuerySP(ctx.Context, cfg.SpAccount.SpOperatorAddress)
+	if err != nil {
+		return fmt.Errorf("failed to query sp info, error: %v\n", err)
+	}
+	selfSpID := spInfo.GetId()
+	var replicateIdx int
+	// -1 represents this is a primarySP; secondarySP should firstly query its order in secondary sp list
+	if selfSpID == gvg.GetPrimarySpId() {
+		fmt.Printf("%d belongs to primary sp\n", objectID)
+		replicateIdx = -1
+	} else {
+		for index, spID := range gvg.GetSecondarySpIds() {
+			if selfSpID == spID {
+				replicateIdx = index
+				break
+			}
+			if replicateIdx == 0 {
+				fmt.Printf("%d doesn't belong to this secondary sp list\n", objectID)
+			}
+		}
+	}
+
+	integrity, err := db.GetObjectIntegrity(objectID, int32(replicateIdx))
 	if err != nil {
 		return err
 	}

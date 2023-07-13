@@ -284,10 +284,8 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				}
 				integrityHash := hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList)
 				if !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
-					log.CtxErrorw(ctx, "invalid integrity hash",
-						"integrity", hex.EncodeToString(integrity),
+					log.CtxErrorw(ctx, "invalid integrity hash", "integrity", hex.EncodeToString(integrity),
 						"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
-					err = ErrInvalidIntegrity
 					return ErrInvalidIntegrity
 				}
 				integrityMeta.IntegrityChecksum = integrityHash
@@ -298,7 +296,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				}
 			}
 
-			log.CtxDebugw(ctx, "succeed to upload payload to piece store")
+			log.CtxDebug(ctx, "succeed to upload payload to piece store")
 			return nil
 		}
 		if err != nil {

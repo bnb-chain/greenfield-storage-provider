@@ -35,7 +35,7 @@ var (
 	ErrReplicateIdsOutOfBounds = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
 	ErrGfSpDB                  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
 	ErrRecoveryRedundancyType  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
-	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "fail to get enough piece data to recovery")
+	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "failed to get enough piece data to recovery")
 	ErrRecoveryDecode          = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
 	ErrPieceStore              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
 	ErrRecoveryPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
@@ -43,6 +43,8 @@ var (
 	ErrPrimaryNotFound         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recovering")
 	ErrRecoveryPieceIndex      = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
 	ErrMigratedPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
+	ErrInvalidRedundancyIndex  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45211, "invalid redundancy index")
+	ErrSetObjectIntegrity      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "failed to set object integrity into spdb")
 )
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {

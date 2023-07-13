@@ -224,9 +224,9 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		defer atomic.AddInt64(&e.doingMigrationGVGTaskCnt, -1)
 		e.HandleMigrateGVGTask(ctx, t)
 	default:
-		log.CtxErrorw(ctx, "unsupported task type")
+		log.CtxError(ctx, "unsupported task type")
 	}
-	log.CtxDebugw(ctx, "finish to handle task")
+	log.CtxDebug(ctx, "finish to handle task")
 	return nil
 }
 

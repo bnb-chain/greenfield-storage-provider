@@ -329,8 +329,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	migratedIntegrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
 	var chainIntegrityHash []byte
 	if redundancyIdx < -1 || redundancyIdx > 5 {
-		// TODO: define an error
-		return fmt.Errorf("invalid redundancy index")
+		return ErrInvalidRedundancyIndex
 	}
 	if redundancyIdx == -1 {
 		// primarySP
@@ -353,8 +352,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	}); err != nil {
 		log.Errorw("failed to set object integrity into spdb", "object_id", objectInfo.Id.String(),
 			"object_name", objectInfo.GetObjectName(), "error", err)
-		// TODO: define an sql db error
-		return err
+		return ErrSetObjectIntegrity
 	}
 	log.Infow("succeed to compute and set object integrity", "object_id", objectInfo.Id.String(),
 		"object_name", objectInfo.GetObjectName())
