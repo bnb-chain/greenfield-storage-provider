@@ -214,7 +214,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	}
 
 	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
-	// log.CtxInfow(ctx, "succeed to list migrate bucket events")
+	log.CtxInfow(ctx, "succeed to list migrate bucket events")
 	return resp, nil
 }
 
@@ -296,7 +296,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 	}
 
 	resp = &types.GfSpListSwapOutEventsResponse{Events: res}
-	// log.CtxInfow(ctx, "succeed to list migrate swap out events", "request", req, "response", resp)
+	log.CtxInfow(ctx, "succeed to list migrate swap out events", "request", req, "response", resp)
 	return resp, nil
 }
 
@@ -328,7 +328,7 @@ func (r *MetadataModular) GfSpListGlobalVirtualGroupsBySecondarySP(ctx context.C
 	}
 
 	resp = &types.GfSpListGlobalVirtualGroupsBySecondarySPResponse{Groups: res}
-	// log.CtxInfow(ctx, "succeed to get global virtual group by secondary sp id")
+	log.CtxInfow(ctx, "succeed to get global virtual group by secondary sp id")
 	return resp, nil
 }
 
@@ -372,7 +372,7 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		spEvent         *virtual_types.EventStorageProviderExit
 		spCompleteEvent *virtual_types.EventCompleteStorageProviderExit
 	)
-	// log.Debugw("GfSpListSpExitEvents", "block-id", req.BlockId, "operator-address", req.OperatorAddress)
+	log.Debugw("GfSpListSpExitEvents", "block-id", req.BlockId, "operator-address", req.OperatorAddress)
 	ctx = log.Context(ctx, req)
 	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
 	if err != nil {
@@ -399,6 +399,6 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		Event:         spEvent,
 		CompleteEvent: spCompleteEvent,
 	}}
-	// log.CtxInfow(ctx, "succeed to list sp exit events")
+	log.CtxInfow(ctx, "succeed to list sp exit events")
 	return resp, nil
 }

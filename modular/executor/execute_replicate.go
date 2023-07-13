@@ -82,27 +82,27 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	log.Debugw("replicate task info", "task_sps", rTask.GetSecondaryEndpoints())
 
 	doReplicateECPiece := func(pieceIdx uint32, data [][]byte) {
-		log.Debugw("start to replicate ec piece")
+		log.Debug("start to replicate ec piece")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate ec piece", "sp", sp)
 			wg.Add(1)
 			go e.doReplicatePiece(ctx, &wg, rTask, sp, uint32(rIdx), pieceIdx, data[rIdx])
 		}
 		wg.Wait()
-		log.Debugw("finish to replicate ec piece")
+		log.Debug("finish to replicate ec piece")
 	}
 	doReplicateSegmentPiece := func(pieceIdx uint32, data []byte) {
-		log.Debugw("start to replicate segment piece")
+		log.Debug("start to replicate segment piece")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate segment piece", "sp", sp)
 			wg.Add(1)
 			go e.doReplicatePiece(ctx, &wg, rTask, sp, uint32(rIdx), pieceIdx, data)
 		}
 		wg.Wait()
-		log.Debugw("finish to replicate segment piece")
+		log.Debug("finish to replicate segment piece")
 	}
 	doneReplicate := func() error {
-		log.Debugw("start to done replicate")
+		log.Debug("start to done replicate")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", sp)
 			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, uint32(rIdx))
@@ -114,7 +114,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 				return innerErr
 			}
 		}
-		log.Debugw("finish to done replicate")
+		log.Debug("finish to done replicate")
 		return nil
 	}
 
@@ -179,7 +179,6 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), replicateIdx, int32(pieceIdx), int64(len(data)))
-	log.Infow("view doReplicatePiece objectInfo", "objectInfo", rTask.GetObjectInfo())
 	receive.SetPieceChecksum(hash.GenerateChecksum(data))
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
 	signTime := time.Now()
