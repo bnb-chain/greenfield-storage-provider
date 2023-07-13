@@ -6,6 +6,7 @@ import (
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -18,8 +19,22 @@ type Consensus interface {
 	HasAccount(ctx context.Context, account string) (bool, error)
 	// ListSPs returns all SP info.
 	ListSPs(ctx context.Context) ([]*sptypes.StorageProvider, error)
+	// QuerySP returns the sp info by operator address.
+	QuerySP(context.Context, string) (*sptypes.StorageProvider, error)
+	// QuerySPByID returns the sp info by sp id.
+	QuerySPByID(context.Context, uint32) (*sptypes.StorageProvider, error)
 	// ListBondedValidators returns all bonded validators info.
 	ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error)
+	// ListVirtualGroupFamilies return all virtual group family which primary sp is spID.
+	ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error)
+	// QueryVirtualGroupFamily return the virtual group family info.
+	QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error)
+	// QueryGlobalVirtualGroup returns the global virtual group info.
+	QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error)
+	// ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
+	ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
+	// QueryVirtualGroupParams returns the virtual group params.
+	QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error)
 	// QueryStorageParams returns the storage params.
 	QueryStorageParams(ctx context.Context) (params *storagetypes.Params, err error)
 	// QueryStorageParamsByTimestamp returns the storage params by block create time.
@@ -40,6 +55,8 @@ type Consensus interface {
 	VerifyPutObjectPermission(ctx context.Context, account, bucket, object string) (bool, error)
 	// ListenObjectSeal returns an indicator whether the object is successfully sealed before timeOutHeight.
 	ListenObjectSeal(ctx context.Context, objectID uint64, timeOutHeight int) (bool, error)
+	// ListenRejectUnSealObject returns an indication of the object is rejected.
+	ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error)
 	// Close the Consensus interface.
 	Close() error
 }
@@ -56,7 +73,35 @@ func (*NullConsensus) ListSPs(context.Context) ([]*sptypes.StorageProvider, erro
 	return nil, nil
 }
 
+func (*NullConsensus) QuerySP(context.Context, string) (*sptypes.StorageProvider, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) QuerySPByID(context.Context, uint32) (*sptypes.StorageProvider, error) {
+	return nil, nil
+}
+
 func (*NullConsensus) ListBondedValidators(context.Context) ([]stakingtypes.Validator, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) ListVirtualGroupFamilies(context.Context, uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32, uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
 	return nil, nil
 }
 
@@ -88,6 +133,9 @@ func (*NullConsensus) VerifyPutObjectPermission(context.Context, string, string,
 	return false, nil
 }
 func (*NullConsensus) ListenObjectSeal(context.Context, uint64, int) (bool, error) {
+	return false, nil
+}
+func (*NullConsensus) ListenRejectUnSealObject(context.Context, uint64, int) (bool, error) {
 	return false, nil
 }
 func (*NullConsensus) Close() error { return nil }

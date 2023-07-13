@@ -5,15 +5,19 @@ on:
     branches:
       - master
       - develop
+      - ci-*
       - release*
       - fix-release*
+      - feat-*
 
   pull_request:
     branches:
       - master
       - develop
       - release*
+      - ci-*
       - fix-release*
+      - feat-*
 
 env:
   CGO_CFLAGS: "-O -D__BLST_PORTABLE__"
@@ -26,9 +30,6 @@ jobs:
         go-version: [1.20.x]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    env:
-      GOPRIVATE: github.com/bnb-chain
-      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
@@ -66,9 +67,6 @@ jobs:
       - run: |
           make install-tools
           make buf-gen
-
-      - name: Setup GitHub Token
-        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
 
       - name: Unit Test
         run: |

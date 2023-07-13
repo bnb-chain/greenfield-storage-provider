@@ -8,12 +8,12 @@ import (
 
 const (
 	// DefaultExecutorMaxExecuteNum defines the default max parallel execute task number.
-	DefaultExecutorMaxExecuteNum int64 = 1024
+	DefaultExecutorMaxExecuteNum int64 = 16
 	// DefaultExecutorAskTaskInterval defines the default ask task interval from manager.
 	DefaultExecutorAskTaskInterval int = 1
 	// DefaultExecutorAskReplicateApprovalTimeout defines the ask replicate piece approval
 	// timeout that send the request to the p2p node,
-	DefaultExecutorAskReplicateApprovalTimeout int64 = 10
+	DefaultExecutorAskReplicateApprovalTimeout int64 = 4
 	// DefaultExecutorAskReplicateApprovalExFactor defines the expanded factor for asking
 	// secondary SP.
 	// Example: need data chunk + data parity chunk numbers SPs as secondary, consider fault
@@ -34,6 +34,39 @@ const (
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
+	// DefaultSleepInterval defines the sleep interval when failed to ask task
+	// it is millisecond level
+	DefaultSleepInterval = 100
+)
+
+const (
+	ExeutorSuccessAskTask   = "executor_ask_task_success"
+	ExeutorRunTask          = "executor_run_task"
+	ExeutorFailureAskTask   = "executor_ask_task_failure"
+	ExeutorFailureAskNoTask = "executor_ask_no_task_failure"
+
+	ExeutorSuccessReplicateTask  = "executor_replicate_task_success"
+	ExeutorFailureReplicateTask  = "executor_replicate_task_failure"
+	ExeutorSuccessSealObjectTask = "executor_seal_object_task_success"
+	ExeutorFailureSealObjectTask = "executor_seal_object_task_failure"
+	ExeutorSuccessReceiveTask    = "executor_receive_task_success"
+	ExeutorFailureReceiveTask    = "executor_receive_task_failure"
+	ExeutorSuccessRecoveryTask   = "executor_recovery_task_success"
+	ExeutorFailureRecoveryTask   = "executor_recovery_task_failure"
+
+	ExeutorSuccessReportTask = "executor_report_task_to_manager_success"
+	ExeutorFailureReportTask = "executor_report_task_to_manager_failure"
+
+	ExeutorSuccessP2P                = "executor_p2p_success"
+	ExeutorFailureP2P                = "executor_p2p_failure"
+	ExeutorSuccessReplicateAllPiece  = "executor_replicate_all_piece_success"
+	ExeutorFailureReplicateAllPiece  = "executor_replicate_all_piece_failure"
+	ExeutorSuccessReplicateOnePiece  = "executor_replicate_one_piece_success"
+	ExeutorFailureReplicateOnePiece  = "executor_replicate_one_piece_failure"
+	ExeutorSuccessDoneReplicatePiece = "executor_done_replicate_piece_success"
+	ExeutorFailureDoneReplicatePiece = "executor_done_replicate_piece_failure"
+	ExeutorSuccessSealObject         = "executor_seal_object_success"
+	ExeutorFailureSealObject         = "executor_seal_object_failure"
 )
 
 func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -46,6 +79,7 @@ func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (co
 
 func DefaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Executor.MaxExecuteNumber == 0 {
+		// TODO:: DefaultExecutorMaxExecuteNum should core_num * multiple, the core_num is compatible with docker
 		cfg.Executor.MaxExecuteNumber = DefaultExecutorMaxExecuteNum
 	}
 	executor.maxExecuteNum = cfg.Executor.MaxExecuteNumber

@@ -1,6 +1,7 @@
 package gfspconfig
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -29,13 +30,15 @@ type Customize struct {
 	NewTQueueWithLimit             coretaskqueue.NewTQueueWithLimit
 	NewStrategyTQueueFunc          coretaskqueue.NewTQueueOnStrategy
 	NewStrategyTQueueWithLimitFunc coretaskqueue.NewTQueueOnStrategyWithLimit
+	NewVirtualGroupManagerFunc     vgmgr.NewVirtualGroupManager
 }
 
 // GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
+	Env            string
 	AppID          string
 	Server         []string
-	GrpcAddress    string
+	GRPCAddress    string
 	Customize      *Customize
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig
@@ -84,30 +87,38 @@ func (cfg *GfSpConfig) String() string {
 }
 
 type ChainConfig struct {
-	ChainID      string
-	ChainAddress []string
-	GasLimit     uint64
+	ChainID                           string
+	ChainAddress                      []string
+	SealGasLimit                      uint64
+	SealFeeAmount                     uint64
+	RejectSealGasLimit                uint64
+	RejectSealFeeAmount               uint64
+	DiscontinueBucketGasLimit         uint64
+	DiscontinueBucketFeeAmount        uint64
+	CreateGlobalVirtualGroupGasLimit  uint64
+	CreateGlobalVirtualGroupFeeAmount uint64
 }
 
 type SpAccountConfig struct {
-	SpOperateAddress   string
+	SpOperatorAddress  string
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
+	SealBlsPrivateKey  string
 	ApprovalPrivateKey string
 	GcPrivateKey       string
 }
 
 type EndpointConfig struct {
-	ApproverEndpoint   string
-	ManagerEndpoint    string
-	DownloaderEndpoint string
-	ReceiverEndpoint   string
-	MetadataEndpoint   string
-	UploaderEndpoint   string
-	P2PEndpoint        string
-	SignerEndpoint     string
-	AuthorizerEndpoint string
+	ApproverEndpoint      string
+	ManagerEndpoint       string
+	DownloaderEndpoint    string
+	ReceiverEndpoint      string
+	MetadataEndpoint      string
+	UploaderEndpoint      string
+	P2PEndpoint           string
+	SignerEndpoint        string
+	AuthenticatorEndpoint string
 }
 
 type ApprovalConfig struct {
@@ -124,8 +135,8 @@ type BucketConfig struct {
 }
 
 type GatewayConfig struct {
-	Domain      string
-	HttpAddress string
+	DomainName  string
+	HTTPAddress string
 }
 
 type ExecutorConfig struct {
@@ -157,6 +168,8 @@ type ParallelConfig struct {
 	GlobalGCObjectParallel             int
 	GlobalGCZombieParallel             int
 	GlobalGCMetaParallel               int
+	GlobalRecoveryPieceParallel        int
+	GlobalMigrateGVGParallel           int
 	GlobalDownloadObjectTaskCacheSize  int
 	GlobalChallengePieceTaskCacheSize  int
 	GlobalBatchGcObjectTimeInterval    int
@@ -174,6 +187,9 @@ type ParallelConfig struct {
 	DiscontinueBucketEnabled       bool
 	DiscontinueBucketTimeInterval  int
 	DiscontinueBucketKeepAliveDays int
+
+	LoadReplicateTimeout int64
+	LoadSealTimeout      int64
 }
 
 type TaskConfig struct {
@@ -196,8 +212,8 @@ type TaskConfig struct {
 type MonitorConfig struct {
 	DisableMetrics     bool
 	DisablePProf       bool
-	MetricsHttpAddress string
-	PProfHttpAddress   string
+	MetricsHTTPAddress string
+	PProfHTTPAddress   string
 }
 
 type RcmgrConfig struct {
@@ -225,5 +241,7 @@ type MetadataConfig struct {
 }
 
 type ManagerConfig struct {
-	EnableLoadTask bool
+	EnableLoadTask                         bool
+	SubscribeSPExitEventIntervalSec        int
+	SubscribeBucketMigrateEventIntervalSec int
 }

@@ -16,6 +16,7 @@ import (
 var _ module.Modular = &GateModular{}
 
 type GateModular struct {
+	env         string
 	domain      string
 	httpAddress string
 	baseApp     *gfspapp.GfSpBaseApp
@@ -24,6 +25,8 @@ type GateModular struct {
 
 	maxListReadQuota int64
 	maxPayloadSize   uint64
+
+	spID uint32
 }
 
 func (g *GateModular) Name() string {
@@ -82,4 +85,16 @@ func (g *GateModular) ReleaseResource(
 	ctx context.Context,
 	span rcmgr.ResourceScopeSpan) {
 	span.Done()
+}
+
+func (a *GateModular) getSPID() (uint32, error) {
+	if a.spID != 0 {
+		return a.spID, nil
+	}
+	spInfo, err := a.baseApp.Consensus().QuerySP(context.Background(), a.baseApp.OperatorAddress())
+	if err != nil {
+		return 0, err
+	}
+	a.spID = spInfo.GetId()
+	return a.spID, nil
 }

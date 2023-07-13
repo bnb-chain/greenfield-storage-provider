@@ -24,6 +24,8 @@ var storageMap = map[string]StorageFn{
 	S3Store:       newS3Store,
 	B2Store:       newB2Store,
 	MinioStore:    newMinioStore,
+	LdfsStore:     newLdfsStore,
+	AliyunfsStore: newAliyunfsStore,
 	DiskFileStore: newDiskFileStore,
 	MemoryStore:   newMemoryStore,
 }
@@ -70,6 +72,30 @@ type objectStorageSecretKey struct {
 
 func getSecretKeyFromEnv(accessKey, secretKey, sessionToken string) *objectStorageSecretKey {
 	key := &objectStorageSecretKey{}
+	if val, ok := os.LookupEnv(accessKey); ok {
+		key.accessKey = val
+	}
+	if val, ok := os.LookupEnv(secretKey); ok {
+		key.secretKey = val
+	}
+	if val, ok := os.LookupEnv(sessionToken); ok {
+		key.sessionToken = val
+	}
+	return key
+}
+
+type aliyunStorageSecretKey struct {
+	region       string
+	accessKey    string
+	secretKey    string
+	sessionToken string
+}
+
+func getAliyunSecretKeyFromEnv(region, accessKey, secretKey, sessionToken string) *aliyunStorageSecretKey {
+	key := &aliyunStorageSecretKey{}
+	if val, ok := os.LookupEnv(region); ok {
+		key.region = val
+	}
 	if val, ok := os.LookupEnv(accessKey); ok {
 		key.accessKey = val
 	}

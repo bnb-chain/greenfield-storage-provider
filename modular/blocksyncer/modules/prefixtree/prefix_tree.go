@@ -26,7 +26,7 @@ var (
 // buildPrefixTreeEvents maps event types that trigger the creation or deletion of prefix tree nodes.
 // If an event type is present and set to true in this map,
 // it means that event will result in changes to the prefix tree structure.
-var buildPrefixTreeEvents = map[string]bool{
+var BuildPrefixTreeEvents = map[string]bool{
 	EventCreateObject:       true,
 	EventDeleteObject:       true,
 	EventCancelCreateObject: true,
@@ -36,7 +36,7 @@ var buildPrefixTreeEvents = map[string]bool{
 // HandleEvent handles the events relevant to the building of the PrefixTree.
 // It checks the type of the event and calls the appropriate handler for it.
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
-	if !buildPrefixTreeEvents[event.Type] {
+	if !BuildPrefixTreeEvents[event.Type] {
 		return nil
 	}
 
@@ -118,7 +118,7 @@ func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetype
 		}
 	}
 
-	object, err := m.db.GetPrefixTreeObject(ctx, common.BigToHash(objectID.BigInt()))
+	object, err := m.db.GetPrefixTreeObject(ctx, common.BigToHash(objectID.BigInt()), bucketName)
 	if err != nil {
 		log.Errorw("failed to get prefix tree object", "error", err)
 		return err

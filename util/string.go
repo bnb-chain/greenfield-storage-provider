@@ -6,6 +6,8 @@ import (
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/lib/pq"
 )
 
 var (
@@ -120,4 +122,16 @@ func StringToBytesSlice(str string) ([][]byte, error) {
 		}
 	}
 	return hashList, nil
+}
+
+func StringArrayToUint32Slice(arr pq.StringArray) ([]uint32, error) {
+	uint32Slice := make([]uint32, len(arr))
+	for i, str := range arr {
+		val, err := StringToUint32(str)
+		if err != nil {
+			return nil, err
+		}
+		uint32Slice[i] = val
+	}
+	return uint32Slice, nil
 }

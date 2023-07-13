@@ -2,7 +2,7 @@ version: v1
 name: buf.build/bnb-chain/greenfield-storage-provider
 deps:
   - buf.build/cosmos/cosmos-proto
-  - buf.build/bnb-chain/greenfield
+  - buf.build/bnb-chain/greenfield:6238d03369aa4e51bbe357ed301fcd3f
   - buf.build/cosmos/gogo-proto
 breaking:
   use:
@@ -18,3 +18,4 @@ lint:
   except:
     - RPC_REQUEST_STANDARD_NAME
     - RPC_RESPONSE_STANDARD_NAME
+  allow_comment_ignores: true

@@ -259,6 +259,21 @@ func (mr *MockMetadataMockRecorder) GetUserBucketsCount(accountID, includeRemove
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockMetadata)(nil).GetUserBucketsCount), accountID, includeRemoved)
 }
 
+// ListBucketsByBucketID mocks base method.
+func (m *MockMetadata) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBucketsByBucketID", ids, includeRemoved)
+	ret0, _ := ret[0].([]*Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBucketsByBucketID indicates an expected call of ListBucketsByBucketID.
+func (mr *MockMetadataMockRecorder) ListBucketsByBucketID(ids, includeRemoved interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByBucketID", reflect.TypeOf((*MockMetadata)(nil).ListBucketsByBucketID), ids, includeRemoved)
+}
+
 // ListDeletedObjectsByBlockNumberRange mocks base method.
 func (m *MockMetadata) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
 	m.ctrl.T.Helper()
@@ -275,18 +290,18 @@ func (mr *MockMetadataMockRecorder) ListDeletedObjectsByBlockNumberRange(startBl
 }
 
 // ListExpiredBucketsBySp mocks base method.
-func (m *MockMetadata) ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error) {
+func (m *MockMetadata) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, limit int64) ([]*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListExpiredBucketsBySp", createAt, primarySpAddress, limit)
+	ret := m.ctrl.Call(m, "ListExpiredBucketsBySp", createAt, primarySpID, limit)
 	ret0, _ := ret[0].([]*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListExpiredBucketsBySp indicates an expected call of ListExpiredBucketsBySp.
-func (mr *MockMetadataMockRecorder) ListExpiredBucketsBySp(createAt, primarySpAddress, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListExpiredBucketsBySp(createAt, primarySpID, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockMetadata)(nil).ListExpiredBucketsBySp), createAt, primarySpAddress, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockMetadata)(nil).ListExpiredBucketsBySp), createAt, primarySpID, limit)
 }
 
 // ListGroupsByNameAndSourceType mocks base method.
@@ -318,6 +333,21 @@ func (m *MockMetadata) ListObjectsByBucketName(bucketName, continuationToken, pr
 func (mr *MockMetadataMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
+}
+
+// ListObjectsByObjectID mocks base method.
+func (m *MockMetadata) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectsByObjectID", ids, includeRemoved)
+	ret0, _ := ret[0].([]*Object)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectsByObjectID indicates an expected call of ListObjectsByObjectID.
+func (mr *MockMetadataMockRecorder) ListObjectsByObjectID(ids, includeRemoved interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByObjectID", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByObjectID), ids, includeRemoved)
 }
 
 // MockBSDB is a mock of BSDB interface.
@@ -568,6 +598,21 @@ func (mr *MockBSDBMockRecorder) GetUserBucketsCount(accountID, includeRemoved in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockBSDB)(nil).GetUserBucketsCount), accountID, includeRemoved)
 }
 
+// ListBucketsByBucketID mocks base method.
+func (m *MockBSDB) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBucketsByBucketID", ids, includeRemoved)
+	ret0, _ := ret[0].([]*Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBucketsByBucketID indicates an expected call of ListBucketsByBucketID.
+func (mr *MockBSDBMockRecorder) ListBucketsByBucketID(ids, includeRemoved interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByBucketID", reflect.TypeOf((*MockBSDB)(nil).ListBucketsByBucketID), ids, includeRemoved)
+}
+
 // ListDeletedObjectsByBlockNumberRange mocks base method.
 func (m *MockBSDB) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
 	m.ctrl.T.Helper()
@@ -584,18 +629,18 @@ func (mr *MockBSDBMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockN
 }
 
 // ListExpiredBucketsBySp mocks base method.
-func (m *MockBSDB) ListExpiredBucketsBySp(createAt int64, primarySpAddress string, limit int64) ([]*Bucket, error) {
+func (m *MockBSDB) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, limit int64) ([]*Bucket, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListExpiredBucketsBySp", createAt, primarySpAddress, limit)
+	ret := m.ctrl.Call(m, "ListExpiredBucketsBySp", createAt, primarySpID, limit)
 	ret0, _ := ret[0].([]*Bucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListExpiredBucketsBySp indicates an expected call of ListExpiredBucketsBySp.
-func (mr *MockBSDBMockRecorder) ListExpiredBucketsBySp(createAt, primarySpAddress, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListExpiredBucketsBySp(createAt, primarySpID, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockBSDB)(nil).ListExpiredBucketsBySp), createAt, primarySpAddress, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockBSDB)(nil).ListExpiredBucketsBySp), createAt, primarySpID, limit)
 }
 
 // ListGroupsByNameAndSourceType mocks base method.
@@ -627,4 +672,19 @@ func (m *MockBSDB) ListObjectsByBucketName(bucketName, continuationToken, prefix
 func (mr *MockBSDBMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
+}
+
+// ListObjectsByObjectID mocks base method.
+func (m *MockBSDB) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectsByObjectID", ids, includeRemoved)
+	ret0, _ := ret[0].([]*Object)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectsByObjectID indicates an expected call of ListObjectsByObjectID.
+func (mr *MockBSDBMockRecorder) ListObjectsByObjectID(ids, includeRemoved interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByObjectID", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByObjectID), ids, includeRemoved)
 }

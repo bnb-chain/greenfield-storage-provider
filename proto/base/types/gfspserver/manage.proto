@@ -10,6 +10,7 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types
 message GfSpBeginTaskRequest {
   oneof request {
     base.types.gfsptask.GfSpUploadObjectTask upload_object_task = 1;
+    base.types.gfsptask.GfSpResumableUploadObjectTask resumable_upload_object_task = 2;
   }
 }
 
@@ -30,6 +31,8 @@ message GfSpAskTaskResponse {
     base.types.gfsptask.GfSpGCObjectTask gc_object_task = 5;
     base.types.gfsptask.GfSpGCZombiePieceTask gc_zombie_piece_task = 6;
     base.types.gfsptask.GfSpGCMetaTask gc_meta_task = 7;
+    base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 8;
+    base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 9;
   }
 }
 
@@ -44,6 +47,9 @@ message GfSpReportTaskRequest {
     base.types.gfsptask.GfSpDownloadObjectTask download_object_task = 7;
     base.types.gfsptask.GfSpChallengePieceTask challenge_piece_task = 8;
     base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 9;
+    base.types.gfsptask.GfSpResumableUploadObjectTask resumable_upload_object_task = 10;
+    base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 11;
+    base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 12;
   }
 }
 
@@ -51,8 +57,27 @@ message GfSpReportTaskResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
+message GfSpPickVirtualGroupFamilyRequest {
+  base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 1;
+}
+
+message GfSpPickVirtualGroupFamilyResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  uint32 vgf_id = 2;
+}
+
+message GfSpNotifyMigrateGVGRequest {
+  base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 1;
+}
+
+message GfSpNotifyMigrateGVGResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
+  rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
+  rpc GfSpNotifyMigrateGVG(GfSpNotifyMigrateGVGRequest) returns (GfSpNotifyMigrateGVGResponse) {}
 }

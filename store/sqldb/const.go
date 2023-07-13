@@ -22,4 +22,24 @@ const (
 	ServiceConfigTableName = "service_config"
 	// OffChainAuthKeyTableName defines the off chain auth key table name.
 	OffChainAuthKeyTableName = "off_chain_auth_key"
+	// PutObjectSuccessTableName  defines the event of successfully putting object
+	PutObjectSuccessTableName = "put_object_success_event_log"
+	// PutObjectEventTableName defines the event of putting object
+	PutObjectEventTableName = "put_object_event_log"
+	// UploadTimeoutTableName defines the event of uploading object to primary sp timeout
+	UploadTimeoutTableName = "upload_timeout_event_log"
+	// UploadFailedTableName defines the event of unsuccessfully uploading object to primary sp
+	UploadFailedTableName = "upload_failed_event_log"
+	// ReplicateTimeoutTableName defines the event of replicating object to secondary sp timeout
+	ReplicateTimeoutTableName = "replicate_timeout_event_log"
+	// ReplicateFailedTableName defines the event of unsuccessfully uploading object to secondary sp
+	ReplicateFailedTableName = "replicate_failed_event_log"
+	// SealTimeoutTableName defines the event of sealing object timeout
+	SealTimeoutTableName = "seal_timeout_event_log"
+	// SealFailedTableName defines the event of unsuccessfully sealing object timeout
+	SealFailedTableName = "seal_failed_event_log"
+	// MigrateSubscribeProgressTableName defines the progress of subscribe migrate event.
+	MigrateSubscribeProgressTableName = "migrate_subscribe_progress"
+	// MigrateGVGTableName defines the progress of subscribe migrate event.
+	MigrateGVGTableName = "migrate_gvg"
 )

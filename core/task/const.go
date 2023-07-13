@@ -17,6 +17,9 @@ const (
 	// TypeTaskCreateBucketApproval defines the type of asking create bucket approval
 	// to primary SP task
 	TypeTaskCreateBucketApproval
+	// TypeTaskMigrateBucketApproval defines the type of asking migrate bucket approval
+	// to primary SP task
+	TypeTaskMigrateBucketApproval
 	// TypeTaskCreateObjectApproval defines the type of asking create object approval
 	// to primary SP task
 	TypeTaskCreateObjectApproval
@@ -25,8 +28,7 @@ const (
 	TypeTaskReplicatePieceApproval
 	// TypeTaskUpload defines the type of uploading object to primary SP task.
 	TypeTaskUpload
-	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs
-	// task.
+	// TypeTaskReplicatePiece defines the type of replicating pieces to secondary SPs task.
 	TypeTaskReplicatePiece
 	// TypeTaskSealObject defines the type of sealing object to the chain task.
 	TypeTaskSealObject
@@ -44,11 +46,18 @@ const (
 	TypeTaskGCZombiePiece
 	// TypeTaskGCMeta defines the type of collecting SP metadata task.
 	TypeTaskGCMeta
+	// TypeTaskRecoverPiece defines the type of the recovering piece task.
+	TypeTaskRecoverPiece
+	// TypeTaskMigrateGVG defines the type of migrating gvg task.
+	TypeTaskMigrateGVG
+	// TypeTaskMigratePiece defines the type of migrating piece task.
+	TypeTaskMigratePiece
 )
 
 var TypeTaskMap = map[TType]string{
 	TypeTaskUnknown:                "UnknownTask",
 	TypeTaskCreateBucketApproval:   "CreateBucketApprovalTask",
+	TypeTaskMigrateBucketApproval:  "MigrateBucketApprovalTask",
 	TypeTaskCreateObjectApproval:   "CreateObjectApprovalTask",
 	TypeTaskReplicatePieceApproval: "ReplicatePieceApprovalTask",
 	TypeTaskUpload:                 "UploadObjectTask",
@@ -60,6 +69,8 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCObject:               "GCObjectTask",
 	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
 	TypeTaskGCMeta:                 "GCMetaTask",
+	TypeTaskRecoverPiece:           "RecoverPieceTask",
+	TypeTaskMigrateGVG:             "MigrateGVGTask",
 }
 
 func TaskTypeName(taskType TType) string {

@@ -3,6 +3,7 @@ package gfspapp
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -18,7 +19,18 @@ var (
 )
 
 func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.GfSpReplicatePieceRequest) (
-	*gfspserver.GfSpReplicatePieceResponse, error) {
+	resp *gfspserver.GfSpReplicatePieceResponse, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.ReqCounter.WithLabelValues(ReceiverFailureReplicatePiece).Inc()
+			metrics.ReqTime.WithLabelValues(ReceiverFailureReplicatePiece).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ReceiverSuccessReplicatePiece).Inc()
+			metrics.ReqTime.WithLabelValues(ReceiverSuccessReplicatePiece).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
 	task := req.GetReceivePieceTask()
 	if task == nil {
 		log.Error("failed to receive piece due to task pointer dangling")
@@ -31,8 +43,6 @@ func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.Gf
 		return &gfspserver.GfSpReplicatePieceResponse{Err: ErrReceiveExhaustResource}, nil
 	}
 	defer span.Done()
-	metrics.ReceivePieceSizeHistogram.WithLabelValues(
-		g.receiver.Name()).Observe(float64(task.GetPieceSize()))
 	err = g.receiver.HandleReceivePieceTask(ctx, task, req.GetPieceData())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to replicate piece", "error", err)
@@ -43,21 +53,31 @@ func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.Gf
 }
 
 func (g *GfSpBaseApp) GfSpDoneReplicatePiece(ctx context.Context, req *gfspserver.GfSpDoneReplicatePieceRequest) (
-	*gfspserver.GfSpDoneReplicatePieceResponse, error) {
+	resp *gfspserver.GfSpDoneReplicatePieceResponse, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.ReqCounter.WithLabelValues(ReceiverFailureDoneReplicatePiece).Inc()
+			metrics.ReqTime.WithLabelValues(ReceiverFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ReceiverSuccessDoneReplicatePiece).Inc()
+			metrics.ReqTime.WithLabelValues(ReceiverSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
 	task := req.GetReceivePieceTask()
 	if task == nil {
 		log.Error("failed to done receive piece due to task pointer dangling")
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: ErrReceiveTaskDangling}, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-	integrity, signature, err := g.receiver.HandleDoneReceivePieceTask(ctx, task)
+	signature, err := g.receiver.HandleDoneReceivePieceTask(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece", "error", err)
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: gfsperrors.MakeGfSpError(err)}, nil
 	}
 	log.CtxDebugw(ctx, "succeed to done replicate pieces")
 	return &gfspserver.GfSpDoneReplicatePieceResponse{
-		IntegrityHash: integrity,
-		Signature:     signature,
+		Signature: signature,
 	}, nil
 }

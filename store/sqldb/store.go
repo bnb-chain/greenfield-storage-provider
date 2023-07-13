@@ -24,13 +24,13 @@ const (
 	SpDBDataBase = "SP_DB_DATABASE"
 
 	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
-	DefaultConnMaxLifetime = 60
+	DefaultConnMaxLifetime = 2048
 	// DefaultConnMaxIdleTime defines the default max idle time of connection.
-	DefaultConnMaxIdleTime = 30
+	DefaultConnMaxIdleTime = 2048
 	// DefaultMaxIdleConns defines the default max number of idle connections.
-	DefaultMaxIdleConns = 16
+	DefaultMaxIdleConns = 2048
 	// DefaultMaxOpenConns defines the default max number of open connections.
-	DefaultMaxOpenConns = 32
+	DefaultMaxOpenConns = 2048
 )
 
 var _ corespdb.SPDB = &SpDBImpl{}
@@ -74,6 +74,38 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to upload object progress table", "error", err)
 		return nil, err
 	}
+	if err = db.AutoMigrate(&PutObjectSuccessTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&PutObjectEventTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&UploadTimeoutTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&UploadFailedTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&ReplicateTimeoutTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&ReplicateFailedTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&SealTimeoutTable{}); err != nil {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&SealFailedTable{}); err != nil {
+		log.Errorw("failed to put event progress table", "error", err)
+		return nil, err
+	}
 	if err = db.AutoMigrate(&GCObjectProgressTable{}); err != nil {
 		log.Errorw("failed to gc object progress table", "error", err)
 		return nil, err
@@ -86,9 +118,12 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to create piece hash table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&IntegrityMetaTable{}); err != nil {
-		log.Errorw("failed to create integrity meta table", "error", err)
-		return nil, err
+	for i := 0; i < IntegrityMetasNumberOfShards; i++ {
+		shardTableName := fmt.Sprintf(IntegrityMetaTable{}.TableName()+"_%02d", i)
+		if err = db.Table(shardTableName).AutoMigrate(&IntegrityMetaTable{}); err != nil {
+			log.Errorw("failed to create integrity meta table", "error", err)
+			return nil, err
+		}
 	}
 	if err = db.AutoMigrate(&BucketTrafficTable{}); err != nil {
 		log.Errorw("failed to create bucket traffic table", "error", err)
@@ -100,6 +135,14 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 	}
 	if err = db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil {
 		log.Errorw("failed to create off-chain authKey table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&MigrateSubscribeProgressTable{}); err != nil {
+		log.Errorw("failed to migrate subscribe progress table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&MigrateGVGTable{}); err != nil {
+		log.Errorw("failed to migrate gvg table", "error", err)
 		return nil, err
 	}
 	return db, nil

@@ -1,6 +1,13 @@
 package bsdb
 
-import permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+import (
+	"database/sql/driver"
+	"fmt"
+	"strconv"
+	"strings"
+
+	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+)
 
 // ListObjectsResult represents the result of a List Objects operation.
 type ListObjectsResult struct {
@@ -43,3 +50,51 @@ const (
 	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database.
 	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
 )
+
+// ObjectIDs represents the request of list object by ids
+type ObjectIDs struct {
+	IDs []uint64 `json:"ids"`
+}
+
+// BucketIDs represents the request of list bucket by ids
+type BucketIDs struct {
+	IDs []uint64 `json:"ids"`
+}
+
+type Uint32Array []uint32
+
+func (a *Uint32Array) Scan(value interface{}) error {
+	if value == nil {
+		*a = nil
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to scan Uint32Array value: %v", value)
+	}
+
+	s := string(bytes)
+	fields := strings.Split(s, ",")
+	result := make([]uint32, len(fields))
+	for i, field := range fields {
+		v, err := strconv.ParseUint(field, 10, 32)
+		if err != nil {
+			return fmt.Errorf("failed to scan Uint32Array value: %v", err)
+		}
+		result[i] = uint32(v)
+	}
+	*a = result
+	return nil
+}
+
+func (a Uint32Array) Value() (driver.Value, error) {
+	if len(a) == 0 {
+		return nil, nil
+	}
+	values := make([]string, len(a))
+	for i, value := range a {
+		values[i] = strconv.FormatUint(uint64(value), 10)
+	}
+	return strings.Join(values, ","), nil
+}

@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.2.3-alpha.2
+FEATURES
+* [#664](https://github.com/bnb-chain/greenfield-storage-provider/pull/664) feat: simulate discontinue transaction before broadcast
+* [#643](https://github.com/bnb-chain/greenfield-storage-provider/pull/643) feat: customize http client using connection pool
+* [#681](https://github.com/bnb-chain/greenfield-storage-provider/pull/681) feat: implement aliyun oss storage
+* [#706](https://github.com/bnb-chain/greenfield-storage-provider/pull/706) feat: verify object permission by meta service
+* [#699](https://github.com/bnb-chain/greenfield-storage-provider/pull/699) feat: SP database sharding
+* [#795](https://github.com/bnb-chain/greenfield-storage-provider/pull/795) feat: basic workflow adaptation in sp exit
+
+REFACTOR
+* [#709](https://github.com/bnb-chain/greenfield-storage-provider/pull/709) refactor: manager dispatch task
+* [#800](https://github.com/bnb-chain/greenfield-storage-provider/pull/800) refactor: async report task
+
+BUGFIX
+* [#672](https://github.com/bnb-chain/greenfield-storage-provider/pull/672) fix: fix data recovery
+* [#690](https://github.com/bnb-chain/greenfield-storage-provider/pull/690) fix: re-enable the off chain auth api and add related ut
+* [#810](https://github.com/bnb-chain/greenfield-storage-provider/pull/810) fix: fix aliyunfs by fetching credentials with AliCloud SDK
+* [#808](https://github.com/bnb-chain/greenfield-storage-provider/pull/808) fix: fix authenticator
+* [#817](https://github.com/bnb-chain/greenfield-storage-provider/pull/817) fix: resumable upload max payload size
+
+## v0.2.3-alpha.1
+
+FEATURES  
+* [#638](https://github.com/bnb-chain/greenfield-storage-provider/pull/638) feat: support data recovery
+* [#660](https://github.com/bnb-chain/greenfield-storage-provider/pull/660) feat: add download cache 
+* [#480](https://github.com/bnb-chain/greenfield-storage-provider/pull/480) feat: support resumable upload
+
+REFACTOR
+* [#649](https://github.com/bnb-chain/greenfield-storage-provider/pull/649) docs: sp docs add flowchart
+
+BUGFIX
+* [#648](https://github.com/bnb-chain/greenfield-storage-provider/pull/648) fix: request cannot be nil in latestBlockHeight
+
+
 ## v0.2.2-alpha.1
 
 FEATURES

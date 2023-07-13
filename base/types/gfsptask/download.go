@@ -128,6 +128,26 @@ func (m *GfSpDownloadObjectTask) EstimateLimit() corercmgr.Limit {
 	return l
 }
 
+func (m *GfSpDownloadObjectTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpDownloadObjectTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
+func (m *GfSpDownloadObjectTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpDownloadObjectTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpDownloadObjectTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpDownloadObjectTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -145,10 +165,6 @@ func (m *GfSpDownloadObjectTask) GetSize() int64 {
 
 func (m *GfSpDownloadObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 	m.ObjectInfo = object
-}
-
-func (m *GfSpDownloadObjectTask) SetUserAddress(address string) {
-	m.UserAddress = address
 }
 
 func (m *GfSpDownloadObjectTask) SetStorageParams(params *storagetypes.Params) {
@@ -277,6 +293,18 @@ func (m *GfSpDownloadPieceTask) EstimateLimit() corercmgr.Limit {
 	return l
 }
 
+func (m *GfSpDownloadPieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpDownloadPieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpDownloadPieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpDownloadPieceTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -293,8 +321,12 @@ func (m *GfSpDownloadPieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 	m.ObjectInfo = object
 }
 
+func (m *GfSpDownloadPieceTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
 func (m *GfSpDownloadPieceTask) SetUserAddress(address string) {
-	m.UserAddress = address
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpDownloadPieceTask) SetStorageParams(params *storagetypes.Params) {
@@ -446,6 +478,18 @@ func (m *GfSpChallengePieceTask) EstimateLimit() corercmgr.Limit {
 	return l
 }
 
+func (m *GfSpChallengePieceTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpChallengePieceTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpChallengePieceTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
 func (m *GfSpChallengePieceTask) Error() error {
 	return m.GetTask().Error()
 }
@@ -466,8 +510,12 @@ func (m *GfSpChallengePieceTask) SetBucketInfo(bucket *storagetypes.BucketInfo) 
 	m.BucketInfo = bucket
 }
 
+func (m *GfSpChallengePieceTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
 func (m *GfSpChallengePieceTask) SetUserAddress(address string) {
-	m.UserAddress = address
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpChallengePieceTask) SetSegmentIdx(idx uint32) {

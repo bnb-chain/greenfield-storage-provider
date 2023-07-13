@@ -1,35 +1,34 @@
-# ServiceLifecycle
+# Lifecycle
 
-ServiceLifecycle is the interface to the service life cycle management subsystem.
-The ServiceLifecycle tracks the Service life cycle, listens to the signal of the
-process for graceful exit.
+Lifecycle interface manages the lifecycle of a service and tracks its state changes. It also listens for signals from
+the process to ensure a graceful shutdown.
 
-# Concept
+## Concept
 
-## Service
+### Service Interface
 
-Service is the interface for ServiceLifecycle to manage. The component that plans 
-to use ServiceLifecycle needs to implement the interface.
+Service is an interface for Lifecycle to manage. The component that plans to use Lifecycle needs to implement this interface.
 
 ```go
-// Service is the interface for ServiceLifecycle to manage.
+// Service provides abstract methods to control the lifecycle of a service
+// Every service must implement Service interface.
 type Service interface {
-	// Name defines the unique identifier of the service, which cannot be repeated 
-	// globally.
+	// Name defines the unique identifier of a service, which cannot be repeated globally.
 	Name() string
-	// Start the service, for resource application, start background coroutine and 
+	// Start a service, for resource application, start background coroutine and 
 	// other startup operations.
 	//
-	// The Start method should be used in non-block way, for example, a blocked 
+	// Start method should be used in non-block way, for example, a blocked 
 	// listening socket should open a goroutine separately internally.
 	Start(ctx context.Context) error
-	// Stop the service, close the goroutines inside the service, recycle resources, 
-	// and ensure the graceful launch of the service.
+	// Stop a service, close the goroutines inside the service, recycle resources, 
+	// and ensure the graceful shutdown of the service.
 	Stop(ctx context.Context) error
 }
 ```
 
-# Example
+### Example
+
 ```go
     ctx := context.Background()
     svcLifecycle.RegisterServices(service...)

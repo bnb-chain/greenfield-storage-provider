@@ -3,11 +3,13 @@ package gfspapp
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 var (
@@ -40,6 +42,22 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 			Response: &gfspserver.GfSpAskApprovalResponse_CreateBucketApprovalTask{
 				CreateBucketApprovalTask: approvalTask,
 			}}, nil
+	case *gfspserver.GfSpAskApprovalRequest_MigrateBucketApprovalTask:
+		approvalTask := task.MigrateBucketApprovalTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
+		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
+			return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
+		}
+		defer span.Done()
+		allow, err := g.OnAskMigrateBucketApproval(ctx, approvalTask)
+		return &gfspserver.GfSpAskApprovalResponse{
+			Err:     gfsperrors.MakeGfSpError(err),
+			Allowed: allow,
+			Response: &gfspserver.GfSpAskApprovalResponse_MigrateBucketApprovalTask{
+				MigrateBucketApprovalTask: approvalTask,
+			}}, nil
 	case *gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask:
 		approvalTask := task.CreateObjectApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
@@ -62,18 +80,28 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 	}
 }
 
-func (g *GfSpBaseApp) OnAskCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask) (bool, error) {
+func (g *GfSpBaseApp) OnAskCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask) (allow bool, err error) {
 	if task == nil || task.GetCreateBucketInfo() == nil {
 		log.CtxError(ctx, "failed to ask create bucket approval due to bucket info pointer dangling")
 		return false, ErrApprovalTaskDangling
 	}
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.ReqCounter.WithLabelValues(ApproverFailureGetBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(ApproverFailureGetBucketApproval).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ApproverSuccessGetBucketApproval).Inc()
+			metrics.ReqTime.WithLabelValues(ApproverSuccessGetBucketApproval).Observe(time.Since(startTime).Seconds())
+		}
+	}()
 
-	err := g.approver.PreCreateBucketApproval(ctx, task)
+	err = g.approver.PreCreateBucketApproval(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to pre create bucket approval", "info", task.Info(), "error", err)
 		return false, err
 	}
-	allow, err := g.approver.HandleCreateBucketApprovalTask(ctx, task)
+	allow, err = g.approver.HandleCreateBucketApprovalTask(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to ask create bucket approval", "error", err)
 		return false, err
@@ -83,18 +111,49 @@ func (g *GfSpBaseApp) OnAskCreateBucketApproval(ctx context.Context, task task.A
 	return allow, nil
 }
 
-func (g *GfSpBaseApp) OnAskCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask) (bool, error) {
+func (g *GfSpBaseApp) OnAskMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask) (bool, error) {
+	if task == nil || task.GetMigrateBucketInfo() == nil {
+		log.CtxError(ctx, "failed to ask migrate bucket approval due to bucket info pointer dangling")
+		return false, ErrApprovalTaskDangling
+	}
+
+	err := g.approver.PreMigrateBucketApproval(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pre migrate bucket approval", "info", task.Info(), "error", err)
+		return false, err
+	}
+	allow, err := g.approver.HandleMigrateBucketApprovalTask(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to ask  migrate bucket approval", "error", err)
+		return false, err
+	}
+	g.approver.PostMigrateBucketApproval(ctx, task)
+	log.CtxDebugw(ctx, "succeed to ask migrate bucket approval")
+	return allow, nil
+}
+
+func (g *GfSpBaseApp) OnAskCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask) (allow bool, err error) {
 	if task == nil || task.GetCreateObjectInfo() == nil {
 		log.CtxError(ctx, "failed to ask create object approval due to object info pointer dangling")
 		return false, ErrApprovalTaskDangling
 	}
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.ReqCounter.WithLabelValues(ApproverFailureGetObjectApproval).Inc()
+			metrics.ReqTime.WithLabelValues(ApproverFailureGetObjectApproval).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ApproverSuccessGetObjectApproval).Inc()
+			metrics.ReqTime.WithLabelValues(ApproverSuccessGetObjectApproval).Observe(time.Since(startTime).Seconds())
+		}
+	}()
 
-	err := g.approver.PreCreateObjectApproval(ctx, task)
+	err = g.approver.PreCreateObjectApproval(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to pre create object approval", "info", task.Info(), "error", err)
 		return false, err
 	}
-	allow, err := g.approver.HandleCreateObjectApprovalTask(ctx, task)
+	allow, err = g.approver.HandleCreateObjectApprovalTask(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to ask create object approval", "error", err)
 		return false, err

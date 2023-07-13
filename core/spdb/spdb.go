@@ -3,8 +3,32 @@ package spdb
 import (
 	"time"
 
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+)
+
+const (
+	GatewayBeginReceiveUpload           = "gateway_begin_receive_upload"
+	GatewayEndReceiveUpload             = "gateway_end_receive_upload"
+	UploaderBeginReceiveData            = "uploader_begin_receive_data"
+	UploaderEndReceiveData              = "uploader_end_receive_data"
+	ManagerReceiveAndWaitSchedulingTask = "manager_receive_and_wait_scheduling_task"
+	ManagerSchedulingTask               = "manager_scheduling_task"
+	ExecutorBeginTask                   = "executor_begin_task"
+	ExecutorEndTask                     = "executor_end_task"
+	ExecutorBeginP2P                    = "executor_begin_p2p"
+	ExecutorEndP2P                      = "executor_end_p2p"
+	ExecutorBeginReplicateOnePiece      = "executor_begin_replicate_one_piece"
+	ExecutorEndReplicateOnePiece        = "executor_end_replicate_one_piece"
+	ExecutorBeginReplicateAllPiece      = "executor_begin_replicate_all_piece"
+	ExecutorEndReplicateAllPiece        = "executor_end_replicate_all_piece"
+	ExecutorBeginDoneReplicatePiece     = "executor_begin_done_replicate_piece"
+	ExecutorEndDoneReplicatePiece       = "executor_end_done_replicate_piece"
+	ExecutorBeginSealTx                 = "executor_begin_seal_tx"
+	ExecutorEndSealTx                   = "executor_end_seal_tx"
+	ExecutorBeginConfirmSeal            = "executor_begin_confirm_seal"
+	ExecutorEndConfirmSeal              = "executor_end_confirm_seal"
 )
 
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
@@ -16,13 +40,15 @@ type UploadObjectProgressDB interface {
 	// UpdateUploadProgress updates the upload object progress state.
 	UpdateUploadProgress(uploadMeta *UploadObjectMeta) error
 	// GetUploadState queries the task state by object id.
-	GetUploadState(objectID uint64) (storetypes.TaskState, error)
+	GetUploadState(objectID uint64) (storetypes.TaskState, string, error)
 	// GetUploadMetasToReplicate queries the latest upload_done/replicate_doing object to continue replicate.
 	// It is only used in startup.
-	GetUploadMetasToReplicate(limit int) ([]*UploadObjectMeta, error)
+	GetUploadMetasToReplicate(limit int, timeout int64) ([]*UploadObjectMeta, error)
 	// GetUploadMetasToSeal queries the latest replicate_done/seal_doing object to continue seal.
 	// It is only used in startup.
-	GetUploadMetasToSeal(limit int) ([]*UploadObjectMeta, error)
+	GetUploadMetasToSeal(limit int, timeout int64) ([]*UploadObjectMeta, error)
+	// InsertPutEvent inserts a new upload event progress.
+	InsertPutEvent(task coretask.Task) error
 }
 
 // GCObjectProgressDB interface which records gc object related progress.
@@ -49,6 +75,8 @@ type SignatureDB interface {
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	// DeleteObjectIntegrity deletes the integrity hash.
 	DeleteObjectIntegrity(objectID uint64) error
+	// AppendObjectChecksumIntegrity gets integrity meta info by object id.
+	AppendObjectChecksumIntegrity(objectID uint64, checksum []byte) error
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
@@ -105,6 +133,43 @@ type OffChainAuthKeyDB interface {
 	InsertAuthKey(newRecord *OffChainAuthKey) error
 }
 
+// MigrateDB is used to support sp exit and bucket migrate.
+type MigrateDB interface {
+	// UpdateSPExitSubscribeProgress includes insert and update.
+	UpdateSPExitSubscribeProgress(blockHeight uint64) error
+	// QuerySPExitSubscribeProgress returns blockHeight which is called at startup.
+	QuerySPExitSubscribeProgress() (uint64, error)
+	// UpdateSwapOutSubscribeProgress includes insert and update.
+	UpdateSwapOutSubscribeProgress(blockHeight uint64) error
+	// QuerySwapOutSubscribeProgress returns blockHeight which is called at startup.
+	QuerySwapOutSubscribeProgress() (uint64, error)
+	// UpdateBucketMigrateSubscribeProgress includes insert and update.
+	UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error
+	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
+	QueryBucketMigrateSubscribeProgress() (uint64, error)
+
+	// InsertMigrateGVGUnit inserts a new gvg migrate unit.
+	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
+	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+
+	// UpdateMigrateGVGUnitStatus updates gvg unit status.
+	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
+	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID
+	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
+
+	// QueryMigrateGVGUnit returns the gvg migrate unit info.
+	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
+	// ListMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
+	ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*MigrateGVGUnitMeta, error)
+	// ListConflictedMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
+	ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error)
+	// ListRemotedMigrateGVGUnits is used to load at dest sp startup(sp exit).
+	ListRemotedMigrateGVGUnits() ([]*MigrateGVGUnitMeta, error)
+	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
+	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
+}
+
 type SPDB interface {
 	UploadObjectProgressDB
 	GCObjectProgressDB
@@ -112,4 +177,5 @@ type SPDB interface {
 	TrafficDB
 	SPInfoDB
 	OffChainAuthKeyDB
+	MigrateDB
 }

@@ -22,7 +22,7 @@ const (
 	DefaultGlobalSealObjectParallel int = 10240
 	// DefaultGlobalReceiveObjectParallel defines the default max parallel confirming
 	// receive pieces on greenfield in SP system.
-	DefaultGlobalReceiveObjectParallel int = 10240
+	DefaultGlobalReceiveObjectParallel int = 10240 * 10
 	// DefaultGlobalGCObjectParallel defines the default max parallel gc objects in SP
 	// system.
 	DefaultGlobalGCObjectParallel int = 4
@@ -32,6 +32,11 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
+	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
+	// system.
+	DefaultGlobalRecoveryPieceParallel int = 7
+	// DefaultGlobalMigrateGVGParallel defines the default max parallel migrating gvg in SP system.
+	DefaultGlobalMigrateGVGParallel int = 10
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
 	// object tasks in manager.
 	DefaultGlobalDownloadObjectTaskCacheSize int = 4096
@@ -40,10 +45,10 @@ const (
 	DefaultGlobalChallengePieceTaskCacheSize int = 4096
 	// DefaultGlobalBatchGcObjectTimeInterval defines the default interval for generating
 	// gc object task.
-	DefaultGlobalBatchGcObjectTimeInterval int = 30 * 60
+	DefaultGlobalBatchGcObjectTimeInterval int = 1 * 60
 	// DefaultGlobalGcObjectBlockInterval defines the default blocks number for getting
 	// deleted objects.
-	DefaultGlobalGcObjectBlockInterval uint64 = 500
+	DefaultGlobalGcObjectBlockInterval uint64 = 1000
 	// DefaultGlobalGcObjectSafeBlockDistance defines the default distance form current block
 	// height to gc the deleted object.
 	DefaultGlobalGcObjectSafeBlockDistance uint64 = 1000
@@ -53,6 +58,10 @@ const (
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
+	// DefaultListenRejectUnSealTimeoutHeight defines the default listen reject unseal object
+	// on greenfield timeout height, if after current block height + timeout height, the object
+	// is not rejected, it is judged failed to reject unseal object on greenfield.
+	DefaultListenRejectUnSealTimeoutHeight int = 10
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
@@ -60,6 +69,31 @@ const (
 	// DefaultDiscontinueBucketKeepAliveDays defines the default bucket keep alive days, after
 	// the interval, buckets will be discontinued, used for test net.
 	DefaultDiscontinueBucketKeepAliveDays = 7
+
+	DefaultLoadReplicateTimeout int64 = 60
+	DefaultLoadSealTimeout      int64 = 180
+	// DefaultSubscribeSPExitEventIntervalSec define the default time interval to subscribe sp exit event from metadata.
+	DefaultSubscribeSPExitEventIntervalSec = 1
+	// DefaultSubscribeBucketMigrateEventIntervalSec define the default time interval to subscribe bucket migrate event from metadata.
+	DefaultSubscribeBucketMigrateEventIntervalSec = 1
+	// DefaultSubscribeSwapOutEventIntervalSec define the default time interval to subscribe gvg swap out event from metadata.
+	DefaultSubscribeSwapOutEventIntervalSec = 1
+)
+
+const (
+	ManagerGCBlockNumber           = "manager_gc_block_number"
+	ManagerSuccessUpload           = "manager_upload_object_success"
+	ManagerFailureUpload           = "manager_upload_object_failure"
+	ManagerSuccessReplicate        = "manager_replicate_object_success"
+	ManagerFailureReplicate        = "manager_replicate_object_failure"
+	ManagerCancelReplicate         = "manager_replicate_object_cancel"
+	ManagerSuccessReplicateAndSeal = "manager_replicate_and_seal_object_success"
+	ManagerFailureReplicateAndSeal = "manager_replicate_and_seal_object_failure"
+	ManagerSuccessSeal             = "manager_seal_object_success"
+	ManagerFailureSeal             = "manager_seal_object_failure"
+	ManagerCancelSeal              = "manager_seal_object_cancel"
+	ManagerSuccessConfirmReceive   = "manager_confirm_receive_success"
+	ManagerFailureConfirmReceive   = "manager_confirm_receive_failure"
 )
 
 func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -70,7 +104,7 @@ func NewManageModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (cor
 	return manager, nil
 }
 
-func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) error {
+func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (err error) {
 	if cfg.Parallel.GlobalMaxUploadingParallel == 0 {
 		cfg.Parallel.GlobalMaxUploadingParallel = DefaultGlobalMaxUploadingNumber
 	}
@@ -95,12 +129,20 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.GlobalGCMetaParallel == 0 {
 		cfg.Parallel.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
 	}
+	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
+		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+	if cfg.Parallel.GlobalMigrateGVGParallel == 0 {
+		cfg.Parallel.GlobalMigrateGVGParallel = DefaultGlobalMigrateGVGParallel
+	}
+
 	if cfg.Parallel.GlobalDownloadObjectTaskCacheSize == 0 {
 		cfg.Parallel.GlobalDownloadObjectTaskCacheSize = DefaultGlobalDownloadObjectTaskCacheSize
 	}
 	if cfg.Parallel.GlobalChallengePieceTaskCacheSize == 0 {
 		cfg.Parallel.GlobalChallengePieceTaskCacheSize = DefaultGlobalChallengePieceTaskCacheSize
 	}
+
 	if cfg.Parallel.GlobalBatchGcObjectTimeInterval == 0 {
 		cfg.Parallel.GlobalBatchGcObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
 	}
@@ -119,6 +161,15 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	if cfg.Parallel.DiscontinueBucketKeepAliveDays == 0 {
 		cfg.Parallel.DiscontinueBucketKeepAliveDays = DefaultDiscontinueBucketKeepAliveDays
 	}
+	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
+		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
+	}
+	if cfg.Parallel.LoadReplicateTimeout == 0 {
+		cfg.Parallel.LoadReplicateTimeout = DefaultLoadReplicateTimeout
+	}
+	if cfg.Parallel.LoadSealTimeout == 0 {
+		cfg.Parallel.LoadSealTimeout = DefaultLoadSealTimeout
+	}
 
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
 	manager.loadTaskLimitToReplicate = cfg.Parallel.GlobalReplicatePieceParallel
@@ -134,10 +185,16 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
 	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval
 	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
+	manager.loadReplicateTimeout = cfg.Parallel.LoadReplicateTimeout
+	manager.loadSealTimeout = cfg.Parallel.LoadSealTimeout
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
+	manager.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-resumeable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
+	manager.recoveryQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-recovery-piece", cfg.Parallel.GlobalRecoveryPieceParallel)
 	manager.sealQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-seal-object", cfg.Parallel.GlobalSealObjectParallel)
 	manager.receiveQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
@@ -146,11 +203,27 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) e
 		manager.Name()+"-gc-object", cfg.Parallel.GlobalGCObjectParallel)
 	manager.gcZombieQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-zombie", cfg.Parallel.GlobalGCZombieParallel)
+	manager.migrateGVGQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-migrate-gvg", cfg.Parallel.GlobalMigrateGVGParallel)
 	manager.gcMetaQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-meta", cfg.Parallel.GlobalGCMetaParallel)
 	manager.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-download-object", cfg.Parallel.GlobalDownloadObjectTaskCacheSize)
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
+
+	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus()); err != nil {
+		return err
+	}
+	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
+	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeSPExitEventIntervalSec
+	}
+	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSec
+	}
+
 	return nil
 }

@@ -7,23 +7,24 @@ on:
     branches:
       - master
       - develop
+      - ci-*
       - release*
       - fix-release*
+      - feat-*
 
   pull_request:
     branches:
       - master
       - develop
+      - ci-*
       - release*
       - fix-release*
+      - feat-*
 
 jobs:
   golangci:
     name: golangci-lint
     runs-on: ${{ matrix.os }}
-    env:
-      GOPRIVATE: github.com/bnb-chain
-      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
     timeout-minutes: 8
     strategy:
       matrix:
@@ -31,9 +32,6 @@ jobs:
         os: [ ubuntu-latest ]
     steps:
       - uses: actions/checkout@v3
-      - name: Setup GitHub Token
-        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}

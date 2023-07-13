@@ -9,7 +9,8 @@ option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types
 message GfSpAskApprovalRequest {
   oneof request {
     base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 1;
-    base.types.gfsptask.GfSpCreateObjectApprovalTask create_object_approval_task = 2;
+    base.types.gfsptask.GfSpMigrateBucketApprovalTask migrate_bucket_approval_task = 2;
+    base.types.gfsptask.GfSpCreateObjectApprovalTask create_object_approval_task = 3;
   }
 }
 
@@ -18,7 +19,8 @@ message GfSpAskApprovalResponse {
   bool allowed = 2;
   oneof response {
     base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 3;
-    base.types.gfsptask.GfSpCreateObjectApprovalTask create_object_approval_task = 4;
+    base.types.gfsptask.GfSpMigrateBucketApprovalTask migrate_bucket_approval_task = 4;
+    base.types.gfsptask.GfSpCreateObjectApprovalTask create_object_approval_task = 5;
   }
 }
 

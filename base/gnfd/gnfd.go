@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	jsonclient "github.com/bnb-chain/greenfield-storage-provider/util/rpc/jsonrpc/client"
 	chainClient "github.com/bnb-chain/greenfield/sdk/client"
 	chttp "github.com/cometbft/cometbft/rpc/client/http"
 )
@@ -23,8 +24,9 @@ const (
 )
 
 var (
-	ErrNoSuchBucket = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500001, "no such bucket")
-	ErrSealTimeout  = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500002, "seal failed")
+	ErrNoSuchBucket        = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500001, "no such bucket")
+	ErrSealTimeout         = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500002, "seal failed")
+	ErrRejectUnSealTimeout = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500003, "reject unseal failed")
 )
 
 // GreenfieldClient the greenfield chain client, only use to query.
@@ -61,13 +63,15 @@ func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
 	if len(cfg.ChainAddress) == 0 {
 		return nil, errors.New("greenfield nodes missing")
 	}
+
 	var clients []*GreenfieldClient
 	var wsClients []*chttp.HTTP
 	for _, address := range cfg.ChainAddress {
-		cc, err := chainClient.NewGreenfieldClient(address, cfg.ChainID)
+		cc, err := chainClient.NewCustomGreenfieldClient(address, cfg.ChainID, jsonclient.DefaultHTTPClient)
 		if err != nil {
 			return nil, err
 		}
+
 		client := &GreenfieldClient{
 			Provider:    address,
 			chainClient: cc,

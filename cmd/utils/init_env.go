@@ -4,17 +4,17 @@ import (
 	"errors"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
@@ -35,13 +35,13 @@ func MakeConfig(ctx *cli.Context) (*gfspconfig.GfSpConfig, error) {
 		cfg.Monitor.DisableMetrics = ctx.Bool(MetricsDisableFlag.Name)
 	}
 	if ctx.IsSet(utils.MetricsHTTPFlag.Name) {
-		cfg.Monitor.MetricsHttpAddress = ctx.String(utils.MetricsHTTPFlag.Name)
+		cfg.Monitor.MetricsHTTPAddress = ctx.String(utils.MetricsHTTPFlag.Name)
 	}
 	if ctx.IsSet(PProfDisableFlag.Name) {
 		cfg.Monitor.DisablePProf = ctx.Bool(PProfDisableFlag.Name)
 	}
 	if ctx.IsSet(PProfHTTPFlag.Name) {
-		cfg.Monitor.PProfHttpAddress = ctx.String(PProfHTTPFlag.Name)
+		cfg.Monitor.PProfHTTPAddress = ctx.String(PProfHTTPFlag.Name)
 	}
 	if ctx.IsSet(DisableResourceManagerFlag.Name) {
 		cfg.Rcmgr.DisableRcmgr = ctx.Bool(DisableResourceManagerFlag.Name)
@@ -96,35 +96,35 @@ func initLog(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 }
 
 func MakeGfSpClient(cfg *gfspconfig.GfSpConfig) *gfspclient.GfSpClient {
-	if len(cfg.GrpcAddress) == 0 {
-		cfg.GrpcAddress = gfspapp.DefaultGrpcAddress
+	if len(cfg.GRPCAddress) == 0 {
+		cfg.GRPCAddress = gfspapp.DefaultGRPCAddress
 	}
 	if len(cfg.Endpoint.ApproverEndpoint) == 0 {
-		cfg.Endpoint.ApproverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ApproverEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.ManagerEndpoint) == 0 {
-		cfg.Endpoint.ManagerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ManagerEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.DownloaderEndpoint) == 0 {
-		cfg.Endpoint.DownloaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.DownloaderEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.ReceiverEndpoint) == 0 {
-		cfg.Endpoint.ReceiverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ReceiverEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.MetadataEndpoint) == 0 {
-		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.UploaderEndpoint) == 0 {
-		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.UploaderEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.P2PEndpoint) == 0 {
-		cfg.Endpoint.P2PEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.P2PEndpoint = cfg.GRPCAddress
 	}
 	if len(cfg.Endpoint.SignerEndpoint) == 0 {
-		cfg.Endpoint.SignerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.SignerEndpoint = cfg.GRPCAddress
 	}
-	if len(cfg.Endpoint.AuthorizerEndpoint) == 0 {
-		cfg.Endpoint.AuthorizerEndpoint = cfg.GrpcAddress
+	if len(cfg.Endpoint.AuthenticatorEndpoint) == 0 {
+		cfg.Endpoint.AuthenticatorEndpoint = cfg.GRPCAddress
 	}
 	client := gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
@@ -135,7 +135,7 @@ func MakeGfSpClient(cfg *gfspconfig.GfSpConfig) *gfspclient.GfSpClient {
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,
-		cfg.Endpoint.AuthorizerEndpoint,
+		cfg.Endpoint.AuthenticatorEndpoint,
 		false)
 	return client
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -29,12 +30,18 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 		b      []byte
 		reqCtx *RequestContext
 	)
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to request nonce", "req_info", reqCtx.String())
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -79,13 +86,18 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		nonce         string
 		expiryDateStr string
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey", "req_info", reqCtx.String())
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -263,7 +275,7 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 		spAddress := match[1]
 		// spName := match[2]  // keep this line here to indicate match[2] means spName
 		spNonce := match[3]
-		if spAddress == g.baseApp.OperateAddress() {
+		if spAddress == g.baseApp.OperatorAddress() {
 			found = true
 			if expectedNonce != spNonce { // nonce doesn't match
 				return ErrSignedMsgNotMatchTemplate

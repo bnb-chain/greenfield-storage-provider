@@ -27,11 +27,12 @@ It sorts from 50...
 * `51`: is used for PieceStore code.
 * `52`: is used for SpDB code.
 * `53`: is used for Resource manager code.
+* `54`: is used for VirtualGroup manager code.
 
 ### Modular Code
 It sorts from 0... to 49
 * `01`: is used for Approver modular code.
-* `02`: is used for Authorizer modular code.
+* `02`: is used for Authenticator modular code.
 * `03`: is used for Downloader modular code.
 * `04`: is used for TaskExecutor modular code.
 * `05`: is used for Gateway modular code.

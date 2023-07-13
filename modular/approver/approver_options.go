@@ -12,10 +12,10 @@ const (
 	DefaultAccountBucketNumber = 100
 	// DefaultBucketApprovalTimeoutHeight defines the default value of timeout
 	// height for creating bucket approval
-	DefaultBucketApprovalTimeoutHeight uint64 = 10
+	DefaultBucketApprovalTimeoutHeight uint64 = 100
 	// DefaultObjectApprovalTimeoutHeight defines the default value of timeout
 	//	// height for creating object approval
-	DefaultObjectApprovalTimeoutHeight uint64 = 10
+	DefaultObjectApprovalTimeoutHeight uint64 = 100
 	// DefaultCreateBucketApprovalParallel defines the default value of parallel
 	// for approved create bucket per approver
 	DefaultCreateBucketApprovalParallel = 10240

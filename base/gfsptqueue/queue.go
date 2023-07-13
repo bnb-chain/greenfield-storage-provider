@@ -2,7 +2,7 @@ package gfsptqueue
 
 import (
 	"net/http"
-	"strings"
+	"sort"
 	"sync"
 	"time"
 
@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
 )
 
 const (
@@ -27,8 +28,8 @@ var _ taskqueue.TQueueOnStrategy = &GfSpTQueue{}
 
 type GfSpTQueue struct {
 	name    string
-	tasks   []coretask.Task
-	indexer map[coretask.TKey]int
+	current int64
+	tasks   map[coretask.TKey]coretask.Task
 	cap     int
 	mux     sync.RWMutex
 
@@ -37,12 +38,10 @@ type GfSpTQueue struct {
 }
 
 func NewGfSpTQueue(name string, cap int) taskqueue.TQueueOnStrategy {
-	metrics.QueueCapGauge.WithLabelValues(name).Set(float64(cap))
 	return &GfSpTQueue{
-		name:    name,
-		cap:     cap,
-		tasks:   make([]coretask.Task, 0),
-		indexer: make(map[coretask.TKey]int),
+		name:  name,
+		cap:   cap,
+		tasks: make(map[coretask.TKey]coretask.Task),
 	}
 }
 
@@ -60,116 +59,55 @@ func (t *GfSpTQueue) Cap() int {
 
 // Has returns an indicator whether the task in queue.
 func (t *GfSpTQueue) Has(key coretask.TKey) bool {
-	// maybe gc task, need RWLock, not RLock
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-has").Observe(time.Since(startTime).Seconds())
+	}()
 	return t.has(key)
 }
 
 // Top returns the top task in the queue, if the queue empty, returns nil.
 func (t *GfSpTQueue) Top() coretask.Task {
-	var gcTasks []coretask.Task
-	// maybe gc task, need RWLock, not RLock
 	t.mux.Lock()
+	startTime := time.Now()
 	defer func() {
-		defer t.mux.Unlock()
-		for _, task := range gcTasks {
-			t.delete(task)
-		}
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-top").Observe(time.Since(startTime).Seconds())
 	}()
-
-	if len(t.tasks) == 0 {
-		return nil
-	}
-	for i := len(t.tasks) - 1; i >= 0; i-- {
-		if t.gcFunc != nil {
-			if t.gcFunc(t.tasks[i]) {
-				gcTasks = append(gcTasks, t.tasks[i])
-				continue
-			}
-		}
-		if t.filterFunc != nil {
-			if t.filterFunc(t.tasks[i]) {
-				return t.tasks[i]
-			}
-		} else {
-			return t.tasks[i]
-		}
-	}
-	return nil
+	return t.top()
 }
 
 // Pop pops and returns the top task in queue, if the queue empty, returns nil.
 func (t *GfSpTQueue) Pop() coretask.Task {
-	var gcTasks []coretask.Task
-	var popTask coretask.Task
-	// maybe trigger retire task, need RWLock not RLock
 	t.mux.Lock()
+	startTime := time.Now()
 	defer func() {
-		defer t.mux.Unlock()
-		for _, task := range gcTasks {
-			t.delete(task)
-		}
-		if popTask != nil {
-			t.delete(popTask)
-		}
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-pop").Observe(time.Since(startTime).Seconds())
 	}()
-
-	if len(t.tasks) == 0 {
-		return nil
+	task := t.top()
+	if task != nil {
+		t.delete(task)
 	}
-	for i := len(t.tasks) - 1; i >= 0; i-- {
-		if t.gcFunc != nil {
-			if t.gcFunc(t.tasks[i]) {
-				gcTasks = append(gcTasks, t.tasks[i])
-				continue
-			}
-		}
-		if t.filterFunc != nil {
-			if t.filterFunc(t.tasks[i]) {
-				popTask = t.tasks[i]
-				return popTask
-			}
-		} else {
-			popTask = t.tasks[i]
-			return popTask
-		}
-	}
-	return nil
+	return task
 }
 
 // PopByKey pops the task by the task key, if the task does not exist , returns nil.
 func (t *GfSpTQueue) PopByKey(key coretask.TKey) coretask.Task {
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-pop_by_key").Observe(time.Since(startTime).Seconds())
+	}()
 	if !t.has(key) {
 		return nil
 	}
-	idx, ok := t.indexer[key]
+	task, ok := t.tasks[key]
 	if !ok {
-		log.Errorw("[BUG] no task in queue after has check", "queue", t.name,
-			"task_key", key)
 		return nil
-	}
-	if idx >= len(t.tasks) {
-		log.Errorw("[BUG] index out of bounds", "queue", t.name,
-			"len", len(t.tasks), "index", idx)
-		t.reset()
-		idx, ok = t.indexer[key]
-		if !ok {
-			return nil
-		}
-	}
-	task := t.tasks[idx]
-	if strings.EqualFold(task.Key().String(), key.String()) {
-		log.Errorw("[BUG] index mismatch task", "queue", t.name,
-			"index_key", key.String(), "task_key", task.Key().String())
-		t.reset()
-		idx, ok = t.indexer[key]
-		if !ok {
-			return nil
-		}
-		task = t.tasks[idx]
 	}
 	t.delete(task)
 	return task
@@ -178,30 +116,32 @@ func (t *GfSpTQueue) PopByKey(key coretask.TKey) coretask.Task {
 // Push pushes the task in queue tail, if the queue len greater the capacity, returns error.
 func (t *GfSpTQueue) Push(task coretask.Task) error {
 	t.mux.Lock()
-	defer t.mux.Unlock()
+	startTime := time.Now()
+	defer func() {
+		t.mux.Unlock()
+		metrics.QueueTime.WithLabelValues(t.name + "-push").Observe(time.Since(startTime).Seconds())
+	}()
 	if t.has(task.Key()) {
 		return ErrTaskRepeated
 	}
 	if t.exceed() {
-		var gcTasks []coretask.Task
+		if t.gcFunc == nil {
+			log.Warnw("queue exceed", "queue", t.name, "cap", t.cap, "len", len(t.tasks))
+			return ErrTaskQueueExceed
+		}
 		clear := false
-		if t.gcFunc != nil {
-			for i := len(t.tasks) - 1; i >= 0; i-- {
-				if t.gcFunc(t.tasks[i]) {
-					gcTasks = append(gcTasks, t.tasks[i])
-					clear = true
-					// only retire one task
-					break
-				}
+		keys := maps.SortKeys(t.tasks)
+		for _, key := range keys {
+			if t.gcFunc(t.tasks[key]) {
+				t.delete(t.tasks[key])
+				clear = true
+				// only retire one task
+				break
 			}
 		}
 		if !clear {
 			log.Warnw("queue exceed", "queue", t.name, "cap", t.cap, "len", len(t.tasks))
 			return ErrTaskQueueExceed
-		} else {
-			for _, gcTask := range gcTasks {
-				t.delete(gcTask)
-			}
 		}
 	}
 	t.add(task)
@@ -213,89 +153,79 @@ func (t *GfSpTQueue) exceed() bool {
 }
 
 func (t *GfSpTQueue) add(task coretask.Task) {
-	if t.has(task.Key()) {
+	defer func() {
+		metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
+		metrics.QueueCapGauge.WithLabelValues(t.name).Set(float64(t.cap))
+	}()
+	if task == nil || t.has(task.Key()) {
 		return
 	}
-	t.tasks = append(t.tasks, task)
-	t.indexer[task.Key()] = len(t.tasks) - 1
-	metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
+	t.tasks[task.Key()] = task
 }
 
 func (t *GfSpTQueue) delete(task coretask.Task) {
-	if !t.has(task.Key()) {
-		return
-	}
-	idx, ok := t.indexer[task.Key()]
-	if !ok {
-		log.Errorw("[BUG] no task in queue after has check", "queue", t.name,
-			"task_key", task.Key().String())
+	if task == nil || !t.has(task.Key()) {
 		return
 	}
 	defer func() {
-		delete(t.indexer, task.Key())
 		metrics.QueueSizeGauge.WithLabelValues(t.name).Set(float64(len(t.tasks)))
+		metrics.QueueCapGauge.WithLabelValues(t.name).Set(float64(t.cap))
+		metrics.TaskInQueueTime.WithLabelValues(t.name).Observe(
+			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}()
-	if idx >= len(t.tasks) {
-		log.Errorw("[BUG] index out of bounds", "queue", t.name,
-			"len", len(t.tasks), "index", idx)
-		t.reset()
-		idx, ok = t.indexer[task.Key()]
-		if !ok {
-			return
-		}
-	}
-	t.tasks = append(t.tasks[0:idx], t.tasks[idx+1:]...)
-	t.reset()
-	metrics.TaskInQueueTimeHistogram.WithLabelValues(t.name).Observe(
-		time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+	delete(t.tasks, task.Key())
 }
 
 func (t *GfSpTQueue) has(key coretask.TKey) bool {
-	if len(t.tasks) != len(t.indexer) {
-		log.Errorw("[BUG] index length mismatch task length", "queue", t.name,
-			"index_length", len(t.indexer), "task_length", len(t.tasks))
-		t.reset()
-	}
-	idx, ok := t.indexer[key]
-	if ok {
-		if idx >= len(t.tasks) {
-			log.Errorw("[BUG] index out of bounds", "queue", t.name,
-				"len", len(t.tasks), "index", idx, "key", key)
-			t.reset()
-		}
-		idx, ok = t.indexer[key]
-		if !ok {
+	task, ok := t.tasks[key]
+	if ok && t.gcFunc != nil {
+		if t.gcFunc(task) {
+			delete(t.tasks, task.Key())
 			return false
 		}
-		task := t.tasks[idx]
-		if !strings.EqualFold(task.Key().String(), key.String()) {
-			log.Errorw("[BUG] index mismatch task", "queue", t.name,
-				"index_key", key.String(), "task_key", task.Key().String())
-			t.reset()
-			idx, ok = t.indexer[key]
-			if !ok {
-				return false
-			}
-			task = t.tasks[idx]
-		}
-		if t.gcFunc != nil {
-			if t.gcFunc(task) {
-				delete(t.indexer, task.Key())
-				t.tasks = append(t.tasks[0:idx], t.tasks[idx+1:]...)
-				t.reset()
-				return false
-			}
-		}
-		return true
 	}
-	return false
+	return ok
 }
 
-func (t *GfSpTQueue) reset() {
-	t.indexer = make(map[coretask.TKey]int)
-	for i, task := range t.tasks {
-		t.indexer[task.Key()] = i
+func (t *GfSpTQueue) top() coretask.Task {
+	if len(t.tasks) == 0 {
+		return nil
 	}
+	var backupTasks []coretask.Task
+	var gcTasks []coretask.Task
+	defer func() {
+		for _, task := range gcTasks {
+			delete(t.tasks, task.Key())
+		}
+	}()
+	for _, task := range t.tasks {
+		if t.gcFunc != nil {
+			if t.gcFunc(task) {
+				gcTasks = append(gcTasks, task)
+				continue
+			}
+		}
+		if t.filterFunc != nil {
+			if !t.filterFunc(task) {
+				continue
+			}
+		}
+		backupTasks = append(backupTasks, task)
+	}
+	if len(backupTasks) == 0 {
+		return nil
+	}
+	sort.Slice(backupTasks, func(i, j int) bool {
+		return backupTasks[i].GetCreateTime() < backupTasks[j].GetCreateTime()
+	})
+	index := sort.Search(len(backupTasks), func(i int) bool { return backupTasks[i].GetCreateTime() > t.current })
+	if index == len(backupTasks) {
+		index = 0
+	}
+	if backupTasks[index] != nil {
+		t.current = backupTasks[index].GetCreateTime()
+	}
+	return backupTasks[index]
 }
 
 // SetFilterTaskStrategy sets the callback func to filter task for popping or topping.

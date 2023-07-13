@@ -10,8 +10,8 @@
 
 ## CheckList
 
-- [ ] s3: amazon S3
-- [ ] file: local file, using disk persistance
+- [ ] s3: AWS S3
+- [ ] file: local file, using disk persistence
 - [ ] memory: memory storage, if server reboot, no data in disk
 - [ ] minio: MinIO
 
@@ -66,4 +66,3 @@ If BucketURL is configured in environment, all services will use the same bucket
 If `Shards` is not set in config.toml, the shard is 0, PieceStore won't shard.
 
 > More storage providers will be supported
-

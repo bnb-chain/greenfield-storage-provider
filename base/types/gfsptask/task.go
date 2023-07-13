@@ -44,9 +44,6 @@ func (m *GfSpTask) SetTimeout(timeout int64) {
 }
 
 func (m *GfSpTask) ExceedTimeout() bool {
-	if m.Retry == 0 {
-		return false
-	}
 	return m.GetUpdateTime()+m.GetTimeout() < time.Now().Unix()
 }
 
@@ -85,6 +82,19 @@ func (m *GfSpTask) EstimateLimit() rcmgr.Limit {
 	return nil
 }
 
+func (m *GfSpTask) SetUserAddress(address string) {
+	m.UserAddress = address
+}
+
+func (m *GfSpTask) SetLogs(logs string) {
+	m.Logs = logs
+}
+
+func (m *GfSpTask) AppendLog(log string) {
+	appendLog := time.Now().String() + "-" + log + "\n"
+	m.Logs = m.GetLogs() + appendLog
+}
+
 func (m *GfSpTask) Error() error {
 	if m.GetErr() == nil {
 		return nil
@@ -96,6 +106,14 @@ func (m *GfSpTask) Error() error {
 
 func (m *GfSpTask) SetError(err error) {
 	m.Err = gfsperrors.MakeGfSpError(err)
+}
+
+func (m *GfSpMigrateGVGTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpMigrateGVGTask) SetUserAddress(s string) {
+	m.GetTask().SetUserAddress(s)
 }
 
 func LimitEstimateByPriority(priority coretask.TPriority) rcmgr.Limit {

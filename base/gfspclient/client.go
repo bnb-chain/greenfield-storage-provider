@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -32,26 +33,28 @@ var (
 	ErrRpcUnknown       = gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, "server slipped away, try again later")
 	ErrExceptionsStream = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98002, "stream closed abnormally")
 	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98101, "response type mismatch")
+	ErrNoSuchObject     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98093, "no such object from metadata")
 )
 
 type GfSpClient struct {
-	approverEndpoint   string
-	managerEndpoint    string
-	downloaderEndpoint string
-	receiverEndpoint   string
-	metadataEndpoint   string
-	uploaderEndpoint   string
-	p2pEndpoint        string
-	signerEndpoint     string
-	authorizerEndpoint string
+	approverEndpoint      string
+	managerEndpoint       string
+	downloaderEndpoint    string
+	receiverEndpoint      string
+	metadataEndpoint      string
+	uploaderEndpoint      string
+	p2pEndpoint           string
+	signerEndpoint        string
+	authenticatorEndpoint string
 
-	mux          sync.RWMutex
-	managerConn  *grpc.ClientConn
-	approverConn *grpc.ClientConn
-	p2pConn      *grpc.ClientConn
-	signerConn   *grpc.ClientConn
-	httpClient   *http.Client
-	metrics      bool
+	mux            sync.RWMutex
+	downloaderConn *grpc.ClientConn
+	managerConn    *grpc.ClientConn
+	approverConn   *grpc.ClientConn
+	p2pConn        *grpc.ClientConn
+	signerConn     *grpc.ClientConn
+	httpClient     *http.Client
+	metrics        bool
 }
 
 func NewGfSpClient(
@@ -63,25 +66,43 @@ func NewGfSpClient(
 	uploaderEndpoint string,
 	p2pEndpoint string,
 	signerEndpoint string,
-	authorizerEndpoint string,
+	authenticatorEndpoint string,
 	metrics bool) *GfSpClient {
 	return &GfSpClient{
-		approverEndpoint:   approverEndpoint,
-		managerEndpoint:    managerEndpoint,
-		downloaderEndpoint: downloaderEndpoint,
-		receiverEndpoint:   receiverEndpoint,
-		metadataEndpoint:   metadataEndpoint,
-		uploaderEndpoint:   uploaderEndpoint,
-		p2pEndpoint:        p2pEndpoint,
-		signerEndpoint:     signerEndpoint,
-		authorizerEndpoint: authorizerEndpoint,
-		metrics:            metrics,
+		approverEndpoint:      approverEndpoint,
+		managerEndpoint:       managerEndpoint,
+		downloaderEndpoint:    downloaderEndpoint,
+		receiverEndpoint:      receiverEndpoint,
+		metadataEndpoint:      metadataEndpoint,
+		uploaderEndpoint:      uploaderEndpoint,
+		p2pEndpoint:           p2pEndpoint,
+		signerEndpoint:        signerEndpoint,
+		authenticatorEndpoint: authenticatorEndpoint,
+		metrics:               metrics,
 	}
 }
 
 func (s *GfSpClient) Connection(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	options := append(DefaultClientOptions(), opts...)
 	return grpc.DialContext(ctx, address, options...)
+}
+
+func (s *GfSpClient) DownloaderConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
+	if s.downloaderConn == nil {
+		conn, err := s.Connection(ctx, s.downloaderEndpoint, options...)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to create connection", "error", err)
+			return nil, ErrRpcUnknown
+		}
+		s.downloaderConn = conn
+	}
+	return s.downloaderConn, nil
 }
 
 func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
@@ -156,7 +177,7 @@ func (s *GfSpClient) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*
 	return s.signerConn, nil
 }
 
-func (s *GfSpClient) HttpClient(ctx context.Context) *http.Client {
+func (s *GfSpClient) HTTPClient(ctx context.Context) *http.Client {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	if s.httpClient == nil {
@@ -175,6 +196,9 @@ func (s *GfSpClient) Close() error {
 	if s.managerConn != nil {
 		s.managerConn.Close()
 	}
+	if s.downloaderConn != nil {
+		s.downloaderConn.Close()
+	}
 	if s.approverConn != nil {
 		s.approverConn.Close()
 	}
@@ -192,5 +216,12 @@ func DefaultClientOptions() []grpc.DialOption {
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxClientCallMsgSize)))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxClientCallMsgSize)))
+
+	var kacp = keepalive.ClientParameters{
+		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+		Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+		PermitWithoutStream: true,             // send pings even without active streams
+	}
+	options = append(options, grpc.WithKeepaliveParams(kacp))
 	return options
 }

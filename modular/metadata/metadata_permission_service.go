@@ -6,6 +6,11 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/forbole/juno/v4/common"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	chaintypes "github.com/bnb-chain/greenfield/types"
 	"github.com/bnb-chain/greenfield/types/resource"
 	gnfdresource "github.com/bnb-chain/greenfield/types/resource"
@@ -13,11 +18,6 @@ import (
 	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/bnb-chain/greenfield/x/storage/keeper"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/forbole/juno/v4/common"
-
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 var (
@@ -48,7 +48,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 	}
 
 	operator, err = sdk.AccAddressFromHexUnsafe(req.Operator)
-	if err != nil {
+	if err != nil && err != sdk.ErrEmptyHexAddress {
 		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "req.Operator", operator.String(), "error", err)
 		return nil, err
 	}

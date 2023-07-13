@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsprcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -24,17 +25,28 @@ import (
 )
 
 const (
+	// EnvLocal defines the default environment.
+	EnvLocal = "local"
+	// EnvDevnet defines the devnet environment.
+	EnvDevnet = "devnet"
+	// EvnQanet defines the qanet environment.
+	EvnQanet = "qanet"
+	// EvnTestnet defines the testnet environment.
+	EvnTestnet = "testnet"
+	// EnvMainnet defines the mainnet environment. And as default environment.
+	EnvMainnet = "mainnet"
+
 	// DefaultGfSpAppIDPrefix defines the default app id prefix.
 	DefaultGfSpAppIDPrefix = "gfsp"
-	// DefaultGrpcAddress defines the default Grpc address.
-	DefaultGrpcAddress = "localhost:9333"
+	// DefaultGRPCAddress defines the default gRPC address.
+	DefaultGRPCAddress = "localhost:9333"
 	// DefaultMetricsAddress defines the default metrics service address.
 	DefaultMetricsAddress = "localhost:24367"
-	// DefaultPprofAddress defines the default pprof service address.
-	DefaultPprofAddress = "localhost:24368"
+	// DefaultPProfAddress defines the default pprof service address.
+	DefaultPProfAddress = "localhost:24368"
 
-	// DefaultChainID defines the default greenfield chain ID.
-	DefaultChainID = "greenfield_9000-1741"
+	// DefaultChainID defines the default greenfield chainID.
+	DefaultChainID = "greenfield_9000-121"
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 
@@ -50,7 +62,78 @@ const (
 	DefaultLowTaskLimit = 16
 )
 
+const (
+	ApproverSuccessGetBucketApproval = "approver_get_bucket_success"
+	ApproverFailureGetBucketApproval = "approver_get_bucket_failure"
+	ApproverSuccessGetObjectApproval = "approver_get_object_success"
+	ApproverFailureGetObjectApproval = "approver_get_object_failure"
+
+	AuthSuccess = "auth_success"
+	AuthFailure = "auth_failure"
+
+	DownloaderSuccessGetPiece         = "downloader_get_piece_success"
+	DownloaderFailureGetPiece         = "downloader_get_piece_failure"
+	DownloaderSuccessGetChallengeInfo = "downloader_get_challenge_info_success"
+	DownloaderFailureGetChallengeInfo = "downloader_get_challenge_info_failure"
+
+	ManagerBeginUpload           = "manager_begin_upload_success"
+	ManagerFailureBeginUpload    = "manager_begin_upload_failure"
+	ManagerSuccessDispatchTask   = "manager_dispatch_task_success"
+	ManagerDispatchReplicateTask = "manager_dispatch_replicate_task_success"
+	ManagerDispatchSealTask      = "manager_dispatch_seal_task_success"
+	ManagerDispatchReceiveTask   = "manager_dispatch_receive_task_success"
+	ManagerDispatchGCObjectTask  = "manager_dispatch_gc_object_task_success"
+	ManagerDispatchRecoveryTask  = "manager_dispatch_recovery_task_success"
+	ManagerNoDispatchTask        = "manager_no_dispatch_task_failure"
+	ManagerFailureDispatchTask   = "manager_dispatch_task_failure"
+	ManagerReportTask            = "manager_report_task_success"
+	ManagerReportUploadTask      = "manager_report_upload_task_success"
+	ManagerReportReplicateTask   = "manager_report_replicate_task_success"
+	ManagerReportSealTask        = "manager_report_seal_task_success"
+	ManagerReportReceiveTask     = "manager_report_receive_task_success"
+	ManagerReportGCObjectTask    = "manager_report_gc_object_task_success"
+	ManagerReportRecoveryTask    = "manager_report_recovery_task_success"
+
+	ReceiverSuccessReplicatePiece     = "receiver_replicate_piece_success"
+	ReceiverFailureReplicatePiece     = "receiver_replicate_piece_failure"
+	ReceiverSuccessDoneReplicatePiece = "receiver_done_replicate_piece_success"
+	ReceiverFailureDoneReplicatePiece = "receiver_done_replicate_piece_failure"
+
+	SignerSuccess                      = "signer_success"
+	SignerFailure                      = "signer_failure"
+	SignerSuccessBucketApproval        = "signer_bucket_approval_success"
+	SignerFailureBucketApproval        = "signer_bucket_approval_failure"
+	SignerSuccessMigrateBucketApproval = "signer_bucket_approval_success"
+	SignerFailureMigrateBucketApproval = "signer_bucket_approval_failure"
+	SignerSuccessObjectApproval        = "signer_object_approval_success"
+	SignerFailureObjectApproval        = "signer_object_approval_failure"
+	SignerSuccessSealObject            = "signer_seal_object_success"
+	SignerFailureSealObject            = "signer_seal_object_failure"
+	SignerSuccessRejectUnSealObject    = "signer_reject_unseal_object_success"
+	SignerFailureRejectUnSealObject    = "signer_reject_unseal_object_failure"
+	SignerSuccessDiscontinueBucket     = "signer_discontinue_bucket_success"
+	SignerFailureDiscontinueBucket     = "signer_discontinue_bucket_failure"
+	SignerSuccessIntegrityHash         = "signer_integrity_hash_success"
+	SignerFailureIntegrityHash         = "signer_integrity_hash_failure"
+	SignerSuccessPing                  = "signer_ping_success"
+	SignerFailurePing                  = "signer_ping_failure"
+	SignerSuccessPong                  = "signer_pong_success"
+	SignerFailurePong                  = "signer_pong_failure"
+	SignerSuccessReceiveTask           = "signer_receive_task_success"
+	SignerFailureReceiveTask           = "signer_receive_task_failure"
+	SignerSuccessReplicateApproval     = "signer_secondary_approval_success"
+	SignerFailureReplicateApproval     = "signer_secondary_approval_failure"
+	SignerSuccessRecoveryTask          = "signer_recovery_task_success"
+	SignerFailureRecoveryTask          = "signer_recovery_task_failure"
+
+	UploaderSuccessPutObject = "uploader_put_object_success"
+	UploaderFailurePutObject = "uploader_put_object_failure"
+)
+
 func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Env == "" {
+		cfg.Env = EnvMainnet
+	}
 	if len(cfg.Server) == 0 {
 		cfg.Server = GetRegisterModulus()
 	}
@@ -59,11 +142,11 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.AppID = DefaultGfSpAppIDPrefix + "-" + servers
 	}
 	app.appID = cfg.AppID
-	if cfg.GrpcAddress == "" {
-		cfg.GrpcAddress = DefaultGrpcAddress
+	if cfg.GRPCAddress == "" {
+		cfg.GRPCAddress = DefaultGRPCAddress
 	}
-	app.grpcAddress = cfg.GrpcAddress
-	app.operateAddress = cfg.SpAccount.SpOperateAddress
+	app.grpcAddress = cfg.GRPCAddress
+	app.operatorAddress = cfg.SpAccount.SpOperatorAddress
 	app.chainID = cfg.Chain.ChainID
 	app.uploadSpeed = cfg.Task.UploadTaskSpeed
 	app.downloadSpeed = cfg.Task.DownloadTaskSpeed
@@ -80,7 +163,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	app.gcZombieRetry = cfg.Task.GcZombieTaskRetry
 	app.gcMetaRetry = cfg.Task.GcMetaTaskRetry
 	app.approver = &coremodule.NullModular{}
-	app.authorizer = &coremodule.NullModular{}
+	app.authenticator = &coremodule.NullModular{}
 	app.downloader = &coremodule.NilModular{}
 	app.executor = &coremodule.NilModular{}
 	app.gater = &coremodule.NullModular{}
@@ -96,34 +179,34 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Endpoint.ApproverEndpoint == "" {
-		cfg.Endpoint.ApproverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ApproverEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.ManagerEndpoint == "" {
-		cfg.Endpoint.ManagerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ManagerEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.DownloaderEndpoint == "" {
-		cfg.Endpoint.DownloaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.DownloaderEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.ReceiverEndpoint == "" {
-		cfg.Endpoint.ReceiverEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.ReceiverEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.MetadataEndpoint == "" {
-		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.MetadataEndpoint == "" {
-		cfg.Endpoint.MetadataEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.MetadataEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.UploaderEndpoint == "" {
-		cfg.Endpoint.UploaderEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.UploaderEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.P2PEndpoint == "" {
-		cfg.Endpoint.P2PEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.P2PEndpoint = cfg.GRPCAddress
 	}
 	if cfg.Endpoint.SignerEndpoint == "" {
-		cfg.Endpoint.SignerEndpoint = cfg.GrpcAddress
+		cfg.Endpoint.SignerEndpoint = cfg.GRPCAddress
 	}
-	if cfg.Endpoint.AuthorizerEndpoint == "" {
-		cfg.Endpoint.AuthorizerEndpoint = cfg.GrpcAddress
+	if cfg.Endpoint.AuthenticatorEndpoint == "" {
+		cfg.Endpoint.AuthenticatorEndpoint = cfg.GRPCAddress
 	}
 	app.client = gfspclient.NewGfSpClient(
 		cfg.Endpoint.ApproverEndpoint,
@@ -134,7 +217,7 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 		cfg.Endpoint.UploaderEndpoint,
 		cfg.Endpoint.P2PEndpoint,
 		cfg.Endpoint.SignerEndpoint,
-		cfg.Endpoint.AuthorizerEndpoint,
+		cfg.Endpoint.AuthenticatorEndpoint,
 		!cfg.Monitor.DisableMetrics)
 	return nil
 }
@@ -311,6 +394,9 @@ func DefaultGfSpTQueueOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Customize.NewStrategyTQueueWithLimitFunc == nil {
 		cfg.Customize.NewStrategyTQueueWithLimitFunc = gfsptqueue.NewGfSpTQueueWithLimit
 	}
+	if cfg.Customize.NewVirtualGroupManagerFunc == nil {
+		cfg.Customize.NewVirtualGroupManagerFunc = gfspvgmgr.NewVirtualGroupManager
+	}
 	return nil
 }
 
@@ -380,8 +466,8 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 		switch module.Name() {
 		case coremodule.ApprovalModularName:
 			app.approver = module.(coremodule.Approver)
-		case coremodule.AuthorizationModularName:
-			app.authorizer = module.(coremodule.Authorizer)
+		case coremodule.AuthenticationModularName:
+			app.authenticator = module.(coremodule.Authenticator)
 		case coremodule.DownloadModularName:
 			app.downloader = module.(coremodule.Downloader)
 		case coremodule.ExecuteModularName:
@@ -394,7 +480,7 @@ func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) erro
 			app.p2p = module.(coremodule.P2P)
 		case coremodule.ReceiveModularName:
 			app.receiver = module.(coremodule.Receiver)
-		case coremodule.SignerModularName:
+		case coremodule.SignModularName:
 			app.signer = module.(coremodule.Signer)
 		case coremodule.UploadModularName:
 			app.uploader = module.(coremodule.Uploader)
@@ -407,10 +493,10 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Monitor.DisableMetrics {
 		app.metrics = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.MetricsHttpAddress == "" {
-		cfg.Monitor.MetricsHttpAddress = DefaultMetricsAddress
+	if cfg.Monitor.MetricsHTTPAddress == "" {
+		cfg.Monitor.MetricsHTTPAddress = DefaultMetricsAddress
 	}
-	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHttpAddress)
+	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHTTPAddress)
 	app.RegisterServices(app.metrics)
 	return nil
 }
@@ -419,10 +505,10 @@ func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 	if cfg.Monitor.DisablePProf {
 		app.pprof = &coremodule.NullModular{}
 	}
-	if cfg.Monitor.PProfHttpAddress == "" {
-		cfg.Monitor.PProfHttpAddress = DefaultPprofAddress
+	if cfg.Monitor.PProfHTTPAddress == "" {
+		cfg.Monitor.PProfHTTPAddress = DefaultPProfAddress
 	}
-	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHttpAddress)
+	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHTTPAddress)
 	app.RegisterServices(app.pprof)
 	return nil
 }

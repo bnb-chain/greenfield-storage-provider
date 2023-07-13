@@ -34,6 +34,29 @@ func (s *GfSpClient) SignCreateBucketApproval(ctx context.Context, bucket *stora
 	return resp.GetSignature(), nil
 }
 
+func (s *GfSpClient) SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgMigrateBucket) (
+	[]byte, error) {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_MigrateBucketInfo{
+			MigrateBucketInfo: bucket,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign migrate bucket approval", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}
+
 func (s *GfSpClient) SignCreateObjectApproval(ctx context.Context, object *storagetypes.MsgCreateObject) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
@@ -56,11 +79,11 @@ func (s *GfSpClient) SignCreateObjectApproval(ctx context.Context, object *stora
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSealObject) error {
+func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_SealObjectInfo{
@@ -70,6 +93,28 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to seal object approval", "error", err)
+		return "", ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+func (s *GfSpClient) CreateGlobalVirtualGroup(ctx context.Context, group *gfspserver.GfSpCreateGlobalVirtualGroup) error {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup{
+			CreateGlobalVirtualGroup: group,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to create global virtual group", "error", err)
 		return ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
@@ -78,13 +123,11 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	return nil
 }
 
-func (s *GfSpClient) RejectUnSealObject(
-	ctx context.Context,
-	object *storagetypes.MsgRejectSealObject) error {
+func (s *GfSpClient) RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_RejectObjectInfo{
@@ -94,19 +137,19 @@ func (s *GfSpClient) RejectUnSealObject(
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to reject unseal object approval", "error", err)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return resp.GetErr()
+		return "", resp.GetErr()
 	}
-	return nil
+	return resp.GetTxHash(), nil
 }
 
-func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) error {
+func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_DiscontinueBucketInfo{
@@ -116,12 +159,12 @@ func (s *GfSpClient) DiscontinueBucket(ctx context.Context, bucket *storagetypes
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to discontinue bucket", "error", err)
-		return ErrRpcUnknown
+		return "", ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return resp.GetErr()
+		return "", resp.GetErr()
 	}
-	return nil
+	return resp.GetTxHash(), nil
 }
 
 func (s *GfSpClient) SignReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask) ([]byte, error) {
@@ -146,29 +189,30 @@ func (s *GfSpClient) SignReplicatePieceApproval(ctx context.Context, task coreta
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignIntegrityHash(ctx context.Context, objectID uint64, checksums [][]byte) ([]byte, []byte, error) {
+func (s *GfSpClient) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
-		return nil, nil, ErrRpcUnknown
+		return nil, ErrRpcUnknown
 	}
 	req := &gfspserver.GfSpSignRequest{
-		Request: &gfspserver.GfSpSignRequest_SignIntegrity{
-			SignIntegrity: &gfspserver.GfSpSignIntegrityHash{
-				ObjectId:  objectID,
-				Checksums: checksums,
+		Request: &gfspserver.GfSpSignRequest_SignSecondaryBls{
+			SignSecondaryBls: &gfspserver.GfSpSignSecondaryBls{
+				ObjectId:             objectID,
+				GlobalVirtualGroupId: gvgId,
+				Checksums:            checksums,
 			},
 		},
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to sign integrity hash", "error", err)
-		return nil, nil, ErrRpcUnknown
+		log.CtxErrorw(ctx, "client failed to sign secondary bls signature", "error", err)
+		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
-		return nil, nil, resp.GetErr()
+		return nil, resp.GetErr()
 	}
-	return resp.GetSignature(), resp.GetIntegrityHash(), nil
+	return resp.GetSignature(), nil
 }
 
 func (s *GfSpClient) SignReceiveTask(ctx context.Context, receiveTask coretask.ReceivePieceTask) ([]byte, error) {
@@ -185,6 +229,28 @@ func (s *GfSpClient) SignReceiveTask(ctx context.Context, receiveTask coretask.R
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to sign receive task", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}
+
+func (s *GfSpClient) SignRecoveryTask(ctx context.Context, recoveryTask coretask.RecoveryPieceTask) ([]byte, error) {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect signer", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_GfspRecoverPieceTask{
+			GfspRecoverPieceTask: recoveryTask.(*gfsptask.GfSpRecoverPieceTask),
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign recovery task", "object name", recoveryTask.GetObjectInfo().ObjectName, "error", err)
 		return nil, ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {
@@ -235,4 +301,49 @@ func (s *GfSpClient) SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong)
 		return nil, resp.GetErr()
 	}
 	return resp.GetSignature(), nil
+}
+
+func (s *GfSpClient) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("client failed to connect signer", "error", err)
+		return nil, err
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_GfspMigratePieceTask{
+			GfspMigratePieceTask: task,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign migrate piece", "object_name",
+			task.GetObjectInfo().GetObjectName(), "error", err)
+		return nil, ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}
+
+func (s *GfSpClient) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect signer", "error", err)
+		return "", err
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CompleteMigrateBucket{
+			CompleteMigrateBucket: migrateBucket,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign complete migrate bucket", "error", err)
+		return "", ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
 }
