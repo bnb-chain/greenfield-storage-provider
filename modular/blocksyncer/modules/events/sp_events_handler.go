@@ -24,7 +24,7 @@ var (
 	EventCompleteSpExit          = proto.MessageName(&vgtypes.EventCompleteStorageProviderExit{})
 )
 
-var spExitEvents = map[string]bool{
+var SpExitEvents = map[string]bool{
 	EventMigrationBucket:         true,
 	EventCompleteMigrationBucket: true,
 	EventSwapOut:                 true,
@@ -33,7 +33,7 @@ var spExitEvents = map[string]bool{
 }
 
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
-	if !spExitEvents[event.Type] {
+	if !SpExitEvents[event.Type] {
 		return nil
 	}
 

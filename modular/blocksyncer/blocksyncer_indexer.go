@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	spExit "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/events"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/prefixtree"
 	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -24,6 +25,7 @@ import (
 	"github.com/forbole/juno/v4/modules/payment"
 	"github.com/forbole/juno/v4/modules/permission"
 	storageprovider "github.com/forbole/juno/v4/modules/storage_provider"
+	virtualgroup "github.com/forbole/juno/v4/modules/virtual_group"
 	"github.com/forbole/juno/v4/node"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
@@ -40,6 +42,7 @@ func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, module
 		Modules:         modules,
 		ServiceName:     serviceName,
 		ProcessedHeight: 0,
+		eventTypeCount:  8,
 	}
 }
 
@@ -51,6 +54,8 @@ type Impl struct {
 
 	LatestBlockHeight atomic.Value
 	ProcessedHeight   uint64
+
+	eventTypeCount int
 
 	ServiceName string
 }
@@ -73,6 +78,21 @@ func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, tx
 		}
 	}
 	return nil
+}
+
+func (i *Impl) ExtractEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
+	for _, module := range i.Modules {
+		if eventModule, ok := module.(modules.EventModule); ok {
+			data, err := eventModule.ExtractEvent(ctx, block, txHash, event)
+			if err != nil {
+				return nil, err
+			}
+			if data != nil {
+				return data, nil
+			}
+		}
+	}
+	return nil, nil
 }
 
 // Process fetches a block for a given height and associated metadata and export it to a database.
@@ -214,11 +234,13 @@ type TxHashEvent struct {
 func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs []*types.Tx) error {
 	bucketEvent := make([]TxHashEvent, 0)
 	groupEvent := make([]TxHashEvent, 0)
-	objectEvent := make([]TxHashEvent, 0)
-	paymentEvent := make([]TxHashEvent, 0)
 	permissionEvent := make([]TxHashEvent, 0)
 	spEvent := make([]TxHashEvent, 0)
 	prefixEvent := make([]TxHashEvent, 0)
+	exitEvent := make([]TxHashEvent, 0)
+	virtualGroupEvent := make([]TxHashEvent, 0)
+	objectEvent := make([]TxHashEvent, 0)
+	dataList := make([]interface{}, 0)
 
 	for _, tx := range txs {
 		txHash := common.HexToHash(tx.TxHash)
@@ -228,28 +250,125 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 				bucketEvent = append(bucketEvent, e)
 			} else if group.GroupEvents[event.Type] {
 				groupEvent = append(groupEvent, e)
-			} else if object.ObjectEvents[event.Type] {
-				objectEvent = append(objectEvent, e)
-			} else if payment.PaymentEvents[event.Type] {
-				paymentEvent = append(paymentEvent, e)
 			} else if permission.PolicyEvents[event.Type] {
 				permissionEvent = append(permissionEvent, e)
 			} else if storageprovider.StorageProviderEvents[event.Type] {
 				spEvent = append(spEvent, e)
 			} else if prefixtree.BuildPrefixTreeEvents[event.Type] {
 				prefixEvent = append(prefixEvent, e)
+			} else if virtualgroup.VirtualGroupEvents[event.Type] {
+				virtualGroupEvent = append(virtualGroupEvent, e)
+			} else if spExit.SpExitEvents[event.Type] {
+				exitEvent = append(exitEvent, e)
+			} else if event.Type == object.EventDeleteObject || event.Type == object.EventCreateObject || payment.PaymentEvents[event.Type] {
+				data, err := i.ExtractEvent(ctx, block, common.Hash{}, sdk.Event(event))
+				if err != nil {
+					return err
+				}
+				log.Infof("data: %v", data)
+				dataList = append(dataList, data)
+			} else if object.ObjectEvents[event.Type] {
+				objectEvent = append(objectEvent, e)
 			}
 		}
 	}
+
+	if len(dataList) > 0 {
+		err := i.BatchHandle(ctx, dataList, block, common.Hash{})
+		if err != nil {
+			return err
+		}
+	}
+
 	allEvents := make([][]TxHashEvent, 0)
 	allEvents = append(allEvents, bucketEvent)
 	allEvents = append(allEvents, groupEvent)
 	allEvents = append(allEvents, objectEvent)
-	allEvents = append(allEvents, paymentEvent)
 	allEvents = append(allEvents, permissionEvent)
 	allEvents = append(allEvents, spEvent)
 	allEvents = append(allEvents, prefixEvent)
+	allEvents = append(allEvents, virtualGroupEvent)
+	allEvents = append(allEvents, exitEvent)
 	return i.concurrenceHandleEvent(ctx, block, allEvents)
+}
+
+func (i *Impl) BatchHandle(ctx context.Context, dataList []interface{}, block *coretypes.ResultBlock, txHash common.Hash) error {
+	log.Infof("dataList length:%d", len(dataList))
+	objects := make([]*models.Object, 0)
+	objectIDMap := make(map[common.Hash]bool, 0)
+	streamRecords := make([]*models.StreamRecord, 0)
+	paymentAccount := make([]*models.PaymentAccount, 0)
+
+	for _, data := range dataList {
+		switch m := data.(type) {
+		case *models.Object:
+			objects = append(objects, m)
+			objectIDMap[m.ObjectID] = true
+		case *models.StreamRecord:
+			streamRecords = append(streamRecords, m)
+		case *models.PaymentAccount:
+			paymentAccount = append(paymentAccount, m)
+		}
+	}
+	if len(paymentAccount) > 0 {
+		if err := i.DB.BatchSavePaymentAccount(ctx, paymentAccount); err != nil {
+			return err
+		}
+	}
+	if len(streamRecords) > 0 {
+		if err := i.DB.BatchSaveStreamRecord(ctx, streamRecords); err != nil {
+			return err
+		}
+	}
+
+	insert := make([]*models.Object, 0)
+	update := make([]*models.Object, 0)
+	objectIDs := make([]common.Hash, 0)
+	for k := range objectIDMap {
+		objectIDs = append(objectIDs, k)
+	}
+	objResults, err := i.DB.GetObjectList(ctx, objectIDs)
+	if err != nil {
+		return err
+	}
+	resMap := make(map[common.Hash]*models.Object)
+	for _, obj := range objResults {
+		resMap[obj.ObjectID] = obj
+	}
+
+	for _, obj := range objects {
+		res, ok := resMap[obj.ObjectID]
+		if !ok {
+			insert = append(insert, obj)
+			continue
+		}
+		if obj.Removed {
+			res.Removed = true
+			res.BucketName = obj.BucketName
+			res.ObjectName = obj.ObjectName
+			res.ObjectID = obj.ObjectID
+			res.LocalVirtualGroupId = obj.LocalVirtualGroupId
+			res.UpdateAt = block.Block.Height
+			res.UpdateTxHash = txHash
+			res.UpdateTime = time.Now().UTC().Unix()
+		}
+		resMap[obj.ObjectID] = res
+	}
+
+	if len(insert) > 0 {
+		if err := i.DB.BatchSaveObject(ctx, insert); err != nil {
+			return err
+		}
+	}
+	for _, v := range resMap {
+		update = append(update, v)
+	}
+	if len(update) > 0 {
+		if err := i.DB.BatchSaveObject(ctx, update); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (i *Impl) concurrenceHandleEvent(ctx context.Context, block *coretypes.ResultBlock, allEvents [][]TxHashEvent) error {
@@ -261,7 +380,7 @@ func (i *Impl) concurrenceHandleEvent(ctx context.Context, block *coretypes.Resu
 			defer wg.Done()
 			for _, e := range event {
 				if err := i.HandleEvent(ctx, block, e.TxHash, e.Event); err != nil {
-					log.Errorw("failed to HandleEvent err:%v", err)
+					log.Errorf("failed to HandleEvent err:%v", err)
 					handleErr = err
 					return
 				}
@@ -277,11 +396,13 @@ func (i *Impl) concurrenceHandleEvent(ctx context.Context, block *coretypes.Resu
 func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.ResultBlock, events []abci.Event) error {
 	bucketEvent := make([]TxHashEvent, 0)
 	groupEvent := make([]TxHashEvent, 0)
-	objectEvent := make([]TxHashEvent, 0)
-	paymentEvent := make([]TxHashEvent, 0)
 	permissionEvent := make([]TxHashEvent, 0)
 	spEvent := make([]TxHashEvent, 0)
 	prefixEvent := make([]TxHashEvent, 0)
+	exitEvent := make([]TxHashEvent, 0)
+	VirtualGroupEvent := make([]TxHashEvent, 0)
+	objectEvent := make([]TxHashEvent, 0)
+	dataList := make([]interface{}, 0)
 
 	for _, event := range events {
 		e := TxHashEvent{Event: sdk.Event(event)}
@@ -289,26 +410,45 @@ func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.Resul
 			bucketEvent = append(bucketEvent, e)
 		} else if group.GroupEvents[event.Type] {
 			groupEvent = append(groupEvent, e)
-		} else if object.ObjectEvents[event.Type] {
-			objectEvent = append(objectEvent, e)
-		} else if payment.PaymentEvents[event.Type] {
-			paymentEvent = append(paymentEvent, e)
 		} else if permission.PolicyEvents[event.Type] {
 			permissionEvent = append(permissionEvent, e)
 		} else if storageprovider.StorageProviderEvents[event.Type] {
 			spEvent = append(spEvent, e)
 		} else if prefixtree.BuildPrefixTreeEvents[event.Type] {
 			prefixEvent = append(prefixEvent, e)
+		} else if virtualgroup.VirtualGroupEvents[event.Type] {
+			VirtualGroupEvent = append(VirtualGroupEvent, e)
+		} else if spExit.SpExitEvents[event.Type] {
+			exitEvent = append(exitEvent, e)
+		} else if event.Type == object.EventDeleteObject || event.Type == object.EventCreateObject || payment.PaymentEvents[event.Type] || virtualgroup.VirtualGroupEvents[event.Type] {
+			data, err := i.ExtractEvent(ctx, block, common.Hash{}, e.Event)
+			if err != nil {
+				return err
+			}
+			log.Infof("data:%v", data)
+			dataList = append(dataList, data)
+		} else if object.ObjectEvents[event.Type] {
+			objectEvent = append(objectEvent, e)
 		}
 	}
+
+	if len(dataList) > 0 {
+		err := i.BatchHandle(ctx, dataList, block, common.Hash{})
+		if err != nil {
+			return err
+		}
+	}
+
 	allEvents := make([][]TxHashEvent, 0)
 	allEvents = append(allEvents, bucketEvent)
 	allEvents = append(allEvents, groupEvent)
 	allEvents = append(allEvents, objectEvent)
-	allEvents = append(allEvents, paymentEvent)
 	allEvents = append(allEvents, permissionEvent)
 	allEvents = append(allEvents, spEvent)
 	allEvents = append(allEvents, prefixEvent)
+	allEvents = append(allEvents, VirtualGroupEvent)
+	allEvents = append(allEvents, exitEvent)
+
 	return i.concurrenceHandleEvent(ctx, block, allEvents)
 }
 
