@@ -3,12 +3,10 @@ package receiver
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -151,30 +149,9 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		return nil, err
 	}
 
-	bucketName := task.GetObjectInfo().GetBucketName()
-	bucketInfo, err := r.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to query bucket info by bucket name", "bucketName", bucketName, "error", err)
-		return nil, err
-	}
-	spInfo, err := r.baseApp.Consensus().QuerySP(ctx, r.baseApp.OperatorAddress())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to query sp info by operator address", "error", err)
-		return nil, err
-	}
-	redundancyIdx, isPrimary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, r.baseApp.GfSpClient(),
-		spInfo.Id, bucketInfo.Id.Uint64(), task.GetObjectInfo().GetLocalVirtualGroupId())
-	if err != nil {
-		log.Errorw("failed to validate and get sp index within gvg secondary sps", "error", err)
-		return nil, err
-	}
-	if isPrimary {
-		return nil, fmt.Errorf("wrong primary sp, should be secondary sp")
-	}
-	log.Infow("print receiver redundancy index", "RedundancyIndex", redundancyIdx)
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
-		RedundancyIndex:   int32(redundancyIdx),
+		RedundancyIndex:   int32(task.GetReplicateIdx()),
 		IntegrityChecksum: hash.GenerateIntegrityHash(pieceChecksums),
 		PieceChecksumList: pieceChecksums,
 	}
