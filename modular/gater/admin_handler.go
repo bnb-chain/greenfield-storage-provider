@@ -15,7 +15,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -110,7 +109,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			}
 		}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
-		task.InitApprovalCreateBucketTask(&createBucketApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
 		startAskCreateBucketApproval := time.Now()
 		approved, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
@@ -201,7 +200,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			}
 		}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
-		task.InitApprovalCreateObjectTask(&createObjectApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
 		approved, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
@@ -366,12 +365,14 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 // signature to seal object on greenfield.
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		receiveMsg []byte
-		data       []byte
-		integrity  []byte
-		signature  []byte
+		err            error
+		reqCtx         *RequestContext
+		receiveMsg     []byte
+		data           []byte
+		integrity      []byte
+		signature      []byte
+		requestAccount sdktypes.AccAddress
+		bucketInfo     *storagetypes.BucketInfo
 	)
 	receivePieceStartTime := time.Now()
 	defer func() {
@@ -405,6 +406,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
+
 	receiveTask := gfsptask.GfSpReceivePieceTask{}
 	err = json.Unmarshal(receiveMsg, &receiveTask)
 	if err != nil {
@@ -413,6 +415,35 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrDecodeMsg
 		return
 	}
+
+	// verify receive task signature
+	requestAccount, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err)
+		err = ErrSignature
+		return
+	}
+
+	// check if the request account is the primary SP of the object of the receive task
+	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+
+	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketInfo.GetPrimarySpId())
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+
+	if bucketPrimarySp.OperatorAddress != requestAccount.String() {
+		log.CtxErrorw(reqCtx.Context(), "the request account of replicate object is not primary SP", "expected:", bucketPrimarySp.OperatorAddress,
+			"actual sp:", requestAccount.String())
+		err = ErrMismatchSp
+		return
+	}
+
 	if receiveTask.GetObjectInfo() == nil ||
 		int(receiveTask.GetReplicateIdx()) >=
 			len(receiveTask.GetObjectInfo().GetChecksums()) {
@@ -451,12 +482,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
 }
 
-// recoverPrimaryHandler handles the query for recovery request from secondary SP or primary SP.
+// getRecoverDataHandler handles the query for recovery request from secondary SP or primary SP.
 // if it is used to recovery primary SP and the handler SP is the corresponding secondary,
 // it returns the EC piece data stored in the secondary SP for the requested object.
 // if it is used to recovery secondary SP and the handler is the corresponding primary SP,
 // it directly returns the EC piece data of the secondary SP.
-func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Request) {
+func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
 		reqCtx      *RequestContext
@@ -481,10 +512,7 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 
 	// ignore the error, because the recovery request only between SPs, the request
 	// verification is by signature of the RecoveryTask
-	reqCtx, newErr := NewRequestContext(r, g)
-	if newErr != nil {
-		log.CtxDebugw(context.Background(), "recoverPrimaryHandler new reqCtx error", "error", newErr)
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	recoveryMsg, err = hex.DecodeString(r.Header.Get(GnfdRecoveryMsgHeader))
 	if err != nil {
@@ -546,15 +574,22 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	var pieceData []byte
-	if redundancyIdx >= 0 {
-		// recovery secondary SP
-		pieceData, err = g.recoverECPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+
+	spID, err := g.getSPID()
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+
+	if redundancyIdx >= 0 && spID == bucketInfo.PrimarySpId {
+		// get segment piece data from primary SP
+		pieceData, err = g.getRecoverSegment(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
 			return
 		}
 	} else {
-		// recovery primary SP
-		pieceData, err = g.recoverSegmentPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
+		// get EC piece data from secondary SP
+		pieceData, err = g.getRecoverPiece(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
 			return
 		}
@@ -564,35 +599,64 @@ func (g *GateModular) recoverPrimaryHandler(w http.ResponseWriter, r *http.Reque
 	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
 
-func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+// getRecoverPiece get EC piece data from handler and return
+func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
 
-	// the primary sp of the object should be consistent with task signature
 	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
 	if err != nil {
 		return nil, err
 	}
-	if primarySp.OperatorAddress != signatureAddr.String() {
-		log.CtxErrorw(ctx, "recovery request not come from primary sp")
-		return nil, ErrRecoverySP
+	// the primary sp of the object should be consistent with task signature
+
+	sspAddress := make([]string, 0)
+
+	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+	if err != nil {
+		return nil, err
+	}
+	for _, sspID := range gvg.SecondarySpIds {
+		sp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspID)
+		if err != nil {
+			return nil, err
+		}
+		sspAddress = append(sspAddress, sp.OperatorAddress)
 	}
 
-	// TODO get sp id from config file
-	spID, err := g.getSPID()
-	if err != nil {
-		return nil, ErrConsensus
+	if primarySp.OperatorAddress != signatureAddr.String() {
+		log.CtxDebugw(ctx, "recovery request not come from primary sp")
+		// judge if the sender is not one of the secondary SP
+		isRequestFromSecondary := false
+		var taskECIndex int32
+		for idx, sspAddr := range sspAddress {
+			if sspAddr == signatureAddr.String() {
+				isRequestFromSecondary = true
+				taskECIndex = int32(idx)
+			}
+		}
+		if !isRequestFromSecondary || (isRequestFromSecondary && taskECIndex != recoveryTask.GetEcIdx()) {
+			log.CtxErrorw(ctx, "recovery request not come from the correct secondary sp")
+			err = ErrRecoverySP
+			return nil, err
+		}
 	}
-	ECIndex, isOneOfSecondary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, g.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
-		return nil, ErrConsensus
+
+	isOneOfSecondary := false
+	var ECIndex int
+	for idx, spAddr := range sspAddress {
+		if spAddr == g.baseApp.OperatorAddress() {
+			isOneOfSecondary = true
+			ECIndex = idx
+			break
+		}
 	}
+
+	// if the handler SP is not one of the secondary SP of the task object, return err
 	if !isOneOfSecondary {
 		return nil, ErrRecoverySP
 	}
 
-	// init download piece task, get piece data and return the data
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(ECIndex))
@@ -612,7 +676,8 @@ func (g *GateModular) recoverSegmentPiece(ctx context.Context, objectInfo *stora
 	return pieceData, nil
 }
 
-func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
+// getRecoverSegment get segment piece data from handler and return the EC piece data based on recovery task info
+func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
@@ -633,6 +698,7 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	if err != nil {
 		return nil, ErrRecoverySP
 	}
+	// if the sender is not one of the secondarySp, return err
 	isOneOfSecondary := false
 	var ECIndex int32
 	for idx, sspId := range gvg.GetSecondarySpIds() {
@@ -653,7 +719,6 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 	segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(),
 		recoveryTask.GetSegmentIdx())
 
-	// TODO: refine it
 	// if recovery data chunk, just download the data part of segment in primarySP
 	// no need to check quota when recovering primary SP or secondary SP data
 	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
@@ -675,7 +740,6 @@ func (g *GateModular) recoverECPiece(ctx context.Context, objectInfo *storagetyp
 		return pieceData, nil
 	}
 
-	// TODO: refine it
 	// if recovery parity chunk, need to download the total segment and ec encode it
 	segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(), params.GetMaxSegmentSize())
 	pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(pieceTask),

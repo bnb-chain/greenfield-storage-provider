@@ -187,6 +187,9 @@ type ParallelConfig struct {
 	DiscontinueBucketEnabled       bool
 	DiscontinueBucketTimeInterval  int
 	DiscontinueBucketKeepAliveDays int
+
+	LoadReplicateTimeout int64
+	LoadSealTimeout      int64
 }
 
 type TaskConfig struct {

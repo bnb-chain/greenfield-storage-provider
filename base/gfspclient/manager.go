@@ -159,7 +159,10 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		log.CtxErrorw(ctx, "client failed to report task", "error", err)
 		return ErrRpcUnknown
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
 }
 
 func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error) {

@@ -37,9 +37,12 @@ const (
 // getUserBucketsHandler handle get object request
 func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		b      bytes.Buffer
-		reqCtx *RequestContext
+		requestIncludeRemoved string
+		includedRemoved       bool
+		queryParams           url.Values
+		err                   error
+		b                     bytes.Buffer
+		reqCtx                *RequestContext
 	)
 	startTime := time.Now()
 	defer func() {
@@ -56,10 +59,10 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestIncludeRemoved = queryParams.Get(ListObjectsIncludeRemovedQuery)
 
 	if ok := common.IsHexAddress(r.Header.Get(GnfdUserAddressHeader)); !ok {
 		log.Errorw("failed to check account id", "account_id", reqCtx.account, "error", err)
@@ -67,7 +70,16 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), true)
+	if requestIncludeRemoved != "" {
+		includedRemoved, err = strconv.ParseBool(requestIncludeRemoved)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse requestRemoved", "request_include_removed", requestIncludeRemoved, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	resp, err := g.baseApp.GfSpClient().GetUserBuckets(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), includedRemoved)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
@@ -101,7 +113,9 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		requestContinuationToken string
 		requestDelimiter         string
 		requestPrefix            string
+		requestIncludeRemoved    string
 		continuationToken        string
+		includedRemoved          bool
 		decodedContinuationToken []byte
 		queryParams              url.Values
 	)
@@ -120,10 +134,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	queryParams = reqCtx.request.URL.Query()
 	requestBucketName = reqCtx.bucketName
@@ -132,6 +143,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	requestContinuationToken = queryParams.Get(ListObjectsContinuationTokenQuery)
 	requestDelimiter = queryParams.Get(ListObjectsDelimiterQuery)
 	requestPrefix = queryParams.Get(ListObjectsPrefixQuery)
+	requestIncludeRemoved = queryParams.Get(ListObjectsIncludeRemovedQuery)
 
 	if requestDelimiter != "" && requestDelimiter != "/" {
 		log.CtxErrorw(reqCtx.Context(), "failed to check delimiter", "delimiter", requestDelimiter, "error", err)
@@ -182,6 +194,15 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		}
 	}
 
+	if requestIncludeRemoved != "" {
+		includedRemoved, err = strconv.ParseBool(requestIncludeRemoved)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse requestRemoved", "request_include_removed", requestIncludeRemoved, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
 	if ok = checkValidObjectPrefix(requestPrefix); !ok {
 		log.CtxErrorw(reqCtx.Context(), "failed to check requestPrefix", "prefix", requestPrefix, "error", err)
 		err = ErrInvalidQuery
@@ -212,7 +233,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 			continuationToken,
 			requestDelimiter,
 			requestPrefix,
-			true)
+			includedRemoved)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return

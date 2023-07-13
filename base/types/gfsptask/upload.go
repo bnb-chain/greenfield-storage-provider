@@ -131,6 +131,14 @@ func (m *GfSpUploadObjectTask) EstimateLimit() corercmgr.Limit {
 	return l
 }
 
+func (m *GfSpUploadObjectTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpUploadObjectTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
 func (m *GfSpUploadObjectTask) SetLogs(logs string) {
 	m.GetTask().SetLogs(logs)
 }
@@ -283,6 +291,14 @@ func (m *GfSpResumableUploadObjectTask) EstimateLimit() corercmgr.Limit {
 	}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
+}
+
+func (m *GfSpResumableUploadObjectTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpResumableUploadObjectTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpResumableUploadObjectTask) SetLogs(logs string) {
@@ -463,6 +479,14 @@ func (m *GfSpReplicatePieceTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
 }
 
+func (m *GfSpReplicatePieceTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpReplicatePieceTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
 func (m *GfSpReplicatePieceTask) SetLogs(logs string) {
 	m.GetTask().SetLogs(logs)
 }
@@ -608,6 +632,14 @@ func (m *GfSpSealObjectTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 
 func (m *GfSpSealObjectTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
+}
+
+func (m *GfSpSealObjectTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpSealObjectTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpSealObjectTask) SetLogs(logs string) {
@@ -762,6 +794,14 @@ func (m *GfSpReceivePieceTask) SetObjectInfo(object *storagetypes.ObjectInfo) {
 
 func (m *GfSpReceivePieceTask) SetStorageParams(param *storagetypes.Params) {
 	m.StorageParams = param
+}
+
+func (m *GfSpReceivePieceTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpReceivePieceTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
 }
 
 func (m *GfSpReceivePieceTask) SetLogs(logs string) {

@@ -79,6 +79,11 @@ type Task interface {
 	SetLogs(logs string)
 	// GetLogs returns the logs of task
 	GetLogs() string
+	// GetUserAddress returns the user account of downloading object.
+	// It is used to record the read bucket information.
+	GetUserAddress() string
+	// SetUserAddress sets the user account of downloading object.
+	SetUserAddress(string)
 	// AppendLog appends the event log to task
 	AppendLog(log string)
 	// Info returns the task detail info for log and debug.
@@ -113,7 +118,7 @@ type ApprovalCreateBucketTask interface {
 	// InitApprovalCreateBucketTask inits the ApprovalCreateBucketTask by
 	// MsgCreateBucket and task priority. SP only fill the MsgCreateBucket's
 	// PrimarySpApproval field, can not change other fields.
-	InitApprovalCreateBucketTask(*storagetypes.MsgCreateBucket, TPriority)
+	InitApprovalCreateBucketTask(string, *storagetypes.MsgCreateBucket, TPriority)
 	// GetCreateBucketInfo returns the user's MsgCreateBucket.
 	GetCreateBucketInfo() *storagetypes.MsgCreateBucket
 	// SetCreateBucketInfo sets the MsgCreateBucket. Should try to avoid calling
@@ -147,7 +152,7 @@ type ApprovalCreateObjectTask interface {
 	// InitApprovalCreateObjectTask inits the ApprovalCreateObjectTask by
 	// MsgCreateObject and task priority. SP only fill the MsgCreateObject's
 	// PrimarySpApproval field, can not change other fields.
-	InitApprovalCreateObjectTask(*storagetypes.MsgCreateObject, TPriority)
+	InitApprovalCreateObjectTask(string, *storagetypes.MsgCreateObject, TPriority)
 	// GetCreateObjectInfo returns the user's MsgCreateObject.
 	GetCreateObjectInfo() *storagetypes.MsgCreateObject
 	// SetCreateObjectInfo sets the MsgCreateObject. Should try to avoid calling
@@ -354,11 +359,6 @@ type DownloadObjectTask interface {
 	GetBucketInfo() *storagetypes.BucketInfo
 	// SetBucketInfo sets the BucketInfo of the download object.
 	SetBucketInfo(*storagetypes.BucketInfo)
-	// GetUserAddress returns the user account of downloading object.
-	// It is used to record the read bucket information.
-	GetUserAddress() string
-	// SetUserAddress sets the user account of downloading object.
-	SetUserAddress(string)
 	// GetSize returns the download payload data size, high - low + 1.
 	GetSize() int64
 	// GetLow returns the start offset of download payload data.

@@ -1,12 +1,16 @@
 package bsdb
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/forbole/juno/v4/common"
+	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
 )
+
+const PrefixesNumberOfShards = 64
 
 // ListObjects List objects by bucket name
 func (b *BsDBImpl) ListObjects(bucketName, continuationToken, prefix string, maxKeys int) ([]*ListObjectsResult, error) {
@@ -32,7 +36,7 @@ func (b *BsDBImpl) ListObjects(bucketName, continuationToken, prefix string, max
 	if continuationToken != "" {
 		filters = append(filters, FullNameFilter(continuationToken))
 	}
-	err = b.db.Table((&SlashPrefixTreeNode{}).TableName()).
+	err = b.db.Table(GetPrefixesTableName(bucketName)).
 		Where("bucket_name = ?", bucketName).
 		Scopes(filters...).
 		Order("full_name").
@@ -69,11 +73,12 @@ func processPath(pathName string) (string, string) {
 // Returns a slice of ListObjectsResult containing filtered object data or an error if something goes wrong.
 func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode) ([]*ListObjectsResult, error) {
 	var (
-		objectIDs  []common.Hash
-		objects    []*Object
-		res        []*ListObjectsResult
-		objectsMap map[common.Hash]*Object
-		err        error
+		objectIDs    []common.Hash
+		totalObjects []*Object
+		objects      []*Object
+		res          []*ListObjectsResult
+		objectsMap   map[common.Hash]*Object
+		err          error
 	)
 
 	//filter objects and query the info
@@ -83,15 +88,19 @@ func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode) ([]*ListObjectsRe
 		}
 	}
 
-	err = b.db.Table((&Object{}).TableName()).
-		Where("object_id in (?)", objectIDs).
-		Find(&objects).Error
-	if err != nil {
-		return nil, err
+	for i := 0; i < ObjectsNumberOfShards; i++ {
+		err = b.db.Table(GetObjectsTableNameByShardNumber(i)).
+			Where("object_id in (?)", objectIDs).
+			Find(&objects).Error
+		//stop after finding one set?
+		if err != nil {
+			return nil, err
+		}
+		totalObjects = append(totalObjects, objects...)
 	}
 
 	objectsMap = make(map[common.Hash]*Object)
-	for _, object := range objects {
+	for _, object := range totalObjects {
 		objectsMap[object.ObjectID] = object
 	}
 
@@ -115,4 +124,16 @@ func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode) ([]*ListObjectsRe
 		}
 	}
 	return res, nil
+}
+
+func GetPrefixesTableName(bucketName string) string {
+	return GetPrefixesTableNameByShardNumber(int(GetPrefixesShardNumberByBucketName(bucketName)))
+}
+
+func GetPrefixesShardNumberByBucketName(bucketName string) uint32 {
+	return murmur3.Sum32([]byte(bucketName)) % PrefixesNumberOfShards
+}
+
+func GetPrefixesTableNameByShardNumber(shard int) string {
+	return fmt.Sprintf("%s_%02d", PrefixTreeTableName, shard)
 }

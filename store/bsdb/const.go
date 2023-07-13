@@ -48,6 +48,8 @@ const (
 	EventCompleteStorageProviderExitTableName = "event_sp_exit_complete"
 	// EventSwapOutTableName defines the name of event sp exit complete table
 	EventSwapOutTableName = "event_swap_out"
+	// ObjectIDMapTableName defines the name of object id map table
+	ObjectIDMapTableName = "object_id_map"
 )
 
 // define the list objects const

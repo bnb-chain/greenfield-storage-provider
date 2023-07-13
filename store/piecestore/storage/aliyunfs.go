@@ -3,12 +3,15 @@ package storage
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -47,21 +50,47 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
 	}
-	// todo to be changed prod region
-	region := "aliyun-cn-hangzhou"
+
+	key := getAliyunSecretKeyFromEnv(AliyunRegion, AliyunAccessKey, AliyunSecretKey, AliyunSessionToken)
+	creds := credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
 	awsConfig := &aws.Config{
-		Region:           aws.String(region),
+		Region:           aws.String(key.region),
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(!disableSSL),
 		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      creds,
 		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
-	// todo to be changed prod OSS_AccessKeyId and OSS_AccessKeySecret
-	awsConfig.Credentials = credentials.NewStaticCredentials("OSS_AccessKeyId", "OSS_AccessKeySecret", "")
-
-	sess, err := session.NewSession(awsConfig)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to create aliyunfs session: %s", err)
+	var sess *session.Session
+	switch cfg.IAMType {
+	case AKSKIAMType:
+		key := getAliyunSecretKeyFromEnv(AliyunRegion, AliyunAccessKey, AliyunSecretKey, AliyunSessionToken)
+		if key.accessKey == "NoSignRequest" {
+			awsConfig.Credentials = credentials.AnonymousCredentials
+		} else if key.accessKey != "" && key.secretKey != "" {
+			awsConfig.Credentials = credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
+		}
+		sess = session.Must(session.NewSession(awsConfig))
+		log.Debugw("use aksk to access aliyunfs", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
+	case SAIAMType:
+		sess = session.Must(session.NewSession())
+		irsa, roleARN, tokenPath := checkAliyunAvailable()
+		if irsa {
+			awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(credentials.NewChainCredentials(
+				[]credentials.Provider{
+					&credentials.EnvProvider{},
+					&credentials.SharedCredentialsProvider{},
+					stscreds.NewWebIdentityRoleProviderWithOptions(
+						sts.New(sess), roleARN, "",
+						stscreds.FetchTokenPath(tokenPath)),
+				}))
+			log.Debug("use sa to access aliyunfs")
+		} else {
+			return nil, "", fmt.Errorf("failed to use sa to access aliyunfs")
+		}
+	default:
+		log.Errorf("unknown IAM type: %s", cfg.IAMType)
+		return nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
 	}
 	sc.sessions[cfg] = sess
 	return sess, bucketName, nil
@@ -90,4 +119,19 @@ func parseAliyunfsBucketURL(bucketURL string) (string, string, bool, error) {
 	}
 	bucketName := strings.Split(uri.Path, "/")[1]
 	return uri.Host, bucketName, ssl, nil
+}
+
+func checkAliyunAvailable() (bool, string, string) {
+	irsa := true
+	roleARN, exists := os.LookupEnv(AliyunRoleARN)
+	if !exists {
+		irsa = false
+		log.Error("failed to read oss role arn")
+	}
+	tokenPath, exists := os.LookupEnv(AliyunWebIdentityTokenFile)
+	if !exists {
+		irsa = false
+		log.Error("failed to read oss web identity token file")
+	}
+	return irsa, roleARN, tokenPath
 }

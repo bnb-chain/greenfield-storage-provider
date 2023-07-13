@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -66,7 +65,9 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		// ignore the access db error, it is the system's inner error, will be let the request go.
 	}
 	// report the task to the manager for monitor the download task
-	_ = d.baseApp.GfSpClient().ReportTask(ctx, downloadObjectTask)
+	go func() {
+		_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadObjectTask)
+	}()
 	return nil
 }
 
@@ -177,7 +178,9 @@ func (d *DownloadModular) PostDownloadObject(ctx context.Context, downloadObject
 func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask) error {
 	defer func() {
 		// report the task to the manager for monitor the download piece task
-		d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+		go func() {
+			_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadPieceTask)
+		}()
 	}()
 
 	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil || downloadPieceTask.GetStorageParams() == nil {
@@ -323,7 +326,9 @@ func (d *DownloadModular) PreChallengePiece(ctx context.Context, downloadPieceTa
 		log.CtxErrorw(ctx, "failed to pre challenge piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
-	_ = d.baseApp.GfSpClient().ReportTask(ctx, downloadPieceTask)
+	go func() {
+		_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadPieceTask)
+	}()
 	return nil
 }
 
@@ -375,8 +380,6 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
-		// if read piece store error, try to recover the error data
-		d.recoverChallengePiece(ctx, downloadPieceTask, pieceKey)
 		return nil, nil, nil, ErrPieceStore
 	}
 
@@ -389,25 +392,4 @@ func (d *DownloadModular) PostChallengePiece(ctx context.Context, downloadPieceT
 func (d *DownloadModular) QueryTasks(ctx context.Context, subKey task.TKey) (
 	[]task.Task, error) {
 	return nil, nil
-}
-
-// recoverChallengePiece recover challenge piece by generating recovery background task if challenge task get piece fail
-func (d *DownloadModular) recoverChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask, pieceKey string) {
-	// TODO check if it need to recovery if the piece data is not correct
-	var segmentIndex uint32
-	segmentIndex, ECIndex, parseErr := d.baseApp.PieceOp().ParseChallengeIdx(pieceKey)
-	if parseErr != nil {
-		// no need to return recovery error to user
-		log.CtxErrorw(ctx, "fail to parse recovery segment index", "error", parseErr)
-	}
-	recoveryTask := &gfsptask.GfSpRecoverPieceTask{}
-	recoveryTask.InitRecoverPieceTask(downloadPieceTask.GetObjectInfo(), downloadPieceTask.GetStorageParams(),
-		d.baseApp.TaskPriority(recoveryTask),
-		segmentIndex,
-		ECIndex,
-		uint64(0),
-		d.baseApp.TaskTimeout(recoveryTask, downloadPieceTask.GetStorageParams().GetMaxSegmentSize()),
-		2)
-
-	d.baseApp.GfSpClient().ReportTask(ctx, recoveryTask)
 }
