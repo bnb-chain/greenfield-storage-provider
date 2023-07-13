@@ -265,7 +265,6 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 				if err != nil {
 					return err
 				}
-				log.Infof("data: %v", data)
 				dataList = append(dataList, data)
 			} else if object.ObjectEvents[event.Type] {
 				objectEvent = append(objectEvent, e)
@@ -293,7 +292,6 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 }
 
 func (i *Impl) BatchHandle(ctx context.Context, dataList []interface{}, block *coretypes.ResultBlock, txHash common.Hash) error {
-	log.Infof("dataList length:%d", len(dataList))
 	objects := make([]*models.Object, 0)
 	objectIDMap := make(map[common.Hash]bool, 0)
 	streamRecords := make([]*models.StreamRecord, 0)
@@ -425,7 +423,6 @@ func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.Resul
 			if err != nil {
 				return err
 			}
-			log.Infof("data:%v", data)
 			dataList = append(dataList, data)
 		} else if object.ObjectEvents[event.Type] {
 			objectEvent = append(objectEvent, e)
