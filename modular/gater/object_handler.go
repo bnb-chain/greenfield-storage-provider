@@ -731,7 +731,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	}
 	if spID != bucketSPID {
 		log.Debugw("primary sp id not matched ",
-			"bucket_sp_dd", bucketSPID, "self_sp_id", spID,
+			"bucket_sp_id", bucketSPID, "self_sp_id", spID,
 		)
 
 		// TODO might need to edit GetEndpointBySpId to reduce call to chain
