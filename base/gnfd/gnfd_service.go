@@ -255,11 +255,14 @@ func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*vi
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
-	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{})
+	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
+		Pagination: &query.PageRequest{Limit: 10000000},
+	})
 	if err != nil {
 		log.Errorw("failed to list virtual group families", "error", err)
 		return vgfs, err
 	}
+	log.Infow("list families", "resp", resp)
 	for i := 0; i < len(resp.GetGvgFamilies()); i++ {
 		f := resp.GetGvgFamilies()[i]
 		if f.PrimarySpId == spID {
