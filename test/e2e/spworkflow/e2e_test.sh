@@ -131,6 +131,20 @@ function test_file_size_greater_than_16_mb() {
   check_md5 ./random_file ./new_random_file
 }
 
+################
+# test sp exit #
+################
+function test_sp_exit() {
+    set -e
+    cd ${workspace}/deployment/localup/local_env/sp0
+    cat ./config.toml
+    string=$(grep "SpOperatorAddress" ./config.toml)
+    echo ${string}
+    operator_address=$(echo "$(grep "SpOperatorAddress" ./config.toml)" | grep -o "0x[0-9a-zA-Z]*")
+    echo ${operator_address}
+    ./gnfd-sp0 -c ./config.toml sp.exit -operatorAddress ${operator_address}
+}
+
 ##################################
 # check two md5 whether is equal #
 ##################################
@@ -164,6 +178,8 @@ function run_e2e() {
   test_create_bucket
   test_file_size_less_than_16_mb
   test_file_size_greater_than_16_mb
+  echo 'run sp exit e2e test'
+  test_sp_exit
 }
 
 function main() {
