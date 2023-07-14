@@ -81,7 +81,7 @@ type Metadata interface {
 	// ListBucketsByVgfID list buckets by vgf ids
 	ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
 	// ListObjectsByLVGID list objects by lvg id
-	ListObjectsByLVGID(lvgIDs []uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	ListObjectsByLVGID(lvgIDs []uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
 	// GetGvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*GlobalVirtualGroup, error)
 	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id

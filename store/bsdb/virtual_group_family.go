@@ -10,29 +10,18 @@ import (
 // ListVirtualGroupFamiliesBySpID list virtual group families by sp id
 func (b *BsDBImpl) ListVirtualGroupFamiliesBySpID(spID uint32) ([]*VirtualGroupFamily, error) {
 	var (
-		groups   []*GlobalVirtualGroup
 		families []*VirtualGroupFamily
-		gvgIDs   []uint32
 		filters  []func(*gorm.DB) *gorm.DB
 		err      error
 	)
 
 	filters = append(filters, RemovedFilter(false))
-	err = b.db.Table((&GlobalVirtualGroup{}).TableName()).
+	err = b.db.Table((&VirtualGroupFamily{}).TableName()).
 		Select("*").
 		Where("primary_sp_id = ?", spID).
 		Scopes(filters...).
-		Find(&groups).Error
-	if err != nil || len(groups) == 0 {
-		return nil, err
-	}
+		Find(&families).Error
 
-	gvgIDs = make([]uint32, len(groups))
-	for i, group := range groups {
-		gvgIDs[i] = group.GlobalVirtualGroupId
-	}
-
-	families, err = b.ListVgfByGvgID(gvgIDs)
 	return families, err
 }
 
@@ -71,7 +60,7 @@ func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error
 	query = fmt.Sprintf("select * from global_virtual_group_families where (FIND_IN_SET('%d', global_virtual_group_ids) > 0", gvgIDs[0])
 	if len(gvgIDs) > 1 {
 		for _, id := range gvgIDs[1:] {
-			subQuery := fmt.Sprintf("or FIND_IN_SET('%d', global_virtual_group_ids) > 0", id)
+			subQuery := fmt.Sprintf(" or FIND_IN_SET('%d', global_virtual_group_ids) > 0", id)
 			query = query + subQuery
 		}
 	}

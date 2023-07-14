@@ -107,11 +107,18 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, li
 		limit = ExpiredBucketsDefaultSize
 	}
 
-	err = b.db.Table((&Bucket{}).TableName()).
-		Select("*").
-		Where("primary_sp_id = ? and status = 'BUCKET_STATUS_CREATED' and create_time < ? and removed = false", primarySpID, createAt).
-		Limit(int(limit)).
-		Order("create_at").
+	err = b.db.Raw(`
+		SELECT buckets.* 
+		FROM buckets 
+		INNER JOIN global_virtual_group_families 
+		ON buckets.global_virtual_group_family_id = global_virtual_group_families.global_virtual_group_family_id
+		WHERE global_virtual_group_families.primary_sp_id = ? 
+		AND buckets.status = 'BUCKET_STATUS_CREATED' 
+		AND buckets.create_time < ? 
+		AND buckets.removed = false
+		ORDER BY buckets.create_at
+		LIMIT ?`,
+		primarySpID, createAt, limit).
 		Find(&buckets).Error
 
 	return buckets, err
@@ -164,26 +171,14 @@ func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool)
 // ListBucketsBindingOnPrimarySP list buckets by primary sp id
 func (b *BsDBImpl) ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
 	var (
-		groups   []*GlobalVirtualGroup
 		families []*VirtualGroupFamily
 		buckets  []*Bucket
-		gvgIDs   []uint32
 		vgfIDs   []uint32
 		err      error
 	)
 
-	groups, err = b.ListGvgByPrimarySpID(spID)
-	if err != nil || groups == nil {
-		return nil, err
-	}
-
-	gvgIDs = make([]uint32, len(groups))
-	for i, group := range groups {
-		gvgIDs[i] = group.GlobalVirtualGroupId
-	}
-
-	families, err = b.ListVgfByGvgID(gvgIDs)
-	if err != nil || families == nil {
+	families, err = b.ListVirtualGroupFamiliesBySpID(spID)
+	if err != nil || len(families) == 0 {
 		return nil, err
 	}
 
@@ -231,24 +226,6 @@ func (b *BsDBImpl) ListBucketsBindingOnSecondarySP(spID uint32, startAfter commo
 	return buckets, err
 }
 
-// ListBucketsByVgfID list buckets by vgf ids
-//
-//	func (b *BsDBImpl) ListBucketsByVgfID(vgfIDs []common.Hash, startAfter common.Hash, limit int) ([]*Bucket, error) {
-//		var (
-//			buckets []*Bucket
-//			filters []func(*gorm.DB) *gorm.DB
-//			err     error
-//		)
-//
-//		filters = append(filters, RemovedFilter(false), BucketIDStartAfterFilter(startAfter))
-//		err = b.db.Table((&Bucket{}).TableName()).
-//			Select("*").
-//			Where("global_virtual_group_family_id in (?)", vgfIDs).
-//			Scopes(filters...).
-//			Limit(limit).
-//			Find(&buckets).Error
-//		return buckets, err
-//	}
 func (b *BsDBImpl) ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket

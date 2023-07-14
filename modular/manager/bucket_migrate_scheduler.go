@@ -426,7 +426,11 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_
 	if err != nil {
 		return nil, err
 	}
-	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketInfo.GetPrimarySpId())
+	bucketSPID, err := util.GetBucketPrimarySPID(context.Background(), s.manager.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return nil, err
+	}
+	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketSPID)
 	if err != nil {
 		log.Errorw("failed to query sp", "error", err)
 		return nil, err

@@ -377,7 +377,7 @@ func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32) 
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 	// sleep 2 seconds for waiting a new block
 	// TODO: pre-allocator improve it.
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 	vgm.refreshMeta()
 	return nil
 }

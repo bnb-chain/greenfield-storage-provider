@@ -429,8 +429,13 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
 
-	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketInfo.GetPrimarySpId())
+	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketSPID)
 	if err != nil {
 		err = ErrConsensus
 		return
@@ -579,8 +584,13 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		err = ErrConsensus
 		return
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
 
-	if redundancyIdx >= 0 && spID == bucketInfo.PrimarySpId {
+	if redundancyIdx >= 0 && spID == bucketSPID {
 		// get segment piece data from primary SP
 		pieceData, err = g.getRecoverSegment(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
@@ -603,7 +613,11 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
 
-	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return nil, err
+	}
+	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketSPID)
 	if err != nil {
 		return nil, err
 	}
@@ -687,10 +701,14 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	if err != nil {
 		return nil, ErrConsensus
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return nil, ErrConsensus
+	}
 
-	if bucketInfo.GetPrimarySpId() != spID {
+	if bucketSPID != spID {
 		log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "actual_sp_id", spID,
-			"expected_sp_id", bucketInfo.GetPrimarySpId())
+			"expected_sp_id", bucketSPID)
 		return nil, ErrRecoverySP
 	}
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
@@ -720,7 +738,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 
 	// if recovery data chunk, just download the data part of segment in primarySP
 	// no need to check quota when recovering primary SP or secondary SP data
-	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketSPID)
 	if err != nil {
 		return nil, err
 	}

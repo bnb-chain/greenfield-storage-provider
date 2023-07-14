@@ -6,6 +6,8 @@ import (
 	"math"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
@@ -59,4 +61,12 @@ func BlsAggregate(secondarySigs [][]byte) ([]byte, error) {
 	}
 	aggBlsSig := bls.AggregateSignatures(blsSigs).Marshal()
 	return aggBlsSig, nil
+}
+
+func GetBucketPrimarySPID(ctx context.Context, chainClient consensus.Consensus, bucketInfo *storagetypes.BucketInfo) (uint32, error) {
+	resp, err := chainClient.QueryVirtualGroupFamily(ctx, bucketInfo.GetGlobalVirtualGroupFamilyId())
+	if err != nil {
+		return 0, nil
+	}
+	return resp.GetPrimarySpId(), nil
 }
