@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -688,12 +689,16 @@ func (g *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketN
 	if err != nil {
 		return "", err
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketMeta.GetBucketInfo())
+	if err != nil {
+		return "", err
+	}
 	spList, err := g.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return "", err
 	}
 	for _, info := range spList {
-		if bucketMeta.BucketInfo.PrimarySpId == info.Id {
+		if bucketSPID == info.Id {
 			return info.Endpoint, nil
 		}
 	}

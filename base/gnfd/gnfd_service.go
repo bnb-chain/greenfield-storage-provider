@@ -254,15 +254,17 @@ func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*vi
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
+	// TODO:
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
-		StorageProviderId: spID,
+		// StorageProviderId: spID,
 	})
 	if err != nil {
 		log.Errorw("failed to list virtual group families", "error", err)
 		return vgfs, err
 	}
-	for i := 0; i < len(resp.GetGlobalVirtualGroupFamilies()); i++ {
-		vgfs = append(vgfs, resp.GetGlobalVirtualGroupFamilies()[i])
+	// TODO:
+	for i := 0; i < len(resp.GetGvgFamilies()); i++ {
+		vgfs = append(vgfs, resp.GetGvgFamilies()[i])
 	}
 	return vgfs, nil
 }
@@ -272,9 +274,10 @@ func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) 
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("query_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
+	// TODO:
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamily(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamilyRequest{
-		StorageProviderId: spID,
-		FamilyId:          vgfID,
+		// StorageProviderId: spID,
+		FamilyId: vgfID,
 	})
 	if err != nil {
 		log.Errorw("failed to query virtual group family", "error", err)
