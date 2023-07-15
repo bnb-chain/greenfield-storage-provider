@@ -147,7 +147,7 @@ function make_config() {
     # blocksyncer
     sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\]/g" config.toml
     sed -i -e "s/RecreateTables = false/RecreateTables = true/g" config.toml
-    WORKERS=50
+    WORKERS=1
     sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml
     sed -i -e "s/Dsn = '.*'/Dsn = \"${USER}:${PWD}@tcp(${ADDRESS})\/${DATABASE}?parseTime=true\&multiStatements=true\&loc=Local\"/g" config.toml
 

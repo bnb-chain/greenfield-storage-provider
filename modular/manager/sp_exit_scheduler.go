@@ -247,8 +247,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 			s.lastSubscribedSPExitBlockHeight++
 			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
 		}
-		// subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
-		subscribeSPExitEventsTicker := time.NewTicker(100 * time.Millisecond)
+		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
 		defer subscribeSPExitEventsTicker.Stop()
 		for range subscribeSPExitEventsTicker.C {
 			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
@@ -293,8 +292,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
 		}
 
-		// subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
-		subscribeSwapOutEventsTicker := time.NewTicker(100 * time.Millisecond)
+		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
 		defer subscribeSwapOutEventsTicker.Stop()
 		for range subscribeSwapOutEventsTicker.C {
 			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {
@@ -526,7 +524,7 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 		return nil
 	}
 
-	// conflict has resolved, produce family swap out.
+	// conflict has been resolved, produce family swap out.
 	swapOut := &virtualgrouptypes.MsgSwapOut{
 		StorageProvider:            plan.scheduler.selfSP.GetOperatorAddress(),
 		GlobalVirtualGroupFamilyId: s.conflictedFamilyID,
@@ -573,7 +571,7 @@ func (plan *SrcSPSwapOutPlan) checkAllCompletedAndSendCompleteSPExitTx() error {
 		}
 	}
 
-	// all is completed
+	// all swap outs are completed
 	msg := &virtualgrouptypes.MsgCompleteStorageProviderExit{
 		StorageProvider: plan.manager.baseApp.OperatorAddress(),
 	}

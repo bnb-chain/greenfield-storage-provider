@@ -196,5 +196,9 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 		log.CtxErrorw(ctx, "failed to notify migrate swap out", "request", req, "error", err)
 		return err
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to notify migrate swap out", "request", req, "error", resp.GetErr())
+		return resp.GetErr()
+	}
+	return nil
 }

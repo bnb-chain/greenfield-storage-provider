@@ -36,6 +36,7 @@ func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtu
 		return err
 	}
 	if selfSPID != swapOut.SuccessorSpId {
+		log.CtxErrorw(ctx, "successor sp id is mismatch", "self_sp_id", selfSPID, "swap_out_successor_sp_id", swapOut.SuccessorSpId)
 		return fmt.Errorf("successor sp id is mismatch")
 	}
 
