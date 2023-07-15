@@ -33,9 +33,14 @@ var BuildPrefixTreeEvents = map[string]bool{
 	EventRejectSealObject:   true,
 }
 
+func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
+	return nil, nil
+}
+
 // HandleEvent handles the events relevant to the building of the PrefixTree.
 // It checks the type of the event and calls the appropriate handler for it.
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
+	log.Infof("prefixhandleevent")
 	if !BuildPrefixTreeEvents[event.Type] {
 		return nil
 	}

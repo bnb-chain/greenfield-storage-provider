@@ -28,7 +28,7 @@ var (
 	EventCancelSwapOut   = proto.MessageName(&vgtypes.EventCancelSwapOut{})
 )
 
-var spExitEvents = map[string]bool{
+var SpExitEvents = map[string]bool{
 	EventMigrationBucket:         true,
 	EventCompleteMigrationBucket: true,
 	EventCancelMigrationBucket:   true,
@@ -39,8 +39,12 @@ var spExitEvents = map[string]bool{
 	EventCancelSwapOut:           true,
 }
 
+func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
+	return nil, nil
+}
+
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
-	if !spExitEvents[event.Type] {
+	if !SpExitEvents[event.Type] {
 		return nil
 	}
 
