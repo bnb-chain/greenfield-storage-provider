@@ -115,7 +115,6 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	log.Infow("VMVMVM: print object info and chain params", "objectInfo", objectInfo, "params", params)
 	log.CtxDebugw(ctx, "succeed to upload payload data")
 }
 

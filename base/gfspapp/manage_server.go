@@ -329,6 +329,7 @@ func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context,
 func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context,
 	req *gfspserver.GfSpNotifyMigrateSwapOutRequest) (*gfspserver.GfSpNotifyMigrateSwapOutResponse, error) {
 	if err := g.manager.NotifyMigrateSwapOut(ctx, req.GetSwapOut()); err != nil {
+		log.CtxErrorw(ctx, "failed to notify migrate swap out", "swap_out", req.GetSwapOut(), "error", err)
 		return nil, err
 	}
 	return &gfspserver.GfSpNotifyMigrateSwapOutResponse{}, nil
