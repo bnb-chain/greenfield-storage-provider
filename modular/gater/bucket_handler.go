@@ -44,18 +44,16 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypeGetBucketQuota, reqCtx.Account(), reqCtx.bucketName, "")
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			err = ErrNoPermission
-			return
-		}
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypeGetBucketQuota, reqCtx.Account(), reqCtx.bucketName, "")
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
 	}
 
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
@@ -134,18 +132,16 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	if err != nil {
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypeListBucketReadRecord, reqCtx.Account(), reqCtx.bucketName, "")
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			err = ErrNoPermission
-			return
-		}
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypeListBucketReadRecord, reqCtx.Account(), reqCtx.bucketName, "")
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
 	}
 
 	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
