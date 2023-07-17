@@ -160,7 +160,8 @@ func (s *SpDBImpl) UpdateIntegrityChecksum(meta *corespdb.IntegrityMeta) (err er
 			time.Since(startTime).Seconds())
 	}()
 
-	result := s.db.Model(&IntegrityMetaTable{}).Where("object_id = ? and redundancy_index = ?", meta.ObjectID, meta.RedundancyIndex).
+	shardTableName := GetIntegrityMetasTableName(meta.ObjectID)
+	result := s.db.Table(shardTableName).Where("object_id = ? and redundancy_index = ?", meta.ObjectID, meta.RedundancyIndex).
 		Updates(&IntegrityMetaTable{
 			IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
 		})
@@ -210,6 +211,7 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 	}()
 
 	integrityMeta, err := s.GetObjectIntegrity(objectID, redundancyIndex)
+	shardTableName := GetIntegrityMetasTableName(objectID)
 	var checksums [][]byte
 	var integrity []byte
 	if err == gorm.ErrRecordNotFound {
@@ -228,7 +230,7 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 	} else {
 		newChecksums := append(integrityMeta.PieceChecksumList, checksum)
 		integrityMeta.PieceChecksumList = newChecksums
-		result := s.db.Model(&IntegrityMetaTable{}).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
+		result := s.db.Table(shardTableName).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
 			Updates(&IntegrityMetaTable{
 				PieceChecksumList: util.BytesSliceToString(newChecksums),
 			})
