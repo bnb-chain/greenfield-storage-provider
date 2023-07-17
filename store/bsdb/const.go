@@ -32,8 +32,8 @@ const (
 	MasterDBTableName = "master_db"
 	// PrefixTreeTableName defines the name of prefix tree node table
 	PrefixTreeTableName = "slash_prefix_tree_nodes"
-	// VirtualGroupFamilyTableName defines the name of virtual group family table
-	VirtualGroupFamilyTableName = "global_virtual_group_families"
+	// GlobalVirtualGroupFamilyTableName defines the name of global virtual group family table
+	GlobalVirtualGroupFamilyTableName = "global_virtual_group_families"
 	// LocalVirtualGroupFamilyTableName defines the name of local virtual group table
 	LocalVirtualGroupFamilyTableName = "local_virtual_groups"
 	// GlobalVirtualGroupTableName defines the name of global virtual group table

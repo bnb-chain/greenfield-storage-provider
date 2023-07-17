@@ -49,9 +49,9 @@ type Metadata interface {
 	// ListBucketsByBucketID list buckets by bucket ids
 	ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error)
 	// ListVirtualGroupFamiliesBySpID list virtual group families by sp id
-	ListVirtualGroupFamiliesBySpID(spID uint32) ([]*VirtualGroupFamily, error)
+	ListVirtualGroupFamiliesBySpID(spID uint32) ([]*GlobalVirtualGroupFamily, error)
 	// GetVirtualGroupFamiliesByVgfID get virtual group families by vgf id
-	GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*VirtualGroupFamily, error)
+	GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*GlobalVirtualGroupFamily, error)
 	// GetGlobalVirtualGroupByGvgID get global virtual group by gvg id
 	GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtualGroup, error)
 	// ListBucketsBindingOnPrimarySP list buckets by primary sp id
@@ -73,7 +73,7 @@ type Metadata interface {
 	// ListGvgByBucketID list global virtual group by bucket id
 	ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGroup, error)
 	// ListVgfByGvgID list vgf by gvg ids
-	ListVgfByGvgID(gvgIDs []uint32) ([]*VirtualGroupFamily, error)
+	ListVgfByGvgID(gvgIDs []uint32) ([]*GlobalVirtualGroupFamily, error)
 	// ListLvgByGvgAndBucketID list lvg by gvg and bucket ids
 	ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []uint32) ([]*LocalVirtualGroup, error)
 	// ListLvgByGvgID list lvg by gvg ids

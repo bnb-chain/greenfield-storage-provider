@@ -4,8 +4,8 @@ import (
 	"github.com/forbole/juno/v4/common"
 )
 
-// VirtualGroupFamily defines a set of physical nodes, which only serve part of the buckets
-type VirtualGroupFamily struct {
+// GlobalVirtualGroupFamily defines a set of physical nodes, which only serve part of the buckets
+type GlobalVirtualGroupFamily struct {
 	ID                         uint64         `gorm:"column:id;primaryKey"`
 	GlobalVirtualGroupFamilyId uint32         `gorm:"column:global_virtual_group_family_id;index:idx_vgf_id"`
 	PrimarySpId                uint32         `gorm:"column:primary_sp_id;index:idx_primary_sp_id"`
@@ -22,6 +22,6 @@ type VirtualGroupFamily struct {
 }
 
 // TableName is used to set VirtualGroupFamily table name in database
-func (g *VirtualGroupFamily) TableName() string {
-	return VirtualGroupFamilyTableName
+func (g *GlobalVirtualGroupFamily) TableName() string {
+	return GlobalVirtualGroupFamilyTableName
 }

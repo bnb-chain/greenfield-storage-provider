@@ -171,7 +171,7 @@ func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool)
 // ListBucketsBindingOnPrimarySP list buckets by primary sp id
 func (b *BsDBImpl) ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
 	var (
-		families []*VirtualGroupFamily
+		families []*GlobalVirtualGroupFamily
 		buckets  []*Bucket
 		vgfIDs   []uint32
 		err      error
@@ -195,7 +195,7 @@ func (b *BsDBImpl) ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.
 func (b *BsDBImpl) ListBucketsBindingOnSecondarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
 	var (
 		groups   []*GlobalVirtualGroup
-		families []*VirtualGroupFamily
+		families []*GlobalVirtualGroupFamily
 		buckets  []*Bucket
 		gvgIDs   []uint32
 		vgfIDs   []uint32
