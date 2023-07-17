@@ -32,6 +32,7 @@ func spExit(ctx *cli.Context) error {
 	}
 	client := utils.MakeGfSpClient(cfg)
 	operatorAddress := ctx.String(spOperatorAddressFlag.Name)
+	// TODO: add more verification for cli args
 	if operatorAddress != cfg.SpAccount.SpOperatorAddress {
 		return fmt.Errorf("invalid operator address")
 	}
