@@ -145,6 +145,32 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 	return nil
 }
 
+// UpdateIntegrityChecksum update integrity hash info to db
+func (s *SpDBImpl) UpdateIntegrityChecksum(meta *corespdb.IntegrityMeta) (err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureSetObjectIntegrity).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureSetObjectIntegrity).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessSetObjectIntegrity).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessSetObjectIntegrity).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	result := s.db.Model(&IntegrityMetaTable{}).Where("object_id = ? and redundancy_index = ?", meta.ObjectID, meta.RedundancyIndex).
+		Updates(&IntegrityMetaTable{
+			IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
+		})
+	if result.Error != nil {
+		return fmt.Errorf("failed to update integrity checksum for integrity meta table: %s", result.Error)
+	}
+
+	return nil
+}
+
 // DeleteObjectIntegrity deletes integrity meta info.
 func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) (err error) {
 	startTime := time.Now()
@@ -168,8 +194,8 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32)
 	return err
 }
 
-// AppendObjectChecksumIntegrity append checksum
-func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, redundancyIndex int32, checksum []byte) (err error) {
+// UpdatePieceChecksum 1) create if not exist 2) append checksum
+func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -210,7 +236,6 @@ func (s *SpDBImpl) AppendObjectChecksumIntegrity(objectID uint64, redundancyInde
 			return fmt.Errorf("failed to update integrity meta table: %s", result.Error)
 		}
 	}
-
 	return nil
 }
 
