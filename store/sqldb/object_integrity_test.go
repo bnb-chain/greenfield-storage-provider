@@ -11,7 +11,7 @@ import (
 type SqlDBTestSuite struct {
 	suite.Suite
 
-	db *corespdb.SPDB
+	db *sqldb.SpDBImpl
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -33,14 +33,15 @@ func (suite *SqlDBTestSuite) SetupTest() {
 	suite.db = db
 }
 
-func TestObjectIntegritySet() {
+func (suite *SqlDBTestSuite) TestObjectIntegritySet() {
 
 	integrityMeta := &corespdb.IntegrityMeta{
-		ObjectID:          uploadObjectTask.GetObjectInfo().Id.Uint64(),
+		ObjectID:          11,
 		RedundancyIndex:   -1,
 		PieceChecksumList: checksums,
 		IntegrityChecksum: integrity,
 	}
 
-	SetObjectIntegrity()
+	db := suite.db
+	db.SetObjectIntegrity(integrityMeta)
 }
