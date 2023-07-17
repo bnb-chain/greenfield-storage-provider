@@ -1,4 +1,4 @@
-name: Docker
+name: PR-BUILD-IMAGE
 
 on:
   pull_request:
