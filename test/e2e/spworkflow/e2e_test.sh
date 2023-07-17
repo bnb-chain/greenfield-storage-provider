@@ -155,7 +155,7 @@ function test_sp_exit() {
     # start exiting sp5
     cd ${workspace}/deployment/localup/local_env/sp5
     ./gnfd-sp5 -c ./config.toml sp.exit -operatorAddress ${operator_address}
-    sleep 600
+    sleep 400
     cd ${workspace}/greenfield-cmd/build/
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit

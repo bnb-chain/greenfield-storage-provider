@@ -55,6 +55,10 @@ jobs:
           echo "Account address: ${{ steps.generate-private-key.outputs.account_address }}"
           echo "PRIVATE_KEY=${{ steps.generate-private-key.outputs.private_key }}" >> "$GITHUB_ENV"
           echo "ACCOUNT_ADDR=${{ steps.generate-private-key.outputs.account_address }}" >> "$GITHUB_ENV"
+      # Build Greenfield Cmd
+      - name: Build Greenfield Cmd
+        run: |
+          bash ./test/e2e/spworkflow/e2e_test.sh --buildCmd
       # Build and Start Greenfield Blockchain
       - name: Build and Start Greenfield Blockchain
         run: |
@@ -63,10 +67,6 @@ jobs:
       - name: Build and Start Greenfield SP
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --startSP
-      # Build Greenfield Cmd
-      - name: Build Greenfield Cmd
-        run: |
-          bash ./test/e2e/spworkflow/e2e_test.sh --buildCmd
       # Use Greenfield Cmd Running SP Exit E2E Test
       - name: Run Greenfield SP Exit E2E Test
         run: |
