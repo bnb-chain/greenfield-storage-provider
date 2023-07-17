@@ -7,16 +7,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
 	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 
 	sdkTypes "github.com/bnb-chain/greenfield-go-sdk/types"
 	"github.com/bnb-chain/greenfield-storage-provider/test/e2e/spworkflow/basesuite"
 	storageTestUtil "github.com/bnb-chain/greenfield/testutil/storage"
 	spTypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storageTypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/stretchr/testify/suite"
-
 	types3 "github.com/bnb-chain/greenfield/x/sp/types"
+	storageTypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 type BucketMigrateTestSuite struct {
