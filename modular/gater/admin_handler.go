@@ -91,22 +91,20 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			startVerifyAuthentication := time.Now()
-			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-				reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
-				reqCtx.Account(), createBucketApproval.GetBucketName(), "")
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
+		startVerifyAuthentication := time.Now()
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+			reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
+			reqCtx.Account(), createBucketApproval.GetBucketName(), "")
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+			return
+		}
+		if !authenticated {
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			err = ErrNoPermission
+			return
 		}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
 		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, g.baseApp.TaskPriority(task))
@@ -139,19 +137,17 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-				reqCtx.Context(), coremodule.AuthOpAskMigrateBucketApproval,
-				reqCtx.Account(), migrateBucketApproval.GetBucketName(), "")
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+			reqCtx.Context(), coremodule.AuthOpAskMigrateBucketApproval,
+			reqCtx.Account(), migrateBucketApproval.GetBucketName(), "")
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+			return
+		}
+		if !authenticated {
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			err = ErrNoPermission
+			return
 		}
 		task := &gfsptask.GfSpMigrateBucketApprovalTask{}
 		task.InitApprovalMigrateBucketTask(&migrateBucketApproval, g.baseApp.TaskPriority(task))
@@ -181,23 +177,21 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			startVerifyAuthentication := time.Now()
-			authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-				reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
-				reqCtx.Account(), createObjectApproval.GetBucketName(),
-				createObjectApproval.GetObjectName())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
-			metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_end").Observe(time.Since(startTime).Seconds())
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
+		startVerifyAuthentication := time.Now()
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
+			reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
+			reqCtx.Account(), createObjectApproval.GetBucketName(),
+			createObjectApproval.GetObjectName())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_auth_end").Observe(time.Since(startTime).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+			return
+		}
+		if !authenticated {
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			err = ErrNoPermission
+			return
 		}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
 		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, g.baseApp.TaskPriority(task))
@@ -284,21 +278,19 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		}
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		authTime := time.Now()
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),
-			objectInfo.GetObjectName())
-		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_auth_time").Observe(time.Since(authTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "failed to get challenge info due to no permission")
-			err = ErrNoPermission
-			return
-		}
+	authTime := time.Now()
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),
+		objectInfo.GetObjectName())
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_auth_time").Observe(time.Since(authTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "failed to get challenge info due to no permission")
+		err = ErrNoPermission
+		return
 	}
 
 	getBucketTime := time.Now()
