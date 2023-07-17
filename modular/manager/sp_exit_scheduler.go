@@ -172,6 +172,8 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err        error
 		migrateKey string
 	)
+	log.Infow("update migrate progress", "sp_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
+		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx())
 	migrateKey = MakeGVGMigrateKey(task.GetSrcGvg().GetId(), task.GetSrcGvg().GetFamilyId(), task.GetRedundancyIdx())
 	if task.GetFinished() {
 		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
@@ -201,6 +203,20 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			log.Errorw("failed to add swap out to task runner due to list virtual groups by family id",
 				"src_sp_id", srcSP.GetId(), "family_id", swapOutFamilyID, "error", err)
 			return err
+		}
+		if len(gvgList) == 0 {
+			// all gvg are completed
+			msg := &virtualgrouptypes.MsgCompleteSwapOut{
+				StorageProvider:            s.manager.baseApp.OperatorAddress(),
+				GlobalVirtualGroupFamilyId: swapOutFamilyID,
+			}
+			txHash, err := s.manager.baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg)
+			if err != nil {
+				log.Errorw("failed to send complete swap out", "family_id", swapOutFamilyID, "error", err)
+				return err
+			}
+			log.Infow("family is empty and send complete swap out tx", "swap_out", msg,
+				"tx_hash", txHash, "family_id", swapOutFamilyID)
 		}
 	} else {
 		var gvg *virtualgrouptypes.GlobalVirtualGroup

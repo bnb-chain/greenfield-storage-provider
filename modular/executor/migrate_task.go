@@ -58,6 +58,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 				return
 			}
 			if index%10 == 0 { // report task per 10 objects
+				log.Info("migrate gvg report task")
 				if err = e.ReportTask(ctx, task); err != nil {
 					log.CtxErrorw(ctx, "failed to report task", "index", index, "error", err)
 				}
@@ -65,6 +66,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		}
 		if len(objectList) < queryLimit {
 			// When the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
+			log.Infow("migrate gvg task finished", "object list length", len(objectList))
 			task.SetFinished(true)
 			return
 		}
@@ -340,7 +342,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	}
 	if !bytes.Equal(migratedIntegrityHash, chainIntegrityHash) {
 		log.Errorw("migrated pieces integrity is different from integrity hash on chain", "object_name",
-			objectInfo.GetObjectName(), "object_id", objectInfo.Id.String())
+			objectInfo.GetObjectName(), "object_id", objectInfo.Id.String(), "redundancy_index", redundancyIdx)
 		return ErrMigratedPieceChecksum
 	}
 
