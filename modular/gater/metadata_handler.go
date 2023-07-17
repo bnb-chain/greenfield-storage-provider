@@ -285,10 +285,7 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
@@ -342,10 +339,7 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
@@ -401,7 +395,7 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, _ = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
@@ -489,7 +483,7 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
+	reqCtx, _ = NewRequestContext(r, g)
 	if err != nil {
 		return
 	}
