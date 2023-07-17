@@ -158,7 +158,7 @@ function test_sp_exit() {
     sleep 600
     cd ${workspace}/greenfield-cmd/build/
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
-    ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit
+    ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/random_file
     ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/random_file ./new_random_file_1
     sleep 10
