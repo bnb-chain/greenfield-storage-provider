@@ -328,6 +328,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			if migrateBucketEvents.Events != nil {
 				// TODO migrating, switch to db
 				if s.executePlanIDMap[migrateBucketEvents.Events.BucketId.Uint64()] != nil {
+					log.Debugw("BucketMigrateScheduler subscribeEvents bucket has already process ", "migrationBucketEvents", migrateBucketEvents.Events, "lastSubscribedBlockHeight", s.lastSubscribedBlockHeight)
 					continue
 				}
 				// debug

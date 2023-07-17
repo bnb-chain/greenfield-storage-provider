@@ -3,10 +3,11 @@ package spworkflow
 import (
 	"bytes"
 	"fmt"
-	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 	"io"
 	"testing"
 	"time"
+
+	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 
 	sdkTypes "github.com/bnb-chain/greenfield-go-sdk/types"
 	"github.com/bnb-chain/greenfield-storage-provider/test/e2e/spworkflow/basesuite"
@@ -235,10 +236,10 @@ func (s *BucketMigrateTestSuite) Test_Bucket_Migrate_Simple_Conflict_Case() {
 	}
 	s.Require().NotNil(destSP)
 
-	s.T().Logf(":Migrate Bucket DstPrimarySPID %d", destSP.GetId())
-
 	// migrate bucket with conflict
 	conflictSPID := objectDetail.GlobalVirtualGroup.SecondarySpIds[0]
+	s.T().Logf(":Migrate Bucket DstPrimarySPID %d", conflictSPID)
+
 	txhash, err := s.Client.MigrateBucket(s.ClientContext, bucketName, sdkTypes.MigrateBucketOptions{TxOpts: nil, DstPrimarySPID: conflictSPID, IsAsyncMode: false})
 	s.Require().NoError(err)
 
@@ -256,7 +257,7 @@ func (s *BucketMigrateTestSuite) Test_Bucket_Migrate_Simple_Conflict_Case() {
 
 	family, err := s.Client.QueryVirtualGroupFamily(s.ClientContext, bucketInfo.GlobalVirtualGroupFamilyId)
 	s.Require().NoError(err)
-	s.Require().Equal(family.PrimarySpId, destSP.GetId())
+	s.Require().Equal(family.PrimarySpId, conflictSPID)
 	ior, info, err := s.Client.GetObject(s.ClientContext, bucketName, objectDetail.ObjectInfo.ObjectName, sdkTypes.GetObjectOptions{})
 	s.Require().NoError(err)
 	if err == nil {
