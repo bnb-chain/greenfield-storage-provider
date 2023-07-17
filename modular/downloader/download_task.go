@@ -195,7 +195,11 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 
 	// if it is a request from the primary SP of the object, no need to check quota
 	bucketInfo := downloadPieceTask.GetBucketInfo()
-	bucketPrimarySp, err := d.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, d.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return err
+	}
+	bucketPrimarySp, err := d.baseApp.Consensus().QuerySPByID(ctx, bucketSPID)
 	if err != nil {
 		return err
 	}

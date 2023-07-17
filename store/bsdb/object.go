@@ -233,7 +233,7 @@ func (b *BsDBImpl) ListPrimaryObjects(spID uint32, bucketID common.Hash, startAf
 		lvgIDs[i] = group.LocalVirtualGroupId
 	}
 
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
+	objects, err = b.ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit)
 	return objects, err
 }
 
@@ -268,7 +268,7 @@ func (b *BsDBImpl) ListSecondaryObjects(spID uint32, bucketID common.Hash, start
 		lvgIDs[i] = group.LocalVirtualGroupId
 	}
 
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
+	objects, err = b.ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit)
 	return objects, err
 }
 
@@ -293,22 +293,29 @@ func (b *BsDBImpl) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32,
 		lvgIDs[i] = group.LocalVirtualGroupId
 	}
 
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
+	objects, err = b.ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit)
 	return objects, err
 }
 
 // ListObjectsByLVGID list objects by lvg id
-func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error) {
 	var (
+		bucket  *Bucket
 		objects []*Object
 		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
 
+	bucket, err = b.GetBucketByID(bucketID.Big().Int64(), false)
+	if err != nil {
+		log.Errorw("failed to get bucket name by bucket id in ListObjectsByLVGID", "error", err)
+		return nil, err
+	}
+
 	filters = append(filters, ObjectIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
-	err = b.db.Table((&Object{}).TableName()).
+	err = b.db.Table(GetObjectsTableName(bucket.BucketName)).
 		Select("*").
-		Where("local_virtual_group_id in (?)", lvgIDs).
+		Where("local_virtual_group_id in (?) and bucket_id = ?", lvgIDs, bucketID).
 		Scopes(filters...).
 		Order("object_id").
 		Find(&objects).Error
@@ -318,24 +325,52 @@ func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, startAfter common.Hash, l
 // ListObjectsInGVG list objects by gvg and bucket id
 func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
 	var (
-		localGroups []*LocalVirtualGroup
-		objects     []*Object
-		gvgIDs      []uint32
-		lvgIDs      []uint32
-		err         error
+		localGroups  []*LocalVirtualGroup
+		objects      []*Object
+		buckets      []*Bucket
+		bucketIDs    []common.Hash
+		bucketIDsMap map[common.Hash]bool
+		tableNameMap map[common.Hash]string
+		gvgIDs       []uint32
+		query        string
+		err          error
 	)
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgID(gvgIDs)
-	if err != nil || localGroups == nil {
+	if err != nil || len(localGroups) == 0 {
 		return nil, err
 	}
 
-	lvgIDs = make([]uint32, len(localGroups))
-	for i, group := range localGroups {
-		lvgIDs[i] = group.LocalVirtualGroupId
+	bucketIDsMap = make(map[common.Hash]bool)
+	bucketIDs = make([]common.Hash, 0)
+	for _, group := range localGroups {
+		if _, ok := bucketIDsMap[group.BucketID]; !ok {
+			bucketIDs = append(bucketIDs, group.BucketID)
+			bucketIDsMap[group.BucketID] = true
+		}
 	}
 
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
+	buckets, err = b.ListBucketsByBucketID(bucketIDs, false)
+	if err != nil {
+		return nil, err
+	}
+
+	tableNameMap = make(map[common.Hash]string)
+	for _, bucket := range buckets {
+		tableNameMap[bucket.BucketID] = GetObjectsTableName(bucket.BucketName)
+	}
+
+	query = fmt.Sprintf("select * from ((select * from %s where local_virtual_group_id = %d and bucket_id = %s)", tableNameMap[localGroups[0].BucketID], localGroups[0].LocalVirtualGroupId, localGroups[0].BucketID.String())
+	if len(localGroups) > 1 {
+		for _, group := range localGroups[1:] {
+			subQuery := fmt.Sprintf(" UNION ALL (select * from %s where local_virtual_group_id = %d and bucket_id = %s)", tableNameMap[group.BucketID], group.LocalVirtualGroupId, group.BucketID.String())
+			query = query + subQuery
+		}
+	}
+
+	query = query + fmt.Sprintf(") as combined where object_id > %s and removed = false order by object_id limit %d;", startAfter.String(), limit)
+	err = b.db.Table((&Object{}).TableName()).Raw(query).Find(&objects).Error
+
 	return objects, err
 }

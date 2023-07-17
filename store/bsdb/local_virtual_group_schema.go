@@ -6,7 +6,7 @@ type LocalVirtualGroup struct {
 	ID                   uint64      `gorm:"column:id;primaryKey"`
 	LocalVirtualGroupId  uint32      `gorm:"column:local_virtual_group_id;index:idx_lvg_id"`
 	GlobalVirtualGroupId uint32      `gorm:"column:global_virtual_group_id;index:idx_gvg_id"`
-	BucketID             common.Hash `gorm:"column:bucket_id;type:BINARY(32);uniqueIndex:idx_bucket_id"`
+	BucketID             common.Hash `gorm:"column:bucket_id;type:BINARY(32);index:idx_bucket_id"`
 	StoredSize           uint64      `gorm:"column:stored_size"`
 
 	CreateAt     int64       `gorm:"column:create_at"`

@@ -18,6 +18,32 @@ func (db *DB) SaveObject(ctx context.Context, object *models.Object) error {
 	return err
 }
 
+func (db *DB) BatchSaveObject(ctx context.Context, objects map[string][]*models.Object) error {
+	for k, v := range objects {
+		err := db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(k)).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "object_id"}},
+			UpdateAll: true,
+		}).Create(v).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (db *DB) GetObjectList(ctx context.Context, objects map[string][]common.Hash) ([]*models.Object, error) {
+	res := make([]*models.Object, 0)
+	for k, v := range objects {
+		var tmp []*models.Object
+		err := db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(k)).Where("object_id IN ? AND removed IS NOT TRUE", v).Find(&tmp).Error
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, tmp...)
+	}
+	return res, nil
+}
+
 func (db *DB) UpdateObject(ctx context.Context, object *models.Object) error {
 	err := db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(object.BucketName)).Where("object_id = ?", object.ObjectID).Updates(object).Error
 	return err

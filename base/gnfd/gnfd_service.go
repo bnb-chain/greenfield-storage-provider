@@ -249,32 +249,36 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) (validators []stakingty
 }
 
 // ListVirtualGroupFamilies return the list of virtual group family.
+// TODO: improve it by metadata
 func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
-		StorageProviderId: spID,
+		Pagination: &query.PageRequest{Limit: 10000000},
 	})
 	if err != nil {
 		log.Errorw("failed to list virtual group families", "error", err)
 		return vgfs, err
 	}
-	for i := 0; i < len(resp.GetGlobalVirtualGroupFamilies()); i++ {
-		vgfs = append(vgfs, resp.GetGlobalVirtualGroupFamilies()[i])
+	log.Infow("list families", "resp", resp)
+	for i := 0; i < len(resp.GetGvgFamilies()); i++ {
+		f := resp.GetGvgFamilies()[i]
+		if f.PrimarySpId == spID {
+			vgfs = append(vgfs, resp.GetGvgFamilies()[i])
+		}
 	}
 	return vgfs, nil
 }
 
 // QueryVirtualGroupFamily returns the virtual group family.
-func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("query_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamily(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamilyRequest{
-		StorageProviderId: spID,
-		FamilyId:          vgfID,
+		FamilyId: vgfID,
 	})
 	if err != nil {
 		log.Errorw("failed to query virtual group family", "error", err)

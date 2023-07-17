@@ -41,22 +41,18 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 
 	reqCtx, _ = NewRequestContext(r, g)
 	migrateSwapOutHeader := r.Header.Get(GnfdMigrateSwapOutMsgHeader)
-	swapOutMsg, err = hex.DecodeString(migrateSwapOutHeader)
-	if err != nil {
+	if swapOutMsg, err = hex.DecodeString(migrateSwapOutHeader); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate swap out header", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
 	swapOut := virtualgrouptypes.MsgSwapOut{}
-	err = json.Unmarshal(swapOutMsg, &swapOut)
-	if err != nil {
+	if err = json.Unmarshal(swapOutMsg, &swapOut); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate swap out msg", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
-	// TODO: check approval.
-	err = g.baseApp.GfSpClient().NotifyMigrateSwapOut(reqCtx.Context(), &swapOut)
-	if err != nil {
+	if err = g.baseApp.GfSpClient().NotifyMigrateSwapOut(reqCtx.Context(), &swapOut); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to notify migrate swap out", "swap_out", swapOut, "error", err)
 		err = ErrNotifySwapOut
 		return
@@ -104,20 +100,6 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// migratePieceSig := migratePiece.GetSignature()
-	// _, pk, err := RecoverAddr(crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig)
-	// if err != nil {
-	// 	log.CtxErrorw(reqCtx.Context(), "failed to get migrate piece address", "error", err)
-	// 	err = ErrSignature
-	// 	return
-	// }
-	//
-	// if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(migratePiece.GetSignBytes()), migratePieceSig[:len(migratePieceSig)-1]) {
-	// 	log.CtxError(reqCtx.Context(), "failed to verify migrate piece signature")
-	// 	err = ErrSignature
-	// 	return
-	// }
-
 	objectInfo := migratePiece.GetObjectInfo()
 	if objectInfo == nil {
 		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info")
@@ -125,7 +107,6 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// TODO: Does this need to verify migratePiece.ObjectInfo to objectInfo on chain?
 	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.GetObjectName(), objectInfo.GetBucketName())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object on chain meta", "error", err)
@@ -212,11 +193,11 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 	signature, err := g.baseApp.GfSpClient().SignSecondarySPMigrationBucket(reqCtx.Context(), signDoc)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to sign secondary sp migration bucket", "error", err)
-		// TODO: define an error
+		err = ErrMigrateApproval
 		return
 	}
 	w.Header().Set(GnfdSecondarySPMigrationBucketApprovalHeader, hex.EncodeToString(signature))
-	log.CtxInfow(reqCtx.Context(), "succeed to sign secondary sp migration bucket approval", "buket_id",
+	log.CtxInfow(reqCtx.Context(), "succeed to sign secondary sp migration bucket approval", "bucket_id",
 		signDoc.BucketId.String())
 }
 
