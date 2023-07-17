@@ -25,8 +25,13 @@ func (db *DB) UpdateObject(ctx context.Context, object *models.Object) error {
 
 func (db *DB) GetObject(ctx context.Context, objectId common.Hash) (*models.Object, error) {
 	var object models.Object
+	bucketName, err := db.GetBucketNameByObjectID(objectId)
 
-	err := db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(object.BucketName)).Where(
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Db.WithContext(ctx).Table(bsdb.GetObjectsTableName(bucketName)).Where(
 		"object_id = ? AND removed IS NOT TRUE", objectId).Find(&object).Error
 	if err != nil {
 		return nil, err
