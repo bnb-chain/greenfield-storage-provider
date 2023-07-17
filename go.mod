@@ -9,11 +9,11 @@ require (
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.2.3-0.20230714012924-df6781d93afa
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
-	github.com/bnb-chain/greenfield-go-sdk v0.2.3-alpha.3.0.20230713131910-4bd8180676b8
+	github.com/bnb-chain/greenfield-go-sdk v0.2.3-alpha.3.0.20230717072602-63f570eaf71f
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.1
 	github.com/consensys/gnark-crypto v0.7.0
-	github.com/cosmos/cosmos-sdk v0.47.2
+	github.com/cosmos/cosmos-sdk v0.47.3
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/felixge/fgprof v0.9.3

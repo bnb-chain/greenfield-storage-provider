@@ -177,7 +177,9 @@ func (s *BucketMigrateTestSuite) Test_Bucket_Migrate_Simple_Case() {
 		time.Sleep(3 * time.Second)
 	}
 
-	s.Require().Equal(bucketInfo.GetPrimarySpId(), destSP.GetId())
+	family, err := s.Client.QueryVirtualGroupFamily(s.ClientContext, bucketInfo.GlobalVirtualGroupFamilyId)
+	s.Require().NoError(err)
+	s.Require().Equal(family.PrimarySpId, destSP.GetId())
 	ior, info, err := s.Client.GetObject(s.ClientContext, bucketName, objectDetail.ObjectInfo.ObjectName, sdkTypes.GetObjectOptions{})
 	s.Require().NoError(err)
 	if err == nil {
@@ -252,7 +254,9 @@ func (s *BucketMigrateTestSuite) Test_Bucket_Migrate_Simple_Conflict_Case() {
 		time.Sleep(3 * time.Second)
 	}
 
-	s.Require().Equal(bucketInfo.GetPrimarySpId(), conflictSPID)
+	family, err := s.Client.QueryVirtualGroupFamily(s.ClientContext, bucketInfo.GlobalVirtualGroupFamilyId)
+	s.Require().NoError(err)
+	s.Require().Equal(family.PrimarySpId, destSP.GetId())
 	ior, info, err := s.Client.GetObject(s.ClientContext, bucketName, objectDetail.ObjectInfo.ObjectName, sdkTypes.GetObjectOptions{})
 	s.Require().NoError(err)
 	if err == nil {
@@ -261,5 +265,4 @@ func (s *BucketMigrateTestSuite) Test_Bucket_Migrate_Simple_Conflict_Case() {
 		s.Require().NoError(err)
 		s.Require().Equal(objectBytes, buffer.Bytes())
 	}
-
 }
