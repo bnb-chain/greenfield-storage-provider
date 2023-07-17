@@ -16,7 +16,7 @@ import (
 // GfSpListVirtualGroupFamiliesBySpID list virtual group families by sp id
 func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context, req *types.GfSpListVirtualGroupFamiliesBySpIDRequest) (resp *types.GfSpListVirtualGroupFamiliesBySpIDResponse, err error) {
 	var (
-		families []*model.VirtualGroupFamily
+		families []*model.GlobalVirtualGroupFamily
 		res      []*virtual_types.GlobalVirtualGroupFamily
 	)
 
@@ -81,7 +81,7 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 // GfSpGetVirtualGroupFamily get virtual group families by vgf id
 func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *types.GfSpGetVirtualGroupFamilyRequest) (resp *types.GfSpGetVirtualGroupFamilyResponse, err error) {
 	var (
-		family *model.VirtualGroupFamily
+		family *model.GlobalVirtualGroupFamily
 		res    *virtual_types.GlobalVirtualGroupFamily
 	)
 
