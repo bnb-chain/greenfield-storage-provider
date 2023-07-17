@@ -19,8 +19,10 @@ import (
 )
 
 const (
-	MaxExpiryAgeInSec int32  = 3600 * 24 * 7 // 7 days
-	ExpiryDateFormat  string = time.RFC3339
+	MaxExpiryAgeInSec         int32  = 3600 * 24 * 7 // 7 days
+	ExpiryDateFormat          string = time.RFC3339
+	ExpectedEddsaPubKeyLength int    = 64
+	ExpectedPersonalSigLength int    = 132
 )
 
 // requestNonceHandler handle requestNonce request
@@ -108,9 +110,10 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
 
 		if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
-			accAddress, err := verifyPersonalSignatureFromHeader(requestSignature[len(personalSignSignaturePrefix):])
-			if err != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", err)
+			accAddress, personalSignVerifyErr := verifyPersonalSignatureFromHeader(requestSignature[len(personalSignSignaturePrefix):])
+			if personalSignVerifyErr != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
+				err = personalSignVerifyErr
 				return
 			}
 			account = accAddress.String()
@@ -133,7 +136,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if userPublicKey == "" {
+	if userPublicKey == "" || len(userPublicKey) != ExpectedEddsaPubKeyLength {
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey due to bad userPublicKey")
 		err = ErrInvalidPublicKeyHeader
 		return
@@ -141,11 +144,6 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 
 	ctx := log.Context(context.Background(), account, domain)
 	currentNonce, nextNonce, _, _, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, account, domain)
-
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to GetAuthNonce", "error", err)
-		return
-	}
 
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to GetAuthNonce", "error", err)
@@ -208,6 +206,9 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 
 func verifyPersonalSignatureFromHeader(requestSignature string) (sdk.AccAddress, error) {
 	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if len(*sigString) != ExpectedPersonalSigLength {
+		return nil, ErrSignature
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +290,7 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 		return ErrSignedMsgNotMatchTemplate
 	}
 	if publicKey != expectedPublicKey {
-		return ErrSignedMsgNotMatchTemplate
+		return ErrSignedMsgNotMatchHeaders
 	}
 	if eip4361ExpirationTime != expectedExpiryDate {
 		return ErrSignedMsgNotMatchTemplate
