@@ -31,8 +31,6 @@ const (
 	Signature = "Signature"
 	// SignTypeV1 is an authentication algorithm, which is used by dapps
 	SignTypeV1 = "authTypeV1"
-	// SignTypeV2 is an authentication algorithm, which is used by metamask
-	SignTypeV2 = "authTypeV2"
 
 	SignTypeOffChain   = "OffChainAuth" // sign type - off-chain-auth
 	SignTypePersonal   = "PersonalSign" // sign type -  PersonalSign
