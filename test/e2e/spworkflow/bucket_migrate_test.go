@@ -66,7 +66,7 @@ func (s *BucketMigrateTestSuite) CreateObjects(bucketName string, count int) ([]
 			buffer.WriteString(fmt.Sprintf("[%05d] %s\n", i, line))
 		}
 		objectName := storageTestUtil.GenRandomObjectName()
-		s.T().Log("---> CreateObject and HeadObject <---")
+		s.T().Logf("---> CreateObject and HeadObject, bucketname:%s, objectname:%s <---", bucketName, objectName)
 		objectTx, err := s.Client.CreateObject(s.ClientContext, bucketName, objectName, bytes.NewReader(buffer.Bytes()), sdkTypes.CreateObjectOptions{})
 		s.Require().NoError(err)
 		_, err = s.Client.WaitForTx(s.ClientContext, objectTx)

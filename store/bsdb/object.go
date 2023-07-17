@@ -306,7 +306,7 @@ func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, bucketID common.Hash, sta
 		err     error
 	)
 
-	bucket, err = b.GetBucketByID(bucketID.Big().Int64(), false)
+	bucket, err = b.GetBucketByID(bucketID.Big().Int64(), true)
 	if err != nil {
 		log.Errorw("failed to get bucket name by bucket id in ListObjectsByLVGID", "error", err)
 		return nil, err
