@@ -189,11 +189,10 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
-	// TODO: refine it.
 	startPickGVGTime := time.Now()
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "error", err)
 		return err
 	}
 
@@ -234,14 +233,14 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 	}
 	if m.UploadingObjectNumber() >= m.maxUploadObjectNumber {
 		log.CtxErrorw(ctx, "uploading object exceed", "uploading", m.uploadQueue.Len(),
-			"replicating", m.replicateQueue.Len(), "sealing", m.sealQueue.Len(), "resumable uploading", m.resumeableUploadQueue.Len())
+			"replicating", m.replicateQueue.Len(), "sealing", m.sealQueue.Len(), "resumable uploading", m.resumableUploadQueue.Len())
 		return ErrExceedTask
 	}
 	if m.TaskUploading(ctx, task) {
 		log.CtxErrorw(ctx, "uploading object repeated", "task_info", task.Info())
 		return ErrRepeatedTask
 	}
-	if err := m.resumeableUploadQueue.Push(task); err != nil {
+	if err := m.resumableUploadQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push resumable upload object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
@@ -262,7 +261,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to handle done upload object, pointer dangling")
 		return ErrDanglingTask
 	}
-	m.resumeableUploadQueue.PopByKey(task.Key())
+	m.resumableUploadQueue.PopByKey(task.Key())
 
 	uploading := m.TaskUploading(ctx, task)
 	if uploading {

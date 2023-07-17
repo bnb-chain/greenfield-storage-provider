@@ -126,7 +126,6 @@ func (e *ExecuteModular) checkGvgConflict(ctx context.Context, srcGvg, destGvg *
 	if index == -1 {
 		return fmt.Errorf("invalid gvg secondary sp id list")
 	}
-	// srcSecondarySPID := srcGvg.GetSecondarySpIds()[index]
 	if e.spID != srcGvg.GetSecondarySpIds()[index] {
 		return fmt.Errorf("invalid secondary sp id in src gvg")
 	}

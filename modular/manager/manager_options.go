@@ -189,8 +189,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.loadSealTimeout = cfg.Parallel.LoadSealTimeout
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
-	manager.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
-		manager.Name()+"-resumeable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
+	manager.resumableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-resumable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
 	manager.recoveryQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(

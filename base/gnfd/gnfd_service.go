@@ -249,24 +249,33 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) (validators []stakingty
 }
 
 // ListVirtualGroupFamilies return the list of virtual group family.
-// TODO: improve it by metadata
+// TODO: improve it by metadata indexer.
 func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
-	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
-		Pagination: &query.PageRequest{Limit: 10000000},
-	})
-	if err != nil {
-		log.Errorw("failed to list virtual group families", "error", err)
-		return vgfs, err
-	}
-	log.Infow("list families", "resp", resp)
-	for i := 0; i < len(resp.GetGvgFamilies()); i++ {
-		f := resp.GetGvgFamilies()[i]
-		if f.PrimarySpId == spID {
-			vgfs = append(vgfs, resp.GetGvgFamilies()[i])
+	var nextKey []byte
+	for {
+		resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
+			Pagination: &query.PageRequest{
+				Key:   nextKey,
+				Limit: 1000},
+		})
+		if err != nil {
+			log.Errorw("failed to list virtual group families", "error", err)
+			return vgfs, err
+		}
+		log.Infow("list families", "response", resp)
+		for i := 0; i < len(resp.GetGvgFamilies()); i++ {
+			f := resp.GetGvgFamilies()[i]
+			if f.PrimarySpId == spID {
+				vgfs = append(vgfs, resp.GetGvgFamilies()[i])
+			}
+		}
+		nextKey = resp.GetPagination().GetNextKey()
+		if nextKey == nil { // finish
+			break
 		}
 	}
 	return vgfs, nil

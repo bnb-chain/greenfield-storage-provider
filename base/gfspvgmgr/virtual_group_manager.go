@@ -374,9 +374,9 @@ func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32) 
 
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
+// TODO: in the future background thread can pre-allocate gvg and reduce impact on foreground thread.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
-	// sleep 2 seconds for waiting a new block
-	// TODO: pre-allocator improve it.
+	// sleep 4 seconds for waiting a new block
 	time.Sleep(4 * time.Second)
 	vgm.refreshMeta()
 	return nil
