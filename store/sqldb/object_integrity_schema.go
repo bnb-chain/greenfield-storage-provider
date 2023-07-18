@@ -25,6 +25,7 @@ func (PieceHashTable) TableName() string {
 // IntegrityMetaTable table schema
 type IntegrityMetaTable struct {
 	ObjectID          uint64 `gorm:"primary_key"`
+	RedundancyIndex   int32  `gorm:"primary_key"`
 	IntegrityChecksum string
 	PieceChecksumList string
 }

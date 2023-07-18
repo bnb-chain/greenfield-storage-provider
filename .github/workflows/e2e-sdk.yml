@@ -1,4 +1,4 @@
-name: SP E2E Test
+name: SP E2E Test with Go-SDK
 
 on:
   push:
@@ -59,15 +59,11 @@ jobs:
       - name: Build and Start Greenfield Blockchain
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --startChain
-#     # Build and Start Greenfield SP
+      # Build and Start Greenfield SP
       - name: Build and Start Greenfield SP
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --startSP
-      # Build Greenfield Cmd
-      - name: Build Greenfield Cmd
+      # Run Greeenfield Go-SDK E2E Test
+      - name: start e2e
         run: |
-          bash ./test/e2e/spworkflow/e2e_test.sh --buildCmd
-#     # Use Greenfield Cmd Running SP E2E Test
-      - name: Run Greenfield SP E2E Test
-        run: |
-          bash ./test/e2e/spworkflow/e2e_test.sh --runTest
+          bash ./test/e2e/spworkflow/e2e_test.sh --runSDKE2E

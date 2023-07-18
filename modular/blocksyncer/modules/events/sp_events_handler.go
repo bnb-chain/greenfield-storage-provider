@@ -19,21 +19,32 @@ import (
 var (
 	EventMigrationBucket         = proto.MessageName(&storagetypes.EventMigrationBucket{})
 	EventCompleteMigrationBucket = proto.MessageName(&storagetypes.EventCompleteMigrationBucket{})
-	EventSwapOut                 = proto.MessageName(&vgtypes.EventSwapOut{})
-	EventSpExit                  = proto.MessageName(&vgtypes.EventStorageProviderExit{})
-	EventCompleteSpExit          = proto.MessageName(&vgtypes.EventCompleteStorageProviderExit{})
+	EventCancelMigrationBucket   = proto.MessageName(&storagetypes.EventCancelMigrationBucket{})
+
+	EventSwapOut         = proto.MessageName(&vgtypes.EventSwapOut{})
+	EventSpExit          = proto.MessageName(&vgtypes.EventStorageProviderExit{})
+	EventCompleteSpExit  = proto.MessageName(&vgtypes.EventCompleteStorageProviderExit{})
+	EventCompleteSwapOut = proto.MessageName(&vgtypes.EventCompleteSwapOut{})
+	EventCancelSwapOut   = proto.MessageName(&vgtypes.EventCancelSwapOut{})
 )
 
-var spExitEvents = map[string]bool{
+var SpExitEvents = map[string]bool{
 	EventMigrationBucket:         true,
 	EventCompleteMigrationBucket: true,
+	EventCancelMigrationBucket:   true,
 	EventSwapOut:                 true,
 	EventSpExit:                  true,
 	EventCompleteSpExit:          true,
+	EventCompleteSwapOut:         true,
+	EventCancelSwapOut:           true,
+}
+
+func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
+	return nil, nil
 }
 
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
-	if !spExitEvents[event.Type] {
+	if !SpExitEvents[event.Type] {
 		return nil
 	}
 
@@ -43,6 +54,7 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 		return err
 	}
 
+	log.Debugw("HandleEvent", "event", event)
 	switch event.Type {
 	case EventMigrationBucket:
 		migrationBucket, ok := typedEvent.(*storagetypes.EventMigrationBucket)
@@ -50,6 +62,7 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 			log.Errorw("type assert error", "type", "EventMigrationBucket", "event", typedEvent)
 			return errors.New("migration bucket event assert error")
 		}
+		log.Debugw("HandleEvent EventMigrationBucket", "migrationBucket", migrationBucket)
 		return m.handleMigrationBucket(ctx, block, txHash, migrationBucket)
 	case EventSwapOut:
 		swapOut, ok := typedEvent.(*vgtypes.EventSwapOut)
@@ -79,6 +92,27 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 			return errors.New("complete storage provider Exit event assert error")
 		}
 		return m.handleCompleteStorageProviderExit(ctx, block, txHash, completeStorageProviderExit)
+	case EventCancelMigrationBucket:
+		cancelMigrationBucket, ok := typedEvent.(*storagetypes.EventCancelMigrationBucket)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventCancelMigrationBucket", "event", typedEvent)
+			return errors.New("cancel Migration Bucket event assert error")
+		}
+		return m.handleCancelMigrationBucket(ctx, block, txHash, cancelMigrationBucket)
+	case EventCancelSwapOut:
+		cancelSwapOut, ok := typedEvent.(*vgtypes.EventCancelSwapOut)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventCancelSwapOut", "event", typedEvent)
+			return errors.New("cancel swap out event assert error")
+		}
+		return m.handleCancelSwapOut(ctx, block, txHash, cancelSwapOut)
+	case EventCompleteSwapOut:
+		completeSwapOut, ok := typedEvent.(*vgtypes.EventCompleteSwapOut)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventCompleteSwapOut", "event", typedEvent)
+			return errors.New("complete swap out event assert error")
+		}
+		return m.handleCompleteSwapOut(ctx, block, txHash, completeSwapOut)
 	default:
 		return nil
 	}
@@ -132,6 +166,38 @@ func (m *Module) handleSwapOut(ctx context.Context, block *tmctypes.ResultBlock,
 	return m.db.SaveEventSwapOut(ctx, eventSwapOut)
 }
 
+func (m *Module) handleCancelSwapOut(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelSwapOut *vgtypes.EventCancelSwapOut) error {
+
+	eventCancelSwapOut := &bsdb.EventCancelSwapOut{
+		StorageProviderId:          cancelSwapOut.StorageProviderId,
+		GlobalVirtualGroupFamilyId: cancelSwapOut.GlobalVirtualGroupFamilyId,
+		GlobalVirtualGroupIds:      cancelSwapOut.GlobalVirtualGroupIds,
+		SuccessorSpId:              cancelSwapOut.SuccessorSpId,
+
+		CreateAt:     block.Block.Height,
+		CreateTxHash: txHash,
+		CreateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	return m.db.SaveEventCancelSwapOut(ctx, eventCancelSwapOut)
+}
+
+func (m *Module) handleCompleteSwapOut(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, completeSwapOut *vgtypes.EventCompleteSwapOut) error {
+
+	eventCompleteSwapOut := &bsdb.EventCompleteSwapOut{
+		StorageProviderId:          completeSwapOut.StorageProviderId,
+		SrcStorageProviderId:       completeSwapOut.SrcStorageProviderId,
+		GlobalVirtualGroupFamilyId: completeSwapOut.GlobalVirtualGroupFamilyId,
+		GlobalVirtualGroupIds:      completeSwapOut.GlobalVirtualGroupIds,
+
+		CreateAt:     block.Block.Height,
+		CreateTxHash: txHash,
+		CreateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	return m.db.SaveEventCompleteSwapOut(ctx, eventCompleteSwapOut)
+}
+
 func (m *Module) handleStorageProviderExit(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, storageProviderExit *vgtypes.EventStorageProviderExit) error {
 
 	eventSPExit := &bsdb.EventStorageProviderExit{
@@ -159,4 +225,19 @@ func (m *Module) handleCompleteStorageProviderExit(ctx context.Context, block *t
 	}
 
 	return m.db.SaveEventSPCompleteExit(ctx, eventSPCompleteExit)
+}
+
+func (m *Module) handleCancelMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelMigrationBucket *storagetypes.EventCancelMigrationBucket) error {
+
+	eventCancelMigrationBucket := &bsdb.EventCancelMigrationBucket{
+		BucketID:   common.BigToHash(cancelMigrationBucket.BucketId.BigInt()),
+		Operator:   common.HexToAddress(cancelMigrationBucket.Operator),
+		BucketName: cancelMigrationBucket.BucketName,
+
+		CreateAt:     block.Block.Height,
+		CreateTxHash: txHash,
+		CreateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	return m.db.SaveEventCancelMigrationBucket(ctx, eventCancelMigrationBucket)
 }

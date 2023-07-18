@@ -72,12 +72,12 @@ const (
 
 	DefaultLoadReplicateTimeout int64 = 60
 	DefaultLoadSealTimeout      int64 = 180
-	// DefaultSubscribeSPExitEventIntervalSec define the default time interval to subscribe sp exit event from metadata.
-	DefaultSubscribeSPExitEventIntervalSec = 1
-	// DefaultSubscribeBucketMigrateEventIntervalSec define the default time interval to subscribe bucket migrate event from metadata.
-	DefaultSubscribeBucketMigrateEventIntervalSec = 1
-	// DefaultSubscribeSwapOutEventIntervalSec define the default time interval to subscribe gvg swap out event from metadata.
-	DefaultSubscribeSwapOutEventIntervalSec = 1
+	// DefaultSubscribeSPExitEventIntervalMillisecond define the default time interval to subscribe sp exit event from metadata.
+	DefaultSubscribeSPExitEventIntervalMillisecond = 100
+	// DefaultSubscribeBucketMigrateEventIntervalMillisecond define the default time interval to subscribe bucket migrate event from metadata.
+	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 100
+	// DefaultSubscribeSwapOutEventIntervalMillisecond define the default time interval to subscribe gvg swap out event from metadata.
+	DefaultSubscribeSwapOutEventIntervalMillisecond = 100
 )
 
 const (
@@ -189,8 +189,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.loadSealTimeout = cfg.Parallel.LoadSealTimeout
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
-	manager.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
-		manager.Name()+"-resumeable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
+	manager.resumableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
+		manager.Name()+"-resumable-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.replicateQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-replicate-piece", cfg.Parallel.GlobalReplicatePieceParallel)
 	manager.recoveryQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
@@ -216,13 +216,13 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		return err
 	}
 	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
-		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
+		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalMillisecond
 	}
 	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
-		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeSPExitEventIntervalSec
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
 	}
-	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
-		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSec
+	if cfg.Manager.SubscribeSwapOutExitEventIntervalSec == 0 {
+		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalMillisecond
 	}
 
 	return nil

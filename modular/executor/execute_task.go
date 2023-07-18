@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -36,7 +37,7 @@ var (
 	ErrReplicateIdsOutOfBounds = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
 	ErrGfSpDB                  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
 	ErrRecoveryRedundancyType  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
-	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "fail to get enough piece data to recovery")
+	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "failed to get enough piece data to recovery")
 	ErrRecoveryDecode          = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
 	ErrPieceStore              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
 	ErrRecoveryPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
@@ -45,6 +46,8 @@ var (
 	ErrRecoveryPieceIndex      = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
 	ErrMigratedPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
 	ErrConsensus               = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 45211, "server slipped away, try again later")
+	ErrInvalidRedundancyIndex  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "invalid redundancy index")
+	ErrSetObjectIntegrity      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45213, "failed to set object integrity into spdb")
 )
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
@@ -183,7 +186,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			"expect", gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())],
 			"current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
-		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64(), int32(task.GetReplicateIdx()))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delete integrity")
 		}
@@ -298,8 +301,10 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		if err != nil {
 			return
 		}
+		var redundancyIndex int32 = -1
 		for rIdx, sspId := range gvg.GetSecondarySpIds() {
 			if spId == sspId {
+				redundancyIndex = int32(rIdx)
 				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
 					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
@@ -312,8 +317,8 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				}
 			}
 		}
-		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64())
+		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index
+		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64(), redundancyIndex)
 		log.CtxDebugw(ctx, "delete the object integrity meta", "object_info", objectInfo, "error", deleteErr)
 		task.SetCurrentBlockNumber(currentGCBlockID)
 		task.SetLastDeletedObjectId(currentGCObjectID)
@@ -601,7 +606,7 @@ func (e *ExecuteModular) getECPieceBySegment(ctx context.Context, redundancyIdx 
 }
 
 func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretask.RecoveryPieceTask, recoveryChecksum []byte) error {
-	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64())
+	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetEcIdx())
 	if err != nil {
 		log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
 		return ErrGfSpDB
@@ -686,12 +691,16 @@ func (g *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketN
 	if err != nil {
 		return "", err
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketMeta.GetBucketInfo())
+	if err != nil {
+		return "", err
+	}
 	spList, err := g.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return "", err
 	}
 	for _, info := range spList {
-		if bucketMeta.BucketInfo.PrimarySpId == info.Id {
+		if bucketSPID == info.Id {
 			return info.Endpoint, nil
 		}
 	}

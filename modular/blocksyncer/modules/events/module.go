@@ -37,8 +37,11 @@ func (m *Module) Name() string {
 func (m *Module) PrepareTables() error {
 	return m.db.PrepareTables(context.TODO(), []schema.Tabler{
 		&bsdb.EventSwapOut{},
+		&bsdb.EventCompleteSwapOut{},
+		&bsdb.EventCancelSwapOut{},
 		&bsdb.EventMigrationBucket{},
 		&bsdb.EventCompleteMigrationBucket{},
+		&bsdb.EventCancelMigrationBucket{},
 		&bsdb.EventStorageProviderExit{},
 		&bsdb.EventCompleteStorageProviderExit{},
 	})

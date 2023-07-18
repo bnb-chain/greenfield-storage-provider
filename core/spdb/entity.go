@@ -4,6 +4,7 @@ import (
 	"time"
 
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // SpAddressType identify address type of SP.
@@ -38,6 +39,7 @@ type GCObjectMeta struct {
 // IntegrityMeta defines the payload integrity hash and piece checksum with objectID.
 type IntegrityMeta struct {
 	ObjectID          uint64
+	RedundancyIndex   int32
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
 }
@@ -91,16 +93,21 @@ type OffChainAuthKey struct {
 // MigrateGVGUnitMeta is used to record migrate type/meta/status/progress.
 type MigrateGVGUnitMeta struct {
 	MigrateGVGKey        string // as primary key
+	SwapOutKey           string
 	GlobalVirtualGroupID uint32 // is used by sp exit/bucket migrate
 	VirtualGroupFamilyID uint32 // is used by sp exit
 	RedundancyIndex      int32  // is used by sp exit
 	BucketID             uint64 // is used by bucket migrate
-	IsRemoted            bool   // is used by sp exit
-	IsSecondary          bool   // is used by sp exit
-	IsConflicted         bool   // is used by sp exit
 	SrcSPID              uint32
 	DestSPID             uint32
 	LastMigratedObjectID uint64
 	MigrateStatus        int // scheduler assign unit status.
-	CheckStatus          int //  src sp check dest sp's migrate unit.
+}
+
+// SwapOutMeta is used to record swap out meta.
+type SwapOutMeta struct {
+	SwapOutKey    string // as primary key
+	IsDestSP      bool
+	SwapOutMsg    *virtualgrouptypes.MsgSwapOut
+	CompletedGVGs []uint32
 }

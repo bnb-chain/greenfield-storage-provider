@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DefaultSealGasLimit                      = 1200 // fix gas limit for msgSealObject is 1200
+	DefaultSealGasLimit                      = 1200 // fix gas limit for MsgSealObject is 1200
 	DefaultSealFeeAmount                     = 6000000000000
 	DefaultRejectSealGasLimit                = 12000 // fix gas limit for MsgRejectSealObject is 12000
 	DefaultRejectSealFeeAmount               = 60000000000000
@@ -21,6 +21,8 @@ const (
 	DefaultDiscontinueBucketFeeAmount        = 12000000000000
 	DefaultCreateGlobalVirtualGroupGasLimit  = 1200 // fix gas limit for MsgCreateGlobalVirtualGroup is 1200
 	DefaultCreateGlobalVirtualGroupFeeAmount = 6000000000000
+	DefaultCompleteMigrateBucketGasLimit     = 1200 // fix gas limit for MsgCompleteMigrateBucket is 1200
+	DefaultCompleteMigrateBucketFeeAmount    = 6000000000000
 
 	// SpOperatorPrivKey defines env variable name for sp operator private key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
@@ -30,8 +32,8 @@ const (
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal private key
 	SpSealPrivKey = "SIGNER_SEAL_PRIV_KEY"
-	// SpSealBlsPrivKey defines env variable name for sp seal bls private key
-	SpSealBlsPrivKey = "SIGNER_SEAL_BLS_PRIV_KEY"
+	// SpBlsPrivKey defines env variable name for sp bls private key
+	SpBlsPrivKey = "SIGNER_BLS_PRIV_KEY"
 	// SpGcPrivKey defines env variable name for sp gc private key
 	SpGcPrivKey = "SIGNER_GC_PRIV_KEY"
 )
@@ -72,6 +74,12 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	if cfg.Chain.CreateGlobalVirtualGroupFeeAmount == 0 {
 		cfg.Chain.CreateGlobalVirtualGroupFeeAmount = DefaultCreateGlobalVirtualGroupFeeAmount
 	}
+	if cfg.Chain.CompleteMigrateBucketGasLimit == 0 {
+		cfg.Chain.CompleteMigrateBucketGasLimit = DefaultCompleteMigrateBucketGasLimit
+	}
+	if cfg.Chain.CompleteMigrateBucketFeeAmount == 0 {
+		cfg.Chain.CompleteMigrateBucketFeeAmount = DefaultCompleteMigrateBucketFeeAmount
+	}
 	if val, ok := os.LookupEnv(SpOperatorPrivKey); ok {
 		cfg.SpAccount.OperatorPrivateKey = val
 	}
@@ -81,8 +89,8 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	if val, ok := os.LookupEnv(SpSealPrivKey); ok {
 		cfg.SpAccount.SealPrivateKey = val
 	}
-	if val, ok := os.LookupEnv(SpSealBlsPrivKey); ok {
-		cfg.SpAccount.SealBlsPrivateKey = val
+	if val, ok := os.LookupEnv(SpBlsPrivKey); ok {
+		cfg.SpAccount.BlsPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpApprovalPrivKey); ok {
 		cfg.SpAccount.ApprovalPrivateKey = val
@@ -111,7 +119,7 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 
 	client, err := NewGreenfieldChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.ChainID,
 		gasInfo, cfg.SpAccount.OperatorPrivateKey, cfg.SpAccount.FundingPrivateKey,
-		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey, cfg.SpAccount.SealBlsPrivateKey)
+		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey, cfg.SpAccount.BlsPrivateKey)
 	if err != nil {
 		return err
 	}

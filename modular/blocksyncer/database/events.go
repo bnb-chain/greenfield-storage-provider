@@ -22,8 +22,32 @@ func (db *DB) SaveEventCompleteMigrationBucket(ctx context.Context, eventComplet
 	return err
 }
 
+func (db *DB) SaveEventCancelMigrationBucket(ctx context.Context, eventCancelMigrationBucket *bsdb.EventCancelMigrationBucket) error {
+	err := db.Db.WithContext(ctx).Table((&bsdb.EventCancelMigrationBucket{}).TableName()).Create(eventCancelMigrationBucket).Error
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func (db *DB) SaveEventSwapOut(ctx context.Context, eventSwapOut *bsdb.EventSwapOut) error {
 	err := db.Db.WithContext(ctx).Table((&bsdb.EventSwapOut{}).TableName()).Create(eventSwapOut).Error
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (db *DB) SaveEventCancelSwapOut(ctx context.Context, eventCancelSwapOut *bsdb.EventCancelSwapOut) error {
+	err := db.Db.WithContext(ctx).Table((&bsdb.EventCancelSwapOut{}).TableName()).Create(eventCancelSwapOut).Error
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (db *DB) SaveEventCompleteSwapOut(ctx context.Context, eventCompleteSwapOut *bsdb.EventCompleteSwapOut) error {
+	err := db.Db.WithContext(ctx).Table((&bsdb.EventCompleteSwapOut{}).TableName()).Create(eventCompleteSwapOut).Error
 	if err != nil {
 		return err
 	}

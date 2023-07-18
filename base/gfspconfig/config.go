@@ -97,6 +97,8 @@ type ChainConfig struct {
 	DiscontinueBucketFeeAmount        uint64
 	CreateGlobalVirtualGroupGasLimit  uint64
 	CreateGlobalVirtualGroupFeeAmount uint64
+	CompleteMigrateBucketGasLimit     uint64
+	CompleteMigrateBucketFeeAmount    uint64
 }
 
 type SpAccountConfig struct {
@@ -104,9 +106,9 @@ type SpAccountConfig struct {
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
-	SealBlsPrivateKey  string
 	ApprovalPrivateKey string
 	GcPrivateKey       string
+	BlsPrivateKey      string
 }
 
 type EndpointConfig struct {
@@ -243,5 +245,6 @@ type MetadataConfig struct {
 type ManagerConfig struct {
 	EnableLoadTask                         bool
 	SubscribeSPExitEventIntervalSec        int
+	SubscribeSwapOutExitEventIntervalSec   int
 	SubscribeBucketMigrateEventIntervalSec int
 }

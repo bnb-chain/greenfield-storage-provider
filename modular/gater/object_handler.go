@@ -113,8 +113,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	log.Infow("VMVMVM: print object info and chain params", "objectInfo", objectInfo, "params", params)
-	log.CtxDebugw(ctx, "succeed to upload payload data")
+	log.CtxDebug(ctx, "succeed to upload payload data")
 }
 
 func parseRange(rangeStr string) (bool, int64, int64) {
@@ -708,7 +707,6 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		return
 	}
 
-	bucketPrimarySpId := getBucketInfoRes.GetBucketInfo().GetPrimarySpId()
 	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	// TODO get from config
 	spID, err := g.getSPID()
@@ -716,9 +714,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		err = ErrConsensus
 		return
 	}
-	if spID != bucketPrimarySpId {
+	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), getBucketInfoRes.GetBucketInfo())
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+	if spID != bucketSPID {
 		log.Debugw("primary sp id not matched ",
-			"bucketPrimarySpId", bucketPrimarySpId, "self sp id", spID,
+			"bucket_sp_id", bucketSPID, "self_sp_id", spID,
 		)
 
 		// TODO might need to edit GetEndpointBySpId to reduce call to chain
