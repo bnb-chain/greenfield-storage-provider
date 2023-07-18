@@ -260,6 +260,7 @@ function main() {
     ;;
    --runSPExit)
     run_sp_exit_e2e
+    ;;
    --runSDKE2E)
     run_go_sdk_e2e
     ;;

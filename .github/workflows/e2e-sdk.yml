@@ -63,8 +63,7 @@ jobs:
       - name: Build and Start Greenfield SP
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --startSP
-      # Run E2E Test
+      # Run Greeenfield Go-SDK E2E Test
       - name: start e2e
         run: |
-          make e2e_test
-          cd ..
+          bash ./test/e2e/spworkflow/e2e_test.sh --runSDKE2E
