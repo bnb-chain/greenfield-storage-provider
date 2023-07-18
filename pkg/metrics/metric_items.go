@@ -67,8 +67,11 @@ var MetricsItems = []prometheus.Collector{
 
 	// blocksyncer metrics category
 	ProcessBlockTime,
-	// EventAvgTime,
-	// TxAvgTime,
+	//EventAvgTime,
+	//TxAvgTime,
+
+	// metadata metrics category
+	MetadataReqTime,
 }
 
 // basic metrics items
@@ -273,6 +276,14 @@ var (
 	//	Help:    "Track process block workflow costs.",
 	//	Buckets: prometheus.DefBuckets,
 	// }, []string{"tx_avg_time"})
+)
+
+var (
+	MetadataReqTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "metadata_request_time",
+		Help:    "Track the metadata request time.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"status", "level", "method_name", "code_or_msg"})
 )
 
 // SP exit and bucket migration metrics

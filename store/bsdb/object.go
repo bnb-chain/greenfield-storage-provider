@@ -3,6 +3,7 @@ package bsdb
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
@@ -32,6 +33,15 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 		results []*ListObjectsResult
 		filters []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
@@ -93,6 +103,15 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		objects      []*Object
 		err          error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includePrivate {
 		for i := 0; i < ObjectsNumberOfShards; i++ {
@@ -139,6 +158,15 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, include
 		object *Object
 		err    error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includePrivate {
 		err = b.db.Table(GetObjectsTableName(bucketName)).
@@ -165,6 +193,15 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 		err     error
 		filters []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if !includeRemoved {
 		filters = append(filters, RemovedFilter(includeRemoved))
@@ -212,6 +249,15 @@ func (b *BsDBImpl) GetObjectByID(objectID int64, includeRemoved bool) (*Object, 
 		bucketName   string
 		filters      []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	objectIDHash = common.BigToHash(math.NewInt(objectID).BigInt())
 	if !includeRemoved {
@@ -242,6 +288,16 @@ func (b *BsDBImpl) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32,
 		bucket      *Bucket
 		err         error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
@@ -270,6 +326,16 @@ func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 		filters       []func(*gorm.DB) *gorm.DB
 		err           error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
@@ -301,6 +367,15 @@ func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, bucketID common.Hash, sta
 		objects []*Object
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	bucket, err = b.GetBucketByID(bucketID.Big().Int64(), true)
 	if err != nil {
@@ -332,6 +407,16 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 		query        string
 		err          error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgID(gvgIDs)
