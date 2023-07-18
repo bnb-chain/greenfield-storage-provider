@@ -45,3 +45,8 @@ const (
 	// MigrateGVGTableName defines the progress of subscribe migrate event.
 	MigrateGVGTableName = "migrate_gvg"
 )
+
+// define error name constant.
+const (
+	TableAlreadyExistsErrorPrefix = "Error 1050 (42S01)"
+)
