@@ -148,7 +148,11 @@ jobs:
       #     docker images
 
       - name: Log into registry
-        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: |
+          echo "${{ secrets.BUF_REGISTRY_USER }}"
+          echo "${{ secrets.BUF_REGISTRY_SECRET }}"
+          echo "${{ secrets.GH_SECRET }}"
+        # echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       # - name: Push image
       #   run: |
