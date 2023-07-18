@@ -52,8 +52,10 @@ type SignatureDB interface {
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	// DeleteObjectIntegrity deletes the integrity hash.
 	DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error
-	// AppendObjectChecksumIntegrity gets integrity meta info by object id.
-	AppendObjectChecksumIntegrity(objectID uint64, redundancyIndex int32, checksum []byte) error
+	// UpdateIntegrityChecksum update IntegrityMetaTable's integrity checksum
+	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
+	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
+	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
