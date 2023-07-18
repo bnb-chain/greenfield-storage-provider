@@ -72,12 +72,12 @@ const (
 
 	DefaultLoadReplicateTimeout int64 = 60
 	DefaultLoadSealTimeout      int64 = 180
-	// DefaultSubscribeSPExitEventIntervalSec define the default time interval to subscribe sp exit event from metadata.
-	DefaultSubscribeSPExitEventIntervalSec = 1
-	// DefaultSubscribeBucketMigrateEventIntervalSec define the default time interval to subscribe bucket migrate event from metadata.
-	DefaultSubscribeBucketMigrateEventIntervalSec = 1
-	// DefaultSubscribeSwapOutEventIntervalSec define the default time interval to subscribe gvg swap out event from metadata.
-	DefaultSubscribeSwapOutEventIntervalSec = 1
+	// DefaultSubscribeSPExitEventIntervalMillisecond define the default time interval to subscribe sp exit event from metadata.
+	DefaultSubscribeSPExitEventIntervalMillisecond = 100
+	// DefaultSubscribeBucketMigrateEventIntervalMillisecond define the default time interval to subscribe bucket migrate event from metadata.
+	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 100
+	// DefaultSubscribeSwapOutEventIntervalMillisecond define the default time interval to subscribe gvg swap out event from metadata.
+	DefaultSubscribeSwapOutEventIntervalMillisecond = 100
 )
 
 const (
@@ -216,13 +216,13 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		return err
 	}
 	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
-		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSec
+		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalMillisecond
 	}
 	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
-		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalSec
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
 	}
 	if cfg.Manager.SubscribeSwapOutExitEventIntervalSec == 0 {
-		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSec
+		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalMillisecond
 	}
 
 	return nil

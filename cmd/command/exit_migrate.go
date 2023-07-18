@@ -14,7 +14,7 @@ var spOperatorAddressFlag = &cli.StringFlag{
 }
 
 var SPExitCmd = &cli.Command{
-	Name:  "exit",
+	Name:  "sp.exit",
 	Usage: "Used for sp exits from the Greenfield storage network",
 	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
 		to exit from Greenfield storage network`,
@@ -32,6 +32,10 @@ func spExit(ctx *cli.Context) error {
 	}
 	client := utils.MakeGfSpClient(cfg)
 	operatorAddress := ctx.String(spOperatorAddressFlag.Name)
+	// TODO: add more verification for cli args
+	if operatorAddress != cfg.SpAccount.SpOperatorAddress {
+		return fmt.Errorf("invalid operator address")
+	}
 	txHash, err := client.SPExit(ctx.Context, &virtualgrouptypes.MsgStorageProviderExit{StorageProvider: operatorAddress})
 	if err != nil {
 		fmt.Printf("failed to send sp exit txn, operatorAddress: %s\n", operatorAddress)
