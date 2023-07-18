@@ -16,7 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -233,44 +232,6 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 				// ignore the access db error, it is the system's inner error, will be let the request go.
 			}
 			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-			return nil
-		}
-		// check quota for secondary read task
-		// TODO get sp id from config file
-		spID, err := d.getSPID()
-		if err != nil {
-			return ErrConsensus
-		}
-		_, isOneOfSecondary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, d.baseApp.GfSpClient(), spID, downloadPieceTask.GetBucketInfo().Id.Uint64(), downloadPieceTask.GetObjectInfo().LocalVirtualGroupId)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
-			return ErrConsensus
-		}
-		// if it is a request from client, the task handler is the secondary SP of the object
-		if isOneOfSecondary {
-			// check free quota
-			log.CtxDebugw(ctx, "downloading piece from secondary SP, checking quota")
-			// TODO traffic db add read type to indicate secondary
-			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
-				&spdb.ReadRecord{
-					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
-					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
-					UserAddress:     downloadPieceTask.GetUserAddress(),
-					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
-					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
-					ReadSize:        downloadPieceTask.GetTotalSize(),
-					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
-				},
-				&spdb.BucketQuota{
-					ReadQuotaSize: d.bucketFreeQuota,
-				},
-			); err != nil {
-				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
-				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
-					return ErrExceedBucketQuota
-				}
-				// ignore the access db error, it is the system's inner error, will be let the request go.
-			}
 			return nil
 		}
 
