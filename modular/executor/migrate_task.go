@@ -90,7 +90,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 	}
 	// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another SP
 	if bucketID != 0 {
-		if err = e.checkGvgConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
+		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
 			log.Debugw("no gvg conflict", "error", err)
 		}
 	}
@@ -122,7 +122,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 	return nil
 }
 
-func (e *ExecuteModular) checkGvgConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,
+func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,
 	objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params) error {
 	index := util.ContainOnlyOneDifferentElement(srcGvg.GetSecondarySpIds(), destGvg.GetSecondarySpIds())
 	if index == -1 {
@@ -322,10 +322,10 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMig
 // 2. compare generated integrity hash to chain integrity hash, if they are equal write to db
 func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.ObjectInfo, pieceData [][]byte, redundancyIdx int32) error {
 	pieceChecksumList := make([][]byte, len(pieceData))
-	for i, v := range pieceData {
-		pieceChecksumList[i] = nil
-		checksum := hash.GenerateChecksum(v)
-		pieceChecksumList[i] = checksum
+	for index, data := range pieceData {
+		pieceChecksumList[index] = nil
+		checksum := hash.GenerateChecksum(data)
+		pieceChecksumList[index] = checksum
 	}
 	migratedIntegrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
 	var chainIntegrityHash []byte
@@ -341,7 +341,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	}
 	if !bytes.Equal(migratedIntegrityHash, chainIntegrityHash) {
 		log.Errorw("migrated pieces integrity is different from integrity hash on chain", "object_name",
-			objectInfo.GetObjectName(), "object_id", objectInfo.Id.String())
+			objectInfo.GetObjectName(), "object_id", objectInfo.Id.String(), "redundancy_index", redundancyIdx)
 		return ErrMigratedPieceChecksum
 	}
 

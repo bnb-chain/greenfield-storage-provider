@@ -99,14 +99,12 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		err = ErrDecodeMsg
 		return
 	}
-
 	objectInfo := migratePiece.GetObjectInfo()
 	if objectInfo == nil {
 		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info")
 		err = ErrInvalidHeader
 		return
 	}
-
 	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.GetObjectName(), objectInfo.GetBucketName())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object on chain meta", "error", err)
@@ -119,9 +117,10 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	segmentIdx := migratePiece.GetSegmentIdx()
 	redundancyIdx := migratePiece.GetRedundancyIdx()
 	if redundancyIdx < primarySPECIdx || redundancyIdx > maxECIdx {
-		// TODO: customize an error to return to sp
+		err = ErrInvalidRedundancyIndex
 		return
 	}
+
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// if ecIdx is equal to -1, we should migrate pieces from primary SP
 	if redundancyIdx == primarySPECIdx {
