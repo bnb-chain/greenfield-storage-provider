@@ -2,8 +2,11 @@ syntax = "proto3";
 package modular.metadata.types;
 
 import "base/types/gfsperrors/error.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
+import "greenfield/permission/common.proto";
+import "greenfield/resource/types.proto";
 import "greenfield/storage/events.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/storage/types.proto";
@@ -418,6 +421,24 @@ message GfSpListObjectsByObjectIDResponse {
   map<uint64, Object> objects = 1;
 }
 
+// GfSpVerifyPermissionByIDRequest is request type for the GfSpVerifyPermissionByID RPC method
+message GfSpVerifyPermissionByIDRequest {
+  // operator defines the account address of operator
+  string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_type defines the source of resource creation
+  greenfield.resource.ResourceType resource_type = 2;
+  // resource_id defines the id of source
+  uint64 resource_id = 3;
+  // action_type defines the requested action type of permission
+  greenfield.permission.ActionType action_type = 4;
+}
+
+// GfSpVerifyPermissionByIDResponse is response type for the GfSpVerifyPermissionByID RPC method
+message GfSpVerifyPermissionByIDResponse {
+  // effect define the effect of the operation permission, include Allow or deny
+  greenfield.permission.Effect effect = 1;
+}
+
 // GfSpListVirtualGroupFamiliesBySpIDRequest is request type for the GfSpListVirtualGroupFamilies RPC method
 message GfSpListVirtualGroupFamiliesBySpIDRequest {
   // sp_id is the unique identification for sp
@@ -679,6 +700,7 @@ service GfSpMetadataService {
   rpc GfSpGetGroupList(GfSpGetGroupListRequest) returns (GfSpGetGroupListResponse) {}
   rpc GfSpListBucketsByBucketID(GfSpListBucketsByBucketIDRequest) returns (GfSpListBucketsByBucketIDResponse) {}
   rpc GfSpListObjectsByObjectID(GfSpListObjectsByObjectIDRequest) returns (GfSpListObjectsByObjectIDResponse) {}
+  rpc GfSpVerifyPermissionByID(GfSpVerifyPermissionByIDRequest) returns (GfSpVerifyPermissionByIDResponse) {}
   rpc GfSpListVirtualGroupFamiliesBySpID(GfSpListVirtualGroupFamiliesBySpIDRequest) returns (GfSpListVirtualGroupFamiliesBySpIDResponse) {}
   rpc GfSpGetGlobalVirtualGroupByGvgID(GfSpGetGlobalVirtualGroupByGvgIDRequest) returns (GfSpGetGlobalVirtualGroupByGvgIDResponse) {}
   rpc GfSpListBucketsBindingOnPrimarySP(GfSpListBucketsBindingOnPrimarySPRequest) returns (GfSpListBucketsBindingOnPrimarySPResponse) {}
