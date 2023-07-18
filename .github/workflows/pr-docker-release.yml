@@ -18,97 +18,97 @@ env:
   GOPRIVATE: github.com/bnb-chain
 
 jobs:
-  # code-lint:
-  #   strategy:
-  #     matrix:
-  #       os: [ ubuntu-latest ]
-  #   runs-on: ${{ matrix.os }}
-  #   timeout-minutes: 8
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Setup GitHub Token
-  #       run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-  #     - uses: actions/setup-go@v3
-  #       with:
-  #         go-version: ${{ matrix.go-version }}
-  #     - uses: bufbuild/buf-setup-action@v1.14.0
-  #       with:
-  #         version: 1.14.0
-  #         buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
-  #         buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-  #     - name: Install Protoc
-  #       uses: arduino/setup-protoc@v1
-  #     - run: |
-  #         make install-tools
-  #         make buf-gen
-  #     - uses: technote-space/get-diff-action@v6
-  #       with:
-  #         PATTERNS: |
-  #           **/**.go
-  #           go.mod
-  #           go.sum
-  #     - run: |
-  #         go mod tidy
-  #         go mod download
-  #     - uses: golangci/golangci-lint-action@v3
-  #       with:
-  #         # Required: the version of golangci-lint is required and
-  #         # must be specified without patch version: we always use the
-  #         # latest patch version.
-  #         version: latest
-  #         skip-pkg-cache: true
-  #         skip-cache: true
-  #         skip-build-cache: true
-  #         args: --timeout 30m -v
-  #         github-token: ${{ secrets.github_token }}
-  #       if: env.GIT_DIFF
+  code-lint:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup GitHub Token
+        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - uses: bufbuild/buf-setup-action@v1.14.0
+        with:
+          version: 1.14.0
+          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - run: |
+          make install-tools
+          make buf-gen
+      - uses: technote-space/get-diff-action@v6
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - run: |
+          go mod tidy
+          go mod download
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          # Required: the version of golangci-lint is required and
+          # must be specified without patch version: we always use the
+          # latest patch version.
+          version: latest
+          skip-pkg-cache: true
+          skip-cache: true
+          skip-build-cache: true
+          args: --timeout 30m -v
+          github-token: ${{ secrets.github_token }}
+        if: env.GIT_DIFF
 
-  # code-unit-test:
-  #   strategy:
-  #     matrix:
-  #       go-version: [1.20.x]
-  #       os: [ubuntu-latest]
-  #   runs-on: ${{ matrix.os }}
-  #   env:
-  #     CGO_CFLAGS: "-O -D__BLST_PORTABLE__"
-  #     CGO_CFLAGS_ALLOW: "-O -D__BLST_PORTABLE__"
-  #   steps:
-  #     - name: Install Go
-  #       uses: actions/setup-go@v3
-  #       with:
-  #         go-version: ${{ matrix.go-version }}
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-  #     - uses: actions/cache@v3
-  #       with:
-  #         # In order:
-  #         # * Module download cache
-  #         # * Build cache (Linux)
-  #         # * Build cache (Mac)
-  #         # * Build cache (Windows)
-  #         path: |
-  #           ~/go/pkg/mod
-  #           ~/.cache/go-build
-  #           ~/Library/Caches/go-build
-  #           %LocalAppData%\go-build
-  #         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-go-
-  #     - uses: bufbuild/buf-setup-action@v1.14.0
-  #       with:
-  #         version: 1.14.0
-  #         buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
-  #         buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-  #     - name: Install Protoc
-  #       uses: arduino/setup-protoc@v1
-  #     - run: |
-  #         make install-tools
-  #         make buf-gen
-  #     - name: Setup GitHub Token
-  #       run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-  #     - name: Unit Test
-  #       run: |
-  #         make test
+  code-unit-test:
+    strategy:
+      matrix:
+        go-version: [1.20.x]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CGO_CFLAGS: "-O -D__BLST_PORTABLE__"
+      CGO_CFLAGS_ALLOW: "-O -D__BLST_PORTABLE__"
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          # * Build cache (Mac)
+          # * Build cache (Windows)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - uses: bufbuild/buf-setup-action@v1.14.0
+        with:
+          version: 1.14.0
+          buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
+          buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - run: |
+          make install-tools
+          make buf-gen
+      - name: Setup GitHub Token
+        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+      - name: Unit Test
+        run: |
+          make test
 
   # Push image to GitHub Packages.
   build-image:
@@ -116,7 +116,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
-    # needs: [code-lint, code-unit-test]
+    needs: [code-lint, code-unit-test]
     env:
       IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
       IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
@@ -136,25 +136,21 @@ jobs:
           make install-tools
           make buf-gen
 
-      # - name: Build image
-      #   run: |
-      #     docker build . \
-      #     --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
-      #     --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
-      #     --label "org.opencontainers.image.revision=${{ github.event.pull_request.head.sha }}" \
-      #     --label "org.opencontainers.image.ref.name=${{ github.event.pull_request.number }}" \
-      #     --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
-      #     -f ./Dockerfile -t "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
-      #     docker images
+      - name: Build image
+        run: |
+          docker build . \
+          --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
+          --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
+          --label "org.opencontainers.image.revision=${{ github.event.pull_request.head.sha }}" \
+          --label "org.opencontainers.image.ref.name=${{ github.event.pull_request.number }}" \
+          --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
+          -f ./Dockerfile -t "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+          docker images
 
       - name: Log into registry
-        run: |
-          echo "${{ secrets.BUF_REGISTRY_USER }}"
-          echo "${{ secrets.BUF_REGISTRY_SECRET }}"
-          echo "${{ secrets.GH_SECRET }}"
-        # echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      # - name: Push image
-      #   run: |
-      #     docker push "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+      - name: Push image
+        run: |
+          docker push "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
           
