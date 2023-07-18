@@ -51,9 +51,9 @@ jobs:
           docker images
 
       - name: Log into registry
-        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u constwz --password-stdin
 
       - name: Push image
         run: |
-          # docker push "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+          docker push "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
           
