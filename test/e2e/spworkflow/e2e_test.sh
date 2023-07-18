@@ -7,6 +7,7 @@ workspace=${GITHUB_WORKSPACE}
 GREENFIELD_REPO_TAG="df6781d93afaf886b6868ad024473b3d8ce08b99"
 #GREENFIELD_CMD_TAG="feat-adaptor-sp-exit"
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
+GREENFIELD_GO_SDK_TAG="c4fe4e2eb589ff345ad52e6fabb0140a04d216d1"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -89,6 +90,18 @@ function build_cmd() {
     echo rpcAddr = \"http://localhost:26750\"
     echo chainId = \"greenfield_9000-121\"
   } > config.toml
+}
+
+############################################
+# build Greenfield go-sdk                  #
+############################################
+function build_greenfield-go-sdk() {
+  set -e
+  cd ${workspace}
+  # build greenfield-go-sdk
+  git clone https://github.com/bnb-chain/greenfield-go-sdk.git
+  cd greenfield-go-sdk/
+  git checkout ${GREENFIELD_GO_SDK_TAGG}
 }
 
 ######################
@@ -220,6 +233,16 @@ function run_sp_exit_e2e() {
   test_sp_exit
 }
 
+###################
+# run go-sdk e2e #
+###################
+function run_go_sdk_e2e() {
+  set -e
+  echo 'run greenfield go sdk e2e test'
+  cd greenfield-go-sdk/
+  make e2e_test
+}
+
 function main() {
   CMD=$1
   case ${CMD} in
@@ -237,6 +260,8 @@ function main() {
     ;;
    --runSPExit)
     run_sp_exit_e2e
+   --runSDKE2E)
+    run_go_sdk_e2e
     ;;
   esac
 }

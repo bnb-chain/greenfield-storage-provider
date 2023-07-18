@@ -19,90 +19,50 @@ on:
       - fix-release*
       - feat-*
 
-env:
-  GreenfieldTag: df6781d93afaf886b6868ad024473b3d8ce08b99
-  GreenfieldStorageProviderTag: ba00e30874e7b0e7048765fd902f229b432504cb
-  GOPRIVATE: github.com/bnb-chain
-  GH_ACCESS_TOKEN: ${{ secrets.GH_TOKEN }}
-  MYSQL_USER: root
-  MYSQL_PASSWORD: root
-  MYSQL_ROOT_PASSWORD: root
-  MYSQL_IP: 127.0.0.1
-  MYSQL_PORT: 3306
-
 jobs:
-  end-to-end-test:
+  e2e-test:
     strategy:
       matrix:
         go-version: [ 1.20.x ]
         os: [ ubuntu-latest ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Checkout code
+      # Checkout Greenfield-SP
+      - name: Checkout Greenfield-SP
         uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          # In order:
-          # * Module download cache
-          # * Build cache (Linux)
-          # * Build cache (Mac)
-          # * Build cache (Windows)
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            ~/Library/Caches/go-build
-            %LocalAppData%\go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: Setup GitHub Token
-        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-
-      # Build Greenfield
-      - name: Build Greenfield
-        run: |
-          git clone https://github.com/bnb-chain/greenfield.git ../greenfield
-          cd ../greenfield
-          git checkout ${{ env.GreenfieldTag }}
-          make proto-gen & make build
-          cd ..
-      # Build Greenfield-SP
-      - name: Build Greenfield-SP
-        run: |
-          git clone https://github.com/bnb-chain/greenfield-storage-provider.git ../greenfield-storage-provider
-          cd ../greenfield-storage-provider
-          git checkout ${{ env.GreenfieldStorageProviderTag }}
-          make install-tools
-          make build
-          cd ../greenfield-go-sdk
       # Run MySQL
       - name: Run MySQL
         run: |
           sudo /etc/init.d/mysql start
-          mysql -h ${{ env.MYSQL_IP }} -P ${{ env.MYSQL_PORT }} -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }} -e 'CREATE DATABASE sp_0; CREATE DATABASE sp_1;CREATE DATABASE sp_2; CREATE DATABASE sp_3;CREATE DATABASE sp_4; CREATE DATABASE sp_5; CREATE DATABASE sp_6;'
-      # Run Greenfield
-      - name: Run Greenfield
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+      - name: Install dependencies
+        run: npm install ethers
+      # generate test private key
+      - name: Generate private key
+        run: node ./.github/workflows/generate-private-key.js
+        id: generate-private-key
+      - name: set private key and account address as job variables
         run: |
-          cd ../greenfield
-          bash ./deployment/localup/localup.sh all 1 8
-          bash ./deployment/localup/localup.sh export_sps 1 8 > sp.json
-          cat sp.json
-          cd ../greenfield-go-sdk
-      # Run Greenfield-SP
-      - name: Run Greenfield-SPs
+          echo "Private key: ${{ steps.generate-private-key.outputs.private_key }}"
+          echo "Account address: ${{ steps.generate-private-key.outputs.account_address }}"
+          echo "PRIVATE_KEY=${{ steps.generate-private-key.outputs.private_key }}" >> "$GITHUB_ENV"
+          echo "ACCOUNT_ADDR=${{ steps.generate-private-key.outputs.account_address }}" >> "$GITHUB_ENV"
+      # Build and Start Greenfield Blockchain
+      - name: Build and Start Greenfield Blockchain
         run: |
-          cd ../greenfield-storage-provider
-          bash ./deployment/localup/localup.sh --generate $GITHUB_WORKSPACE/../greenfield/sp.json ${{ env.MYSQL_USER }} ${{ env.MYSQL_PASSWORD }} ${{ env.MYSQL_IP }}:${{ env.MYSQL_PORT }}
-          bash ./deployment/localup/localup.sh --reset
-          bash ./deployment/localup/localup.sh --start
-          sleep 10
-          ps -ef | grep gnfd-sp | wc -l
-          tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log
-          cd ../greenfield-go-sdk
+          bash ./test/e2e/spworkflow/e2e_test.sh --startChain
+      # Build and Start Greenfield SP
+      - name: Build and Start Greenfield SP
+        run: |
+          bash ./test/e2e/spworkflow/e2e_test.sh --startSP
       # Run E2E Test
       - name: start e2e
         run: |
