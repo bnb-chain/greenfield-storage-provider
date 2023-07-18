@@ -38,6 +38,8 @@ type Metadata interface {
 	ListExpiredBucketsBySp(createAt int64, primarySpID uint32, limit int64) ([]*Bucket, error)
 	// GetObjectByName get object info by an object name
 	GetObjectByName(objectName string, bucketName string, includePrivate bool) (*Object, error)
+	// GetObjectByID get object info by an object id
+	GetObjectByID(objectID int64, includeRemoved bool) (*Object, error)
 	// GetSwitchDBSignal check if there is a signal to switch the database
 	GetSwitchDBSignal() (*MasterDB, error)
 	// GetBucketMetaByName get bucket info with its related info
@@ -48,6 +50,8 @@ type Metadata interface {
 	ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error)
 	// ListBucketsByBucketID list buckets by bucket ids
 	ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error)
+	// GetGroupByID get group info by an object id
+	GetGroupByID(groupID int64, includeRemoved bool) (*Group, error)
 	// ListVirtualGroupFamiliesBySpID list virtual group families by sp id
 	ListVirtualGroupFamiliesBySpID(spID uint32) ([]*VirtualGroupFamily, error)
 	// GetVirtualGroupFamiliesByVgfID get virtual group families by vgf id

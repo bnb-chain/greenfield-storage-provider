@@ -397,6 +397,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: listExpiredBucketsBySpRouterName,
 		},
 		{
+			name:             "Verify permission by resource id router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + VerifyPermissionByIDQuery + "&" + ResourceIDQuery + "&" + ResourceTypeQuery + "&" + VerifyPermissionOperator + "&" + VerifyPermissionActionType,
+			shouldMatch:      true,
+			wantedRouterName: verifyPermissionByIDRouterName,
+		},
+		{
 			name:             "List virtual group families by sp id router",
 			router:           gwRouter,
 			method:           http.MethodGet,

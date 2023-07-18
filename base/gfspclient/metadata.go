@@ -3,6 +3,7 @@ package gfspclient
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield/types/resource"
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
@@ -774,4 +775,29 @@ func (s *GfSpClient) GetObjectByID(ctx context.Context, objectID uint64, opts ..
 		return nil, ErrNoSuchObject
 	}
 	return resp.GetObjects()[objectID].GetObjectInfo(), nil
+}
+
+// VerifyPermissionByID Verify the input account’s permission to input source type and resource id
+func (s *GfSpClient) VerifyPermissionByID(ctx context.Context, Operator string, resourceType resource.ResourceType, resourceID uint64,
+	actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error) {
+	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	req := &types.GfSpVerifyPermissionByIDRequest{
+		Operator:     Operator,
+		ResourceType: resourceType,
+		ResourceId:   resourceID,
+		ActionType:   actionType,
+	}
+
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpVerifyPermissionByID(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send verify permission by id rpc", "error", err)
+		return nil, err
+	}
+	return &resp.Effect, nil
 }
