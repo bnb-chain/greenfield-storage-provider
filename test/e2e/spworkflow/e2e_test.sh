@@ -145,24 +145,32 @@ function test_sp_exit() {
     dd if=/dev/urandom of=./random_file bs=17M count=1
     ./gnfd-cmd -c ./config.toml --home ./ bucket create --primarySP ${operator_address} gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
+    ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/octet-stream" ./random_file gnfd://spexit/random_file
     ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://spexit/example.json
     sleep 16
+    ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/random_file
+    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/random_file  ./new_random_file
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
     ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/example.json ./new.json
     sleep 10
     check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new.json
+    check_md5 ./random_file ./new_random_file
 
     # start exiting sp5
     cd ${workspace}/deployment/localup/local_env/sp5
     ./gnfd-sp5 -c ./config.toml sp.exit -operatorAddress ${operator_address}
+    cd ${workspace}/greenfield-cmd/build/
+    ./gnfd-cmd -c ./config.toml --home ./ sp ls
     sleep 180
     cd ${workspace}/greenfield-cmd/build/
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
     ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/example.json ./new1.json
+    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/random_file  ./new_random_file1
     sleep 10
     check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new1.json
+    check_md5 ./random_file ./new_random_file1
 }
 
 ##################################
