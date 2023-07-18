@@ -28,10 +28,14 @@ const (
 	// SPDBFailureDelObjectIntegrity defines the metrics label of unsuccessfully del object integrity
 	SPDBFailureDelObjectIntegrity = "del_object_integrity_meta_failure"
 
-	// SPDBSuccessAppendObjectChecksumIntegrity defines the metrics label of successfully append object checksum integrity
-	SPDBSuccessAppendObjectChecksumIntegrity = "append_object_checksum_integrity_success"
-	// SPDBFailureAppendObjectChecksumIntegrity defines the metrics label of unsuccessfully append object checksum integrity
-	SPDBFailureAppendObjectChecksumIntegrity = "append_object_checksum_integrity_failure"
+	// SPDBSuccessUpdatePieceChecksum defines the metrics label of successfully update object piece checksum
+	SPDBSuccessUpdatePieceChecksum = "append_object_checksum_integrity_success"
+	// SPDBFailureUpdatePieceChecksum defines the metrics label of unsuccessfully update object piece checksum
+	SPDBFailureUpdatePieceChecksum = "append_object_checksum_integrity_failure"
+	// SPDBSuccessUpdateIntegrityChecksum defines the metrics label of successfully update object integrity checksum
+	SPDBSuccessUpdateIntegrityChecksum = "append_object_checksum_integrity_success"
+	// SPDBFailureUpdateIntegrityChecksum defines the metrics label of unsuccessfully update object integrity checksum
+	SPDBFailureUpdateIntegrityChecksum = "append_object_checksum_integrity_failure"
 	// SPDBSuccessGetReplicatePieceChecksum defines the metrics label of successfully get replicate piece checksum
 	SPDBSuccessGetReplicatePieceChecksum = "get_replicate_piece_checksum_success"
 	// SPDBFailureGetReplicatePieceChecksum defines the metrics label of unsuccessfully get replicate piece checksum
@@ -145,18 +149,18 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 	return nil
 }
 
-// UpdateIntegrityChecksum update integrity hash info to db
+// UpdateIntegrityChecksum update integrity hash info to db, TODO: if not exit, whether create it
 func (s *SpDBImpl) UpdateIntegrityChecksum(meta *corespdb.IntegrityMeta) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.SPDBCounter.WithLabelValues(SPDBFailureSetObjectIntegrity).Inc()
-			metrics.SPDBTime.WithLabelValues(SPDBFailureSetObjectIntegrity).Observe(
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureUpdateIntegrityChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureUpdateIntegrityChecksum).Observe(
 				time.Since(startTime).Seconds())
 			return
 		}
-		metrics.SPDBCounter.WithLabelValues(SPDBSuccessSetObjectIntegrity).Inc()
-		metrics.SPDBTime.WithLabelValues(SPDBSuccessSetObjectIntegrity).Observe(
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessUpdateIntegrityChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessUpdateIntegrityChecksum).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
@@ -195,18 +199,19 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32)
 	return err
 }
 
-// UpdatePieceChecksum 1) create if not exist 2) append checksum
+// UpdatePieceChecksum 1) If the IntegrityMetaTable does not exist, it will be created.
+// 2) If the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
 func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.SPDBCounter.WithLabelValues(SPDBFailureAppendObjectChecksumIntegrity).Inc()
-			metrics.SPDBTime.WithLabelValues(SPDBFailureAppendObjectChecksumIntegrity).Observe(
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureUpdatePieceChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureUpdatePieceChecksum).Observe(
 				time.Since(startTime).Seconds())
 			return
 		}
-		metrics.SPDBCounter.WithLabelValues(SPDBSuccessAppendObjectChecksumIntegrity).Inc()
-		metrics.SPDBTime.WithLabelValues(SPDBSuccessAppendObjectChecksumIntegrity).Observe(
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessUpdatePieceChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessUpdatePieceChecksum).Observe(
 			time.Since(startTime).Seconds())
 	}()
 

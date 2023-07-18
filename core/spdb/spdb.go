@@ -54,7 +54,7 @@ type SignatureDB interface {
 	DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error
 	// UpdateIntegrityChecksum update IntegrityMetaTable's integrity checksum
 	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
-	// UpdatePieceChecksum update IntegrityMetaTable's piece checksum
+	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
 	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
