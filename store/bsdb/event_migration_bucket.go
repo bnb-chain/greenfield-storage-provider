@@ -1,5 +1,7 @@
 package bsdb
 
+import "time"
+
 // ListMigrateBucketEvents list migrate bucket events
 func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error) {
 	var (
@@ -8,6 +10,15 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 		cancelEvents   []*EventCancelMigrationBucket
 		err            error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	err = b.db.Table((&EventMigrationBucket{}).TableName()).
 		Select("*").

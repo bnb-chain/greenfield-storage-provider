@@ -16,6 +16,15 @@ func (b *BsDBImpl) GetPermissionByResourceAndPrincipal(resourceType, principalTy
 		permission *Permission
 		err        error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	err = b.db.Table((&Permission{}).TableName()).
 		Select("*").
@@ -33,6 +42,15 @@ func (b *BsDBImpl) GetStatementsByPolicyID(policyIDList []common.Hash, includeRe
 		statements []*Statement
 		err        error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includeRemoved {
 		err = b.db.Table((&Statement{}).TableName()).
@@ -54,6 +72,15 @@ func (b *BsDBImpl) GetPermissionsByResourceAndPrincipleType(resourceType, princi
 		permissions []*Permission
 		err         error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includeRemoved {
 		err = b.db.Table((&Permission{}).TableName()).
