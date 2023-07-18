@@ -288,8 +288,7 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 func (s *BucketMigrateScheduler) subscribeEvents() {
-	// TODO replace to time.second
-	subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * 100 * time.Millisecond)
+	subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Millisecond)
 	for {
 		<-subscribeBucketMigrateEventsTicker.C
 		var (

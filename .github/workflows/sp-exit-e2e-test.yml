@@ -1,4 +1,4 @@
-name: SP E2E Test
+name: SP Exit E2E Test
 
 on:
   push:
@@ -55,19 +55,19 @@ jobs:
           echo "Account address: ${{ steps.generate-private-key.outputs.account_address }}"
           echo "PRIVATE_KEY=${{ steps.generate-private-key.outputs.private_key }}" >> "$GITHUB_ENV"
           echo "ACCOUNT_ADDR=${{ steps.generate-private-key.outputs.account_address }}" >> "$GITHUB_ENV"
-      # Build and Start Greenfield Blockchain
-      - name: Build and Start Greenfield Blockchain
-        run: |
-          bash ./test/e2e/spworkflow/e2e_test.sh --startChain
-#     # Build and Start Greenfield SP
-      - name: Build and Start Greenfield SP
-        run: |
-          bash ./test/e2e/spworkflow/e2e_test.sh --startSP
       # Build Greenfield Cmd
       - name: Build Greenfield Cmd
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --buildCmd
-#     # Use Greenfield Cmd Running SP E2E Test
-      - name: Run Greenfield SP E2E Test
+      # Build and Start Greenfield Blockchain
+      - name: Build and Start Greenfield Blockchain
         run: |
-          bash ./test/e2e/spworkflow/e2e_test.sh --runTest
+          bash ./test/e2e/spworkflow/e2e_test.sh --startChain
+      #     # Build and Start Greenfield SP
+      - name: Build and Start Greenfield SP
+        run: |
+          bash ./test/e2e/spworkflow/e2e_test.sh --startSP
+      # Use Greenfield Cmd Running SP Exit E2E Test
+      - name: Run Greenfield SP Exit E2E Test
+        run: |
+          bash ./test/e2e/spworkflow/e2e_test.sh --runSPExit

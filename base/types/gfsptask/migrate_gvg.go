@@ -37,10 +37,10 @@ func (m *GfSpMigrateGVGTask) Type() coretask.TType {
 
 func (m *GfSpMigrateGVGTask) Info() string {
 	return fmt.Sprintf(
-		"key[%s], type[%s], priority[%d], limit[%s], src_gvg_id[%d], bucket_id[%d], redundancy_index[%d], last_migrated_object_id[%d], %s",
+		"key[%s], type[%s], priority[%d], limit[%s], src_gvg_id[%d], bucket_id[%d], redundancy_index[%d], last_migrated_object_id[%d], finished[%t], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
 		m.GetSrcGvg().GetId(), m.GetBucketId(), m.GetRedundancyIdx(),
-		m.GetLastMigratedObjectId(), m.GetTask().Info())
+		m.GetLastMigratedObjectId(), m.GetFinished(), m.GetTask().Info())
 }
 
 func (m *GfSpMigrateGVGTask) GetAddress() string {

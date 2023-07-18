@@ -131,6 +131,40 @@ function test_file_size_greater_than_16_mb() {
   check_md5 ./random_file ./new_random_file
 }
 
+################
+# test sp exit #
+################
+function test_sp_exit() {
+    set -e
+    # choose sp5
+    cd ${workspace}/deployment/localup/local_env/sp5
+    operator_address=$(echo "$(grep "SpOperatorAddress" ./config.toml)" | grep -o "0x[0-9a-zA-Z]*")
+    echo ${operator_address}
+    cd ${workspace}/greenfield-cmd/build/
+    ls
+    dd if=/dev/urandom of=./random_file bs=17M count=1
+    ./gnfd-cmd -c ./config.toml --home ./ bucket create --primarySP ${operator_address} gnfd://spexit
+    ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
+    ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://spexit/example.json
+    sleep 16
+    ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
+    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/example.json ./new.json
+    sleep 10
+    check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new.json
+
+    # start exiting sp5
+    cd ${workspace}/deployment/localup/local_env/sp5
+    ./gnfd-sp5 -c ./config.toml sp.exit -operatorAddress ${operator_address}
+    sleep 180
+    cd ${workspace}/greenfield-cmd/build/
+    ./gnfd-cmd -c ./config.toml --home ./ sp ls
+    ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
+    ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
+    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/example.json ./new1.json
+    sleep 10
+    check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new1.json
+}
+
 ##################################
 # check two md5 whether is equal #
 ##################################
@@ -162,8 +196,20 @@ function run_e2e() {
   set -e
   echo 'run test_create_bucket'
   test_create_bucket
+  echo 'run put object case less than 16 MB'
   test_file_size_less_than_16_mb
+  echo 'run put object case greater than 16 MB'
   test_file_size_greater_than_16_mb
+}
+
+###################
+# run sp exit e2e #
+###################
+# TODO: use this function in sp exit e2e for speeding all e2e process which will be overwritten in the future
+function run_sp_exit_e2e() {
+  set -e
+  echo 'run sp exit e2e test'
+  test_sp_exit
 }
 
 function main() {
@@ -180,6 +226,9 @@ function main() {
     ;;
   --runTest)
     run_e2e
+    ;;
+   --runSPExit)
+    run_sp_exit_e2e
     ;;
   esac
 }
