@@ -1,0 +1,69 @@
+name: SP E2E Test with Go-SDK
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - ci-*
+      - release*
+      - fix-release*
+      - feat-*
+
+  pull_request:
+    branches:
+      - master
+      - develop
+      - ci-*
+      - release*
+      - fix-release*
+      - feat-*
+
+jobs:
+  e2e-test:
+    strategy:
+      matrix:
+        go-version: [ 1.20.x ]
+        os: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      # Checkout Greenfield-SP
+      - name: Checkout Greenfield-SP
+        uses: actions/checkout@v3
+      # Run MySQL
+      - name: Run MySQL
+        run: |
+          sudo /etc/init.d/mysql start
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+      - name: Install dependencies
+        run: npm install ethers
+      # generate test private key
+      - name: Generate private key
+        run: node ./.github/workflows/generate-private-key.js
+        id: generate-private-key
+      - name: set private key and account address as job variables
+        run: |
+          echo "Private key: ${{ steps.generate-private-key.outputs.private_key }}"
+          echo "Account address: ${{ steps.generate-private-key.outputs.account_address }}"
+          echo "PRIVATE_KEY=${{ steps.generate-private-key.outputs.private_key }}" >> "$GITHUB_ENV"
+          echo "ACCOUNT_ADDR=${{ steps.generate-private-key.outputs.account_address }}" >> "$GITHUB_ENV"
+      # Build and Start Greenfield Blockchain
+      - name: Build and Start Greenfield Blockchain
+        run: |
+          bash ./test/e2e/spworkflow/e2e_test.sh --startChain
+      # Build and Start Greenfield SP
+      - name: Build and Start Greenfield SP
+        run: |
+          bash ./test/e2e/spworkflow/e2e_test.sh --startSP
+      # Run Greeenfield Go-SDK E2E Test
+      - name: start e2e
+        run: |
+          bash ./test/e2e/spworkflow/e2e_test.sh --runSDKE2E
