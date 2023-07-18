@@ -262,6 +262,7 @@ function main() {
     run_sp_exit_e2e
     ;;
    --runSDKE2E)
+    build_greenfield-go-sdk
     run_go_sdk_e2e
     ;;
   esac
