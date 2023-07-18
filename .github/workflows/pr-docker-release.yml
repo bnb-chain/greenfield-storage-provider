@@ -136,21 +136,21 @@ jobs:
           make install-tools
           make buf-gen
 
-      - name: Build image
-        run: |
-          docker build . \
-          --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
-          --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
-          --label "org.opencontainers.image.revision=${{ github.event.pull_request.head.sha }}" \
-          --label "org.opencontainers.image.ref.name=${{ github.event.pull_request.number }}" \
-          --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
-          -f ./Dockerfile -t "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
-          docker images
+      # - name: Build image
+      #   run: |
+      #     docker build . \
+      #     --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
+      #     --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
+      #     --label "org.opencontainers.image.revision=${{ github.event.pull_request.head.sha }}" \
+      #     --label "org.opencontainers.image.ref.name=${{ github.event.pull_request.number }}" \
+      #     --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
+      #     -f ./Dockerfile -t "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+      #     docker images
 
       - name: Log into registry
         run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Push image
-        run: |
-          docker push "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+      # - name: Push image
+      #   run: |
+      #     docker push "${IMAGE_NAME}:${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
           
