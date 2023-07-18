@@ -92,8 +92,7 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
 			log.Debugw("no gvg conflict", "error", err)
 		}
-	}
-	if bucketID != bucketInfo.Id.Uint64() {
+	} else {
 		bucketID = bucketInfo.Id.Uint64()
 	}
 
