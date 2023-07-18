@@ -240,7 +240,6 @@ function run_go_sdk_e2e() {
   set -e
   cd ${workspace}/greenfield-go-sdk/
   echo 'run greenfield go sdk e2e test'
-  cd greenfield-go-sdk/
   make e2e_test
 }
 
