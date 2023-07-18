@@ -7,7 +7,8 @@ workspace=${GITHUB_WORKSPACE}
 GREENFIELD_REPO_TAG="df6781d93afaf886b6868ad024473b3d8ce08b99"
 #GREENFIELD_CMD_TAG="feat-adaptor-sp-exit"
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
-GREENFIELD_GO_SDK_TAG="c4fe4e2eb589ff345ad52e6fabb0140a04d216d1"
+# feat-sp-exit-refactor-sp-info
+GREENFIELD_GO_SDK_TAG="edbaff6b1d663e7c7f038a6afc9793e8bd0766fe"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -101,7 +102,7 @@ function build_greenfield-go-sdk() {
   # build greenfield-go-sdk
   git clone https://github.com/bnb-chain/greenfield-go-sdk.git
   cd greenfield-go-sdk/
-  git checkout ${GREENFIELD_GO_SDK_TAGG}
+  git checkout ${GREENFIELD_GO_SDK_TAG}
 }
 
 ######################
