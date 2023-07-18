@@ -3,6 +3,7 @@ package bsdb
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -14,6 +15,15 @@ func (b *BsDBImpl) ListVirtualGroupFamiliesBySpID(spID uint32) ([]*GlobalVirtual
 		filters  []func(*gorm.DB) *gorm.DB
 		err      error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&GlobalVirtualGroupFamily{}).TableName()).
@@ -32,6 +42,15 @@ func (b *BsDBImpl) GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*GlobalVirtualG
 		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&GlobalVirtualGroupFamily{}).TableName()).
@@ -53,6 +72,15 @@ func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*GlobalVirtualGroupFamily,
 		query    string
 		err      error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if len(gvgIDs) == 0 {
 		return nil, nil

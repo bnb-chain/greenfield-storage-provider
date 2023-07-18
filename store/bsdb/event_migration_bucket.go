@@ -2,6 +2,7 @@ package bsdb
 
 import (
 	"errors"
+	"time"
 
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
@@ -15,6 +16,15 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 		cancelEvents   []*EventCancelMigrationBucket
 		err            error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	err = b.db.Table((&EventMigrationBucket{}).TableName()).
 		Select("*").

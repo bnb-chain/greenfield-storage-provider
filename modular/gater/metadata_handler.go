@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
@@ -34,7 +35,24 @@ const (
 	MaximumListObjectsAndBucketsSize = 1000
 	DefaultGetGroupListLimit         = 50
 	DefaultGetGroupListOffset        = 0
+	HandlerSuccess                   = "success"
+	HandlerFailure                   = "failure"
+	HandlerLevel                     = "handler"
 )
+
+func MetadataHandlerFailureMetrics(err error, startTime time.Time, handlerName string) {
+	gfspErr := gfsperrors.MakeGfSpError(err)
+	code := gfspErr.HttpStatusCode
+	metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+	metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+	metrics.MetadataReqTime.WithLabelValues(HandlerFailure, HandlerLevel, handlerName, strconv.Itoa(int(code))).Observe(time.Since(startTime).Seconds())
+}
+
+func MetadataHandlerSuccessMetrics(startTime time.Time, handlerName string) {
+	metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+	metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+	metrics.MetadataReqTime.WithLabelValues(HandlerSuccess, HandlerLevel, handlerName, strconv.Itoa(http.StatusOK)).Observe(time.Since(startTime).Seconds())
+}
 
 // getUserBucketsHandler handle get object request
 func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,15 +67,14 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -124,15 +141,14 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by bucket name", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -275,15 +291,14 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get object meta", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -329,15 +344,14 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get bucket meta", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -385,15 +399,14 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to verify permission", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -473,15 +486,14 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get group list", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -575,15 +587,14 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by ids", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -644,15 +655,14 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list buckets by ids", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 

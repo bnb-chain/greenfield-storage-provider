@@ -2,6 +2,7 @@ package bsdb
 
 import (
 	"errors"
+	"time"
 
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
@@ -14,6 +15,15 @@ func (b *BsDBImpl) ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []uint32
 		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&LocalVirtualGroup{}).TableName()).
@@ -31,6 +41,15 @@ func (b *BsDBImpl) ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error)
 		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&LocalVirtualGroup{}).TableName()).
@@ -48,6 +67,16 @@ func (b *BsDBImpl) GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*
 		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&LocalVirtualGroup{}).TableName()).
 		Select("*").
