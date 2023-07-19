@@ -290,7 +290,7 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		return nil, ErrExceedRequest
 	}
 	bucketTraffic, err := r.baseApp.GfSpDB().GetBucketTraffic(
-		req.GetBucketInfo().Id.Uint64(), req.GetYearMonth())
+		req.GetBucketInfo().Id.Uint64())
 	if systemerrors.Is(err, gorm.ErrRecordNotFound) {
 		return &types.GfSpGetBucketReadQuotaResponse{
 			ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
@@ -304,9 +304,10 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 			"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
 		return &types.GfSpGetBucketReadQuotaResponse{Err: ErrGfSpDB}, nil
 	}
+
 	return &types.GfSpGetBucketReadQuotaResponse{
 		ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
-		SpFreeQuotaSize:  r.freeQuotaPerBucket,
+		SpFreeQuotaSize:  bucketTraffic.FreeQuotaSize,
 		ConsumedSize:     bucketTraffic.ReadConsumedSize,
 	}, nil
 }

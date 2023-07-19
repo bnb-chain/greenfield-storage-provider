@@ -55,44 +55,24 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 			time.Since(startTime).Seconds())
 	}()
 
-	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
-	bucketTraffic, err := s.GetBucketTraffic(record.BucketID, yearMonth)
+	bucketTraffic, err := s.GetBucketTraffic(record.BucketID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
+	// bucket traffic table should be initialized before checking meta
 	if bucketTraffic == nil {
-		// insert, if not existed
-		insertBucketTraffic := &BucketTrafficTable{
-			BucketID:         record.BucketID,
-			Month:            yearMonth,
-			BucketName:       record.BucketName,
-			ReadConsumedSize: 0,
-			ReadQuotaSize:    quota.ReadQuotaSize,
-			ModifiedTime:     time.Now(),
-		}
-		result := s.db.Create(insertBucketTraffic)
-		if result.Error != nil {
-			err = fmt.Errorf("failed to insert bucket traffic table: %s", result.Error)
-			return err
-		}
-		if result.RowsAffected != 1 {
-			log.Infow("insert traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
-		}
-		bucketTraffic = &corespdb.BucketTraffic{
-			BucketID:         insertBucketTraffic.BucketID,
-			YearMonth:        insertBucketTraffic.Month,
-			BucketName:       insertBucketTraffic.BucketName,
-			ReadConsumedSize: insertBucketTraffic.ReadConsumedSize,
-			ReadQuotaSize:    insertBucketTraffic.ReadQuotaSize,
-		}
+		err = fmt.Errorf("failed to get bucket traffic table")
+		return err
 	}
-	if bucketTraffic.ReadQuotaSize != quota.ReadQuotaSize {
+
+	// the ChargedQuotaSize
+	if bucketTraffic.ReadQuotaSize != quota.ChargedQuotaSize {
 		// update if chain quota has changed
 		result := s.db.Model(&BucketTrafficTable{}).
-			Where("bucket_id = ? and month = ?", bucketTraffic.BucketID, bucketTraffic.YearMonth).
+			Where("bucket_id = ?", bucketTraffic.BucketID).
 			Updates(BucketTrafficTable{
-				ReadQuotaSize: quota.ReadQuotaSize,
-				ModifiedTime:  time.Now(),
+				ChargedQuotaSize: quota.ChargedQuotaSize,
+				ModifiedTime:     time.Now(),
 			})
 		if result.Error != nil {
 			err = fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
@@ -102,20 +82,38 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 		if result.RowsAffected != 1 {
 			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
-		bucketTraffic.ReadQuotaSize = quota.ReadQuotaSize
+		bucketTraffic.ReadQuotaSize = quota.ChargedQuotaSize
 	}
 
-	// check quota
-	if bucketTraffic.ReadConsumedSize+record.ReadSize > quota.ReadQuotaSize {
-		return ErrCheckQuotaEnough
+	recordQuotaCost := record.ReadSize
+	needCheckChainQuota := true
+	freeQuotaRemain := bucketTraffic.FreeQuotaSize - bucketTraffic.FreeQuotaConsumedSize
+	// if remain free quota more than 0, consume free quota first
+	if freeQuotaRemain > 0 {
+		// if free quota is enough, no need to check charged quota
+		if recordQuotaCost < freeQuotaRemain {
+			bucketTraffic.ReadConsumedSize += recordQuotaCost
+			bucketTraffic.FreeQuotaConsumedSize += recordQuotaCost
+			needCheckChainQuota = false
+		} else {
+			bucketTraffic.FreeQuotaConsumedSize += freeQuotaRemain
+		}
+	}
+	// if free quota is not enough, check the charged quota
+	if needCheckChainQuota {
+		if bucketTraffic.ReadConsumedSize+recordQuotaCost > quota.ChargedQuotaSize+quota.FreeQuotaSize {
+			return ErrCheckQuotaEnough
+		}
+		bucketTraffic.ReadConsumedSize += recordQuotaCost
 	}
 
 	// update bucket traffic
 	result := s.db.Model(&BucketTrafficTable{}).
-		Where("bucket_id = ? and month = ?", bucketTraffic.BucketID, bucketTraffic.YearMonth).
+		Where("bucket_id = ?", bucketTraffic.BucketID).
 		Updates(BucketTrafficTable{
-			ReadConsumedSize: bucketTraffic.ReadConsumedSize + record.ReadSize,
-			ModifiedTime:     time.Now(),
+			ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
+			FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
+			ModifiedTime:          time.Now(),
 		})
 	if result.Error != nil {
 		err = fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
@@ -143,8 +141,30 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	return nil
 }
 
+func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *corespdb.BucketQuota) error {
+	insertBucketTraffic := &BucketTrafficTable{
+		BucketID:              bucketID,
+		FreeQuotaSize:         quota.FreeQuotaSize,
+		FreeQuotaConsumedSize: 0,
+		BucketName:            bucketName,
+		ReadConsumedSize:      0,
+		ChargedQuotaSize:      quota.ChargedQuotaSize,
+		ModifiedTime:          time.Now(),
+	}
+	result := s.db.Create(insertBucketTraffic)
+	if result.Error != nil {
+		err := fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
+		return err
+	}
+	if result.RowsAffected != 1 {
+		log.Infow("insert traffic", "RowsAffected", result.RowsAffected, "quota", quota)
+	}
+
+	return nil
+}
+
 // GetBucketTraffic return bucket traffic info
-func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (traffic *corespdb.BucketTraffic, err error) {
+func (s *SpDBImpl) GetBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTraffic, err error) {
 	var (
 		result      *gorm.DB
 		queryReturn BucketTrafficTable
@@ -163,7 +183,7 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (traffic 
 			time.Since(startTime).Seconds())
 	}()
 
-	result = s.db.Where("bucket_id = ? and month = ?", bucketID, yearMonth).First(&queryReturn)
+	result = s.db.Where("bucket_id = ?", bucketID).First(&queryReturn)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		err = result.Error
 		return nil, err
@@ -173,12 +193,13 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (traffic 
 		return nil, err
 	}
 	return &corespdb.BucketTraffic{
-		BucketID:         queryReturn.BucketID,
-		YearMonth:        queryReturn.Month,
-		BucketName:       queryReturn.BucketName,
-		ReadConsumedSize: queryReturn.ReadConsumedSize,
-		ReadQuotaSize:    queryReturn.ReadQuotaSize,
-		ModifyTime:       queryReturn.ModifiedTime.Unix(),
+		BucketID:              queryReturn.BucketID,
+		FreeQuotaSize:         queryReturn.FreeQuotaSize,
+		FreeQuotaConsumedSize: queryReturn.FreeQuotaConsumedSize,
+		BucketName:            queryReturn.BucketName,
+		ReadConsumedSize:      queryReturn.ReadConsumedSize,
+		ReadQuotaSize:         queryReturn.ChargedQuotaSize,
+		ModifyTime:            queryReturn.ModifiedTime.Unix(),
 	}, nil
 }
 

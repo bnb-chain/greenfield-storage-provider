@@ -35,6 +35,7 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	if cfg.Bucket.FreeQuotaPerBucket == 0 {
 		cfg.Bucket.FreeQuotaPerBucket = downloader.DefaultBucketFreeQuota
 	}
+
 	if cfg.Metadata.BsDBSwitchCheckIntervalSec == 0 {
 		cfg.Metadata.BsDBSwitchCheckIntervalSec = DefaultBsDBSwitchCheckIntervalSec
 	}
