@@ -98,7 +98,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		log.Errorw("failed to new operator greenfield client", "error", err)
 		return nil, err
 	}
-	operatorAccNonce, err := operatorClient.GetNonce()
+	operatorAccNonce, err := operatorClient.GetNonce(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		log.Errorw("failed to new seal greenfield client", "error", err)
 		return nil, err
 	}
-	sealAccNonce, err := sealClient.GetNonce()
+	sealAccNonce, err := sealClient.GetNonce(context.Background())
 	if err != nil {
 		log.Errorw("failed to get nonce", "error", err)
 		return nil, err
@@ -154,7 +154,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 	if err != nil {
 		return nil, err
 	}
-	gcAccNonce, err := gcClient.GetNonce()
+	gcAccNonce, err := gcClient.GetNonce(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -698,7 +698,7 @@ func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gn
 		log.CtxErrorw(ctx, "failed to wait next block", "error", err)
 		return 0, err
 	}
-	nonce, err := gnfdClient.GetNonce()
+	nonce, err := gnfdClient.GetNonce(context.Background())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get seal account nonce on chain", "error", err)
 		return 0, err
