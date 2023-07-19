@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/greenfield/types/common"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 
@@ -56,6 +57,10 @@ const (
 	DiscontinueBucket        GasInfoType = "DiscontinueBucket"
 	CreateGlobalVirtualGroup GasInfoType = "CreateGlobalVirtualGroup"
 	CompleteMigrateBucket    GasInfoType = "CompleteMigrateBucket"
+	SwapOut                  GasInfoType = "SwapOut"
+	CompleteSwapOut          GasInfoType = "CompleteSwapOut"
+	SPExit                   GasInfoType = "SPExit"
+	CompleteSPExit           GasInfoType = "CompleteSPExit"
 )
 
 type GasInfo struct {
@@ -74,12 +79,12 @@ type GreenfieldChainSignClient struct {
 	operatorAccNonce  uint64
 	sealAccNonce      uint64
 	gcAccNonce        uint64
-	sealBlsKm         keys.KeyManager
+	blsKm             keys.KeyManager
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
 func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, sealBlsPrivKey string) (*GreenfieldChainSignClient, error) {
+	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, blsPrivKey string) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -108,7 +113,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		return nil, err
 	}
 
-	sealBlsKM, err := keys.NewBlsPrivateKeyManager(sealBlsPrivKey)
+	blsKM, err := keys.NewBlsPrivateKeyManager(blsPrivKey)
 	if err != nil {
 		log.Errorw("failed to new bls private key manager", "error", err)
 		return nil, err
@@ -168,7 +173,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
 		operatorAccNonce:  operatorAccNonce,
-		sealBlsKm:         sealBlsKM,
+		blsKm:             blsKM,
 	}, nil
 }
 
@@ -204,7 +209,7 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType,
 	sealObject *storagetypes.MsgSealObject) (string, error) {
 	if sealObject == nil {
-		log.CtxErrorw(ctx, "failed to seal object due to pointer dangling")
+		log.CtxError(ctx, "failed to seal object due to pointer dangling")
 		return "", ErrDanglingPointer
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
@@ -269,7 +274,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context, scope SignType,
 	rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
 	if rejectObject == nil {
-		log.CtxErrorw(ctx, "reject unseal object msg pointer dangling")
+		log.CtxError(ctx, "reject unseal object msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, rejectObject.GetBucketName())
@@ -371,8 +376,13 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 	return txHash, nil
 }
 
-func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) ([]byte, error) {
+func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType,
+	gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) ([]byte, error) {
 	log.Infow("signer start to create a new global virtual group", "scope", scope)
+	if gvg == nil {
+		log.CtxError(ctx, "create virtual group msg pointer dangling")
+		return nil, ErrDanglingPointer
+	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
@@ -385,6 +395,8 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 
 	msgCreateGlobalVirtualGroup := virtualgrouptypes.NewMsgCreateGlobalVirtualGroup(km.GetAddr(),
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
+	log.Debugf("CreateGlobalVirtualGroup bucket migrate :%s", msgCreateGlobalVirtualGroup)
+
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
 		Mode:      &mode,
@@ -427,6 +439,10 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Context, scope SignType,
 	migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	log.Infow("signer starts to complete migrate bucket", "scope", scope)
+	if migrateBucket == nil {
+		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
@@ -464,6 +480,211 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 			msgCompleteMigrateBucket.String())
 		ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast complete migrate bucket, error: %v", err))
 		return "", ErrCompleteMigrateBucketOnChain
+	}
+
+	// update nonce when tx is successfully submitted
+	client.operatorAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope SignType,
+	swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	log.Infow("signer starts to swap out", "scope", scope)
+	if swapOut == nil {
+		log.CtxError(ctx, "swap out msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgSwapOut := virtualgrouptypes.NewMsgSwapOut(km.GetAddr(), swapOut.GetGlobalVirtualGroupFamilyId(), swapOut.GetGlobalVirtualGroupIds(),
+		swapOut.GetSuccessorSpId())
+	msgSwapOut.SuccessorSpApproval = &common.Approval{
+		ExpiredHeight: swapOut.SuccessorSpApproval.GetExpiredHeight(),
+		Sig:           swapOut.SuccessorSpApproval.GetSig(),
+	}
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[SwapOut].GasLimit,
+		FeeAmount: client.gasInfo[SwapOut].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSwapOut}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrSwapOutOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrSwapOutOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast swap out", "error", err, "swap_out", msgSwapOut.String())
+		ErrSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast swap out, error: %v", err))
+		return "", ErrSwapOutOnChain
+	}
+
+	// update nonce when tx is successfully submitted
+	client.operatorAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, scope SignType,
+	completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
+	log.Infow("signer starts to complete swap out", "scope", scope)
+	if completeSwapOut == nil {
+		log.CtxError(ctx, "complete swap out msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgCompleteSwapOut := virtualgrouptypes.NewMsgCompleteSwapOut(km.GetAddr(), completeSwapOut.GetGlobalVirtualGroupFamilyId(),
+		completeSwapOut.GetGlobalVirtualGroupIds())
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[CompleteSwapOut].GasLimit,
+		FeeAmount: client.gasInfo[CompleteSwapOut].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSwapOut}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrCompleteSwapOutOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast complete swap out", "error", err, "complete_swap_out",
+			msgCompleteSwapOut.String())
+		ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast complete swap out, error: %v", err))
+		return "", ErrCompleteSwapOutOnChain
+	}
+
+	// update nonce when tx is successfully submitted
+	client.operatorAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignType,
+	spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	log.Infow("signer starts to sp exit", "scope", scope)
+	if spExit == nil {
+		log.CtxError(ctx, "sp exit msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgSPExit := virtualgrouptypes.NewMsgStorageProviderExit(km.GetAddr())
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[SPExit].GasLimit,
+		FeeAmount: client.gasInfo[SPExit].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSPExit}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrSPExitOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrSPExitOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast sp exit", "error", err, "sp_exit",
+			msgSPExit.String())
+		ErrSPExitOnChain.SetError(fmt.Errorf("failed to broadcast sp exit, error: %v", err))
+		return "", ErrSPExitOnChain
+	}
+
+	// update nonce when tx is successfully submitted
+	client.operatorAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, scope SignType,
+	completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	log.Infow("signer starts to complete sp exit", "scope", scope)
+	if completeSPExit == nil {
+		log.CtxError(ctx, "complete sp exit msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgCompleteSPExit := virtualgrouptypes.NewMsgCompleteStorageProviderExit(km.GetAddr())
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[CompleteSPExit].GasLimit,
+		FeeAmount: client.gasInfo[CompleteSPExit].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSPExit}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrCompleteSPExitOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast complete sp exit", "error", err, "complete_sp_exit",
+			msgCompleteSPExit.String())
+		ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to broadcast complete sp exit, error: %v", err))
+		return "", ErrCompleteSPExitOnChain
 	}
 
 	// update nonce when tx is successfully submitted

@@ -10,6 +10,10 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -20,10 +24,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
@@ -40,7 +40,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		migrateBucketApproval = storagetypes.MsgMigrateBucket{}
 		createObjectApproval  = storagetypes.MsgCreateObject{}
 		authenticated         bool
-		approved              bool
 	)
 	startTime := time.Now()
 	defer func() {
@@ -110,14 +109,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
 		startAskCreateBucketApproval := time.Now()
-		approved, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
+		authenticated, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_ask_approval_cost").Observe(time.Since(startAskCreateBucketApproval).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask create bucket approval", "error", err)
 			return
 		}
-		if !approved {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create bucket approval")
 			err = ErrRefuseApproval
 			return
@@ -152,12 +151,12 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task := &gfsptask.GfSpMigrateBucketApprovalTask{}
 		task.InitApprovalMigrateBucketTask(&migrateBucketApproval, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalMigrateBucketTask
-		approved, approvalTask, err = g.baseApp.GfSpClient().AskMigrateBucketApproval(reqCtx.Context(), task)
+		authenticated, approvalTask, err = g.baseApp.GfSpClient().AskMigrateBucketApproval(reqCtx.Context(), task)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask migrate bucket approval", "error", err)
 			return
 		}
-		if !approved {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask migrate bucket approval")
 			err = ErrRefuseApproval
 			return
@@ -197,14 +196,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
-		approved, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
+		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
 			return
 		}
-		if !approved {
+		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
 			err = ErrRefuseApproval
 			return
@@ -422,8 +421,13 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
 
-	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketInfo.GetPrimarySpId())
+	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketSPID)
 	if err != nil {
 		err = ErrConsensus
 		return
@@ -572,8 +576,13 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		err = ErrConsensus
 		return
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
 
-	if redundancyIdx >= 0 && spID == bucketInfo.PrimarySpId {
+	if redundancyIdx >= 0 && spID == bucketSPID {
 		// get segment piece data from primary SP
 		pieceData, err = g.getRecoverSegment(reqCtx.Context(), chainObjectInfo, bucketInfo, recoveryTask, params, signatureAddr)
 		if err != nil {
@@ -596,7 +605,11 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
 
-	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return nil, err
+	}
+	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketSPID)
 	if err != nil {
 		return nil, err
 	}
@@ -680,10 +693,14 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	if err != nil {
 		return nil, ErrConsensus
 	}
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return nil, ErrConsensus
+	}
 
-	if bucketInfo.GetPrimarySpId() != spID {
+	if bucketSPID != spID {
 		log.CtxErrorw(ctx, "it is not the right the primary SP to handle secondary SP recovery", "actual_sp_id", spID,
-			"expected_sp_id", bucketInfo.GetPrimarySpId())
+			"expected_sp_id", bucketSPID)
 		return nil, ErrRecoverySP
 	}
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
@@ -713,7 +730,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 
 	// if recovery data chunk, just download the data part of segment in primarySP
 	// no need to check quota when recovering primary SP or secondary SP data
-	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketInfo.GetPrimarySpId())
+	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketSPID)
 	if err != nil {
 		return nil, err
 	}

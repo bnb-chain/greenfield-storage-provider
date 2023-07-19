@@ -28,7 +28,7 @@ type Consensus interface {
 	// ListVirtualGroupFamilies return all virtual group family which primary sp is spID.
 	ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error)
 	// QueryVirtualGroupFamily return the virtual group family info.
-	QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error)
+	QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error)
 	// QueryGlobalVirtualGroup returns the global virtual group info.
 	QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error)
 	// ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
@@ -95,7 +95,7 @@ func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32,
 	return nil, nil
 }
 
-func (*NullConsensus) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+func (*NullConsensus) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	return nil, nil
 }
 

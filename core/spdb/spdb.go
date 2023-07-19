@@ -8,29 +8,6 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
-const (
-	GatewayBeginReceiveUpload           = "gateway_begin_receive_upload"
-	GatewayEndReceiveUpload             = "gateway_end_receive_upload"
-	UploaderBeginReceiveData            = "uploader_begin_receive_data"
-	UploaderEndReceiveData              = "uploader_end_receive_data"
-	ManagerReceiveAndWaitSchedulingTask = "manager_receive_and_wait_scheduling_task"
-	ManagerSchedulingTask               = "manager_scheduling_task"
-	ExecutorBeginTask                   = "executor_begin_task"
-	ExecutorEndTask                     = "executor_end_task"
-	ExecutorBeginP2P                    = "executor_begin_p2p"
-	ExecutorEndP2P                      = "executor_end_p2p"
-	ExecutorBeginReplicateOnePiece      = "executor_begin_replicate_one_piece"
-	ExecutorEndReplicateOnePiece        = "executor_end_replicate_one_piece"
-	ExecutorBeginReplicateAllPiece      = "executor_begin_replicate_all_piece"
-	ExecutorEndReplicateAllPiece        = "executor_end_replicate_all_piece"
-	ExecutorBeginDoneReplicatePiece     = "executor_begin_done_replicate_piece"
-	ExecutorEndDoneReplicatePiece       = "executor_end_done_replicate_piece"
-	ExecutorBeginSealTx                 = "executor_begin_seal_tx"
-	ExecutorEndSealTx                   = "executor_end_seal_tx"
-	ExecutorBeginConfirmSeal            = "executor_begin_confirm_seal"
-	ExecutorEndConfirmSeal              = "executor_end_confirm_seal"
-)
-
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
 type UploadObjectProgressDB interface {
 	// InsertUploadProgress inserts a new upload object progress.
@@ -69,14 +46,16 @@ type SignatureDB interface {
 	/*
 		Object Signature is used to get challenge info.
 	*/
-	// GetObjectIntegrity gets integrity meta info by object id.
-	GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
+	// GetObjectIntegrity gets integrity meta info by object id and redundancy index.
+	GetObjectIntegrity(objectID uint64, redundancyIndex int32) (*IntegrityMeta, error)
 	// SetObjectIntegrity sets(maybe overwrite) integrity hash info to db.
 	SetObjectIntegrity(integrity *IntegrityMeta) error
 	// DeleteObjectIntegrity deletes the integrity hash.
-	DeleteObjectIntegrity(objectID uint64) error
-	// AppendObjectChecksumIntegrity gets integrity meta info by object id.
-	AppendObjectChecksumIntegrity(objectID uint64, checksum []byte) error
+	DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error
+	// UpdateIntegrityChecksum update IntegrityMetaTable's integrity checksum
+	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
+	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
+	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
@@ -148,6 +127,15 @@ type MigrateDB interface {
 	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
 	QueryBucketMigrateSubscribeProgress() (uint64, error)
 
+	// InsertSwapOutUnit is used to insert a swap out unit.
+	InsertSwapOutUnit(meta *SwapOutMeta) error
+	// UpdateSwapOutUnitCompletedGVGList is used to record dest swap out progress, manager restart can load it.
+	UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error
+	// QuerySwapOutUnitInSrcSP is used to rebuild swap out plan at startup.
+	QuerySwapOutUnitInSrcSP(swapOutKey string) (*SwapOutMeta, error)
+	// ListDestSPSwapOutUnits is used to rebuild swap out plan at startup.
+	ListDestSPSwapOutUnits() ([]*SwapOutMeta, error)
+
 	// InsertMigrateGVGUnit inserts a new gvg migrate unit.
 	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
@@ -155,17 +143,11 @@ type MigrateDB interface {
 
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
-	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID
+	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
 	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
 
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
-	// ListMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
-	ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*MigrateGVGUnitMeta, error)
-	// ListConflictedMigrateGVGUnitsByFamilyID is used to load at src sp startup(sp exit).
-	ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*MigrateGVGUnitMeta, error)
-	// ListRemotedMigrateGVGUnits is used to load at dest sp startup(sp exit).
-	ListRemotedMigrateGVGUnits() ([]*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 }

@@ -255,10 +255,10 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.SpDB.User = "root"
 	}
 	if cfg.SpDB.Passwd == "" {
-		cfg.SpDB.User = "test"
+		cfg.SpDB.Passwd = "test"
 	}
 	if cfg.SpDB.Address == "" {
-		cfg.SpDB.User = "127.0.0.1:3306"
+		cfg.SpDB.Address = "127.0.0.1:3306"
 	}
 	if cfg.SpDB.Database == "" {
 		cfg.SpDB.Database = "storage_provider_db"

@@ -82,27 +82,27 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	log.Debugw("replicate task info", "task_sps", rTask.GetSecondaryEndpoints())
 
 	doReplicateECPiece := func(pieceIdx uint32, data [][]byte) {
-		log.Debugw("start to replicate ec piece")
+		log.Debug("start to replicate ec piece")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate ec piece", "sp", sp)
 			wg.Add(1)
 			go e.doReplicatePiece(ctx, &wg, rTask, sp, uint32(rIdx), pieceIdx, data[rIdx])
 		}
 		wg.Wait()
-		log.Debugw("finish to replicate ec piece")
+		log.Debug("finish to replicate ec piece")
 	}
 	doReplicateSegmentPiece := func(pieceIdx uint32, data []byte) {
-		log.Debugw("start to replicate segment piece")
+		log.Debug("start to replicate segment piece")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate segment piece", "sp", sp)
 			wg.Add(1)
 			go e.doReplicatePiece(ctx, &wg, rTask, sp, uint32(rIdx), pieceIdx, data)
 		}
 		wg.Wait()
-		log.Debugw("finish to replicate segment piece")
+		log.Debug("finish to replicate segment piece")
 	}
 	doneReplicate := func() error {
-		log.Debugw("start to done replicate")
+		log.Debug("start to done replicate")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", sp)
 			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, uint32(rIdx))
@@ -114,19 +114,19 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 				return innerErr
 			}
 		}
-		log.Debugw("finish to done replicate")
+		log.Debug("finish to done replicate")
 		return nil
 	}
 
 	startReplicatePieceTime := time.Now()
-	for pIdx := uint32(0); pIdx < segmentPieceCount; pIdx++ {
-		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), pIdx)
+	for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
+		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
 		startGetPieceTime := time.Now()
 		segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to get segment data form piece store", "error", err)
+			log.CtxErrorw(ctx, "failed to get segment data from piece store", "error", err)
 			rTask.SetError(err)
 			return err
 		}
@@ -142,9 +142,9 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 				rTask.SetError(err)
 				return err
 			}
-			doReplicateECPiece(pIdx, ecData)
+			doReplicateECPiece(segIdx, ecData)
 		} else {
-			doReplicateSegmentPiece(pIdx, segData)
+			doReplicateSegmentPiece(segIdx, segData)
 		}
 	}
 	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())
@@ -200,7 +200,7 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 			"piece_idx", pieceIdx, "error", err)
 		return
 	}
-	log.CtxDebugw(ctx, "success to replicate piece", "replicate_idx", replicateIdx,
+	log.CtxDebugw(ctx, "succeed to replicate piece", "replicate_idx", replicateIdx,
 		"piece_idx", pieceIdx)
 	return
 }
