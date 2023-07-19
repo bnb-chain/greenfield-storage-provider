@@ -85,15 +85,19 @@ func (vgfp *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	return 0, fmt.Errorf("failed to pick weighted random index")
 }
 
-func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(availableVgfIDs []uint32) (*vgmgr.VirtualGroupFamilyMeta, error) {
 	var (
 		picker   FreeStorageSizeWeightPicker
 		familyID uint32
 		err      error
 	)
 	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
-	for _, f := range vgfm.vgfIDToVgf {
-		picker.addVirtualGroupFamily(f)
+	for id, f := range vgfm.vgfIDToVgf {
+		for _, vgfID := range availableVgfIDs {
+			if id == vgfID {
+				picker.addVirtualGroupFamily(f)
+			}
+		}
 	}
 	if familyID, err = picker.pickIndex(); err != nil {
 		log.Errorw("failed to pick vgf", "error", err)
@@ -362,7 +366,19 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickVirtualGroupFamily()
+
+	vgfIDS := make([]uint32, len(vgm.vgfManager.vgfIDToVgf))
+	i := 0
+	for k := range vgm.vgfManager.vgfIDToVgf {
+		vgfIDS[i] = k
+		i++
+	}
+
+	availableVgfIDs, err := vgm.chainClient.AvailableGlobalVirtualGroupFamilies(context.Background(), vgfIDS)
+	if err != nil {
+		return nil, err
+	}
+	return vgm.vgfManager.pickVirtualGroupFamily(availableVgfIDs)
 }
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,

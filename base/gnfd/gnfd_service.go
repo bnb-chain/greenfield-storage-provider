@@ -314,6 +314,21 @@ func (g *Gnfd) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virt
 	return resp.GetGlobalVirtualGroup(), nil
 }
 
+// AvailableGlobalVirtualGroupFamilies submits a list global virtual group families Id to chain and return the filtered list of families which are able to server create bucket request.
+func (g *Gnfd) AvailableGlobalVirtualGroupFamilies(ctx context.Context, globalVirtualGroupFamiliesIDs []uint32) ([]uint32, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("available_global_virtual_families").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VirtualGroupQueryClient.AvailableGlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.AvailableGlobalVirtualGroupFamiliesRequest{
+		GlobalVirtualGroupFamilyIds: globalVirtualGroupFamiliesIDs,
+	})
+	if err != nil {
+		log.Errorw("failed to query availabel global virtual group families", "error", err)
+		return nil, err
+	}
+	return resp.GlobalVirtualGroupFamilyIds, nil
+}
+
 // QueryVirtualGroupParams return virtual group params.
 func (g *Gnfd) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
 	startTime := time.Now()
