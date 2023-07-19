@@ -349,14 +349,15 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-
 	vgfIDS := make([]uint32, len(vgm.vgfManager.vgfIDToVgf))
+	if len(vgfIDS) == 0 {
+		return nil, ErrFailedPickVGF
+	}
 	i := 0
 	for k := range vgm.vgfManager.vgfIDToVgf {
 		vgfIDS[i] = k
 		i++
 	}
-
 	availableVgfIDs, err := vgm.chainClient.AvailableGlobalVirtualGroupFamilies(context.Background(), vgfIDS)
 	if err != nil {
 		return nil, err
