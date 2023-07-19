@@ -125,6 +125,12 @@ const (
 	ListSwapOutEventsQuery = "swap-out-events"
 	// ListSpExitEventsQuery defines list swap out events, which is used to route request
 	ListSpExitEventsQuery = "sp-exit-events"
+	// VerifyPermissionByIDQuery defines verify permission by resource id, which is used to route request
+	VerifyPermissionByIDQuery = "verify-id"
+	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for
+	ResourceIDQuery = "resource-id"
+	// ResourceTypeQuery defines the type of resource that grants permission for
+	ResourceTypeQuery = "resource-type"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
 	GetGroupListNameQuery = "name"
 	// GetGroupListPrefixQuery defines get group list prefix query, which is used to route request

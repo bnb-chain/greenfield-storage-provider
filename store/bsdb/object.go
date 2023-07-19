@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
@@ -200,6 +201,35 @@ func GetObjectsShardNumberByBucketName(bucketName string) uint32 {
 
 func GetObjectsTableNameByShardNumber(shard int) string {
 	return fmt.Sprintf("%s_%02d", ObjectTableName, shard)
+}
+
+// GetObjectByID get object info by object id
+func (b *BsDBImpl) GetObjectByID(objectID int64, includeRemoved bool) (*Object, error) {
+	var (
+		object       *Object
+		err          error
+		objectIDHash common.Hash
+		bucketName   string
+		filters      []func(*gorm.DB) *gorm.DB
+	)
+
+	objectIDHash = common.BigToHash(math.NewInt(objectID).BigInt())
+	if !includeRemoved {
+		filters = append(filters, RemovedFilter(includeRemoved))
+	}
+
+	bucketName, err = b.GetBucketNameByObjectID(objectIDHash)
+	if err != nil {
+		log.Errorw("failed to get bucket name by object id in GetObjectByID", "error", err)
+		return nil, err
+	}
+
+	err = b.db.Table(GetObjectsTableName(bucketName)).
+		Select("*").
+		Where("object_id  = ?", objectIDHash).
+		Scopes(filters...).
+		Take(&object).Error
+	return object, err
 }
 
 // ListPrimaryObjects list objects by primary sp id

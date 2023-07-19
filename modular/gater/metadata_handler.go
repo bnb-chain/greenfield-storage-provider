@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield/types/resource"
+	resource_types "github.com/bnb-chain/greenfield/types/resource"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
@@ -1068,6 +1070,95 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// verifyPermissionByIDHandler handle verify permission by id request
+func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                 error
+		requestOperator     string
+		requestResourceID   string
+		requestResourceType string
+		requestActionType   string
+		resourceID          uint64
+		resourceType        uint32
+		actionType          uint32
+		ok                  bool
+		b                   bytes.Buffer
+		queryParams         url.Values
+		effect              *permission_types.Effect
+		reqCtx              *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to verify permission by id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestResourceID = queryParams.Get(ResourceIDQuery)
+	requestResourceType = queryParams.Get(ResourceTypeQuery)
+	requestOperator = queryParams.Get(VerifyPermissionOperator)
+	requestActionType = queryParams.Get(VerifyPermissionActionType)
+
+	if ok = common.IsHexAddress(requestOperator); !ok {
+		log.Errorw("failed to check operator", "operator", requestOperator, "error", err)
+		return
+	}
+
+	if resourceID, err = util.StringToUint64(requestResourceID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check resource id", "resource-id", requestResourceID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	// 0: "RESOURCE_TYPE_UNSPECIFIED", RESOURCE_TYPE_UNSPECIFIED is not considered in this request
+	if resourceType, err = util.StringToUint32(requestResourceType); err != nil || resourceType == 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check source type", "resource-type", requestResourceType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if _, ok = resource_types.ResourceType_name[int32(resourceType)]; !ok {
+		log.CtxErrorw(reqCtx.Context(), "failed to check source type", "resource-type", resourceType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if actionType, err = util.StringToUint32(requestActionType); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse action type", "action-type", requestActionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if _, ok = permission_types.ActionType_name[int32(actionType)]; !ok {
+		log.CtxErrorw(reqCtx.Context(), "failed to check action type", "action-type", actionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	effect, err = g.baseApp.GfSpClient().VerifyPermissionByID(reqCtx.Context(), requestOperator, resource.ResourceType(resourceType), resourceID, permission_types.ActionType(actionType))
+	if err != nil {
+		log.Errorf("failed to verify permission by id", "error", err)
+		return
+	}
+
+	grpcResponse := &storage_types.QueryVerifyPermissionResponse{Effect: *effect}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to verify permission by id", "error", err)
 		return
 	}
 
