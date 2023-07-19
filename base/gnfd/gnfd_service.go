@@ -336,7 +336,7 @@ func (g *Gnfd) AvailableGlobalVirtualGroupFamilies(ctx context.Context, globalVi
 		GlobalVirtualGroupFamilyIds: globalVirtualGroupFamiliesIDs,
 	})
 	if err != nil {
-		log.Errorw("failed to query availabel global virtual group families", "error", err)
+		log.Errorw("failed to query available global virtual group families", "error", err)
 		return nil, err
 	}
 	return resp.GlobalVirtualGroupFamilyIds, nil
