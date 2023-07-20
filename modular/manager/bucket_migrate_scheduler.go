@@ -487,10 +487,10 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 }
 
 func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
-	var res *gfspserver.GfSpQueryBucketMigrateResponse
+	var res gfspserver.GfSpQueryBucketMigrateResponse
 	var plans []*gfspserver.GfSpBucketMigrate
 	for _, executePlan := range s.executePlanIDMap {
-		var plan *gfspserver.GfSpBucketMigrate
+		var plan gfspserver.GfSpBucketMigrate
 		plan.BucketId = executePlan.bucketID
 		for _, unit := range executePlan.gvgUnitMap {
 			plan.GvgTask = append(plan.GvgTask, &gfspserver.GfSpMigrateGVG{
@@ -499,10 +499,11 @@ func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketM
 				Status:               int32(unit.migrateStatus),
 			})
 		}
-		plans = append(plans, plan)
+		plans = append(plans, &plan)
 	}
 	res.BucketMigratePlan = plans
-	return res, nil
+	log.Debugw("listExecutePlan", "listExecutePlan", res)
+	return &res, nil
 }
 
 func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error {
@@ -546,6 +547,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 		primarySPGVGList      []*virtualgrouptypes.GlobalVirtualGroup
 	)
 
+	log.Debug("loadBucketMigrateExecutePlansFromDB start")
 	// get bucket id from metadata, TODO: if you have any good idea
 	migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
 	if err != nil {
@@ -556,12 +558,15 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	for _, migrateBucketEvents := range migrationBucketEvents {
 		// if has CompleteEvents, skip it
 		if migrateBucketEvents.CompleteEvents != nil {
-			continue
+			bucketIDs = append(bucketIDs, migrateBucketEvents.Events.BucketId.Uint64())
+			// TODO if completed event construct memory map
+			//continue
 		}
 		if migrateBucketEvents.Events != nil {
 			bucketIDs = append(bucketIDs, migrateBucketEvents.Events.BucketId.Uint64())
 		}
 	}
+	log.Debug("loadBucketMigrateExecutePlansFromDB", "bucketIDs", bucketIDs)
 	// load from db by BucketID & construct plan
 	for _, bucketID := range bucketIDs {
 		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID)
@@ -594,6 +599,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 			}
 		}
 
+		log.Debugw("loadBucketMigrateExecutePlansFromDB", "executePlan", executePlan)
 		s.executePlanIDMap[executePlan.bucketID] = executePlan
 	}
 	return err

@@ -132,7 +132,6 @@ var QueryBucketMigrateCmd = &cli.Command{
 	Usage:  "Query bucket migrate integrity hash and signature",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		objectIDFlag,
 	},
 	Category: "QUERY COMMANDS",
 	Description: `The query.bucket.migrate command send rpc request to spdb 
