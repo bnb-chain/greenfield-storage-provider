@@ -7,12 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	gnfdSdkTypes "github.com/bnb-chain/greenfield/sdk/types"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
@@ -203,7 +205,7 @@ func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.St
 // QuerySPFreeQuota returns the sp free quota
 func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (uint64, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_sp").Observe(time.Since(startTime).Seconds())
+	defer metrics.GnfdChainTime.WithLabelValues("query_spQuota").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
 		SpAddr:    operatorAddress,
@@ -214,6 +216,47 @@ func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (ui
 		return 0, err
 	}
 	return resp.GetSpStoragePrice().FreeReadQuota, nil
+}
+
+// UpdateSPQuota update the free quota info and return the txn hash
+func (g *Gnfd) UpdateSPQuota(ctx context.Context, operatorAddress string, freeQuota uint64) (string, error) {
+	client := g.getCurrentClient().GnfdClient()
+
+	priceInfo, err := g.QuerySPPrice(ctx, operatorAddress)
+	if err != nil {
+		return "", err
+	}
+
+	msgUpdateStoragePrice := &sptypes.MsgUpdateSpStoragePrice{
+		SpAddress:     operatorAddress,
+		ReadPrice:     priceInfo.ReadPrice,
+		StorePrice:    priceInfo.StorePrice,
+		FreeReadQuota: freeQuota,
+	}
+
+	resp, err := client.BroadcastTx(ctx, []sdk.Msg{msgUpdateStoragePrice}, &gnfdSdkTypes.TxOption{})
+	if err != nil {
+		log.Errorw("failed to update storage  price ", "error", err)
+		return "", err
+	}
+
+	return resp.TxResponse.TxHash, nil
+}
+
+// QuerySPPrice returns the sp price info
+func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_spPrice").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+		SpAddr:    operatorAddress,
+		Timestamp: 0,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return sptypes.SpStoragePrice{}, err
+	}
+	return resp.GetSpStoragePrice(), nil
 }
 
 // QuerySPByID returns the sp info.
