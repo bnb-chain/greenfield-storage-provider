@@ -40,14 +40,12 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 
 	if task == nil || task.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to pre receive piece due to pointer dangling")
-		err = ErrDanglingTask
 		return ErrDanglingTask
 	}
 	checkHasTime := time.Now()
 	if r.receiveQueue.Has(task.Key()) {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_check_has_time").Observe(time.Since(checkHasTime).Seconds())
 		log.CtxErrorw(ctx, "has repeat receive task")
-		err = ErrRepeatedTask
 		return ErrRepeatedTask
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_check_has_time").Observe(time.Since(checkHasTime).Seconds())
@@ -62,9 +60,9 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	defer r.receiveQueue.PopByKey(task.Key())
 	checksum := hash.GenerateChecksum(data)
 	if !bytes.Equal(checksum, task.GetPieceChecksum()) {
-		err = ErrInvalidDataChecksum
 		return ErrInvalidDataChecksum
 	}
+
 	var pieceKey string
 	if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
 		pieceKey = r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(),
@@ -78,7 +76,6 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 		task.GetReplicateIdx(), uint32(task.GetPieceIdx()), task.GetPieceChecksum()); err != nil {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_mysql_time").Observe(time.Since(setDBTime).Seconds())
 		log.CtxErrorw(ctx, "failed to set checksum to db", "error", err)
-		err = ErrGfSpDB
 		return ErrGfSpDB
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_mysql_time").Observe(time.Since(setDBTime).Seconds())
@@ -86,7 +83,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	setPieceTime := time.Now()
 	if err = r.baseApp.PieceStore().PutPiece(ctx, pieceKey, data); err != nil {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_piece_time").Observe(time.Since(setPieceTime).Seconds())
-		err = ErrPieceStore
+		log.CtxErrorw(ctx, "failed to put piece into piece store", "error", err)
 		return ErrPieceStore
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_piece_time").Observe(time.Since(setPieceTime).Seconds())
@@ -105,7 +102,6 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 
 	if task == nil || task.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to pre receive piece due to pointer dangling")
-		err = ErrDanglingTask
 		return nil, ErrDanglingTask
 	}
 	pushTime := time.Now()
@@ -119,7 +115,6 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	defer r.receiveQueue.PopByKey(task.Key())
 	if task == nil || task.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to done receive task, pointer dangling")
-		err = ErrDanglingTask
 		return nil, ErrDanglingTask
 	}
 	segmentCount := r.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
@@ -131,12 +126,10 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_get_checksums_time").Observe(time.Since(getChecksumsTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get checksum from db", "error", err)
-		err = ErrGfSpDB
 		return nil, ErrGfSpDB
 	}
 	if len(pieceChecksums) != int(segmentCount) {
 		log.CtxErrorw(ctx, "replicate piece unfinished")
-		err = ErrUnfinishedTask
 		return nil, ErrUnfinishedTask
 	}
 	signTime := time.Now()
@@ -160,7 +153,6 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_set_integrity_time").Observe(time.Since(setIntegrityTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to write integrity meta to db", "error", err)
-		err = ErrGfSpDB
 		return nil, ErrGfSpDB
 	}
 	deletePieceHashTime := time.Now()
@@ -171,6 +163,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
 			Observe(time.Since(deletePieceHashTime).Seconds())
 	}
+
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
 		Observe(time.Since(deletePieceHashTime).Seconds())
 	// the manager dispatch the task to confirm whether seal on chain as secondary sp.

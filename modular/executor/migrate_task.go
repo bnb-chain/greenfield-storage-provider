@@ -40,39 +40,35 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		} else { // bucket migrate task
 			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, srcGvgID, bucketID, lastMigratedObjectID, queryLimit)
 		}
-		log.Infow("migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
-			"last_migrated_object_id", lastMigratedObjectID, "object_list", objectList, "error", err)
 		if err != nil {
+			log.Errorw("migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
+				"last_migrated_object_id", lastMigratedObjectID, "object_list", objectList, "error", err)
 			return
 		}
-		for index, object := range objectList {
-			if object.GetRemoved() || object.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-				log.CtxInfow(ctx, "object has been removed or object status is not sealed", "removed",
-					object.GetRemoved(), "object_status", object.GetObjectInfo().GetObjectStatus(), "object_id",
-					object.GetObjectInfo().Id.String(), "object_name", object.GetObjectInfo().GetObjectName())
-				continue
-			}
-			if err = e.doMigrationGVGTask(ctx, task, object, bucketID); err != nil {
+		count := 0
+		for _, object := range objectList {
+			if err = e.doObjectMigration(ctx, task, object, bucketID); err != nil {
 				log.CtxErrorw(ctx, "failed to do migration gvg task", "error", err)
 				return
 			}
-			if index%10 == 0 { // report task per 10 objects
+			count++
+			if count%10 == 0 { // report task per 10 objects
 				log.Info("migrate gvg report task")
 				if err = e.ReportTask(ctx, task); err != nil {
-					log.CtxErrorw(ctx, "failed to report task", "index", index, "error", err)
+					log.CtxErrorw(ctx, "failed to report task", "count", count, "error", err)
 				}
 			}
 		}
 		if len(objectList) < queryLimit {
 			log.Infow("migrate gvg task finished", "object list length", len(objectList))
-			// When the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
+			// when the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
 			task.SetFinished(true)
 			return
 		}
 	}
 }
 
-func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.MigrateGVGTask, object *metadatatypes.Object,
+func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.MigrateGVGTask, object *metadatatypes.Object,
 	bucketID uint64) error {
 	params, err := e.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, object.GetObjectInfo().GetCreateAt())
 	if err != nil {
@@ -297,10 +293,10 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 		migratedIntegrityHash []byte
 		err                   error
 	)
-	for i, v := range pieceData {
-		pieceChecksumList[i] = nil
-		checksum := hash.GenerateChecksum(v)
-		pieceChecksumList[i] = checksum
+	for index, data := range pieceData {
+		pieceChecksumList[index] = nil
+		checksum := hash.GenerateChecksum(data)
+		pieceChecksumList[index] = checksum
 	}
 	migratedIntegrityHash = hash.GenerateIntegrityHash(pieceChecksumList)
 	var chainIntegrityHash []byte
