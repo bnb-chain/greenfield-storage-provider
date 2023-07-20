@@ -415,7 +415,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the request account is the primary SP of the object of the receive task
+	// check if the request account is the primary SP of the object of the receiving task
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
 	if err != nil {
 		err = ErrConsensus
@@ -451,7 +451,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrExceptionStream
 		return
 	}
-	if receiveTask.GetRedundancyIdx() >= 0 {
+	if !receiveTask.GetFinished() {
 		metrics.ReqPieceSize.WithLabelValues(GatewayReplicatePieceSize).Observe(float64(len(data)))
 		handlePieceTime := time.Now()
 		err = g.baseApp.GfSpClient().ReplicatePiece(reqCtx.Context(), &receiveTask, data)

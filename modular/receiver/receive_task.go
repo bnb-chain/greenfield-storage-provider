@@ -65,11 +65,10 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 
 	var pieceKey string
 	if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-		pieceKey = r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(),
-			task.GetSegmentIdx(), uint32(task.GetRedundancyIdx()))
+		pieceKey = r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx(),
+			uint32(task.GetRedundancyIdx()))
 	} else {
-		pieceKey = r.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(),
-			task.GetSegmentIdx())
+		pieceKey = r.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx())
 	}
 	setDBTime := time.Now()
 	if err = r.baseApp.GfSpDB().SetReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(),
@@ -117,25 +116,25 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		log.CtxErrorw(ctx, "failed to done receive task, pointer dangling")
 		return nil, ErrDanglingTask
 	}
+
 	segmentCount := r.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
-
 	getChecksumsTime := time.Now()
-	pieceChecksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
-		task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx(), segmentCount)
+	pieceChecksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(),
+		task.GetRedundancyIdx(), segmentCount)
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_get_checksums_time").Observe(time.Since(getChecksumsTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get checksum from db", "error", err)
 		return nil, ErrGfSpDB
 	}
 	if len(pieceChecksums) != int(segmentCount) {
-		log.CtxErrorw(ctx, "replicate piece unfinished")
+		log.CtxError(ctx, "replicate piece unfinished")
 		return nil, ErrUnfinishedTask
 	}
-	signTime := time.Now()
-	signature, err := r.baseApp.GfSpClient().SignSecondarySealBls(ctx,
-		task.GetObjectInfo().Id.Uint64(), task.GetGlobalVirtualGroupId(), task.GetObjectInfo().GetChecksums())
 
+	signTime := time.Now()
+	signature, err := r.baseApp.GfSpClient().SignSecondarySealBls(ctx, task.GetObjectInfo().Id.Uint64(),
+		task.GetGlobalVirtualGroupId(), task.GetObjectInfo().GetChecksums())
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_sign_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the integrity hash", "error", err)

@@ -280,9 +280,8 @@ func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 // SetReplicatePieceChecksum sets replicate checksum.
 func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error {
 	var (
-		result          *gorm.DB
-		insertPieceHash *PieceHashTable
-		err             error
+		result *gorm.DB
+		err    error
 	)
 	startTime := time.Now()
 	defer func() {
@@ -297,7 +296,7 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 			time.Since(startTime).Seconds())
 	}()
 
-	insertPieceHash = &PieceHashTable{
+	insertPieceHash := &PieceHashTable{
 		ObjectID:        objectID,
 		SegmentIndex:    segmentIdx,
 		RedundancyIndex: redundancyIdx,

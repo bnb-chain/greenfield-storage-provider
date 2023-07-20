@@ -115,9 +115,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
 				metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(startTime).Seconds())
 				if err != nil {
-					err = ErrPieceStore
-					log.CtxErrorw(ctx, "failed to put segment piece to piece store",
-						"piece_key", pieceKey, "error", err)
+					log.CtxErrorw(ctx, "failed to put segment piece to piece store", "piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
 			}
@@ -125,7 +123,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
-				err = ErrInvalidIntegrity
 				return ErrInvalidIntegrity
 			}
 			integrityMeta := &corespdb.IntegrityMeta{
@@ -139,7 +136,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_cost").Observe(time.Since(startUpdateSignature).Seconds())
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 			if err != nil {
-				err = ErrGfSpDB
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 				return ErrGfSpDB
 			}
@@ -147,7 +143,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			return nil
 		}
 		if err != nil {
-			err = ErrClosedStream
 			log.CtxErrorw(ctx, "stream closed abnormally", "piece_key", pieceKey, "error", err)
 			return ErrClosedStream
 		}
@@ -158,7 +153,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
-			err = ErrPieceStore
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
 			return ErrPieceStore
 		}
@@ -231,8 +225,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 	defer u.resumeableUploadQueue.PopByKey(task.Key())
 
 	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(
-		task.GetObjectInfo().GetPayloadSize(),
-		task.GetStorageParams().GetMaxSegmentSize())
+		task.GetObjectInfo().GetPayloadSize(), task.GetStorageParams().GetMaxSegmentSize())
 	offset := task.GetResumeOffset()
 	var (
 		err           error
