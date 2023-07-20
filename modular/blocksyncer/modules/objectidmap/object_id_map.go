@@ -3,7 +3,7 @@ package objectidmap
 import (
 	"context"
 	"errors"
-
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -11,8 +11,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
-
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 var (
@@ -26,17 +24,15 @@ var buildPrefixTreeEvents = map[string]bool{
 	EventCreateObject: true,
 }
 
-// HandleEvent handles the events relevant to the building of the PrefixTree.
-// It checks the type of the event and calls the appropriate handler for it.
-func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
+func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) ([]string, error) {
 	if !buildPrefixTreeEvents[event.Type] {
-		return nil
+		return nil, nil
 	}
 
 	typedEvent, err := sdk.ParseTypedEvent(abci.Event(event))
 	if err != nil {
 		log.Errorw("parse typed events error", "module", m.Name(), "event", event, "err", err)
-		return err
+		return nil, err
 	}
 
 	switch event.Type {
@@ -44,16 +40,22 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 		createObject, ok := typedEvent.(*storagetypes.EventCreateObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventCreateObject", "event", typedEvent)
-			return errors.New("create object event assert error")
+			return nil, errors.New("create object event assert error")
 		}
-		return m.handleCreateObject(ctx, createObject)
+		return []string{m.handleCreateObject(ctx, createObject)}, nil
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
+// HandleEvent handles the events relevant to the building of the PrefixTree.
+// It checks the type of the event and calls the appropriate handler for it.
+func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
+	return nil
+}
+
 // handleCreateObject handles EventCreateObject.
-func (m *Module) handleCreateObject(ctx context.Context, createObject *storagetypes.EventCreateObject) error {
+func (m *Module) handleCreateObject(ctx context.Context, createObject *storagetypes.EventCreateObject) string {
 	objectIDMap := &bsdb.ObjectIDMap{
 		ObjectID:   common.BigToHash(createObject.ObjectId.BigInt()),
 		BucketName: createObject.BucketName,

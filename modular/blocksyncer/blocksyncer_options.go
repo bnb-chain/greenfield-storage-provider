@@ -33,6 +33,7 @@ import (
 
 func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	junoCfg := makeBlockSyncerConfig(cfg)
+
 	MainService = &BlockSyncerModular{
 		config:  junoCfg,
 		name:    BlockSyncerModularName,
