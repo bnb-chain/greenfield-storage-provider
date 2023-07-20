@@ -157,9 +157,9 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
-			err = ErrPieceStore
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
-			return ErrPieceStore
+			err = ErrPieceStore
+			return err
 		}
 		segIdx++
 	}
