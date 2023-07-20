@@ -8,7 +8,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -133,7 +133,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 		if err != nil {
 			return err
 		}
-		var gvgMappings []*storage_types.GVGMapping
+		var gvgMappings []*storagetypes.GVGMapping
 		for _, migrateGVGUnit := range plan.gvgUnitMap {
 			aggBlsSig, getBlsError := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateExecuteUnit)
 			if getBlsError != nil {
@@ -141,11 +141,11 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 				return err
 			}
 			vgfID = migrateGVGUnit.destGVG.GetFamilyId()
-			gvgMappings = append(gvgMappings, &storage_types.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.srcGVG.GetId(),
+			gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.srcGVG.GetId(),
 				DstGlobalVirtualGroupId: migrateGVGUnit.destGVGID, SecondarySpBlsSignature: aggBlsSig})
 		}
 
-		migrateBucket := &storage_types.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
+		migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
 			BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
 		txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
 		log.Infow("send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "error", txErr)
@@ -155,7 +155,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 
 // getBlsAggregateSigForBucketMigration get bls sign from secondary sp which is used for bucket migration
 func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx context.Context, migrateExecuteUnit *BucketMigrateGVGExecuteUnit) ([]byte, error) {
-	signDoc := storage_types.NewSecondarySpMigrationBucketSignDoc(plan.manager.baseApp.ChainID(),
+	signDoc := storagetypes.NewSecondarySpMigrationBucketSignDoc(plan.manager.baseApp.ChainID(),
 		sdkmath.NewUint(plan.bucketID), migrateExecuteUnit.destSP.GetId(), migrateExecuteUnit.srcGVG.GetId(), migrateExecuteUnit.destGVGID)
 	secondarySigs := make([][]byte, 0)
 	for _, spID := range migrateExecuteUnit.srcGVG.GetSecondarySpIds() {
@@ -401,14 +401,14 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 	})
 }
 
-func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storage_types.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
+func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storagetypes.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
 	var (
 		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
 		plan             *BucketMigrateExecutePlan
 		err              error
 		destFamilyID     uint32
 		destGVG          *vgmgr.GlobalVirtualGroupMeta
-		bucketInfo       *storage_types.BucketInfo
+		bucketInfo       *storagetypes.BucketInfo
 	)
 
 	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
@@ -484,6 +484,25 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 		// TODO
 		return nil, errors.New("no such execute plan")
 	}
+}
+
+func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
+	var res *gfspserver.GfSpQueryBucketMigrateResponse
+	var plans []*gfspserver.GfSpBucketMigrate
+	for _, executePlan := range s.executePlanIDMap {
+		var plan *gfspserver.GfSpBucketMigrate
+		plan.BucketId = executePlan.bucketID
+		for _, unit := range executePlan.gvgUnitMap {
+			plan.GvgTask = append(plan.GvgTask, &gfspserver.GfSpMigrateGVG{
+				DestGvgId:            unit.destGVG.Id,
+				LastMigratedObjectId: unit.lastMigratedObjectID,
+				Status:               int32(unit.migrateStatus),
+			})
+		}
+		plans = append(plans, plan)
+	}
+	res.BucketMigratePlan = plans
+	return res, nil
 }
 
 func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error {
@@ -570,7 +589,6 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 				return errors.New("failed to list gvg")
 			}
 			for _, gvg := range primarySPGVGList {
-				// TODO destGVG
 				bucketUnit := newBucketMigrateGVGExecuteUnit(bucketID, gvg, srcSP, destSP, WaitForMigrate, migrateGVG.DestSPID, migrateGVG.LastMigratedObjectID, nil)
 				executePlan.gvgUnitMap[gvg.Id] = bucketUnit
 			}

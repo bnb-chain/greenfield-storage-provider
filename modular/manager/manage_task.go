@@ -715,6 +715,15 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	return tasks, nil
 }
 
+func (m *ManageModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
+	res, err := m.bucketMigrateScheduler.listExecutePlan()
+	return res, err
+}
+
+func (m *ManageModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
+	return nil, nil
+}
+
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
 func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
 	var (

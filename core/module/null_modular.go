@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"errors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"io"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -35,6 +36,13 @@ func (*NullModular) ReserveResource(context.Context, *rcmgr.ScopeStat) (rcmgr.Re
 }
 func (*NullModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) {}
 func (*NullModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
+	return nil, ErrNilModular
+}
+func (m *NullModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
+	return nil, ErrNilModular
+}
+
+func (m *NullModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
 	return nil, ErrNilModular
 }
 func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) error {

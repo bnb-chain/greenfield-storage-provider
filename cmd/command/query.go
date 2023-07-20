@@ -126,6 +126,19 @@ var GetSegmentIntegrityCmd = &cli.Command{
 get integrity hash and signature.`,
 }
 
+var QueryBucketMigrateCmd = &cli.Command{
+	Action: getBucketMigrateAction,
+	Name:   "query.bucket.migrate",
+	Usage:  "Query bucket migrate integrity hash and signature",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		objectIDFlag,
+	},
+	Category: "QUERY COMMANDS",
+	Description: `The query.bucket.migrate command send rpc request to spdb 
+get integrity hash and signature.`,
+}
+
 func listModularAction(ctx *cli.Context) error {
 	fmt.Print(gfspapp.GetRegisterModulusDescription())
 	return nil
@@ -338,5 +351,29 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 	for i, checksum := range integrity.PieceChecksumList {
 		fmt.Printf("piece[%d], checksum[%s]\n", i, hex.EncodeToString(checksum))
 	}
+	return nil
+}
+
+func getBucketMigrateAction(ctx *cli.Context) error {
+	endpoint := gfspapp.DefaultGRPCAddress
+	if ctx.IsSet(utils.ConfigFileFlag.Name) {
+		cfg := &gfspconfig.GfSpConfig{}
+		err := utils.LoadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
+		if err != nil {
+			log.Errorw("failed to load config file", "error", err)
+			return err
+		}
+		endpoint = cfg.GRPCAddress
+	}
+	if ctx.IsSet(endpointFlag.Name) {
+		endpoint = ctx.String(endpointFlag.Name)
+	}
+	client := &gfspclient.GfSpClient{}
+	infos, err := client.QueryBucketMigrate(context.Background(), endpoint)
+	if err != nil {
+		return err
+	}
+	fmt.Printf(infos)
+
 	return nil
 }

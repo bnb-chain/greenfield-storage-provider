@@ -27,3 +27,22 @@ func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey str
 	}
 	return resp.GetTaskInfo(), nil
 }
+
+func (s *GfSpClient) QueryBucketMigrate(ctx context.Context, endpoint string) (string, error) {
+	conn, connErr := s.Connection(ctx, endpoint)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
+		return "", ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &gfspserver.GfSpQueryBucketMigrateRequest{}
+	resp, err := gfspserver.NewGfSpQueryTaskServiceClient(conn).GfSpQueryBucketMigrate(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query tasks", "error", err)
+		return "", ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.String(), nil
+}

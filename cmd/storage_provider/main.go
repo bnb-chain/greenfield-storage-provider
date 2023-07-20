@@ -104,6 +104,7 @@ func init() {
 		command.GetObjectCmd,
 		command.ChallengePieceCmd,
 		command.GetSegmentIntegrityCmd,
+		command.QueryBucketMigrateCmd,
 		// p2p category commands
 		command.P2PCreateKeysCmd,
 		// miscellaneous category commands

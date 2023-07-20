@@ -2,6 +2,7 @@ syntax = "proto3";
 package base.types.gfspserver;
 
 import "base/types/gfsperrors/error.proto";
+import "base/types/gfsptask/task.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
 
@@ -14,6 +15,48 @@ message GfSpQueryTasksResponse {
   repeated string task_info = 2;
 }
 
+message GfSpQueryBucketMigrateRequest {
+}
+
+message GfSpBucketMigrate {
+  string bucket_name =2;
+  uint64 bucket_id = 3;
+  string migrate_status = 4;
+  repeated GfSpMigrateGVG gvg_task = 5;
+}
+
+message GfSpMigrateGVG {
+  uint32 dest_gvg_id = 1;
+  uint64 last_migrated_object_id = 2;
+  int32 status = 3;
+}
+
+message GfSpQueryBucketMigrateResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated GfSpBucketMigrate bucket_migrate_plan = 2;
+}
+
+message GfSpQuerySpExitRequest {
+}
+
+message GfSpSPExit {
+  string bucket_name =2;
+  uint64 bucket_id = 3;
+  string migrate_status = 4;
+  repeated GfSpMigrateGVG gvg_task = 5;
+}
+
+message DestRunner {
+//  swap out ?
+}
+
+message GfSpQuerySpExitResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated GfSpSPExit sp_exit = 2;
+}
+
 service GfSpQueryTaskService {
   rpc GfSpQueryTasks(GfSpQueryTasksRequest) returns (GfSpQueryTasksResponse) {}
+  rpc GfSpQueryBucketMigrate(GfSpQueryBucketMigrateRequest) returns (GfSpQueryBucketMigrateResponse) {}
+  rpc GfSpQuerySpExit(GfSpQuerySpExitRequest) returns (GfSpQuerySpExitResponse) {}
 }
