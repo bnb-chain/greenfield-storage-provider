@@ -4,7 +4,7 @@ workspace=${GITHUB_WORKSPACE}
 
 # some constants
 #GREENFIELD_REPO_TAG="feat_sp_exit_develop"
-GREENFIELD_REPO_TAG="df6781d93afaf886b6868ad024473b3d8ce08b99"
+GREENFIELD_REPO_TAG="e9d4805ed15e01cbdefcf4d393eea8b0997abef2"
 #GREENFIELD_CMD_TAG="feat-adaptor-sp-exit"
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
 # feat-sp-exit-refactor-sp-info
