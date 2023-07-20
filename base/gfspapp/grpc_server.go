@@ -86,11 +86,11 @@ func GeKeepAliveServerOptions() []grpc.ServerOption {
 	}
 
 	var kasp = keepalive.ServerParameters{
-		MaxConnectionIdle:     10 * time.Second, // If a client is idle for 10 seconds, send a GOAWAY
-		MaxConnectionAge:      10 * time.Second, // If any connection is alive for more than 10 seconds, send a GOAWAY
-		MaxConnectionAgeGrace: 5 * time.Second,  // Allow 5 seconds for pending RPCs to complete before forcibly closing connections
-		Time:                  5 * time.Second,  // Ping the client if it is idle for 5 seconds to ensure the connection is still active
-		Timeout:               1 * time.Second,  // Wait 1 second for the ping ack before assuming the connection is dead
+		MaxConnectionIdle:     30 * time.Second, // If a client is idle for 30 seconds, send a GOAWAY
+		MaxConnectionAge:      30 * time.Second, // If any connection is alive for more than 30 seconds, send a GOAWAY
+		MaxConnectionAgeGrace: 60 * time.Second, // Allow 60 seconds for pending RPCs to complete before forcibly closing connections
+		Time:                  10 * time.Second, // Ping the client if it is idle for 10 seconds to ensure the connection is still active
+		Timeout:               10 * time.Second, // Wait 10 second for the ping ack before assuming the connection is dead
 	}
 
 	return append([]grpc.ServerOption{}, grpc.KeepaliveEnforcementPolicy(kaep), grpc.KeepaliveParams(kasp))
