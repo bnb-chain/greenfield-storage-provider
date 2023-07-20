@@ -426,13 +426,11 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
-
 	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketSPID)
 	if err != nil {
 		err = ErrConsensus
 		return
 	}
-
 	if bucketPrimarySp.OperatorAddress != requestAccount.String() {
 		log.CtxErrorw(reqCtx.Context(), "the request account of replicate object is not primary SP", "expected:", bucketPrimarySp.OperatorAddress,
 			"actual sp:", requestAccount.String())
@@ -440,9 +438,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if receiveTask.GetObjectInfo() == nil ||
-		int(receiveTask.GetReplicateIdx()) >=
-			len(receiveTask.GetObjectInfo().GetChecksums()) {
+	if receiveTask.GetObjectInfo() == nil || int(receiveTask.GetRedundancyIdx()) >= len(receiveTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(reqCtx.Context(), "receive task params error")
 		err = ErrInvalidHeader
 		return
@@ -455,7 +451,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrExceptionStream
 		return
 	}
-	if receiveTask.GetPieceIdx() >= 0 {
+	if receiveTask.GetRedundancyIdx() >= 0 {
 		metrics.ReqPieceSize.WithLabelValues(GatewayReplicatePieceSize).Observe(float64(len(data)))
 		handlePieceTime := time.Now()
 		err = g.baseApp.GfSpClient().ReplicatePiece(reqCtx.Context(), &receiveTask, data)

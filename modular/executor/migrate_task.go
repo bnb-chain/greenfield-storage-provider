@@ -83,8 +83,8 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 		log.CtxErrorw(ctx, "failed to query bucket info by bucket name", "bucket_name", bucketName, "error", err)
 		return err
 	}
-	// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another SP
 	if bucketID != 0 {
+		// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another secondary SP
 		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
 			log.Debugw("no gvg conflict", "error", err)
 		}
@@ -265,6 +265,50 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 	}
 	log.Infow("succeed to migrate all pieces", "object_id", task.GetObjectInfo().Id.Uint64(),
 		"object_name", task.GetObjectInfo().GetObjectName(), "sp_endpoint", task.GetSrcSpEndpoint())
+	return nil
+}
+
+func (e *ExecuteModular) HandleNew(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) error {
+	var (
+		segmentCount = e.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
+			task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
+		redundancyIdx = task.GetRedundancyIdx()
+	)
+
+	if task == nil {
+		return ErrDanglingPointer
+	}
+
+	// 获取一条数据，算一个piece checksum，存入数据库和piecestore，最后验证完整性hash，不正确的由gc删除
+	for i := 0; i < int(segmentCount); i++ {
+		task.SegmentIdx = uint32(i)
+		pieceData, err := e.sendRequest(ctx, task)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to migrate piece data", "object_id", task.GetObjectInfo().Id.Uint64(),
+				"object_name", task.GetObjectInfo().GetObjectName(), "segment_piece_index", task.GetSegmentIdx(), "sp_endpoint",
+				task.GetSrcSpEndpoint(), "error", err)
+			return err
+		}
+
+		var pieceKey string
+		if redundancyIdx == primarySPRedundancyIdx {
+			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), uint32(i))
+		} else {
+			pieceKey = e.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(), uint32(i), uint32(redundancyIdx))
+		}
+		if err = e.baseApp.PieceStore().PutPiece(ctx, pieceKey, pieceData); err != nil {
+			log.CtxErrorw(ctx, "failed to put piece data into primary sp", "piece_key", pieceKey, "error", err)
+			return err
+		}
+
+		pieceChecksum := hash.GenerateChecksum(pieceData)
+		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(), uint32(i), redundancyIdx,
+			pieceChecksum); err != nil {
+			log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", task.GetObjectInfo().Id.Uint64(),
+				"segment_index", i, "redundancy_index", redundancyIdx, "error", err)
+			return err
+		}
+	}
 	return nil
 }
 

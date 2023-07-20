@@ -169,10 +169,9 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	if err != nil {
 		return
 	}
-	if int(task.GetReplicateIdx()) >= len(gvg.GetSecondarySpIds()) {
+	if int(task.GetRedundancyIdx()) >= len(gvg.GetSecondarySpIds()) {
 		log.CtxErrorw(ctx, "failed to confirm receive task, replicate idx out of bounds",
-			"replicate_idx", task.GetReplicateIdx(),
-			"secondary_sp_len", len(gvg.GetSecondarySpIds()))
+			"redundancy_idx", task.GetRedundancyIdx(), "secondary_sp_len", len(gvg.GetSecondarySpIds()))
 		task.SetError(ErrReplicateIdsOutOfBounds)
 		return
 	}
@@ -181,12 +180,11 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	if err != nil {
 		return
 	}
-	if gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())] != spID {
+	if gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())] != spID {
 		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
-			"expect", gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())],
-			"current", e.baseApp.OperatorAddress())
+			"expect", gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())], "current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
-		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64(), int32(task.GetReplicateIdx()))
+		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delete integrity")
 		}
@@ -195,8 +193,8 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			task.GetStorageParams().GetMaxPayloadSize())
 		for i := uint32(0); i < segmentCount; i++ {
 			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-				pieceKey = e.baseApp.PieceOp().ECPieceKey(offChainObject.Id.Uint64(),
-					i, task.GetReplicateIdx())
+				pieceKey = e.baseApp.PieceOp().ECPieceKey(offChainObject.Id.Uint64(), i,
+					uint32(task.GetRedundancyIdx()))
 			} else {
 				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(offChainObject.Id.Uint64(), i)
 			}

@@ -66,14 +66,14 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	var pieceKey string
 	if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
 		pieceKey = r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(),
-			uint32(task.GetPieceIdx()), task.GetReplicateIdx())
+			task.GetSegmentIdx(), uint32(task.GetRedundancyIdx()))
 	} else {
 		pieceKey = r.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(),
-			uint32(task.GetPieceIdx()))
+			task.GetSegmentIdx())
 	}
 	setDBTime := time.Now()
 	if err = r.baseApp.GfSpDB().SetReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(),
-		task.GetReplicateIdx(), uint32(task.GetPieceIdx()), task.GetPieceChecksum()); err != nil {
+		task.GetSegmentIdx(), task.GetRedundancyIdx(), task.GetPieceChecksum()); err != nil {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_mysql_time").Observe(time.Since(setDBTime).Seconds())
 		log.CtxErrorw(ctx, "failed to set checksum to db", "error", err)
 		return ErrGfSpDB
@@ -122,7 +122,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 
 	getChecksumsTime := time.Now()
 	pieceChecksums, err := r.baseApp.GfSpDB().GetAllReplicatePieceChecksum(
-		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount)
+		task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx(), segmentCount)
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_get_checksums_time").Observe(time.Since(getChecksumsTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get checksum from db", "error", err)
@@ -144,7 +144,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
-		RedundancyIndex:   int32(task.GetReplicateIdx()),
+		RedundancyIndex:   task.GetRedundancyIdx(),
 		IntegrityChecksum: hash.GenerateIntegrityHash(pieceChecksums),
 		PieceChecksumList: pieceChecksums,
 	}
@@ -157,7 +157,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	deletePieceHashTime := time.Now()
 	if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksum(
-		task.GetObjectInfo().Id.Uint64(), task.GetReplicateIdx(), segmentCount); err != nil {
+		task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx(), segmentCount); err != nil {
 		log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "error", err)
 		// ignore the error,let the request go, the background task will gc the meta again later
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
