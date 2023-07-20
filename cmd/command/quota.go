@@ -49,14 +49,14 @@ func updateFreeQuotaAction(ctx *cli.Context) error {
 	}
 
 	if oldQuota == freeQuota {
-		return fmt.Errorf("quota value: %s is same as chain meta, no need to update \n", freeQuota)
+		return fmt.Errorf("quota value: %d is same as chain meta, no need to update \n", freeQuota)
 	}
 
 	txnHash, err := chain.UpdateSPQuota(localCtx, cfg.SpAccount.SpOperatorAddress, freeQuota)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("update sp free quota to %s successfully, txn hash is %s \n", freeQuota, txnHash)
+	fmt.Printf("update sp free quota from %d to %d successfully, txn hash is %s \n", oldQuota, freeQuota, txnHash)
 
 	return nil
 }
