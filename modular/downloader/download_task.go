@@ -69,7 +69,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 			FreeQuotaSize:    freeQuotaSize,
 		})
 		if err != nil {
-			log.CtxErrorw(ctx, "init bucket traffic fail", "error", err)
+			log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
 			return ErrGfSpDB
 		}
 	}
@@ -244,7 +244,6 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		return nil
 	}
 	if downloadPieceTask.GetEnableCheck() {
-		log.CtxDebugw(ctx, "downloading from primary SP, checking quota")
 		checkQuotaTime := time.Now()
 
 		bucketID := downloadPieceTask.GetBucketInfo().Id.Uint64()
@@ -259,13 +258,16 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			if err != nil {
 				return ErrConsensus
 			}
+			log.CtxDebugw(ctx, "finish init bucket traffic table", "charged_quota", downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
+				"freeQuota", freeQuotaSize)
+
 			// only need to set the free quota when init the traffic table
 			err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{
 				ChargedQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
 				FreeQuotaSize:    freeQuotaSize,
 			})
 			if err != nil {
-				log.CtxErrorw(ctx, "init bucket traffic fail", "error", err)
+				log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
 				return ErrGfSpDB
 			}
 		}

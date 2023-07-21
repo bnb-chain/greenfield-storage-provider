@@ -83,28 +83,28 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
 		bucketTraffic.ChargedQuotaSize = quota.ChargedQuotaSize
+		log.Infow("updated charged quota", "db quota:", quota.ChargedQuotaSize)
 	}
 
 	recordQuotaCost := record.ReadSize
 	needCheckChainQuota := true
 	freeQuotaRemain := bucketTraffic.FreeQuotaSize - bucketTraffic.FreeQuotaConsumedSize
 	// if remain free quota more than 0, consume free quota first
-	if freeQuotaRemain > 0 {
+	if freeQuotaRemain > 0 && recordQuotaCost < freeQuotaRemain {
 		// if free quota is enough, no need to check charged quota
-		if recordQuotaCost < freeQuotaRemain {
-			bucketTraffic.ReadConsumedSize += recordQuotaCost
-			bucketTraffic.FreeQuotaConsumedSize += recordQuotaCost
-			needCheckChainQuota = false
-		} else {
-			bucketTraffic.FreeQuotaConsumedSize += freeQuotaRemain
-		}
+		bucketTraffic.ReadConsumedSize += recordQuotaCost
+		bucketTraffic.FreeQuotaConsumedSize += recordQuotaCost
+		needCheckChainQuota = false
 	}
 	// if free quota is not enough, check the charged quota
 	if needCheckChainQuota {
-		if bucketTraffic.ReadConsumedSize+recordQuotaCost > quota.ChargedQuotaSize+quota.FreeQuotaSize {
+		if bucketTraffic.ReadConsumedSize+recordQuotaCost > bucketTraffic.ChargedQuotaSize+bucketTraffic.FreeQuotaSize {
 			return ErrCheckQuotaEnough
 		}
 		bucketTraffic.ReadConsumedSize += recordQuotaCost
+		if freeQuotaRemain > 0 {
+			bucketTraffic.FreeQuotaConsumedSize += freeQuotaRemain
+		}
 	}
 
 	// update bucket traffic

@@ -55,6 +55,10 @@ func updateFreeQuotaAction(ctx *cli.Context) error {
 	}
 
 	priceInfo, err := chain.QuerySPPrice(localCtx, operatorAddr)
+	if err != nil {
+		fmt.Printf("failed to get the current quota info %s\n", err.Error())
+		return err
+	}
 	msgUpdateStoragePrice := &sptypes.MsgUpdateSpStoragePrice{
 		SpAddress:     operatorAddr,
 		ReadPrice:     priceInfo.ReadPrice,

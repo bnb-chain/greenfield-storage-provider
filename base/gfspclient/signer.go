@@ -116,7 +116,7 @@ func (s *GfSpClient) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdate
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to seal object approval", "error", err)
+		log.CtxErrorw(ctx, "client failed to update SP price info", "error", err)
 		return "", ErrRpcUnknown
 	}
 	if resp.GetErr() != nil {

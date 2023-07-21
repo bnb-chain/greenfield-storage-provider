@@ -203,11 +203,10 @@ func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.St
 // QuerySPFreeQuota returns the sp free quota
 func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (uint64, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_spQuota").Observe(time.Since(startTime).Seconds())
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_quota").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
-		SpAddr:    operatorAddress,
-		Timestamp: 0,
+		SpAddr: operatorAddress,
 	})
 	if err != nil {
 		log.Errorw("failed to query storage provider", "error", err)
@@ -219,11 +218,10 @@ func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (ui
 // QuerySPPrice returns the sp price info
 func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_spPrice").Observe(time.Since(startTime).Seconds())
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_price").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
-		SpAddr:    operatorAddress,
-		Timestamp: 0,
+		SpAddr: operatorAddress,
 	})
 	if err != nil {
 		log.Errorw("failed to query storage provider", "error", err)

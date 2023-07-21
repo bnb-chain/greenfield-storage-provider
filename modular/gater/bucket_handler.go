@@ -76,7 +76,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 			err = ErrConsensus
 		}
 		charge = bucketInfo.GetChargedReadQuota()
-		log.CtxDebugw(reqCtx.Context(), "fail to get traffic info in db, return the chain meta", "free quota", free, "charged quota", charge)
+		log.CtxDebugw(reqCtx.Context(), "fail to get traffic info in db, return the chain meta", "free_quota", free, "charged_quota", charge)
 		consume = 0
 	} else {
 		// if the traffic table has been created, return the db info from meta service
@@ -92,7 +92,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		Version             string   `xml:"version,attr"`
 		BucketName          string   `xml:"BucketName"`
 		BucketID            string   `xml:"BucketID"`
-		ReadQuotaSize       uint64   `xml:"ChargedQuotaSize"`
+		ReadQuotaSize       uint64   `xml:"ReadQuotaSize"`
 		SPFreeReadQuotaSize uint64   `xml:"SPFreeReadQuotaSize"`
 		ReadConsumedSize    uint64   `xml:"ReadConsumedSize"`
 	}{

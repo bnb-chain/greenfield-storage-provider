@@ -506,10 +506,10 @@ func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scop
 	nonce := client.operatorAccNonce
 
 	msgUpdateStorageSPPrice := &sptypes.MsgUpdateSpStoragePrice{
-		km.GetAddr().String(),
-		priceInfo.ReadPrice,
-		priceInfo.FreeReadQuota,
-		priceInfo.StorePrice,
+		SpAddress:     km.GetAddr().String(),
+		ReadPrice:     priceInfo.ReadPrice,
+		FreeReadQuota: priceInfo.FreeReadQuota,
+		StorePrice:    priceInfo.StorePrice,
 	}
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
