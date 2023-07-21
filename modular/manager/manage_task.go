@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -713,6 +714,26 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, recoveryTasks...)
 	tasks = append(tasks, migrateGVGTasks...)
 	return tasks, nil
+}
+
+func (m *ManageModular) QueryBucketMigrate(ctx context.Context) (res *gfspserver.GfSpQueryBucketMigrateResponse, err error) {
+	if m.bucketMigrateScheduler != nil {
+		res, err = m.bucketMigrateScheduler.listExecutePlan()
+	} else {
+		res, err = nil, errors.New("bucketMigrateScheduler not exit")
+	}
+
+	return res, err
+}
+
+func (m *ManageModular) QuerySpExit(ctx context.Context) (res *gfspserver.GfSpQuerySpExitResponse, err error) {
+	if m.spExitScheduler != nil {
+		res, err = m.spExitScheduler.ListSPExitPlan()
+	} else {
+		res, err = nil, errors.New("spExitScheduler not exit")
+	}
+
+	return res, err
 }
 
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.

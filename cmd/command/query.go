@@ -126,6 +126,30 @@ var GetSegmentIntegrityCmd = &cli.Command{
 get integrity hash and signature.`,
 }
 
+var QueryBucketMigrateCmd = &cli.Command{
+	Action: getBucketMigrateAction,
+	Name:   "query.bucket.migrate",
+	Usage:  "Query bucket migrate plan and status",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+	},
+	Category: "QUERY COMMANDS",
+	Description: `The query.bucket.migrate command send rpc request to manager 
+get plan and status.`,
+}
+
+var QuerySPExitCmd = &cli.Command{
+	Action: getSPExitAction,
+	Name:   "query.sp.exit",
+	Usage:  "Query sp exit swap plan and migrate gvg task status",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+	},
+	Category: "QUERY COMMANDS",
+	Description: `The query.sp.exit command send rpc request to manager 
+get sp exit swap plan and migrate gvg task status.`,
+}
+
 func listModularAction(ctx *cli.Context) error {
 	fmt.Print(gfspapp.GetRegisterModulusDescription())
 	return nil
@@ -338,5 +362,53 @@ func getSegmentIntegrityAction(ctx *cli.Context) error {
 	for i, checksum := range integrity.PieceChecksumList {
 		fmt.Printf("piece[%d], checksum[%s]\n", i, hex.EncodeToString(checksum))
 	}
+	return nil
+}
+
+func getBucketMigrateAction(ctx *cli.Context) error {
+	endpoint := gfspapp.DefaultGRPCAddress
+	if ctx.IsSet(utils.ConfigFileFlag.Name) {
+		cfg := &gfspconfig.GfSpConfig{}
+		err := utils.LoadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
+		if err != nil {
+			log.Errorw("failed to load config file", "error", err)
+			return err
+		}
+		endpoint = cfg.GRPCAddress
+	}
+	if ctx.IsSet(endpointFlag.Name) {
+		endpoint = ctx.String(endpointFlag.Name)
+	}
+	client := &gfspclient.GfSpClient{}
+	info, err := client.QueryBucketMigrate(context.Background(), endpoint)
+	if err != nil {
+		return err
+	}
+	fmt.Println(info)
+
+	return nil
+}
+
+func getSPExitAction(ctx *cli.Context) error {
+	endpoint := gfspapp.DefaultGRPCAddress
+	if ctx.IsSet(utils.ConfigFileFlag.Name) {
+		cfg := &gfspconfig.GfSpConfig{}
+		err := utils.LoadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
+		if err != nil {
+			log.Errorw("failed to load config file", "error", err)
+			return err
+		}
+		endpoint = cfg.GRPCAddress
+	}
+	if ctx.IsSet(endpointFlag.Name) {
+		endpoint = ctx.String(endpointFlag.Name)
+	}
+	client := &gfspclient.GfSpClient{}
+	info, err := client.QuerySPExit(context.Background(), endpoint)
+	if err != nil {
+		return err
+	}
+	fmt.Println(info)
+
 	return nil
 }
