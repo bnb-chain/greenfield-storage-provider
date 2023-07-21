@@ -721,7 +721,8 @@ func (m *ManageModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfS
 }
 
 func (m *ManageModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
-	return nil, nil
+	res, err := m.spExitScheduler.ListSPExitPlan()
+	return res, err
 }
 
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.

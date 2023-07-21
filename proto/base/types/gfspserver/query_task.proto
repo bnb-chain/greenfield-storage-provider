@@ -29,6 +29,7 @@ message GfSpMigrateGVG {
   uint32 dest_gvg_id = 1;
   uint64 last_migrated_object_id = 2;
   int32 status = 3;
+  string swap_out_key = 4;
 }
 
 message GfSpQueryBucketMigrateResponse {
@@ -40,19 +41,30 @@ message GfSpQuerySpExitRequest {
 }
 
 message GfSpSPExit {
-  string bucket_name =2;
-  uint64 bucket_id = 3;
-  string migrate_status = 4;
-  repeated GfSpMigrateGVG gvg_task = 5;
+  SrcSPSwapOutPlan src_swap_out = 1;
+  DestSPTaskRunner dest_runner = 2;
 }
 
-message DestRunner {
-//  swap out ?
+message DestSPTaskRunner {
+  repeated SwapOutUnit swap_out = 1;
+  repeated GfSpMigrateGVG gvg_task = 2;
+}
+
+message SwapOutUnit {
+  bool isFamily = 1;
+  bool isSecondary = 2;
+  uint32 globalVirtualGroupFamilyId = 3;
+  uint32 successorSpId = 4;
+  int32 status = 5;
+}
+
+message SrcSPSwapOutPlan {
+  repeated SwapOutUnit swap_out = 3;
 }
 
 message GfSpQuerySpExitResponse {
   base.types.gfsperrors.GfSpError err = 1;
-  repeated GfSpSPExit sp_exit = 2;
+  GfSpSPExit sp_exit = 2;
 }
 
 service GfSpQueryTaskService {

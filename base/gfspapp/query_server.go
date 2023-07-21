@@ -53,13 +53,12 @@ func (g *GfSpBaseApp) GfSpQueryTasks(ctx context.Context, req *gfspserver.GfSpQu
 
 func (g *GfSpBaseApp) GfSpQueryBucketMigrate(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrateRequest) (
 	*gfspserver.GfSpQueryBucketMigrateResponse, error) {
-
 	res, err := g.manager.QueryBucketMigrate(ctx)
 	return res, err
 }
 
 func (g *GfSpBaseApp) GfSpQuerySpExit(ctx context.Context, req *gfspserver.GfSpQuerySpExitRequest) (
 	*gfspserver.GfSpQuerySpExitResponse, error) {
-
-	return nil, nil
+	res, err := g.manager.QuerySpExit(ctx)
+	return res, err
 }
