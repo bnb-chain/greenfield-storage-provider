@@ -60,11 +60,11 @@ type SignatureDB interface {
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
 	// SetReplicatePieceChecksum sets(maybe overwrite) the piece hash.
-	SetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32, checksum []byte) error
+	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
 	// GetAllReplicatePieceChecksum gets all piece hashes.
-	GetAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) ([][]byte, error)
+	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
-	DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) error
+	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
 }
 
 // TrafficDB defines a series of traffic interfaces.
