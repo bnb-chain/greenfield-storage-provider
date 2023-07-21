@@ -168,9 +168,7 @@ func (i *Impl) Process(height uint64) error {
 
 	cost := time.Now().UnixMilli() - startTime
 	log.Infof("total cost: %d", cost)
-	metrics.ProcessBlockTime.WithLabelValues("process_block_time").Observe(float64(cost))
-	metrics.ProcessBlockTime.WithLabelValues("event_avg_time").Observe(float64(cost) / float64(eventCount))
-	metrics.ProcessBlockTime.WithLabelValues("tx_avg_time").Observe(float64(cost) / float64(txCount))
+	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(cost))
 
 	return nil
 }
