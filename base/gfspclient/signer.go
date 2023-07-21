@@ -8,6 +8,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -89,6 +90,28 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_SealObjectInfo{
 			SealObjectInfo: object,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to seal object approval", "error", err)
+		return "", ErrRpcUnknown
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+func (s *GfSpClient) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect to signer", "error", connErr)
+		return "", ErrRpcUnknown
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_SpStoragePrice{
+			SpStoragePrice: price,
 		},
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)

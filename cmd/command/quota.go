@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	"github.com/urfave/cli/v2"
 )
 
@@ -43,7 +44,8 @@ func updateFreeQuotaAction(ctx *cli.Context) error {
 	}
 
 	localCtx := context.Background()
-	oldQuota, err := chain.QuerySPFreeQuota(localCtx, cfg.SpAccount.SpOperatorAddress)
+	operatorAddr := cfg.SpAccount.SpOperatorAddress
+	oldQuota, err := chain.QuerySPFreeQuota(localCtx, operatorAddr)
 	if err != nil {
 		return err
 	}
@@ -52,7 +54,16 @@ func updateFreeQuotaAction(ctx *cli.Context) error {
 		return fmt.Errorf("quota value: %d is same as chain meta, no need to update \n", freeQuota)
 	}
 
-	txnHash, err := chain.UpdateSPQuota(localCtx, cfg.SpAccount.SpOperatorAddress, freeQuota)
+	priceInfo, err := chain.QuerySPPrice(localCtx, operatorAddr)
+	msgUpdateStoragePrice := &sptypes.MsgUpdateSpStoragePrice{
+		SpAddress:     operatorAddr,
+		ReadPrice:     priceInfo.ReadPrice,
+		StorePrice:    priceInfo.StorePrice,
+		FreeReadQuota: freeQuota,
+	}
+
+	spClient := utils.MakeGfSpClient(cfg)
+	txnHash, err := spClient.UpdateSPPrice(localCtx, msgUpdateStoragePrice)
 	if err != nil {
 		return err
 	}

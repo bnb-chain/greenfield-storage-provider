@@ -28,8 +28,6 @@ type Consensus interface {
 	QuerySPFreeQuota(context.Context, string) (uint64, error)
 	// QuerySPPrice returns the sp price info
 	QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error)
-	// UpdateSPQuota returns the sp price info
-	UpdateSPQuota(ctx context.Context, operatorAddress string, freeQuota uint64) (string, error)
 	// ListBondedValidators returns all bonded validators info.
 	ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	// ListVirtualGroupFamilies return all virtual group family which primary sp is spID.
@@ -90,10 +88,6 @@ func (*NullConsensus) QuerySPFreeQuota(context.Context, string) (uint64, error) 
 
 func (*NullConsensus) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
 	return sptypes.SpStoragePrice{}, nil
-}
-
-func (*NullConsensus) UpdateSPQuota(ctx context.Context, operatorAddress string, freeQuota uint64) (string, error) {
-	return "", nil
 }
 
 func (*NullConsensus) QuerySPByID(context.Context, uint32) (*sptypes.StorageProvider, error) {

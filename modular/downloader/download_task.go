@@ -270,7 +270,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			}
 		}
 
-		if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+		if dbErr := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 			&spdb.ReadRecord{
 				BucketID:        bucketID,
 				ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
@@ -283,10 +283,10 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			&spdb.BucketQuota{
 				ChargedQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
 			},
-		); err != nil {
+		); dbErr != nil {
 			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-			log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
-			if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
+			log.CtxErrorw(ctx, "failed to check bucket quota", "error", dbErr)
+			if errors.Is(dbErr, sqldb.ErrCheckQuotaEnough) {
 				return ErrExceedBucketQuota
 			}
 			// ignore the access db error, it is the system's inner error, will be let the request go.

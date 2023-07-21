@@ -22,6 +22,7 @@ import (
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
 	"github.com/bnb-chain/greenfield/types"
 	"github.com/bnb-chain/greenfield/types/common"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -60,6 +61,7 @@ const (
 	CompleteSwapOut          GasInfoType = "CompleteSwapOut"
 	SPExit                   GasInfoType = "SPExit"
 	CompleteSPExit           GasInfoType = "CompleteSPExit"
+	UpdateSPPrice            GasInfoType = "UpdateSPPrice"
 )
 
 type GasInfo struct {
@@ -479,6 +481,61 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 			msgCompleteMigrateBucket.String())
 		ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast complete migrate bucket, error: %v", err))
 		return "", ErrCompleteMigrateBucketOnChain
+	}
+
+	// update nonce when tx is successfully submitted
+	client.operatorAccNonce = nonce + 1
+	return txHash, nil
+}
+
+func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scope SignType,
+	priceInfo *sptypes.MsgUpdateSpStoragePrice) (string, error) {
+	log.Infow("signer starts to complete update SP price info", "scope", scope)
+	if priceInfo == nil {
+		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgUpdateStorageSPPrice := &sptypes.MsgUpdateSpStoragePrice{
+		km.GetAddr().String(),
+		priceInfo.ReadPrice,
+		priceInfo.FreeReadQuota,
+		priceInfo.StorePrice,
+	}
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+	txOpt := &ctypes.TxOption{
+		Mode:      &mode,
+		GasLimit:  client.gasInfo[UpdateSPPrice].GasLimit,
+		FeeAmount: client.gasInfo[UpdateSPPrice].FeeAmount,
+		Nonce:     nonce,
+	}
+
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgUpdateStorageSPPrice}, txOpt)
+	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		if nonceErr != nil {
+			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
+			ErrUpdateSPPriceOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrUpdateSPPriceOnChain
+		}
+		client.operatorAccNonce = nonce
+	}
+	// failed to broadcast tx
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to broadcast update sp price msg", "error", err, "update_sp_price",
+			msgUpdateStorageSPPrice.String())
+		ErrUpdateSPPriceOnChain.SetError(fmt.Errorf("failed to broadcast msg to update sp price, error: %v", err))
+		return "", ErrUpdateSPPriceOnChain
 	}
 
 	// update nonce when tx is successfully submitted
