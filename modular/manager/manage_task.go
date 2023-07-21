@@ -2,12 +2,11 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/go-errors/errors"
 
 	"cosmossdk.io/math"
 
