@@ -5,17 +5,17 @@ import (
 	"net/http"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var (
@@ -25,7 +25,11 @@ var (
 	ErrDiscontinueBucketOnChain     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
 	ErrDanglingPointer              = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
 	ErrCreateGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
-	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send complete migrate bucket failed")
+	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120007, "send complete migrate bucket failed")
+	ErrSwapOutOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send swap out failed")
+	ErrCompleteSwapOutOnChain       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120009, "send complete swap out failed")
+	ErrSPExitOnChain                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
+	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -101,9 +105,9 @@ func (s *SignModular) SignReceivePieceTask(ctx context.Context, task task.Receiv
 	return sig, nil
 }
 
-func (s *SignModular) SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
+func (s *SignModular) SignSecondarySealBls(ctx context.Context, objectID uint64, gvgId uint32, checksums [][]byte) ([]byte, error) {
 	msg := storagetypes.NewSecondarySpSealObjectSignDoc(s.baseApp.ChainID(), gvgId, sdkmath.NewUint(objectID), storagetypes.GenerateHash(checksums)).GetBlsSignHash()
-	sig, err := s.client.sealBlsKm.Sign(msg[:])
+	sig, err := s.client.blsKm.Sign(msg[:])
 	if err != nil {
 		return nil, err
 	}
@@ -167,4 +171,38 @@ func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMig
 
 func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
+}
+
+func (s *SignModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
+	msg := signDoc.GetBlsSignHash()
+	sig, err := s.client.blsKm.Sign(msg[:])
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}
+
+func (s *SignModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	return s.client.SwapOut(ctx, SignOperator, swapOut)
+}
+
+func (s *SignModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error) {
+	msg := swapOut.GetApprovalBytes()
+	sig, err := s.client.Sign(SignApproval, msg)
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}
+
+func (s *SignModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
+	return s.client.CompleteSwapOut(ctx, SignOperator, completeSwapOut)
+}
+
+func (s *SignModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	return s.client.SPExit(ctx, SignOperator, spExit)
+}
+
+func (s *SignModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	return s.client.CompleteSPExit(ctx, SignOperator, completeSPExit)
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
@@ -156,7 +158,7 @@ type TaskExecutor interface {
 	// HandleGCMetaTask handles the GCMetaTask that is asked from manager module.
 	HandleGCMetaTask(ctx context.Context, task task.GCMetaTask)
 	// HandleMigrateGVGTask handles the MigrateGVGTask that is asked from manager module
-	HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error
+	HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask)
 	// ReportTask reports the results or status of running task to manager module.
 	ReportTask(ctx context.Context, task task.Task) error
 }
@@ -170,6 +172,10 @@ type Manager interface {
 	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
 	// QueryTasks queries tasks that hold on manager by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	// QueryBucketMigrate queries tasks that hold on manager by task sub-key.
+	QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error)
+	// QuerySpExit queries tasks that hold on manager by task sub-key.
+	QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error)
 	// HandleCreateUploadObjectTask handles the CreateUploadObject request from Uploader, before Uploader handles
 	// the users' UploadObject requests, it should send CreateUploadObject requests to Manager ask if it's ok.
 	// Through this interface SP implements the global uploading object strategy.
@@ -212,8 +218,8 @@ type Manager interface {
 	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
 	// HandleRecoverPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
 	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
-	// NotifyMigrateGVG is used to notify dest sp migrate gvg.
-	NotifyMigrateGVG(ctx context.Context, task task.MigrateGVGTask) error
+	// NotifyMigrateSwapOut is used to notify dest sp migrate swap out.
+	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 }
@@ -258,8 +264,8 @@ type Signer interface {
 	SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)
 	// SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data between SPs.
 	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
-	// SignSecondaryBls signs the secondary bls for sealing object.
-	SignSecondaryBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
+	// SignSecondarySealBls signs the secondary bls for sealing object.
+	SignSecondarySealBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
 	// SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
 	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
@@ -274,8 +280,22 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
+	// SignMigratePiece signs the GfSpMigratePieceTask for migrating piece
 	SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
+	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
 	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
+	// SignSecondarySPMigrationBucket signs secondary sp bls for bucket migration
+	SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
+	// SwapOut signs the MsgSwapOut and broadcast the tx to greenfield.
+	SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
+	// SignSwapOut signs the MsgSwapOut for asking swap out approval.
+	SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error)
+	// CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to greenfield.
+	CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
+	// SPExit signs the MsgStorageProviderExit and broadcast the tx to greenfield.
+	SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
+	// CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to greenfield.
+	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 
@@ -37,6 +39,13 @@ func (*NullModular) ReleaseResource(context.Context, rcmgr.ResourceScopeSpan) {}
 func (*NullModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task.Task, error) {
 	return nil, ErrNilModular
 }
+func (m *NullModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
+	return nil, ErrNilModular
+}
+
+func (m *NullModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
+	return nil, ErrNilModular
+}
 func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) error {
 	return ErrNilModular
 }
@@ -56,7 +65,7 @@ func (*NullModular) PostMigrateBucketApproval(context.Context, task.ApprovalMigr
 func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
 	return 0, ErrNilModular
 }
-func (*NullModular) NotifyMigrateGVG(context.Context, task.MigrateGVGTask) error {
+func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.MsgSwapOut) error {
 	return ErrNilModular
 }
 
@@ -204,11 +213,8 @@ func (*NilModular) HandleGCMetaTask(context.Context, task.GCMetaTask)           
 func (*NilModular) HandleReplicatePieceApproval(context.Context, task.ApprovalReplicatePieceTask, int32, int32, int64) ([]task.ApprovalReplicatePieceTask, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error {
-	return ErrNilModular
-}
-func (*NilModular) HandleQueryBootstrap(context.Context) ([]string, error) { return nil, ErrNilModular }
-
+func (*NilModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) {}
+func (*NilModular) HandleQueryBootstrap(context.Context) ([]string, error)                { return nil, ErrNilModular }
 func (*NilModular) SignCreateBucketApproval(context.Context, *storagetypes.MsgCreateBucket) ([]byte, error) {
 	return nil, ErrNilModular
 }
@@ -224,7 +230,7 @@ func (*NilModular) SignReplicatePieceApproval(context.Context, task.ApprovalRepl
 func (*NilModular) SignReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignSecondaryBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
+func (*NilModular) SignSecondarySealBls(context.Context, uint64, uint32, [][]byte) ([]byte, error) {
 	return nil, ErrNilModular
 }
 func (*NilModular) SignRecoveryPieceTask(context.Context, task.RecoveryPieceTask) ([]byte, error) {
@@ -252,6 +258,24 @@ func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigr
 	return nil, ErrNilModular
 }
 func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	return "", ErrNilModular
+}
+func (*NilModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	return "", ErrNilModular
+}
+func (*NilModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
+	return "", ErrNilModular
+}
+func (*NilModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	return "", ErrNilModular
+}
+func (*NilModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
 	return "", ErrNilModular
 }
 

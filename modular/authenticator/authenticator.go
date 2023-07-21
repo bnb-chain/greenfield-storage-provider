@@ -201,6 +201,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrRepeatedBucket
 		}
 		return true, nil
+	case coremodule.AuthOpAskMigrateBucketApproval:
+		queryTime := time.Now()
+		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_migrate_bucket_approval_query_bucket_time").Observe(time.Since(queryTime).Seconds())
+		if bucketInfo == nil {
+			log.CtxErrorw(ctx, "failed to verify authentication of asking migrate bucket "+
+				"approval, bucket not existed", "bucket", bucket)
+			return false, ErrRepeatedBucket
+		}
+		return true, nil
 	case coremodule.AuthOpAskCreateObjectApproval:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
@@ -232,14 +242,17 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrConsensus
 		}
 
-		// TODO get sp id from config
 		spID, err := a.getSPID()
 		if err != nil {
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpId() != spID {
+		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
-				"expected_sp_id", bucketInfo.GetPrimarySpId())
+				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
@@ -273,9 +286,13 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		if err != nil {
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpId() != spID {
+		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
-				"expected_sp_id", bucketInfo.GetPrimarySpId())
+				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
@@ -309,9 +326,13 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		if err != nil {
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpId() != spID {
+		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
-				"expected_sp_id", bucketInfo.GetPrimarySpId())
+				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
@@ -398,9 +419,13 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		if err != nil {
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpId() != spID {
+		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
-				"expected_sp_id", bucketInfo.GetPrimarySpId())
+				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
 		if bucketInfo.GetOwner() != account {
@@ -447,7 +472,11 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		if err != nil {
 			return false, ErrConsensus
 		}
-		if bucketInfo.GetPrimarySpId() == spID {
+		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
+		if err != nil {
+			return false, ErrConsensus
+		}
+		if bucketSPID == spID {
 			return true, nil
 		}
 		_, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, a.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)

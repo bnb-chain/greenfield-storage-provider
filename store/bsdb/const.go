@@ -32,8 +32,8 @@ const (
 	MasterDBTableName = "master_db"
 	// PrefixTreeTableName defines the name of prefix tree node table
 	PrefixTreeTableName = "slash_prefix_tree_nodes"
-	// VirtualGroupFamilyTableName defines the name of virtual group family table
-	VirtualGroupFamilyTableName = "global_virtual_group_families"
+	// GlobalVirtualGroupFamilyTableName defines the name of global virtual group family table
+	GlobalVirtualGroupFamilyTableName = "global_virtual_group_families"
 	// LocalVirtualGroupFamilyTableName defines the name of local virtual group table
 	LocalVirtualGroupFamilyTableName = "local_virtual_groups"
 	// GlobalVirtualGroupTableName defines the name of global virtual group table
@@ -42,14 +42,21 @@ const (
 	EventMigrationTableName = "event_migration_bucket"
 	// EventCompleteMigrationTableName defines the name of event complete migrate bucket table
 	EventCompleteMigrationTableName = "event_complete_migration_bucket"
+	// EventCancelMigrationTableName defines the name of event cancel migrate bucket table
+	EventCancelMigrationTableName = "event_cancel_migration_bucket"
 	// EventStorageProviderExitTableName defines the name of event sp exit table
 	EventStorageProviderExitTableName = "event_sp_exit"
 	// EventCompleteStorageProviderExitTableName defines the name of event sp exit complete table
 	EventCompleteStorageProviderExitTableName = "event_sp_exit_complete"
-	// EventSwapOutTableName defines the name of event sp exit complete table
+	// EventSwapOutTableName defines the name of event swap out table
 	EventSwapOutTableName = "event_swap_out"
 	// ObjectIDMapTableName defines the name of object id map table
 	ObjectIDMapTableName = "object_id_map"
+	// EventCancelSwapOutTableName defines the name of event cancel swap out table
+	// EventCompleteSwapOutTableName defines the name of event swap out complete table
+	EventCompleteSwapOutTableName = "event_swap_out_complete"
+	// EventCancelSwapOutTableName defines the name of event swap out cancel table
+	EventCancelSwapOutTableName = "event_cancel_swap_out"
 )
 
 // define the list objects const

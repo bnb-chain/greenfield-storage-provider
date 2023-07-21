@@ -40,6 +40,13 @@ const (
 	SealFailedTableName = "seal_failed_event_log"
 	// MigrateSubscribeProgressTableName defines the progress of subscribe migrate event.
 	MigrateSubscribeProgressTableName = "migrate_subscribe_progress"
+	// SwapOutTableName is the swap out unit table.
+	SwapOutTableName = "swap_out_unit"
 	// MigrateGVGTableName defines the progress of subscribe migrate event.
 	MigrateGVGTableName = "migrate_gvg"
+)
+
+// define error name constant.
+const (
+	TableAlreadyExistsErrorPrefix = "Error 1050 (42S01)"
 )

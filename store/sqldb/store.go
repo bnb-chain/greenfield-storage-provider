@@ -70,78 +70,82 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
 	// create if not exist
-	if err = db.AutoMigrate(&UploadObjectProgressTable{}); err != nil {
+	if err = db.AutoMigrate(&UploadObjectProgressTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to upload object progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&PutObjectSuccessTable{}); err != nil {
+	if err = db.AutoMigrate(&PutObjectSuccessTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to successfully put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&PutObjectEventTable{}); err != nil {
+	if err = db.AutoMigrate(&PutObjectEventTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&UploadTimeoutTable{}); err != nil {
+	if err = db.AutoMigrate(&UploadTimeoutTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to successfully put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&UploadFailedTable{}); err != nil {
+	if err = db.AutoMigrate(&UploadFailedTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&ReplicateTimeoutTable{}); err != nil {
+	if err = db.AutoMigrate(&ReplicateTimeoutTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to successfully put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&ReplicateFailedTable{}); err != nil {
+	if err = db.AutoMigrate(&ReplicateFailedTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&SealTimeoutTable{}); err != nil {
+	if err = db.AutoMigrate(&SealTimeoutTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to successfully put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&SealFailedTable{}); err != nil {
+	if err = db.AutoMigrate(&SealFailedTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to put event progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&GCObjectProgressTable{}); err != nil {
+	if err = db.AutoMigrate(&GCObjectProgressTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to gc object progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&SpInfoTable{}); err != nil {
+	if err = db.AutoMigrate(&SpInfoTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to create sp info table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&PieceHashTable{}); err != nil {
+	if err = db.AutoMigrate(&PieceHashTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to create piece hash table", "error", err)
 		return nil, err
 	}
 	for i := 0; i < IntegrityMetasNumberOfShards; i++ {
 		shardTableName := fmt.Sprintf(IntegrityMetaTable{}.TableName()+"_%02d", i)
-		if err = db.Table(shardTableName).AutoMigrate(&IntegrityMetaTable{}); err != nil {
+		if err = db.Table(shardTableName).AutoMigrate(&IntegrityMetaTable{}); err != nil && !isAlreadyExists(err) {
 			log.Errorw("failed to create integrity meta table", "error", err)
 			return nil, err
 		}
 	}
-	if err = db.AutoMigrate(&BucketTrafficTable{}); err != nil {
+	if err = db.AutoMigrate(&BucketTrafficTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to create bucket traffic table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&ReadRecordTable{}); err != nil {
+	if err = db.AutoMigrate(&ReadRecordTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to create read record table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil {
+	if err = db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to create off-chain authKey table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&MigrateSubscribeProgressTable{}); err != nil {
+	if err = db.AutoMigrate(&MigrateSubscribeProgressTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to migrate subscribe progress table", "error", err)
 		return nil, err
 	}
-	if err = db.AutoMigrate(&MigrateGVGTable{}); err != nil {
+	if err = db.AutoMigrate(&SwapOutTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to swap out table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&MigrateGVGTable{}); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to migrate gvg table", "error", err)
 		return nil, err
 	}

@@ -43,8 +43,10 @@ const (
 	listDeletedObjectsByBlockNumberRangeRouterName = "ListDeletedObjectsByBlockNumberRange"
 	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
-	notifyMigrateGVGRouterName                     = "NotifyMigrateGVG"
+	notifyMigrateSwapOutRouterName                 = "NotifyMigrateSwapOut"
 	migratePieceRouterName                         = "MigratePiece"
+	migrationBucketApprovalName                    = "MigrationBucketApproval"
+	swapOutApprovalName                            = "SwapOutApproval"
 	listVirtualGroupFamiliesBySpIDRouterName       = "ListVirtualGroupFamiliesBySpID"
 	getVirtualGroupFamilyRouterName                = "GetVirtualGroupFamily"
 	getGlobalVirtualGroupByGvgIDRouterName         = "GetGlobalVirtualGroupByGvgID"
@@ -56,6 +58,7 @@ const (
 	listMigrateBucketEventsRouterName              = "ListMigrateBucketEvents"
 	listSwapOutEventsRouterName                    = "ListSwapOutEvents"
 	listSpExitEventsRouterName                     = "ListSpExitEvents"
+	verifyPermissionByIDRouterName                 = "VerifyPermissionByID"
 )
 
 const (
@@ -99,10 +102,15 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
 	// data recovery
 	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.getRecoverDataHandler)
-	// dest sp receive migrate gvg notify from src sp.
-	router.Path(NotifyMigrateGVGTaskPath).Name(notifyMigrateGVGRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateGVGHandler)
-	// migrate pieces between SPs which is used for SP exiting case
+
+	// dest sp receive swap out notify from src sp.
+	router.Path(NotifyMigrateSwapOutTaskPath).Name(notifyMigrateSwapOutRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateSwapOutHandler)
+	// dest sp pull piece data from src sp, for sp exit and bucket migrate.
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
+	// migration bucket approval for secondary sp bls signature.
+	router.Path(SecondarySPMigrationBucketApprovalPath).Name(migrationBucketApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSecondaryBlsMigrationBucketApprovalHandler)
+	// swap out approval for sp exiting.
+	router.Path(SwapOutApprovalPath).Name(swapOutApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSwapOutApproval)
 
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
@@ -183,7 +191,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodPost).
 		Queries(ListBucketsByBucketIDQuery, "").
 		HandlerFunc(g.listBucketsByBucketIDHandler)
-
+	router.Path("/").
+		Name(verifyPermissionByIDRouterName).
+		Methods(http.MethodGet).
+		Queries(VerifyPermissionByIDQuery, "").
+		HandlerFunc(g.verifyPermissionByIDHandler)
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID
 		router.Path("/").Name(getPaymentByBucketIDRouterName).Methods(http.MethodGet).Queries(GetPaymentByBucketIDQuery, "").HandlerFunc(g.getPaymentByBucketIDHandler)
@@ -194,10 +206,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		// List Deleted Objects
 		router.Path("/").Name(listDeletedObjectsByBlockNumberRangeRouterName).Methods(http.MethodGet).Queries(ListDeletedObjectsQuery, "").HandlerFunc(g.listDeletedObjectsByBlockNumberRangeHandler)
 
-		//Get User Buckets Count
+		// Get User Buckets Count
 		router.Path("/").Name(getUserBucketsCountRouterName).Methods(http.MethodGet).Queries(GetUserBucketsCountQuery, "").HandlerFunc(g.getUserBucketsCountHandler)
 
-		//List Expired Buckets By Sp
+		// List Expired Buckets By Sp
 		router.Path("/").Name(listExpiredBucketsBySpRouterName).Methods(http.MethodGet).Queries(ListExpiredBucketsBySpQuery, "").HandlerFunc(g.listExpiredBucketsBySpHandler)
 
 		// List Virtual Group Families By Sp ID

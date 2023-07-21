@@ -1,6 +1,7 @@
 package bsdb
 
 import (
+	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 )
@@ -61,4 +62,26 @@ func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 		Scopes(filters...).
 		Take(&count).Error
 	return groups, count, err
+}
+
+// GetGroupByID get group info by object id
+func (b *BsDBImpl) GetGroupByID(groupID int64, includeRemoved bool) (*Group, error) {
+	var (
+		group       *Group
+		groupIDHash common.Hash
+		err         error
+		filters     []func(*gorm.DB) *gorm.DB
+	)
+
+	groupIDHash = common.BigToHash(math.NewInt(groupID).BigInt())
+	if !includeRemoved {
+		filters = append(filters, RemovedFilter(includeRemoved))
+	}
+
+	err = b.db.Table((&Group{}).TableName()).
+		Select("*").
+		Where("group_id  = ?", groupIDHash).
+		Scopes(filters...).
+		Find(&group).Error
+	return group, err
 }

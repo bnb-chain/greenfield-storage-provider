@@ -1,10 +1,14 @@
 package sqldb
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"gorm.io/gorm"
 )
 
@@ -117,6 +121,7 @@ func (s *SpDBImpl) QuerySwapOutSubscribeProgress() (uint64, error) {
 	}
 	return queryReturn.LastSubscribedBlockHeight, nil
 }
+
 func (s *SpDBImpl) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error {
 	var (
 		result       *gorm.DB
@@ -168,6 +173,104 @@ func (s *SpDBImpl) QueryBucketMigrateSubscribeProgress() (uint64, error) {
 	return queryReturn.LastSubscribedBlockHeight, nil
 }
 
+func (s *SpDBImpl) InsertSwapOutUnit(meta *spdb.SwapOutMeta) error {
+	var (
+		err            error
+		result         *gorm.DB
+		insertSwapOut  *SwapOutTable
+		swapOutMarshal []byte
+	)
+	if swapOutMarshal, err = json.Marshal(meta.SwapOutMsg); err != nil {
+		return err
+	}
+
+	insertSwapOut = &SwapOutTable{
+		SwapOutKey:       meta.SwapOutKey,
+		IsDestSP:         meta.IsDestSP,
+		SwapOutMsg:       hex.EncodeToString(swapOutMarshal),
+		CompletedGVGList: util.Uint32SliceToString(meta.CompletedGVGs),
+	}
+	result = s.db.Create(insertSwapOut)
+	if result.Error != nil || result.RowsAffected != 1 {
+		err = fmt.Errorf("failed to insert swap out table: %s", result.Error)
+		return err
+	}
+	return nil
+}
+
+func (s *SpDBImpl) UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error {
+	result := s.db.Model(&SwapOutTable{}).
+		Where("swap_out_key = ? and is_dest_sp = 1", swapOutKey).
+		Update("completed_gvg_list", util.Uint32SliceToString(completedGVGList))
+	return result.Error
+}
+
+func (s *SpDBImpl) QuerySwapOutUnitInSrcSP(swapOutKey string) (*spdb.SwapOutMeta, error) {
+	var (
+		err            error
+		result         *gorm.DB
+		queryReturn    *SwapOutTable
+		swapOutMarshal []byte
+		completedGVGs  []uint32
+	)
+	queryReturn = &SwapOutTable{}
+	result = s.db.First(queryReturn, "is_dest_sp = false and swap_out_key = ?", swapOutKey)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if swapOutMarshal, err = hex.DecodeString(queryReturn.SwapOutMsg); err != nil {
+		return nil, err
+	}
+	swapOut := virtualgrouptypes.MsgSwapOut{}
+	if err = json.Unmarshal(swapOutMarshal, &swapOut); err != nil {
+		return nil, err
+	}
+	if completedGVGs, err = util.StringToUint32Slice(queryReturn.CompletedGVGList); err != nil {
+		return nil, err
+	}
+
+	return &spdb.SwapOutMeta{
+		SwapOutKey:    queryReturn.SwapOutKey,
+		IsDestSP:      queryReturn.IsDestSP,
+		SwapOutMsg:    &swapOut,
+		CompletedGVGs: completedGVGs,
+	}, nil
+}
+
+func (s *SpDBImpl) ListDestSPSwapOutUnits() ([]*spdb.SwapOutMeta, error) {
+	var queryReturns []SwapOutTable
+	result := s.db.Where("is_dest_sp = true").Find(&queryReturns)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to list swap out table: %s", result.Error)
+	}
+	returns := make([]*spdb.SwapOutMeta, 0)
+	for _, queryReturn := range queryReturns {
+		var (
+			err            error
+			swapOutMarshal []byte
+			completedGVGs  []uint32
+		)
+		if swapOutMarshal, err = hex.DecodeString(queryReturn.SwapOutMsg); err != nil {
+			return nil, err
+		}
+		swapOut := virtualgrouptypes.MsgSwapOut{}
+		if err = json.Unmarshal(swapOutMarshal, &swapOut); err != nil {
+			return nil, err
+		}
+		if completedGVGs, err = util.StringToUint32Slice(queryReturn.CompletedGVGList); err != nil {
+			return nil, err
+		}
+		returns = append(returns, &spdb.SwapOutMeta{
+			SwapOutKey:    queryReturn.SwapOutKey,
+			IsDestSP:      queryReturn.IsDestSP,
+			SwapOutMsg:    &swapOut,
+			CompletedGVGs: completedGVGs,
+		})
+	}
+	return returns, nil
+}
+
 func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 	var (
 		err              error
@@ -176,11 +279,15 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 	)
 	insertMigrateGVG = &MigrateGVGTable{
 		MigrateKey:           meta.MigrateGVGKey,
+		SwapOutKey:           meta.SwapOutKey,
 		GlobalVirtualGroupID: meta.GlobalVirtualGroupID,
 		VirtualGroupFamilyID: meta.VirtualGroupFamilyID,
-		RedundancyIndex:      meta.RedundancyIndex,
 		BucketID:             meta.BucketID,
-		IsSecondary:          meta.IsSecondary,
+		RedundancyIndex:      meta.RedundancyIndex,
+
+		SrcSPID:              meta.SrcSPID,
+		DestSPID:             meta.DestSPID,
+		LastMigratedObjectID: meta.LastMigratedObjectID,
 		MigrateStatus:        meta.MigrateStatus,
 	}
 	result = s.db.Create(insertMigrateGVG)
@@ -229,89 +336,11 @@ func (s *SpDBImpl) QueryMigrateGVGUnit(migrateKey string) (*spdb.MigrateGVGUnitM
 		VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
 		RedundancyIndex:      queryReturn.RedundancyIndex,
 		BucketID:             queryReturn.BucketID,
-		IsSecondary:          queryReturn.IsSecondary,
-		IsConflicted:         queryReturn.IsConflicted,
 		SrcSPID:              queryReturn.SrcSPID,
 		DestSPID:             queryReturn.DestSPID,
 		LastMigratedObjectID: queryReturn.LastMigratedObjectID,
 		MigrateStatus:        queryReturn.MigrateStatus,
 	}, nil
-}
-
-// ListMigrateGVGUnitsByFamilyID is used to src sp load to build execute plan.
-func (s *SpDBImpl) ListMigrateGVGUnitsByFamilyID(familyID uint32, srcSP uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
-	var queryReturns []MigrateGVGTable
-	result := s.db.Where("is_conflicted = false and is_secondary = false and is_remoted = false and redundancy_index = 0 and bucket_id = 0 and virtual_group_family_id = ? and src_sp_id = ?",
-		familyID, srcSP).Find(&queryReturns)
-	if result.Error != nil {
-		return nil, fmt.Errorf("failed to list migrate gvg table: %s", result.Error)
-	}
-	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
-	for _, queryReturn := range queryReturns {
-		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-			RedundancyIndex:      queryReturn.RedundancyIndex,
-			BucketID:             queryReturn.BucketID,
-			IsSecondary:          queryReturn.IsSecondary,
-			IsConflicted:         queryReturn.IsConflicted,
-			SrcSPID:              queryReturn.SrcSPID,
-			DestSPID:             queryReturn.DestSPID,
-			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
-			MigrateStatus:        queryReturn.MigrateStatus,
-		})
-	}
-	return returns, nil
-}
-
-// ListConflictedMigrateGVGUnitsByFamilyID is used to src sp load to build execute plan.
-func (s *SpDBImpl) ListConflictedMigrateGVGUnitsByFamilyID(familyID uint32) ([]*spdb.MigrateGVGUnitMeta, error) {
-	var queryReturns []MigrateGVGTable
-	result := s.db.Where("is_conflicted = true and virtual_group_family_id = ?", familyID).Find(&queryReturns)
-	if result.Error != nil {
-		return nil, fmt.Errorf("failed to list migrate gvg table: %s", result.Error)
-	}
-	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
-	for _, queryReturn := range queryReturns {
-		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-			RedundancyIndex:      queryReturn.RedundancyIndex,
-			BucketID:             queryReturn.BucketID,
-			IsSecondary:          queryReturn.IsSecondary,
-			IsConflicted:         queryReturn.IsConflicted,
-			SrcSPID:              queryReturn.SrcSPID,
-			DestSPID:             queryReturn.DestSPID,
-			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
-			MigrateStatus:        queryReturn.MigrateStatus,
-		})
-	}
-	return returns, nil
-}
-
-// ListRemotedMigrateGVGUnits is used to dest sp load to build migrate task runner.
-func (s *SpDBImpl) ListRemotedMigrateGVGUnits() ([]*spdb.MigrateGVGUnitMeta, error) {
-	var queryReturns []MigrateGVGTable
-	result := s.db.Where("is_remoted = true").Find(&queryReturns)
-	if result.Error != nil {
-		return nil, fmt.Errorf("failed to list migrate gvg table: %s", result.Error)
-	}
-	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
-	for _, queryReturn := range queryReturns {
-		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-			RedundancyIndex:      queryReturn.RedundancyIndex,
-			BucketID:             queryReturn.BucketID,
-			IsSecondary:          queryReturn.IsSecondary,
-			IsConflicted:         queryReturn.IsConflicted,
-			SrcSPID:              queryReturn.SrcSPID,
-			DestSPID:             queryReturn.DestSPID,
-			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
-			MigrateStatus:        queryReturn.MigrateStatus,
-		})
-	}
-	return returns, nil
 }
 
 func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*spdb.MigrateGVGUnitMeta, error) {
@@ -327,8 +356,6 @@ func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*spdb.Migra
 			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
 			RedundancyIndex:      queryReturn.RedundancyIndex,
 			BucketID:             queryReturn.BucketID,
-			IsSecondary:          queryReturn.IsSecondary,
-			IsConflicted:         queryReturn.IsConflicted,
 			SrcSPID:              queryReturn.SrcSPID,
 			DestSPID:             queryReturn.DestSPID,
 			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
