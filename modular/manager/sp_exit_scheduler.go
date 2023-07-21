@@ -6,12 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -197,10 +196,9 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 		for _, unit := range s.swapOutPlan.swapOutUnitMap {
 			swapOutKey := GetSwapOutKey(unit.swapOut)
 			gfspunit := &gfspserver.SwapOutUnit{
-				GlobalVirtualGroupFamilyId: unit.swapOut.GlobalVirtualGroupFamilyId,
-				SwapOutKey:                 swapOutKey,
-				SuccessorSpId:              unit.swapOut.SuccessorSpId,
-				Status:                     int32(Migrating),
+				SwapOutKey:    swapOutKey,
+				SuccessorSpId: unit.swapOut.SuccessorSpId,
+				Status:        int32(Migrating),
 			}
 			swapOutSrcUnitMap[swapOutKey] = gfspunit
 		}
@@ -223,13 +221,11 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 		for _, unit := range s.taskRunner.swapOutUnitMap {
 			swapOutKey := GetSwapOutKey(unit.swapOut)
 			gfspunit := &gfspserver.SwapOutUnit{
-				GlobalVirtualGroupFamilyId: unit.swapOut.GlobalVirtualGroupFamilyId,
-				SuccessorSpId:              unit.swapOut.SuccessorSpId,
-				SwapOutKey:                 swapOutKey,
+				SuccessorSpId: unit.swapOut.SuccessorSpId,
+				SwapOutKey:    swapOutKey,
 			}
 
 			swapOutUnitMap[swapOutKey] = gfspunit
-			res.SwapOutDest = append(res.SwapOutDest, gfspunit)
 		}
 
 		// scan gvg
@@ -237,6 +233,7 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 			gvg := &gfspserver.GfSpMigrateGVG{
 				LastMigratedObjectId: gvgUnit.lastMigratedObjectID,
 				Status:               int32(gvgUnit.migrateStatus),
+				SrcGvgId:             gvgUnit.srcGVG.GetId(),
 			}
 			swapOutKey := gvgUnit.swapOutKey
 			swapOutUnitMap[swapOutKey].GvgTask = append(swapOutUnitMap[swapOutKey].GvgTask, gvg)
@@ -249,7 +246,7 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 		res.SelfSpId = s.selfSP.GetId()
 	}
 
-	log.Debugw("ListSPExitPlan", "ListSPExitPlan", res)
+	log.Debugw("SPExitScheduler ListSPExitPlan", "res swap out", res)
 	return res, nil
 }
 

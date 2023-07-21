@@ -384,7 +384,7 @@ func getBucketMigrateAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Print(info)
+	fmt.Println(info)
 
 	return nil
 }
@@ -408,7 +408,7 @@ func getSPExitAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Print(info)
+	fmt.Println(info)
 
 	return nil
 }

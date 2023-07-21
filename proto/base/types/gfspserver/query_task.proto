@@ -19,19 +19,21 @@ message GfSpQueryBucketMigrateRequest {}
 message GfSpBucketMigrate {
   string bucket_name = 1;
   uint64 bucket_id = 2;
-  string migrate_status = 3;
+  uint32 finished = 3;
   repeated GfSpMigrateGVG gvg_task = 4;
 }
 
 message GfSpMigrateGVG {
   uint32 dest_gvg_id = 1;
-  uint64 last_migrated_object_id = 2;
-  int32 status = 3;
+  uint32 src_gvg_id = 2;
+  uint64 last_migrated_object_id = 3;
+  int32 status = 4;
 }
 
 message GfSpQueryBucketMigrateResponse {
   base.types.gfsperrors.GfSpError err = 1;
-  repeated GfSpBucketMigrate bucket_migrate_plan = 2;
+  repeated GfSpBucketMigrate bucket_migrate = 2;
+  uint32 self_sp_id = 3;
 }
 
 message GfSpQuerySpExitRequest {}
@@ -39,17 +41,16 @@ message GfSpQuerySpExitRequest {}
 message SwapOutUnit {
   string swap_out_key = 1;
   int32 status = 2;
-  uint32 global_virtual_group_family_id = 3;
-  uint32 successor_sp_id = 4;
+  uint32 successor_sp_id = 3;
 
-  repeated GfSpMigrateGVG gvg_task = 6;
+  repeated GfSpMigrateGVG gvg_task = 4;
 }
 
 message GfSpQuerySpExitResponse {
   base.types.gfsperrors.GfSpError err = 1;
-  uint32 self_sp_id = 4;
   repeated SwapOutUnit swap_out_src = 2;
   repeated SwapOutUnit swap_out_dest = 3;
+  uint32 self_sp_id = 4;
 }
 
 service GfSpQueryTaskService {

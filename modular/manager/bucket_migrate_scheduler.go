@@ -492,17 +492,20 @@ func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketM
 	for _, executePlan := range s.executePlanIDMap {
 		var plan gfspserver.GfSpBucketMigrate
 		plan.BucketId = executePlan.bucketID
+		plan.Finished = uint32(executePlan.finished)
 		for _, unit := range executePlan.gvgUnitMap {
 			plan.GvgTask = append(plan.GvgTask, &gfspserver.GfSpMigrateGVG{
-				DestGvgId:            unit.destGVG.Id,
+				SrcGvgId:             unit.srcGVG.GetId(),
+				DestGvgId:            unit.destGVG.GetId(),
 				LastMigratedObjectId: unit.lastMigratedObjectID,
 				Status:               int32(unit.migrateStatus),
 			})
 		}
 		plans = append(plans, &plan)
 	}
-	res.BucketMigratePlan = plans
-	log.Debugw("listExecutePlan", "listExecutePlan", res)
+	res.BucketMigrate = plans
+	res.SelfSpId = s.selfSP.GetId()
+	log.Debugw("BucketMigrateScheduler listExecutePlan", "plans res", res)
 	return &res, nil
 }
 

@@ -3,10 +3,11 @@ package manager
 import (
 	"context"
 	"fmt"
-	"github.com/go-errors/errors"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-errors/errors"
 
 	"cosmossdk.io/math"
 
