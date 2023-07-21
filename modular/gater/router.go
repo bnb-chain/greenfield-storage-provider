@@ -116,9 +116,13 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
+	router.Path("/download").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
+		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
 	// universal endpoint view
 	router.Path("/view/{bucket:[^/]*}/{object:.+}").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
+	router.Path("/view").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
+		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.viewObjectByUniversalEndpointHandler)
 
 	var routers []*mux.Router
 	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())
