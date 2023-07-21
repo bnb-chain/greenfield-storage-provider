@@ -34,11 +34,12 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 	)
 
 	for {
-		if bucketID == 0 { // sp exit task
-			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVG(ctx, srcGvgID, lastMigratedObjectID, queryLimit)
-		} else { // bucket migrate task
-			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, srcGvgID, bucketID, lastMigratedObjectID, queryLimit)
-		}
+		// TODO Will adapt the new logic of list objects
+		//if bucketID == 0 { // sp exit task
+		//	objectList, err = e.baseApp.GfSpClient().ListObjectsInGVG(ctx, srcGvgID, lastMigratedObjectID, queryLimit)
+		//} else { // bucket migrate task
+		//	objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, srcGvgID, bucketID, lastMigratedObjectID, queryLimit)
+		//}
 		if err != nil {
 			log.Errorw("migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
 				"last_migrated_object_id", lastMigratedObjectID, "object_list", objectList, "error", err)

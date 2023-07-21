@@ -477,6 +477,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: listObjectsInGVGAndBucketRouterName,
 		},
 		{
+			name:             "List objects by gvg and bucket id for gc",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListObjectsByGVGAndBucketForGCQuery + "&" + GvgIDQuery + "&" + BucketIDQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery,
+			shouldMatch:      true,
+			wantedRouterName: listObjectsByGVGAndBucketForGCRouterName,
+		},
+		{
 			name:             "List objects by gvg id",
 			router:           gwRouter,
 			method:           http.MethodGet,

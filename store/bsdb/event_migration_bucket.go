@@ -1,5 +1,12 @@
 package bsdb
 
+import (
+	"errors"
+
+	"github.com/forbole/juno/v4/common"
+	"gorm.io/gorm"
+)
+
 // ListMigrateBucketEvents list migrate bucket events
 func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error) {
 	var (
@@ -34,4 +41,23 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 	}
 
 	return events, completeEvents, cancelEvents, err
+}
+
+// GetMigrateBucketEventByBucketID get migrate bucket event by bucket id
+func (b *BsDBImpl) GetMigrateBucketEventByBucketID(bucketID common.Hash) (*EventCompleteMigrationBucket, error) {
+	var (
+		completeEvents *EventCompleteMigrationBucket
+		err            error
+	)
+
+	err = b.db.Table((&EventCompleteMigrationBucket{}).TableName()).
+		Select("*").
+		Where("bucket_id = ?", bucketID).
+		Order("create_time desc").
+		Take(&completeEvents).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return completeEvents, err
 }
