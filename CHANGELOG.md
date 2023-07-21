@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.3-alpha.3
+## 0.2.3-alpha.7
 
 FEATURES
 * [#824](https://github.com/bnb-chain/greenfield-storage-provider/pull/824) feat: support sp exit and bucket migrate
