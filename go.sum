@@ -172,6 +172,8 @@ github.com/bits-and-blooms/bitset v1.2.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edY
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/bnb-chain/greenfield v0.2.3-0.20230721102207-645a0b758251 h1:b/sR75tWbiC0bBct+SE8YgrDzKSd3KwAZNVVMETh6M8=
 github.com/bnb-chain/greenfield v0.2.3-0.20230721102207-645a0b758251/go.mod h1:xz2m5KocEhwtSDuteP9HYLQpxfv4/L1t0Hr0JZm/MkA=
+github.com/bnb-chain/greenfield v0.2.3-alpha.6 h1:kC3L1aKZdG0dFzQf/1+l+uuTGzHUi3ybwLzSqZbzJ28=
+github.com/bnb-chain/greenfield v0.2.3-alpha.6/go.mod h1:2sjyOH3z8zH0VaSlu5propRLYt8PvT2Ta01F6sP3Tas=
 github.com/bnb-chain/greenfield-cometbft v0.0.2-alpha.2 h1:ys9kmgtRx04wcCextE6CrVmbL1bJDklWr+hWgm1y2k4=
 github.com/bnb-chain/greenfield-cometbft v0.0.2-alpha.2/go.mod h1:EBmwmUdaNbGPyGjf1cMuoN3pAeM2tQu7Lfg95813EAw=
 github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1 h1:XcWulGacHVRiSCx90Q8Y//ajOrLNBQWR/KDB89dy3cU=
@@ -186,8 +188,8 @@ github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05f
 github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9/go.mod h1:Ygz4wBHrgc7g0N+8+MrnTfS9LLn9aaTGa9hKopuym5k=
 github.com/bnb-chain/greenfield-iavl v0.20.1-alpha.1 h1:ZnIcvkkQVurg0OaAwmUGn2cK5bZbffjVChFyhh86HMk=
 github.com/bnb-chain/greenfield-iavl v0.20.1-alpha.1/go.mod h1:oLksTs8dfh7DYIKBro7hbRQ+ewls7ghJ27pIXlbEXyI=
-github.com/bnb-chain/juno/v4 v4.0.0-20230719021354-2aba8a78327d h1:J4iYTYSH/pyvxPcg4J8yEY3lSYGx4Ctfh4fo8JIln2s=
-github.com/bnb-chain/juno/v4 v4.0.0-20230719021354-2aba8a78327d/go.mod h1:GQo3ReBpy/FLm/FXAMuBU6H8Y2c3QcELQoeqFXzX19E=
+github.com/bnb-chain/juno/v4 v4.0.0-20230721022935-55c4cd3f3ecf h1:TFcI1iP9uKtUh6dQuQmT2wkZoBP/YMUSsQKHIlsGgso=
+github.com/bnb-chain/juno/v4 v4.0.0-20230721022935-55c4cd3f3ecf/go.mod h1:wUV2oH8dsnGR/d+XOZpCRRPZPY1KN5Sq1xFxWwMXTIU=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
