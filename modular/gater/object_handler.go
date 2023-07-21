@@ -764,7 +764,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		splitSuffix := splitPeriod[len(splitPeriod)-1]
 		if !strings.Contains(r.RequestURI, objectSpecialSuffixUrlReplacement) &&
 			(strings.EqualFold(splitSuffix, ObjectPdfSuffix) || strings.EqualFold(splitSuffix, ObjectXmlSuffix)) {
-			objectPathRequestURL := strings.Replace(r.RequestURI, "/", objectSpecialSuffixUrlReplacement, 1)
+			objectPathRequestURL := "/" + strings.Replace(r.RequestURI[1:], "/", objectSpecialSuffixUrlReplacement, 1)
 			redirectURL = spEndpoint + objectPathRequestURL
 			log.Debugw("getting redirect url for private object:", "redirectURL", redirectURL)
 			http.Redirect(w, r, redirectURL, 302)
