@@ -188,55 +188,67 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 // ListSPExitPlan is used to update migrate status from task executor.
 func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse, error) {
 	res := &gfspserver.GfSpQuerySpExitResponse{}
-	srcSPSwapOutPlan := &gfspserver.SrcSPSwapOutPlan{}
-	destSPTaskRunner := &gfspserver.DestSPTaskRunner{}
 	// src SP SwapOut Plan
-	for _, unit := range s.swapOutPlan.swapOutUnitMap {
-		gfspunit := &gfspserver.SwapOutUnit{
-			IsSecondary:                unit.isSecondary,
-			IsFamily:                   unit.isFamily,
-			GlobalVirtualGroupFamilyId: unit.swapOut.GlobalVirtualGroupFamilyId,
-			SuccessorSpId:              unit.swapOut.SuccessorSpId,
-			Status:                     0,
-		}
-		srcSPSwapOutPlan.SwapOut = append(srcSPSwapOutPlan.SwapOut, gfspunit)
+	if s.swapOutPlan != nil {
+		s.swapOutPlan.swapOutUnitMapMutex.Lock()
+		defer s.swapOutPlan.swapOutUnitMapMutex.Unlock()
+		swapOutSrcUnitMap := make(map[string]*gfspserver.SwapOutUnit)
 
-	}
-	for _, unit := range s.swapOutPlan.completedSwapOut {
-		gfspunit := &gfspserver.SwapOutUnit{
-			IsSecondary:                unit.isSecondary,
-			IsFamily:                   unit.isFamily,
-			GlobalVirtualGroupFamilyId: unit.swapOut.GlobalVirtualGroupFamilyId,
-			SuccessorSpId:              unit.swapOut.SuccessorSpId,
-			Status:                     1,
+		for _, unit := range s.swapOutPlan.swapOutUnitMap {
+			swapOutKey := GetSwapOutKey(unit.swapOut)
+			gfspunit := &gfspserver.SwapOutUnit{
+				GlobalVirtualGroupFamilyId: unit.swapOut.GlobalVirtualGroupFamilyId,
+				SwapOutKey:                 swapOutKey,
+				SuccessorSpId:              unit.swapOut.SuccessorSpId,
+				Status:                     int32(Migrating),
+			}
+			swapOutSrcUnitMap[swapOutKey] = gfspunit
 		}
-		srcSPSwapOutPlan.SwapOut = append(srcSPSwapOutPlan.SwapOut, gfspunit)
-	}
+		for _, unit := range s.swapOutPlan.completedSwapOut {
+			swapOutKey := GetSwapOutKey(unit.swapOut)
+			swapOutSrcUnitMap[swapOutKey].Status = int32(Migrated)
+		}
 
-	res.SpExit.SrcSwapOut = srcSPSwapOutPlan
+		for _, swapOut := range swapOutSrcUnitMap {
+			res.SwapOutSrc = append(res.SwapOutSrc, swapOut)
+		}
+	}
 
 	// dest sp
-	for _, unit := range s.taskRunner.swapOutUnitMap {
-		gfspunit := &gfspserver.SwapOutUnit{
-			IsSecondary:                unit.isSecondary,
-			IsFamily:                   unit.isFamily,
-			GlobalVirtualGroupFamilyId: unit.swapOut.GlobalVirtualGroupFamilyId,
-			SuccessorSpId:              unit.swapOut.SuccessorSpId,
-			Status:                     1,
+	if s.taskRunner != nil {
+		s.taskRunner.mutex.Lock()
+		defer s.taskRunner.mutex.Unlock()
+		swapOutUnitMap := make(map[string]*gfspserver.SwapOutUnit)
+
+		for _, unit := range s.taskRunner.swapOutUnitMap {
+			swapOutKey := GetSwapOutKey(unit.swapOut)
+			gfspunit := &gfspserver.SwapOutUnit{
+				GlobalVirtualGroupFamilyId: unit.swapOut.GlobalVirtualGroupFamilyId,
+				SuccessorSpId:              unit.swapOut.SuccessorSpId,
+				SwapOutKey:                 swapOutKey,
+			}
+
+			swapOutUnitMap[swapOutKey] = gfspunit
+			res.SwapOutDest = append(res.SwapOutDest, gfspunit)
 		}
-		destSPTaskRunner.SwapOut = append(srcSPSwapOutPlan.SwapOut, gfspunit)
+
+		// scan gvg
+		for _, gvgUnit := range s.taskRunner.gvgUnits {
+			gvg := &gfspserver.GfSpMigrateGVG{
+				LastMigratedObjectId: gvgUnit.lastMigratedObjectID,
+				Status:               int32(gvgUnit.migrateStatus),
+			}
+			swapOutKey := gvgUnit.swapOutKey
+			swapOutUnitMap[swapOutKey].GvgTask = append(swapOutUnitMap[swapOutKey].GvgTask, gvg)
+		}
+
+		for _, swapOut := range swapOutUnitMap {
+			res.SwapOutDest = append(res.SwapOutDest, swapOut)
+		}
+
+		res.SelfSpId = s.selfSP.GetId()
 	}
 
-	for _, unit := range s.taskRunner.gvgUnits {
-		gvg := &gfspserver.GfSpMigrateGVG{
-			LastMigratedObjectId: unit.lastMigratedObjectID,
-			SwapOutKey:           unit.swapOutKey,
-			Status:               int32(unit.migrateStatus),
-		}
-		destSPTaskRunner.GvgTask = append(destSPTaskRunner.GvgTask, gvg)
-	}
-
-	res.SpExit.DestRunner = destSPTaskRunner
 	log.Debugw("ListSPExitPlan", "ListSPExitPlan", res)
 	return res, nil
 }

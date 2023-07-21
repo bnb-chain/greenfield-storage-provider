@@ -2,6 +2,8 @@ package gfspclient
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -44,7 +46,11 @@ func (s *GfSpClient) QueryBucketMigrate(ctx context.Context, endpoint string) (s
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()
 	}
-	return resp.String(), nil
+	jsonData, err := json.Marshal(resp)
+	if err != nil {
+		return "", errors.New("error converting response to JSON")
+	}
+	return string(jsonData), nil
 }
 
 func (s *GfSpClient) QuerySPExit(ctx context.Context, endpoint string) (string, error) {
@@ -63,5 +69,9 @@ func (s *GfSpClient) QuerySPExit(ctx context.Context, endpoint string) (string, 
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()
 	}
-	return resp.String(), nil
+	jsonData, err := json.Marshal(resp)
+	if err != nil {
+		return "", errors.New("error converting response to JSON")
+	}
+	return string(jsonData), nil
 }

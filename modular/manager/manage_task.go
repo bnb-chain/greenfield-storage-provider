@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"github.com/go-errors/errors"
 	"net/http"
 	"strings"
 	"time"
@@ -715,13 +716,23 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	return tasks, nil
 }
 
-func (m *ManageModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
-	res, err := m.bucketMigrateScheduler.listExecutePlan()
+func (m *ManageModular) QueryBucketMigrate(ctx context.Context) (res *gfspserver.GfSpQueryBucketMigrateResponse, err error) {
+	if m.bucketMigrateScheduler != nil {
+		res, err = m.bucketMigrateScheduler.listExecutePlan()
+	} else {
+		res, err = nil, errors.New("bucketMigrateScheduler not exit")
+	}
+
 	return res, err
 }
 
-func (m *ManageModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
-	res, err := m.spExitScheduler.ListSPExitPlan()
+func (m *ManageModular) QuerySpExit(ctx context.Context) (res *gfspserver.GfSpQuerySpExitResponse, err error) {
+	if m.spExitScheduler != nil {
+		res, err = m.spExitScheduler.ListSPExitPlan()
+	} else {
+		res, err = nil, errors.New("spExitScheduler not exit")
+	}
+
 	return res, err
 }
 
