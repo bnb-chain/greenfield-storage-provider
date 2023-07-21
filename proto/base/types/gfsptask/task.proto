@@ -96,14 +96,15 @@ message GfSpReceivePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  uint32 replicate_idx = 4;
-  int32 piece_idx = 5;
+  uint32 segment_idx = 4;
+  int32 redundancy_idx = 5;
   int64 piece_size = 6;
   bytes piece_checksum = 7;
   bytes signature = 8;
   bool sealed = 9;
-  uint32 global_virtual_group_id = 10;
-  bool bucket_migration = 11;
+  bool finished = 10;
+  uint32 global_virtual_group_id = 11;
+  bool bucket_migration = 12;
 }
 
 message GfSpSealObjectTask {

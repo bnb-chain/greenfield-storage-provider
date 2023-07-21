@@ -3,6 +3,7 @@ package permission
 import (
 	"context"
 	"errors"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
@@ -90,7 +91,7 @@ func (m *Module) handlePutPolicy(ctx context.Context, block *tmctypes.ResultBloc
 		ExpirationTime:  expireTime,
 	}
 
-	statements := make([]*models.Statements, 0, 0)
+	statements := make([]*models.Statements, 0)
 	for _, statement := range policy.Statements {
 		actionValue := 0
 		for _, action := range statement.Actions {

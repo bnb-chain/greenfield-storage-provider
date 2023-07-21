@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"errors"
+
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	vgtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"

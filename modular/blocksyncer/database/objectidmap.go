@@ -2,8 +2,8 @@ package database
 
 import (
 	"context"
-	"gorm.io/gorm"
 
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"

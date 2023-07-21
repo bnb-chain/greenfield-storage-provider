@@ -81,22 +81,22 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 
 	log.Debugw("replicate task info", "task_sps", rTask.GetSecondaryEndpoints())
 
-	doReplicateECPiece := func(pieceIdx uint32, data [][]byte) {
+	doReplicateECPiece := func(segIdx uint32, data [][]byte) {
 		log.Debug("start to replicate ec piece")
-		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
+		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate ec piece", "sp", sp)
 			wg.Add(1)
-			go e.doReplicatePiece(ctx, &wg, rTask, sp, uint32(rIdx), pieceIdx, data[rIdx])
+			go e.doReplicatePiece(ctx, &wg, rTask, sp, segIdx, int32(redundancyIdx), data[redundancyIdx])
 		}
 		wg.Wait()
 		log.Debug("finish to replicate ec piece")
 	}
-	doReplicateSegmentPiece := func(pieceIdx uint32, data []byte) {
+	doReplicateSegmentPiece := func(segIdx uint32, data []byte) {
 		log.Debug("start to replicate segment piece")
-		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
+		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate segment piece", "sp", sp)
 			wg.Add(1)
-			go e.doReplicatePiece(ctx, &wg, rTask, sp, uint32(rIdx), pieceIdx, data)
+			go e.doReplicatePiece(ctx, &wg, rTask, sp, segIdx, int32(redundancyIdx), data)
 		}
 		wg.Wait()
 		log.Debug("finish to replicate segment piece")
@@ -105,7 +105,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		log.Debug("start to done replicate")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", sp)
-			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, uint32(rIdx))
+			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, int32(rIdx))
 			if innerErr == nil {
 				secondarySignatures[rIdx] = signature
 				metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
@@ -160,17 +160,19 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 }
 
 func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.ReplicatePieceTask,
-	spEndpoint string, replicateIdx uint32, pieceIdx uint32, data []byte) (err error) {
+	spEndpoint string, segmentIdx uint32, redundancyIdx int32, data []byte) (err error) {
 	var signature []byte
-	rTask.AppendLog(fmt.Sprintf("executor-begin-replicate-piece-sidx:%d-ridx-%d", pieceIdx, replicateIdx))
+	rTask.AppendLog(fmt.Sprintf("executor-begin-replicate-piece-sIdx:%d-rIdx-%d", segmentIdx, redundancyIdx))
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d-error:%s-endpoint:%s", pieceIdx, replicateIdx, err.Error(), spEndpoint))
+			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sIdx:%d-rIdx-%d-error:%s-endpoint:%s",
+				segmentIdx, redundancyIdx, err.Error(), spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureReplicateOnePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorFailureReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		} else {
-			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sidx:%d-ridx-%d-endpoint:%s", pieceIdx, replicateIdx, spEndpoint))
+			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sIdx:%d-rIdx-%d-endpoint:%s",
+				segmentIdx, redundancyIdx, spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateOnePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		}
@@ -178,7 +180,7 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}()
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
-		e.baseApp.TaskPriority(rTask), replicateIdx, int32(pieceIdx), int64(len(data)))
+		e.baseApp.TaskPriority(rTask), segmentIdx, redundancyIdx, int64(len(data)))
 	receive.SetPieceChecksum(hash.GenerateChecksum(data))
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
 	signTime := time.Now()
@@ -186,8 +188,8 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_cost").Observe(time.Since(signTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_end").Observe(time.Since(startTime).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign receive task", "replicate_idx", replicateIdx,
-			"piece_idx", pieceIdx, "error", err)
+		log.CtxErrorw(ctx, "failed to sign receive task", "segment_idx", segmentIdx,
+			"redundancy_idx", redundancyIdx, "error", err)
 		return
 	}
 	receive.SetSignature(signature)
@@ -196,31 +198,33 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_cost").Observe(time.Since(replicateOnePieceTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_end").Observe(time.Since(startTime).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to replicate piece", "replicate_idx", replicateIdx,
-			"piece_idx", pieceIdx, "error", err)
+		log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx,
+			"redundancy_idx", redundancyIdx, "error", err)
 		return
 	}
-	log.CtxDebugw(ctx, "succeed to replicate piece", "replicate_idx", replicateIdx,
-		"piece_idx", pieceIdx)
+	log.CtxDebugw(ctx, "succeed to replicate piece", "segment_idx", segmentIdx,
+		"redundancy_idx", redundancyIdx)
 	return
 }
 
 func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask,
-	spEndpoint string, replicateIdx uint32) ([]byte, error) {
+	spEndpoint string, redundancyIdx int32) ([]byte, error) {
 	var (
 		err           error
 		signature     []byte
 		taskSignature []byte
 	)
-	rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d", replicateIdx))
+	rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-rIdx-%d", redundancyIdx))
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d-error:%s-endpoint:%s", replicateIdx, err.Error(), spEndpoint))
+			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-rIdx-%d-error:%s-endpoint:%s",
+				redundancyIdx, err.Error(), spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		} else {
-			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-ridx-%d-endpoint:%s", replicateIdx, spEndpoint))
+			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-rIdx-%d-endpoint:%s",
+				redundancyIdx, spEndpoint))
 			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
 			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		}
@@ -228,14 +232,14 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
-		e.baseApp.TaskPriority(rTask), replicateIdx, -1, 0)
+		e.baseApp.TaskPriority(rTask), 0, redundancyIdx, 0)
+	receive.SetFinished(true)
 	signTime := time.Now()
 	taskSignature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
 	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_cost").Observe(time.Since(signTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("background_sign_receive_end").Observe(time.Since(signTime).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign done receive task",
-			"replicate_idx", replicateIdx, "error", err)
+		log.CtxErrorw(ctx, "failed to sign done receive task", "redundancy_idx", redundancyIdx, "error", err)
 		return nil, err
 	}
 	receive.SetSignature(taskSignature)
@@ -245,18 +249,17 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_end").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint,
-			"replicate_idx", replicateIdx, "error", err)
+			"redundancy_idx", redundancyIdx, "error", err)
 		return nil, err
 	}
-	if int(replicateIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
-		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds",
-			"replicate_idx", replicateIdx)
+	if int(redundancyIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
+		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "redundancy_idx", redundancyIdx)
 		return nil, ErrReplicateIdsOutOfBounds
 	}
 
 	// TODO:
 	// veritySignatureTime := time.Now()
-	// TODO get gvgId and blsPubKey from task, bls pub key alreay injected via key manager for current sp
+	// TODO get gvgID and blsPubKey from task, bls pub key alreay injected via key manager for current sp
 	// var blsPubKey bls.PublicKey
 	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
 	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
@@ -264,10 +267,10 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	metrics.PerfPutObjectTime.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
-			"replicate_idx", replicateIdx, "error", err)
+			"redundancy_idx", redundancyIdx, "error", err)
 		return nil, err
 	}
-	log.CtxDebugw(ctx, "succeed to done replicate", "endpoint", spEndpoint, "replicate_idx", replicateIdx)
+	log.CtxDebugw(ctx, "succeed to done replicate", "endpoint", spEndpoint, "redundancy_idx", redundancyIdx)
 	return signature, nil
 }
 

@@ -247,7 +247,7 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 }
 
 // GetReplicatePieceChecksum gets replicate piece checksum.
-func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32) ([]byte, error) {
+func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) ([]byte, error) {
 	var (
 		err           error
 		queryReturn   PieceHashTable
@@ -267,7 +267,7 @@ func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, replicateIdx uint3
 	}()
 
 	if err = s.db.Model(&PieceHashTable{}).
-		Where("object_id = ? and replicate_index = ? and piece_index = ?", objectID, replicateIdx, pieceIdx).
+		Where("object_id = ? and segment_index = ? and redundancy_index = ?", objectID, segmentIdx, redundancyIdx).
 		First(&queryReturn).Error; err != nil {
 		return nil, err
 	}
@@ -278,11 +278,10 @@ func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, replicateIdx uint3
 }
 
 // SetReplicatePieceChecksum sets replicate checksum.
-func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32, checksum []byte) error {
+func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error {
 	var (
-		result          *gorm.DB
-		insertPieceHash *PieceHashTable
-		err             error
+		result *gorm.DB
+		err    error
 	)
 	startTime := time.Now()
 	defer func() {
@@ -297,11 +296,11 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, replicateIdx uint3
 			time.Since(startTime).Seconds())
 	}()
 
-	insertPieceHash = &PieceHashTable{
-		ObjectID:       objectID,
-		ReplicateIndex: replicateIdx,
-		PieceIndex:     pieceIdx,
-		PieceChecksum:  hex.EncodeToString(checksum),
+	insertPieceHash := &PieceHashTable{
+		ObjectID:        objectID,
+		SegmentIndex:    segmentIdx,
+		RedundancyIndex: redundancyIdx,
+		PieceChecksum:   hex.EncodeToString(checksum),
 	}
 	result = s.db.Create(insertPieceHash)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
@@ -315,7 +314,7 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, replicateIdx uint3
 }
 
 // DeleteReplicatePieceChecksum deletes piece checksum.
-func (s *SpDBImpl) DeleteReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32) (err error) {
+func (s *SpDBImpl) DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -330,17 +329,17 @@ func (s *SpDBImpl) DeleteReplicatePieceChecksum(objectID uint64, replicateIdx ui
 	}()
 
 	err = s.db.Delete(&PieceHashTable{
-		ObjectID:       objectID,     // should be the primary key
-		ReplicateIndex: replicateIdx, // should be the primary key
-		PieceIndex:     pieceIdx,     // should be the primary key
+		ObjectID:        objectID,
+		SegmentIndex:    segmentIdx,
+		RedundancyIndex: redundancyIdx,
 	}).Error
 	return err
 }
 
 // GetAllReplicatePieceChecksum gets all the piece checksums.
-func (s *SpDBImpl) GetAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) ([][]byte, error) {
+func (s *SpDBImpl) GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
 	var (
-		pieceIndex        uint32
+		segmentIdx        uint32
 		err               error
 		pieceChecksum     []byte
 		pieceChecksumList = make([][]byte, 0)
@@ -358,21 +357,21 @@ func (s *SpDBImpl) GetAllReplicatePieceChecksum(objectID uint64, replicateIdx ui
 			time.Since(startTime).Seconds())
 	}()
 
-	for pieceIndex < pieceCount {
-		pieceChecksum, err = s.GetReplicatePieceChecksum(objectID, replicateIdx, pieceIndex)
+	for segmentIdx < pieceCount {
+		pieceChecksum, err = s.GetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx)
 		if err != nil {
 			return nil, err
 		}
 		pieceChecksumList = append(pieceChecksumList, pieceChecksum)
-		pieceIndex++
+		segmentIdx++
 	}
 	return pieceChecksumList, nil
 }
 
 // DeleteAllReplicatePieceChecksum deletes all the piece checksum.
-func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) error {
+func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error {
 	var (
-		pieceIndex uint32
+		segmentIdx uint32
 		err        error
 	)
 	startTime := time.Now()
@@ -388,12 +387,12 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx
 			time.Since(startTime).Seconds())
 	}()
 
-	for pieceIndex < pieceCount {
-		err = s.DeleteReplicatePieceChecksum(objectID, replicateIdx, pieceIndex)
+	for segmentIdx < pieceCount {
+		err = s.DeleteReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx)
 		if err != nil {
 			return err
 		}
-		pieceIndex++
+		segmentIdx++
 	}
 	return nil
 }

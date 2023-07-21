@@ -3,6 +3,7 @@ package virtualgroup
 import (
 	"context"
 	"errors"
+
 	vgtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"

@@ -58,6 +58,7 @@ const (
 	listMigrateBucketEventsRouterName              = "ListMigrateBucketEvents"
 	listSwapOutEventsRouterName                    = "ListSwapOutEvents"
 	listSpExitEventsRouterName                     = "ListSpExitEvents"
+	verifyPermissionByIDRouterName                 = "VerifyPermissionByID"
 )
 
 const (
@@ -190,7 +191,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodPost).
 		Queries(ListBucketsByBucketIDQuery, "").
 		HandlerFunc(g.listBucketsByBucketIDHandler)
-
+	router.Path("/").
+		Name(verifyPermissionByIDRouterName).
+		Methods(http.MethodGet).
+		Queries(VerifyPermissionByIDQuery, "").
+		HandlerFunc(g.verifyPermissionByIDHandler)
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID
 		router.Path("/").Name(getPaymentByBucketIDRouterName).Methods(http.MethodGet).Queries(GetPaymentByBucketIDQuery, "").HandlerFunc(g.getPaymentByBucketIDHandler)

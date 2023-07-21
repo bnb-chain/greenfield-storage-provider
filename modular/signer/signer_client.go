@@ -698,7 +698,7 @@ func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gn
 		log.CtxErrorw(ctx, "failed to wait next block", "error", err)
 		return 0, err
 	}
-	nonce, err := gnfdClient.GetNonce(ctx)
+	nonce, err := gnfdClient.GetNonce(context.Background())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get seal account nonce on chain", "error", err)
 		return 0, err

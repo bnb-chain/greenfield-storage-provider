@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gorm.io/gorm"
 	"sync/atomic"
 	"time"
+
+	"gorm.io/gorm"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -146,13 +147,6 @@ func (i *Impl) Process(height uint64) error {
 	allSQL = append(allSQL, map[string][]interface{}{
 		sql: val,
 	})
-
-	for _, m := range allSQL {
-		for k, v := range m {
-			log.Infof("sql: %s", k)
-			log.Infof("param: %v", v)
-		}
-	}
 
 	finalSQL := ""
 	finalVal := make([]interface{}, 0)

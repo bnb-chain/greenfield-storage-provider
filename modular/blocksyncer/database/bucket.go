@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+
 	"github.com/forbole/juno/v4/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
