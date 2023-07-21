@@ -66,7 +66,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	}
 
 	// the ChargedQuotaSize
-	if bucketTraffic.ReadQuotaSize != quota.ChargedQuotaSize {
+	if bucketTraffic.ChargedQuotaSize != quota.ChargedQuotaSize {
 		// update if chain quota has changed
 		result := s.db.Model(&BucketTrafficTable{}).
 			Where("bucket_id = ?", bucketTraffic.BucketID).
@@ -82,7 +82,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 		if result.RowsAffected != 1 {
 			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
-		bucketTraffic.ReadQuotaSize = quota.ChargedQuotaSize
+		bucketTraffic.ChargedQuotaSize = quota.ChargedQuotaSize
 	}
 
 	recordQuotaCost := record.ReadSize
@@ -198,7 +198,7 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTr
 		FreeQuotaConsumedSize: queryReturn.FreeQuotaConsumedSize,
 		BucketName:            queryReturn.BucketName,
 		ReadConsumedSize:      queryReturn.ReadConsumedSize,
-		ReadQuotaSize:         queryReturn.ChargedQuotaSize,
+		ChargedQuotaSize:      queryReturn.ChargedQuotaSize,
 		ModifyTime:            queryReturn.ModifiedTime.Unix(),
 	}, nil
 }

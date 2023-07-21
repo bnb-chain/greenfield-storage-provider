@@ -73,7 +73,7 @@ type BucketTraffic struct {
 	ReadConsumedSize      uint64
 	FreeQuotaSize         uint64 // the total free quota size of SP price meta
 	FreeQuotaConsumedSize uint64 // the consumed free quota size
-	ReadQuotaSize         uint64 // the total charged quota of bucket
+	ChargedQuotaSize      uint64 // the total charged quota of bucket
 	ModifyTime            int64
 }
 
