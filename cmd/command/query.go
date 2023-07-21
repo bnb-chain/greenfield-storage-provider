@@ -380,11 +380,11 @@ func getBucketMigrateAction(ctx *cli.Context) error {
 		endpoint = ctx.String(endpointFlag.Name)
 	}
 	client := &gfspclient.GfSpClient{}
-	infos, err := client.QueryBucketMigrate(context.Background(), endpoint)
+	info, err := client.QueryBucketMigrate(context.Background(), endpoint)
 	if err != nil {
 		return err
 	}
-	fmt.Printf(infos)
+	fmt.Print(info)
 
 	return nil
 }
@@ -404,11 +404,11 @@ func getSPExitAction(ctx *cli.Context) error {
 		endpoint = ctx.String(endpointFlag.Name)
 	}
 	client := &gfspclient.GfSpClient{}
-	infos, err := client.QuerySPExit(context.Background(), endpoint)
+	info, err := client.QuerySPExit(context.Background(), endpoint)
 	if err != nil {
 		return err
 	}
-	fmt.Printf(infos)
+	fmt.Print(info)
 
 	return nil
 }

@@ -2,8 +2,9 @@ package module
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"io"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"

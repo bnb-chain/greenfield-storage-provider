@@ -3,9 +3,10 @@ package manager
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"sync"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"

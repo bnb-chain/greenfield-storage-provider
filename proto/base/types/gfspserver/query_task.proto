@@ -15,14 +15,13 @@ message GfSpQueryTasksResponse {
   repeated string task_info = 2;
 }
 
-message GfSpQueryBucketMigrateRequest {
-}
+message GfSpQueryBucketMigrateRequest {}
 
 message GfSpBucketMigrate {
-  string bucket_name =2;
-  uint64 bucket_id = 3;
-  string migrate_status = 4;
-  repeated GfSpMigrateGVG gvg_task = 5;
+  string bucket_name = 1;
+  uint64 bucket_id = 2;
+  string migrate_status = 3;
+  repeated GfSpMigrateGVG gvg_task = 4;
 }
 
 message GfSpMigrateGVG {
@@ -37,8 +36,7 @@ message GfSpQueryBucketMigrateResponse {
   repeated GfSpBucketMigrate bucket_migrate_plan = 2;
 }
 
-message GfSpQuerySpExitRequest {
-}
+message GfSpQuerySpExitRequest {}
 
 message GfSpSPExit {
   SrcSPSwapOutPlan src_swap_out = 1;
@@ -59,7 +57,7 @@ message SwapOutUnit {
 }
 
 message SrcSPSwapOutPlan {
-  repeated SwapOutUnit swap_out = 3;
+  repeated SwapOutUnit swap_out = 1;
 }
 
 message GfSpQuerySpExitResponse {
