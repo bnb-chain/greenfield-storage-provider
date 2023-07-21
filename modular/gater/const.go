@@ -240,6 +240,15 @@ const (
 	NotifyMigrateGVGTaskPath = "/greenfield/migrate/v1/notify-migrate-gvg-task"
 	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header.
 	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
+
+	// ObjectXmlSuffix defines the object has xml suffix
+	ObjectXmlSuffix = "xml"
+	// ObjectPdfSuffix defines the object has pdf suffix
+	ObjectPdfSuffix = "pdf"
+	// UniversalEndpointSpecialSuffixQuery defines the query of universal endpoint with special suffix
+	UniversalEndpointSpecialSuffixQuery = "objectPath"
+	// objectSpecialSuffixUrlReplacement defines the replacement part for universal endpoint object url with special suffix
+	objectSpecialSuffixUrlReplacement = "?" + UniversalEndpointSpecialSuffixQuery + "="
 )
 
 const (

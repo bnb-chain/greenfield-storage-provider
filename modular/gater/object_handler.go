@@ -634,16 +634,18 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
 func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		authenticated bool
-		isRange       bool
-		rangeStart    int64
-		rangeEnd      int64
-		// redirectURL          string
+		err                  error
+		reqCtx               *RequestContext
+		authenticated        bool
+		isRange              bool
+		rangeStart           int64
+		rangeEnd             int64
+		redirectURL          string
 		params               *storagetypes.Params
 		escapedObjectName    string
 		isRequestFromBrowser bool
+		spEndpoint           string
+		getEndpointErr       error
 	)
 	startTime := time.Now()
 	defer func() {
@@ -727,14 +729,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			err = ErrConsensus
 			return
 		}
-		spEndpoint, getEndpointErr := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
+		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
 		if getEndpointErr != nil || spEndpoint == "" {
 			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}
 
-		redirectURL := spEndpoint + r.RequestURI
+		redirectURL = spEndpoint + r.RequestURI
 		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
 		http.Redirect(w, r, redirectURL, 302)
@@ -759,6 +761,17 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			expiry    string
 			signature string
 		)
+		splitPeriod := strings.Split(r.RequestURI, ".")
+		splitSuffix := splitPeriod[len(splitPeriod)-1]
+		if !strings.Contains(r.RequestURI, objectSpecialSuffixUrlReplacement) &&
+			(strings.EqualFold(splitSuffix, ObjectPdfSuffix) || strings.EqualFold(splitSuffix, ObjectXmlSuffix)) {
+			objectPathRequestURL := strings.Replace(r.RequestURI, "/", objectSpecialSuffixUrlReplacement, 1)
+			redirectURL = spEndpoint + objectPathRequestURL
+			log.Debugw("getting redirect url for private object:", "redirectURL", redirectURL)
+			http.Redirect(w, r, redirectURL, 302)
+			return
+		}
+
 		queryParams := r.URL.Query()
 		if queryParams["expiry"] != nil {
 			expiry = queryParams["expiry"][0]
