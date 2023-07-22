@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/urfave/cli/v2"
 )
 
 const (

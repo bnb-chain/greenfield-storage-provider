@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.DownloadObjectTask, opts ...grpc.DialOption) (

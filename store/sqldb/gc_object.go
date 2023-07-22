@@ -3,8 +3,9 @@ package sqldb
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 )
 
 // InsertGCObjectProgress is used to insert gc object progress.

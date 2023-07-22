@@ -1,6 +1,8 @@
 package bsdb
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ListSwapOutEvents list swap out events
 func (b *BsDBImpl) ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, []*EventCompleteSwapOut, []*EventCancelSwapOut, error) {
