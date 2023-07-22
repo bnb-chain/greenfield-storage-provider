@@ -3,11 +3,12 @@ package consensus
 import (
 	"context"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Consensus is the interface to query greenfield consensus data. the consensus
