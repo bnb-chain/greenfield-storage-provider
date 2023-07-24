@@ -134,10 +134,13 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(fi
 			continue
 		}
 		for _, gvg := range vgf.GVGMap {
+			log.Debugw("prepare to add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			if filter.CheckGVG(&vgmgr.GlobalVirtualGroupMeta{
-				SecondarySPIDs: gvg.SecondarySPIDs,
+				SecondarySPIDs:     gvg.SecondarySPIDs,
+				StakingStorageSize: gvg.StakingStorageSize,
 			}) {
 				picker.addGlobalVirtualGroup(gvg)
+				log.Debugw("add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			}
 		}
 		if globalVirtualGroupID, err = picker.pickIndex(); err != nil {
