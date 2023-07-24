@@ -11,13 +11,7 @@ on:
       - feat-*
 
   pull_request:
-    branches:
-      - master
-      - develop
-      - ci-*
-      - release*
-      - fix-release*
-      - feat-*
+
 
 jobs:
   # commit-message-lint:

@@ -13,13 +13,7 @@ on:
       - feat-*
 
   pull_request:
-    branches:
-      - master
-      - develop
-      - ci-*
-      - release*
-      - fix-release*
-      - feat-*
+
 
 jobs:
   golangci:

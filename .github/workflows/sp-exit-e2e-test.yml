@@ -10,15 +10,6 @@ on:
       - fix-release*
       - feat-*
 
-  pull_request:
-    branches:
-      - master
-      - develop
-      - ci-*
-      - release*
-      - fix-release*
-      - feat-*
-
 jobs:
   e2e-test:
     strategy:
