@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: all check format vet generate install-tools buf-gen build test tidy clean
+.PHONY: all check format vet generate install-tools buf-gen proto-clean build test tidy clean
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
@@ -25,13 +25,16 @@ generate:
 	go generate ./...
 
 install-tools:
-	go install github.com/golang/mock/mockgen@v1.6.0
+	go install go.uber.org/mock/mockgen@latest
 	go install github.com/bufbuild/buf/cmd/buf@v1.13.1
 	go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
 
 buf-gen:
 	rm -rf ./base/types/*/*.pb.go && rm -rf ./modular/metadata/types/*.pb.go && rm -rf ./store/types/*.pb.go
 	buf generate
+
+proto-clean:
+	rm -rf ./base/types/*/*.pb.go && rm -rf ./modular/metadata/types/*.pb.go && rm -rf ./store/types/*.pb.go
 
 build:
 	bash +x ./build.sh
