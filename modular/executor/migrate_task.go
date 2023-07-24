@@ -76,12 +76,6 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 		return err
 	}
 
-	// bucketName := object.GetObjectInfo().GetBucketName()
-	// bucketInfo, err := e.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
-	// if err != nil {
-	// 	log.CtxErrorw(ctx, "failed to query bucket info by bucket name", "bucket_name", bucketName, "error", err)
-	// 	return err
-	// }
 	if bucketID != 0 {
 		// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another secondary SP
 		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
@@ -93,14 +87,8 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 	redundancyIdx, isSecondary := util.ValidateSecondarySPs(selfSpID, objectDetails.GetGvg().GetSecondarySpIds())
 	isPrimary := util.ValidatePrimarySP(selfSpID, objectDetails.GetGvg().GetPrimarySpId())
 	if !isPrimary && !isSecondary {
-		return fmt.Errorf("invalid sp id: %s", selfSpID)
+		return fmt.Errorf("invalid sp id: %d", selfSpID)
 	}
-	// redundancyIdx, isSecondary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, e.baseApp.GfSpClient(),
-	// 	task.GetSrcSp().GetId(), bucketID, object.GetObjectInfo().GetLocalVirtualGroupId())
-	// if err != nil {
-	// 	log.CtxErrorw(ctx, "failed to validate and get sp index within gvg secondary sps", "error", err)
-	// 	return err
-	// }
 	migratePieceTask := &gfsptask.GfSpMigratePieceTask{
 		ObjectInfo:    object.GetObjectInfo(),
 		StorageParams: params,

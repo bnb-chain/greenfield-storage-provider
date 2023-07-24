@@ -65,10 +65,7 @@ func ValidateSecondarySPs(selfSpID uint32, secondarySpIDs []uint32) (int, bool) 
 
 // ValidatePrimarySP returns whether selfSpID is primarySpID
 func ValidatePrimarySP(selfSpID, primarySpID uint32) bool {
-	if selfSpID == primarySpID {
-		return true
-	}
-	return false
+	return selfSpID == primarySpID
 }
 
 // BlsAggregate aggregate secondary sp bls signature
