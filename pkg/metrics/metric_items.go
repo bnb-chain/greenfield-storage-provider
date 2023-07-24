@@ -67,8 +67,8 @@ var MetricsItems = []prometheus.Collector{
 
 	// blocksyncer metrics category
 	ProcessBlockTime,
-	//EventAvgTime,
-	//TxAvgTime,
+	// EventAvgTime,
+	// TxAvgTime,
 }
 
 // basic metrics items
@@ -263,14 +263,17 @@ var (
 		Help:    "Track process block workflow costs.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"process_block_time"})
-	//EventAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	// EventAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	//	Name:    "process_block_time",
 	//	Help:    "Track process block workflow costs.",
 	//	Buckets: prometheus.DefBuckets,
-	//}, []string{"event_avg_time"})
-	//TxAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	// }, []string{"event_avg_time"})
+	// TxAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	//	Name:    "process_block_time",
 	//	Help:    "Track process block workflow costs.",
 	//	Buckets: prometheus.DefBuckets,
-	//}, []string{"tx_avg_time"})
+	// }, []string{"tx_avg_time"})
 )
+
+// SP exit and bucket migration metrics
+var ()

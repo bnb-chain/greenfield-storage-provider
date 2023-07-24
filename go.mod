@@ -12,12 +12,13 @@ require (
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.1
 	github.com/consensys/gnark-crypto v0.7.0
+	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/felixge/fgprof v0.9.3
 	github.com/forbole/juno/v4 v4.0.0-00010101000000-000000000000
-	github.com/golang/mock v1.6.0
+	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2 v2.0.0-rc.3
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
@@ -27,16 +28,19 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/libp2p/go-libp2p v0.25.1
 	github.com/multiformats/go-multiaddr v0.8.0
-	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
+	github.com/pelletier/go-toml/v2 v2.0.7
 	github.com/pkg/sftp v1.13.5
 	github.com/prometheus/client_golang v1.15.0
+	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stretchr/testify v1.8.4
 	github.com/ulule/limiter/v3 v3.11.1
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
 	go.opentelemetry.io/otel/trace v1.11.0
+	go.uber.org/mock v0.2.0
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
+	golang.org/x/crypto v0.9.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.56.1
@@ -74,7 +78,6 @@ require (
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0 // indirect
@@ -106,9 +109,9 @@ require (
 	github.com/go-co-op/gocron v1.13.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/go-sql-driver/mysql v1.7.0
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
@@ -205,12 +208,12 @@ require (
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/naoina/go-stringutil v0.1.0 // indirect
+	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.2 // indirect
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.7
 	github.com/peterh/liner v1.2.0 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -238,7 +241,6 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/spaolacci/murmur3 v1.1.0
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
@@ -267,7 +269,6 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.15.0 // indirect
 	go.uber.org/fx v1.18.2 // indirect
-	golang.org/x/crypto v0.9.0
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect

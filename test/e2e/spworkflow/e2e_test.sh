@@ -3,12 +3,11 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-#GREENFIELD_REPO_TAG="feat_sp_exit_develop"
 GREENFIELD_REPO_TAG="v0.2.3-alpha.6"
-#GREENFIELD_CMD_TAG="feat-adaptor-sp-exit"
+# greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
-# feat-sp-exit-refactor-sp-info
-GREENFIELD_GO_SDK_TAG="e9fcd4155668718b117f50ff3c5085c0a1227421"
+# greenfield go sdk branch name: develop
+GREENFIELD_GO_SDK_TAG="5614440e16f1a01491169ee985de1257808ab2e2"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -176,7 +175,6 @@ function test_sp_exit() {
     cd ${workspace}/greenfield-cmd/build/
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     sleep 180
-    cd ${workspace}/greenfield-cmd/build/
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
