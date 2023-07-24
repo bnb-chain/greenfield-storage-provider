@@ -15,9 +15,7 @@ on:
       - master
       - develop
       - release*
-      - ci-*
       - fix-release*
-      - feat-*
 
 env:
   CGO_CFLAGS: "-O -D__BLST_PORTABLE__"

@@ -15,9 +15,7 @@ on:
       - master
       - develop
       - release*
-      - ci-*
       - fix-release*
-      - feat-*
 
 jobs:
   gosec:

@@ -16,11 +16,9 @@ on:
   pull_request:
     branches:
       - master
-      - ci-*
       - develop
       - release*
       - fix-release*
-      - feat-*
 
     paths:
       - 'proto/**'
