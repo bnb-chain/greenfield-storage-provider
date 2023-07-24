@@ -809,8 +809,7 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 			return err
 		}
 	}
-	policy := NewGenerateGVGSecondarySPsPolicyByPrefer(params, m.gvgPreferSPList)
-	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(policy)
+	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, m.gvgPreferSPList))
 	if err != nil {
 		return err
 	}
