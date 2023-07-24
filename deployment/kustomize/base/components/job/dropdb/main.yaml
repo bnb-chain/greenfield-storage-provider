@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dropdb
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      containers:
+      - name: db-operation
+        image: imega/mysql-client
+        command:
+        - /bin/sh
+        args:
+        - -c
+        - mysql
+          --host=$(echo $SP_DB_ADDRESS | cut -d ':' -f1)
+          --user=$SP_DB_USER
+          --password=$SP_DB_PASSWORD
+          --execute 'DROP DATABASE IF EXISTS storage_provider_db'
+        imagePullPolicy: Always
+        env:
+          - name: SP_DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_USER
+                name: default
+          - name: SP_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_PASSWORD
+                name: default
+          - name: SP_DB_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_ADDRESS
+                name: default
+      restartPolicy: Never

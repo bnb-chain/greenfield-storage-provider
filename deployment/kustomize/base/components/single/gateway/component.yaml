@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      serviceAccountName: nodereal-default
+      containers:
+      - name: gateway
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.3
+        args: ["--log.std", "-c", "/config/config.toml", "-server", "gateway,authenticator"]
+        env:
+          - name: SP_DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_USER
+                name: default
+          - name: SP_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_PASSWORD
+                name: default
+          - name: SP_DB_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_ADDRESS
+                name: default
+        resources:
+          limits:
+            cpu: "4"
+            memory: 8Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        ports:
+          - containerPort: 9033
+            name: gateway
+          - containerPort: 24367
+            name: metrics
+          - containerPort: 24368
+            name: pprof
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      volumes:
+        - name: config
+          configMap:
+            name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  ports:
+  - port: 9033
+    targetPort: 9033
+    name: gateway
+  - port: 24367
+    targetPort: 24367
+    name: metrics
+  - port: 24368
+    targetPort: 24368
+    name: pprof
+  selector:
+    app: gateway
