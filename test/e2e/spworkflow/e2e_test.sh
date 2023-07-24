@@ -248,7 +248,7 @@ function run_go_sdk_e2e() {
   set -e
   cd ${workspace}/greenfield-go-sdk/
   echo 'run greenfield go sdk e2e test'
-  go test -v e2e/e2e_migrate_bucket_test.go
+  make e2e_test
 }
 
 function main() {
