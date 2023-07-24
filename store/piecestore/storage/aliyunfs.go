@@ -9,11 +9,20 @@ import (
 
 	credentials_aliyun "github.com/aliyun/credentials-go/credentials"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+)
+
+// aliyunCredProviderName provides a name of aliyun credential provider
+const aliyunCredProviderName = "AliyunCredProvider"
+
+var (
+	// ErrAliyunCredentialsEmpty is emitted when aliyun credentials are empty.
+	errAliyunCredentialsEmpty = awserr.New("EmptyAliyunCreds", "aliyun credentials are empty", nil)
 )
 
 var _ ObjectStorage = &aliyunfsStore{}
@@ -24,34 +33,79 @@ var (
 	}
 )
 
+type aliyunCredProvider struct {
+	cred             credentials_aliyun.Credential
+	lastRetrieveTime time.Time
+}
+
+func newAliyunCredProvider(cred credentials_aliyun.Credential) credentials.Provider {
+	return &aliyunCredProvider{
+		cred:             cred,
+		lastRetrieveTime: time.Unix(0, 0),
+	}
+}
+
+// Retrieve returns nil if it successfully retrieved the value.
+// Error is returned if the value were not obtainable, or empty.
+func (c *aliyunCredProvider) Retrieve() (credentials.Value, error) {
+	accessKeyID, err := c.cred.GetAccessKeyId()
+	if err != nil {
+		return credentials.Value{ProviderName: aliyunCredProviderName}, errAliyunCredentialsEmpty
+	}
+
+	accessKeySecret, err := c.cred.GetAccessKeySecret()
+	if err != nil {
+		return credentials.Value{ProviderName: aliyunCredProviderName}, errAliyunCredentialsEmpty
+	}
+
+	securityToken, err := c.cred.GetSecurityToken()
+	if err != nil {
+		return credentials.Value{ProviderName: aliyunCredProviderName}, errAliyunCredentialsEmpty
+	}
+
+	c.lastRetrieveTime = time.Now()
+	return credentials.Value{
+		AccessKeyID:     *accessKeyID,
+		SecretAccessKey: *accessKeySecret,
+		SessionToken:    *securityToken,
+		ProviderName:    aliyunCredProviderName,
+	}, nil
+}
+
+// IsExpired returns if the credentials are no longer valid, and need
+// to be retrieved.
+func (c *aliyunCredProvider) IsExpired() bool {
+	// The default expiration time of aliyun credential is 1 hour.
+	// Here we try to update the credential every 30 minutes.
+	return time.Since(c.lastRetrieveTime) >= 30*time.Minute
+}
+
 type aliyunfsStore struct {
 	s3Store
-	awsConfig *aws.Config
 }
 
 func newAliyunfsStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
-	aliyunfsSession, awsConfig, bucket, err := aliyunfsSessionCache.newAliyunfsSession(cfg)
+	aliyunfsSession, bucket, err := aliyunfsSessionCache.newAliyunfsSession(cfg)
 	if err != nil {
 		log.Errorw("failed to new aliyunfs session", "error", err)
 		return nil, err
 	}
 	log.Infow("new aliyunfs store succeeds", "bucket", bucket)
-	store := &aliyunfsStore{s3Store{bucketName: bucket, api: s3.New(aliyunfsSession)}, awsConfig}
-	go store.updateSecurityToken()
+	store := &aliyunfsStore{s3Store{bucketName: bucket, api: s3.New(aliyunfsSession)}}
 	return store, nil
 }
 
-func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Session, *aws.Config, string, error) {
+func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Session, string, error) {
 	sc.Lock()
 	defer sc.Unlock()
 
 	endpoint, bucketName, disableSSL, err := parseAliyunfsBucketURL(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse aliyunfs bucket url", "error", err)
-		return nil, nil, "", err
+		return nil, "", err
 	}
 	if sess, ok := sc.sessions[cfg]; ok {
-		return sess, nil, bucketName, nil
+		return sess, bucketName, nil
 	}
 
 	key := getAliyunSecretKeyFromEnv(AliyunRegion, AliyunAccessKey, AliyunSecretKey, AliyunSessionToken)
@@ -78,67 +132,32 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		}
 		sess = session.Must(session.NewSession(awsConfig))
 		log.Debugw("use aksk to access aliyunfs", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
+
 	case SAIAMType:
 		irsa, roleARN, tokenPath := checkAliyunAvailable()
 		log.Debugw("aliyun env", "irsa", irsa, "roleARN", roleARN, "tokenPath", tokenPath)
 		if irsa {
-			err = setSecurityToken(awsConfig)
+			cred, err := credentials_aliyun.NewCredential(nil)
 			if err != nil {
-				return nil, nil, "", err
+				return nil, "", err
 			}
+
+			awsConfig.Credentials = credentials.NewCredentials(newAliyunCredProvider(cred))
 		} else {
-			return nil, nil, "", fmt.Errorf("failed to use sa to access aliyunfs")
+			return nil, "", fmt.Errorf("failed to use sa to access aliyunfs")
 		}
 		sess = session.Must(session.NewSession(awsConfig))
+
 	default:
 		log.Errorf("unknown IAM type: %s", cfg.IAMType)
-		return nil, nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
+		return nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
 	}
 	sc.sessions[cfg] = sess
-	return sess, awsConfig, bucketName, nil
+	return sess, bucketName, nil
 }
 
 func (m *aliyunfsStore) String() string {
 	return fmt.Sprintf("aliyunfs://%s/", m.s3Store.bucketName)
-}
-
-func (m *aliyunfsStore) updateSecurityToken() {
-	// The default expiration time is 1 hour, so we update it every 30 minutes.
-	ticker := time.NewTicker(30 * time.Minute)
-	defer ticker.Stop()
-
-	for {
-		<-ticker.C
-		if err := setSecurityToken(m.awsConfig); err != nil {
-			log.Errorf("update security token failed, err: %v", err)
-		}
-	}
-}
-
-func setSecurityToken(awsConfig *aws.Config) error {
-	cred, err := credentials_aliyun.NewCredential(nil)
-	if err != nil {
-		return err
-	}
-
-	accessKeyID, err := cred.GetAccessKeyId()
-	if err != nil {
-		return err
-	}
-
-	accessKeySecret, err := cred.GetAccessKeySecret()
-	if err != nil {
-		return err
-	}
-
-	securityToken, err := cred.GetSecurityToken()
-	if err != nil {
-		return err
-	}
-
-	log.Debugw("aliyun env", "accessKeyID", accessKeyID, "accessKeySecret", accessKeySecret, "securityToken", securityToken)
-	awsConfig.Credentials = credentials.NewStaticCredentials(*accessKeyID, *accessKeySecret, *securityToken)
-	return nil
 }
 
 func parseAliyunfsBucketURL(bucketURL string) (string, string, bool, error) {
