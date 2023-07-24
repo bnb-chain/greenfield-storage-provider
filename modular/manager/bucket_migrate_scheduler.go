@@ -2,11 +2,12 @@ package manager
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"errors"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"time"
+
+	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 
 	sdkmath "cosmossdk.io/math"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
@@ -47,13 +48,10 @@ func (f *PickDestGVGFilter) CheckFamily(familyID uint32) bool {
 func (f *PickDestGVGFilter) CheckGVG(gvgMeta *vgmgr.GlobalVirtualGroupMeta) bool {
 	if len(f.expectedSecondarySPIDs) == len(gvgMeta.SecondarySPIDs) {
 		if gvgMeta.UsedStorageSize+2*f.expectedMinFreeSize > gvgMeta.StakingStorageSize {
-			log.Debugw("PickDestGVGFilter CheckGVG", "gvgMeta.UsedStorageSize", gvgMeta.UsedStorageSize, "2*f.expectedMinFreeSize", 2*f.expectedMinFreeSize,
-				"gvgMeta.StakingStorageSize", gvgMeta.StakingStorageSize)
 			return false
 		}
 		for index, expectedSPID := range f.expectedSecondarySPIDs {
 			if expectedSPID != gvgMeta.SecondarySPIDs[index] {
-				log.Debugw("PickDestGVGFilter CheckGVG expectedSPID", "expectedSecondarySPIDs", f.expectedSecondarySPIDs)
 				return false
 			}
 		}
