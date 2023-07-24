@@ -117,6 +117,8 @@ const (
 	ListGlobalVirtualGroupsByBucketQuery = "gvg-bucket-id"
 	// ListObjectsInGVGAndBucketQuery defines list objects by gvg and bucket id, which is used to route request
 	ListObjectsInGVGAndBucketQuery = "objects-gvg-bucket"
+	// ListObjectsByGVGAndBucketForGCQuery defines list objects by gvg and bucket for gc, which is used to route request
+	ListObjectsByGVGAndBucketForGCQuery = "objects-gvg-gc"
 	// ListObjectsInGVGQuery defines list objects by gvg id, which is used to route request
 	ListObjectsInGVGQuery = "objects-gvg"
 	// ListMigrateBucketEventsQuery defines list migrate bucket events, which is used to route request

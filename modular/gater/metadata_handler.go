@@ -1489,7 +1489,7 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 		limitStr          string
 		requestStartAfter string
 		startAfter        uint64
-		objects           []*types.Object
+		objects           []*types.ObjectDetails
 		queryParams       url.Values
 	)
 
@@ -1556,6 +1556,87 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 	w.Write(b.Bytes())
 }
 
+// listObjectsByGVGAndBucketForGCHandler list objects by gvg and bucket for gc
+func (g *GateModular) listObjectsByGVGAndBucketForGCHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		b                 bytes.Buffer
+		reqCtx            *RequestContext
+		requestGvgID      string
+		gvgID             uint32
+		bucketIDStr       string
+		bucketID          uint64
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		objects           []*types.ObjectDetails
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGvgID = queryParams.Get(GvgIDQuery)
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if bucketID, err = util.StringToUint64(bucketIDStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if gvgID, err = util.StringToUint32(requestGvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "gvg-id", requestGvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	objects, err = g.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(reqCtx.Context(), gvgID, bucketID, startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectsByGVGAndBucketForGCResponse{Objects: objects}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
 // listObjectsInGVGHandler list objects by gvg id
 func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -1568,7 +1649,7 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 		limitStr          string
 		requestStartAfter string
 		startAfter        uint64
-		objects           []*types.Object
+		objects           []*types.ObjectDetails
 		queryParams       url.Values
 	)
 
@@ -1594,10 +1675,12 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
-		err = ErrInvalidQuery
-		return
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
 	}
 
 	if limitStr != "" {

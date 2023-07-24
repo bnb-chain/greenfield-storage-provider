@@ -168,64 +168,6 @@ func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool)
 	return buckets, err
 }
 
-// ListBucketsBindingOnPrimarySP list buckets by primary sp id
-func (b *BsDBImpl) ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
-	var (
-		families []*GlobalVirtualGroupFamily
-		buckets  []*Bucket
-		vgfIDs   []uint32
-		err      error
-	)
-
-	families, err = b.ListVirtualGroupFamiliesBySpID(spID)
-	if err != nil || len(families) == 0 {
-		return nil, err
-	}
-
-	vgfIDs = make([]uint32, len(families))
-	for i, family := range families {
-		vgfIDs[i] = family.GlobalVirtualGroupFamilyId
-	}
-
-	buckets, err = b.ListBucketsByVgfID(vgfIDs, startAfter, limit)
-	return buckets, err
-}
-
-// ListBucketsBindingOnSecondarySP list buckets by secondary sp id
-func (b *BsDBImpl) ListBucketsBindingOnSecondarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
-	var (
-		groups   []*GlobalVirtualGroup
-		families []*GlobalVirtualGroupFamily
-		buckets  []*Bucket
-		gvgIDs   []uint32
-		vgfIDs   []uint32
-		err      error
-	)
-
-	groups, err = b.ListGvgBySecondarySpID(spID)
-	if err != nil || groups == nil {
-		return nil, err
-	}
-
-	gvgIDs = make([]uint32, len(groups))
-	for i, group := range groups {
-		gvgIDs[i] = group.GlobalVirtualGroupId
-	}
-
-	families, err = b.ListVgfByGvgID(gvgIDs)
-	if err != nil || families == nil {
-		return nil, err
-	}
-
-	vgfIDs = make([]uint32, len(groups))
-	for i, family := range families {
-		vgfIDs[i] = family.GlobalVirtualGroupFamilyId
-	}
-
-	buckets, err = b.ListBucketsByVgfID(vgfIDs, startAfter, limit)
-	return buckets, err
-}
-
 func (b *BsDBImpl) ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket
