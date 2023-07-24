@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadata
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: metadata
+  template:
+    metadata:
+      labels:
+        app: metadata
+    spec:
+      serviceAccountName: nodereal-default
+      containers:
+      - name: metadata
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.3
+        args: ["--log.std", "-c", "/config/config.toml", "-server", "metadata"]
+        env:
+          - name: SP_DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_USER
+                name: default
+          - name: SP_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_PASSWORD
+                name: default
+          - name: SP_DB_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_ADDRESS
+                name: default
+          - name: SP_DB_DATABASE
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_DATABASE
+                name: default
+          - name: BS_DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: BS_DB_USER
+                name: default
+          - name: BS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: BS_DB_PASSWORD
+                name: default
+          - name: BS_DB_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_ADDRESS
+                name: default
+          - name: BS_DB_DATABASE
+            valueFrom:
+              secretKeyRef:
+                key: BS_DB_DATABASE
+                name: default
+          - name: BS_DB_SWITCHED_USER
+            valueFrom:
+              secretKeyRef:
+                key: BS_DB_SWITCHED_USER
+                name: default
+          - name: BS_DB_SWITCHED_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: BS_DB_SWITCHED_PASSWORD
+                name: default
+          - name: BS_DB_SWITCHED_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                key: BS_DB_SWITCHED_ADDRESS
+                name: default
+          - name: BS_DB_SWITCHED_DATABASE
+            valueFrom:
+              secretKeyRef:
+                key: BS_DB_SWITCHED_DATABASE
+                name: default
+        resources:
+          limits:
+            cpu: "4"
+            memory: 8Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        ports:
+          - containerPort: 9333
+            name: metadata
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      volumes:
+        - name: config
+          configMap:
+            name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metadata
+spec:
+  ports:
+  - port: 9333
+    targetPort: 9333
+    name: metadata
+  selector:
+    app: metadata
