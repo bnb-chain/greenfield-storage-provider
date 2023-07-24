@@ -73,10 +73,12 @@ func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	)
 	for _, value := range picker.freeStorageSizeWeightMap {
 		sumWeight += value
+		log.Debugw("pickIndex freeStorageSizeWeightMap", "")
 	}
 	pickWeight = rand.Float64() * sumWeight
 	for key, value := range picker.freeStorageSizeWeightMap {
 		tempSumWeight += value
+		log.Debugw("pickIndex freeStorageSizeWeightMap", "key", key, "value", value)
 		if tempSumWeight > pickWeight {
 			return key, nil
 		}
@@ -135,10 +137,14 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(fi
 			continue
 		}
 		for _, gvg := range vgf.GVGMap {
+			log.Debugw("prepare to add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
+
 			if filter.CheckGVG(&vgmgr.GlobalVirtualGroupMeta{
-				SecondarySPIDs: gvg.SecondarySPIDs,
+				SecondarySPIDs:     gvg.SecondarySPIDs,
+				StakingStorageSize: gvg.StakingStorageSize,
 			}) {
 				picker.addGlobalVirtualGroup(gvg)
+				log.Debugw("add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			}
 		}
 		if globalVirtualGroupID, err = picker.pickIndex(); err != nil {
