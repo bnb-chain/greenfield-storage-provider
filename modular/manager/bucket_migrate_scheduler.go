@@ -416,7 +416,7 @@ func calculateStakingSizeStrategy(manager *ManageModular) (denom string, amount 
 	amount = virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(stakingStorageSize))
 	log.Infow("begin to create a gvg for bucket migrate", "gvg_meta", gvgMeta, "amount", amount)
 
-	return "", amount, nil
+	return virtualGroupParams.DepositDenom, amount, nil
 }
 
 func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID uint32, secondarySPIDs []uint32, stakingSize uint64) error {
