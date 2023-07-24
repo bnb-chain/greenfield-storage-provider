@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/urfave/cli/v2"
+
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -14,8 +17,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/urfave/cli/v2"
 )
 
 const (

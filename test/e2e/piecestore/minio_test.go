@@ -3,8 +3,9 @@ package piecestore_e2e
 import (
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
 func TestMinioStore(t *testing.T) {

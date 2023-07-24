@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"google.golang.org/grpc"
 )
 
 func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {

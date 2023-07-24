@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 

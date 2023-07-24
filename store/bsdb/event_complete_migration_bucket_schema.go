@@ -1,6 +1,8 @@
 package bsdb
 
-import "github.com/forbole/juno/v4/common"
+import (
+	"github.com/forbole/juno/v4/common"
+)
 
 type EventCompleteMigrationBucket struct {
 	ID                         uint64         `gorm:"column:id;primaryKey"`

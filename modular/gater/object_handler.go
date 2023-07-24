@@ -10,18 +10,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 

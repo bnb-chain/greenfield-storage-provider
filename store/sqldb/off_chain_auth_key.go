@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"gorm.io/gorm"
+
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 )
 
 // InsertAuthKey insert a new record into OffChainAuthKeyTable

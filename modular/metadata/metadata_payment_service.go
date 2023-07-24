@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 )
 
 // GfSpGetPaymentByBucketName get bucket payment info by a bucket name

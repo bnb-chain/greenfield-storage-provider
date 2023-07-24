@@ -9,11 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -24,6 +19,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (

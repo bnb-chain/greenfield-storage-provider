@@ -3,15 +3,15 @@ package gfspclient
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield/types/resource"
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"google.golang.org/grpc"
-
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {

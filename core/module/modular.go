@@ -4,14 +4,14 @@ import (
 	"context"
 	"io"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -170,6 +170,10 @@ type Manager interface {
 	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
 	// QueryTasks queries tasks that hold on manager by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	// QueryBucketMigrate queries tasks that hold on manager by task sub-key.
+	QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error)
+	// QuerySpExit queries tasks that hold on manager by task sub-key.
+	QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error)
 	// HandleCreateUploadObjectTask handles the CreateUploadObject request from Uploader, before Uploader handles
 	// the users' UploadObject requests, it should send CreateUploadObject requests to Manager ask if it's ok.
 	// Through this interface SP implements the global uploading object strategy.
