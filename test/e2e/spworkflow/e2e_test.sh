@@ -7,7 +7,7 @@ GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
 # greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
 # greenfield go sdk branch name: develop
-GREENFIELD_GO_SDK_TAG="5614440e16f1a01491169ee985de1257808ab2e2"
+GREENFIELD_GO_SDK_TAG="b496b4d4b3f33a3b92dffb5912a255381e29aca0"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -245,10 +245,24 @@ function run_sp_exit_e2e() {
 # run go-sdk e2e #
 ###################
 function run_go_sdk_e2e() {
-  set -e
+  set +e
   cd ${workspace}/greenfield-go-sdk/
   echo 'run greenfield go sdk e2e test'
   make e2e_test
+  exit_status_command=$?
+  if [ $exit_status_command -eq 0 ]; then
+    echo "make e2e_test successful."
+  else
+    cat ${workspace}/deployment/localup/local_env/sp0/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp1/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp2/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp3/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp4/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp5/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp6/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp7/log.txt
+    exit $exit_status_command
+  fi
 }
 
 function main() {
