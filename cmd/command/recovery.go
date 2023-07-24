@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/urfave/cli/v2"
 )
 
 const (
@@ -159,6 +159,7 @@ func recoverPieceAction(ctx *cli.Context) error {
 
 func getReplicateIdxBySP(bucketInfo *types.BucketInfo, objectInfo *types.ObjectInfo, cfg *gfspconfig.GfSpConfig) (int, error) {
 	replicateIdx := 0
+	var isSecondarySp bool
 	chain, err := utils.MakeGnfd(cfg)
 	if err != nil {
 		return 0, err
@@ -168,7 +169,19 @@ func getReplicateIdxBySP(bucketInfo *types.BucketInfo, objectInfo *types.ObjectI
 	if err != nil {
 		return 0, err
 	}
-	replicateIdx, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), spClient, sp.Id, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+
+	bucketSPID, err := util.GetBucketPrimarySPID(context.Background(), chain, bucketInfo)
+	if err != nil {
+		return 0, err
+	}
+
+	// it is a primary sp
+	if bucketSPID == sp.Id {
+		replicateIdx = -1
+		return replicateIdx, nil
+	}
+
+	replicateIdx, isSecondarySp, err = util.ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), spClient, sp.Id, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 	if err != nil {
 		return 0, err
 	}

@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
+
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -25,7 +26,7 @@ var buildPrefixTreeEvents = map[string]bool{
 	EventCreateObject: true,
 }
 
-func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) ([]string, error) {
+func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
 	if !buildPrefixTreeEvents[event.Type] {
 		return nil, nil
 	}
@@ -43,7 +44,7 @@ func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, 
 			log.Errorw("type assert error", "type", "EventCreateObject", "event", typedEvent)
 			return nil, errors.New("create object event assert error")
 		}
-		return []string{m.handleCreateObject(ctx, createObject)}, nil
+		return m.handleCreateObject(ctx, createObject), nil
 	default:
 		return nil, nil
 	}
@@ -56,11 +57,14 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 }
 
 // handleCreateObject handles EventCreateObject.
-func (m *Module) handleCreateObject(ctx context.Context, createObject *storagetypes.EventCreateObject) string {
+func (m *Module) handleCreateObject(ctx context.Context, createObject *storagetypes.EventCreateObject) map[string][]interface{} {
 	objectIDMap := &bsdb.ObjectIDMap{
 		ObjectID:   common.BigToHash(createObject.ObjectId.BigInt()),
 		BucketName: createObject.BucketName,
 	}
 
-	return m.db.CreateObjectIDMap(ctx, objectIDMap)
+	k, v := m.db.CreateObjectIDMap(ctx, objectIDMap)
+	return map[string][]interface{}{
+		k: v,
+	}
 }

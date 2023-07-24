@@ -149,7 +149,7 @@ function make_config() {
     sed -i -e "s/RecreateTables = false/RecreateTables = true/g" config.toml
     WORKERS=1
     sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml
-    sed -i -e "s/Dsn = '.*'/Dsn = \"${USER}:${PWD}@tcp(${ADDRESS})\/${DATABASE}?parseTime=true\&multiStatements=true\&loc=Local\"/g" config.toml
+    sed -i -e "s/Dsn = '.*'/Dsn = \"${USER}:${PWD}@tcp(${ADDRESS})\/${DATABASE}?parseTime=true\&multiStatements=true\&loc=Local\&interpolateParams=true\"/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null

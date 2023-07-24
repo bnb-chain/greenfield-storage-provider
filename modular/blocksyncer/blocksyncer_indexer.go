@@ -157,9 +157,11 @@ func (i *Impl) Process(height uint64) error {
 		}
 	}
 
+	//log.Infof("SQL: %s", finalSQL)
+	//log.Infof("param: %v", finalVal)
 	tx := i.DB.Begin(context.TODO())
 	if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
-		log.Errorw("failed to exec sql", "error", err)
+		log.Errorw("failed to exec sql", "error", txErr)
 		tx.Rollback()
 		return txErr
 	}
@@ -180,6 +182,7 @@ func (i *Impl) Process(height uint64) error {
 	cost := time.Now().UnixMilli() - startTime
 	log.Infof("total cost: %d", cost)
 	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
+	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(cost))
 
 	return nil
 }

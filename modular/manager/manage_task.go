@@ -2,12 +2,14 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -22,7 +24,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -713,6 +714,26 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, recoveryTasks...)
 	tasks = append(tasks, migrateGVGTasks...)
 	return tasks, nil
+}
+
+func (m *ManageModular) QueryBucketMigrate(ctx context.Context) (res *gfspserver.GfSpQueryBucketMigrateResponse, err error) {
+	if m.bucketMigrateScheduler != nil {
+		res, err = m.bucketMigrateScheduler.listExecutePlan()
+	} else {
+		res, err = nil, errors.New("bucketMigrateScheduler not exit")
+	}
+
+	return res, err
+}
+
+func (m *ManageModular) QuerySpExit(ctx context.Context) (res *gfspserver.GfSpQuerySpExitResponse, err error) {
+	if m.spExitScheduler != nil {
+		res, err = m.spExitScheduler.ListSPExitPlan()
+	} else {
+		res, err = nil, errors.New("spExitScheduler not exit")
+	}
+
+	return res, err
 }
 
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.

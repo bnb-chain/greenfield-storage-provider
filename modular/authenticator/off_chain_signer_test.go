@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"
 	"github.com/consensys/gnark-crypto/ecc/bn254/twistededwards"
@@ -18,6 +17,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/blake2b"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func TestGenerateEddsaPrivateKey(t *testing.T) {

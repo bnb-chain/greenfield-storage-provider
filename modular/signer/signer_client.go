@@ -8,11 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield/types/common"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-
 	"cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -24,7 +21,9 @@ import (
 	"github.com/bnb-chain/greenfield/sdk/keys"
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
 	"github.com/bnb-chain/greenfield/types"
+	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // SignType is the type of msg signature

@@ -6,16 +6,16 @@ import (
 	"sync"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -181,6 +181,72 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err = s.taskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
 	}
 	return err
+}
+
+// ListSPExitPlan is used to update migrate status from task executor.
+func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse, error) {
+	res := &gfspserver.GfSpQuerySpExitResponse{}
+	// src SP SwapOut Plan
+	if s.swapOutPlan != nil {
+		s.swapOutPlan.swapOutUnitMapMutex.Lock()
+		defer s.swapOutPlan.swapOutUnitMapMutex.Unlock()
+		swapOutSrcUnitMap := make(map[string]*gfspserver.SwapOutUnit)
+
+		for _, unit := range s.swapOutPlan.swapOutUnitMap {
+			swapOutKey := GetSwapOutKey(unit.swapOut)
+			gfspunit := &gfspserver.SwapOutUnit{
+				SwapOutKey:    swapOutKey,
+				SuccessorSpId: unit.swapOut.SuccessorSpId,
+				Status:        int32(Migrating),
+			}
+			swapOutSrcUnitMap[swapOutKey] = gfspunit
+		}
+		for _, unit := range s.swapOutPlan.completedSwapOut {
+			swapOutKey := GetSwapOutKey(unit.swapOut)
+			swapOutSrcUnitMap[swapOutKey].Status = int32(Migrated)
+		}
+
+		for _, swapOut := range swapOutSrcUnitMap {
+			res.SwapOutSrc = append(res.SwapOutSrc, swapOut)
+		}
+	}
+
+	// dest sp
+	if s.taskRunner != nil {
+		s.taskRunner.mutex.Lock()
+		defer s.taskRunner.mutex.Unlock()
+		swapOutUnitMap := make(map[string]*gfspserver.SwapOutUnit)
+
+		for _, unit := range s.taskRunner.swapOutUnitMap {
+			swapOutKey := GetSwapOutKey(unit.swapOut)
+			gfspunit := &gfspserver.SwapOutUnit{
+				SuccessorSpId: unit.swapOut.SuccessorSpId,
+				SwapOutKey:    swapOutKey,
+			}
+
+			swapOutUnitMap[swapOutKey] = gfspunit
+		}
+
+		// scan gvg
+		for _, gvgUnit := range s.taskRunner.gvgUnits {
+			gvg := &gfspserver.GfSpMigrateGVG{
+				LastMigratedObjectId: gvgUnit.lastMigratedObjectID,
+				Status:               int32(gvgUnit.migrateStatus),
+				SrcGvgId:             gvgUnit.srcGVG.GetId(),
+			}
+			swapOutKey := gvgUnit.swapOutKey
+			swapOutUnitMap[swapOutKey].GvgTask = append(swapOutUnitMap[swapOutKey].GvgTask, gvg)
+		}
+
+		for _, swapOut := range swapOutUnitMap {
+			res.SwapOutDest = append(res.SwapOutDest, swapOut)
+		}
+
+		res.SelfSpId = s.selfSP.GetId()
+	}
+
+	log.Debugw("SPExitScheduler ListSPExitPlan", "res swap out", res)
+	return res, nil
 }
 
 // AddSwapOutToTaskRunner is used to swap out to task runner from src sp.
