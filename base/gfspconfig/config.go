@@ -244,4 +244,5 @@ type ManagerConfig struct {
 	EnableLoadTask                         bool
 	SubscribeSPExitEventIntervalSec        int
 	SubscribeBucketMigrateEventIntervalSec int
+	GVGPreferSPList                        []uint32
 }

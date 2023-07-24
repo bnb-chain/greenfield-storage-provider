@@ -87,6 +87,8 @@ type ManageModular struct {
 
 	loadReplicateTimeout int64
 	loadSealTimeout      int64
+
+	gvgPreferSPList []uint32
 }
 
 func (m *ManageModular) Name() string {

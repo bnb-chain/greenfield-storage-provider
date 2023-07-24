@@ -739,7 +739,7 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 	return vgf.ID, nil
 }
 
-// PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
+// PickVirtualGroupFamilyForBucketMigrate is used to pick a suitable vgf for creating bucket.
 func (m *ManageModular) PickVirtualGroupFamilyForBucketMigrate(ctx context.Context) (uint32, error) {
 	var (
 		err error
@@ -762,6 +762,46 @@ func (m *ManageModular) PickVirtualGroupFamilyForBucketMigrate(ctx context.Conte
 	return vgf.ID, nil
 }
 
+var _ vgmgr.GenerateGVGSecondarySPsPolicy = &GenerateGVGSecondarySPsPolicyByPrefer{}
+
+type GenerateGVGSecondarySPsPolicyByPrefer struct {
+	expectedSecondarySPNumber int
+	preferSPIDMap             map[uint32]bool
+	preferSPIDList            []uint32
+	backupSPIDList            []uint32
+}
+
+func NewGenerateGVGSecondarySPsPolicyByPrefer(p *storagetypes.Params, preferSPIDList []uint32) *GenerateGVGSecondarySPsPolicyByPrefer {
+	policy := &GenerateGVGSecondarySPsPolicyByPrefer{
+		expectedSecondarySPNumber: int(p.GetRedundantDataChunkNum() + p.GetRedundantParityChunkNum()),
+		preferSPIDMap:             make(map[uint32]bool),
+		preferSPIDList:            make([]uint32, 0),
+		backupSPIDList:            make([]uint32, 0),
+	}
+	for _, spID := range preferSPIDList {
+		policy.preferSPIDMap[spID] = true
+	}
+	return policy
+}
+
+func (p *GenerateGVGSecondarySPsPolicyByPrefer) AddCandidateSP(spID uint32) {
+	if _, found := p.preferSPIDMap[spID]; found {
+		p.preferSPIDList = append(p.preferSPIDList, spID)
+	} else {
+		p.backupSPIDList = append(p.backupSPIDList, spID)
+	}
+
+}
+func (p *GenerateGVGSecondarySPsPolicyByPrefer) GenerateGVGSecondarySPs() ([]uint32, error) {
+	if p.expectedSecondarySPNumber > len(p.preferSPIDList)+len(p.backupSPIDList) {
+		return nil, fmt.Errorf("no enough sp")
+	}
+	resultSPList := make([]uint32, 0)
+	resultSPList = append(resultSPList, p.preferSPIDList...)
+	resultSPList = append(resultSPList, p.backupSPIDList...)
+	return resultSPList[0:p.expectedSecondarySPNumber], nil
+}
+
 func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagetypes.Params) error {
 	var err error
 	if params == nil {
@@ -769,7 +809,8 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 			return err
 		}
 	}
-	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	policy := NewGenerateGVGSecondarySPsPolicyByPrefer(params, m.gvgPreferSPList)
+	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(policy)
 	if err != nil {
 		return err
 	}
