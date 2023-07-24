@@ -508,6 +508,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: listSpExitEventsRouterName,
 		},
+		{
+			name:             "Get sp info by operator address",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetSPInfoQuery + "&" + OperatorAddressQuery,
+			shouldMatch:      true,
+			wantedRouterName: getSPInfoRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

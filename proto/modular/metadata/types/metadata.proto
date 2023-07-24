@@ -7,6 +7,7 @@ import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
 import "greenfield/permission/common.proto";
 import "greenfield/resource/types.proto";
+import "greenfield/sp/types.proto";
 import "greenfield/storage/events.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/storage/types.proto";
@@ -685,6 +686,18 @@ message GfSpListSpExitEventsResponse {
   ListSpExitEvents events = 1;
 }
 
+// GfSpGetSPInfoRequest is request type for the GfSpGetSPInfo RPC method
+message GfSpGetSPInfoRequest {
+  // operator_address is the unique identification address for operator
+  string operator_address = 1;
+}
+
+// GfSpGetSPInfoResponse is response type for the GfSpGetSPInfo RPC method
+message GfSpGetSPInfoResponse {
+  // sp defines the meta info of storage provider
+  greenfield.sp.StorageProvider storage_provider = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -722,4 +735,5 @@ service GfSpMetadataService {
   rpc GfSpListMigrateBucketEvents(GfSpListMigrateBucketEventsRequest) returns (GfSpListMigrateBucketEventsResponse) {}
   rpc GfSpListSwapOutEvents(GfSpListSwapOutEventsRequest) returns (GfSpListSwapOutEventsResponse) {}
   rpc GfSpListSpExitEvents(GfSpListSpExitEventsRequest) returns (GfSpListSpExitEventsResponse) {}
+  rpc GfSpGetSPInfo(GfSpGetSPInfoRequest) returns (GfSpGetSPInfoResponse) {}
 }

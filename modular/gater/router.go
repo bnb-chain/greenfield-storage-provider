@@ -59,6 +59,7 @@ const (
 	listSwapOutEventsRouterName                    = "ListSwapOutEvents"
 	listSpExitEventsRouterName                     = "ListSpExitEvents"
 	verifyPermissionByIDRouterName                 = "VerifyPermissionByID"
+	getSPInfoRouterName                            = "GetSPInfo"
 )
 
 const (
@@ -248,6 +249,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// List Sp Exit Events
 		router.Path("/").Name(listSpExitEventsRouterName).Methods(http.MethodGet).Queries(ListSpExitEventsQuery, "").HandlerFunc(g.listSpExitEventsHandler)
+
+		// Get Sp info by operator address
+		router.Path("/").Name(getSPInfoRouterName).Methods(http.MethodGet).Queries(GetSPInfoQuery, "").HandlerFunc(g.getSPInfoHandler)
 	}
 
 	router.Path("/").

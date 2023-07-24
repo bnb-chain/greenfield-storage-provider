@@ -57,6 +57,8 @@ const (
 	EventCompleteSwapOutTableName = "event_swap_out_complete"
 	// EventCancelSwapOutTableName defines the name of event swap out cancel table
 	EventCancelSwapOutTableName = "event_cancel_swap_out"
+	// StorageProviderTableName defines the name of storage providers table
+	StorageProviderTableName = "storage_providers"
 )
 
 // define the list objects const
