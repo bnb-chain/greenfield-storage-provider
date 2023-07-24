@@ -73,12 +73,10 @@ func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	)
 	for _, value := range picker.freeStorageSizeWeightMap {
 		sumWeight += value
-		log.Debugw("pickIndex freeStorageSizeWeightMap", "")
 	}
 	pickWeight = rand.Float64() * sumWeight
 	for key, value := range picker.freeStorageSizeWeightMap {
 		tempSumWeight += value
-		log.Debugw("pickIndex freeStorageSizeWeightMap", "key", key, "value", value)
 		if tempSumWeight > pickWeight {
 			return key, nil
 		}
