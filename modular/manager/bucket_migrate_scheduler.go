@@ -370,6 +370,9 @@ func (s *BucketMigrateScheduler) pickGlobalVirtualGroupForBucketMigrate(filter *
 		gvg *vgmgr.GlobalVirtualGroupMeta
 	)
 
+	// TODO: The logic of GVGPickFilter is modified to ignore the StakingStorageSize when checking for a valid GVG.
+	// If a GVG is considered suitable but its StakingStorageSize is insufficient, it will directly send a request to the blockchain
+	// to add additional staking funds.
 	if gvg, err = s.manager.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(filter); err != nil {
 		// create a new gvg, and retry pick.
 		if err = s.createGlobalVirtualGroupForBucketMigrate(filter.expectedFamilyID, filter.expectedSecondarySPIDs, 3*filter.expectedMinFreeSize); err != nil {
