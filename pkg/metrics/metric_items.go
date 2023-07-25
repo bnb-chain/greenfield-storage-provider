@@ -66,8 +66,7 @@ var MetricsItems = []prometheus.Collector{
 	PerfChallengeTimeHistogram,
 
 	// blocksyncer metrics category
-	//EventAvgTime,
-	//TxAvgTime,
+	BlocksyncerCatchTime,
 
 	// metadata metrics category
 	MetadataReqTime,
