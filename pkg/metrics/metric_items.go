@@ -68,9 +68,6 @@ var MetricsItems = []prometheus.Collector{
 	// blocksyncer metrics category
 	BlocksyncerCatchTime,
 
-	//EventAvgTime,
-	//TxAvgTime,
-
 	// metadata metrics category
 	MetadataReqTime,
 }

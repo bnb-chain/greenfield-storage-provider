@@ -25,6 +25,7 @@ var (
 	ErrExceedRequest   = gfsperrors.Register(MetadataModularName, http.StatusNotAcceptable, 90002, "request exceed")
 	ErrNoRecord        = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
 	ErrGfSpDB          = gfsperrors.Register(MetadataModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
+	ErrNoSuchSP        = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90004, "no such sp")
 )
 
 var _ types.GfSpMetadataServiceServer = &MetadataModular{}

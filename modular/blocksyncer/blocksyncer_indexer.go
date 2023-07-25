@@ -91,7 +91,7 @@ func (i *Impl) Process(height uint64) error {
 	// log.Debugw("processing block", "height", height)
 	var block *coretypes.ResultBlock
 	var events *coretypes.ResultBlockResults
-	var txs map[string][]abci.Event
+	var txs map[common.Hash][]abci.Event
 
 	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
 	blockAny, okb := blockMap.Load(heightKey)
@@ -99,7 +99,7 @@ func (i *Impl) Process(height uint64) error {
 	txsAny, okt := txMap.Load(heightKey)
 	block, _ = blockAny.(*coretypes.ResultBlock)
 	events, _ = eventsAny.(*coretypes.ResultBlockResults)
-	txs, _ = txsAny.(map[string][]abci.Event)
+	txs, _ = txsAny.(map[common.Hash][]abci.Event)
 	if !okb || !oke || !okt {
 		log.Warnf("failed to get map data height: %d", height)
 		return ErrBlockNotFound
@@ -238,12 +238,12 @@ type TxHashEvent struct {
 }
 
 // ExportEventsInTxs accepts a slice of events in tx in order to save in database.
-func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs map[string][]abci.Event) ([]map[string][]interface{}, error) {
+func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs map[common.Hash][]abci.Event) ([]map[string][]interface{}, error) {
 	allSQL := make([]map[string][]interface{}, 0)
 	for k, v := range txs {
 		for _, event := range v {
-			log.Infof("sdkevent: %v", event)
-			sqls, err := i.ExtractEvent(ctx, block, common.HexToHash(k), sdk.Event(event))
+			//log.Infof("sdkevent: %v", event)
+			sqls, err := i.ExtractEvent(ctx, block, k, sdk.Event(event))
 			if err != nil {
 				return nil, err
 			}

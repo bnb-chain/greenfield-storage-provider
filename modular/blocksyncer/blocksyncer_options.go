@@ -12,6 +12,7 @@ import (
 	cometbfttypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/forbole/juno/v4/cmd"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
+	"github.com/forbole/juno/v4/common"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
 	"github.com/forbole/juno/v4/modules"
@@ -299,11 +300,11 @@ func (b *BlockSyncerModular) fetchData(start, end uint64) {
 				//	log.Warnf("failed to get block results from node: %s", err)
 				//	continue
 				//}
-				txs := make(map[string][]cometbfttypes.Event)
+				txs := make(map[common.Hash][]cometbfttypes.Event)
 				for idx := 0; idx < len(events.TxsResults); idx++ {
 					k := block.Block.Data.Txs[idx]
 					v := events.TxsResults[idx].GetEvents()
-					txs[k.String()] = v
+					txs[common.BytesToHash(k.Hash())] = v
 				}
 
 				heightKey := fmt.Sprintf("%s-%d", b.Name(), height)
