@@ -66,9 +66,11 @@ var MetricsItems = []prometheus.Collector{
 	PerfChallengeTimeHistogram,
 
 	// blocksyncer metrics category
-	ProcessBlockTime,
-	// EventAvgTime,
-	// TxAvgTime,
+	//EventAvgTime,
+	//TxAvgTime,
+
+	// metadata metrics category
+	MetadataReqTime,
 }
 
 // basic metrics items
@@ -258,21 +260,18 @@ var (
 )
 
 var (
-	ProcessBlockTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "process_block_time",
-		Help:    "Track process block workflow costs.",
+	BlocksyncerCatchTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "blocksyncer_catch_time",
+		Help: "Track the time of catch block time. ",
+	}, []string{"height"})
+)
+
+var (
+	MetadataReqTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "metadata_request_time",
+		Help:    "Track the metadata request time.",
 		Buckets: prometheus.DefBuckets,
-	}, []string{"process_block_time"})
-	// EventAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	//	Name:    "process_block_time",
-	//	Help:    "Track process block workflow costs.",
-	//	Buckets: prometheus.DefBuckets,
-	// }, []string{"event_avg_time"})
-	// TxAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	//	Name:    "process_block_time",
-	//	Help:    "Track process block workflow costs.",
-	//	Buckets: prometheus.DefBuckets,
-	// }, []string{"tx_avg_time"})
+	}, []string{"status", "level", "method_name", "code_or_msg"})
 )
 
 // SP exit and bucket migration metrics
