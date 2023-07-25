@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	cometbfttypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/forbole/juno/v4/cmd"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
@@ -243,8 +244,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 		if latestBlockHeight == int64(endBlock) {
 			continue
 		}
-		log.Info(count*(cycle+1) + startHeight - 1)
-		log.Info(latestBlockHeight)
+
 		if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 			startBlock = count*cycle + startHeight
 			endBlock = count*(cycle+1) + startHeight - 1
@@ -294,11 +294,18 @@ func (b *BlockSyncerModular) fetchData(start, end uint64) {
 					log.Warnf("failed to get block results from node: %s", err)
 					continue
 				}
-				txs, err := b.parserCtx.Node.Txs(block)
-				if err != nil {
-					log.Warnf("failed to get block results from node: %s", err)
-					continue
+				//txs, err := b.parserCtx.Node.Txs(block)
+				//if err != nil {
+				//	log.Warnf("failed to get block results from node: %s", err)
+				//	continue
+				//}
+				txs := make(map[string][]cometbfttypes.Event)
+				for idx := 0; idx < len(events.TxsResults); idx++ {
+					k := block.Block.Data.Txs[idx]
+					v := events.TxsResults[idx].GetEvents()
+					txs[k.String()] = v
 				}
+
 				heightKey := fmt.Sprintf("%s-%d", b.Name(), height)
 				blockMap.Store(heightKey, block)
 				eventMap.Store(heightKey, events)
