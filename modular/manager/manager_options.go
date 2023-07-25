@@ -224,6 +224,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Manager.SubscribeSwapOutExitEventIntervalSec == 0 {
 		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalMillisecond
 	}
+	manager.gvgPreferSPList = cfg.Manager.GVGPreferSPList
 
 	return nil
 }
