@@ -6,9 +6,6 @@ import (
 	"sync"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -17,6 +14,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -266,7 +265,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 	gvgList = make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
 
 	if swapOutFamilyID != 0 {
-		if gvgList, err = s.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), srcSP.GetId(), swapOutFamilyID); err != nil {
+		if gvgList, err = s.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), swapOutFamilyID); err != nil {
 			log.Errorw("failed to add swap out to task runner due to list virtual groups by family id",
 				"src_sp_id", srcSP.GetId(), "family_id", swapOutFamilyID, "error", err)
 			return err
@@ -526,12 +525,7 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *SPExitGVGExecuteUnit,
 
 	needCompleted := make([]uint32, 0)
 	if s.isFamily {
-		srcSP, err := runner.manager.baseApp.Consensus().QuerySP(context.Background(), s.swapOut.GetStorageProvider())
-		if err != nil {
-			log.Errorw("failed to query sp", "swap_out_src_sp", s.swapOut.GetStorageProvider(), "error", err)
-			return err
-		}
-		familyGVGs, err := runner.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), srcSP.GetId(), s.swapOut.GetGlobalVirtualGroupFamilyId())
+		familyGVGs, err := runner.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), s.swapOut.GetGlobalVirtualGroupFamilyId())
 		if err != nil {
 			log.Errorw("failed to query family gvg", "family_id", s.swapOut.GetGlobalVirtualGroupFamilyId(), "error", err)
 			return err
@@ -593,7 +587,7 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 		destFamilySP           *sptypes.StorageProvider
 	)
 	if familyGVGs, err = plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(),
-		plan.scheduler.selfSP.GetId(), s.conflictedFamilyID); err != nil {
+		s.conflictedFamilyID); err != nil {
 		log.Errorw("failed to query family gvg", "family_id", s.conflictedFamilyID, "error", err)
 		return err
 	}
@@ -831,7 +825,7 @@ func (runner *DestSPTaskRunner) LoadFromDB() error {
 
 		if swapOut.SwapOutMsg.GetGlobalVirtualGroupFamilyId() != 0 {
 			allGVGList, queryGVGError := runner.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(),
-				srcSP.GetId(), swapOut.SwapOutMsg.GetGlobalVirtualGroupFamilyId())
+				swapOut.SwapOutMsg.GetGlobalVirtualGroupFamilyId())
 			if queryGVGError != nil {
 				log.Errorw("failed to add swap out to task runner due to list virtual groups by family id", "error", queryGVGError)
 				return queryGVGError
@@ -1082,7 +1076,7 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) (
 		destFamilySP           *sptypes.StorageProvider
 		swapOutUnits           = make([]*SwapOutUnit, 0)
 	)
-	if familyGVGs, err = checker.plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), checker.selfSP.GetId(), checker.vgf.GetId()); err != nil {
+	if familyGVGs, err = checker.plan.manager.baseApp.Consensus().ListGlobalVirtualGroupsByFamilyID(context.Background(), checker.vgf.GetId()); err != nil {
 		log.Errorw("failed to generate swap out units due to list virtual groups by family id", "error", err)
 		return nil, err
 	}

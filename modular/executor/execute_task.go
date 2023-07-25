@@ -11,7 +11,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -24,6 +23,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 

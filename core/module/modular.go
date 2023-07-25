@@ -4,16 +4,15 @@ import (
 	"context"
 	"io"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -296,6 +295,8 @@ type Signer interface {
 	SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
 	// CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to greenfield.
 	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
+	// UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to greenfield.
+	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

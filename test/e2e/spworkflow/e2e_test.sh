@@ -3,12 +3,11 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-#GREENFIELD_REPO_TAG="feat_sp_exit_develop"
-GREENFIELD_REPO_TAG="e9d4805ed15e01cbdefcf4d393eea8b0997abef2"
-#GREENFIELD_CMD_TAG="feat-adaptor-sp-exit"
+GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
+# greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
-# feat-sp-exit-refactor-sp-info
-GREENFIELD_GO_SDK_TAG="22a0bb6e413c05507a9dc395fac750b1195716af"
+# greenfield go sdk branch name: develop
+GREENFIELD_GO_SDK_TAG="5614440e16f1a01491169ee985de1257808ab2e2"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -62,7 +61,15 @@ function greenfield_sp() {
   bash ./deployment/localup/localup.sh --generate ${workspace}/greenfield/sp.json ${MYSQL_USER} ${MYSQL_PASSWORD} ${MYSQL_ADDRESS}
   bash ./deployment/localup/localup.sh --reset
   bash ./deployment/localup/localup.sh --start
-  sleep 5
+  sleep 25
+  ./deployment/localup/local_env/sp0/gnfd-sp0 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp0/config.toml
+  ./deployment/localup/local_env/sp1/gnfd-sp1 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp1/config.toml
+  ./deployment/localup/local_env/sp2/gnfd-sp2 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp2/config.toml
+  ./deployment/localup/local_env/sp3/gnfd-sp3 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp3/config.toml
+  ./deployment/localup/local_env/sp4/gnfd-sp4 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp4/config.toml
+  ./deployment/localup/local_env/sp5/gnfd-sp5 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp5/config.toml
+  ./deployment/localup/local_env/sp6/gnfd-sp6 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp6/config.toml
+  ./deployment/localup/local_env/sp7/gnfd-sp7 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp7/config.toml
   tail -n 1000 deployment/localup/local_env/sp0/gnfd-sp.log
   ps -ef | grep gnfd-sp | wc -l
 }
@@ -166,6 +173,7 @@ function test_sp_exit() {
     ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/random_file  ./new_random_file
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
     ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/example.json ./new.json
+
     sleep 10
     check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new.json
     check_md5 ./random_file ./new_random_file
@@ -176,7 +184,6 @@ function test_sp_exit() {
     cd ${workspace}/greenfield-cmd/build/
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     sleep 180
-    cd ${workspace}/greenfield-cmd/build/
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json

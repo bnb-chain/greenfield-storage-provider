@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.3-alpha.11
+
+FEATURES
+* [#867](https://github.com/bnb-chain/greenfield-storage-provider/pull/867) feat: impl ListObjectsByGVGAndBucketForGC and object details
+* [#888](https://github.com/bnb-chain/greenfield-storage-provider/pull/888) feat: metadata and block syncer monitor
+* [#890](https://github.com/bnb-chain/greenfield-storage-provider/pull/890) feat: add generate gvg sp policy
+* [#851](https://github.com/bnb-chain/greenfield-storage-provider/pull/851) feat: support query sp
+
+REFACTOR
+* [#860](https://github.com/bnb-chain/greenfield-storage-provider/pull/860) refactor: update quota consumption method
+
+BUGFIX
+* [#848](https://github.com/bnb-chain/greenfield-storage-provider/pull/848) fix: fix recover command
+* [#876](https://github.com/bnb-chain/greenfield-storage-provider/pull/876) fix: GVGPickFilter CheckGVG func's paramter
+* [#893](https://github.com/bnb-chain/greenfield-storage-provider/pull/893) fix:blocksyncer object map id
+* [#868](https://github.com/bnb-chain/greenfield-storage-provider/pull/868) fix: fix aliyun credential expiration issue
+* [#894](https://github.com/bnb-chain/greenfield-storage-provider/pull/894) feat: revert grpc keepalive params
+* [#897](https://github.com/bnb-chain/greenfield-storage-provider/pull/897) fix: private universal endpoint special suffix handle
+* [#898](https://github.com/bnb-chain/greenfield-storage-provider/pull/898) fix:blocksyncer monitor
+
+
 ## 0.2.3-alpha.7
 
 FEATURES

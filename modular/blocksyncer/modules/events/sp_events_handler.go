@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	vgtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +12,8 @@ import (
 	"github.com/forbole/juno/v4/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	vgtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
@@ -22,10 +22,11 @@ var (
 	EventCancelMigrationBucket   = proto.MessageName(&storagetypes.EventCancelMigrationBucket{})
 
 	EventSwapOut         = proto.MessageName(&vgtypes.EventSwapOut{})
-	EventSpExit          = proto.MessageName(&vgtypes.EventStorageProviderExit{})
-	EventCompleteSpExit  = proto.MessageName(&vgtypes.EventCompleteStorageProviderExit{})
 	EventCompleteSwapOut = proto.MessageName(&vgtypes.EventCompleteSwapOut{})
 	EventCancelSwapOut   = proto.MessageName(&vgtypes.EventCancelSwapOut{})
+
+	EventSpExit         = proto.MessageName(&vgtypes.EventStorageProviderExit{})
+	EventCompleteSpExit = proto.MessageName(&vgtypes.EventCompleteStorageProviderExit{})
 )
 
 var SpExitEvents = map[string]bool{
@@ -33,10 +34,10 @@ var SpExitEvents = map[string]bool{
 	EventCompleteMigrationBucket: true,
 	EventCancelMigrationBucket:   true,
 	EventSwapOut:                 true,
-	EventSpExit:                  true,
-	EventCompleteSpExit:          true,
 	EventCompleteSwapOut:         true,
 	EventCancelSwapOut:           true,
+	EventSpExit:                  true,
+	EventCompleteSpExit:          true,
 }
 
 func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
@@ -141,6 +142,7 @@ func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmcty
 		Operator:                   common.HexToAddress(completeMigrationBucket.Operator),
 		BucketName:                 completeMigrationBucket.BucketName,
 		GlobalVirtualGroupFamilyId: completeMigrationBucket.GlobalVirtualGroupFamilyId,
+		SrcPrimarySpId:             completeMigrationBucket.SrcPrimarySpId,
 
 		CreateAt:     block.Block.Height,
 		CreateTxHash: txHash,

@@ -9,14 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -135,10 +133,13 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(fi
 			continue
 		}
 		for _, gvg := range vgf.GVGMap {
+			log.Debugw("prepare to add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			if filter.CheckGVG(&vgmgr.GlobalVirtualGroupMeta{
-				SecondarySPIDs: gvg.SecondarySPIDs,
+				SecondarySPIDs:     gvg.SecondarySPIDs,
+				StakingStorageSize: gvg.StakingStorageSize,
 			}) {
 				picker.addGlobalVirtualGroup(gvg)
+				log.Debugw("add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			}
 		}
 		if globalVirtualGroupID, err = picker.pickIndex(); err != nil {
@@ -156,23 +157,16 @@ type spManager struct {
 	otherSPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
-	secondarySPNumber := int(param.GetRedundantDataChunkNum() + param.GetRedundantParityChunkNum())
-	if sm.selfSP == nil || len(sm.otherSPs) < secondarySPNumber {
-		return nil, fmt.Errorf("no enough sp")
-	}
-	secondarySPIDs := make([]uint32, 0)
+func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	for _, sp := range sm.otherSPs {
 		if !sp.IsInService() {
 			continue
 		}
-		secondarySPIDs = append(secondarySPIDs, sp.GetId())
-		if len(secondarySPIDs) == secondarySPNumber {
-			break
-		}
+		genPolicy.AddCandidateSP(sp.GetId())
 	}
-	if len(secondarySPIDs) < secondarySPNumber {
-		return nil, fmt.Errorf("no enough sp")
+	secondarySPIDs, err := genPolicy.GenerateGVGSecondarySPs()
+	if err != nil {
+		return nil, err
 	}
 	return &vgmgr.GlobalVirtualGroupMeta{
 		PrimarySPID:        sm.selfSP.Id,
@@ -383,10 +377,10 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 }
 
 // GenerateGlobalVirtualGroupMeta is used to generate a gvg meta.
-func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.generateVirtualGroupMeta(param)
+	return vgm.spManager.generateVirtualGroupMeta(genPolicy)
 }
 
 // PickSPByFilter is used to pick sp by filter check.

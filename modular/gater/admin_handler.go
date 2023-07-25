@@ -9,12 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -24,6 +23,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.

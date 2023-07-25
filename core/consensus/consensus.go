@@ -3,11 +3,12 @@ package consensus
 import (
 	"context"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Consensus is the interface to query greenfield consensus data. the consensus
@@ -23,6 +24,10 @@ type Consensus interface {
 	QuerySP(context.Context, string) (*sptypes.StorageProvider, error)
 	// QuerySPByID returns the sp info by sp id.
 	QuerySPByID(context.Context, uint32) (*sptypes.StorageProvider, error)
+	// QuerySPFreeQuota returns the sp free quota by operator address.
+	QuerySPFreeQuota(context.Context, string) (uint64, error)
+	// QuerySPPrice returns the sp price info
+	QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error)
 	// ListBondedValidators returns all bonded validators info.
 	ListBondedValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	// ListVirtualGroupFamilies return all virtual group family which primary sp is spID.
@@ -32,7 +37,7 @@ type Consensus interface {
 	// QueryGlobalVirtualGroup returns the global virtual group info.
 	QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error)
 	// ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
-	ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
+	ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
 	// QueryVirtualGroupParams returns the virtual group params.
 	QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error)
 	// QueryStorageParams returns the storage params.
@@ -77,6 +82,14 @@ func (*NullConsensus) QuerySP(context.Context, string) (*sptypes.StorageProvider
 	return nil, nil
 }
 
+func (*NullConsensus) QuerySPFreeQuota(context.Context, string) (uint64, error) {
+	return 0, nil
+}
+
+func (*NullConsensus) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
+	return sptypes.SpStoragePrice{}, nil
+}
+
 func (*NullConsensus) QuerySPByID(context.Context, uint32) (*sptypes.StorageProvider, error) {
 	return nil, nil
 }
@@ -89,7 +102,7 @@ func (*NullConsensus) ListVirtualGroupFamilies(context.Context, uint32) ([]*virt
 	return nil, nil
 }
 
-func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32, uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	return nil, nil
 }
 

@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSplitToSegmentPieceInfos(t *testing.T) {

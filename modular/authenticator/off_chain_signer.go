@@ -4,9 +4,10 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"
 	"github.com/consensys/gnark-crypto/ecc/bn254/twistededwards/eddsa"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 type PublicKey = eddsa.PublicKey

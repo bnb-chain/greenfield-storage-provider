@@ -1,7 +1,6 @@
 package gfspconfig
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -10,6 +9,7 @@ import (
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
@@ -247,4 +247,5 @@ type ManagerConfig struct {
 	SubscribeSPExitEventIntervalSec        int
 	SubscribeSwapOutExitEventIntervalSec   int
 	SubscribeBucketMigrateEventIntervalSec int
+	GVGPreferSPList                        []uint32
 }
