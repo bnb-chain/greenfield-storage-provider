@@ -5,15 +5,24 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
+	credentials_aliyun "github.com/aliyun/credentials-go/credentials"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+)
+
+// aliyunCredProviderName provides a name of aliyun credential provider
+const aliyunCredProviderName = "AliyunCredProvider"
+
+var (
+	// ErrAliyunCredentialsEmpty is emitted when aliyun credentials are empty.
+	errAliyunCredentialsEmpty = awserr.New("EmptyAliyunCreds", "aliyun credentials are empty", nil)
 )
 
 var _ ObjectStorage = &aliyunfsStore{}
@@ -23,6 +32,53 @@ var (
 		sessions: map[ObjectStorageConfig]*session.Session{},
 	}
 )
+
+type aliyunCredProvider struct {
+	cred             credentials_aliyun.Credential
+	lastRetrieveTime time.Time
+}
+
+func newAliyunCredProvider(cred credentials_aliyun.Credential) credentials.Provider {
+	return &aliyunCredProvider{
+		cred:             cred,
+		lastRetrieveTime: time.Unix(0, 0),
+	}
+}
+
+// Retrieve returns nil if it successfully retrieved the value.
+// Error is returned if the value were not obtainable, or empty.
+func (c *aliyunCredProvider) Retrieve() (credentials.Value, error) {
+	accessKeyID, err := c.cred.GetAccessKeyId()
+	if err != nil {
+		return credentials.Value{ProviderName: aliyunCredProviderName}, errAliyunCredentialsEmpty
+	}
+
+	accessKeySecret, err := c.cred.GetAccessKeySecret()
+	if err != nil {
+		return credentials.Value{ProviderName: aliyunCredProviderName}, errAliyunCredentialsEmpty
+	}
+
+	securityToken, err := c.cred.GetSecurityToken()
+	if err != nil {
+		return credentials.Value{ProviderName: aliyunCredProviderName}, errAliyunCredentialsEmpty
+	}
+
+	c.lastRetrieveTime = time.Now()
+	return credentials.Value{
+		AccessKeyID:     *accessKeyID,
+		SecretAccessKey: *accessKeySecret,
+		SessionToken:    *securityToken,
+		ProviderName:    aliyunCredProviderName,
+	}, nil
+}
+
+// IsExpired returns if the credentials are no longer valid, and need
+// to be retrieved.
+func (c *aliyunCredProvider) IsExpired() bool {
+	// The default expiration time of aliyun credential is 1 hour.
+	// Here we try to update the credential every 30 minutes.
+	return time.Since(c.lastRetrieveTime) >= 30*time.Minute
+}
 
 type aliyunfsStore struct {
 	s3Store
@@ -61,6 +117,9 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		Credentials:      creds,
 		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
+	log.Debugw("aliyun env", "AliyunRegion", key.region, "AliyunAccessKey", key.accessKey,
+		"AliyunSecretKey", key.secretKey, "AliyunSessionToken", key.sessionToken)
+
 	var sess *session.Session
 	switch cfg.IAMType {
 	case AKSKIAMType:
@@ -72,22 +131,23 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		}
 		sess = session.Must(session.NewSession(awsConfig))
 		log.Debugw("use aksk to access aliyunfs", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
+
 	case SAIAMType:
-		sess = session.Must(session.NewSession())
 		irsa, roleARN, tokenPath := checkAliyunAvailable()
+		log.Debugw("aliyun env", "irsa", irsa, "roleARN", roleARN, "tokenPath", tokenPath)
 		if irsa {
-			awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(credentials.NewChainCredentials(
-				[]credentials.Provider{
-					&credentials.EnvProvider{},
-					&credentials.SharedCredentialsProvider{},
-					stscreds.NewWebIdentityRoleProviderWithOptions(
-						sts.New(sess), roleARN, "",
-						stscreds.FetchTokenPath(tokenPath)),
-				}))
-			log.Debug("use sa to access aliyunfs")
+			cred, err := credentials_aliyun.NewCredential(nil)
+			if err != nil {
+				return nil, "", err
+			}
+
+			awsConfig.Credentials = credentials.NewCredentials(newAliyunCredProvider(cred))
 		} else {
 			return nil, "", fmt.Errorf("failed to use sa to access aliyunfs")
 		}
+		sess = session.Must(session.NewSession(awsConfig))
+		log.Debugw("use sa to access aliyunfs", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
+
 	default:
 		log.Errorf("unknown IAM type: %s", cfg.IAMType)
 		return nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
