@@ -37,7 +37,7 @@ type Consensus interface {
 	// QueryGlobalVirtualGroup returns the global virtual group info.
 	QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error)
 	// ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
-	ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
+	ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
 	// QueryVirtualGroupParams returns the virtual group params.
 	QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error)
 	// QueryStorageParams returns the storage params.
@@ -102,7 +102,7 @@ func (*NullConsensus) ListVirtualGroupFamilies(context.Context, uint32) ([]*virt
 	return nil, nil
 }
 
-func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32, uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	return nil, nil
 }
 
