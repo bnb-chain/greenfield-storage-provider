@@ -327,12 +327,11 @@ func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virt
 }
 
 // ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
-func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_by_family_id").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupByFamilyID(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupByFamilyIDRequest{
-		StorageProviderId:          spID,
 		GlobalVirtualGroupFamilyId: vgfID,
 	})
 	if err != nil {
