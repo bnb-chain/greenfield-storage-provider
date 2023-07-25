@@ -10,6 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield/types/resource"
+	resource_types "github.com/bnb-chain/greenfield/types/resource"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
+	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	sp_types "github.com/bnb-chain/greenfield/x/sp/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -20,13 +28,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/types/resource"
-	resource_types "github.com/bnb-chain/greenfield/types/resource"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -411,9 +412,6 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
 
 	queryParams = reqCtx.request.URL.Query()
 	objectName = queryParams.Get(VerifyPermissionObjectQuery)
@@ -498,9 +496,6 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
 
 	queryParams = reqCtx.request.URL.Query()
 	sourceType = queryParams.Get(GetGroupListSourceTypeQuery)
@@ -1886,6 +1881,54 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list sp exit events", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getSPInfoHandler get sp info by operator address
+func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                    error
+		b                      bytes.Buffer
+		reqCtx                 *RequestContext
+		requestOperatorAddress string
+		sp                     *sp_types.StorageProvider
+		queryParams            url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestOperatorAddress = queryParams.Get(OperatorAddressQuery)
+
+	if ok := common.IsHexAddress(requestOperatorAddress); !ok {
+		log.Errorw("failed to check operator", "operator-address", requestOperatorAddress, "error", err)
+		return
+	}
+
+	sp, err = g.baseApp.GfSpClient().GetSPInfo(reqCtx.Context(), requestOperatorAddress)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetSPInfoResponse{StorageProvider: sp}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", "error", err)
 		return
 	}
 
