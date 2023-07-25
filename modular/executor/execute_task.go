@@ -206,7 +206,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		}
 		return
 	}
-	log.CtxDebugw(ctx, "succeed to handle confirm receive piece task")
+	log.CtxDebug(ctx, "succeed to handle confirm receive piece task")
 }
 
 func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.GCObjectTask) {
