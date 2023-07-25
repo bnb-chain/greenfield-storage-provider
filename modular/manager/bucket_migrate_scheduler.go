@@ -612,7 +612,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 		}
 	}
 	// load from db by BucketID & construct plan
-	for bucketID, _ := range bucketIDs {
+	for bucketID := range bucketIDs {
 		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID)
 		if err != nil {
 			return err
