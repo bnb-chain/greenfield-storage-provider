@@ -18,6 +18,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"gorm.io/gorm"
 )
 
 var (
@@ -35,6 +36,12 @@ var (
 )
 
 func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) error {
+	var (
+		err           error
+		freeQuotaSize uint64
+		bucketTraffic *spdb.BucketTraffic
+	)
+
 	if downloadObjectTask == nil || downloadObjectTask.GetObjectInfo() == nil || downloadObjectTask.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed pre download object due to pointer dangling")
 		return ErrDanglingPointer
@@ -43,6 +50,30 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		log.CtxErrorw(ctx, "failed to pre download object due to object unsealed")
 		return ErrObjectUnsealed
 	}
+
+	bucketID := downloadObjectTask.GetBucketInfo().Id.Uint64()
+	bucketName := downloadObjectTask.GetBucketInfo().GetBucketName()
+	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(downloadObjectTask.GetBucketInfo().Id.Uint64())
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	// init the bucket traffic table when checking quota for the first time
+	if bucketTraffic == nil {
+		freeQuotaSize, err = d.baseApp.Consensus().QuerySPFreeQuota(ctx, d.baseApp.OperatorAddress())
+		if err != nil {
+			return ErrConsensus
+		}
+		// only need to set the free quota when init the traffic table
+		err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{
+			ChargedQuotaSize: downloadObjectTask.GetBucketInfo().GetChargedReadQuota(),
+			FreeQuotaSize:    freeQuotaSize,
+		})
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
+			return ErrGfSpDB
+		}
+	}
+
 	// TODO:: spilt check and add record steps, check in pre download, add record in post download
 	if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 		&spdb.ReadRecord{
@@ -55,7 +86,8 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 			ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
 		},
 		&spdb.BucketQuota{
-			ReadQuotaSize: downloadObjectTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
+			ChargedQuotaSize: downloadObjectTask.GetBucketInfo().GetChargedReadQuota(),
+			FreeQuotaSize:    freeQuotaSize,
 		},
 	); err != nil {
 		log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
@@ -182,6 +214,11 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadPieceTask)
 		}()
 	}()
+	var (
+		err           error
+		freeQuotaSize uint64
+		bucketTraffic *spdb.BucketTraffic
+	)
 
 	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil || downloadPieceTask.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed pre download piece due to pointer dangling")
@@ -207,34 +244,56 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		return nil
 	}
 	if downloadPieceTask.GetEnableCheck() {
-		// if it is a request from client, the task handler is the primary SP of the sp
-		if d.baseApp.OperatorAddress() == bucketPrimarySp.OperatorAddress {
-			log.CtxDebugw(ctx, "downloading from primary SP, checking quota")
-			checkQuotaTime := time.Now()
-			if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
-				&spdb.ReadRecord{
-					BucketID:        downloadPieceTask.GetBucketInfo().Id.Uint64(),
-					ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
-					UserAddress:     downloadPieceTask.GetUserAddress(),
-					BucketName:      downloadPieceTask.GetBucketInfo().GetBucketName(),
-					ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
-					ReadSize:        downloadPieceTask.GetTotalSize(),
-					ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
-				},
-				&spdb.BucketQuota{
-					ReadQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota() + d.bucketFreeQuota,
-				},
-			); err != nil {
-				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-				log.CtxErrorw(ctx, "failed to check bucket quota", "error", err)
-				if errors.Is(err, sqldb.ErrCheckQuotaEnough) {
-					return ErrExceedBucketQuota
-				}
-				// ignore the access db error, it is the system's inner error, will be let the request go.
-			}
-			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
-			return nil
+		checkQuotaTime := time.Now()
+
+		bucketID := downloadPieceTask.GetBucketInfo().Id.Uint64()
+		bucketName := downloadPieceTask.GetBucketInfo().GetBucketName()
+		bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(downloadPieceTask.GetBucketInfo().Id.Uint64())
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
 		}
+		// init the bucket traffic table when checking quota for the first time
+		if bucketTraffic == nil {
+			freeQuotaSize, err = d.baseApp.Consensus().QuerySPFreeQuota(ctx, d.baseApp.OperatorAddress())
+			if err != nil {
+				return ErrConsensus
+			}
+			log.CtxDebugw(ctx, "finish init bucket traffic table", "charged_quota", downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
+				"freeQuota", freeQuotaSize)
+
+			// only need to set the free quota when init the traffic table
+			err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{
+				ChargedQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
+				FreeQuotaSize:    freeQuotaSize,
+			})
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
+				return ErrGfSpDB
+			}
+		}
+
+		if dbErr := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+			&spdb.ReadRecord{
+				BucketID:        bucketID,
+				ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+				UserAddress:     downloadPieceTask.GetUserAddress(),
+				BucketName:      bucketName,
+				ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+				ReadSize:        downloadPieceTask.GetTotalSize(),
+				ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+			},
+			&spdb.BucketQuota{
+				ChargedQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
+			},
+		); dbErr != nil {
+			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
+			log.CtxErrorw(ctx, "failed to check bucket quota", "error", dbErr)
+			if errors.Is(dbErr, sqldb.ErrCheckQuotaEnough) {
+				return ErrExceedBucketQuota
+			}
+			// ignore the access db error, it is the system's inner error, will be let the request go.
+		}
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_check_quota_time").Observe(time.Since(checkQuotaTime).Seconds())
 
 	}
 
