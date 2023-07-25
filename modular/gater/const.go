@@ -129,6 +129,8 @@ const (
 	ListSpExitEventsQuery = "sp-exit-events"
 	// VerifyPermissionByIDQuery defines verify permission by resource id, which is used to route request
 	VerifyPermissionByIDQuery = "verify-id"
+	// GetSPInfoQuery defines query sp info, which is used to route request
+	GetSPInfoQuery = "query-sp"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for
 	ResourceIDQuery = "resource-id"
 	// ResourceTypeQuery defines the type of resource that grants permission for
