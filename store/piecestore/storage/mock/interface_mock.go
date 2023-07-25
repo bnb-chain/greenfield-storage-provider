@@ -11,7 +11,7 @@ import (
 	time "time"
 
 	storage "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockObjectStorage is a mock of ObjectStorage interface.

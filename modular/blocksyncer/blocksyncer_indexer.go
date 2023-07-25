@@ -181,6 +181,7 @@ func (i *Impl) Process(height uint64) error {
 
 	cost := time.Now().UnixMilli() - startTime
 	log.Infof("total cost: %d", cost)
+
 	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
 	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(cost))
 

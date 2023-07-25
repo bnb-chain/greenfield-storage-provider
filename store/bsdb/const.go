@@ -65,3 +65,10 @@ const (
 	CommonPrefix = "common_prefix"
 	GroupAddress = "0x0000000000000000000000000000000000000000"
 )
+
+// define the metrics const
+const (
+	DatabaseSuccess = "success"
+	DatabaseFailure = "failure"
+	DatabaseLevel   = "database"
+)

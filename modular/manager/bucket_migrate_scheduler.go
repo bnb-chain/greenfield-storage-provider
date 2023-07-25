@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -367,6 +370,9 @@ func (s *BucketMigrateScheduler) pickGlobalVirtualGroupForBucketMigrate(filter *
 		gvg *vgmgr.GlobalVirtualGroupMeta
 	)
 
+	// TODO: The logic of GVGPickFilter is modified to ignore the StakingStorageSize when checking for a valid GVG.
+	// If a GVG is considered suitable but its StakingStorageSize is insufficient, it will directly send a request to the blockchain
+	// to add additional staking funds.
 	if gvg, err = s.manager.virtualGroupManager.PickGlobalVirtualGroupForBucketMigrate(filter); err != nil {
 		// create a new gvg, and retry pick.
 		if err = s.createGlobalVirtualGroupForBucketMigrate(filter.expectedFamilyID, filter.expectedSecondarySPIDs, 3*filter.expectedMinFreeSize); err != nil {
@@ -384,8 +390,40 @@ func (s *BucketMigrateScheduler) pickGlobalVirtualGroupForBucketMigrate(filter *
 	return gvg, nil
 }
 
+// Calculate the staking size strategy for the target GVG
+func calculateStakingSizeStrategy(manager *ManageModular) (denom string, amount sdkmath.Int, err error) {
+	var (
+		params             *storagetypes.Params
+		stakingStorageSize uint64
+	)
+
+	if params, err = manager.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix()); err != nil {
+		return "", sdkmath.ZeroInt(), err
+	}
+
+	gvgMeta, err := manager.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	if err != nil {
+		return "", sdkmath.ZeroInt(), err
+	}
+
+	virtualGroupParams, err := manager.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
+	if err != nil {
+		return "", sdkmath.ZeroInt(), err
+	}
+	// double check
+	if gvgMeta.StakingStorageSize == 0 {
+		stakingStorageSize = gfspvgmgr.DefaultInitialGVGStakingStorageSize
+	} else {
+		stakingStorageSize = gvgMeta.StakingStorageSize
+	}
+	amount = virtualGroupParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(stakingStorageSize))
+	log.Infow("begin to create a gvg for bucket migrate", "gvg_meta", gvgMeta, "amount", amount)
+
+	return virtualGroupParams.DepositDenom, amount, nil
+}
+
 func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID uint32, secondarySPIDs []uint32, stakingSize uint64) error {
-	virtualGroupParams, err := s.manager.baseApp.Consensus().QueryVirtualGroupParams(context.Background())
+	denom, amount, err := calculateStakingSizeStrategy(s.manager)
 	if err != nil {
 		return err
 	}
@@ -394,9 +432,8 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 		PrimarySpAddress:     s.manager.baseApp.OperatorAddress(), // it is useless
 		SecondarySpIds:       secondarySPIDs,
 		Deposit: &sdk.Coin{
-			Denom: virtualGroupParams.GetDepositDenom(),
-			// TODO this be zero, how to fix ?
-			Amount: sdkmath.NewInt(1000000),
+			Denom:  denom,
+			Amount: amount,
 		},
 	})
 }

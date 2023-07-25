@@ -54,6 +54,7 @@ const (
 	listGlobalVirtualGroupsBySecondarySPRouterName = "ListGlobalVirtualGroupsBySecondarySP"
 	listGlobalVirtualGroupsByBucketRouterName      = "ListGlobalVirtualGroupsByBucket"
 	listObjectsInGVGAndBucketRouterName            = "ListObjectsInGVGAndBucket"
+	listObjectsByGVGAndBucketForGCRouterName       = "ListObjectsByGVGAndBucketForGC"
 	listObjectsInGVGRouterName                     = "ListObjectsInGVG"
 	listMigrateBucketEventsRouterName              = "ListMigrateBucketEvents"
 	listSwapOutEventsRouterName                    = "ListSwapOutEvents"
@@ -232,6 +233,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// List Objects By Gvg And Bucket ID
 		router.Path("/").Name(listObjectsInGVGAndBucketRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGAndBucketQuery, "").HandlerFunc(g.listObjectsInGVGAndBucketHandler)
+
+		// List Objects By Gvg And Bucket ID
+		router.Path("/").Name(listObjectsByGVGAndBucketForGCRouterName).Methods(http.MethodGet).Queries(ListObjectsByGVGAndBucketForGCQuery, "").HandlerFunc(g.listObjectsByGVGAndBucketForGCHandler)
 
 		// List Objects By Gvg And Bucket ID
 		router.Path("/").Name(listObjectsInGVGRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGQuery, "").HandlerFunc(g.listObjectsInGVGHandler)
