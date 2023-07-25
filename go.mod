@@ -18,6 +18,7 @@ replace (
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0
+	github.com/aliyun/credentials-go v1.3.1
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.2.1-alpha.1
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf
@@ -61,6 +62,8 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
+	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
+	github.com/alibabacloud-go/tea v1.1.8 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
