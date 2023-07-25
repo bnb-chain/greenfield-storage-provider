@@ -29,7 +29,7 @@ func DefaultGrpcServerOptions() []grpc.ServerOption {
 
 func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
 	options = append(options, DefaultGrpcServerOptions()...)
-	options = append(options, GeKeepAliveServerOptions()...)
+	//options = append(options, GeKeepAliveServerOptions()...)
 	if g.EnableMetrics() {
 		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
