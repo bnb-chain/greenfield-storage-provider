@@ -240,6 +240,7 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 	exitEvent := make([]TxHashEvent, 0)
 	virtualGroupEvent := make([]TxHashEvent, 0)
 	objectEvent := make([]TxHashEvent, 0)
+	objectIDEvent := make([]TxHashEvent, 0)
 	dataList := make([]interface{}, 0)
 
 	for _, tx := range txs {
@@ -265,6 +266,7 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 				}
 				dataList = append(dataList, data)
 				prefixEvent = append(prefixEvent, e)
+				objectIDEvent = append(objectIDEvent, e)
 			} else if object.ObjectEvents[event.Type] {
 				objectEvent = append(objectEvent, e)
 			}
@@ -290,6 +292,7 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 	allEvents = append(allEvents, prefixEvent)
 	allEvents = append(allEvents, virtualGroupEvent)
 	allEvents = append(allEvents, exitEvent)
+	allEvents = append(allEvents, objectIDEvent)
 	return i.concurrenceHandleEvent(ctx, block, allEvents)
 }
 
@@ -418,6 +421,7 @@ func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.Resul
 	exitEvent := make([]TxHashEvent, 0)
 	VirtualGroupEvent := make([]TxHashEvent, 0)
 	objectEvent := make([]TxHashEvent, 0)
+	objectIDEvent := make([]TxHashEvent, 0)
 	dataList := make([]interface{}, 0)
 
 	for _, event := range events {
@@ -440,6 +444,7 @@ func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.Resul
 				return err
 			}
 			dataList = append(dataList, data)
+			objectIDEvent = append(objectIDEvent, e)
 			prefixEvent = append(prefixEvent, e)
 		} else if object.ObjectEvents[event.Type] {
 			objectEvent = append(objectEvent, e)
@@ -465,6 +470,7 @@ func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.Resul
 	allEvents = append(allEvents, prefixEvent)
 	allEvents = append(allEvents, VirtualGroupEvent)
 	allEvents = append(allEvents, exitEvent)
+	allEvents = append(allEvents, objectIDEvent)
 
 	return i.concurrenceHandleEvent(ctx, block, allEvents)
 }
