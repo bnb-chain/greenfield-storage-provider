@@ -120,6 +120,8 @@ func init() {
 		command.RecoverPieceCmd,
 		// sp exit
 		command.SPExitCmd,
+		// update quota
+		command.SetQuotaCmd,
 	}
 	registerModular()
 }

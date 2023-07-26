@@ -401,7 +401,7 @@ func calculateStakingSizeStrategy(manager *ManageModular) (denom string, amount 
 		return "", sdkmath.ZeroInt(), err
 	}
 
-	gvgMeta, err := manager.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	gvgMeta, err := manager.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, manager.gvgPreferSPList))
 	if err != nil {
 		return "", sdkmath.ZeroInt(), err
 	}

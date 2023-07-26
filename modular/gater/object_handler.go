@@ -7,7 +7,6 @@ import (
 	"fmt"
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -636,16 +635,17 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
 func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		authenticated bool
-		isRange       bool
-		rangeStart    int64
-		rangeEnd      int64
-		// redirectURL          string
+		err                  error
+		reqCtx               *RequestContext
+		authenticated        bool
+		isRange              bool
+		rangeStart           int64
+		rangeEnd             int64
+		redirectURL          string
 		params               *storagetypes.Params
-		escapedObjectName    string
 		isRequestFromBrowser bool
+		spEndpoint           string
+		getEndpointErr       error
 	)
 	startTime := time.Now()
 	defer func() {
@@ -688,18 +688,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	// ignore the error, because the universal endpoint does not need signature
 	reqCtx, _ = NewRequestContext(r, g)
 
-	escapedObjectName, err = url.PathUnescape(reqCtx.objectName)
-	if err != nil {
-		log.Errorw("failed to unescape object name ", "object_name", reqCtx.objectName, "error", err)
-		return
-	}
-
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
 		return
 	}
-	if err = s3util.CheckValidObjectName(escapedObjectName); err != nil {
-		log.Errorw("failed to check object name", "object_name", escapedObjectName, "error", err)
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
 		return
 	}
 
@@ -733,22 +727,22 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			err = ErrConsensus
 			return
 		}
-		spEndpoint, getEndpointErr := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
+		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
 		if getEndpointErr != nil || spEndpoint == "" {
 			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}
 
-		redirectURL := spEndpoint + r.RequestURI
+		redirectURL = spEndpoint + r.RequestURI
 		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
 		http.Redirect(w, r, redirectURL, 302)
 		return
 	}
-	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
+	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
-		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
+		log.Errorw("failed to check object meta", "object_name", reqCtx.objectName, "error", err)
 		err = ErrNoSuchObject
 		return
 	}
@@ -765,6 +759,17 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			expiry    string
 			signature string
 		)
+		splitPeriod := strings.Split(r.RequestURI, ".")
+		splitSuffix := splitPeriod[len(splitPeriod)-1]
+		if !strings.Contains(r.RequestURI, objectSpecialSuffixUrlReplacement) &&
+			(strings.EqualFold(splitSuffix, ObjectPdfSuffix) || strings.EqualFold(splitSuffix, ObjectXmlSuffix)) {
+			objectPathRequestURL := "/" + strings.Replace(r.RequestURI[1:], "/", objectSpecialSuffixUrlReplacement, 1)
+			redirectURL = spEndpoint + objectPathRequestURL
+			log.Debugw("getting redirect url for private object:", "redirectURL", redirectURL)
+			http.Redirect(w, r, redirectURL, 302)
+			return
+		}
+
 		queryParams := r.URL.Query()
 		if queryParams[commonhttp.HTTPHeaderExpiryTimestamp] != nil {
 			expiry = queryParams[commonhttp.HTTPHeaderExpiryTimestamp][0]
@@ -869,7 +874,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	}
 
 	if isDownload {
-		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	} else {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
 	}

@@ -6,12 +6,13 @@ import (
 
 // BucketTrafficTable table schema
 type BucketTrafficTable struct {
-	BucketID         uint64 `gorm:"primary_key"`
-	Month            string `gorm:"primary_key"`
-	BucketName       string
-	ReadConsumedSize uint64
-	ReadQuotaSize    uint64 // ReadQuotaSize = the greenfield chain bucket quota + the sp default free quota
-	ModifiedTime     time.Time
+	BucketID              uint64 `gorm:"primary_key"`
+	BucketName            string
+	ReadConsumedSize      uint64
+	FreeQuotaConsumedSize uint64 // indicates the consumed free quota size
+	FreeQuotaSize         uint64 // the greenfield chain free quota
+	ChargedQuotaSize      uint64 //the greenfield chain bucket charged quota
+	ModifiedTime          time.Time
 }
 
 // TableName is used to set BucketTraffic Schema's table name in database

@@ -1,6 +1,8 @@
 package bsdb
 
 import (
+	"time"
+
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
@@ -12,6 +14,15 @@ func (b *BsDBImpl) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, accou
 		groups []*Group
 		err    error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includeRemoved {
 		err = b.db.Table((&Group{}).TableName()).
@@ -35,6 +46,15 @@ func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 		filters []func(*gorm.DB) *gorm.DB
 		count   int64
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if sourceType != "" {
 		filters = append(filters, SourceTypeFilter(sourceType))

@@ -53,6 +53,21 @@ func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfs
 	return -1, false, nil
 }
 
+// ValidateSecondarySPs returns whether current sp is one of the object gvg's secondary sp and its index within GVG(if is)
+func ValidateSecondarySPs(selfSpID uint32, secondarySpIDs []uint32) (int, bool) {
+	for i, sspID := range secondarySpIDs {
+		if selfSpID == sspID {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+// ValidatePrimarySP returns whether selfSpID is primarySpID
+func ValidatePrimarySP(selfSpID, primarySpID uint32) bool {
+	return selfSpID == primarySpID
+}
+
 // BlsAggregate aggregate secondary sp bls signature
 func BlsAggregate(secondarySigs [][]byte) ([]byte, error) {
 	blsSigs, err := bls.MultipleSignaturesFromBytes(secondarySigs)

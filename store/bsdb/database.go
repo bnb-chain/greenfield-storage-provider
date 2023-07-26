@@ -2,6 +2,7 @@ package bsdb
 
 import (
 	"github.com/forbole/juno/v4/common"
+	"gorm.io/gorm"
 )
 
 // Metadata contains all the methods required by block syncer db database
@@ -58,18 +59,12 @@ type Metadata interface {
 	GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*GlobalVirtualGroupFamily, error)
 	// GetGlobalVirtualGroupByGvgID get global virtual group by gvg id
 	GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtualGroup, error)
-	// ListBucketsBindingOnPrimarySP list buckets by primary sp id
-	ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
-	// ListBucketsBindingOnSecondarySP list buckets by secondary sp id
-	ListBucketsBindingOnSecondarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
-	// ListPrimaryObjects list objects by primary sp id
-	ListPrimaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
-	// ListSecondaryObjects list objects by primary sp id
-	ListSecondaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
-	// ListObjectsInGVGAndBucket ListObjectsInGVG list objects by gvg and bucket id
-	ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	// ListObjectsInGVGAndBucket list objects by gvg and bucket id
+	ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, *Bucket, error)
+	// ListObjectsByGVGAndBucketForGC list objects by gvg and bucket for gc
+	ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, *Bucket, error)
 	// ListObjectsInGVG list objects by gvg
-	ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error)
+	ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, []*Bucket, error)
 	// ListGvgByPrimarySpID list gvg by primary sp id
 	ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup, error)
 	// ListGvgBySecondarySpID list gvg by secondary sp id
@@ -85,17 +80,21 @@ type Metadata interface {
 	// ListBucketsByVgfID list buckets by vgf ids
 	ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error)
 	// ListObjectsByLVGID list objects by lvg id
-	ListObjectsByLVGID(lvgIDs []uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error)
+	ListObjectsByLVGID(lvgIDs []uint32, bucketID common.Hash, startAfter common.Hash, limit int, filters ...func(*gorm.DB) *gorm.DB) ([]*Object, *Bucket, error)
 	// GetGvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*GlobalVirtualGroup, error)
 	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
 	// ListMigrateBucketEvents list migrate bucket events
 	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error)
+	// GetMigrateBucketEventByBucketID get migrate bucket event by bucket id
+	GetMigrateBucketEventByBucketID(bucketID common.Hash) (*EventCompleteMigrationBucket, error)
 	// ListSwapOutEvents list swap out events
 	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, []*EventCompleteSwapOut, []*EventCancelSwapOut, error)
 	// ListSpExitEvents list sp exit events
 	ListSpExitEvents(blockID uint64, operatorAddress common.Address) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error)
+	// GetSPByAddress get sp info by operator address
+	GetSPByAddress(operatorAddress common.Address) (*StorageProvider, error)
 }
 
 // BSDB contains all the methods required by block syncer database

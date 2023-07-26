@@ -119,6 +119,8 @@ const (
 	ListGlobalVirtualGroupsByBucketQuery = "gvg-bucket-id"
 	// ListObjectsInGVGAndBucketQuery defines list objects by gvg and bucket id, which is used to route request
 	ListObjectsInGVGAndBucketQuery = "objects-gvg-bucket"
+	// ListObjectsByGVGAndBucketForGCQuery defines list objects by gvg and bucket for gc, which is used to route request
+	ListObjectsByGVGAndBucketForGCQuery = "objects-gvg-gc"
 	// ListObjectsInGVGQuery defines list objects by gvg id, which is used to route request
 	ListObjectsInGVGQuery = "objects-gvg"
 	// ListMigrateBucketEventsQuery defines list migrate bucket events, which is used to route request
@@ -129,6 +131,8 @@ const (
 	ListSpExitEventsQuery = "sp-exit-events"
 	// VerifyPermissionByIDQuery defines verify permission by resource id, which is used to route request
 	VerifyPermissionByIDQuery = "verify-id"
+	// GetSPInfoQuery defines query sp info, which is used to route request
+	GetSPInfoQuery = "query-sp"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for
 	ResourceIDQuery = "resource-id"
 	// ResourceTypeQuery defines the type of resource that grants permission for
@@ -250,6 +254,14 @@ const (
 	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
 	// SwapOutApprovalPath defines get swap out approval path.
 	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
+	// ObjectXmlSuffix defines the object has xml suffix
+	ObjectXmlSuffix = "xml"
+	// ObjectPdfSuffix defines the object has pdf suffix
+	ObjectPdfSuffix = "pdf"
+	// UniversalEndpointSpecialSuffixQuery defines the query of universal endpoint with special suffix
+	UniversalEndpointSpecialSuffixQuery = "objectPath"
+	// objectSpecialSuffixUrlReplacement defines the replacement part for universal endpoint object url with special suffix
+	objectSpecialSuffixUrlReplacement = "?" + UniversalEndpointSpecialSuffixQuery + "="
 )
 
 const (

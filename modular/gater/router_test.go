@@ -477,6 +477,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: listObjectsInGVGAndBucketRouterName,
 		},
 		{
+			name:             "List objects by gvg and bucket id for gc",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListObjectsByGVGAndBucketForGCQuery + "&" + GvgIDQuery + "&" + BucketIDQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery,
+			shouldMatch:      true,
+			wantedRouterName: listObjectsByGVGAndBucketForGCRouterName,
+		},
+		{
 			name:             "List objects by gvg id",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -507,6 +515,14 @@ func TestRouters(t *testing.T) {
 			url:              scheme + testDomain + "/?" + ListSpExitEventsQuery + "&" + SpIDQuery + "&" + BlockIDQuery,
 			shouldMatch:      true,
 			wantedRouterName: listSpExitEventsRouterName,
+		},
+		{
+			name:             "Get sp info by operator address",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetSPInfoQuery + "&" + OperatorAddressQuery,
+			shouldMatch:      true,
+			wantedRouterName: getSPInfoRouterName,
 		},
 	}
 	for _, testCase := range testCases {
