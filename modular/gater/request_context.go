@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"net/http"
 	"strings"
 	"time"
@@ -40,6 +41,19 @@ type RequestContext struct {
 	startTime time.Time
 }
 
+var skipAuthRouterNames = []string{
+	requestNonceRouterName,
+	updateUserPublicKeyRouterName, // this will skip general auth algorithms first and use specific "personal sign" later
+	downloadObjectByUniversalEndpointName,
+	viewObjectByUniversalEndpointName,
+	getUserBucketsRouterName,
+	listObjectsByBucketRouterName,
+	getObjectMetaRouterName,
+	getBucketMetaRouterName,
+	listBucketsByBucketIDRouterName,
+	listObjectsByObjectIDRouterName,
+}
+
 // NewRequestContext returns an instance of RequestContext, and verify the
 // request signature, returns the instance regardless of the success or
 // failure of the verification.
@@ -61,6 +75,10 @@ func NewRequestContext(r *http.Request, g *GateModular) (*RequestContext, error)
 		account:    vars["account_id"],
 		vars:       vars,
 		startTime:  time.Now(),
+	}
+	log.Infof("routerName is %s", routerName)
+	if slices.Contains(skipAuthRouterNames, routerName) {
+		return reqCtx, nil
 	}
 	account, err := reqCtx.VerifySignature()
 	if err != nil {
@@ -134,6 +152,23 @@ func signaturePrefix(version, algorithm string) string {
 }
 
 func (r *RequestContext) VerifySignature() (string, error) {
+	// check expiry header
+	requestExpiredTimestamp := r.request.Header.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+	if requestExpiredTimestamp == "" {
+		requestExpiredTimestamp = r.request.URL.Query().Get(commonhttp.HTTPHeaderExpiryTimestamp)
+	}
+	expiryDate, parseErr := time.Parse(ExpiryDateFormat, requestExpiredTimestamp)
+	if parseErr != nil {
+		return "", ErrInvalidExpiryDateHeader
+	}
+	log.Infof("%s", time.Until(expiryDate).Seconds())
+	log.Infof("%s", MaxExpiryAgeInSec)
+	expiryAge := int32(time.Until(expiryDate).Seconds())
+	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
+		return "", ErrInvalidExpiryDateHeader
+	}
+
+	// check sig
 	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(SignTypeV1, SignAlgorithm)
 	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
@@ -248,10 +283,16 @@ func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.A
 		return nil, err
 	}
 
+	// check request integrity
+	realMsgToSign := commonhttp.GetMsgToSign(r.request)
+	if hex.EncodeToString(realMsgToSign) != *signedMsg {
+		log.CtxErrorw(r.ctx, "failed to check signed msg")
+		return nil, ErrRequestConsistent
+	}
+
 	account := r.request.Header.Get(GnfdUserAddressHeader)
 	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 	offChainSig := *sigString
-	realMsgToSign := *signedMsg
 
 	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyOffChainSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
@@ -260,6 +301,39 @@ func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.A
 	}
 	if verifyOffChainSignatureResp {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
+		return userAddress, nil
+	} else {
+		return nil, err
+	}
+}
+
+// verifyOffChainSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed.  The auth information will be parsed from URL.
+func (r *RequestContext) verifyOffChainSignatureFromPreSignedURL(authenticationStr string, account string, domain string) (sdk.AccAddress, error) {
+	var (
+		signedMsg *string
+		err       error
+	)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(authenticationStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// check request integrity
+	realMsgToSign := commonhttp.GetMsgToSignForPreSignedURL(r.request)
+	if hex.EncodeToString(realMsgToSign) != *signedMsg {
+		log.CtxErrorw(r.ctx, "failed to check signed msg")
+		return nil, ErrRequestConsistent
+	}
+
+	offChainSig := *sigString
+
+	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyOffChainSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
+	if err != nil {
+		log.Errorf("failed to verify off chain signature", "error", err)
+		return nil, err
+	}
+	if verifyOffChainSignatureResp {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
 		return userAddress, nil
 	} else {
 		return nil, err

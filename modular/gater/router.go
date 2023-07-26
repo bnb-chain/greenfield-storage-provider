@@ -24,8 +24,8 @@ const (
 	verifyPermissionRouterName                     = "VerifyPermission"
 	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
-	requestNonceName                               = "RequestNonce"
-	updateUserPublicKey                            = "UpdateUserPublicKey"
+	requestNonceRouterName                         = "RequestNonce"
+	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
 	queryUploadProgressRouterName                  = "QueryUploadProgress"
 	downloadObjectByUniversalEndpointName          = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName              = "ViewObjectByUniversalEndpoint"
@@ -79,11 +79,11 @@ func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// off-chain-auth router
 	router.Path(AuthRequestNoncePath).
-		Name(requestNonceName).
+		Name(requestNonceRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.requestNonceHandler)
 	router.Path(AuthUpdateKeyPath).
-		Name(updateUserPublicKey).
+		Name(updateUserPublicKeyRouterName).
 		Methods(http.MethodPost).
 		HandlerFunc(g.updateUserPublicKeyHandler)
 

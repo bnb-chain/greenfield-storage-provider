@@ -3,6 +3,7 @@ package gater
 import (
 	"context"
 	"encoding/json"
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -20,7 +21,7 @@ import (
 )
 
 const (
-	MaxExpiryAgeInSec         int32  = 3600 * 24 * 7 // 7 days
+	MaxExpiryAgeInSec         int32  = commonhttp.MaxExpiryAgeInSec // 7 days
 	ExpiryDateFormat          string = time.RFC3339
 	ExpectedEddsaPubKeyLength int    = 64
 	ExpectedPersonalSigLength int    = 132
@@ -104,24 +105,23 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		// verify personal sign signature
-		personalSignSignaturePrefix := signaturePrefix(SignTypePersonal, SignAlgorithm)
-		requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
+	reqCtx, _ = NewRequestContext(r, g)
+	// verify personal sign signature
+	personalSignSignaturePrefix := signaturePrefix(SignTypePersonal, SignAlgorithm)
+	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
 
-		if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
-			accAddress, personalSignVerifyErr := verifyPersonalSignatureFromHeader(requestSignature[len(personalSignSignaturePrefix):])
-			if personalSignVerifyErr != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
-				err = personalSignVerifyErr
-				return
-			}
-			account = accAddress.String()
-			reqCtx.account = account
-		} else {
+	if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
+		accAddress, personalSignVerifyErr := verifyPersonalSignatureFromHeader(requestSignature[len(personalSignSignaturePrefix):])
+		if personalSignVerifyErr != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
+			err = personalSignVerifyErr
 			return
 		}
+		account = accAddress.String()
+		reqCtx.account = account
+	} else {
+		err = ErrUnsupportedSignType
+		return
 	}
 
 	domain = reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
@@ -173,8 +173,6 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
-	personalSignSignaturePrefix := signaturePrefix(SignTypePersonal, SignAlgorithm)
 	signedMsg, _, err := parseSignedMsgAndSigFromRequest(requestSignature[len(personalSignSignaturePrefix):])
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey when parseSignedMsgAndSigFromRequest")
@@ -253,34 +251,37 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 	pattern := `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)\n*Resources:((?:\n- SP .+ \(name:.+\) with nonce: \d+)+)`
 
 	re := regexp.MustCompile(pattern)
-	match := re.FindStringSubmatch(signedContent)
-	if len(match) < 4 {
+	patternMatches := re.FindStringSubmatch(signedContent)
+	if len(patternMatches) < 10 {
 		return ErrSignedMsgNotMatchTemplate
 	}
 	// Extract variable values
-	dappDomain := match[1]
-	// userAcct := match[2]  // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
-	publicKey := match[3]
-	// eip4361URI := match[4] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
-	// eip4361Version := match[5] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
-	// eip4361ChainId := match[6] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
-	// eip4361IssuedAt := match[7] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
-	eip4361ExpirationTime := match[8]
+	dappDomain := patternMatches[1]
+	// userAcct := patternMatches[2]  // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	publicKey := patternMatches[3]
+	// eip4361URI := patternMatches[4] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	// eip4361Version := patternMatches[5] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	// eip4361ChainId := patternMatches[6] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	// eip4361IssuedAt := patternMatches[7] // unused, but keep this line here to indicate the matched details so that they could be useful in the future.
+	eip4361ExpirationTime := patternMatches[8]
 
-	spsText := match[9]
+	spsText := patternMatches[9]
 	spsPattern := `- SP (.+) \(name:(.+\S)\) with nonce: (\d+)`
 	spsRe := regexp.MustCompile(spsPattern)
 	spsMatch := spsRe.FindAllStringSubmatch(spsText, -1)
 
 	var found = false
-	for _, match := range spsMatch {
-		spAddress := match[1]
-		// spName := match[2]  // keep this line here to indicate match[2] means spName
-		spNonce := match[3]
+	for _, spInfoMatches := range spsMatch {
+		if len(patternMatches) < 4 {
+			return ErrSignedMsgNotMatchTemplate
+		}
+		spAddress := spInfoMatches[1]
+		// spName := spInfoMatches[2]  // keep this line here to indicate spInfoMatches[2] means spName
+		spNonce := spInfoMatches[3]
 		if spAddress == g.baseApp.OperatorAddress() {
 			found = true
 			if expectedNonce != spNonce { // nonce doesn't match
-				return ErrSignedMsgNotMatchTemplate
+				return ErrSignedMsgNotMatchSPNonce
 			}
 		}
 	}
@@ -288,13 +289,13 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 		return ErrSignedMsgNotMatchSPAddr
 	}
 	if dappDomain != expectedDomain {
-		return ErrSignedMsgNotMatchTemplate
+		return ErrSignedMsgNotMatchDomain
 	}
 	if publicKey != expectedPublicKey {
-		return ErrSignedMsgNotMatchHeaders
+		return ErrSignedMsgNotMatchPubKey
 	}
 	if eip4361ExpirationTime != expectedExpiryDate {
-		return ErrSignedMsgNotMatchTemplate
+		return ErrSignedMsgNotMatchExpiry
 	}
 
 	return nil

@@ -70,7 +70,7 @@ message VerifyOffChainSignatureRequest {
   // off_chain_sig is the off chain signature signed by user's eddsa seed private key
   string off_chain_sig = 3;
   // real_msg_to_sign is the msg that the off_chain_sig is signed for
-  string real_msg_to_sign = 4;
+  bytes real_msg_to_sign = 4;
 }
 
 // VerifyOffChainSignatureResponse is response type for the VerifyOffChainSignature RPC method.

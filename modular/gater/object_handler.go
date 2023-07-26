@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"net/http"
 	"net/url"
 	"strings"
@@ -397,19 +398,25 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	queryParams := r.URL.Query()
-	gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
-	gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
-	gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
-
-	// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
-	if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" {
-		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
-		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
-		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
-	}
-
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
+	if reqCtxErr != nil {
+		queryParams := r.URL.Query()
+		gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
+		gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
+		gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+		gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+
+		// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
+		if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
+			account, preSignedURLErr := reqCtx.verifyOffChainSignatureFromPreSignedURL(gnfdAuthorizationParam[len(signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+			if preSignedURLErr != nil {
+				reqCtxErr = preSignedURLErr
+			} else {
+				reqCtx.account = account.String()
+				reqCtxErr = nil
+			}
+		}
+	}
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
@@ -759,8 +766,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			signature string
 		)
 		queryParams := r.URL.Query()
-		if queryParams["expiry"] != nil {
-			expiry = queryParams["expiry"][0]
+		if queryParams[commonhttp.HTTPHeaderExpiryTimestamp] != nil {
+			expiry = queryParams[commonhttp.HTTPHeaderExpiryTimestamp][0]
 		}
 		if queryParams["signature"] != nil {
 			signature = queryParams["signature"][0]
@@ -770,14 +777,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			expiryDate, dateParseErr := time.Parse(ExpiryDateFormat, expiry)
 			if dateParseErr != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid format", "expiry", expiry)
-				err = ErrInvalidExpiryDate
+				err = ErrInvalidExpiryDateParam
 				return
 			}
 			log.Infof("%s", time.Until(expiryDate).Seconds())
 			log.Infof("%s", MaxExpiryAgeInSec)
 			expiryAge := int32(time.Until(expiryDate).Seconds())
 			if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
-				err = ErrInvalidExpiryDate
+				err = ErrInvalidExpiryDateParam
 				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid expiry value", "expiry", expiry)
 				return
 			}
@@ -822,9 +829,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
 			if htmlConfig == "" {
-				log.CtxErrorw(reqCtx.Context(), "chain id is not found", "chain id ", g.baseApp.ChainID())
-				err = gfsperrors.MakeGfSpError(fmt.Errorf("chain id is not found"))
-				return
+				htmlConfig = htmlConfigMap["greenfield_5600-1"] // use testnet by default, actually, we only need the metamask sign function, regardless which greenfield network the metamask is going to connect.
 			}
 			hc, _ := json.Marshal(htmlConfig)
 			html := strings.Replace(GnfdBuiltInUniversalEndpointDappHtml, "<% env %>", string(hc), 1)

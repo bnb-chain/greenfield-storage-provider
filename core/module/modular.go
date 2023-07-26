@@ -65,7 +65,7 @@ type Authenticator interface {
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32,
 		userPublicKey string, expiryDate int64) (bool, error)
 	// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error)
+	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error)
 }
 
 // Approver is an abstract interface to handle asking approval requests.

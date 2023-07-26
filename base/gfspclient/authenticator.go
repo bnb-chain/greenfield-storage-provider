@@ -93,7 +93,7 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 }
 
 // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-func (s *GfSpClient) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string, opts ...grpc.CallOption) (bool, error) {
+func (s *GfSpClient) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error) {
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
