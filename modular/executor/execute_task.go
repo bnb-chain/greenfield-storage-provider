@@ -82,11 +82,11 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureSealObject).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorFailureSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorFailureSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorFailureSealObject).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessSealObject).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorSuccessSealObject).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {

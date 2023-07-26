@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -11,6 +12,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -31,6 +33,11 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		queryLimit           = uint32(100)
 		batchSize            = 10
 	)
+	startMigrateGVGTime := time.Now()
+	defer func() {
+		metrics.MigrateGVGTimeHistogram.WithLabelValues("migrate_gvg_cost").Observe(time.Since(startMigrateGVGTime).Seconds())
+		metrics.MigrateGVGCouter.WithLabelValues("migrate_").Inc()
+	}()
 
 	for {
 		if bucketID == 0 { // sp exit task
@@ -54,6 +61,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 				log.Info("migrate gvg report task")
 				if err = e.ReportTask(ctx, task); err != nil {
 					log.CtxErrorw(ctx, "failed to report task", "error", err)
+					return
 				}
 			}
 		}
