@@ -5,6 +5,7 @@ import "base/types/gfsperrors/error.proto";
 import "base/types/gfspp2p/p2p.proto";
 import "base/types/gfsptask/task.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "greenfield/sp/tx.proto";
 import "greenfield/storage/common.proto";
 import "greenfield/storage/tx.proto";
 import "greenfield/virtualgroup/tx.proto";
@@ -48,6 +49,7 @@ message GfSpSignRequest {
     greenfield.virtualgroup.MsgCompleteSwapOut complete_swap_out = 19;
     greenfield.virtualgroup.MsgStorageProviderExit sp_exit = 20;
     greenfield.virtualgroup.MsgCompleteStorageProviderExit complete_sp_exit = 21;
+    greenfield.sp.MsgUpdateSpStoragePrice sp_storage_price = 22;
   }
 }
 

@@ -7,19 +7,11 @@ on:
     branches:
       - master
       - develop
-      - ci-*
-      - release*
       - fix-release*
-      - feat-*
 
   pull_request:
     branches:
-      - master
-      - develop
-      - ci-*
-      - release*
-      - fix-release*
-      - feat-*
+
 
 jobs:
   golangci:

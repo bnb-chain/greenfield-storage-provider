@@ -2,16 +2,19 @@ package gater
 
 import (
 	"encoding/xml"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"gorm.io/gorm"
 )
 
 // getBucketReadQuotaHandler handles the get bucket read quota request.
@@ -22,6 +25,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		authenticated         bool
 		bucketInfo            *storagetypes.BucketInfo
 		charge, free, consume uint64
+		bucketTraffic         *spdb.BucketTraffic
 	)
 	startTime := time.Now()
 	defer func() {
@@ -62,11 +66,26 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		err = ErrConsensus
 		return
 	}
-	charge, free, consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
-		reqCtx.Context(), bucketInfo, reqCtx.vars["year_month"])
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "error", err)
-		return
+
+	bucketTraffic, err = g.baseApp.GfSpDB().GetBucketTraffic(
+		bucketInfo.Id.Uint64())
+	// if the traffic table has not been created and initialized yet, return the chain info
+	if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
+		free, err = g.baseApp.Consensus().QuerySPFreeQuota(reqCtx.Context(), g.baseApp.OperatorAddress())
+		if err != nil {
+			err = ErrConsensus
+		}
+		charge = bucketInfo.GetChargedReadQuota()
+		log.CtxDebugw(reqCtx.Context(), "fail to get traffic info in db, return the chain meta", "free_quota", free, "charged_quota", charge)
+		consume = 0
+	} else {
+		// if the traffic table has been created, return the db info from meta service
+		charge, free, consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
+			reqCtx.Context(), bucketInfo)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "error", err)
+			return
+		}
 	}
 	var xmlInfo = struct {
 		XMLName             xml.Name `xml:"GetReadQuotaResult"`
