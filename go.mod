@@ -49,8 +49,10 @@ require (
 )
 
 require (
+	github.com/AanZee/goimportssort v0.0.0-20200826100315-f4e155b80708 // indirect
 	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
 	github.com/alibabacloud-go/tea v1.1.8 // indirect
+	github.com/dave/dst v0.23.1 // indirect
 	github.com/linxGnu/grocksdb v1.7.16 // indirect
 )
 

@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
@@ -18,7 +20,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"gorm.io/gorm"
 )
 
 var (

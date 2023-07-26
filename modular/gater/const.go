@@ -1,6 +1,8 @@
 package gater
 
-import commonhttp "github.com/bnb-chain/greenfield-common/go/http"
+import (
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
+)
 
 // define all kinds of http constants
 const (

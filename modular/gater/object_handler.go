@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"net/http"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"

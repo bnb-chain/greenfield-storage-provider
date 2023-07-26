@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
-
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"

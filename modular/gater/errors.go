@@ -2,10 +2,10 @@ package gater
 
 import (
 	"encoding/xml"
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"net/http"
 	"strconv"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
