@@ -1193,5 +1193,5 @@ func GetSwapOutApprovalAndSendTx(client *gfspclient.GfSpClient, destSP *sptypes.
 }
 
 func isAlreadyExists(err error) bool {
-	return strings.HasPrefix(err.Error(), "already exist")
+	return strings.Contains(err.Error(), "already exist")
 }
