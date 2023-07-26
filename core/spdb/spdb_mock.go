@@ -328,20 +328,6 @@ func (mr *MockSignatureDBMockRecorder) SetReplicatePieceChecksum(objectID, segme
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum)
 }
 
-// UpdatePieceChecksum mocks base method.
-func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdatePieceChecksum", objectID, redundancyIndex, checksum)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdatePieceChecksum indicates an expected call of UpdatePieceChecksum.
-func (mr *MockSignatureDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
-}
-
 // UpdateIntegrityChecksum mocks base method.
 func (m *MockSignatureDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) error {
 	m.ctrl.T.Helper()
@@ -354,6 +340,20 @@ func (m *MockSignatureDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) erro
 func (mr *MockSignatureDBMockRecorder) UpdateIntegrityChecksum(integrity interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateIntegrityChecksum), integrity)
+}
+
+// UpdatePieceChecksum mocks base method.
+func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePieceChecksum", objectID, redundancyIndex, checksum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePieceChecksum indicates an expected call of UpdatePieceChecksum.
+func (mr *MockSignatureDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
 }
 
 // MockTrafficDB is a mock of TrafficDB interface.

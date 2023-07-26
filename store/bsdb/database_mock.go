@@ -290,6 +290,21 @@ func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(res
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockMetadata)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
 }
 
+// GetSPByAddress mocks base method.
+func (m *MockMetadata) GetSPByAddress(operatorAddress common.Address) (*StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSPByAddress", operatorAddress)
+	ret0, _ := ret[0].(*StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSPByAddress indicates an expected call of GetSPByAddress.
+func (mr *MockMetadataMockRecorder) GetSPByAddress(operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPByAddress", reflect.TypeOf((*MockMetadata)(nil).GetSPByAddress), operatorAddress)
+}
+
 // GetStatementsByPolicyID mocks base method.
 func (m *MockMetadata) GetStatementsByPolicyID(policyIDList []common.Hash, includeRemoved bool) ([]*Statement, error) {
 	m.ctrl.T.Helper()
@@ -971,6 +986,21 @@ func (m *MockBSDB) GetPermissionsByResourceAndPrincipleType(resourceType, princi
 func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockBSDB)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
+}
+
+// GetSPByAddress mocks base method.
+func (m *MockBSDB) GetSPByAddress(operatorAddress common.Address) (*StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSPByAddress", operatorAddress)
+	ret0, _ := ret[0].(*StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSPByAddress indicates an expected call of GetSPByAddress.
+func (mr *MockBSDBMockRecorder) GetSPByAddress(operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPByAddress", reflect.TypeOf((*MockBSDB)(nil).GetSPByAddress), operatorAddress)
 }
 
 // GetStatementsByPolicyID mocks base method.
