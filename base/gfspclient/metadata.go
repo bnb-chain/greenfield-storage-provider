@@ -811,3 +811,19 @@ func (s *GfSpClient) GetSPInfo(ctx context.Context, operatorAddress string, opts
 	}
 	return resp.GetStorageProvider(), nil
 }
+
+func (s *GfSpClient) GetStatus(ctx context.Context, opts ...grpc.DialOption) (*types.Status, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetStatusRequest{}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetStatus(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get debug info", "error", err)
+		return nil, ErrRPCUnknown
+	}
+	return resp.GetStatus(), nil
+}
