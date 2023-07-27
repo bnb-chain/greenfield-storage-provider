@@ -638,7 +638,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 			bucketIDs = append(bucketIDs, migrateBucketEvents.Events.BucketId.Uint64())
 		}
 	}
-	log.Debug("loadBucketMigrateExecutePlansFromDB", "bucketIDs", bucketIDs)
+	log.Debugw("loadBucketMigrateExecutePlansFromDB", "bucketIDs", bucketIDs)
 	// load from db by BucketID & construct plan
 	for _, bucketID := range bucketIDs {
 		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID)
@@ -660,7 +660,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 				log.Errorw("failed to query sp", "error", queryErr)
 				return queryErr
 			}
-			primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), uint64(s.selfSP.GetId()))
+			primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), bucketID)
 			if err != nil {
 				log.Errorw("failed to list gvg", "error", err)
 				return errors.New("failed to list gvg")
