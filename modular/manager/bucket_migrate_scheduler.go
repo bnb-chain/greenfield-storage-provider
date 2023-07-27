@@ -313,7 +313,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 			}
 		}
 		// when receive CompleteMigrationBucket/ event, we should delete memory & db's status
-		s.deleteExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
+		s.deleteExecutePlanByBucketID(migrateBucketEvents.CompleteEvents.BucketId.Uint64())
 		executePlan.stopSPSchedule()
 		return err
 	}
