@@ -173,8 +173,8 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err        error
 		migrateKey string
 	)
-	log.Infow("update migrate progress", "sp_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
-		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx())
+	log.Infow("update migrate progress", "gvg_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
+		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx(), "last_migrated_object_id", task.GetLastMigratedObjectID())
 	migrateKey = MakeGVGMigrateKey(task.GetSrcGvg().GetId(), task.GetSrcGvg().GetFamilyId(), task.GetRedundancyIdx())
 	if task.GetFinished() {
 		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
