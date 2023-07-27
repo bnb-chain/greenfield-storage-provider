@@ -78,6 +78,7 @@ message GfSpReplicatePieceTask {
   // TODO: refine it.
   uint32 global_virtual_group_id = 7;
   repeated string secondary_endpoints = 8;
+  int32 not_available_sp_idx = 9;
   // repeated greenfield.sp.StorageProvider secondary_sps = 8;
 }
 

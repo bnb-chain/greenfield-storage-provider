@@ -100,7 +100,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vgmgr.VirtualG
 	return vgfm.vgfIDToVgf[familyID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -111,6 +111,9 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vg
 		return nil, ErrStaledMetadata
 	}
 	for _, g := range vgfm.vgfIDToVgf[vgfID].GVGMap {
+		if filter != nil && filter.Apply(g.ID) {
+			continue
+		}
 		picker.addGlobalVirtualGroup(g)
 	}
 
@@ -158,7 +161,7 @@ type spManager struct {
 	otherSPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params, filter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	secondarySPNumber := int(param.GetRedundantDataChunkNum() + param.GetRedundantParityChunkNum())
 	if sm.selfSP == nil || len(sm.otherSPs) < secondarySPNumber {
 		return nil, fmt.Errorf("no enough sp")
@@ -166,6 +169,9 @@ func (sm *spManager) generateVirtualGroupMeta(param *storagetypes.Params) (*vgmg
 	secondarySPIDs := make([]uint32, 0)
 	for _, sp := range sm.otherSPs {
 		if !sp.IsInService() {
+			continue
+		}
+		if filter != nil && filter.Apply(sp.Id) {
 			continue
 		}
 		secondarySPIDs = append(secondarySPIDs, sp.GetId())
@@ -216,6 +222,7 @@ type virtualGroupManager struct {
 	spManager           *spManager // is used to generate a new gvg
 	vgParams            *virtualgrouptypes.Params
 	vgfManager          *virtualGroupFamilyManager
+	freezeSPPool        *FreezeSPPool
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
@@ -223,6 +230,7 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
 		chainClient:         chainClient,
+		freezeSPPool:        NewSpFreezingPool(),
 	}
 	vgm.refreshMeta()
 	go func() {
@@ -233,6 +241,7 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 			// log.Info("finish to refresh virtual group manager meta")
 		}
 	}()
+	go vgm.releaseSPAndGVGLoop()
 	return vgm, nil
 }
 
@@ -355,7 +364,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFam
 func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)))
 }
 
 // PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
@@ -371,7 +380,7 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vg
 func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, nil)
 }
 
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
@@ -388,7 +397,8 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.generateVirtualGroupMeta(param)
+
+	return vgm.spManager.generateVirtualGroupMeta(param, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeSPIDs()))
 }
 
 // PickSPByFilter is used to pick sp by filter check.
@@ -408,4 +418,17 @@ func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvid
 	}
 	// query chain if it is not found in memory topology.
 	return vgm.chainClient.QuerySPByID(context.Background(), spID)
+}
+
+// FreezeSPAndGVGs freeze a secondary SP and its GVGs
+func (vgm *virtualGroupManager) FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrouptypes.GlobalVirtualGroup) {
+	vgm.freezeSPPool.FreezeSPAndGVGs(spID, gvgs)
+}
+
+// releaseSPAndGVGLoop runs periodically to release SP from the freeze pool
+func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
+	ticker := time.NewTicker(ReleaseSPCronJobInterval)
+	for range ticker.C {
+		vgm.freezeSPPool.ReleaseSP()
+	}
 }

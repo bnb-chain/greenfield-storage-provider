@@ -4,6 +4,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
@@ -42,6 +43,25 @@ type GVGPickFilter interface {
 	CheckGVG(gvgMeta *GlobalVirtualGroupMeta) bool
 }
 
+// ExcludeFilter applies on an ID to check if it should be excluded
+type ExcludeFilter interface {
+	Apply(id uint32) bool
+}
+
+type ExcludeIDFilter struct {
+	ExcludeIDs map[uint32]struct{}
+}
+
+func NewExcludeIDFilter(excludeGVGIDs IDSet) ExcludeFilter {
+	return &ExcludeIDFilter{
+		ExcludeIDs: excludeGVGIDs,
+	}
+}
+func (f *ExcludeIDFilter) Apply(gvgID uint32) bool {
+	_, ok := f.ExcludeIDs[gvgID]
+	return ok
+}
+
 // VirtualGroupManager is used to provide virtual group api.
 type VirtualGroupManager interface {
 	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
@@ -58,11 +78,17 @@ type VirtualGroupManager interface {
 	ForceRefreshMeta() error
 	// GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
 	GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*GlobalVirtualGroupMeta, error)
-	// PickSPByFilter picks sp which is match pick filter condition.
+	// PickSPByFilter picks sp which is match pick Apply condition.
 	PickSPByFilter(filter SPPickFilter) (*sptypes.StorageProvider, error)
 	// QuerySPByID returns sp proto.
 	QuerySPByID(spID uint32) (*sptypes.StorageProvider, error)
+	// FreezeSPAndGVGs puts the secondary SP and its joining Global virtual groups into the freeze pool for a specific period,
+	// For those SPs which are in the pool will be skipped when creating a GVG, GVGs in the pool will not be chosen to seal Object
+	// until released
+	FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrouptypes.GlobalVirtualGroup)
 }
 
 // NewVirtualGroupManager is the virtual group manager init api.
 type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)
+
+type IDSet = map[uint32]struct{}
