@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -1183,10 +1184,14 @@ func GetSwapOutApprovalAndSendTx(client *gfspclient.GfSpClient, destSP *sptypes.
 		log.Errorw("failed to get swap out approval from dest sp", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
-	if _, err = client.SwapOut(ctx, approvalSwapOut); err != nil {
+	if _, err = client.SwapOut(ctx, approvalSwapOut); err != nil && !isAlreadyExists(err) {
 		log.Errorw("failed to send swap out tx to chain", "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
 	log.Infow("succeed to get approval and send swap out tx", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut)
 	return approvalSwapOut, nil
+}
+
+func isAlreadyExists(err error) bool {
+	return strings.Contains(err.Error(), "already exist")
 }
