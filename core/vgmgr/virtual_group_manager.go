@@ -59,13 +59,13 @@ type ExcludeIDFilter struct {
 	ExcludeIDs map[uint32]struct{}
 }
 
-func NewExcludeIDFilter(excludeGVGIDs IDSet) ExcludeFilter {
+func NewExcludeIDFilter(ids IDSet) ExcludeFilter {
 	return &ExcludeIDFilter{
-		ExcludeIDs: excludeGVGIDs,
+		ExcludeIDs: ids,
 	}
 }
-func (f *ExcludeIDFilter) Apply(gvgID uint32) bool {
-	_, ok := f.ExcludeIDs[gvgID]
+func (f *ExcludeIDFilter) Apply(id uint32) bool {
+	_, ok := f.ExcludeIDs[id]
 	return ok
 }
 

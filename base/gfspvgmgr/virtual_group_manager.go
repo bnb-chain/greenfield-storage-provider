@@ -223,7 +223,7 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
 		chainClient:         chainClient,
-		freezeSPPool:        NewSpFreezingPool(),
+		freezeSPPool:        NewFreezeSPPool(),
 	}
 	vgm.refreshMeta()
 	go func() {
@@ -419,7 +419,7 @@ func (vgm *virtualGroupManager) FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrou
 
 // releaseSPAndGVGLoop runs periodically to release SP from the freeze pool
 func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
-	ticker := time.NewTicker(ReleaseSPCronJobInterval)
+	ticker := time.NewTicker(ReleaseSPJobInterval)
 	for range ticker.C {
 		vgm.freezeSPPool.ReleaseSP()
 	}

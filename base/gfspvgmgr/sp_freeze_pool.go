@@ -1,7 +1,6 @@
 package gfspvgmgr
 
 import (
-	"fmt"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"sync"
@@ -9,36 +8,30 @@ import (
 )
 
 const (
-	DefaultFreezingPeriodForSPInMin = 1 * time.Minute
-	ReleaseSPCronJobInterval        = 20 * time.Second
+	DefaultFreezingPeriodForSP = 10 * time.Minute
+	ReleaseSPJobInterval       = 1 * time.Minute
 )
 
 type FreezeSPPool struct {
 	sync.Map
 }
 
-func NewSpFreezingPool() *FreezeSPPool {
+func NewFreezeSPPool() *FreezeSPPool {
 	return &FreezeSPPool{sync.Map{}}
 }
 
-// FreezeSPAndGVGs put a Secondary SP and its joined Global virtual group into the Freeze Pool.
+// FreezeSPAndGVGs puts a Secondary SP and its joined Global virtual groups into the Freeze Pool.
 func (s *FreezeSPPool) FreezeSPAndGVGs(spID uint32, joinedGVGs []*virtual_types.GlobalVirtualGroup) {
 	stats := &SPStats{
 		JoinedGVGs:  joinedGVGs,
-		FreezeUntil: time.Now().Add(DefaultFreezingPeriodForSPInMin).Unix(),
+		FreezeUntil: time.Now().Add(DefaultFreezingPeriodForSP).Unix(),
 	}
 	s.Store(spID, stats)
-}
-
-func (s *FreezeSPPool) Remove(SpID uint32) {
-	s.Delete(SpID)
 }
 
 func (s *FreezeSPPool) GetFreezeSPIDs() vgmgr.IDSet {
 	idSet := make(map[uint32]struct{}, 0)
 	s.Range(func(k, v interface{}) bool {
-		fmt.Println("printing sync map")
-		fmt.Println(k, v)
 		idSet[k.(uint32)] = struct{}{}
 		return true
 	})
@@ -58,19 +51,14 @@ func (s *FreezeSPPool) GetFreezeGVGsInFamily(familyID uint32) vgmgr.IDSet {
 	return idSet
 }
 
-func (s *FreezeSPPool) ReleaseSP() []uint32 {
-	sps := make([]uint32, 0)
+func (s *FreezeSPPool) ReleaseSP() {
 	s.Range(func(k interface{}, v interface{}) bool {
 		stats := v.(*SPStats)
-		fmt.Printf("ReleaseSP loop k-v, %v, %v \n", k, v)
 		if time.Now().Unix() > stats.FreezeUntil {
 			s.Delete(k)
-			sps = append(sps, k.(uint32))
 		}
 		return true
 	})
-	fmt.Printf("ReleaseSP sps %v is released  \n", sps)
-	return sps
 }
 
 type SPStats struct {
