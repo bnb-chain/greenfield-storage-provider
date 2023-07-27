@@ -10,7 +10,7 @@ import (
 
 func TestMemoryStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setup(t, storage.MemoryStore, "", 0)
+	handler, err := setup(t, storage.MemoryStore, "", 0, storage.AKSKIAMType)
 	assert.Equal(t, err, nil)
 
 	doOperations(t, handler)
