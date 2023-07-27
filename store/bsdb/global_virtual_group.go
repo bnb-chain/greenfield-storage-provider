@@ -3,6 +3,7 @@ package bsdb
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
@@ -15,6 +16,15 @@ func (b *BsDBImpl) GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtualGro
 		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&GlobalVirtualGroup{}).TableName()).
@@ -36,6 +46,15 @@ func (b *BsDBImpl) ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup, err
 		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&GlobalVirtualGroup{}).TableName()).
@@ -54,6 +73,16 @@ func (b *BsDBImpl) ListGvgBySecondarySpID(spID uint32) ([]*GlobalVirtualGroup, e
 		query string
 		err   error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	query = fmt.Sprintf("select * from global_virtual_groups where FIND_IN_SET('%d', secondary_sp_ids) > 0 and removed = false; ", spID)
 	err = b.db.Raw(query).Find(&gvg).Error
 
@@ -67,6 +96,16 @@ func (b *BsDBImpl) GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*
 		lvg *LocalVirtualGroup
 		err error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	lvg, err = b.GetLvgByBucketAndLvgID(bucketID, lvgID)
 	if err != nil || lvg == nil {
 		return nil, err
@@ -91,6 +130,15 @@ func (b *BsDBImpl) ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGrou
 		filters      []func(*gorm.DB) *gorm.DB
 		err          error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, RemovedFilter(false))
 	err = b.db.Table((&LocalVirtualGroup{}).TableName()).

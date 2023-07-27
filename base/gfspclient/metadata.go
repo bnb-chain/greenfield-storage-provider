@@ -3,15 +3,16 @@ package gfspclient
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield/types/resource"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
+	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield/types/resource"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
@@ -307,7 +308,7 @@ func (s *GfSpClient) GetEndpointBySpAddress(ctx context.Context, spAddress strin
 	return resp.GetEndpoint(), nil
 }
 
-func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (
+func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, opts ...grpc.DialOption) (
 	uint64, uint64, uint64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
@@ -317,7 +318,6 @@ func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_typ
 	defer conn.Close()
 	req := &types.GfSpGetBucketReadQuotaRequest{
 		BucketInfo: bucket,
-		YearMonth:  yearMonth,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketReadQuota(ctx, req)
 	if err != nil {
@@ -739,4 +739,22 @@ func (s *GfSpClient) VerifyPermissionByID(ctx context.Context, Operator string, 
 		return nil, err
 	}
 	return &resp.Effect, nil
+}
+
+func (s *GfSpClient) GetSPInfo(ctx context.Context, operatorAddress string, opts ...grpc.DialOption) (*sptypes.StorageProvider, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetSPInfoRequest{
+		OperatorAddress: operatorAddress,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetSPInfo(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get sp info by operator address", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.GetStorageProvider(), nil
 }

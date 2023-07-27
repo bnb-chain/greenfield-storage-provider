@@ -328,20 +328,6 @@ func (mr *MockSignatureDBMockRecorder) SetReplicatePieceChecksum(objectID, segme
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum)
 }
 
-// UpdateIntegrityChecksum mocks base method.
-func (m *MockSignatureDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateIntegrityChecksum", integrity)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateIntegrityChecksum indicates an expected call of UpdateIntegrityChecksum.
-func (mr *MockSignatureDBMockRecorder) UpdateIntegrityChecksum(integrity interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateIntegrityChecksum), integrity)
-}
-
 // UpdatePieceChecksum mocks base method.
 func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
 	m.ctrl.T.Helper()
@@ -354,6 +340,20 @@ func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex i
 func (mr *MockSignatureDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
+}
+
+// UpdateIntegrityChecksum mocks base method.
+func (m *MockSignatureDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateIntegrityChecksum", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateIntegrityChecksum indicates an expected call of UpdateIntegrityChecksum.
+func (mr *MockSignatureDBMockRecorder) UpdateIntegrityChecksum(integrity interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateIntegrityChecksum), integrity)
 }
 
 // MockTrafficDB is a mock of TrafficDB interface.
@@ -409,18 +409,18 @@ func (mr *MockTrafficDBMockRecorder) GetBucketReadRecord(bucketID, timeRange int
 }
 
 // GetBucketTraffic mocks base method.
-func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
+func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
+	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
 	ret0, _ := ret[0].(*BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketTraffic indicates an expected call of GetBucketTraffic.
-func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}) *gomock.Call {
+func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID, yearMonth)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID)
 }
 
 // GetObjectReadRecord mocks base method.
@@ -466,6 +466,20 @@ func (m *MockTrafficDB) GetUserReadRecord(userAddress string, timeRange *Traffic
 func (mr *MockTrafficDBMockRecorder) GetUserReadRecord(userAddress, timeRange interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserReadRecord", reflect.TypeOf((*MockTrafficDB)(nil).GetUserReadRecord), userAddress, timeRange)
+}
+
+// InitBucketTraffic mocks base method.
+func (m *MockTrafficDB) InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitBucketTraffic", bucketID, bucketName, quota)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitBucketTraffic indicates an expected call of InitBucketTraffic.
+func (mr *MockTrafficDBMockRecorder) InitBucketTraffic(bucketID, bucketName, quota interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).InitBucketTraffic), bucketID, bucketName, quota)
 }
 
 // MockSPInfoDB is a mock of SPInfoDB interface.
@@ -1113,18 +1127,18 @@ func (mr *MockSPDBMockRecorder) GetBucketReadRecord(bucketID, timeRange interfac
 }
 
 // GetBucketTraffic mocks base method.
-func (m *MockSPDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
+func (m *MockSPDB) GetBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
+	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
 	ret0, _ := ret[0].(*BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketTraffic indicates an expected call of GetBucketTraffic.
-func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}) *gomock.Call {
+func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID, yearMonth)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID)
 }
 
 // GetGCMetasToGC mocks base method.
@@ -1291,6 +1305,20 @@ func (m *MockSPDB) GetUserReadRecord(userAddress string, timeRange *TrafficTimeR
 func (mr *MockSPDBMockRecorder) GetUserReadRecord(userAddress, timeRange interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetUserReadRecord), userAddress, timeRange)
+}
+
+// InitBucketTraffic mocks base method.
+func (m *MockSPDB) InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitBucketTraffic", bucketID, bucketName, quota)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitBucketTraffic indicates an expected call of InitBucketTraffic.
+func (mr *MockSPDBMockRecorder) InitBucketTraffic(bucketID, bucketName, quota interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).InitBucketTraffic), bucketID, bucketName, quota)
 }
 
 // InsertAuthKey mocks base method.

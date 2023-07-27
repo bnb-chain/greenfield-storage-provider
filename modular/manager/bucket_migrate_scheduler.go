@@ -401,7 +401,7 @@ func calculateStakingSizeStrategy(manager *ManageModular) (denom string, amount 
 		return "", sdkmath.ZeroInt(), err
 	}
 
-	gvgMeta, err := manager.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	gvgMeta, err := manager.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, manager.gvgPreferSPList))
 	if err != nil {
 		return "", sdkmath.ZeroInt(), err
 	}
@@ -436,6 +436,32 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 			Amount: amount,
 		},
 	})
+}
+
+// replace SecondarySp which is in STATUS_GRACEFUL_EXITING
+func (s *BucketMigrateScheduler) replaceExitingSP(secondarySPIDs []uint32) ([]uint32, error) {
+	replacedSPIDs := secondarySPIDs
+	excludedSPIDs := secondarySPIDs
+
+	for idx, spID := range secondarySPIDs {
+		sp, err := s.manager.virtualGroupManager.QuerySPByID(spID)
+		if err != nil {
+			log.Errorw("failed to query sp", "error", err)
+			return nil, err
+		}
+		if sp.Status == sptypes.STATUS_GRACEFUL_EXITING {
+			replacedSP, pickErr := s.manager.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(excludedSPIDs))
+			if pickErr != nil {
+				log.Errorw("failed to pick new sp to replace exiting secondary sp", "excludedSPIDs", excludedSPIDs, "error", pickErr)
+				return nil, pickErr
+			}
+			replacedSPIDs[idx] = replacedSP.GetId()
+			excludedSPIDs = append(excludedSPIDs, replacedSP.GetId())
+		}
+	}
+
+	return replacedSPIDs, nil
+
 }
 
 func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storagetypes.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
@@ -480,7 +506,14 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	destFamilyID = 0
 	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "len:", len(primarySPGVGList))
 	for _, srcGVG := range primarySPGVGList {
-		secondarySPIDs := srcGVG.GetSecondarySpIds()
+		srcSecondarySPIDs := srcGVG.GetSecondarySpIds()
+		// check sp exiting
+		secondarySPIDs, err := s.replaceExitingSP(srcSecondarySPIDs)
+		if err != nil {
+			log.Errorw("pick sp to replace exiting sp error", "srcSecondarySPIDs", srcSecondarySPIDs, "secondarySPIDs", secondarySPIDs)
+			return nil, err
+		}
+
 		// check conflicts.
 		conflictedIndex, errNotInSecondarySPs := util.GetSecondarySPIndexFromGVG(srcGVG, destSP.GetId())
 		log.Debugw("produceBucketMigrateExecutePlan prepare to check conflicts", "srcGVG", srcGVG, "destSP", destSP, "conflictedIndex", conflictedIndex, "errNotInSecondarySPs", errNotInSecondarySPs)

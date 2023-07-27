@@ -247,4 +247,5 @@ type ManagerConfig struct {
 	SubscribeSPExitEventIntervalSec        int
 	SubscribeSwapOutExitEventIntervalSec   int
 	SubscribeBucketMigrateEventIntervalSec int
+	GVGPreferSPList                        []uint32
 }

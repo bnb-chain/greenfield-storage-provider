@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -30,6 +31,7 @@ var (
 	ErrCompleteSwapOutOnChain       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120009, "send complete swap out failed")
 	ErrSPExitOnChain                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
 	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
+	ErrUpdateSPPriceOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120012, "send update sp price failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -171,6 +173,10 @@ func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMig
 
 func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
+}
+
+func (s *SignModular) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
+	return s.client.UpdateSPPrice(ctx, SignOperator, price)
 }
 
 func (s *SignModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {

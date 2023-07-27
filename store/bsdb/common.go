@@ -3,10 +3,14 @@ package bsdb
 import (
 	"database/sql/driver"
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 // ListObjectsResult represents the result of a List Objects operation.
@@ -97,4 +101,24 @@ func (a Uint32Array) Value() (driver.Value, error) {
 		values[i] = strconv.FormatUint(uint64(value), 10)
 	}
 	return strings.Join(values, ","), nil
+}
+
+func MetadataDatabaseFailureMetrics(err error, startTime time.Time, methodName string) {
+	metrics.MetadataReqTime.WithLabelValues(DatabaseFailure, DatabaseLevel, methodName, err.Error()).Observe(time.Since(startTime).Seconds())
+}
+
+func MetadataDatabaseSuccessMetrics(startTime time.Time, methodName string) {
+	metrics.MetadataReqTime.WithLabelValues(DatabaseSuccess, DatabaseLevel, methodName, strconv.Itoa(0)).Observe(time.Since(startTime).Seconds())
+}
+
+func currentFunction() string {
+	counter, _, _, success := runtime.Caller(1)
+
+	if !success {
+		println("functionName: runtime.Caller: failed")
+	}
+
+	fullName := runtime.FuncForPC(counter).Name()
+	splitNames := strings.Split(fullName, ".")
+	return splitNames[len(splitNames)-1]
 }

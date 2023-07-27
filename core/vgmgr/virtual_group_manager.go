@@ -3,7 +3,6 @@ package vgmgr
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
@@ -42,6 +41,14 @@ type GVGPickFilter interface {
 	CheckGVG(gvgMeta *GlobalVirtualGroupMeta) bool
 }
 
+// GenerateGVGSecondarySPsPolicy is used to generate gvg secondary sp list.
+type GenerateGVGSecondarySPsPolicy interface {
+	// AddCandidateSP is used to add candidate sp.
+	AddCandidateSP(spID uint32)
+	// GenerateGVGSecondarySPs returns gvg secondary sp list.
+	GenerateGVGSecondarySPs() ([]uint32, error)
+}
+
 // VirtualGroupManager is used to provide virtual group api.
 type VirtualGroupManager interface {
 	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
@@ -57,7 +64,7 @@ type VirtualGroupManager interface {
 	// if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 	ForceRefreshMeta() error
 	// GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
-	GenerateGlobalVirtualGroupMeta(param *storagetypes.Params) (*GlobalVirtualGroupMeta, error)
+	GenerateGlobalVirtualGroupMeta(genPolicy GenerateGVGSecondarySPsPolicy) (*GlobalVirtualGroupMeta, error)
 	// PickSPByFilter picks sp which is match pick filter condition.
 	PickSPByFilter(filter SPPickFilter) (*sptypes.StorageProvider, error)
 	// QuerySPByID returns sp proto.
