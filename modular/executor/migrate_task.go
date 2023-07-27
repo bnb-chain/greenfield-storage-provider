@@ -47,18 +47,19 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		length := len(objectList)
 		for index, object := range objectList {
 			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil {
-				log.CtxErrorw(ctx, "failed to do migration gvg task", "error", err)
+				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID, "object_info", object, "error", err)
 				return
 			}
 			if (index+1)%batchSize == 0 || index == length-1 { // report task per 10 objects
-				log.Info("migrate gvg report task")
+				log.Info("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID, "last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
+				task.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
 				if err = e.ReportTask(ctx, task); err != nil {
 					log.CtxErrorw(ctx, "failed to report task", "error", err)
 				}
 			}
 		}
 		if len(objectList) < int(queryLimit) {
-			log.Infow("finished to migrate gvg task", "object list length", len(objectList))
+			log.Infow("finished to migrate gvg task", "object_number", len(objectList), "gvg_id", srcGvgID, "bucket_id", bucketID)
 			// when the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
 			task.SetFinished(true)
 			return

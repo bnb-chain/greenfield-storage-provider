@@ -288,18 +288,18 @@ func (s *GfSpClient) GetBucketMeta(ctx context.Context, bucketName string, inclu
 	return resp.GetBucket(), resp.GetStreamRecord(), nil
 }
 
-// GetEndpointBySpAddress get endpoint by sp address
-func (s *GfSpClient) GetEndpointBySpAddress(ctx context.Context, spAddress string, opts ...grpc.DialOption) (string, error) {
+// GetEndpointBySpId get endpoint by sp id
+func (s *GfSpClient) GetEndpointBySpId(ctx context.Context, spId uint32, opts ...grpc.DialOption) (string, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
 		return "", ErrRpcUnknown
 	}
 	defer conn.Close()
-	req := &types.GfSpGetEndpointBySpAddressRequest{
-		SpAddress: spAddress,
+	req := &types.GfSpGetEndpointBySpIdRequest{
+		SpId: spId,
 	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetEndpointBySpAddress(ctx, req)
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetEndpointBySpId(ctx, req)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to send get sp by address rpc", "error", err)

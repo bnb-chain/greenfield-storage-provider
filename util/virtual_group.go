@@ -81,7 +81,7 @@ func BlsAggregate(secondarySigs [][]byte) ([]byte, error) {
 func GetBucketPrimarySPID(ctx context.Context, chainClient consensus.Consensus, bucketInfo *storagetypes.BucketInfo) (uint32, error) {
 	resp, err := chainClient.QueryVirtualGroupFamily(ctx, bucketInfo.GetGlobalVirtualGroupFamilyId())
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	return resp.GetPrimarySpId(), nil
 }
