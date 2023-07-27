@@ -105,7 +105,7 @@ func (i *Impl) Process(height uint64) error {
 		return ErrBlockNotFound
 	}
 
-	startTime := time.Now().UnixMilli()
+	startTime := time.Now()
 
 	beginBlockEvents := events.BeginBlockEvents
 	endBlockEvents := events.EndBlockEvents
@@ -157,8 +157,9 @@ func (i *Impl) Process(height uint64) error {
 		}
 	}
 
-	//log.Infof("SQL: %s", finalSQL)
-	//log.Infof("param: %v", finalVal)
+	metrics.BlocksyncerLogicTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(startTime).Milliseconds()))
+
+	dbStartTime := time.Now()
 	tx := i.DB.Begin(context.TODO())
 	if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
 		log.Errorw("failed to exec sql", "error", txErr)
@@ -170,20 +171,21 @@ func (i *Impl) Process(height uint64) error {
 		log.Errorw("failed to commit db", "error", txErr)
 		return txErr
 	}
+	metrics.BlocksyncerWriteDBTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(dbStartTime).Milliseconds()))
 
-	log.Infof("handle&write data cost: %d", time.Now().UnixMilli()-startTime)
+	log.Infof("handle&write data cost: %d", time.Since(startTime).Milliseconds())
 	log.Infof("height :%d tx count:%d event count:%d", height, txCount, eventCount)
+	metrics.BlockEventCount.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(eventCount))
 
 	blockMap.Delete(heightKey)
 	eventMap.Delete(heightKey)
 	txMap.Delete(heightKey)
 	i.ProcessedHeight = height
 
-	cost := time.Now().UnixMilli() - startTime
-	log.Infof("total cost: %d", cost)
+	log.Infof("total cost: %d", time.Since(startTime).Milliseconds())
 
 	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
-	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(cost))
+	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(startTime).Milliseconds()))
 
 	return nil
 }

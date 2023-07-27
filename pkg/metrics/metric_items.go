@@ -67,6 +67,9 @@ var MetricsItems = []prometheus.Collector{
 
 	// blocksyncer metrics category
 	BlocksyncerCatchTime,
+	BlockEventCount,
+	BlocksyncerLogicTime,
+	BlocksyncerWriteDBTime,
 
 	// metadata metrics category
 	MetadataReqTime,
@@ -262,6 +265,22 @@ var (
 	BlocksyncerCatchTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "blocksyncer_catch_time",
 		Help: "Track the time of catch block time. ",
+	}, []string{"height"})
+	BlocksyncerLogicTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "blocksyncer_logic_time",
+		Help: "Track the time of catch block time. ",
+	}, []string{"height"})
+	BlocksyncerWriteDBTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "blocksyncer_write_db_time",
+		Help: "Track the time of catch block time. ",
+	}, []string{"height"})
+	ChainRPCTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "chain_rpc_time",
+		Help: "Track the time of chain rpc. ",
+	})
+	BlockEventCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "block_event_count",
+		Help: "Track the time of chain rpc. ",
 	}, []string{"height"})
 )
 

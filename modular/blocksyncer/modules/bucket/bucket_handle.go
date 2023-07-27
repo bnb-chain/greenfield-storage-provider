@@ -20,7 +20,6 @@ var (
 	EventDeleteBucket            = proto.MessageName(&storagetypes.EventDeleteBucket{})
 	EventUpdateBucketInfo        = proto.MessageName(&storagetypes.EventUpdateBucketInfo{})
 	EventDiscontinueBucket       = proto.MessageName(&storagetypes.EventDiscontinueBucket{})
-	EventMigrationBucket         = proto.MessageName(&storagetypes.EventMigrationBucket{})
 	EventCompleteMigrationBucket = proto.MessageName(&storagetypes.EventCompleteMigrationBucket{})
 )
 
@@ -29,7 +28,6 @@ var BucketEvents = map[string]bool{
 	EventDeleteBucket:            true,
 	EventUpdateBucketInfo:        true,
 	EventDiscontinueBucket:       true,
-	EventMigrationBucket:         true,
 	EventCompleteMigrationBucket: true,
 }
 
@@ -73,13 +71,6 @@ func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, 
 			return nil, errors.New("discontinue bucket event assert error")
 		}
 		return m.handleDiscontinueBucket(ctx, block, txHash, discontinueBucket), nil
-	case EventMigrationBucket:
-		migrationBucket, ok := typedEvent.(*storagetypes.EventMigrationBucket)
-		if !ok {
-			log.Errorw("type assert error", "type", "EventMigrationBucket", "event", typedEvent)
-			return nil, errors.New("migration bucket event assert error")
-		}
-		return m.handleMigrationBucket(ctx, block, txHash, migrationBucket), nil
 	case EventCompleteMigrationBucket:
 		completeMigrationBucket, ok := typedEvent.(*storagetypes.EventCompleteMigrationBucket)
 		if !ok {
@@ -127,7 +118,6 @@ func (m *Module) handleDeleteBucket(ctx context.Context, block *tmctypes.ResultB
 	bucket := &models.Bucket{
 		BucketID:                   common.BigToHash(deleteBucket.BucketId.BigInt()),
 		BucketName:                 deleteBucket.BucketName,
-		Operator:                   common.HexToAddress(deleteBucket.Operator),
 		Owner:                      common.HexToAddress(deleteBucket.Owner),
 		GlobalVirtualGroupFamilyId: deleteBucket.GlobalVirtualGroupFamilyId,
 
@@ -164,7 +154,6 @@ func (m *Module) handleDiscontinueBucket(ctx context.Context, block *tmctypes.Re
 
 func (m *Module) handleUpdateBucketInfo(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, updateBucket *storagetypes.EventUpdateBucketInfo) map[string][]interface{} {
 	bucket := &models.Bucket{
-		Operator:                   common.HexToAddress(updateBucket.Operator),
 		BucketName:                 updateBucket.BucketName,
 		BucketID:                   common.BigToHash(updateBucket.BucketId.BigInt()),
 		ChargedReadQuota:           updateBucket.ChargedReadQuota,
@@ -183,28 +172,10 @@ func (m *Module) handleUpdateBucketInfo(ctx context.Context, block *tmctypes.Res
 	}
 }
 
-func (m *Module) handleMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, migrationBucket *storagetypes.EventMigrationBucket) map[string][]interface{} {
-	bucket := &models.Bucket{
-		BucketID:   common.BigToHash(migrationBucket.BucketId.BigInt()),
-		BucketName: migrationBucket.BucketName,
-		Operator:   common.HexToAddress(migrationBucket.Operator),
-
-		UpdateAt:     block.Block.Height,
-		UpdateTxHash: txHash,
-		UpdateTime:   block.Block.Time.UTC().Unix(),
-	}
-
-	k, v := m.db.UpdateBucketToSQL(ctx, bucket)
-	return map[string][]interface{}{
-		k: v,
-	}
-}
-
 func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, completeMigrationBucket *storagetypes.EventCompleteMigrationBucket) map[string][]interface{} {
 	bucket := &models.Bucket{
 		BucketID:                   common.BigToHash(completeMigrationBucket.BucketId.BigInt()),
 		BucketName:                 completeMigrationBucket.BucketName,
-		Operator:                   common.HexToAddress(completeMigrationBucket.Operator),
 		GlobalVirtualGroupFamilyId: completeMigrationBucket.GlobalVirtualGroupFamilyId,
 
 		UpdateAt:     block.Block.Height,
