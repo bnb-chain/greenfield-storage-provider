@@ -292,10 +292,11 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	if migrateBucketEvents.CancelEvents != nil {
 		executePlan, err := s.getExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		if err != nil {
-			log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket")
+			log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "CancelEvents", migrateBucketEvents.CancelEvents)
 			return err
 		}
 		// when receive CompleteMigrationBucket/ event, we should delete memory & db's status
+		s.deleteExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		executePlan.stopSPSchedule()
 	}
 	if migrateBucketEvents.CompleteEvents != nil {
@@ -312,23 +313,25 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 			}
 		}
 		// when receive CompleteMigrationBucket/ event, we should delete memory & db's status
+		s.deleteExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		executePlan.stopSPSchedule()
 		return err
 	}
 	if migrateBucketEvents.Events != nil {
 		if s.executePlanIDMap[migrateBucketEvents.Events.BucketId.Uint64()] != nil {
-			return errors.New("execute plan not exists")
+			log.Debugw("bucket migrate scheduler the bucket is already in migrating", "Events", migrateBucketEvents.Events)
+			return errors.New("bucket already in migrating")
 		}
 		// debug
 		log.Debugw("Bucket Migrate Scheduler process Events", "migrationBucketEvents", migrateBucketEvents.Events, "lastSubscribedBlockHeight", s.lastSubscribedBlockHeight)
 
 		executePlan, err := s.produceBucketMigrateExecutePlan(migrateBucketEvents.Events)
 		if err != nil {
-			log.Errorw("failed to produce bucket migrate execute plan", "error", err)
+			log.Errorw("failed to produce bucket migrate execute plan", "Events", migrateBucketEvents.Events, "error", err)
 			return err
 		}
 		if err = executePlan.Start(); err != nil {
-			log.Errorw("failed to start bucket migrate execute plan", "error", err)
+			log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Events, "executePlan", executePlan, "error", err)
 			return err
 		}
 		s.executePlanIDMap[executePlan.bucketID] = executePlan
@@ -353,7 +356,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			// 1. subscribe migrate bucket events
 			migrationBucketEvents, subscribeError := s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				log.Errorw("failed to list migrate bucket events", "error", subscribeError)
+				log.Errorw("failed to list migrate bucket events", "block_id", s.lastSubscribedBlockHeight+1, "error", subscribeError)
 				continue
 			}
 			log.Infow("loop subscribe bucket migrate event", "sp_exit_events", migrationBucketEvents, "block_id", s.lastSubscribedBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
@@ -560,6 +563,16 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 		return executePlan, nil
 	} else {
 		return nil, errors.New("no such execute plan")
+	}
+}
+
+func (s *BucketMigrateScheduler) deleteExecutePlanByBucketID(bucketID uint64) error {
+	_, ok := s.executePlanIDMap[bucketID]
+	if ok {
+		delete(s.executePlanIDMap, bucketID)
+		return nil
+	} else {
+		return errors.New("no such execute plan")
 	}
 }
 
