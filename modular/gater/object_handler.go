@@ -397,25 +397,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, reqCtxErr = NewRequestContext(r, g)
-	if reqCtxErr != nil {
-		queryParams := r.URL.Query()
-		gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
-		gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
-		gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
-		gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
-
-		// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
-		if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
-			account, preSignedURLErr := reqCtx.verifyOffChainSignatureFromPreSignedURL(gnfdAuthorizationParam[len(signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
-			if preSignedURLErr != nil {
-				reqCtxErr = preSignedURLErr
-			} else {
-				reqCtx.account = account.String()
-				reqCtxErr = nil
-			}
-		}
-	}
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
@@ -434,11 +415,34 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
 
 	if !authenticated {
+		// V1 or OffChainAuth authentication, by checking the headers.
+		reqCtx, reqCtxErr = NewRequestContext(r, g)
+		// if not passed, then check authentication parameters
+		if reqCtxErr != nil {
+			queryParams := r.URL.Query()
+			gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
+			gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
+			gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+			gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+
+			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
+			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
+				account, preSignedURLErr := reqCtx.verifyOffChainSignatureFromPreSignedURL(gnfdAuthorizationParam[len(signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				if preSignedURLErr != nil {
+					reqCtxErr = preSignedURLErr
+				} else {
+					reqCtx.account = account.String()
+					reqCtxErr = nil
+				}
+			}
+		}
+
 		if reqCtxErr != nil {
 			err = reqCtxErr
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
+		// check permission
 		authTime := time.Now()
 		if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
@@ -785,8 +789,6 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 				err = ErrInvalidExpiryDateParam
 				return
 			}
-			log.Infof("%s", time.Until(expiryDate).Seconds())
-			log.Infof("%s", MaxExpiryAgeInSec)
 			expiryAge := int32(time.Until(expiryDate).Seconds())
 			if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
 				err = ErrInvalidExpiryDateParam

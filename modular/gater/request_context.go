@@ -161,8 +161,6 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	if parseErr != nil {
 		return "", ErrInvalidExpiryDateHeader
 	}
-	log.Infof("%s", time.Until(expiryDate).Seconds())
-	log.Infof("%s", MaxExpiryAgeInSec)
 	expiryAge := int32(time.Until(expiryDate).Seconds())
 	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
 		return "", ErrInvalidExpiryDateHeader
@@ -193,7 +191,6 @@ func (r *RequestContext) VerifySignature() (string, error) {
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
 func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddress, error) {
 	var (
-		signedMsg string
 		signature []byte
 		err       error
 	)
@@ -204,12 +201,7 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 	}
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
-		if len(pair) != 2 {
-			return nil, ErrAuthorizationHeaderFormat
-		}
 		switch pair[0] {
-		case SignedMsg:
-			signedMsg = pair[1]
 		case Signature:
 			if signature, err = hex.DecodeString(pair[1]); err != nil {
 				return nil, err
@@ -221,10 +213,6 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSign(r.request)
-	if hex.EncodeToString(realMsgToSign) != signedMsg {
-		log.CtxErrorw(r.ctx, "failed to check signed msg")
-		return nil, ErrRequestConsistent
-	}
 
 	// check signature consistent
 	addr, pk, err := RecoverAddr(realMsgToSign, signature)
@@ -275,20 +263,15 @@ func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature 
 // verifyOffChainSignature used to verify off-chain-auth signature, return (address, nil) if check succeed
 func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.AccAddress, error) {
 	var (
-		signedMsg *string
-		err       error
+		err error
 	)
-	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	_, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
 	if err != nil {
 		return nil, err
 	}
 
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSign(r.request)
-	if hex.EncodeToString(realMsgToSign) != *signedMsg {
-		log.CtxErrorw(r.ctx, "failed to check signed msg")
-		return nil, ErrRequestConsistent
-	}
 
 	account := r.request.Header.Get(GnfdUserAddressHeader)
 	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
@@ -310,20 +293,15 @@ func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.A
 // verifyOffChainSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed.  The auth information will be parsed from URL.
 func (r *RequestContext) verifyOffChainSignatureFromPreSignedURL(authenticationStr string, account string, domain string) (sdk.AccAddress, error) {
 	var (
-		signedMsg *string
-		err       error
+		err error
 	)
-	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(authenticationStr)
+	_, sigString, err := parseSignedMsgAndSigFromRequest(authenticationStr)
 	if err != nil {
 		return nil, err
 	}
 
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSignForPreSignedURL(r.request)
-	if hex.EncodeToString(realMsgToSign) != *signedMsg {
-		log.CtxErrorw(r.ctx, "failed to check signed msg")
-		return nil, ErrRequestConsistent
-	}
 
 	offChainSig := *sigString
 
@@ -347,9 +325,7 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 	)
 	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
 	signatureItems := strings.Split(requestSignature, ",")
-	if len(signatureItems) != 2 {
-		return nil, nil, ErrAuthorizationHeaderFormat
-	}
+
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
@@ -357,6 +333,8 @@ func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string,
 		}
 		switch pair[0] {
 		case SignedMsg:
+			// for off-chain-auth, client doesn't need to pass the signedMsg, as SP will generate the signed msg by itself.
+			// but this method is also used by updateUserPublicKeyHandler API, which uses the personal sign verification and require clients to send a signed Msg.
 			signedMsg = pair[1]
 		case Signature:
 			signature = pair[1]

@@ -111,7 +111,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
 
 	if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
-		accAddress, personalSignVerifyErr := verifyPersonalSignatureFromHeader(requestSignature[len(personalSignSignaturePrefix):])
+		accAddress, personalSignVerifyErr := verifyPersonalSignatureFromRequest(strings.TrimPrefix(requestSignature, personalSignSignaturePrefix))
 		if personalSignVerifyErr != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
 			err = personalSignVerifyErr
@@ -164,8 +164,6 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		err = ErrInvalidExpiryDateHeader
 		return
 	}
-	log.Infof("%s", time.Until(expiryDate).Seconds())
-	log.Infof("%s", MaxExpiryAgeInSec)
 	expiryAge := int32(time.Until(expiryDate).Seconds())
 	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
 		err = ErrInvalidExpiryDateHeader
@@ -203,7 +201,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	w.Write(b)
 }
 
-func verifyPersonalSignatureFromHeader(requestSignature string) (sdk.AccAddress, error) {
+func verifyPersonalSignatureFromRequest(requestSignature string) (sdk.AccAddress, error) {
 	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
 	if len(*sigString) != ExpectedPersonalSigLength {
 		return nil, ErrSignature
