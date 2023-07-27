@@ -325,6 +325,22 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: viewObjectByUniversalEndpointName,
 		},
 		{
+			name:             "universal endpoint download pdf/xml special router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/download" + objectSpecialSuffixUrlReplacement + "test_bucket_name/test_object_name",
+			shouldMatch:      true,
+			wantedRouterName: downloadObjectByUniversalEndpointName,
+		},
+		{
+			name:             "universal endpoint view pdf/xml special router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/view" + objectSpecialSuffixUrlReplacement + "test_bucket_name/test_object_name",
+			shouldMatch:      true,
+			wantedRouterName: viewObjectByUniversalEndpointName,
+		},
+		{
 			name:             "offchain-auth request nonce router",
 			router:           gwRouter,
 			method:           http.MethodGet,
