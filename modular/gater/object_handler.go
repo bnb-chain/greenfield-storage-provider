@@ -1,7 +1,6 @@
 package gater
 
 import (
-	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -722,15 +721,10 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			"bucket_sp_id", bucketSPID, "self_sp_id", spID,
 		)
 
-		// TODO might need to edit GetEndpointBySpId to reduce call to chain
-		sp, queryErr := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
-		if queryErr != nil {
-			err = ErrConsensus
-			return
-		}
-		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
+		// get the endpoint where the bucket actually is in
+		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpId(reqCtx.Context(), bucketSPID)
 		if getEndpointErr != nil || spEndpoint == "" {
-			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
+			log.Errorw("failed to get endpoint by id ", "sp_id", bucketSPID, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}
