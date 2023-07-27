@@ -520,7 +520,6 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 		if errNotInSecondarySPs == nil {
 			// gvg has conflicts.
 			excludedSPIDs := srcGVG.GetSecondarySpIds()
-			excludedSPIDs = append(excludedSPIDs, srcSP.GetId())
 			replacedSP, pickErr := s.manager.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(excludedSPIDs))
 			if pickErr != nil {
 				log.Errorw("failed to pick new sp to replace conflict secondary sp", "srcGVG", srcGVG, "destSP", destSP, "excludedSPIDs", excludedSPIDs, "error", pickErr)
