@@ -22,6 +22,7 @@ import (
 	ctypes "github.com/bnb-chain/greenfield/sdk/types"
 	"github.com/bnb-chain/greenfield/types"
 	"github.com/bnb-chain/greenfield/types/common"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -60,6 +61,7 @@ const (
 	CompleteSwapOut          GasInfoType = "CompleteSwapOut"
 	SPExit                   GasInfoType = "SPExit"
 	CompleteSPExit           GasInfoType = "CompleteSPExit"
+	UpdateSPPrice            GasInfoType = "UpdateSPPrice"
 )
 
 type GasInfo struct {
@@ -450,35 +452,98 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
-	nonce := client.operatorAccNonce
 
 	msgCompleteMigrateBucket := storagetypes.NewMsgCompleteMigrateBucket(km.GetAddr(), migrateBucket.GetBucketName(),
 		migrateBucket.GetGlobalVirtualGroupFamilyId(), migrateBucket.GetGvgMappings())
+
+	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:      &mode,
+			GasLimit:  client.gasInfo[CompleteMigrateBucket].GasLimit,
+			FeeAmount: client.gasInfo[CompleteMigrateBucket].FeeAmount,
+			Nonce:     nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteMigrateBucket}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrCompleteMigrateBucketOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast complete migrate bucket tx", "error", err, "retry", i)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast complete migrate bucket tx", "tx_hash", txHash, "seal_msg", msgCompleteMigrateBucket)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast complete migrate bucket, error: %v", err))
+	return "", ErrCompleteMigrateBucketOnChain
+}
+
+func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scope SignType,
+	priceInfo *sptypes.MsgUpdateSpStoragePrice) (string, error) {
+	log.Infow("signer starts to complete update SP price info", "scope", scope)
+	if priceInfo == nil {
+		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+	nonce := client.operatorAccNonce
+
+	msgUpdateStorageSPPrice := &sptypes.MsgUpdateSpStoragePrice{
+		SpAddress:     km.GetAddr().String(),
+		ReadPrice:     priceInfo.ReadPrice,
+		FreeReadQuota: priceInfo.FreeReadQuota,
+		StorePrice:    priceInfo.StorePrice,
+	}
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	txOpt := &ctypes.TxOption{
 		Mode:      &mode,
-		GasLimit:  client.gasInfo[CompleteMigrateBucket].GasLimit,
-		FeeAmount: client.gasInfo[CompleteMigrateBucket].FeeAmount,
+		GasLimit:  client.gasInfo[UpdateSPPrice].GasLimit,
+		FeeAmount: client.gasInfo[UpdateSPPrice].FeeAmount,
 		Nonce:     nonce,
 	}
 
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteMigrateBucket}, txOpt)
+	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgUpdateStorageSPPrice}, txOpt)
 	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
 		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 		if nonceErr != nil {
 			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
-			ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
-			return "", ErrCompleteMigrateBucketOnChain
+			ErrUpdateSPPriceOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+			return "", ErrUpdateSPPriceOnChain
 		}
 		client.operatorAccNonce = nonce
 	}
 	// failed to broadcast tx
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast complete migrate bucket", "error", err, "complete_migrate_bucket",
-			msgCompleteMigrateBucket.String())
-		ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast complete migrate bucket, error: %v", err))
-		return "", ErrCompleteMigrateBucketOnChain
+		log.CtxErrorw(ctx, "failed to broadcast update sp price msg", "error", err, "update_sp_price",
+			msgUpdateStorageSPPrice.String())
+		ErrUpdateSPPriceOnChain.SetError(fmt.Errorf("failed to broadcast msg to update sp price, error: %v", err))
+		return "", ErrUpdateSPPriceOnChain
 	}
 
 	// update nonce when tx is successfully submitted
@@ -501,7 +566,6 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
-	nonce := client.operatorAccNonce
 
 	msgSwapOut := virtualgrouptypes.NewMsgSwapOut(km.GetAddr(), swapOut.GetGlobalVirtualGroupFamilyId(), swapOut.GetGlobalVirtualGroupIds(),
 		swapOut.GetSuccessorSpId())
@@ -509,35 +573,46 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 		ExpiredHeight: swapOut.SuccessorSpApproval.GetExpiredHeight(),
 		Sig:           swapOut.SuccessorSpApproval.GetSig(),
 	}
-	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
-	txOpt := &ctypes.TxOption{
-		Mode:      &mode,
-		GasLimit:  client.gasInfo[SwapOut].GasLimit,
-		FeeAmount: client.gasInfo[SwapOut].FeeAmount,
-		Nonce:     nonce,
-	}
+	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSwapOut}, txOpt)
-	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
-		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
-		if nonceErr != nil {
-			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
-			ErrSwapOutOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
-			return "", ErrSwapOutOnChain
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:      &mode,
+			GasLimit:  client.gasInfo[SwapOut].GasLimit,
+			FeeAmount: client.gasInfo[SwapOut].FeeAmount,
+			Nonce:     nonce,
 		}
-		client.operatorAccNonce = nonce
-	}
-	// failed to broadcast tx
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast swap out", "error", err, "swap_out", msgSwapOut.String())
-		ErrSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast swap out, error: %v", err))
-		return "", ErrSwapOutOnChain
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSwapOut}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrSwapOutOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast swap out", "error", err, "swap_out", msgSwapOut.String())
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast start swap out tx", "tx_hash", txHash, "swap_out", msgSwapOut.String())
+		return txHash, nil
+
 	}
 
-	// update nonce when tx is successfully submitted
-	client.operatorAccNonce = nonce + 1
-	return txHash, nil
+	// failed to broadcast tx
+	ErrSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast swap out tx, error: %v", err))
+	return "", ErrSwapOutOnChain
 }
 
 func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, scope SignType,
@@ -555,40 +630,47 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
-	nonce := client.operatorAccNonce
 
 	msgCompleteSwapOut := virtualgrouptypes.NewMsgCompleteSwapOut(km.GetAddr(), completeSwapOut.GetGlobalVirtualGroupFamilyId(),
 		completeSwapOut.GetGlobalVirtualGroupIds())
-	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
-	txOpt := &ctypes.TxOption{
-		Mode:      &mode,
-		GasLimit:  client.gasInfo[CompleteSwapOut].GasLimit,
-		FeeAmount: client.gasInfo[CompleteSwapOut].FeeAmount,
-		Nonce:     nonce,
-	}
+	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSwapOut}, txOpt)
-	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
-		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
-		if nonceErr != nil {
-			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
-			ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
-			return "", ErrCompleteSwapOutOnChain
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:      &mode,
+			GasLimit:  client.gasInfo[CompleteSwapOut].GasLimit,
+			FeeAmount: client.gasInfo[CompleteSwapOut].FeeAmount,
+			Nonce:     nonce,
 		}
-		client.operatorAccNonce = nonce
-	}
-	// failed to broadcast tx
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast complete swap out", "error", err, "complete_swap_out",
-			msgCompleteSwapOut.String())
-		ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast complete swap out, error: %v", err))
-		return "", ErrCompleteSwapOutOnChain
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSwapOut}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrCompleteSwapOutOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast complete swap out tx", "error", err, "retry", i)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast complete swap out tx", "tx_hash", txHash, "seal_msg", msgCompleteSwapOut)
+		return txHash, nil
 	}
 
-	// update nonce when tx is successfully submitted
-	client.operatorAccNonce = nonce + 1
-	return txHash, nil
+	ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to broadcast complete swap out, error: %v", err))
+	return "", ErrCompleteSwapOutOnChain
 }
 
 func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignType,
@@ -606,39 +688,46 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
-	nonce := client.operatorAccNonce
 
 	msgSPExit := virtualgrouptypes.NewMsgStorageProviderExit(km.GetAddr())
-	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
-	txOpt := &ctypes.TxOption{
-		Mode:      &mode,
-		GasLimit:  client.gasInfo[SPExit].GasLimit,
-		FeeAmount: client.gasInfo[SPExit].FeeAmount,
-		Nonce:     nonce,
-	}
 
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSPExit}, txOpt)
-	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
-		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
-		if nonceErr != nil {
-			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
-			ErrSPExitOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
-			return "", ErrSPExitOnChain
+	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:      &mode,
+			GasLimit:  client.gasInfo[SPExit].GasLimit,
+			FeeAmount: client.gasInfo[SPExit].FeeAmount,
+			Nonce:     nonce,
 		}
-		client.operatorAccNonce = nonce
-	}
-	// failed to broadcast tx
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast sp exit", "error", err, "sp_exit",
-			msgSPExit.String())
-		ErrSPExitOnChain.SetError(fmt.Errorf("failed to broadcast sp exit, error: %v", err))
-		return "", ErrSPExitOnChain
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSPExit}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrSPExitOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast start sp exit tx", "error", err, "retry", i)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast start sp exit tx", "tx_hash", txHash, "seal_msg", msgSPExit)
+		return txHash, nil
 	}
 
-	// update nonce when tx is successfully submitted
-	client.operatorAccNonce = nonce + 1
-	return txHash, nil
+	ErrSPExitOnChain.SetError(fmt.Errorf("failed to broadcast start sp exit, error: %v", err))
+	return "", ErrSPExitOnChain
 }
 
 func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, scope SignType,
@@ -656,39 +745,46 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
-	nonce := client.operatorAccNonce
 
 	msgCompleteSPExit := virtualgrouptypes.NewMsgCompleteStorageProviderExit(km.GetAddr())
-	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
-	txOpt := &ctypes.TxOption{
-		Mode:      &mode,
-		GasLimit:  client.gasInfo[CompleteSPExit].GasLimit,
-		FeeAmount: client.gasInfo[CompleteSPExit].FeeAmount,
-		Nonce:     nonce,
-	}
 
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSPExit}, txOpt)
-	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
-		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
-		if nonceErr != nil {
-			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
-			ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
-			return "", ErrCompleteSPExitOnChain
+	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:      &mode,
+			GasLimit:  client.gasInfo[CompleteSPExit].GasLimit,
+			FeeAmount: client.gasInfo[CompleteSPExit].FeeAmount,
+			Nonce:     nonce,
 		}
-		client.operatorAccNonce = nonce
-	}
-	// failed to broadcast tx
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast complete sp exit", "error", err, "complete_sp_exit",
-			msgCompleteSPExit.String())
-		ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to broadcast complete sp exit, error: %v", err))
-		return "", ErrCompleteSPExitOnChain
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSPExit}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrCompleteSPExitOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast complete sp exit tx", "error", err, "retry", i)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast complete sp exit tx", "tx_hash", txHash, "seal_msg", msgCompleteSPExit)
+		return txHash, nil
 	}
 
-	// update nonce when tx is successfully submitted
-	client.operatorAccNonce = nonce + 1
-	return txHash, nil
+	ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to broadcast complete sp exit, error: %v", err))
+	return "", ErrCompleteSPExitOnChain
 }
 
 func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.GreenfieldClient) (uint64, error) {

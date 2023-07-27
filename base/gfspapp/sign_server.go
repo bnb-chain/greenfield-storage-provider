@@ -215,6 +215,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete sp exit", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_SpStoragePrice:
+		txHash, err = g.signer.UpdateSPPrice(ctx, t.SpStoragePrice)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to update sp price", "error", err)
+		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")
 		return &gfspserver.GfSpSignResponse{

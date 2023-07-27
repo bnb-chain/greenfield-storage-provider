@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
@@ -200,6 +200,36 @@ func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.St
 	return resp.GetStorageProvider(), nil
 }
 
+// QuerySPFreeQuota returns the sp free quota
+func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (uint64, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_quota").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+		SpAddr: operatorAddress,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return 0, err
+	}
+	return resp.GetSpStoragePrice().FreeReadQuota, nil
+}
+
+// QuerySPPrice returns the sp price info
+func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_price").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+		SpAddr: operatorAddress,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return sptypes.SpStoragePrice{}, err
+	}
+	return resp.GetSpStoragePrice(), nil
+}
+
 // QuerySPByID returns the sp info.
 func (g *Gnfd) QuerySPByID(ctx context.Context, spID uint32) (*sptypes.StorageProvider, error) {
 	startTime := time.Now()
@@ -297,12 +327,11 @@ func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virt
 }
 
 // ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
-func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_by_family_id").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupByFamilyID(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupByFamilyIDRequest{
-		StorageProviderId:          spID,
 		GlobalVirtualGroupFamilyId: vgfID,
 	})
 	if err != nil {

@@ -21,10 +21,12 @@ import (
 )
 
 var (
-	ErrDanglingPointer = gfsperrors.Register(MetadataModularName, http.StatusBadRequest, 90001, "OoooH... request lost, try again later")
-	ErrExceedRequest   = gfsperrors.Register(MetadataModularName, http.StatusNotAcceptable, 90002, "request exceed")
-	ErrNoRecord        = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
-	ErrGfSpDB          = gfsperrors.Register(MetadataModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
+	ErrDanglingPointer   = gfsperrors.Register(MetadataModularName, http.StatusBadRequest, 90001, "OoooH... request lost, try again later")
+	ErrExceedRequest     = gfsperrors.Register(MetadataModularName, http.StatusNotAcceptable, 90002, "request exceed")
+	ErrNoRecord          = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
+	ErrGfSpDB            = gfsperrors.Register(MetadataModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
+	ErrNoSuchSP          = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90004, "no such sp")
+	ErrExceedBlockHeight = gfsperrors.Register(MetadataModularName, http.StatusBadRequest, 90005, "request block height exceed latest height")
 )
 
 var _ types.GfSpMetadataServiceServer = &MetadataModular{}
@@ -289,7 +291,7 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		return nil, ErrExceedRequest
 	}
 	bucketTraffic, err := r.baseApp.GfSpDB().GetBucketTraffic(
-		req.GetBucketInfo().Id.Uint64(), req.GetYearMonth())
+		req.GetBucketInfo().Id.Uint64())
 	if systemerrors.Is(err, gorm.ErrRecordNotFound) {
 		return &types.GfSpGetBucketReadQuotaResponse{
 			ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
@@ -303,9 +305,10 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 			"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
 		return &types.GfSpGetBucketReadQuotaResponse{Err: ErrGfSpDB}, nil
 	}
+
 	return &types.GfSpGetBucketReadQuotaResponse{
 		ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
-		SpFreeQuotaSize:  r.freeQuotaPerBucket,
+		SpFreeQuotaSize:  bucketTraffic.FreeQuotaSize,
 		ConsumedSize:     bucketTraffic.ReadConsumedSize,
 	}, nil
 }

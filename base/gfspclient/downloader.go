@@ -37,11 +37,12 @@ func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.
 
 func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.DownloadPieceTask, opts ...grpc.DialOption) (
 	[]byte, error) {
-	conn, connErr := s.DownloaderConn(ctx, opts...)
+	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
 		return nil, ErrRpcUnknown
 	}
+	defer conn.Close()
 	req := &gfspserver.GfSpDownloadPieceRequest{
 		DownloadPieceTask: downloadPieceTask.(*gfsptask.GfSpDownloadPieceTask),
 	}

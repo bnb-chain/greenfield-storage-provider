@@ -2,6 +2,7 @@ package bsdb
 
 import (
 	"errors"
+	"time"
 
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
@@ -14,6 +15,15 @@ func (b *BsDBImpl) GetPaymentByBucketName(bucketName string, includePrivate bool
 		err          error
 		bucket       *Bucket
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	bucket, err = b.GetBucketByName(bucketName, includePrivate)
 	if err != nil {
@@ -35,6 +45,15 @@ func (b *BsDBImpl) GetPaymentByBucketID(bucketID int64, includePrivate bool) (*S
 		err          error
 		bucket       *Bucket
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	bucket, err = b.GetBucketByID(bucketID, includePrivate)
 	if err != nil {

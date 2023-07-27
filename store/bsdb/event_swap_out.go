@@ -2,6 +2,7 @@ package bsdb
 
 import (
 	"fmt"
+	"time"
 )
 
 // ListSwapOutEvents list swap out events
@@ -12,6 +13,15 @@ func (b *BsDBImpl) ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapO
 		cancelEvents   []*EventCancelSwapOut
 		err            error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	err = b.db.Table((&EventSwapOut{}).TableName()).
 		Select("*").
