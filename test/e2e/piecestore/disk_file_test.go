@@ -10,7 +10,7 @@ import (
 
 func TestDiskFileStore(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setup(t, storage.DiskFileStore, "", 0, storage.AKSKIAMType)
+	handler, err := setup(t, storage.DiskFileStore, "", 0)
 	assert.Equal(t, err, nil)
 
 	doOperations(t, handler)

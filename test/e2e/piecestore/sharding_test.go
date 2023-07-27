@@ -19,7 +19,7 @@ var shardNum = 5
 
 func TestSharding(t *testing.T) {
 	// init PieceStore
-	handler, err := setup(t, storage.DiskFileStore, "./data/test%d", shardNum, storage.AKSKIAMType)
+	handler, err := setup(t, storage.DiskFileStore, "./data/test%d", shardNum)
 	assert.Equal(t, err, nil)
 
 	err = createFiles(shardNum)
