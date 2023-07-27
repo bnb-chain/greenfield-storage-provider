@@ -269,14 +269,14 @@ message GfSpGetBucketMetaResponse {
   greenfield.payment.StreamRecord stream_record = 2;
 }
 
-// GfSpGetEndpointBySpAddressRequest is request type for the GfSpGetEndpointBySpAddress RPC method
-message GfSpGetEndpointBySpAddressRequest {
-  // sp_address is the address of the sp
-  string sp_address = 1;
+// GfSpGetEndpointBySpIdRequest is request type for the GfSpGetEndpointBySpId RPC method
+message GfSpGetEndpointBySpIdRequest {
+  // sp_id is the id of the sp
+  uint32 sp_id = 1;
 }
 
-// GfSpGetEndpointBySpAddressResponse is response type for the GfSpGetEndpointBySpAddress RPC method.
-message GfSpGetEndpointBySpAddressResponse {
+// GfSpGetEndpointBySpIdResponse is response type for the GfSpGetEndpointBySpId RPC method.
+message GfSpGetEndpointBySpIdResponse {
   // endpoint defines endpoint of a sp
   string endpoint = 1;
 }
@@ -669,7 +669,7 @@ service GfSpMetadataService {
   rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {}
   rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
-  rpc GfSpGetEndpointBySpAddress(GfSpGetEndpointBySpAddressRequest) returns (GfSpGetEndpointBySpAddressResponse) {}
+  rpc GfSpGetEndpointBySpId(GfSpGetEndpointBySpIdRequest) returns (GfSpGetEndpointBySpIdResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}

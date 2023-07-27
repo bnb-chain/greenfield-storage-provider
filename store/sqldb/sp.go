@@ -255,6 +255,36 @@ func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, e
 	}, nil
 }
 
+// GetSpById query sp info by id
+func (s *SpDBImpl) GetSpById(id uint32) (*sptypes.StorageProvider, error) {
+	queryReturn := &SpInfoTable{}
+	result := s.db.First(queryReturn, "id = ? and is_own = false", id)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to query sp info table by id: %s", result.Error)
+	}
+	totalDeposit, ok := sdkmath.NewIntFromString(queryReturn.TotalDeposit)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse int")
+	}
+	return &sptypes.StorageProvider{
+		Id:              queryReturn.ID,
+		OperatorAddress: queryReturn.OperatorAddress,
+		FundingAddress:  queryReturn.FundingAddress,
+		SealAddress:     queryReturn.SealAddress,
+		ApprovalAddress: queryReturn.ApprovalAddress,
+		TotalDeposit:    totalDeposit,
+		Status:          sptypes.Status(queryReturn.Status),
+		Endpoint:        queryReturn.Endpoint,
+		Description: sptypes.Description{
+			Moniker:         queryReturn.Moniker,
+			Identity:        queryReturn.Identity,
+			Website:         queryReturn.Website,
+			SecurityContact: queryReturn.SecurityContact,
+			Details:         queryReturn.Details,
+		},
+	}, nil
+}
+
 // GetOwnSpInfo query own sp info in db
 func (s *SpDBImpl) GetOwnSpInfo() (*sptypes.StorageProvider, error) {
 	queryReturn := &SpInfoTable{}
