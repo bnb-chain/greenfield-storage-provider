@@ -10,7 +10,7 @@ import (
 
 func TestS3Store(t *testing.T) {
 	// 1. init PieceStore
-	handler, err := setup(t, storage.S3Store, s3BucketURL, 0)
+	handler, err := setup(t, storage.S3Store, s3BucketURL, 0, storage.AKSKIAMType)
 	assert.Equal(t, err, nil)
 
 	doOperations(t, handler)
