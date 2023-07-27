@@ -19,7 +19,7 @@ const (
 	// virtualPath = "https://test.s3.us-east-1.amazonaws.com"
 )
 
-func setup(t *testing.T, storageType, bucketURL string, shards int, iamType string) (*piece.PieceStore, error) {
+func setup(t *testing.T, storageType, bucketURL string, shards int) (*piece.PieceStore, error) {
 	t.Helper()
 	return piece.NewPieceStore(&storage.PieceStoreConfig{
 		Shards: shards,
@@ -27,7 +27,7 @@ func setup(t *testing.T, storageType, bucketURL string, shards int, iamType stri
 			Storage:    storageType,
 			BucketURL:  bucketURL,
 			MaxRetries: 5,
-			IAMType:    iamType,
+			IAMType:    storage.AKSKIAMType,
 		},
 	})
 }
