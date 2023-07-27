@@ -476,7 +476,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 
 	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
 
-	log.Debugf("produceBucketMigrateExecutePlan bucketID", plan.bucketID)
+	log.Debugw("produceBucketMigrateExecutePlan", "bucketID", plan.bucketID, "EventMigrationBucket", event)
 	// query metadata service to get primary sp's gvg list.
 	primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), plan.bucketID)
 	if err != nil {
@@ -504,34 +504,34 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	}
 
 	destFamilyID = 0
-	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "len:", len(primarySPGVGList))
+	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "len:", len(primarySPGVGList), "EventMigrationBucket", event)
 	for _, srcGVG := range primarySPGVGList {
 		srcSecondarySPIDs := srcGVG.GetSecondarySpIds()
 		// check sp exiting
 		secondarySPIDs, err := s.replaceExitingSP(srcSecondarySPIDs)
 		if err != nil {
-			log.Errorw("pick sp to replace exiting sp error", "srcSecondarySPIDs", srcSecondarySPIDs, "secondarySPIDs", secondarySPIDs)
+			log.Errorw("pick sp to replace exiting sp error", "srcSecondarySPIDs", srcSecondarySPIDs, "secondarySPIDs", secondarySPIDs, "EventMigrationBucket", event)
 			return nil, err
 		}
 
 		// check conflicts.
 		conflictedIndex, errNotInSecondarySPs := util.GetSecondarySPIndexFromGVG(srcGVG, destSP.GetId())
-		log.Debugw("produceBucketMigrateExecutePlan prepare to check conflicts", "srcGVG", srcGVG, "destSP", destSP, "conflictedIndex", conflictedIndex, "errNotInSecondarySPs", errNotInSecondarySPs)
+		log.Debugw("produceBucketMigrateExecutePlan prepare to check conflicts", "srcGVG", srcGVG, "destSP", destSP, "conflictedIndex", conflictedIndex, "errNotInSecondarySPs", errNotInSecondarySPs, "EventMigrationBucket", event)
 		if errNotInSecondarySPs == nil {
 			// gvg has conflicts.
 			excludedSPIDs := srcGVG.GetSecondarySpIds()
 			replacedSP, pickErr := s.manager.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(excludedSPIDs))
 			if pickErr != nil {
-				log.Errorw("failed to pick new sp to replace conflict secondary sp", "srcGVG", srcGVG, "destSP", destSP, "excludedSPIDs", excludedSPIDs, "error", pickErr)
+				log.Errorw("failed to pick new sp to replace conflict secondary sp", "srcGVG", srcGVG, "destSP", destSP, "excludedSPIDs", excludedSPIDs, "error", pickErr, "EventMigrationBucket", event)
 				return nil, pickErr
 			}
 			secondarySPIDs[conflictedIndex] = replacedSP.GetId()
-			log.Debugw("produceBucketMigrateExecutePlan resolve conflict", "excludedSPIDs", excludedSPIDs)
+			log.Debugw("produceBucketMigrateExecutePlan resolve conflict", "excludedSPIDs", excludedSPIDs, "EventMigrationBucket", event)
 		}
-		log.Debugw("produceBucketMigrateExecutePlan prepare to pick new gvg", "secondarySPIDs", secondarySPIDs)
+		log.Debugw("produceBucketMigrateExecutePlan prepare to pick new gvg", "secondarySPIDs", secondarySPIDs, "EventMigrationBucket", event)
 		destGVG, err = s.pickGlobalVirtualGroupForBucketMigrate(NewPickDestGVGFilter(destFamilyID, secondarySPIDs, srcGVG.StoredSize))
 		if err != nil {
-			log.Errorw("failed to pick gvg for migrate bucket", "error", err)
+			log.Errorw("failed to pick gvg for migrate bucket", "error", err, "EventMigrationBucket", event)
 			return nil, err
 		}
 		destFamilyID = destGVG.FamilyID
@@ -539,7 +539,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 
 		bucketUnit := newBucketMigrateGVGExecuteUnit(plan.bucketID, srcGVG, srcSP, destSP, WaitForMigrate, destGVG.ID, 0, destGlobalVirtualGroup)
 		plan.gvgUnitMap[srcGVG.GetId()] = bucketUnit
-		log.Debugw("generate a new ", "MigrateExecuteUnitByBucket", bucketUnit)
+		log.Debugw("generate a new", "MigrateExecuteUnitByBucket", bucketUnit, "EventMigrationBucket", event)
 	}
 
 	return plan, nil
