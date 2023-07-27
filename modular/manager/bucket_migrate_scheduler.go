@@ -359,7 +359,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				log.Errorw("failed to list migrate bucket events", "block_id", s.lastSubscribedBlockHeight+1, "error", subscribeError)
 				continue
 			}
-			log.Infow("loop subscribe bucket migrate event", "sp_exit_events", migrationBucketEvents, "block_id", s.lastSubscribedBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
+			log.Infow("loop subscribe bucket migrate event", "migrationBucketEvents", migrationBucketEvents, "block_id", s.lastSubscribedBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
 
 			// 2. make plan, start plan
 			for _, migrateBucketEvents := range migrationBucketEvents {
@@ -650,7 +650,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	for _, migrateBucketEvents := range migrationBucketEvents {
 		// if has CompleteEvents & CancelEvents, skip it
 		if migrateBucketEvents.CompleteEvents != nil || migrateBucketEvents.CancelEvents != nil {
-			bucketIDs[migrateBucketEvents.Events.BucketId.Uint64()] = true
+			bucketIDs[migrateBucketEvents.Events.BucketId.Uint64()] = false
 		}
 		if migrateBucketEvents.Events != nil {
 			bucketIDs[migrateBucketEvents.Events.BucketId.Uint64()] = true
@@ -658,7 +658,10 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	}
 	log.Debug("loadBucketMigrateExecutePlansFromDB", "bucketIDs", bucketIDs)
 	// load from db by BucketID & construct plan
-	for bucketID := range bucketIDs {
+	for bucketID, exist := range bucketIDs {
+		if !exist {
+			continue
+		}
 		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID)
 		if err != nil {
 			return err
