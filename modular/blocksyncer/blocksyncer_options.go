@@ -38,7 +38,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 
 	MainService = &BlockSyncerModular{
 		config:  junoCfg,
-		name:    BlockSyncerModularName,
+		name:    coremodule.BlockSyncerModularName,
 		baseApp: app,
 	}
 	blockMap = new(sync.Map)
@@ -49,7 +49,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 		return nil, err
 	}
 
-	//prepare master table
+	// prepare master table
 	FlagDB = db.Cast(MainService.parserCtx.Database)
 	MainService.prepareMasterFlagTable()
 	mainServiceDB, _ := FlagDB.GetMasterDB(context.TODO())
@@ -62,7 +62,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 
 	// when NeedBackup config true Or backup db is current master DB, init backup service
 	if NeedBackup || !mainServiceDB.IsMaster {
-		//create backup block syncer
+		// create backup block syncer
 		if blockSyncerBackup, err := newBackupBlockSyncerService(junoCfg, mainDBIsMaster); err != nil {
 			return nil, err
 		} else {
@@ -85,7 +85,7 @@ func (b *BlockSyncerModular) initClient() error {
 	cmdCfg := junoConfig.GetParseConfig()
 	cmdCfg.WithTomlConfig(b.config)
 
-	//set toml config to juno config
+	// set toml config to juno config
 	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
 		log.Infof("readErr: %v", readErr)
 		return readErr
@@ -93,7 +93,7 @@ func (b *BlockSyncerModular) initClient() error {
 
 	// get DSN from env first
 	var dbEnv string
-	if b.Name() == BlockSyncerModularName {
+	if b.Name() == coremodule.BlockSyncerModularName {
 		dbEnv = DsnBlockSyncer
 	} else {
 		dbEnv = DsnBlockSyncerSwitched
@@ -322,7 +322,7 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 	if err != nil {
 		return err
 	}
-	//not exist
+	// not exist
 	if !masterRecord.OneRowId {
 		if err = FlagDB.SetMasterDB(context.TODO(), &bsdb.MasterDB{
 			OneRowId: true,
@@ -450,12 +450,12 @@ func SwitchMasterDBFlag() error {
 		return err
 	}
 
-	//switch flag
+	// switch flag
 	masterFlag.IsMaster = !masterFlag.IsMaster
 	if err = FlagDB.SetMasterDB(context.TODO(), masterFlag); err != nil {
 		return err
 	}
-	log.Infof("DB switched")
+	log.Info("DB switched")
 	return nil
 }
 

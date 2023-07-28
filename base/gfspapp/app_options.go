@@ -4,6 +4,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
@@ -20,7 +21,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
@@ -135,7 +136,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.Env = EnvMainnet
 	}
 	if len(cfg.Server) == 0 {
-		cfg.Server = GetRegisterModulus()
+		cfg.Server = GetRegisteredModules()
 	}
 	if cfg.AppID == "" {
 		servers := strings.Join(cfg.Server, `-`)
@@ -322,7 +323,6 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 // DefaultGfBsDB cast block syncer db connections, user and password if not loaded from env vars
 func DefaultGfBsDB(config *config.SQLDBConfig) {
-
 	if config.ConnMaxLifetime == 0 {
 		config.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
 	}
@@ -349,32 +349,43 @@ func DefaultGfBsDB(config *config.SQLDBConfig) {
 	}
 }
 
+var pieceOnce = sync.Once{}
+
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Customize.PieceStore != nil {
 		app.pieceStore = cfg.Customize.PieceStore
 		return nil
 	}
-	if cfg.PieceStore.Store.Storage == "" {
-		cfg.PieceStore.Store.Storage = "file"
+	for _, v := range cfg.Server {
+		if v == coremodule.ApprovalModularName || v == coremodule.AuthenticationModularName || v == coremodule.SignModularName ||
+			v == coremodule.GateModularName || v == coremodule.MetadataModularName || v == coremodule.BlockSyncerModularName {
+			log.Infof("[%s] module doesn't need piece store", v)
+			continue
+		}
+		if cfg.PieceStore.Store.Storage == "" {
+			cfg.PieceStore.Store.Storage = "file"
+		}
+		if cfg.PieceStore.Store.BucketURL == "" {
+			cfg.PieceStore.Store.BucketURL = "./data"
+		}
+		if cfg.PieceStore.Store.MaxRetries == 0 {
+			cfg.PieceStore.Store.MaxRetries = 5
+		}
+		if cfg.PieceStore.Store.MinRetryDelay == 0 {
+			cfg.PieceStore.Store.MinRetryDelay = 1
+		}
+		if cfg.PieceStore.Store.IAMType == "" {
+			cfg.PieceStore.Store.IAMType = "SA"
+		}
+		pieceOnce.Do(func() {
+			pieceStore, err := psclient.NewStoreClient(&cfg.PieceStore)
+			if err != nil {
+				log.Panicw("failed to new piece store", "error", err)
+				return
+			}
+			app.pieceStore = pieceStore
+		})
 	}
-	if cfg.PieceStore.Store.BucketURL == "" {
-		cfg.PieceStore.Store.BucketURL = "./data"
-	}
-	if cfg.PieceStore.Store.MaxRetries == 0 {
-		cfg.PieceStore.Store.MaxRetries = 5
-	}
-	if cfg.PieceStore.Store.MinRetryDelay == 0 {
-		cfg.PieceStore.Store.MinRetryDelay = 1
-	}
-	if cfg.PieceStore.Store.IAMType == "" {
-		cfg.PieceStore.Store.IAMType = "SA"
-	}
-	pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
-	if err != nil {
-		log.Warnw("if not use piece store, please ignore: failed to new piece store", "error", err)
-		return nil
-	}
-	app.pieceStore = pieceStore
 	return nil
 }
 
@@ -454,7 +465,7 @@ func DefaultGfSpConsensusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) er
 	return nil
 }
 
-func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+func DefaultGfSpModuleOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	for _, modular := range cfg.Server {
 		newFunc := GetNewModularFunc(strings.ToLower(modular))
 		module, err := newFunc(app, cfg)
@@ -501,7 +512,7 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	return nil
 }
 
-func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+func DefaultGfSpPProfOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Monitor.DisablePProf {
 		app.pprof = &coremodule.NullModular{}
 	}
@@ -523,9 +534,9 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultGfSpResourceManagerOption,
 	DefaultGfSpConsensusOption,
 	DefaultGfSpTQueueOption,
-	DefaultGfSpModulusOption,
+	DefaultGfSpModuleOption,
 	DefaultGfSpMetricOption,
-	DefaultGfSpPprofOption,
+	DefaultGfSpPProfOption,
 }
 
 func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfSpBaseApp, error) {

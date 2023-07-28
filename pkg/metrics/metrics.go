@@ -81,15 +81,10 @@ func (m *Metrics) serve() {
 	}
 }
 
-func (m *Metrics) ReserveResource(
-	ctx context.Context,
-	state *corercmgr.ScopeStat) (
-	corercmgr.ResourceScopeSpan, error) {
+func (m *Metrics) ReserveResource(ctx context.Context, state *corercmgr.ScopeStat) (corercmgr.ResourceScopeSpan, error) {
 	return &corercmgr.NullScope{}, nil
 }
-func (m *Metrics) ReleaseResource(
-	ctx context.Context,
-	scope corercmgr.ResourceScopeSpan) {
+func (m *Metrics) ReleaseResource(ctx context.Context, scope corercmgr.ResourceScopeSpan) {
 	scope.Done()
 }
 

@@ -47,6 +47,7 @@ type StoreClient struct {
 func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error) {
 	ps, err := piece.NewPieceStore(pieceConfig)
 	if err != nil {
+		log.Errorw("failed to new piece store", "error", err)
 		return nil, err
 	}
 	return &StoreClient{ps: ps, name: pieceConfig.Store.Storage}, nil
