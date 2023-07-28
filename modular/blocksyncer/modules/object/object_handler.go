@@ -41,7 +41,7 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 	return nil
 }
 
-func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
+func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
 	if !ObjectEvents[event.Type] {
 		return nil, nil
 	}
