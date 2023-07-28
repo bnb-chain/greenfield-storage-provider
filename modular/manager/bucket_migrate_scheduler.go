@@ -168,7 +168,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 	if plan.finished == len(plan.gvgUnitMap) {
 		err := plan.sendCompleteMigrateBucketTx(migrateExecuteUnit)
 		if err != nil {
-			log.Errorw("send complete migrate bucket msg to chain failed", "migrateExecuteUnit", migrateExecuteUnit)
+			log.Errorw("failed to send complete migrate bucket msg to chain due to reason", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
 			return err
 		}
 	}
@@ -608,12 +608,12 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 		return nil, err
 	}
 
-	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "len:", len(primarySPGVGList), "EventMigrationBucket", event)
+	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "bucket_gvg_list_len", len(primarySPGVGList), "EventMigrationBucket", event)
 	if len(primarySPGVGList) == 0 {
 		// an empty bucket ends here, and it will not return a plan. The execution will not continue.
 		err := plan.sendCompleteMigrateBucketTx(nil)
 		if err != nil {
-			log.Errorw("send complete migrate bucket msg to chain failed", "EventMigrationBucket", event)
+			log.Errorw("failed to send complete migrate bucket msg to chain due to reason", "error", err, "EventMigrationBucket", event)
 			return nil, err
 		}
 		return plan, nil
