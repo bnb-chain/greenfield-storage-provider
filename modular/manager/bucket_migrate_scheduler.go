@@ -290,25 +290,33 @@ func (s *BucketMigrateScheduler) Start() error {
 	return nil
 }
 
-func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expectedStatus storagetypes.BucketStatus) error {
+// Before processing MigrateBucketEvents, first check if the status of the bucket on the chain meets the expectations. If it meets the expectations, proceed with the execution; otherwise, skip this MigrateBucketEvent event.
+func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	// check the chain's bucket is migrating
 	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), bucketName)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if bucketInfo.BucketStatus != expectedStatus {
 		log.Debugw("the bucket status is not same, the event will skip", "bucketInfo", bucketInfo, "expectedStatus", expectedStatus)
-		return errors.New("the bucket status is not same")
+		return false, nil
 	}
-	return nil
+	return true, nil
 }
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
+	// skip pair [Events, CancelEvents] or [Events, CompleteEvents]
+	if (migrateBucketEvents.CancelEvents != nil && migrateBucketEvents.Events != nil) || (migrateBucketEvents.CompleteEvents != nil && migrateBucketEvents.Events != nil) {
+		return nil
+	}
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
-		err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
+		}
+		if !expected {
+			return nil
 		}
 		executePlan, err := s.getExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		if err != nil {
@@ -320,9 +328,12 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
-		err := s.checkBucketFromChain(migrateBucketEvents.CompleteEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.CompleteEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
+		}
+		if !expected {
+			return nil
 		}
 		executePlan, err := s.getExecutePlanByBucketID(migrateBucketEvents.CompleteEvents.BucketId.Uint64())
 		// 1) Received the CompleteEvents event for the first time.
@@ -343,9 +354,12 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 3. process Events
 	if migrateBucketEvents.Events != nil {
-		err := s.checkBucketFromChain(migrateBucketEvents.Events.BucketName, storagetypes.BUCKET_STATUS_MIGRATING)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.Events.BucketName, storagetypes.BUCKET_STATUS_MIGRATING)
 		if err != nil {
 			return err
+		}
+		if !expected {
+			return nil
 		}
 		if s.executePlanIDMap[migrateBucketEvents.Events.BucketId.Uint64()] != nil {
 			log.Debugw("bucket migrate scheduler the bucket is already in migrating", "Events", migrateBucketEvents.Events)
