@@ -25,4 +25,8 @@ var (
 	SignModularDescription           = "Signs the transaction and broadcasts to chain."
 	UploadModularName                = strings.ToLower("Uploader")
 	UploadModularDescription         = "Uploads object payload to primary SP."
+	BlockSyncerModularName           = strings.ToLower("BlockSyncer")
+	BlockSyncerModularDescription    = "Synchronize data on the chain to SP"
+	MetadataModularName              = strings.ToLower("Metadata")
+	MetadataModularDescription       = "Retrieves sp metadata and info."
 )

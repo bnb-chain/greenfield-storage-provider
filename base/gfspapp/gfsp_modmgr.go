@@ -46,10 +46,10 @@ func RegisterModular(name string, description string, newFunc NewModularFunc) {
 	modMgr.mux.Lock()
 	defer modMgr.mux.Unlock()
 	if name == "" {
-		log.Panic("modular name cannot be blank")
+		log.Panic("module name cannot be blank")
 	}
 	if _, ok := modMgr.newModularFunc[name]; ok {
-		log.Panicf("[%s] modular repeated", name)
+		log.Panicf("[%s] module repeated", name)
 	}
 	modMgr.module = append(modMgr.module, name)
 	if len(description) != 0 {
@@ -83,7 +83,7 @@ func GetNewModularFunc(name string) NewModularFunc {
 	modMgr.mux.RLock()
 	defer modMgr.mux.RUnlock()
 	if _, ok := modMgr.newModularFunc[name]; !ok {
-		log.Panicf("not registered [%s] modular info", name)
+		log.Panicf("not registered [%s] module info", name)
 	}
 	return modMgr.newModularFunc[name]
 }
