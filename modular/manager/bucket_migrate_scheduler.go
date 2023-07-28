@@ -305,10 +305,6 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expecte
 }
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
-	// skip pair [Events, CancelEvents] or [Events, CompleteEvents]
-	if (migrateBucketEvents.CancelEvents != nil && migrateBucketEvents.Events != nil) || (migrateBucketEvents.CompleteEvents != nil && migrateBucketEvents.Events != nil) {
-		return nil
-	}
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
 		expected, err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
