@@ -2,14 +2,13 @@ package gnfd
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"math"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -463,7 +462,7 @@ func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (bucketInfo *
 }
 
 // QueryBucketInfoById returns the bucket info by name.
-func (g *Gnfd) QueryBucketInfoById(ctx context.Context, bucketId uint32) (bucketInfo *storagetypes.BucketInfo, err error) {
+func (g *Gnfd) QueryBucketInfoById(ctx context.Context, bucketId uint64) (bucketInfo *storagetypes.BucketInfo, err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -484,7 +483,8 @@ func (g *Gnfd) QueryBucketInfoById(ctx context.Context, bucketId uint32) (bucket
 	}()
 
 	client := g.getCurrentClient().GnfdClient()
-	resp, err := client.HeadBucketById(ctx, &storagetypes.QueryHeadBucketByIdRequest{BucketId: util.Uint32ToString(bucketId)})
+	id := sdkmath.NewUint(bucketId)
+	resp, err := client.HeadBucketById(ctx, &storagetypes.QueryHeadBucketByIdRequest{BucketId: id.String()})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query bucket", "bucket_id", bucketId, "error", err)
 		return nil, err

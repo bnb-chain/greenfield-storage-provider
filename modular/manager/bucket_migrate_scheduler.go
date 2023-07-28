@@ -309,7 +309,7 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 // Before processing MigrateBucketEvents, first check if the status of the bucket on the chain meets the expectations. If it meets the expectations, proceed with the execution; otherwise, skip this MigrateBucketEvent event.
-func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint32, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
+func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	// check the chain's bucket is migrating
 	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketId)
 	if err != nil {
@@ -325,7 +325,7 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint32, expectedS
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
-		expected, err := s.checkBucketFromChain(uint32(migrateBucketEvents.CancelEvents.BucketId.Uint64()), storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketId.Uint64(), storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
 		}
@@ -342,7 +342,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
-		expected, err := s.checkBucketFromChain(uint32(migrateBucketEvents.CompleteEvents.BucketId.Uint64()), storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.CompleteEvents.BucketId.Uint64(), storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
 		}
@@ -368,7 +368,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 3. process Events
 	if migrateBucketEvents.Events != nil {
-		expected, err := s.checkBucketFromChain(uint32(migrateBucketEvents.Events.BucketId.Uint64()), storagetypes.BUCKET_STATUS_MIGRATING)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.Events.BucketId.Uint64(), storagetypes.BUCKET_STATUS_MIGRATING)
 		if err != nil {
 			return err
 		}
