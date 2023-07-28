@@ -51,7 +51,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 				return
 			}
 			if (index+1)%batchSize == 0 || index == length-1 { // report task per 10 objects
-				log.Info("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID, "last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
+				log.Infow("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID, "last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
 				task.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
 				if err = e.ReportTask(ctx, task); err != nil {
 					log.CtxErrorw(ctx, "failed to report task", "error", err)
@@ -202,7 +202,7 @@ func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, 
 	return nil
 }
 
-// HandleMigratePieceTask handles the migrate piece task
+// HandleMigratePieceTask handles migrate piece task
 // It will send requests to the src SP(exiting SP or bucket migration) to get piece data. Using piece data to generate
 // piece checksum and integrity hash, if integrity hash is similar to chain's, piece data would be written into PieceStore,
 // generated piece checksum and integrity hash will be written into sql db.
@@ -270,7 +270,7 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMig
 	pieceData, err = e.baseApp.GfSpClient().MigratePiece(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to migrate piece data", "object_id",
-			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "error", err)
+			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "task_info", task, "error", err)
 		return nil, err
 	}
 	log.CtxInfow(ctx, "succeed to get piece from another sp", "object_id", task.GetObjectInfo().Id.Uint64(),

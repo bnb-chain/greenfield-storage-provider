@@ -162,7 +162,7 @@ func (s *GfSpClient) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigrat
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to migrate pieces, StatusCode(%d), Endpoint(%s)", resp.StatusCode, endpoint)
+		return nil, fmt.Errorf("failed to migrate pieces, status_code(%d), endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	buf := &bytes.Buffer{}
 	_, err = io.Copy(buf, resp.Body)
