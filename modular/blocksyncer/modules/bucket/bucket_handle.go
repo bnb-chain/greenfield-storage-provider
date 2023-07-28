@@ -31,7 +31,7 @@ var BucketEvents = map[string]bool{
 	EventCompleteMigrationBucket: true,
 }
 
-func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
+func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
 	if !BucketEvents[event.Type] {
 		return nil, nil
 	}

@@ -72,7 +72,7 @@ func (i *Impl) ExtractEvent(ctx context.Context, block *coretypes.ResultBlock, t
 	allSQL := make(map[string][]interface{})
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
-			sqls, err := eventModule.ExtractEvent(ctx, block, txHash, event)
+			sqls, err := eventModule.ExtractEventStatements(ctx, block, txHash, event)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
 				return nil, err
