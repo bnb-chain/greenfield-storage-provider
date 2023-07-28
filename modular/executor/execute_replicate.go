@@ -48,8 +48,8 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		return
 	} else {
 		task.AppendLog("executor-end-replicate-object")
-		metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessReplicateAllPiece).Inc()
-		metrics.ExecutorTime.WithLabelValues(ExecutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
+		metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateAllPiece).Inc()
+		metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
 	}
 	sealMsg := &storagetypes.MsgSealObject{
 		Operator:                    e.baseApp.OperatorAddress(),
@@ -108,9 +108,9 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, int32(rIdx))
 			if innerErr == nil {
 				secondarySignatures[rIdx] = signature
-				metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessDoneReplicatePiece).Inc()
+				metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
 			} else {
-				metrics.ExecutorCounter.WithLabelValues(ExecutorFailureDoneReplicatePiece).Inc()
+				metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
 				return innerErr
 			}
 		}
@@ -168,13 +168,13 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 		if err != nil {
 			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sIdx:%d-rIdx-%d-error:%s-endpoint:%s",
 				segmentIdx, redundancyIdx, err.Error(), spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExecutorFailureReplicateOnePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExecutorFailureReplicateOnePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureReplicateOnePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorFailureReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		} else {
 			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sIdx:%d-rIdx-%d-endpoint:%s",
 				segmentIdx, redundancyIdx, spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessReplicateOnePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExecutorSuccessReplicateOnePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateOnePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		}
 		waitGroup.Done()
 	}()
@@ -220,13 +220,13 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 		if err != nil {
 			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-rIdx-%d-error:%s-endpoint:%s",
 				redundancyIdx, err.Error(), spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExecutorFailureDoneReplicatePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExecutorFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		} else {
 			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-rIdx-%d-endpoint:%s",
 				redundancyIdx, spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessDoneReplicatePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExecutorSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 

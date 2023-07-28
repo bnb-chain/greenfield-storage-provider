@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -636,6 +637,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		rangeEnd             int64
 		redirectURL          string
 		params               *storagetypes.Params
+		escapedObjectName    string
 		isRequestFromBrowser bool
 		spEndpoint           string
 		getEndpointErr       error
@@ -681,12 +683,18 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	// ignore the error, because the universal endpoint does not need signature
 	reqCtx, _ = NewRequestContext(r, g)
 
+	escapedObjectName, err = url.PathUnescape(reqCtx.objectName)
+	if err != nil {
+		log.Errorw("failed to unescape object name ", "object_name", reqCtx.objectName, "error", err)
+		return
+	}
+
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
 		return
 	}
-	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
-		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+	if err = s3util.CheckValidObjectName(escapedObjectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", escapedObjectName, "error", err)
 		return
 	}
 
@@ -728,9 +736,9 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		http.Redirect(w, r, redirectURL, 302)
 		return
 	}
-	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
+	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
-		log.Errorw("failed to check object meta", "object_name", reqCtx.objectName, "error", err)
+		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
 		err = ErrNoSuchObject
 		return
 	}
@@ -864,7 +872,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	}
 
 	if isDownload {
-		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
 	} else {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
 	}
