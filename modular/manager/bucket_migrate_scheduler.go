@@ -383,17 +383,11 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 			log.Errorw("failed to produce bucket migrate execute plan", "Events", migrateBucketEvents.Events, "error", err)
 			return err
 		}
-		if executePlan != nil {
-			if err = executePlan.Start(); err != nil {
-				log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Events, "executePlan", executePlan, "error", err)
-				return err
-			}
-			s.executePlanIDMap[executePlan.bucketID] = executePlan
-		} else {
-			// empty bucket
-			return nil
+		if err = executePlan.Start(); err != nil {
+			log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Events, "executePlan", executePlan, "error", err)
+			return err
 		}
-
+		s.executePlanIDMap[executePlan.bucketID] = executePlan
 	}
 	return nil
 }
@@ -622,7 +616,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	if len(primarySPGVGList) == 0 {
 		// an empty bucket ends here, and it will not return a plan. The execution will not continue.
 		plan.sendCompleteMigrateBucketTx(nil)
-		return nil, nil
+		return plan, nil
 	} else {
 		plan, err = s.generateBucketMigrateGVGExecuteUnit(primarySPGVGList, event, plan, srcSP, destSP)
 		return plan, err
