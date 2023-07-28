@@ -21,7 +21,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
@@ -378,7 +378,7 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 			cfg.PieceStore.Store.IAMType = "SA"
 		}
 		pieceOnce.Do(func() {
-			pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
+			pieceStore, err := psclient.NewStoreClient(&cfg.PieceStore)
 			if err != nil {
 				log.Panicw("failed to new piece store", "error", err)
 				return
