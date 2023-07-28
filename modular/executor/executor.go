@@ -120,8 +120,8 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 
 	askTask, err := e.baseApp.GfSpClient().AskTask(ctx, limit)
 	if err != nil {
-		metrics.ReqCounter.WithLabelValues(ExeutorFailureAskNoTask).Inc()
-		metrics.ReqTime.WithLabelValues(ExeutorFailureAskNoTask).Observe(time.Since(startTime).Seconds())
+		metrics.ReqCounter.WithLabelValues(ExecutorFailureAskNoTask).Inc()
+		metrics.ReqTime.WithLabelValues(ExecutorFailureAskNoTask).Observe(time.Since(startTime).Seconds())
 		if e.omitError(err) {
 			return err
 		}
@@ -130,14 +130,14 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	}
 	// double confirm the safe task
 	if askTask == nil {
-		metrics.ReqCounter.WithLabelValues(ExeutorFailureAskTask).Inc()
-		metrics.ReqTime.WithLabelValues(ExeutorFailureAskTask).Observe(time.Since(startTime).Seconds())
+		metrics.ReqCounter.WithLabelValues(ExecutorFailureAskTask).Inc()
+		metrics.ReqTime.WithLabelValues(ExecutorFailureAskTask).Observe(time.Since(startTime).Seconds())
 		log.CtxErrorw(ctx, "failed to ask task due to dangling pointer",
 			"remaining", limit.String(), "error", err)
 		return ErrDanglingPointer
 	}
-	metrics.ReqCounter.WithLabelValues(ExeutorSuccessAskTask).Inc()
-	metrics.ReqTime.WithLabelValues(ExeutorSuccessAskTask).Observe(time.Since(startTime).Seconds())
+	metrics.ReqCounter.WithLabelValues(ExecutorSuccessAskTask).Inc()
+	metrics.ReqTime.WithLabelValues(ExecutorSuccessAskTask).Observe(time.Since(startTime).Seconds())
 
 	atomic.AddInt64(&e.executingNum, 1)
 	defer atomic.AddInt64(&e.executingNum, -1)
@@ -157,8 +157,8 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 
 	runTime := time.Now()
 	defer func() {
-		metrics.ReqCounter.WithLabelValues(ExeutorRunTask).Inc()
-		metrics.ReqTime.WithLabelValues(ExeutorRunTask).Observe(time.Since(runTime).Seconds())
+		metrics.ReqCounter.WithLabelValues(ExecutorRunTask).Inc()
+		metrics.ReqTime.WithLabelValues(ExecutorRunTask).Observe(time.Since(runTime).Seconds())
 	}()
 
 	ctx = log.WithValue(ctx, log.CtxKeyTask, askTask.Key().String())
@@ -168,33 +168,33 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		defer atomic.AddInt64(&e.doingReplicatePieceTaskCnt, -1)
 		e.HandleReplicatePieceTask(ctx, t)
 		if t.Error() != nil {
-			metrics.ReqCounter.WithLabelValues(ExeutorFailureReplicateTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorFailureReplicateTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorFailureReplicateTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorFailureReplicateTask).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(ExeutorSuccessReplicateTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorSuccessReplicateTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorSuccessReplicateTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorSuccessReplicateTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfsptask.GfSpSealObjectTask:
 		atomic.AddInt64(&e.doingSpSealObjectTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingSpSealObjectTaskCnt, -1)
 		e.HandleSealObjectTask(ctx, t)
 		if t.Error() != nil {
-			metrics.ReqCounter.WithLabelValues(ExeutorFailureSealObjectTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorFailureSealObjectTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorFailureSealObjectTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorFailureSealObjectTask).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(ExeutorSuccessSealObjectTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorSuccessSealObjectTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorSuccessSealObjectTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorSuccessSealObjectTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfsptask.GfSpReceivePieceTask:
 		atomic.AddInt64(&e.doingReceivePieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingReceivePieceTaskCnt, -1)
 		e.HandleReceivePieceTask(ctx, t)
 		if t.Error() != nil {
-			metrics.ReqCounter.WithLabelValues(ExeutorFailureReceiveTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorFailureReceiveTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorFailureReceiveTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorFailureReceiveTask).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(ExeutorSuccessReceiveTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorSuccessReceiveTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorSuccessReceiveTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorSuccessReceiveTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfsptask.GfSpGCObjectTask:
 		atomic.AddInt64(&e.doingGCObjectTaskCnt, 1)
@@ -213,11 +213,11 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
 		e.HandleRecoverPieceTask(ctx, t)
 		if t.Error() != nil {
-			metrics.ReqCounter.WithLabelValues(ExeutorFailureRecoveryTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorFailureRecoveryTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorFailureRecoveryTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorFailureRecoveryTask).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(ExeutorSuccessRecoveryTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorSuccessRecoveryTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfsptask.GfSpMigrateGVGTask:
 		atomic.AddInt64(&e.doingMigrationGVGTaskCnt, 1)
@@ -230,17 +230,15 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	return nil
 }
 
-func (e *ExecuteModular) ReportTask(
-	ctx context.Context,
-	task coretask.Task) (err error) {
+func (e *ExecuteModular) ReportTask(ctx context.Context, task coretask.Task) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.ReqCounter.WithLabelValues(ExeutorFailureReportTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorFailureReportTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorFailureReportTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorFailureReportTask).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(ExeutorSuccessReportTask).Inc()
-			metrics.ReqTime.WithLabelValues(ExeutorSuccessReportTask).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(ExecutorSuccessReportTask).Inc()
+			metrics.ReqTime.WithLabelValues(ExecutorSuccessReportTask).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -254,10 +252,7 @@ func (e *ExecuteModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (e *ExecuteModular) ReserveResource(
-	ctx context.Context,
-	st *corercmgr.ScopeStat) (
-	corercmgr.ResourceScopeSpan, error) {
+func (e *ExecuteModular) ReserveResource(ctx context.Context, st *corercmgr.ScopeStat) (corercmgr.ResourceScopeSpan, error) {
 	span, err := e.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -269,9 +264,7 @@ func (e *ExecuteModular) ReserveResource(
 	return span, nil
 }
 
-func (e *ExecuteModular) ReleaseResource(
-	ctx context.Context,
-	span corercmgr.ResourceScopeSpan) {
+func (e *ExecuteModular) ReleaseResource(ctx context.Context, span corercmgr.ResourceScopeSpan) {
 	span.Done()
 }
 

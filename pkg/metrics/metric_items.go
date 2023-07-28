@@ -70,6 +70,10 @@ var MetricsItems = []prometheus.Collector{
 
 	// metadata metrics category
 	MetadataReqTime,
+
+	// sp exit and bucket migration category
+	MigrateGVGTimeHistogram,
+	MigrateGVGCouter,
 }
 
 // basic metrics items
@@ -274,4 +278,14 @@ var (
 )
 
 // SP exit and bucket migration metrics
-var ()
+var (
+	MigrateGVGTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "migrate_gvg_time",
+		Help:    "Track migrate gvg workflow costs",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"migrate_gvg_time"})
+	MigrateGVGCouter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "migrate_gvg_counter",
+		Help: "Track migrate gvg number",
+	}, []string{"migrate_gvg_counter"})
+)
