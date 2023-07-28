@@ -114,17 +114,51 @@ func (plan *BucketMigrateExecutePlan) UpdateMigrateGVGLastMigratedObjectID(migra
 	return nil
 }
 
-func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, migrateExecuteUnit *BucketMigrateGVGExecuteUnit, migrateStatus MigrateStatus) error {
+// send CompleteMigrateBucket to chain 1) empty bucket: gvgUnitMap is nil; 2) normal bucket
+func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecuteUnit *BucketMigrateGVGExecuteUnit) error {
 	var (
-		err   error
 		vgfID uint32
+		err   error
 	)
+	// empty bucket, need to pick a vgf
+	if migrateExecuteUnit == nil {
+		vgfID, err = plan.manager.PickVirtualGroupFamily(context.Background(), &task.NullTask{})
+		if err != nil {
+			log.Errorw("failed to pick vgf for migrate bucket", "error", err)
+			return err
+		}
+	}
+
+	bucket, err := plan.manager.baseApp.GfSpClient().GetBucketByBucketID(context.Background(), int64(plan.bucketID), true)
+	if err != nil {
+		return err
+	}
+	var gvgMappings []*storagetypes.GVGMapping
+	for _, migrateGVGUnit := range plan.gvgUnitMap {
+		aggBlsSig, getBlsError := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateExecuteUnit)
+		if getBlsError != nil {
+			log.Errorw("failed to get bls aggregate signature", "error", getBlsError)
+			return err
+		}
+		vgfID = migrateGVGUnit.destGVG.GetFamilyId()
+		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.srcGVG.GetId(),
+			DstGlobalVirtualGroupId: migrateGVGUnit.destGVGID, SecondarySpBlsSignature: aggBlsSig})
+	}
+
+	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
+		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
+	txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
+	log.Infow("send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "error", txErr)
+	return nil
+}
+
+func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, migrateExecuteUnit *BucketMigrateGVGExecuteUnit, migrateStatus MigrateStatus) error {
 
 	plan.finished++
 	migrateExecuteUnit.migrateStatus = migrateStatus
 
 	// update migrate gvg status
-	err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus))
+	err := plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus))
 	if err != nil {
 		log.Errorw("update migrate gvg status", "migrate_key", migrateKey, "error", err)
 		return err
@@ -132,27 +166,11 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 
 	// all migrate units success, send tx to chain
 	if plan.finished == len(plan.gvgUnitMap) {
-		var bucket *types.Bucket
-		bucket, err = plan.manager.baseApp.GfSpClient().GetBucketByBucketID(context.Background(), int64(plan.bucketID), true)
+		err := plan.sendCompleteMigrateBucketTx(migrateExecuteUnit)
 		if err != nil {
+			log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
 			return err
 		}
-		var gvgMappings []*storagetypes.GVGMapping
-		for _, migrateGVGUnit := range plan.gvgUnitMap {
-			aggBlsSig, getBlsError := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateExecuteUnit)
-			if getBlsError != nil {
-				log.Errorw("failed to get bls aggregate signature", "error", getBlsError)
-				return err
-			}
-			vgfID = migrateGVGUnit.destGVG.GetFamilyId()
-			gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.srcGVG.GetId(),
-				DstGlobalVirtualGroupId: migrateGVGUnit.destGVGID, SecondarySpBlsSignature: aggBlsSig})
-		}
-
-		migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
-			BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
-		txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
-		log.Infow("send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "error", txErr)
 	}
 	return nil
 }
@@ -291,9 +309,9 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 // Before processing MigrateBucketEvents, first check if the status of the bucket on the chain meets the expectations. If it meets the expectations, proceed with the execution; otherwise, skip this MigrateBucketEvent event.
-func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
+func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	// check the chain's bucket is migrating
-	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), bucketName)
+	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketId)
 	if err != nil {
 		return false, err
 	}
@@ -307,7 +325,7 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expecte
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
-		expected, err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketId.Uint64(), storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
 		}
@@ -324,7 +342,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
-		expected, err := s.checkBucketFromChain(migrateBucketEvents.CompleteEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.CompleteEvents.BucketId.Uint64(), storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
 		}
@@ -350,7 +368,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 3. process Events
 	if migrateBucketEvents.Events != nil {
-		expected, err := s.checkBucketFromChain(migrateBucketEvents.Events.BucketName, storagetypes.BUCKET_STATUS_MIGRATING)
+		expected, err := s.checkBucketFromChain(migrateBucketEvents.Events.BucketId.Uint64(), storagetypes.BUCKET_STATUS_MIGRATING)
 		if err != nil {
 			return err
 		}
@@ -515,47 +533,11 @@ func (s *BucketMigrateScheduler) replaceExitingSP(secondarySPIDs []uint32) ([]ui
 
 }
 
-func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storagetypes.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
+func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnit(primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup, event *storagetypes.EventMigrationBucket, plan *BucketMigrateExecutePlan, srcSP, destSP *sptypes.StorageProvider) (*BucketMigrateExecutePlan, error) {
 	var (
-		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
-		plan             *BucketMigrateExecutePlan
-		err              error
-		destFamilyID     uint32
-		destGVG          *vgmgr.GlobalVirtualGroupMeta
-		bucketInfo       *storagetypes.BucketInfo
+		destGVG      *vgmgr.GlobalVirtualGroupMeta
+		destFamilyID uint32
 	)
-
-	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
-
-	log.Debugw("produceBucketMigrateExecutePlan", "bucketID", plan.bucketID, "EventMigrationBucket", event)
-	// query metadata service to get primary sp's gvg list.
-	primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), plan.bucketID)
-	if err != nil {
-		log.Errorw("failed to list gvg ", "error", err)
-		return nil, errors.New("failed to list gvg")
-	}
-
-	bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), event.BucketName)
-	if err != nil {
-		return nil, err
-	}
-	bucketSPID, err := util.GetBucketPrimarySPID(context.Background(), s.manager.baseApp.Consensus(), bucketInfo)
-	if err != nil {
-		return nil, err
-	}
-	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketSPID)
-	if err != nil {
-		log.Errorw("failed to query sp", "error", err)
-		return nil, err
-	}
-	destSP, err := s.manager.virtualGroupManager.QuerySPByID(event.DstPrimarySpId)
-	if err != nil {
-		log.Errorw("failed to query sp", "error", err)
-		return nil, err
-	}
-
-	destFamilyID = 0
-	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "len:", len(primarySPGVGList), "EventMigrationBucket", event)
 	for _, srcGVG := range primarySPGVGList {
 		srcSecondarySPIDs := srcGVG.GetSecondarySpIds()
 		// check sp exiting
@@ -591,10 +573,63 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 
 		bucketUnit := newBucketMigrateGVGExecuteUnit(plan.bucketID, srcGVG, srcSP, destSP, WaitForMigrate, destGVG.ID, 0, destGlobalVirtualGroup)
 		plan.gvgUnitMap[srcGVG.GetId()] = bucketUnit
-		log.Debugw("produceBucketMigrateExecutePlan generate a new", "MigrateExecuteUnitByBucket", bucketUnit, "EventMigrationBucket", event)
+		log.Infow("produceBucketMigrateExecutePlan generate a new", "MigrateExecuteUnitByBucket", bucketUnit, "EventMigrationBucket", event)
 	}
 
 	return plan, nil
+}
+
+func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storagetypes.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
+	var (
+		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
+		plan             *BucketMigrateExecutePlan
+		err              error
+	)
+
+	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
+
+	log.Debugw("produceBucketMigrateExecutePlan", "bucketID", plan.bucketID, "EventMigrationBucket", event)
+	// query metadata service to get primary sp's gvg list.
+	primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), plan.bucketID)
+	if err != nil {
+		log.Errorw("failed to list gvg ", "error", err, "EventMigrationBucket", event)
+		return nil, errors.New("failed to list gvg")
+	}
+
+	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), event.BucketId.Uint64())
+	if err != nil {
+		return nil, err
+	}
+	bucketSPID, err := util.GetBucketPrimarySPID(context.Background(), s.manager.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketSPID)
+	if err != nil {
+		log.Errorw("failed to query sp", "error", err, "EventMigrationBucket", event)
+		return nil, err
+	}
+	destSP, err := s.manager.virtualGroupManager.QuerySPByID(event.DstPrimarySpId)
+	if err != nil {
+		log.Errorw("failed to query sp", "error", err, "EventMigrationBucket", event)
+		return nil, err
+	}
+
+	log.Debugw("produceBucketMigrateExecutePlan list", "primarySPGVGList", primarySPGVGList, "bucket_gvg_list_len", len(primarySPGVGList), "EventMigrationBucket", event)
+	if len(primarySPGVGList) == 0 {
+		// an empty bucket ends here, and it will not return a plan. The execution will not continue.
+		err := plan.sendCompleteMigrateBucketTx(nil)
+		if err != nil {
+			log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "EventMigrationBucket", event)
+			return nil, err
+		}
+		return plan, nil
+	} else {
+		plan, err = s.generateBucketMigrateGVGExecuteUnit(primarySPGVGList, event, plan, srcSP, destSP)
+		return plan, err
+	}
+
 }
 
 func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*BucketMigrateExecutePlan, error) {
