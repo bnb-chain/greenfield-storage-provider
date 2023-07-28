@@ -47,7 +47,7 @@ type Consensus interface {
 	// QueryBucketInfo returns the bucket info by bucket name.
 	QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error)
 	// QueryBucketInfoById returns the bucket info by bucket id.
-	QueryBucketInfoById(ctx context.Context, bucketId uint32) (bucketInfo *storagetypes.BucketInfo, err error)
+	QueryBucketInfoById(ctx context.Context, bucketId uint64) (bucketInfo *storagetypes.BucketInfo, err error)
 	// QueryObjectInfo returns the object info by bucket and object name.
 	QueryObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ObjectInfo, error)
 	// QueryObjectInfoByID returns the object info by object ID.
@@ -129,7 +129,7 @@ func (*NullConsensus) QueryStorageParamsByTimestamp(context.Context, int64) (*st
 func (*NullConsensus) QueryBucketInfo(context.Context, string) (*storagetypes.BucketInfo, error) {
 	return nil, nil
 }
-func (*NullConsensus) QueryBucketInfoById(context.Context, uint32) (*storagetypes.BucketInfo, error) {
+func (*NullConsensus) QueryBucketInfoById(context.Context, uint64) (*storagetypes.BucketInfo, error) {
 	return nil, nil
 }
 func (*NullConsensus) QueryObjectInfo(context.Context, string, string) (*storagetypes.ObjectInfo, error) {
