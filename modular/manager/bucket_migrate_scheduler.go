@@ -309,9 +309,9 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 // Before processing MigrateBucketEvents, first check if the status of the bucket on the chain meets the expectations. If it meets the expectations, proceed with the execution; otherwise, skip this MigrateBucketEvent event.
-func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
+func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint32, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	// check the chain's bucket is migrating
-	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), bucketName)
+	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketId)
 	if err != nil {
 		return false, err
 	}
@@ -325,7 +325,7 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expecte
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
-		expected, err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(uint32(migrateBucketEvents.CancelEvents.BucketId.Uint64()), storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
 		}
@@ -342,7 +342,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
-		expected, err := s.checkBucketFromChain(migrateBucketEvents.CompleteEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
+		expected, err := s.checkBucketFromChain(uint32(migrateBucketEvents.CompleteEvents.BucketId.Uint64()), storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
 		}
@@ -368,7 +368,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 3. process Events
 	if migrateBucketEvents.Events != nil {
-		expected, err := s.checkBucketFromChain(migrateBucketEvents.Events.BucketName, storagetypes.BUCKET_STATUS_MIGRATING)
+		expected, err := s.checkBucketFromChain(uint32(migrateBucketEvents.Events.BucketId.Uint64()), storagetypes.BUCKET_STATUS_MIGRATING)
 		if err != nil {
 			return err
 		}
@@ -573,7 +573,7 @@ func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnit(primarySPGV
 
 		bucketUnit := newBucketMigrateGVGExecuteUnit(plan.bucketID, srcGVG, srcSP, destSP, WaitForMigrate, destGVG.ID, 0, destGlobalVirtualGroup)
 		plan.gvgUnitMap[srcGVG.GetId()] = bucketUnit
-		log.Debugw("produceBucketMigrateExecutePlan generate a new", "MigrateExecuteUnitByBucket", bucketUnit, "EventMigrationBucket", event)
+		log.Infow("produceBucketMigrateExecutePlan generate a new", "MigrateExecuteUnitByBucket", bucketUnit, "EventMigrationBucket", event)
 	}
 
 	return plan, nil
@@ -584,7 +584,6 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 		primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup
 		plan             *BucketMigrateExecutePlan
 		err              error
-		bucketInfo       *storagetypes.BucketInfo
 	)
 
 	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64())
@@ -593,26 +592,19 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	// query metadata service to get primary sp's gvg list.
 	primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), plan.bucketID)
 	if err != nil {
-		log.Errorw("failed to list gvg ", "error", err)
+		log.Errorw("failed to list gvg ", "error", err, "EventMigrationBucket", event)
 		return nil, errors.New("failed to list gvg")
 	}
 
-	bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), event.BucketName)
+	bucketID := uint32(event.BucketId.Uint64())
+	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketID)
 	if err != nil {
-		return nil, err
-	}
-	bucketSPID, err := util.GetBucketPrimarySPID(context.Background(), s.manager.baseApp.Consensus(), bucketInfo)
-	if err != nil {
-		return nil, err
-	}
-	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketSPID)
-	if err != nil {
-		log.Errorw("failed to query sp", "error", err)
+		log.Errorw("failed to query sp", "error", err, "EventMigrationBucket", event)
 		return nil, err
 	}
 	destSP, err := s.manager.virtualGroupManager.QuerySPByID(event.DstPrimarySpId)
 	if err != nil {
-		log.Errorw("failed to query sp", "error", err)
+		log.Errorw("failed to query sp", "error", err, "EventMigrationBucket", event)
 		return nil, err
 	}
 
