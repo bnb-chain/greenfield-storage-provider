@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"cosmossdk.io/math"
@@ -248,6 +249,8 @@ type BucketMigrateScheduler struct {
 	selfSP                    *sptypes.StorageProvider
 	lastSubscribedBlockHeight uint64                               // load from db
 	executePlanIDMap          map[uint64]*BucketMigrateExecutePlan // bucketID -> BucketMigrateExecutePlan
+	// src sp swap unit plan.
+	mutex sync.RWMutex
 }
 
 // NewBucketMigrateScheduler returns a bucket migrate scheduler instance.
@@ -287,9 +290,26 @@ func (s *BucketMigrateScheduler) Start() error {
 	return nil
 }
 
+func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expectedStatus storagetypes.BucketStatus) error {
+	// check the chain's bucket is migrating
+	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfo(context.Background(), bucketName)
+	if err != nil {
+		return err
+	}
+	if bucketInfo.BucketStatus != expectedStatus {
+		log.Debugw("the bucket status is not same, the event will skip", "bucketInfo", bucketInfo, "expectedStatus", expectedStatus)
+		return errors.New("the bucket status is not same")
+	}
+	return nil
+}
+
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
+		err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_MIGRATING)
+		if err != nil {
+			return err
+		}
 		executePlan, err := s.getExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		if err != nil {
 			log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "CancelEvents", migrateBucketEvents.CancelEvents)
@@ -300,6 +320,10 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
+		err := s.checkBucketFromChain(migrateBucketEvents.CompleteEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
+		if err != nil {
+			return err
+		}
 		executePlan, err := s.getExecutePlanByBucketID(migrateBucketEvents.CompleteEvents.BucketId.Uint64())
 		// 1) Received the CompleteEvents event for the first time.
 		// 2) Subsequently received the CompleteEvents event.
@@ -319,6 +343,10 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 3. process Events
 	if migrateBucketEvents.Events != nil {
+		err := s.checkBucketFromChain(migrateBucketEvents.Events.BucketName, storagetypes.BUCKET_STATUS_MIGRATING)
+		if err != nil {
+			return err
+		}
 		if s.executePlanIDMap[migrateBucketEvents.Events.BucketId.Uint64()] != nil {
 			log.Debugw("bucket migrate scheduler the bucket is already in migrating", "Events", migrateBucketEvents.Events)
 			return errors.New("bucket already in migrating")
@@ -560,6 +588,8 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 }
 
 func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*BucketMigrateExecutePlan, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	executePlan, ok := s.executePlanIDMap[bucketID]
 	if ok {
 		return executePlan, nil
@@ -569,13 +599,15 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 }
 
 func (s *BucketMigrateScheduler) deleteExecutePlanByBucketID(bucketID uint64) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	_, ok := s.executePlanIDMap[bucketID]
 	if ok {
 		delete(s.executePlanIDMap, bucketID)
-		return nil
 	} else {
-		return errors.New("no such execute plan")
+		log.Debugw("deleteExecutePlanByBucketID may error, delete an unexisted bucket", "bucketID", bucketID)
 	}
+	return nil
 }
 
 func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
@@ -653,6 +685,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 		// if has CompleteEvents & CancelEvents, skip it
 		if migrateBucketEvents.CompleteEvents != nil || migrateBucketEvents.CancelEvents != nil {
 			bucketIDs[migrateBucketEvents.Events.BucketId.Uint64()] = false
+			continue
 		}
 		if migrateBucketEvents.Events != nil {
 			bucketIDs[migrateBucketEvents.Events.BucketId.Uint64()] = true
@@ -660,8 +693,8 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	}
 	log.Debugw("loadBucketMigrateExecutePlansFromDB", "bucketIDs", bucketIDs)
 	// load from db by BucketID & construct plan
-	for bucketID, exist := range bucketIDs {
-		if !exist {
+	for bucketID, migrating := range bucketIDs {
+		if !migrating {
 			continue
 		}
 		migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID)
@@ -693,7 +726,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 			}
 		}
 
-		log.Debugw("bucket migrate scheduler load from db", "executePlan", executePlan)
+		log.Debugw("bucket migrate scheduler load from db", "executePlan", executePlan, "bucketID", bucketID)
 		s.executePlanIDMap[executePlan.bucketID] = executePlan
 	}
 	log.Debugw("Bucket Migrate Scheduler load from db success", "bucketIDs", bucketIDs)
