@@ -4,6 +4,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
@@ -348,6 +349,8 @@ func DefaultGfBsDB(config *config.SQLDBConfig) {
 	}
 }
 
+var pieceOnce = sync.Once{}
+
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Customize.PieceStore != nil {
 		app.pieceStore = cfg.Customize.PieceStore
@@ -374,10 +377,10 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 		if cfg.PieceStore.Store.IAMType == "" {
 			cfg.PieceStore.Store.IAMType = "SA"
 		}
-		once.Do(func() {
+		pieceOnce.Do(func() {
 			pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
 			if err != nil {
-				log.Errorw("failed to new piece store", "error", err)
+				log.Panicw("failed to new piece store", "error", err)
 				return
 			}
 			app.pieceStore = pieceStore
