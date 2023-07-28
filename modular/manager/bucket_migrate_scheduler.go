@@ -288,22 +288,23 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
-	// when receive chain CompleteMigrationBucket event
+	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
 		executePlan, err := s.getExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		if err != nil {
 			log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "CancelEvents", migrateBucketEvents.CancelEvents)
 			return err
 		}
-		// when receive CompleteMigrationBucket/ event, we should delete memory & db's status
 		s.deleteExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		executePlan.stopSPSchedule()
 	}
+	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
 		executePlan, err := s.getExecutePlanByBucketID(migrateBucketEvents.CompleteEvents.BucketId.Uint64())
-		// check db should be migrated
+		// 1) Received the CompleteEvents event for the first time.
+		// 2) Subsequently received the CompleteEvents event.
 		if err != nil {
-			log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket")
+			log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket, the event may already finished", "CompleteEvents", migrateBucketEvents.CompleteEvents)
 			return err
 		}
 
@@ -312,11 +313,11 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 				log.Errorw("report task may error, unit should be migrated", "unit", unit)
 			}
 		}
-		// when receive CompleteMigrationBucket/ event, we should delete memory & db's status
 		s.deleteExecutePlanByBucketID(migrateBucketEvents.CompleteEvents.BucketId.Uint64())
 		executePlan.stopSPSchedule()
 		return err
 	}
+	// 3. process Events
 	if migrateBucketEvents.Events != nil {
 		if s.executePlanIDMap[migrateBucketEvents.Events.BucketId.Uint64()] != nil {
 			log.Debugw("bucket migrate scheduler the bucket is already in migrating", "Events", migrateBucketEvents.Events)
@@ -547,7 +548,8 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 			return nil, err
 		}
 		destFamilyID = destGVG.FamilyID
-		destGlobalVirtualGroup := &virtualgrouptypes.GlobalVirtualGroup{Id: destGVG.ID, FamilyId: destGVG.FamilyID, PrimarySpId: destGVG.PrimarySPID, SecondarySpIds: destGVG.SecondarySPIDs, StoredSize: destGVG.StakingStorageSize}
+		destGlobalVirtualGroup := &virtualgrouptypes.GlobalVirtualGroup{Id: destGVG.ID, FamilyId: destGVG.FamilyID, PrimarySpId: destGVG.PrimarySPID,
+			SecondarySpIds: destGVG.SecondarySPIDs, StoredSize: destGVG.StakingStorageSize}
 
 		bucketUnit := newBucketMigrateGVGExecuteUnit(plan.bucketID, srcGVG, srcSP, destSP, WaitForMigrate, destGVG.ID, 0, destGlobalVirtualGroup)
 		plan.gvgUnitMap[srcGVG.GetId()] = bucketUnit
