@@ -23,7 +23,7 @@ type NewModularFunc = func(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremo
 // Module description uses for 'list' command that shows the SP supports modules info.
 // New module func is help module manager to init the module instance.
 type ModularManager struct {
-	modulus        []string
+	module         []string
 	descriptions   map[string]string
 	newModularFunc map[string]NewModularFunc
 	mux            sync.RWMutex
@@ -51,22 +51,22 @@ func RegisterModular(name string, description string, newFunc NewModularFunc) {
 	if _, ok := modMgr.newModularFunc[name]; ok {
 		log.Panicf("[%s] modular repeated", name)
 	}
-	modMgr.modulus = append(modMgr.modulus, name)
+	modMgr.module = append(modMgr.module, name)
 	if len(description) != 0 {
 		modMgr.descriptions[name] = description
 	}
 	modMgr.newModularFunc[name] = newFunc
 }
 
-// GetRegisterModulus returns the list registered modules.
-func GetRegisterModulus() []string {
+// GetRegisteredModules returns the registered modules.
+func GetRegisteredModules() []string {
 	modMgr.mux.RLock()
 	defer modMgr.mux.RUnlock()
-	return modMgr.modulus
+	return modMgr.module
 }
 
-// GetRegisterModulusDescription returns the list registered modules' description.
-func GetRegisterModulusDescription() string {
+// GetRegisterModuleDescription returns the list registered modules' description.
+func GetRegisterModuleDescription() string {
 	modMgr.mux.RLock()
 	defer modMgr.mux.RUnlock()
 	var descriptions string
@@ -83,7 +83,7 @@ func GetNewModularFunc(name string) NewModularFunc {
 	modMgr.mux.RLock()
 	defer modMgr.mux.RUnlock()
 	if _, ok := modMgr.newModularFunc[name]; !ok {
-		log.Panicf("not register [%s] modular info", name)
+		log.Panicf("not registered [%s] modular info", name)
 	}
 	return modMgr.newModularFunc[name]
 }
