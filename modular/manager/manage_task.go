@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"net/http"
 	"strings"
 	"time"
@@ -418,14 +419,19 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			return err
 		}
 		sspID := gvg.GetSecondarySpIds()[handleTask.GetNotAvailableSpIdx()]
-		excludedGVGs, err := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
+		sspJoinGVGs, err := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
 		if err != nil {
 			log.Errorw("failed to list GVGs by secondary sp", "spID", sspID, "error", err)
 			return err
 		}
-		m.virtualGroupManager.FreezeSPAndGVGs(sspID, excludedGVGs)
-		log.CtxDebugw(ctx, "add sp to freeze pool", "spID", sspID, "excludedGVGs", excludedGVGs)
-
+		shouldFreezeGVGs := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+		for _, g := range sspJoinGVGs {
+			if g.GetPrimarySpId() == m.spID {
+				shouldFreezeGVGs = append(shouldFreezeGVGs, g)
+			}
+		}
+		m.virtualGroupManager.FreezeSPAndGVGs(sspID, shouldFreezeGVGs)
+		log.CtxDebugw(ctx, "add sp to freeze pool", "spID", sspID, "excludedGVGs", shouldFreezeGVGs)
 		m.replicateQueue.PopByKey(handleTask.Key())
 
 		return m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask)
