@@ -596,8 +596,16 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 		return nil, errors.New("failed to list gvg")
 	}
 
-	bucketID := uint32(event.BucketId.Uint64())
-	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketID)
+	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), event.BucketId.Uint64())
+	if err != nil {
+		return nil, err
+	}
+	bucketSPID, err := util.GetBucketPrimarySPID(context.Background(), s.manager.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	srcSP, err := s.manager.virtualGroupManager.QuerySPByID(bucketSPID)
 	if err != nil {
 		log.Errorw("failed to query sp", "error", err, "EventMigrationBucket", event)
 		return nil, err
