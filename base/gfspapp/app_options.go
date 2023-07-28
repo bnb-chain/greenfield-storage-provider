@@ -15,6 +15,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
@@ -135,7 +137,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		cfg.Env = EnvMainnet
 	}
 	if len(cfg.Server) == 0 {
-		cfg.Server = GetRegisterModulus()
+		cfg.Server = GetRegisteredModules()
 	}
 	if cfg.AppID == "" {
 		servers := strings.Join(cfg.Server, `-`)
@@ -322,7 +324,6 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 
 // DefaultGfBsDB cast block syncer db connections, user and password if not loaded from env vars
 func DefaultGfBsDB(config *config.SQLDBConfig) {
-
 	if config.ConnMaxLifetime == 0 {
 		config.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
 	}
@@ -354,6 +355,13 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 		app.pieceStore = cfg.Customize.PieceStore
 		return nil
 	}
+	for _, v := range cfg.Server {
+		if v == coremodule.ApprovalModularName || v == coremodule.AuthenticationModularName || v == coremodule.SignModularName ||
+			v == coremodule.GateModularName || v == metadata.MetadataModularName || v == blocksyncer.BlockSyncerModularName {
+			log.Infof("[s] module doesn't need piece store", v)
+			return nil
+		}
+	}
 	if cfg.PieceStore.Store.Storage == "" {
 		cfg.PieceStore.Store.Storage = "file"
 	}
@@ -371,8 +379,8 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 	}
 	pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
 	if err != nil {
-		log.Warnw("if not use piece store, please ignore: failed to new piece store", "error", err)
-		return nil
+		log.Errorw("if not use piece store, please ignore: failed to new piece store", "error", err)
+		return err
 	}
 	app.pieceStore = pieceStore
 	return nil
@@ -454,7 +462,7 @@ func DefaultGfSpConsensusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) er
 	return nil
 }
 
-func DefaultGfSpModulusOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+func DefaultGfSpModuleOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	for _, modular := range cfg.Server {
 		newFunc := GetNewModularFunc(strings.ToLower(modular))
 		module, err := newFunc(app, cfg)
@@ -501,7 +509,7 @@ func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	return nil
 }
 
-func DefaultGfSpPprofOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+func DefaultGfSpPProfOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Monitor.DisablePProf {
 		app.pprof = &coremodule.NullModular{}
 	}
@@ -523,9 +531,9 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultGfSpResourceManagerOption,
 	DefaultGfSpConsensusOption,
 	DefaultGfSpTQueueOption,
-	DefaultGfSpModulusOption,
+	DefaultGfSpModuleOption,
 	DefaultGfSpMetricOption,
-	DefaultGfSpPprofOption,
+	DefaultGfSpPProfOption,
 }
 
 func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfSpBaseApp, error) {

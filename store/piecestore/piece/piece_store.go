@@ -18,7 +18,7 @@ func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	checkConfig(pieceConfig)
 	blob, err := createStorage(*pieceConfig)
 	if err != nil {
-		log.Errorw("failed to create storage", "error", err)
+		log.Panicw("failed to create storage", "error", err)
 		return nil, err
 	}
 	log.Debugw("piece store is running", "storage type", pieceConfig.Store.Storage,
@@ -32,6 +32,9 @@ func checkConfig(cfg *storage.PieceStoreConfig) {
 	overrideConfigFromEnv(cfg)
 	if cfg.Shards > 256 {
 		log.Panicf("too many shards: %d", cfg.Shards)
+	}
+	if cfg.Store.IAMType != storage.AKSKIAMType && cfg.Store.IAMType != storage.SAIAMType {
+		log.Panicf("invalid iam type: %s", cfg.Store.IAMType)
 	}
 	if cfg.Store.MaxRetries < 0 {
 		log.Panic("MaxRetries should be equal or greater than zero")
@@ -110,13 +113,13 @@ func setDefaultFileStorePath() string {
 	case "darwin":
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			log.Panicf("error: %v", err)
+			log.Panicw("failed to get current user's home directory", "error", err)
 		}
 		defaultBucket = path.Join(homeDir, ".piecestore", "local")
 	case "windows":
 		defaultBucket = path.Join("C:/piecestore/local")
 	default:
-		log.Error("Unknown operating system!")
+		log.Panic("Unknown operating system!")
 	}
 	return defaultBucket
 }
