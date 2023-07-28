@@ -306,7 +306,7 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketName string, expecte
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
-		err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_MIGRATING)
+		err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketName, storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
 		}
