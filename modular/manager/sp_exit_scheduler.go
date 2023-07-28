@@ -297,14 +297,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 	}
 
 	for _, gvg := range gvgList {
-		redundancyIndex := int32(-1)
-		if gvg.GetFamilyId() == 0 {
-			if redundancyIndex, err = util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId()); err != nil {
-				log.Errorw("failed to add swap out to task runner due to get redundancy index",
-					"gvg_info", gvg, "sp_id", srcSP.GetId(), "error", err)
-				return err
-			}
-		}
+		redundancyIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId())
 		gUnit := &SPExitGVGExecuteUnit{}
 		gUnit.srcGVG = gvg
 		gUnit.redundancyIndex = redundancyIndex
@@ -316,6 +309,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			log.Errorw("failed to add swap out to task runner", "gvg_unit", gUnit, "error", err)
 			return err
 		}
+		log.Infow("succeed to add gvg unit to task runner", "gvg_unit", gUnit)
 	}
 	return s.taskRunner.AddNewSwapOut(swapOut)
 }
