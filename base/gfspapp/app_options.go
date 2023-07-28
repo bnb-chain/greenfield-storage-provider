@@ -4,6 +4,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
@@ -15,14 +16,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	piecestoreclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
+	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
@@ -350,6 +349,8 @@ func DefaultGfBsDB(config *config.SQLDBConfig) {
 	}
 }
 
+var pieceOnce = sync.Once{}
+
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Customize.PieceStore != nil {
 		app.pieceStore = cfg.Customize.PieceStore
@@ -357,32 +358,34 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 	}
 	for _, v := range cfg.Server {
 		if v == coremodule.ApprovalModularName || v == coremodule.AuthenticationModularName || v == coremodule.SignModularName ||
-			v == coremodule.GateModularName || v == metadata.MetadataModularName || v == blocksyncer.BlockSyncerModularName {
-			log.Infof("[s] module doesn't need piece store", v)
-			return nil
+			v == coremodule.GateModularName || v == coremodule.MetadataModularName || v == coremodule.BlockSyncerModularName {
+			log.Infof("[%s] module doesn't need piece store", v)
+			continue
 		}
+		if cfg.PieceStore.Store.Storage == "" {
+			cfg.PieceStore.Store.Storage = "file"
+		}
+		if cfg.PieceStore.Store.BucketURL == "" {
+			cfg.PieceStore.Store.BucketURL = "./data"
+		}
+		if cfg.PieceStore.Store.MaxRetries == 0 {
+			cfg.PieceStore.Store.MaxRetries = 5
+		}
+		if cfg.PieceStore.Store.MinRetryDelay == 0 {
+			cfg.PieceStore.Store.MinRetryDelay = 1
+		}
+		if cfg.PieceStore.Store.IAMType == "" {
+			cfg.PieceStore.Store.IAMType = "SA"
+		}
+		pieceOnce.Do(func() {
+			pieceStore, err := psclient.NewStoreClient(&cfg.PieceStore)
+			if err != nil {
+				log.Panicw("failed to new piece store", "error", err)
+				return
+			}
+			app.pieceStore = pieceStore
+		})
 	}
-	if cfg.PieceStore.Store.Storage == "" {
-		cfg.PieceStore.Store.Storage = "file"
-	}
-	if cfg.PieceStore.Store.BucketURL == "" {
-		cfg.PieceStore.Store.BucketURL = "./data"
-	}
-	if cfg.PieceStore.Store.MaxRetries == 0 {
-		cfg.PieceStore.Store.MaxRetries = 5
-	}
-	if cfg.PieceStore.Store.MinRetryDelay == 0 {
-		cfg.PieceStore.Store.MinRetryDelay = 1
-	}
-	if cfg.PieceStore.Store.IAMType == "" {
-		cfg.PieceStore.Store.IAMType = "SA"
-	}
-	pieceStore, err := piecestoreclient.NewStoreClient(&cfg.PieceStore)
-	if err != nil {
-		log.Errorw("if not use piece store, please ignore: failed to new piece store", "error", err)
-		return err
-	}
-	app.pieceStore = pieceStore
 	return nil
 }
 

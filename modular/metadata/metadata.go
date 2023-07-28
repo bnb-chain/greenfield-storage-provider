@@ -2,23 +2,17 @@ package metadata
 
 import (
 	"context"
-	"strings"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-)
-
-var (
-	MetadataModularName        = strings.ToLower("Metadata")
-	MetadataModularDescription = "Retrieves sp metadata and info."
 )
 
 const (
 	DefaultMetadataStatisticsInterval = 60
 )
 
-var _ module.Modular = &MetadataModular{}
+var _ coremodule.Modular = &MetadataModular{}
 
 type MetadataModular struct {
 	baseApp *gfspapp.GfSpBaseApp
@@ -33,7 +27,7 @@ type MetadataModular struct {
 }
 
 func (r *MetadataModular) Name() string {
-	return MetadataModularName
+	return coremodule.MetadataModularName
 }
 
 func (r *MetadataModular) Start(ctx context.Context) error {
@@ -47,19 +41,14 @@ func (r *MetadataModular) Start(ctx context.Context) error {
 
 func (r *MetadataModular) Stop(ctx context.Context) error {
 	r.scope.Release()
-	//r.dbSwitchTicker.Stop()
+	// r.dbSwitchTicker.Stop()
 	return nil
 }
 
-func (r *MetadataModular) ReserveResource(
-	ctx context.Context,
-	state *rcmgr.ScopeStat) (
-	rcmgr.ResourceScopeSpan, error) {
+func (r *MetadataModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
 	return &rcmgr.NullScope{}, nil
 }
 
-func (r *MetadataModular) ReleaseResource(
-	ctx context.Context,
-	span rcmgr.ResourceScopeSpan) {
+func (r *MetadataModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
 	span.Done()
 }
