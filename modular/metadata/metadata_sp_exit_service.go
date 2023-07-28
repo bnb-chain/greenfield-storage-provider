@@ -213,11 +213,13 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
 			}
 		}
-		res = append(res, &types.ListMigrateBucketEvents{
-			Events:         spEvent,
-			CompleteEvents: spCompleteEvent,
-			CancelEvents:   spCancelEvent,
-		})
+		if spCompleteEvent == nil {
+			res = append(res, &types.ListMigrateBucketEvents{
+				Events:         spEvent,
+				CompleteEvents: spCompleteEvent,
+				CancelEvents:   spCancelEvent,
+			})
+		}
 	}
 
 	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
