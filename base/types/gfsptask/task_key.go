@@ -97,7 +97,7 @@ func GfSpSealObjectTaskKey(bucket, object, id string) task.TKey {
 func GfSpReceivePieceTaskKey(bucket, object, id string, rIdx uint32, pIdx int32) task.TKey {
 	return task.TKey(KeyPrefixGfSpReceivePieceTask +
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id,
-			"rIdx:"+fmt.Sprint(rIdx), "pIdx:"+fmt.Sprint(pIdx)))
+			"segmentIdx:"+fmt.Sprint(rIdx), "redundancyIdx:"+fmt.Sprint(pIdx)))
 }
 
 func GfSpGCObjectTaskKey(start, end uint64, time int64) task.TKey {
@@ -113,9 +113,9 @@ func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGfSpGCMetaTask + CombineKey("time"+fmt.Sprint(time)))
 }
 
-func GfSpMigrateGVGTaskKey(gvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {
+func GfSpMigrateGVGTaskKey(oldGvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {
 	return task.TKey(KeyPrefixGfSpMigrateGVGTask + CombineKey(
-		"gvgID"+fmt.Sprint(gvgID), "bucketID"+fmt.Sprint(bucketID), "redundancyIndex"+fmt.Sprint(redundancyIndex)))
+		"oldGvgID"+fmt.Sprint(oldGvgID), "bucketID"+fmt.Sprint(bucketID), "redundancyIndex"+fmt.Sprint(redundancyIndex)))
 }
 
 func GfSpMigratePieceTaskKey(object, id string, redundancyIdx uint32, ecIdx int32) task.TKey {

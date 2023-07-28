@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/forbole/juno/v4/common"
 	"github.com/spaolacci/murmur3"
@@ -23,6 +24,16 @@ func (b *BsDBImpl) ListObjects(bucketName, continuationToken, prefix string, max
 		limit       int
 		err         error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
 	strings.Split(prefix, "/")
@@ -80,6 +91,15 @@ func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode) ([]*ListObjectsRe
 		objectsMap   map[common.Hash]*Object
 		err          error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	//filter objects and query the info
 	for _, node := range nodes {

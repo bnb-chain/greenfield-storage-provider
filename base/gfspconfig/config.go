@@ -1,7 +1,6 @@
 package gfspconfig
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
@@ -10,6 +9,7 @@ import (
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
@@ -97,6 +97,8 @@ type ChainConfig struct {
 	DiscontinueBucketFeeAmount        uint64
 	CreateGlobalVirtualGroupGasLimit  uint64
 	CreateGlobalVirtualGroupFeeAmount uint64
+	CompleteMigrateBucketGasLimit     uint64
+	CompleteMigrateBucketFeeAmount    uint64
 }
 
 type SpAccountConfig struct {
@@ -104,9 +106,9 @@ type SpAccountConfig struct {
 	OperatorPrivateKey string
 	FundingPrivateKey  string
 	SealPrivateKey     string
-	SealBlsPrivateKey  string
 	ApprovalPrivateKey string
 	GcPrivateKey       string
+	BlsPrivateKey      string
 }
 
 type EndpointConfig struct {
@@ -243,5 +245,7 @@ type MetadataConfig struct {
 type ManagerConfig struct {
 	EnableLoadTask                         bool
 	SubscribeSPExitEventIntervalSec        int
+	SubscribeSwapOutExitEventIntervalSec   int
 	SubscribeBucketMigrateEventIntervalSec int
+	GVGPreferSPList                        []uint32
 }

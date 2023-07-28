@@ -3,7 +3,9 @@ package bsdb
 import (
 	"fmt"
 	"sort"
+	"time"
 
+	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
@@ -31,6 +33,15 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 		results []*ListObjectsResult
 		filters []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	// return NextContinuationToken by adding 1 additionally
 	limit = maxKeys + 1
@@ -92,6 +103,15 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 		objects      []*Object
 		err          error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includePrivate {
 		for i := 0; i < ObjectsNumberOfShards; i++ {
@@ -138,6 +158,15 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, include
 		object *Object
 		err    error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includePrivate {
 		err = b.db.Table(GetObjectsTableName(bucketName)).
@@ -164,6 +193,15 @@ func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool)
 		err     error
 		filters []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if !includeRemoved {
 		filters = append(filters, RemovedFilter(includeRemoved))
@@ -202,91 +240,69 @@ func GetObjectsTableNameByShardNumber(shard int) string {
 	return fmt.Sprintf("%s_%02d", ObjectTableName, shard)
 }
 
-// ListPrimaryObjects list objects by primary sp id
-func (b *BsDBImpl) ListPrimaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error) {
+// GetObjectByID get object info by object id
+func (b *BsDBImpl) GetObjectByID(objectID int64, includeRemoved bool) (*Object, error) {
 	var (
-		groups      []*GlobalVirtualGroup
-		localGroups []*LocalVirtualGroup
-		objects     []*Object
-		gvgIDs      []uint32
-		lvgIDs      []uint32
-		err         error
+		object       *Object
+		err          error
+		objectIDHash common.Hash
+		bucketName   string
+		filters      []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
-	groups, err = b.ListGvgByPrimarySpID(spID)
-	if err != nil || len(groups) == 0 {
+	objectIDHash = common.BigToHash(math.NewInt(objectID).BigInt())
+	if !includeRemoved {
+		filters = append(filters, RemovedFilter(includeRemoved))
+	}
+
+	bucketName, err = b.GetBucketNameByObjectID(objectIDHash)
+	if err != nil {
+		log.Errorw("failed to get bucket name by object id in GetObjectByID", "error", err)
 		return nil, err
 	}
 
-	gvgIDs = make([]uint32, len(groups))
-	for i, group := range groups {
-		gvgIDs[i] = group.GlobalVirtualGroupId
-	}
-
-	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
-	if err != nil || len(localGroups) == 0 {
-		return nil, err
-	}
-
-	lvgIDs = make([]uint32, len(localGroups))
-	for i, group := range localGroups {
-		lvgIDs[i] = group.LocalVirtualGroupId
-	}
-
-	//TODO check the removed logic here
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
-	return objects, err
-}
-
-// ListSecondaryObjects list objects by secondary sp id
-func (b *BsDBImpl) ListSecondaryObjects(spID uint32, bucketID common.Hash, startAfter common.Hash, limit int) ([]*Object, error) {
-	var (
-		groups      []*GlobalVirtualGroup
-		localGroups []*LocalVirtualGroup
-		objects     []*Object
-		gvgIDs      []uint32
-		lvgIDs      []uint32
-		err         error
-	)
-
-	groups, err = b.ListGvgBySecondarySpID(spID)
-	if err != nil || len(groups) == 0 {
-		return nil, err
-	}
-
-	gvgIDs = make([]uint32, len(groups))
-	for i, group := range groups {
-		gvgIDs[i] = group.GlobalVirtualGroupId
-	}
-
-	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
-	if err != nil || len(localGroups) == 0 {
-		return nil, err
-	}
-
-	lvgIDs = make([]uint32, len(localGroups))
-	for i, group := range localGroups {
-		lvgIDs[i] = group.LocalVirtualGroupId
-	}
-
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
-	return objects, err
+	err = b.db.Table(GetObjectsTableName(bucketName)).
+		Select("*").
+		Where("object_id  = ?", objectIDHash).
+		Scopes(filters...).
+		Take(&object).Error
+	return object, err
 }
 
 // ListObjectsInGVGAndBucket list objects by gvg and bucket id
-func (b *BsDBImpl) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+func (b *BsDBImpl) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, *Bucket, error) {
 	var (
 		localGroups []*LocalVirtualGroup
 		objects     []*Object
 		gvgIDs      []uint32
 		lvgIDs      []uint32
+		bucket      *Bucket
 		err         error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
 	if err != nil || len(localGroups) == 0 {
-		return nil, err
+		return nil, nil, err
 	}
 
 	lvgIDs = make([]uint32, len(localGroups))
@@ -294,49 +310,149 @@ func (b *BsDBImpl) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32,
 		lvgIDs[i] = group.LocalVirtualGroupId
 	}
 
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
-	return objects, err
+	objects, bucket, err = b.ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit)
+	return objects, bucket, err
+}
+
+// ListObjectsByGVGAndBucketForGC list objects by gvg and bucket for gc
+func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID uint32, startAfter common.Hash, limit int) ([]*Object, *Bucket, error) {
+	var (
+		localGroups   []*LocalVirtualGroup
+		objects       []*Object
+		gvgIDs        []uint32
+		lvgIDs        []uint32
+		completeEvent *EventCompleteMigrationBucket
+		bucket        *Bucket
+		filters       []func(*gorm.DB) *gorm.DB
+		err           error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	gvgIDs = append(gvgIDs, gvgID)
+
+	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
+	if err != nil || len(localGroups) == 0 {
+		return nil, nil, err
+	}
+
+	lvgIDs = make([]uint32, len(localGroups))
+	for i, group := range localGroups {
+		lvgIDs[i] = group.LocalVirtualGroupId
+	}
+
+	completeEvent, err = b.GetMigrateBucketEventByBucketID(bucketID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if completeEvent != nil {
+		filters = append(filters, CreateAtFilter(completeEvent.CreateAt))
+	}
+
+	objects, bucket, err = b.ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit, filters...)
+	return objects, bucket, err
 }
 
 // ListObjectsByLVGID list objects by lvg id
-func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+func (b *BsDBImpl) ListObjectsByLVGID(lvgIDs []uint32, bucketID common.Hash, startAfter common.Hash, limit int, filters ...func(*gorm.DB) *gorm.DB) ([]*Object, *Bucket, error) {
 	var (
+		bucket  *Bucket
 		objects []*Object
-		filters []func(*gorm.DB) *gorm.DB
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	bucket, err = b.GetBucketByID(bucketID.Big().Int64(), true)
+	if err != nil {
+		log.Errorw("failed to get bucket name by bucket id in ListObjectsByLVGID", "error", err)
+		return nil, nil, err
+	}
 
 	filters = append(filters, ObjectIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
-	err = b.db.Table((&Object{}).TableName()).
+	err = b.db.Table(GetObjectsTableName(bucket.BucketName)).
 		Select("*").
-		Where("local_virtual_group_id in (?)", lvgIDs).
+		Where("local_virtual_group_id in (?) and bucket_id = ? and status = 'OBJECT_STATUS_SEALED'", lvgIDs, bucketID).
 		Scopes(filters...).
 		Order("object_id").
 		Find(&objects).Error
-	return objects, err
+
+	return objects, bucket, err
 }
 
 // ListObjectsInGVG list objects by gvg and bucket id
-func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, error) {
+func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit int) ([]*Object, []*Bucket, error) {
 	var (
-		localGroups []*LocalVirtualGroup
-		objects     []*Object
-		gvgIDs      []uint32
-		lvgIDs      []uint32
-		err         error
+		localGroups  []*LocalVirtualGroup
+		objects      []*Object
+		buckets      []*Bucket
+		bucketIDs    []common.Hash
+		bucketIDsMap map[common.Hash]bool
+		tableNameMap map[common.Hash]string
+		gvgIDs       []uint32
+		query        string
+		err          error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgID(gvgIDs)
-	if err != nil || localGroups == nil {
-		return nil, err
+	if err != nil || len(localGroups) == 0 {
+		return nil, nil, err
 	}
 
-	lvgIDs = make([]uint32, len(localGroups))
-	for i, group := range localGroups {
-		lvgIDs[i] = group.LocalVirtualGroupId
+	bucketIDsMap = make(map[common.Hash]bool)
+	bucketIDs = make([]common.Hash, 0)
+	for _, group := range localGroups {
+		if _, ok := bucketIDsMap[group.BucketID]; !ok {
+			bucketIDs = append(bucketIDs, group.BucketID)
+			bucketIDsMap[group.BucketID] = true
+		}
 	}
 
-	objects, err = b.ListObjectsByLVGID(lvgIDs, startAfter, limit)
-	return objects, err
+	buckets, err = b.ListBucketsByBucketID(bucketIDs, false)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tableNameMap = make(map[common.Hash]string)
+	for _, bucket := range buckets {
+		tableNameMap[bucket.BucketID] = GetObjectsTableName(bucket.BucketName)
+	}
+
+	query = fmt.Sprintf("select * from ((select * from %s where local_virtual_group_id = %d and bucket_id = %s)", tableNameMap[localGroups[0].BucketID], localGroups[0].LocalVirtualGroupId, localGroups[0].BucketID.String())
+	if len(localGroups) > 1 {
+		for _, group := range localGroups[1:] {
+			subQuery := fmt.Sprintf(" UNION ALL (select * from %s where local_virtual_group_id = %d and bucket_id = %s)", tableNameMap[group.BucketID], group.LocalVirtualGroupId, group.BucketID.String())
+			query = query + subQuery
+		}
+	}
+
+	query = query + fmt.Sprintf(") as combined where status = 'OBJECT_STATUS_SEALED' and object_id > %s and  removed = false order by object_id limit %d;", startAfter.String(), limit)
+	err = b.db.Table((&Object{}).TableName()).Raw(query).Find(&objects).Error
+
+	return objects, buckets, err
 }

@@ -3,8 +3,10 @@ package gfspclient
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield/types/resource"
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"google.golang.org/grpc"
@@ -286,18 +288,18 @@ func (s *GfSpClient) GetBucketMeta(ctx context.Context, bucketName string, inclu
 	return resp.GetBucket(), resp.GetStreamRecord(), nil
 }
 
-// GetEndpointBySpAddress get endpoint by sp address
-func (s *GfSpClient) GetEndpointBySpAddress(ctx context.Context, spAddress string, opts ...grpc.DialOption) (string, error) {
+// GetEndpointBySpId get endpoint by sp id
+func (s *GfSpClient) GetEndpointBySpId(ctx context.Context, spId uint32, opts ...grpc.DialOption) (string, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
 		return "", ErrRpcUnknown
 	}
 	defer conn.Close()
-	req := &types.GfSpGetEndpointBySpAddressRequest{
-		SpAddress: spAddress,
+	req := &types.GfSpGetEndpointBySpIdRequest{
+		SpId: spId,
 	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetEndpointBySpAddress(ctx, req)
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetEndpointBySpId(ctx, req)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to send get sp by address rpc", "error", err)
@@ -306,7 +308,7 @@ func (s *GfSpClient) GetEndpointBySpAddress(ctx context.Context, spAddress strin
 	return resp.GetEndpoint(), nil
 }
 
-func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (
+func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, opts ...grpc.DialOption) (
 	uint64, uint64, uint64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
@@ -316,7 +318,6 @@ func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_typ
 	defer conn.Close()
 	req := &types.GfSpGetBucketReadQuotaRequest{
 		BucketInfo: bucket,
-		YearMonth:  yearMonth,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketReadQuota(ctx, req)
 	if err != nil {
@@ -497,89 +498,7 @@ func (s *GfSpClient) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uin
 	return resp.GlobalVirtualGroup, nil
 }
 
-func (s *GfSpClient) ListBucketsBindingOnPrimarySP(ctx context.Context, spID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Bucket, error) {
-	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
-	}
-	defer conn.Close()
-	req := &types.GfSpListBucketsBindingOnPrimarySPRequest{
-		SpId:       spID,
-		StartAfter: startAfter,
-		Limit:      limit,
-	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListBucketsBindingOnPrimarySP(ctx, req)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to list buckets by primary sp id", "error", err)
-		return nil, ErrRpcUnknown
-	}
-	return resp.Buckets, nil
-}
-
-func (s *GfSpClient) ListBucketsBindingOnSecondarySP(ctx context.Context, spID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Bucket, error) {
-	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
-	}
-	defer conn.Close()
-	req := &types.GfSpListBucketsBindingOnSecondarySPRequest{
-		SpId:       spID,
-		StartAfter: startAfter,
-		Limit:      limit,
-	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListBucketsBindingOnSecondarySP(ctx, req)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to list buckets by secondary sp id", "error", err)
-		return nil, ErrRpcUnknown
-	}
-	return resp.Buckets, nil
-}
-
-func (s *GfSpClient) ListPrimaryObjects(ctx context.Context, spID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
-	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
-	}
-	defer conn.Close()
-	req := &types.GfSpListPrimaryObjectsRequest{
-		SpId:       spID,
-		BucketId:   bucketID,
-		StartAfter: startAfter,
-		Limit:      limit,
-	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListPrimaryObjects(ctx, req)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to list objects by primary sp id", "error", err)
-		return nil, ErrRpcUnknown
-	}
-	return resp.Objects, nil
-}
-
-func (s *GfSpClient) ListSecondaryObjects(ctx context.Context, spID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
-	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if connErr != nil {
-		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRpcUnknown
-	}
-	defer conn.Close()
-	req := &types.GfSpListSecondaryObjectsRequest{
-		SpId:       spID,
-		BucketId:   bucketID,
-		StartAfter: startAfter,
-		Limit:      limit,
-	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListSecondaryObjects(ctx, req)
-	if err != nil {
-		log.CtxErrorw(ctx, "client failed to list objects by secondary sp id", "error", err)
-		return nil, ErrRpcUnknown
-	}
-	return resp.Objects, nil
-}
-
-func (s *GfSpClient) ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
+func (s *GfSpClient) ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -600,7 +519,7 @@ func (s *GfSpClient) ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32
 	return resp.Objects, nil
 }
 
-func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.Object, error) {
+func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -615,6 +534,27 @@ func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAf
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsInGVG(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to list objects by gvg id", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.Objects, nil
+}
+
+func (s *GfSpClient) ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectsByGVGAndBucketForGCRequest{
+		GvgId:      gvgID,
+		BucketId:   bucketID,
+		StartAfter: startAfter,
+		Limit:      limit,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsByGVGAndBucketForGC(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list objects by gvg and bucket for gc", "error", err)
 		return nil, ErrRpcUnknown
 	}
 	return resp.Objects, nil
@@ -774,4 +714,47 @@ func (s *GfSpClient) GetObjectByID(ctx context.Context, objectID uint64, opts ..
 		return nil, ErrNoSuchObject
 	}
 	return resp.GetObjects()[objectID].GetObjectInfo(), nil
+}
+
+// VerifyPermissionByID Verify the input account’s permission to input source type and resource id
+func (s *GfSpClient) VerifyPermissionByID(ctx context.Context, Operator string, resourceType resource.ResourceType, resourceID uint64,
+	actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error) {
+	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	req := &types.GfSpVerifyPermissionByIDRequest{
+		Operator:     Operator,
+		ResourceType: resourceType,
+		ResourceId:   resourceID,
+		ActionType:   actionType,
+	}
+
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpVerifyPermissionByID(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send verify permission by id rpc", "error", err)
+		return nil, err
+	}
+	return &resp.Effect, nil
+}
+
+func (s *GfSpClient) GetSPInfo(ctx context.Context, operatorAddress string, opts ...grpc.DialOption) (*sptypes.StorageProvider, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRpcUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetSPInfoRequest{
+		OperatorAddress: operatorAddress,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetSPInfo(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get sp info by operator address", "error", err)
+		return nil, ErrRpcUnknown
+	}
+	return resp.GetStorageProvider(), nil
 }

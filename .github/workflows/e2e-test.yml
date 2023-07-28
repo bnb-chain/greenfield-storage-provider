@@ -1,23 +1,15 @@
-name: E2E Test
+name: SP E2E Test
 
 on:
   push:
     branches:
       - master
       - develop
-      - ci-*
-      - release*
       - fix-release*
-      - feat-*
 
   pull_request:
     branches:
-      - master
-      - develop
-      - ci-*
-      - release*
-      - fix-release*
-      - feat-*
+
 
 jobs:
   e2e-test:
@@ -67,7 +59,7 @@ jobs:
       - name: Build Greenfield Cmd
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --buildCmd
-#     # Use Greenfield Cmd Running E2E Test
-      - name: Run Greenfield E2E Test
+#     # Use Greenfield Cmd Running SP E2E Test
+      - name: Run Greenfield SP E2E Test
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --runTest

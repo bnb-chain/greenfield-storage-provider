@@ -1,0 +1,3 @@
+resources:
+- infra.yaml
+- ingress.yaml

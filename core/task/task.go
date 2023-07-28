@@ -294,17 +294,17 @@ type ReceivePieceTask interface {
 	ObjectTask
 	// InitReceivePieceTask init the ReceivePieceTask.
 	InitReceivePieceTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
-		replicateIdx uint32, pieceIdx int32, pieceSize int64)
-	// GetReplicateIdx returns the replicate index. The replicate index identifies the
-	// serial number of the secondary SP for object piece copy.
-	GetReplicateIdx() uint32
-	// SetReplicateIdx sets the replicate index.
-	SetReplicateIdx(uint32)
-	// GetPieceIdx returns the piece index. The piece index identifies the serial number
+		segmentIdx uint32, redundancyIdx int32, pieceSize int64)
+	// GetSegmentIdx returns the piece index. The piece index identifies the serial number
 	// of segment of object payload data for object piece copy.
-	GetPieceIdx() int32
-	// SetPieceIdx sets the piece index.
-	SetPieceIdx(int32)
+	GetSegmentIdx() uint32
+	// SetSegmentIdx sets the segment index.
+	SetSegmentIdx(uint32)
+	// GetRedundancyIdx returns the redundancy index. The redundancy index identifies the
+	// serial number of the secondary SP for object piece copy.
+	GetRedundancyIdx() int32
+	// SetRedundancyIdx sets the redundancy index.
+	SetRedundancyIdx(int32)
 	// GetPieceSize returns the received piece data size, it is used to resource estimate.
 	GetPieceSize() int64
 	// SetPieceSize sets the received piece data size.
@@ -328,8 +328,18 @@ type ReceivePieceTask interface {
 	GetSealed() bool
 	// SetSealed sets the object of receiving piece data whether is successfully sealed.
 	SetSealed(bool)
+	// GetFinished returns whether replicate piece is done
+	GetFinished() bool
+	// SetFinished sets finished field
+	SetFinished(bool)
 	// GetGlobalVirtualGroupId returns the object's global virtual group id.
 	GetGlobalVirtualGroupId() uint32
+	// SetGlobalVirtualGroupId sets the object's global virtual group id.
+	SetGlobalVirtualGroupID(uint32)
+	// GetBucketMigration returns whether receiver does bucket migration
+	GetBucketMigration() bool
+	// SetBucketMigration sets the bucket migration
+	SetBucketMigration(bool)
 }
 
 // SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.
@@ -526,20 +536,20 @@ type RecoveryPieceTask interface {
 type MigrateGVGTask interface {
 	Task
 	// InitMigrateGVGTask inits migrate gvg task by bucket id, gvg.
-	InitMigrateGVGTask(priority TPriority, bucketID uint64, gvg *virtualgrouptypes.GlobalVirtualGroup,
-		redundancyIndex int32, srcSP *sptypes.StorageProvider, destSP *sptypes.StorageProvider)
-	// GetGvg returns the global virtual group
-	GetGvg() *virtualgrouptypes.GlobalVirtualGroup
-	// SetGvg sets the global virtual group
-	SetGvg(*virtualgrouptypes.GlobalVirtualGroup)
+	InitMigrateGVGTask(priority TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup,
+		redundancyIndex int32, srcSP *sptypes.StorageProvider, timeout int64, retry int64)
+	// GetSrcGvg returns the src global virtual group
+	GetSrcGvg() *virtualgrouptypes.GlobalVirtualGroup
+	// SetSrcGvg sets the src global virtual group
+	SetSrcGvg(*virtualgrouptypes.GlobalVirtualGroup)
+	// GetDestGvg returns the dest global virtual group
+	GetDestGvg() *virtualgrouptypes.GlobalVirtualGroup
+	// SetDestGvg sets the dest global virtual group
+	SetDestGvg(*virtualgrouptypes.GlobalVirtualGroup)
 	// GetSrcSp returns the src storage provider
 	GetSrcSp() *sptypes.StorageProvider
 	// SetSrcSp sets the src storage provider
 	SetSrcSp(*sptypes.StorageProvider)
-	// GetDestSp returns the dest storage provider
-	GetDestSp() *sptypes.StorageProvider
-	// SetDestSp sets the dest storage provider
-	SetDestSp(*sptypes.StorageProvider)
 	// GetBucketID returns the bucketID
 	GetBucketID() uint64
 	// SetBucketID sets the bucketID

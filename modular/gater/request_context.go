@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -16,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -128,12 +128,6 @@ func (r *RequestContext) String() string {
 		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
-// SkipVerifyAuthentication is temporary to Compatible SignatureV2
-func (r *RequestContext) SkipVerifyAuthentication() bool {
-	v2SignaturePrefix := signaturePrefix(SignTypeV2, SignAlgorithm)
-	return strings.HasPrefix(r.request.Header.Get(GnfdAuthorizationHeader), v2SignaturePrefix)
-}
-
 // signaturePrefix return supported Authentication prefix
 func signaturePrefix(version, algorithm string) string {
 	return version + " " + algorithm + ","
@@ -148,10 +142,6 @@ func (r *RequestContext) VerifySignature() (string, error) {
 			return "", err
 		}
 		return accAddress.String(), nil
-	}
-	v2SignaturePrefix := signaturePrefix(SignTypeV2, SignAlgorithm)
-	if strings.HasPrefix(requestSignature, v2SignaturePrefix) {
-		return "signV2", nil
 	}
 
 	OffChainSignaturePrefix := signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)

@@ -1,6 +1,8 @@
 package bsdb
 
 import (
+	"time"
+
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 )
@@ -12,10 +14,19 @@ func (b *BsDBImpl) ListSpExitEvents(blockID uint64, operatorAddress common.Addre
 		completeEvent *EventCompleteStorageProviderExit
 		err           error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	err = b.db.Table((&EventStorageProviderExit{}).TableName()).
 		Select("*").
-		Where("operator_address = ? and create_at = ?", operatorAddress, blockID).
+		Where("operator_address = ? and create_at <= ?", operatorAddress, blockID).
 		Take(&event).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -26,7 +37,7 @@ func (b *BsDBImpl) ListSpExitEvents(blockID uint64, operatorAddress common.Addre
 
 	err = b.db.Table((&EventCompleteStorageProviderExit{}).TableName()).
 		Select("*").
-		Where("operator_address = ? and create_at = ?", operatorAddress, blockID).
+		Where("operator_address = ? and create_at <= ?", operatorAddress, blockID).
 		Take(&completeEvent).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

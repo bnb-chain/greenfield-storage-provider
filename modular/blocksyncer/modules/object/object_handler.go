@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +11,8 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
 	"github.com/forbole/juno/v4/models"
+
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -25,7 +26,7 @@ var (
 	EventUpdateObjectInfo   = proto.MessageName(&storagetypes.EventUpdateObjectInfo{})
 )
 
-var objectEvents = map[string]bool{
+var ObjectEvents = map[string]bool{
 	EventCreateObject:       true,
 	EventCancelCreateObject: true,
 	EventSealObject:         true,
@@ -37,14 +38,23 @@ var objectEvents = map[string]bool{
 }
 
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
-	if !objectEvents[event.Type] {
-		return nil
+	_, err := m.Handle(ctx, block, txHash, event, true)
+	return err
+}
+
+func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
+	return m.Handle(ctx, block, txHash, event, false)
+}
+
+func (m *Module) Handle(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event, OperationDB bool) (interface{}, error) {
+	if !ObjectEvents[event.Type] {
+		return nil, nil
 	}
 
 	typedEvent, err := sdk.ParseTypedEvent(abci.Event(event))
 	if err != nil {
 		log.Errorw("parse typed events error", "module", m.Name(), "event", event, "err", err)
-		return err
+		return nil, err
 	}
 
 	switch event.Type {
@@ -52,65 +62,100 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 		createObject, ok := typedEvent.(*storagetypes.EventCreateObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventCreateObject", "event", typedEvent)
-			return errors.New("create object event assert error")
+			return nil, errors.New("create object event assert error")
 		}
-		return m.handleCreateObject(ctx, block, txHash, createObject)
+		data := m.handleCreateObject(ctx, block, txHash, createObject)
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.SaveObject(ctx, data)
 	case EventCancelCreateObject:
 		cancelCreateObject, ok := typedEvent.(*storagetypes.EventCancelCreateObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventCancelCreateObject", "event", typedEvent)
-			return errors.New("cancel create object event assert error")
+			return nil, errors.New("cancel create object event assert error")
 		}
-		return m.handleCancelCreateObject(ctx, block, txHash, cancelCreateObject)
+		data := m.handleCancelCreateObject(ctx, block, txHash, cancelCreateObject)
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.UpdateObject(ctx, data)
 	case EventSealObject:
 		sealObject, ok := typedEvent.(*storagetypes.EventSealObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventSealObject", "event", typedEvent)
-			return errors.New("seal object event assert error")
+			return nil, errors.New("seal object event assert error")
 		}
-		return m.handleSealObject(ctx, block, txHash, sealObject)
+		data := m.handleSealObject(ctx, block, txHash, sealObject)
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.UpdateObject(ctx, data)
 	case EventCopyObject:
 		copyObject, ok := typedEvent.(*storagetypes.EventCopyObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventCopyObject", "event", typedEvent)
-			return errors.New("copy object event assert error")
+			return nil, errors.New("copy object event assert error")
 		}
-		return m.handleCopyObject(ctx, block, txHash, copyObject)
+		data, copyErr := m.handleCopyObject(ctx, block, txHash, copyObject)
+		if copyErr != nil {
+			return nil, copyErr
+		}
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.UpdateObject(ctx, data)
 	case EventDeleteObject:
 		deleteObject, ok := typedEvent.(*storagetypes.EventDeleteObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventDeleteObject", "event", typedEvent)
-			return errors.New("delete object event assert error")
+			return nil, errors.New("delete object event assert error")
 		}
-		return m.handleDeleteObject(ctx, block, txHash, deleteObject)
+		data := m.handleDeleteObject(ctx, block, txHash, deleteObject)
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.UpdateObject(ctx, data)
 	case EventRejectSealObject:
 		rejectSealObject, ok := typedEvent.(*storagetypes.EventRejectSealObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventRejectSealObject", "event", typedEvent)
-			return errors.New("reject seal object event assert error")
+			return nil, errors.New("reject seal object event assert error")
 		}
-		return m.handleRejectSealObject(ctx, block, txHash, rejectSealObject)
+		data := m.handleRejectSealObject(ctx, block, txHash, rejectSealObject)
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.UpdateObject(ctx, data)
 	case EventDiscontinueObject:
 		discontinueObject, ok := typedEvent.(*storagetypes.EventDiscontinueObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventDiscontinueObject", "event", typedEvent)
-			return errors.New("discontinue object event assert error")
+			return nil, errors.New("discontinue object event assert error")
 		}
-		return m.handleEventDiscontinueObject(ctx, block, txHash, discontinueObject)
+		data := m.handleEventDiscontinueObject(ctx, block, txHash, discontinueObject)
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.UpdateObject(ctx, data)
 	case EventUpdateObjectInfo:
 		updateObjectInfo, ok := typedEvent.(*storagetypes.EventUpdateObjectInfo)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventUpdateObjectInfo", "event", typedEvent)
-			return errors.New("update object event assert error")
+			return nil, errors.New("update object event assert error")
 		}
-		return m.handleUpdateObjectInfo(ctx, block, txHash, updateObjectInfo)
+		data := m.handleUpdateObjectInfo(ctx, block, txHash, updateObjectInfo)
+		if !OperationDB {
+			return data, nil
+		}
+		return nil, m.db.UpdateObject(ctx, data)
 	}
 
-	return nil
+	return nil, nil
 }
 
-func (m *Module) handleCreateObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, createObject *storagetypes.EventCreateObject) error {
-	object := &models.Object{
+func (m *Module) handleCreateObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, createObject *storagetypes.EventCreateObject) *models.Object {
+	return &models.Object{
 		BucketID:       common.BigToHash(createObject.BucketId.BigInt()),
 		BucketName:     createObject.BucketName,
 		ObjectID:       common.BigToHash(createObject.ObjectId.BigInt()),
@@ -133,30 +178,27 @@ func (m *Module) handleCreateObject(ctx context.Context, block *tmctypes.ResultB
 		UpdateTime:   createObject.CreateAt,
 		Removed:      false,
 	}
-
-	return m.db.SaveObject(ctx, object)
 }
 
-func (m *Module) handleSealObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, sealObject *storagetypes.EventSealObject) error {
-	object := &models.Object{
-		BucketName:   sealObject.BucketName,
-		ObjectName:   sealObject.ObjectName,
-		ObjectID:     common.BigToHash(sealObject.ObjectId.BigInt()),
-		Operator:     common.HexToAddress(sealObject.Operator),
-		Status:       sealObject.Status.String(),
-		SealedTxHash: txHash,
+func (m *Module) handleSealObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, sealObject *storagetypes.EventSealObject) *models.Object {
+	return &models.Object{
+		BucketName:          sealObject.BucketName,
+		ObjectName:          sealObject.ObjectName,
+		ObjectID:            common.BigToHash(sealObject.ObjectId.BigInt()),
+		Operator:            common.HexToAddress(sealObject.Operator),
+		LocalVirtualGroupId: sealObject.LocalVirtualGroupId,
+		Status:              sealObject.Status.String(),
+		SealedTxHash:        txHash,
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 		Removed:      false,
 	}
-
-	return m.db.UpdateObject(ctx, object)
 }
 
-func (m *Module) handleCancelCreateObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelCreateObject *storagetypes.EventCancelCreateObject) error {
-	object := &models.Object{
+func (m *Module) handleCancelCreateObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelCreateObject *storagetypes.EventCancelCreateObject) *models.Object {
+	return &models.Object{
 		BucketName:   cancelCreateObject.BucketName,
 		ObjectName:   cancelCreateObject.ObjectName,
 		ObjectID:     common.BigToHash(cancelCreateObject.ObjectId.BigInt()),
@@ -166,14 +208,12 @@ func (m *Module) handleCancelCreateObject(ctx context.Context, block *tmctypes.R
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 		Removed:      true,
 	}
-
-	return m.db.UpdateObject(ctx, object)
 }
 
-func (m *Module) handleCopyObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, copyObject *storagetypes.EventCopyObject) error {
+func (m *Module) handleCopyObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, copyObject *storagetypes.EventCopyObject) (*models.Object, error) {
 	destObject, err := m.db.GetObject(ctx, common.BigToHash(copyObject.SrcObjectId.BigInt()))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	destObject.ObjectID = common.BigToHash(copyObject.DstObjectId.BigInt())
@@ -188,27 +228,27 @@ func (m *Module) handleCopyObject(ctx context.Context, block *tmctypes.ResultBlo
 	destObject.UpdateTime = block.Block.Time.UTC().Unix()
 	destObject.Removed = false
 
-	return m.db.UpdateObject(ctx, destObject)
+	return destObject, nil
 }
 
-func (m *Module) handleDeleteObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, deleteObject *storagetypes.EventDeleteObject) error {
-	object := &models.Object{
-		BucketName:   deleteObject.BucketName,
-		ObjectName:   deleteObject.ObjectName,
-		ObjectID:     common.BigToHash(deleteObject.ObjectId.BigInt()),
+func (m *Module) handleDeleteObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, deleteObject *storagetypes.EventDeleteObject) *models.Object {
+	return &models.Object{
+		BucketName:          deleteObject.BucketName,
+		ObjectName:          deleteObject.ObjectName,
+		ObjectID:            common.BigToHash(deleteObject.ObjectId.BigInt()),
+		LocalVirtualGroupId: deleteObject.LocalVirtualGroupId,
+
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 		Removed:      true,
 	}
-
-	return m.db.UpdateObject(ctx, object)
 }
 
 // RejectSeal event won't emit a delete event, need to be deleted manually here in metadata service
 // handle logic is set as removed, no need to set status
-func (m *Module) handleRejectSealObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, rejectSealObject *storagetypes.EventRejectSealObject) error {
-	object := &models.Object{
+func (m *Module) handleRejectSealObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, rejectSealObject *storagetypes.EventRejectSealObject) *models.Object {
+	return &models.Object{
 		BucketName: rejectSealObject.BucketName,
 		ObjectName: rejectSealObject.ObjectName,
 		ObjectID:   common.BigToHash(rejectSealObject.ObjectId.BigInt()),
@@ -219,12 +259,10 @@ func (m *Module) handleRejectSealObject(ctx context.Context, block *tmctypes.Res
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 		Removed:      true,
 	}
-
-	return m.db.UpdateObject(ctx, object)
 }
 
-func (m *Module) handleEventDiscontinueObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, discontinueObject *storagetypes.EventDiscontinueObject) error {
-	object := &models.Object{
+func (m *Module) handleEventDiscontinueObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, discontinueObject *storagetypes.EventDiscontinueObject) *models.Object {
+	return &models.Object{
 		BucketName:   discontinueObject.BucketName,
 		ObjectID:     common.BigToHash(discontinueObject.ObjectId.BigInt()),
 		DeleteReason: discontinueObject.Reason,
@@ -236,12 +274,10 @@ func (m *Module) handleEventDiscontinueObject(ctx context.Context, block *tmctyp
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 		Removed:      false,
 	}
-
-	return m.db.UpdateObject(ctx, object)
 }
 
-func (m *Module) handleUpdateObjectInfo(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, updateObject *storagetypes.EventUpdateObjectInfo) error {
-	object := &models.Object{
+func (m *Module) handleUpdateObjectInfo(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, updateObject *storagetypes.EventUpdateObjectInfo) *models.Object {
+	return &models.Object{
 		BucketName: updateObject.BucketName,
 		ObjectID:   common.BigToHash(updateObject.ObjectId.BigInt()),
 		ObjectName: updateObject.ObjectName,
@@ -252,6 +288,4 @@ func (m *Module) handleUpdateObjectInfo(ctx context.Context, block *tmctypes.Res
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 	}
-
-	return m.db.UpdateObject(ctx, object)
 }

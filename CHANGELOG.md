@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.2.3-alpha.11
+
+FEATURES
+* [#867](https://github.com/bnb-chain/greenfield-storage-provider/pull/867) feat: impl ListObjectsByGVGAndBucketForGC and object details
+* [#888](https://github.com/bnb-chain/greenfield-storage-provider/pull/888) feat: metadata and block syncer monitor
+* [#890](https://github.com/bnb-chain/greenfield-storage-provider/pull/890) feat: add generate gvg sp policy
+* [#851](https://github.com/bnb-chain/greenfield-storage-provider/pull/851) feat: support query sp
+
+REFACTOR
+* [#860](https://github.com/bnb-chain/greenfield-storage-provider/pull/860) refactor: update quota consumption method
+
+BUGFIX
+* [#848](https://github.com/bnb-chain/greenfield-storage-provider/pull/848) fix: fix recover command
+* [#876](https://github.com/bnb-chain/greenfield-storage-provider/pull/876) fix: GVGPickFilter CheckGVG func's paramter
+* [#893](https://github.com/bnb-chain/greenfield-storage-provider/pull/893) fix:blocksyncer object map id
+* [#868](https://github.com/bnb-chain/greenfield-storage-provider/pull/868) fix: fix aliyun credential expiration issue
+* [#894](https://github.com/bnb-chain/greenfield-storage-provider/pull/894) feat: revert grpc keepalive params
+* [#897](https://github.com/bnb-chain/greenfield-storage-provider/pull/897) fix: private universal endpoint special suffix handle
+* [#898](https://github.com/bnb-chain/greenfield-storage-provider/pull/898) fix:blocksyncer monitor
+
+
+## 0.2.3-alpha.7
+
+FEATURES
+* [#824](https://github.com/bnb-chain/greenfield-storage-provider/pull/824) feat: support sp exit and bucket migrate
+* [#856](https://github.com/bnb-chain/greenfield-storage-provider/pull/856) feat: update local virtual group event
+* [#853](https://github.com/bnb-chain/greenfield-storage-provider/pull/853) feat: update greenfield-go-sdk e2e version
+* [#852](https://github.com/bnb-chain/greenfield-storage-provider/pull/852) ci: fix docker-ci.yml to push develop
+* [#865](https://github.com/bnb-chain/greenfield-storage-provider/pull/865) feat: add bucket migrate & sp exit query cli
+
+BUGFIX
+* [#834](https://github.com/bnb-chain/greenfield-storage-provider/pull/834) fix: remove v2 Authorization
+* [#832](https://github.com/bnb-chain/greenfield-storage-provider/pull/832) fix: add checking logic for sig length and public length
+* [#839](https://github.com/bnb-chain/greenfield-storage-provider/pull/839) fix: blocksyncer panic
+* [#847](https://github.com/bnb-chain/greenfield-storage-provider/pull/847) fix: block syncer copy object
+* [#850](https://github.com/bnb-chain/greenfield-storage-provider/pull/850) fix: handle concurrent spdb table creation
+* [#814](https://github.com/bnb-chain/greenfield-storage-provider/pull/814) fix: verify group permission
+* [#858](https://github.com/bnb-chain/greenfield-storage-provider/pull/858) fix: resumable upload maxpayload size bugs
+* [#863](https://github.com/bnb-chain/greenfield-storage-provider/pull/863) fix: optimize piece migration logic to avoid oom
+ 
+
 ## v0.2.3-alpha.2
 FEATURES
 * [#664](https://github.com/bnb-chain/greenfield-storage-provider/pull/664) feat: simulate discontinue transaction before broadcast

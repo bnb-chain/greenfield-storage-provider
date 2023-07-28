@@ -10,18 +10,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield/types/resource"
+	resource_types "github.com/bnb-chain/greenfield/types/resource"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	sp_types "github.com/bnb-chain/greenfield/x/sp/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
@@ -32,7 +36,24 @@ const (
 	MaximumListObjectsAndBucketsSize = 1000
 	DefaultGetGroupListLimit         = 50
 	DefaultGetGroupListOffset        = 0
+	HandlerSuccess                   = "success"
+	HandlerFailure                   = "failure"
+	HandlerLevel                     = "handler"
 )
+
+func MetadataHandlerFailureMetrics(err error, startTime time.Time, handlerName string) {
+	gfspErr := gfsperrors.MakeGfSpError(err)
+	code := gfspErr.HttpStatusCode
+	metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+	metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+	metrics.MetadataReqTime.WithLabelValues(HandlerFailure, HandlerLevel, handlerName, strconv.Itoa(int(code))).Observe(time.Since(startTime).Seconds())
+}
+
+func MetadataHandlerSuccessMetrics(startTime time.Time, handlerName string) {
+	metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+	metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+	metrics.MetadataReqTime.WithLabelValues(HandlerSuccess, HandlerLevel, handlerName, strconv.Itoa(http.StatusOK)).Observe(time.Since(startTime).Seconds())
+}
 
 // getUserBucketsHandler handle get object request
 func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,15 +68,14 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -122,15 +142,14 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by bucket name", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -273,22 +292,18 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get object meta", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
@@ -330,22 +345,18 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get bucket meta", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
@@ -389,22 +400,18 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to verify permission", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	queryParams = reqCtx.request.URL.Query()
 	objectName = queryParams.Get(VerifyPermissionObjectQuery)
@@ -477,22 +484,18 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get group list", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
 
 	queryParams = reqCtx.request.URL.Query()
 	sourceType = queryParams.Get(GetGroupListSourceTypeQuery)
@@ -579,15 +582,14 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by ids", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -648,15 +650,14 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list buckets by ids", reqCtx.String())
 			MakeErrorResponse(w, err)
-			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
-			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
-			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1081,6 +1082,95 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 	w.Write(b.Bytes())
 }
 
+// verifyPermissionByIDHandler handle verify permission by id request
+func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                 error
+		requestOperator     string
+		requestResourceID   string
+		requestResourceType string
+		requestActionType   string
+		resourceID          uint64
+		resourceType        uint32
+		actionType          uint32
+		ok                  bool
+		b                   bytes.Buffer
+		queryParams         url.Values
+		effect              *permission_types.Effect
+		reqCtx              *RequestContext
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to verify permission by id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestResourceID = queryParams.Get(ResourceIDQuery)
+	requestResourceType = queryParams.Get(ResourceTypeQuery)
+	requestOperator = queryParams.Get(VerifyPermissionOperator)
+	requestActionType = queryParams.Get(VerifyPermissionActionType)
+
+	if ok = common.IsHexAddress(requestOperator); !ok {
+		log.Errorw("failed to check operator", "operator", requestOperator, "error", err)
+		return
+	}
+
+	if resourceID, err = util.StringToUint64(requestResourceID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check resource id", "resource-id", requestResourceID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	// 0: "RESOURCE_TYPE_UNSPECIFIED", RESOURCE_TYPE_UNSPECIFIED is not considered in this request
+	if resourceType, err = util.StringToUint32(requestResourceType); err != nil || resourceType == 0 {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check source type", "resource-type", requestResourceType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if _, ok = resource_types.ResourceType_name[int32(resourceType)]; !ok {
+		log.CtxErrorw(reqCtx.Context(), "failed to check source type", "resource-type", resourceType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if actionType, err = util.StringToUint32(requestActionType); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse action type", "action-type", requestActionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if _, ok = permission_types.ActionType_name[int32(actionType)]; !ok {
+		log.CtxErrorw(reqCtx.Context(), "failed to check action type", "action-type", actionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	effect, err = g.baseApp.GfSpClient().VerifyPermissionByID(reqCtx.Context(), requestOperator, resource.ResourceType(resourceType), resourceID, permission_types.ActionType(actionType))
+	if err != nil {
+		log.Errorf("failed to verify permission by id", "error", err)
+		return
+	}
+
+	grpcResponse := &storage_types.QueryVerifyPermissionResponse{Effect: *effect}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.Errorf("failed to verify permission by id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
 // listVirtualGroupFamiliesBySpIDHandler list virtual group families by sp id
 func (g *GateModular) listVirtualGroupFamiliesBySpIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -1404,7 +1494,7 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 		limitStr          string
 		requestStartAfter string
 		startAfter        uint64
-		objects           []*types.Object
+		objects           []*types.ObjectDetails
 		queryParams       url.Values
 	)
 
@@ -1471,6 +1561,87 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 	w.Write(b.Bytes())
 }
 
+// listObjectsByGVGAndBucketForGCHandler list objects by gvg and bucket for gc
+func (g *GateModular) listObjectsByGVGAndBucketForGCHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		b                 bytes.Buffer
+		reqCtx            *RequestContext
+		requestGvgID      string
+		gvgID             uint32
+		bucketIDStr       string
+		bucketID          uint64
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		objects           []*types.ObjectDetails
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGvgID = queryParams.Get(GvgIDQuery)
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if bucketID, err = util.StringToUint64(bucketIDStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if gvgID, err = util.StringToUint32(requestGvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "gvg-id", requestGvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	objects, err = g.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(reqCtx.Context(), gvgID, bucketID, startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectsByGVGAndBucketForGCResponse{Objects: objects}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
 // listObjectsInGVGHandler list objects by gvg id
 func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -1483,7 +1654,7 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 		limitStr          string
 		requestStartAfter string
 		startAfter        uint64
-		objects           []*types.Object
+		objects           []*types.ObjectDetails
 		queryParams       url.Values
 	)
 
@@ -1509,10 +1680,12 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
-		err = ErrInvalidQuery
-		return
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
 	}
 
 	if limitStr != "" {
@@ -1708,6 +1881,54 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list sp exit events", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getSPInfoHandler get sp info by operator address
+func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                    error
+		b                      bytes.Buffer
+		reqCtx                 *RequestContext
+		requestOperatorAddress string
+		sp                     *sp_types.StorageProvider
+		queryParams            url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestOperatorAddress = queryParams.Get(OperatorAddressQuery)
+
+	if ok := common.IsHexAddress(requestOperatorAddress); !ok {
+		log.Errorw("failed to check operator", "operator-address", requestOperatorAddress, "error", err)
+		return
+	}
+
+	sp, err = g.baseApp.GfSpClient().GetSPInfo(reqCtx.Context(), requestOperatorAddress)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetSPInfoResponse{StorageProvider: sp}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", "error", err)
 		return
 	}
 

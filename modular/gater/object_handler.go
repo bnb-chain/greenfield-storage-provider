@@ -1,7 +1,6 @@
 package gater
 
 import (
-	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -10,18 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -63,20 +62,18 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		startAuthenticationTime := time.Now()
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			err = ErrNoPermission
-			return
-		}
+	startAuthenticationTime := time.Now()
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
 	}
 
 	startGetObjectInfoTime := time.Now()
@@ -115,8 +112,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	log.Infow("VMVMVM: print object info and chain params", "objectInfo", objectInfo, "params", params)
-	log.CtxDebugw(ctx, "succeed to upload payload data")
+	log.CtxDebug(ctx, "succeed to upload payload data")
 }
 
 func parseRange(rangeStr string) (bool, int64, int64) {
@@ -184,18 +180,16 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			err = ErrNoPermission
-			return
-		}
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
 	}
 
 	startGetObjectInfoTime := time.Now()
@@ -207,11 +201,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		err = ErrConsensus
 		return
 	}
-	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
-		err = ErrInvalidPayloadSize
-		return
-	}
+
 	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
@@ -311,18 +301,16 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			err = ErrNoPermission
-			return
-		}
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
 	}
 
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
@@ -418,6 +406,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
 		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
 		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	}
 
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
@@ -444,21 +433,20 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
-		if !reqCtx.SkipVerifyAuthentication() {
-			authTime := time.Now()
-			if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-				coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
-				metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-				log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-				return
-			}
+		authTime := time.Now()
+		if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
 			metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
-			if !authenticated {
-				log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-				err = ErrNoPermission
-				return
-			}
+			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+			return
 		}
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_auth_time").Observe(time.Since(authTime).Seconds())
+		if !authenticated {
+			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			err = ErrNoPermission
+			return
+		}
+
 	} // else anonymous users can get public object.
 
 	getObjectTime := time.Now()
@@ -578,18 +566,16 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 	if err != nil {
 		return
 	}
-	if !reqCtx.SkipVerifyAuthentication() {
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-			coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-			return
-		}
-		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-			err = ErrNoPermission
-			return
-		}
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
 	}
 
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
@@ -643,16 +629,18 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 // getObjectByUniversalEndpointHandler handles the get object request sent by universal endpoint
 func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request, isDownload bool) {
 	var (
-		err           error
-		reqCtx        *RequestContext
-		authenticated bool
-		isRange       bool
-		rangeStart    int64
-		rangeEnd      int64
-		// redirectURL          string
+		err                  error
+		reqCtx               *RequestContext
+		authenticated        bool
+		isRange              bool
+		rangeStart           int64
+		rangeEnd             int64
+		redirectURL          string
 		params               *storagetypes.Params
 		escapedObjectName    string
 		isRequestFromBrowser bool
+		spEndpoint           string
+		getEndpointErr       error
 	)
 	startTime := time.Now()
 	defer func() {
@@ -717,7 +705,6 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		return
 	}
 
-	bucketPrimarySpId := getBucketInfoRes.GetBucketInfo().GetPrimarySpId()
 	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	// TODO get from config
 	spID, err := g.getSPID()
@@ -725,25 +712,25 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		err = ErrConsensus
 		return
 	}
-	if spID != bucketPrimarySpId {
+	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), getBucketInfoRes.GetBucketInfo())
+	if err != nil {
+		err = ErrConsensus
+		return
+	}
+	if spID != bucketSPID {
 		log.Debugw("primary sp id not matched ",
-			"bucketPrimarySpId", bucketPrimarySpId, "self sp id", spID,
+			"bucket_sp_id", bucketSPID, "self_sp_id", spID,
 		)
 
-		// TODO might need to edit GetEndpointBySpId to reduce call to chain
-		sp, queryErr := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
-		if queryErr != nil {
-			err = ErrConsensus
-			return
-		}
-		spEndpoint, getEndpointErr := g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
+		// get the endpoint where the bucket actually is in
+		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpId(reqCtx.Context(), bucketSPID)
 		if getEndpointErr != nil || spEndpoint == "" {
-			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
+			log.Errorw("failed to get endpoint by id ", "sp_id", bucketSPID, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}
 
-		redirectURL := spEndpoint + r.RequestURI
+		redirectURL = spEndpoint + r.RequestURI
 		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
 		http.Redirect(w, r, redirectURL, 302)
@@ -768,6 +755,17 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			expiry    string
 			signature string
 		)
+		splitPeriod := strings.Split(r.RequestURI, ".")
+		splitSuffix := splitPeriod[len(splitPeriod)-1]
+		if !strings.Contains(r.RequestURI, objectSpecialSuffixUrlReplacement) &&
+			(strings.EqualFold(splitSuffix, ObjectPdfSuffix) || strings.EqualFold(splitSuffix, ObjectXmlSuffix)) {
+			objectPathRequestURL := "/" + strings.Replace(r.RequestURI[1:], "/", objectSpecialSuffixUrlReplacement, 1)
+			redirectURL = spEndpoint + objectPathRequestURL
+			log.Debugw("getting redirect url for private object:", "redirectURL", redirectURL)
+			http.Redirect(w, r, redirectURL, 302)
+			return
+		}
+
 		queryParams := r.URL.Query()
 		if queryParams["expiry"] != nil {
 			expiry = queryParams["expiry"][0]

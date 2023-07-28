@@ -5,7 +5,6 @@ import (
 	"errors"
 	"strings"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +13,7 @@ import (
 	"github.com/forbole/juno/v4/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -33,9 +33,14 @@ var BuildPrefixTreeEvents = map[string]bool{
 	EventRejectSealObject:   true,
 }
 
+func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
+	return nil, nil
+}
+
 // HandleEvent handles the events relevant to the building of the PrefixTree.
 // It checks the type of the event and calls the appropriate handler for it.
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
+	log.Infof("prefixhandleevent")
 	if !BuildPrefixTreeEvents[event.Type] {
 		return nil
 	}

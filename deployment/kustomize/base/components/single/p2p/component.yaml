@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p2p
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: p2p
+  strategy:
+    type: Recreate # to avoid the pv mount dead loop between the old and new p2p pod
+  template:
+    metadata:
+      labels:
+        app: p2p
+    spec:
+      serviceAccountName: nodereal-default
+      containers:
+      - name: p2p
+        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.4-p2p
+        args: ["--log.std", "-c", "/config/config.toml", "-server", "p2p"]
+        env:
+          - name: P2P_PRIVATE_KEY
+            valueFrom:
+              secretKeyRef:
+                key: P2P_PRIVATE_KEY
+                name: default
+          - name: SP_DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_USER
+                name: default
+          - name: SP_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_PASSWORD
+                name: default
+          - name: SP_DB_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                key: SP_DB_ADDRESS
+                name: default
+        resources:
+          limits:
+            cpu: "4"
+            memory: 8Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        ports:
+          - containerPort: 9333
+            name: p2p
+          - containerPort: 9933
+            name: p2p-external
+          - containerPort: 24367
+            name: metrics
+          - containerPort: 24368
+            name: pprof
+        volumeMounts:
+        - mountPath: /config
+          name: config
+      volumes:
+        - name: config
+          configMap:
+            name: config
+      securityContext:
+        fsGroup: 1000 # uid=1000(sp) gid=1000(sp) groups=5(tty),1000(sp)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p2p
+spec:
+  ports:
+  - port: 9333
+    targetPort: 9333
+    name: p2p
+  - port: 24367
+    targetPort: 24367
+    name: metrics
+  - port: 24368
+    targetPort: 24368
+    name: pprof
+  selector:
+    app: p2p
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-subnets: null
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+  name: p2p-external
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 9933
+    targetPort: 9933
+    name: p2p-external
+  selector:
+    app: p2p
+

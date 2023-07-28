@@ -663,7 +663,7 @@ func (m *GfSpSealObjectTask) SetError(err error) {
 }
 
 func (m *GfSpReceivePieceTask) InitReceivePieceTask(gvgID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	priority coretask.TPriority, replicateIdx uint32, pieceIdx int32, pieceSize int64) {
+	priority coretask.TPriority, segmentIdx uint32, redundancyIdx int32, pieceSize int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GlobalVirtualGroupId = gvgID
@@ -672,8 +672,8 @@ func (m *GfSpReceivePieceTask) InitReceivePieceTask(gvgID uint32, object *storag
 	m.SetObjectInfo(object)
 	m.SetStorageParams(params)
 	m.SetPriority(priority)
-	m.SetReplicateIdx(replicateIdx)
-	m.SetPieceIdx(pieceIdx)
+	m.SetSegmentIdx(segmentIdx)
+	m.SetRedundancyIdx(redundancyIdx)
 	m.SetPieceSize(pieceSize)
 }
 
@@ -682,8 +682,8 @@ func (m *GfSpReceivePieceTask) GetSignBytes() []byte {
 		ObjectInfo:    m.GetObjectInfo(),
 		StorageParams: m.GetStorageParams(),
 		Task:          &GfSpTask{CreateTime: m.GetCreateTime()},
-		ReplicateIdx:  m.GetReplicateIdx(),
-		PieceIdx:      m.GetPieceIdx(),
+		SegmentIdx:    m.GetSegmentIdx(),
+		RedundancyIdx: m.GetRedundancyIdx(),
 		PieceSize:     m.GetPieceSize(),
 		PieceChecksum: m.GetPieceChecksum(),
 	}
@@ -696,8 +696,8 @@ func (m *GfSpReceivePieceTask) Key() coretask.TKey {
 		m.GetObjectInfo().GetBucketName(),
 		m.GetObjectInfo().GetObjectName(),
 		m.GetObjectInfo().Id.String(),
-		m.GetReplicateIdx(),
-		m.GetPieceIdx())
+		m.GetSegmentIdx(),
+		m.GetRedundancyIdx())
 }
 
 func (m *GfSpReceivePieceTask) Type() coretask.TType {
@@ -705,9 +705,9 @@ func (m *GfSpReceivePieceTask) Type() coretask.TType {
 }
 
 func (m *GfSpReceivePieceTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s] rIdx[%d], pIdx[%d], size[%d], checksum[%s], %s",
-		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetReplicateIdx(),
-		m.GetPieceIdx(), m.GetPieceSize(), hex.EncodeToString(m.GetPieceChecksum()), m.GetTask().Info())
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s] segmentIdx[%d], redundancyIdx[%d], size[%d], checksum[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(), m.GetSegmentIdx(),
+		m.GetRedundancyIdx(), m.GetPieceSize(), hex.EncodeToString(m.GetPieceChecksum()), m.GetTask().Info())
 }
 
 func (m *GfSpReceivePieceTask) GetAddress() string {
@@ -824,12 +824,12 @@ func (m *GfSpReceivePieceTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpReceivePieceTask) SetReplicateIdx(idx uint32) {
-	m.ReplicateIdx = idx
+func (m *GfSpReceivePieceTask) SetSegmentIdx(idx uint32) {
+	m.SegmentIdx = idx
 }
 
-func (m *GfSpReceivePieceTask) SetPieceIdx(idx int32) {
-	m.PieceIdx = idx
+func (m *GfSpReceivePieceTask) SetRedundancyIdx(idx int32) {
+	m.RedundancyIdx = idx
 }
 
 func (m *GfSpReceivePieceTask) SetPieceSize(size int64) {
@@ -844,6 +844,22 @@ func (m *GfSpReceivePieceTask) SetSealed(seal bool) {
 	m.Sealed = seal
 }
 
+func (m *GfSpReceivePieceTask) SetFinished(finished bool) {
+	m.Finished = finished
+}
+
 func (m *GfSpReceivePieceTask) SetSignature(signature []byte) {
 	m.Signature = signature
+}
+
+func (m *GfSpReceivePieceTask) GetGlobalVirtualGroupID() uint32 {
+	return m.GetGlobalVirtualGroupId()
+}
+
+func (m *GfSpReceivePieceTask) SetGlobalVirtualGroupID(gvgID uint32) {
+	m.GlobalVirtualGroupId = gvgID
+}
+
+func (m *GfSpReceivePieceTask) SetBucketMigration(migration bool) {
+	m.BucketMigration = migration
 }

@@ -1,0 +1,47 @@
+# This is external facing ALB
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gnfd-sp-alb
+  annotations:
+    alb.ingress.kubernetes.io/security-groups: null
+    alb.ingress.kubernetes.io/subnets: null
+    alb.ingress.kubernetes.io/certificate-arn: null
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "10"
+    alb.ingress.kubernetes.io/healthcheck-path: /status
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/ip-address-type: ipv4
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80},{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-2016-08
+    alb.ingress.kubernetes.io/success-codes: 200,404
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=300
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+spec:
+  ingressClassName: alb
+  rules:
+  - host: null
+    http:
+      paths:
+      - backend:
+          service:
+            name: ingress-nginx-controller
+            port:
+              number: 80
+        pathType: ImplementationSpecific
+  - host: null
+    http:
+      paths:
+      - backend:
+          service:
+            name: ingress-nginx-controller
+            port:
+              number: 80
+        pathType: ImplementationSpecific
+
+

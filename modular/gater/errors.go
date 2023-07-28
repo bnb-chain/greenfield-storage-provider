@@ -27,8 +27,8 @@ var (
 	ErrMismatchSp                = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50014, "mismatch sp")
 	ErrSignature                 = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50015, "signature verification failed")
 	ErrInvalidPayloadSize        = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50016, "invalid payload")
-	ErrInvalidDomainHeader       = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50017, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
-	ErrInvalidPublicKeyHeader    = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50018, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
+	ErrInvalidDomainHeader       = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50017, "The "+GnfdOffChainAuthAppDomainHeader+" header is incorrect.")
+	ErrInvalidPublicKeyHeader    = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50018, "The "+GnfdOffChainAuthAppRegPublicKeyHeader+" header is incorrect.")
 	ErrInvalidRegNonceHeader     = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50019, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
 	ErrSignedMsgNotMatchHeaders  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50020, "The signed message in "+GnfdAuthorizationHeader+" does not match the content in headers.")
 	ErrSignedMsgNotMatchSPAddr   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50021, "The signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
@@ -48,6 +48,9 @@ var (
 	ErrRecoverySP             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50030, "The SP is not the correct SP to recovery")
 	ErrRecoveryRedundancyType = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50031, "The redundancy type of the recovering piece is not EC")
 	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50032, "System busy, try to request later")
+	ErrMigrateApproval        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50033, "server slipped away, try again later")
+	ErrNotifySwapOut          = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50034, "server slipped away, try again later")
+	ErrInvalidRedundancyIndex = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50035, "invalid redundancy index")
 )
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {

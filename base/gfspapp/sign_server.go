@@ -100,9 +100,9 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SignerSuccessDiscontinueBucket).Inc()
 			metrics.ReqTime.WithLabelValues(SignerSuccessDiscontinueBucket).Observe(time.Since(startTime).Seconds())
 		}
-	case *gfspserver.GfSpSignRequest_SignSecondaryBls:
-		signature, err = g.signer.SignSecondaryBls(ctx, t.SignSecondaryBls.ObjectId,
-			t.SignSecondaryBls.GlobalVirtualGroupId, t.SignSecondaryBls.Checksums)
+	case *gfspserver.GfSpSignRequest_SignSecondarySealBls:
+		signature, err = g.signer.SignSecondarySealBls(ctx, t.SignSecondarySealBls.ObjectId,
+			t.SignSecondarySealBls.GlobalVirtualGroupId, t.SignSecondarySealBls.Checksums)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign secondary bls signature", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureIntegrityHash).Inc()
@@ -184,6 +184,41 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		txHash, err = g.signer.CompleteMigrateBucket(ctx, t.CompleteMigrateBucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete migrate bucket", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_SignSecondarySpMigrationBucket:
+		signature, err = g.signer.SignSecondarySPMigrationBucket(ctx, t.SignSecondarySpMigrationBucket)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign secondary sp bls migration bucket", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_SwapOut:
+		txHash, err = g.signer.SwapOut(ctx, t.SwapOut)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign swap out", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_SignSwapOut:
+		signature, err = g.signer.SignSwapOut(ctx, t.SignSwapOut)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign swap out approval", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_CompleteSwapOut:
+		txHash, err = g.signer.CompleteSwapOut(ctx, t.CompleteSwapOut)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign complete swap out", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_SpExit:
+		txHash, err = g.signer.SPExit(ctx, t.SpExit)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign sp exit", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_CompleteSpExit:
+		txHash, err = g.signer.CompleteSPExit(ctx, t.CompleteSpExit)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign complete sp exit", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_SpStoragePrice:
+		txHash, err = g.signer.UpdateSPPrice(ctx, t.SpStoragePrice)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to update sp price", "error", err)
 		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")

@@ -78,8 +78,8 @@ func Test_verifyReceivePieceTaskSignature(t *testing.T) {
 		ObjectInfo:    &storagetypes.ObjectInfo{Id: sdkmath.NewUint(0)},
 		StorageParams: &storagetypes.Params{VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 0}},
 		PieceSize:     10,
-		PieceIdx:      -1,
-		ReplicateIdx:  1,
+		SegmentIdx:    1,
+		RedundancyIdx: -1,
 	}
 	sigs, err := km.Sign(receive.GetSignBytes())
 	assert.NoError(t, err)

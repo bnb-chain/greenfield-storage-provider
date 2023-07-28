@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -18,6 +17,7 @@ import (
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -200,6 +200,36 @@ func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.St
 	return resp.GetStorageProvider(), nil
 }
 
+// QuerySPFreeQuota returns the sp free quota
+func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (uint64, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_quota").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+		SpAddr: operatorAddress,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return 0, err
+	}
+	return resp.GetSpStoragePrice().FreeReadQuota, nil
+}
+
+// QuerySPPrice returns the sp price info
+func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_price").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+		SpAddr: operatorAddress,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return sptypes.SpStoragePrice{}, err
+	}
+	return resp.GetSpStoragePrice(), nil
+}
+
 // QuerySPByID returns the sp info.
 func (g *Gnfd) QuerySPByID(ctx context.Context, spID uint32) (*sptypes.StorageProvider, error) {
 	startTime := time.Now()
@@ -249,32 +279,45 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) (validators []stakingty
 }
 
 // ListVirtualGroupFamilies return the list of virtual group family.
+// TODO: improve it by metadata indexer.
 func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
-	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
-		StorageProviderId: spID,
-	})
-	if err != nil {
-		log.Errorw("failed to list virtual group families", "error", err)
-		return vgfs, err
-	}
-	for i := 0; i < len(resp.GetGlobalVirtualGroupFamilies()); i++ {
-		vgfs = append(vgfs, resp.GetGlobalVirtualGroupFamilies()[i])
+	var nextKey []byte
+	for {
+		resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
+			Pagination: &query.PageRequest{
+				Key:   nextKey,
+				Limit: 1000},
+		})
+		if err != nil {
+			log.Errorw("failed to list virtual group families", "error", err)
+			return vgfs, err
+		}
+		log.Infow("list families", "response", resp)
+		for i := 0; i < len(resp.GetGvgFamilies()); i++ {
+			f := resp.GetGvgFamilies()[i]
+			if f.PrimarySpId == spID {
+				vgfs = append(vgfs, resp.GetGvgFamilies()[i])
+			}
+		}
+		nextKey = resp.GetPagination().GetNextKey()
+		if nextKey == nil { // finish
+			break
+		}
 	}
 	return vgfs, nil
 }
 
 // QueryVirtualGroupFamily returns the virtual group family.
-func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("query_virtual_group_family").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamily(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamilyRequest{
-		StorageProviderId: spID,
-		FamilyId:          vgfID,
+		FamilyId: vgfID,
 	})
 	if err != nil {
 		log.Errorw("failed to query virtual group family", "error", err)
@@ -284,12 +327,11 @@ func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, spID, vgfID uint32) 
 }
 
 // ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
-func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_by_family_id").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupByFamilyID(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupByFamilyIDRequest{
-		StorageProviderId:          spID,
 		GlobalVirtualGroupFamilyId: vgfID,
 	})
 	if err != nil {

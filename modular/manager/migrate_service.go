@@ -2,8 +2,10 @@ package manager
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 func (m *ManageModular) getSPID() (uint32, error) {
@@ -18,20 +20,25 @@ func (m *ManageModular) getSPID() (uint32, error) {
 	return m.spID, nil
 }
 
-// NotifyMigrateGVG is used to receive migrate gvg task from src sp.
-func (m *ManageModular) NotifyMigrateGVG(ctx context.Context, task task.MigrateGVGTask) error {
+// NotifyMigrateSwapOut is used to receive migrate gvg task from src sp.
+func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error {
+	var (
+		err      error
+		selfSPID uint32
+	)
 	if m.spExitScheduler == nil {
-		return ErrNotifyMigrateGVG
+		log.CtxError(ctx, "sp exit scheduler has no init")
+		return ErrNotifyMigrateSwapOut
+	}
+	selfSPID, err = m.getSPID()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get self sp id", "error", err)
+		return err
+	}
+	if selfSPID != swapOut.SuccessorSpId {
+		log.CtxErrorw(ctx, "successor sp id is mismatch", "self_sp_id", selfSPID, "swap_out_successor_sp_id", swapOut.SuccessorSpId)
+		return fmt.Errorf("successor sp id is mismatch")
 	}
 
-	return m.spExitScheduler.AddNewMigrateGVGUnit(&GlobalVirtualGroupMigrateExecuteUnit{
-		gvg:             task.GetGvg(),
-		redundancyIndex: task.GetRedundancyIdx(),
-		isRemoted:       true, // from src sp
-		isConflicted:    false,
-		isSecondary:     false,
-		srcSP:           task.GetSrcSp(),
-		destSP:          task.GetDestSp(),
-		migrateStatus:   WaitForMigrate,
-	})
+	return m.spExitScheduler.AddSwapOutToTaskRunner(swapOut)
 }

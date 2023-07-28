@@ -42,7 +42,6 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
-	spID    uint32
 
 	// loading task at startup.
 	enableLoadTask           bool
@@ -50,18 +49,18 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue           taskqueue.TQueueOnStrategy
-	resumeableUploadQueue taskqueue.TQueueOnStrategy
-	replicateQueue        taskqueue.TQueueOnStrategyWithLimit
-	sealQueue             taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue          taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue         taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue         taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue           taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue         taskqueue.TQueueOnStrategy
-	challengeQueue        taskqueue.TQueueOnStrategy
-	recoveryQueue         taskqueue.TQueueOnStrategyWithLimit
-	migrateGVGQueue       taskqueue.TQueueOnStrategyWithLimit
+	uploadQueue          taskqueue.TQueueOnStrategy
+	resumableUploadQueue taskqueue.TQueueOnStrategy
+	replicateQueue       taskqueue.TQueueOnStrategyWithLimit
+	sealQueue            taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue         taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue        taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue        taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue          taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue        taskqueue.TQueueOnStrategy
+	challengeQueue       taskqueue.TQueueOnStrategy
+	recoveryQueue        taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueue      taskqueue.TQueueOnStrategyWithLimit
 
 	maxUploadObjectNumber int
 
@@ -77,6 +76,7 @@ type ManageModular struct {
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
 
+	spID                   uint32
 	virtualGroupManager    vgmgr.VirtualGroupManager
 	bucketMigrateScheduler *BucketMigrateScheduler
 	spExitScheduler        *SPExitScheduler
@@ -87,6 +87,8 @@ type ManageModular struct {
 
 	loadReplicateTimeout int64
 	loadSealTimeout      int64
+
+	gvgPreferSPList []uint32
 }
 
 func (m *ManageModular) Name() string {
@@ -95,7 +97,7 @@ func (m *ManageModular) Name() string {
 
 func (m *ManageModular) Start(ctx context.Context) error {
 	m.uploadQueue.SetRetireTaskStrategy(m.GCUploadObjectQueue)
-	m.resumeableUploadQueue.SetRetireTaskStrategy(m.GCResumableUploadObjectQueue)
+	m.resumableUploadQueue.SetRetireTaskStrategy(m.GCResumableUploadObjectQueue)
 	m.replicateQueue.SetRetireTaskStrategy(m.GCReplicatePieceQueue)
 	m.replicateQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.sealQueue.SetRetireTaskStrategy(m.GCSealObjectQueue)
@@ -299,7 +301,9 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
 			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
-		// TODO: set gvg info
+		replicateTask.SetSecondaryAddresses(meta.SecondaryEndpoints)
+		replicateTask.SetSecondarySignatures(meta.SecondarySignatures)
+		replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
@@ -377,7 +381,7 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 		log.CtxDebugw(ctx, "sealing object repeated")
 		return true
 	}
-	if m.resumeableUploadQueue.Has(task.Key()) {
+	if m.resumableUploadQueue.Has(task.Key()) {
 		log.CtxDebugw(ctx, "resumable uploading object repeated")
 		return true
 	}
@@ -394,7 +398,7 @@ func (m *ManageModular) TaskRecovering(ctx context.Context, task task.Task) bool
 }
 
 func (m *ManageModular) UploadingObjectNumber() int {
-	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumeableUploadQueue.Len()
+	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumableUploadQueue.Len()
 }
 
 func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
@@ -474,7 +478,9 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
-	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	// TODO if add some expire mechanism
+	return false
+	//return qTask.ExceedRetry() || qTask.ExceedTimeout()
 }
 
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
