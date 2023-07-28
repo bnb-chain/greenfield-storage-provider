@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -11,6 +12,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -31,6 +33,11 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		queryLimit           = uint32(100)
 		batchSize            = 10
 	)
+	startMigrateGVGTime := time.Now()
+	defer func() {
+		metrics.MigrateGVGTimeHistogram.WithLabelValues("migrate_gvg_cost").Observe(time.Since(startMigrateGVGTime).Seconds())
+		metrics.MigrateGVGCouter.WithLabelValues("migrate_gvg_counter").Inc()
+	}()
 
 	for {
 		if bucketID == 0 { // sp exit task
@@ -47,18 +54,20 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		length := len(objectList)
 		for index, object := range objectList {
 			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil {
-				log.CtxErrorw(ctx, "failed to do migration gvg task", "error", err)
+				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID, "object_info", object, "error", err)
 				return
 			}
 			if (index+1)%batchSize == 0 || index == length-1 { // report task per 10 objects
-				log.Info("migrate gvg report task")
+				log.Infow("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID, "last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
+				task.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
 				if err = e.ReportTask(ctx, task); err != nil {
 					log.CtxErrorw(ctx, "failed to report task", "error", err)
+					return
 				}
 			}
 		}
 		if len(objectList) < int(queryLimit) {
-			log.Infow("finished to migrate gvg task", "object list length", len(objectList))
+			log.Infow("finished to migrate gvg task", "object_number", len(objectList), "gvg_id", srcGvgID, "bucket_id", bucketID)
 			// when the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
 			task.SetFinished(true)
 			return
@@ -201,7 +210,7 @@ func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, 
 	return nil
 }
 
-// HandleMigratePieceTask handles the migrate piece task
+// HandleMigratePieceTask handles migrate piece task
 // It will send requests to the src SP(exiting SP or bucket migration) to get piece data. Using piece data to generate
 // piece checksum and integrity hash, if integrity hash is similar to chain's, piece data would be written into PieceStore,
 // generated piece checksum and integrity hash will be written into sql db.
@@ -269,7 +278,7 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMig
 	pieceData, err = e.baseApp.GfSpClient().MigratePiece(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to migrate piece data", "object_id",
-			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "error", err)
+			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "task_info", task, "error", err)
 		return nil, err
 	}
 	log.CtxInfow(ctx, "succeed to get piece from another sp", "object_id", task.GetObjectInfo().Id.Uint64(),

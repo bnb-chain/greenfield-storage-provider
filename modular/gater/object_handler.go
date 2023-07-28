@@ -405,6 +405,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
 		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
 		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	}
 
 	reqCtx, reqCtxErr = NewRequestContext(r, g)

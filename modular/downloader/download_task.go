@@ -75,7 +75,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 	}
 
 	// TODO:: spilt check and add record steps, check in pre download, add record in post download
-	if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+	if err = d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 		&spdb.ReadRecord{
 			BucketID:        downloadObjectTask.GetBucketInfo().Id.Uint64(),
 			ObjectID:        downloadObjectTask.GetObjectInfo().Id.Uint64(),

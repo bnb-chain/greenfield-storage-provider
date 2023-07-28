@@ -173,8 +173,8 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err        error
 		migrateKey string
 	)
-	log.Infow("update migrate progress", "sp_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
-		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx())
+	log.Infow("update migrate progress", "gvg_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
+		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx(), "last_migrated_object_id", task.GetLastMigratedObjectID())
 	migrateKey = MakeGVGMigrateKey(task.GetSrcGvg().GetId(), task.GetSrcGvg().GetFamilyId(), task.GetRedundancyIdx())
 	if task.GetFinished() {
 		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
@@ -297,14 +297,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 	}
 
 	for _, gvg := range gvgList {
-		redundancyIndex := int32(-1)
-		if gvg.GetFamilyId() == 0 {
-			if redundancyIndex, err = util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId()); err != nil {
-				log.Errorw("failed to add swap out to task runner due to get redundancy index",
-					"gvg_info", gvg, "sp_id", srcSP.GetId(), "error", err)
-				return err
-			}
-		}
+		redundancyIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId())
 		gUnit := &SPExitGVGExecuteUnit{}
 		gUnit.srcGVG = gvg
 		gUnit.redundancyIndex = redundancyIndex
@@ -316,6 +309,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			log.Errorw("failed to add swap out to task runner", "gvg_unit", gUnit, "error", err)
 			return err
 		}
+		log.Infow("succeed to add gvg unit to task runner", "gvg_unit", gUnit)
 	}
 	return s.taskRunner.AddNewSwapOut(swapOut)
 }
@@ -1007,7 +1001,6 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
 					0, unit.srcGVG, unit.redundancyIndex,
 					unit.srcSP,
-					// TODO if add add a new tasktimeout
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					runner.manager.baseApp.TaskMaxRetry(migrateGVGTask))
 				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
