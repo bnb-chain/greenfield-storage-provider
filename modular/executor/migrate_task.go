@@ -36,7 +36,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 	startMigrateGVGTime := time.Now()
 	defer func() {
 		metrics.MigrateGVGTimeHistogram.WithLabelValues("migrate_gvg_cost").Observe(time.Since(startMigrateGVGTime).Seconds())
-		metrics.MigrateGVGCouter.WithLabelValues("migrate_").Inc()
+		metrics.MigrateGVGCouter.WithLabelValues("migrate_gvg_counter").Inc()
 	}()
 
 	for {
