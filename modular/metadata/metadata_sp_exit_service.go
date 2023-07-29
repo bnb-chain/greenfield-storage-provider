@@ -32,6 +32,7 @@ func (r *MetadataModular) GfSpListVirtualGroupFamiliesBySpID(ctx context.Context
 	for i, family := range families {
 		res[i] = &virtual_types.GlobalVirtualGroupFamily{
 			Id:                    family.GlobalVirtualGroupFamilyId,
+			PrimarySpId:           family.PrimarySpId,
 			GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
 			VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
 		}
@@ -96,6 +97,7 @@ func (r *MetadataModular) GfSpGetVirtualGroupFamily(ctx context.Context, req *ty
 	if family != nil {
 		res = &virtual_types.GlobalVirtualGroupFamily{
 			Id:                    family.GlobalVirtualGroupFamilyId,
+			PrimarySpId:           family.PrimarySpId,
 			GlobalVirtualGroupIds: family.GlobalVirtualGroupIds,
 			VirtualPaymentAddress: family.VirtualPaymentAddress.String(),
 		}
