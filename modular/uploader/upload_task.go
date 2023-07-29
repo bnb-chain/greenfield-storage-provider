@@ -119,7 +119,8 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 					return ErrPieceStore
 				}
 			}
-			if !bytes.Equal(hash.GenerateIntegrityHash(checksums), uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
+			integrity = hash.GenerateIntegrityHash(checksums)
+			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
