@@ -744,12 +744,12 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 // loadBucketMigrateExecutePlansFromDB 1) subscribe progress 2) plan progress 3) task progress
 func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	var (
-		migrationBucketEvents    []*types.ListMigrateBucketEvents
-		err                      error
-		primarySPGVGList         []*virtualgrouptypes.GlobalVirtualGroup
-		migratingBucketIDs       []uint64
-		migrationBucketEventsMap map[uint64]*types.ListMigrateBucketEvents
+		migrationBucketEvents []*types.ListMigrateBucketEvents
+		err                   error
+		primarySPGVGList      []*virtualgrouptypes.GlobalVirtualGroup
+		migratingBucketIDs    []uint64
 	)
+	migrationBucketEventsMap := make(map[uint64]*types.ListMigrateBucketEvents)
 
 	// get bucket id from metadata (migrate bucket events)
 	migrationBucketEvents, err = s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
@@ -787,7 +787,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 			// an empty bucket ends here, and it will not return a plan. The execution will not continue.
 			err = executePlan.sendCompleteMigrateBucketTx(nil)
 			if err != nil {
-				log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "EventMigrationBucket", migrationBucketEventsMap[bucketID])
+				log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "EventMigrationBucket", bucketMigrateEvent.Events)
 				return err
 			}
 		} else {
