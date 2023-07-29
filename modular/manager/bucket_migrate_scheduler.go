@@ -534,9 +534,7 @@ func (s *BucketMigrateScheduler) replaceExitingSP(secondarySPIDs []uint32) ([]ui
 }
 
 func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnitFromDB(primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup, bucketID uint64, executePlan *BucketMigrateExecutePlan) (*BucketMigrateExecutePlan, error) {
-
-	//allGVGList
-
+	// TODO: check every migrateGVGUnitMeta must match primarySPGVGList
 	// notFinishedGVGList
 	migrateGVGUnitMeta, err := s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID)
 	if err != nil {
@@ -547,12 +545,12 @@ func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnitFromDB(prima
 	for _, migrateGVG := range migrateGVGUnitMeta {
 		srcSP, queryErr := s.manager.virtualGroupManager.QuerySPByID(migrateGVG.SrcSPID)
 		if queryErr != nil {
-			log.Errorw("failed to query sp", "error", queryErr)
+			log.Errorw("failed to query sp", "error", queryErr, "sp_info", srcSP)
 			return nil, queryErr
 		}
 		destSP, queryErr := s.manager.virtualGroupManager.QuerySPByID(migrateGVG.DestSPID)
 		if queryErr != nil {
-			log.Errorw("failed to query sp", "error", queryErr)
+			log.Errorw("failed to query sp", "error", queryErr, "sp_info", destSP)
 			return nil, queryErr
 		}
 
@@ -779,7 +777,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 
 		primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), bucketID)
 		if err != nil {
-			log.Errorw("failed to list gvg", "error", err)
+			log.Errorw("failed to list gvg", "error", err, "EventMigrationBucket", bucketMigrateEvent.Events)
 			return errors.New("failed to list gvg")
 		}
 
@@ -803,9 +801,10 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 			log.Errorw("failed to start bucket migrate execute plan", "Events", bucketMigrateEvent.Events, "executePlan", executePlan, "error", err)
 			return err
 		}
+
 		s.executePlanIDMap[executePlan.bucketID] = executePlan
 	}
-	log.Debugw("Bucket Migrate Scheduler load from db success", "bucketIDs", migratingBucketIDs)
+	log.Debugw("bucket migrate scheduler load from db success", "bucketIDs", migratingBucketIDs)
 
 	return err
 }
