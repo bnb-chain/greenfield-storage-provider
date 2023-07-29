@@ -1,0 +1,48 @@
+https://api.blockchair.com/cross-chain/tether/stats
+https://api.blockchair.com/cross-chain/usd-coin/stats
+https://api.blockchair.com/cross-chain/binance-usd/stats
+Output:
+
+circulation shows the total token circulation across all supported blockchains
+blockchains is an array of blockchains the token supports:
+circulation is the token circulation on a particular blockchain
+explorer is a link to Blockchair's explorer for the token
+
+961b9447da86112dfe70300a9b661352c9577611cfb7b1cb572bf62dd3aa24a3  zenzo-2.1.0-aarch64-linux-gnu-debug.tar.gz
+
+f613022307e1af7e95cf91e6940c1ad62f74b1beafcee9645b89ac43e3c4f963  zenzo-2.1.0-aarch64-linux-gnu.tar.gz
+
+460f066754cceddf57d66d6e4d1dc67b2ea81ddf10555e30feb66c3cfbc4a871  zenzo-2.1.0-arm-linux-gnueabihf-debug.tar.gz
+
+6e6b2fc49bedb04d0230de2880c8e122e6a3ab622243a7732fe595d3dbcec07c  zenzo-2.1.0-arm-linux-gnueabihf.tar.gz
+
+7c2d5b369cd5853af165012be2669fbfea469257cd789dbc27b8e139f9a2de8d  zenzo-2.1.0-riscv64-linux-gnu-debug.tar.gz
+
+1f52f63bc6c4942aec9da882cd6a37c9d647706ff7ba154d15ad88cad0b1c10e  zenzo-2.1.0-riscv64-linux-gnu.tar.gz
+
+839e8ae4323e28cb829c16d07fb739df203874269d0dffdd0191521fefd5089c  zenzo-2.1.0-x86_64-linux-gnu-debug.tar.gz
+
+1f3a85d2344bd92255b438a15ed4fd04398b5a78e0ee42133798ff49a554e72d  zenzo-2.1.0-x86_64-linux-gnu.tar.gz
+
+a37bd8b9485175a0118308b76dba433258c2c1d8e410ef6db19af9d77397bec0  zenzo-2.1.0-win-unsigned.tar.gz
+
+0f3ddd114d1b72974908a00b3ef194b552341fb6522f8b2745fe316ebe93617d  zenzo-2.1.0-win64-debug.zip
+
+535dfe6d2ad4d2aab34df876023cf4dccd9636f97f72261a3a5bd98691a18eeb  zenzo-2.1.0-win64-setup-unsigned.exe
+
+b57a994a236ee915443b0b7d4f19bb338235cd94e2ce9e99baf9d065b7abd6da  zenzo-2.1.0-win64.zip
+
+28506c0b50e4f36b5625721130f0fb9ddbcb4f03265da487e21cb5917d2b467c  zenzo-2.1.0-osx-unsigned.dmg
+
+bdc9d1d00482e570e28b509bbb7a92e727df15802e0359f64fd62a11974dddf8  zenzo-2.1.0-osx-unsigned.tar.gz
+
+3e9bde9642d4567a36511ce7457948c4471952ec010dd650465febabdd80278d  zenzo-2.1.0-osx64.tar.gz
+
+https://github.com/MetaMask/snaps/tree/main/packages%2Fcreate-snap
+
+yarn install && yarn start
+
+
+
+
+
