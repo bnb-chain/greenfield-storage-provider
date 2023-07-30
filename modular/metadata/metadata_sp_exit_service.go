@@ -406,7 +406,7 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		return nil, ErrExceedBlockHeight
 	}
 
-	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
+	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list sp exit events", "error", err)
 		return nil, err
