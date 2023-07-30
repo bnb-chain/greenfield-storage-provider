@@ -669,7 +669,7 @@ func (s *GfSpClient) ListSwapOutEvents(ctx context.Context, blockID uint64, spID
 	return resp.Events, nil
 }
 
-func (s *GfSpClient) ListSpExitEvents(ctx context.Context, blockID uint64, operatorAddress string, opts ...grpc.DialOption) (*types.ListSpExitEvents, error) {
+func (s *GfSpClient) ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -677,8 +677,8 @@ func (s *GfSpClient) ListSpExitEvents(ctx context.Context, blockID uint64, opera
 	}
 	defer conn.Close()
 	req := &types.GfSpListSpExitEventsRequest{
-		BlockId:         blockID,
-		OperatorAddress: operatorAddress,
+		BlockId: blockID,
+		SpId:    spID,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListSpExitEvents(ctx, req)
 	if err != nil {
