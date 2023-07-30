@@ -65,6 +65,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 					return
 				}
 			}
+			lastMigratedObjectID = object.GetObject().GetObjectInfo().Id.Uint64()
 		}
 		if len(objectList) < int(queryLimit) {
 			log.Infow("finished to migrate gvg task", "object_number", len(objectList), "gvg_id", srcGvgID, "bucket_id", bucketID)
