@@ -120,7 +120,7 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		return err
 	}
 	spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(),
-		s.lastSubscribedSPExitBlockHeight, s.manager.baseApp.OperatorAddress())
+		s.lastSubscribedSPExitBlockHeight, s.selfSP.GetId())
 	if subscribeError != nil {
 		log.Errorw("failed to init due to subscribe sp exit", "error", subscribeError)
 		return subscribeError
@@ -327,7 +327,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Millisecond)
 		defer subscribeSPExitEventsTicker.Stop()
 		for range subscribeSPExitEventsTicker.C {
-			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
+			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
 				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
 				continue
