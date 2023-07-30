@@ -146,7 +146,7 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 	}
 	log.Infow("succeed to init sp exit scheduler", "is_exiting", s.isExiting, "is_exited", s.isExited,
 		"last_subscribed_sp_exit_block_height", s.lastSubscribedSPExitBlockHeight,
-		"last_subscribed_bucket_migrate_block_height", s.lastSubscribedSwapOutBlockHeight,
+		"last_subscribed_swap_out_block_height", s.lastSubscribedSwapOutBlockHeight,
 		"src_sp_swap_out_plan", s.swapOutPlan,
 		"dest_sp_task_runner", s.taskRunner)
 	return nil
