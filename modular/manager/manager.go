@@ -135,16 +135,24 @@ func (m *ManageModular) Start(ctx context.Context) error {
 func (m *ManageModular) delayStartMigrateScheduler() {
 	// delay start to wait metadata service ready.
 	// migrate scheduler init depend metadata.
-	time.Sleep(60 * time.Second)
-
-	var err error
-	if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
-		log.Errorw("failed to new bucket migrate scheduler", "error", err)
+	for {
+		time.Sleep(60 * time.Second)
+		var err error
+		if m.bucketMigrateScheduler == nil {
+			if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
+				log.Errorw("failed to new bucket migrate scheduler", "error", err)
+				continue
+			}
+		}
+		if m.spExitScheduler == nil {
+			if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
+				log.Errorw("failed to new sp exit scheduler", "error", err)
+				continue
+			}
+		}
+		log.Info("succeed to start migrate scheduler")
+		return
 	}
-	if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
-		log.Errorw("failed to new sp exit scheduler", "error", err)
-	}
-	log.Info("succeed to start migrate scheduler")
 }
 
 func (m *ManageModular) eventLoop(ctx context.Context) {
