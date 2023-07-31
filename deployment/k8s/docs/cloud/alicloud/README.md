@@ -7,7 +7,7 @@ Greenfield Storage Provider Deployment Guide - Alicloud
 
 
 ### Resources
-#### IAM role
+#### RAM role
 
 * Create a new role which will be used by SP K8S application.
 ![1](imgs/ram.png "RAM Role")
