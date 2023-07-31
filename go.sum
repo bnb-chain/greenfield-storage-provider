@@ -172,6 +172,8 @@ github.com/bits-and-blooms/bitset v1.2.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edY
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/bnb-chain/greenfield v0.2.3-alpha.7 h1:R/HE/18e1G5WOeSIKFmFFzLGJDv7Gi1aJJrV/Famezc=
 github.com/bnb-chain/greenfield v0.2.3-alpha.7/go.mod h1:7/pNYmq09bxZy9yNfCfQa0pPwNH42efmFZJ5nP0fRNA=
+github.com/bnb-chain/greenfield v0.2.3 h1:s5KbeTuBiN+VL9i+BJtSFU+UNw6zk45Py9Ee1LY6liU=
+github.com/bnb-chain/greenfield v0.2.3/go.mod h1:LnDIEY7G57bs6tjKbJbwpy09zNceNgAsabYMa6t1Nd0=
 github.com/bnb-chain/greenfield-cometbft v0.0.2-alpha.2 h1:ys9kmgtRx04wcCextE6CrVmbL1bJDklWr+hWgm1y2k4=
 github.com/bnb-chain/greenfield-cometbft v0.0.2-alpha.2/go.mod h1:EBmwmUdaNbGPyGjf1cMuoN3pAeM2tQu7Lfg95813EAw=
 github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1 h1:XcWulGacHVRiSCx90Q8Y//ajOrLNBQWR/KDB89dy3cU=
