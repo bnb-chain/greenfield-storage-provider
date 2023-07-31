@@ -70,8 +70,8 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	startAuthenticationTime := time.Now()
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
+		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
@@ -278,8 +278,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	log.CtxDebugw(ctx, "succeed to upload payload data")
-
+	log.CtxDebug(ctx, "succeed to upload payload data")
 }
 
 // queryResumeOffsetHandler handles the resumable put object
@@ -923,9 +922,9 @@ func (g *GateModular) viewObjectByUniversalEndpointHandler(w http.ResponseWriter
 
 // checkSPAndBucketStatus check sp and bucket is in right status
 func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName string) error {
-	spInfo, err := g.baseApp.GfSpClient().GetSPInfo(ctx, g.baseApp.OperatorAddress())
+	spInfo, err := g.baseApp.Consensus().QuerySP(ctx, g.baseApp.OperatorAddress())
 	if err != nil {
-		log.Errorw("failed to query sp info by operator address", "operator_address", g.baseApp.OperatorAddress(),
+		log.Errorw("failed to query sp by operator address", "operator_address", g.baseApp.OperatorAddress(),
 			"error", err)
 		return err
 	}
@@ -936,15 +935,17 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 		return ErrSPUnavailable
 	}
 
-	bucketMeta, _, err := g.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
 	if err != nil {
 		log.Errorw("failed to query bucket info by bucket name", "bucket_name", bucketName, "error", err)
+		return err
 	}
-	bucketStatus := bucketMeta.GetBucketInfo().GetBucketStatus()
+	bucketStatus := bucketInfo.GetBucketStatus()
 	if bucketStatus != storagetypes.BUCKET_STATUS_CREATED {
 		log.Errorw("bucket is not in created status", "bucket_name", bucketName, "bucket_status", bucketStatus,
-			"bucket_id", bucketMeta.GetBucketInfo().Id.String())
+			"bucket_id", bucketInfo.Id.String())
 		return ErrBucketUnavailable
 	}
+	log.Info("sp and bucket status is right")
 	return nil
 }

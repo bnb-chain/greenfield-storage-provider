@@ -51,8 +51,6 @@ var (
 	ErrBucketUnavailable      = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50036, "bucket is not in service status")
 
 	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
-
-	ErrApprovalExpired = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
 )
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {

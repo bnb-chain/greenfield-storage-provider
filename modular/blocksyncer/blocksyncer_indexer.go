@@ -244,7 +244,7 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 	allSQL := make([]map[string][]interface{}, 0)
 	for k, v := range txs {
 		for _, event := range v {
-			//log.Infof("sdkevent: %v", event)
+			// log.Infof("sdkevent: %v", event)
 			sqls, err := i.ExtractEvent(ctx, block, k, sdk.Event(event))
 			if err != nil {
 				return nil, err
