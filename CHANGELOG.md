@@ -1,5 +1,20 @@
 # Changelog
 
+
+## 0.2.3
+
+BUGFIX
+* [#910](https://github.com/bnb-chain/greenfield-storage-provider/pull/910) fix: return err when request height > latest
+* [#905](https://github.com/bnb-chain/greenfield-storage-provider/pull/905) fix: polish sp exit tx failed workflow
+* [#911](https://github.com/bnb-chain/greenfield-storage-provider/pull/911) feat: replace SecondarySp which is in STATUS_GRACEFUL_EXITING
+* [#914](https://github.com/bnb-chain/greenfield-storage-provider/pull/914) fix: universal endpoint redirect using bucket's real endpoint
+* [#919](https://github.com/bnb-chain/greenfield-storage-provider/pull/919) fix: pick sp can select primary sp
+* [#923](https://github.com/bnb-chain/greenfield-storage-provider/pull/923) refactor : migrate bucket
+* [#925](https://github.com/bnb-chain/greenfield-storage-provider/pull/925) fix: refine sp exit scheduler
+* [#934](https://github.com/bnb-chain/greenfield-storage-provider/pull/934) feat:bs batchsubmit
+* [#936](https://github.com/bnb-chain/greenfield-storage-provider/pull/936) fix: failed to new piece store will panic
+* [#947](https://github.com/bnb-chain/greenfield-storage-provider/pull/947) fix: replace operation address to sp id sp exit
+
 ## 0.2.3-alpha.11
 
 FEATURES
