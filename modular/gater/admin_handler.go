@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
@@ -39,6 +40,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		createBucketApproval  = storagetypes.MsgCreateBucket{}
 		migrateBucketApproval = storagetypes.MsgMigrateBucket{}
 		createObjectApproval  = storagetypes.MsgCreateObject{}
+		spInfo                *sptypes.StorageProvider
 		authenticated         bool
 	)
 	startTime := time.Now()
@@ -78,6 +80,21 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 
 	switch approvalType {
 	case createBucketApprovalAction:
+		// check sp status firstly
+		spInfo, err = g.baseApp.Consensus().QuerySP(reqCtx.Context(), g.baseApp.OperatorAddress())
+		if err != nil {
+			log.Errorw("failed to query sp by operator address", "operator_address", g.baseApp.OperatorAddress(),
+				"error", err)
+			return
+		}
+		spStatus := spInfo.GetStatus()
+		if spStatus != sptypes.STATUS_IN_SERVICE {
+			log.Errorw("sp is not in service status", "operator_address", g.baseApp.OperatorAddress(),
+				"sp_status", spStatus, "sp_id", spInfo.GetId(), "endpoint", spInfo.GetEndpoint())
+			err = ErrSPUnavailable
+			return
+		}
+
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createBucketApproval); err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
 				r.Header.Get(GnfdUnsignedApprovalMsgHeader), "error", err)
@@ -176,6 +193,11 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
+		if err = g.checkSPAndBucketStatus(reqCtx.Context(), createObjectApproval.GetBucketName()); err != nil {
+			log.Errorw("create object approval failed to check sp and bucket status", "error", err)
+			return
+		}
+
 		startVerifyAuthentication := time.Now()
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 			reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
