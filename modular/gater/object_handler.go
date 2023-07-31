@@ -1,6 +1,7 @@
 package gater
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -61,6 +63,12 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+		log.Errorw("put object api failed to check sp and bucket status", "error", err)
+		return
+	}
+
 	startAuthenticationTime := time.Now()
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
@@ -179,6 +187,12 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+		log.Errorw("resumable put object api failed to check sp and bucket status", "error", err)
+		return
+	}
+
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
@@ -905,4 +919,32 @@ func (g *GateModular) downloadObjectByUniversalEndpointHandler(w http.ResponseWr
 // viewObjectByUniversalEndpointHandler handles the view object request sent by universal endpoint
 func (g *GateModular) viewObjectByUniversalEndpointHandler(w http.ResponseWriter, r *http.Request) {
 	g.getObjectByUniversalEndpointHandler(w, r, false)
+}
+
+// checkSPAndBucketStatus check sp and bucket is in right status
+func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName string) error {
+	spInfo, err := g.baseApp.GfSpClient().GetSPInfo(ctx, g.baseApp.OperatorAddress())
+	if err != nil {
+		log.Errorw("failed to query sp info by operator address", "operator_address", g.baseApp.OperatorAddress(),
+			"error", err)
+		return err
+	}
+	spStatus := spInfo.GetStatus()
+	if spStatus != sptypes.STATUS_IN_SERVICE {
+		log.Errorw("sp is not in service status", "operator_address", g.baseApp.OperatorAddress(),
+			"sp_status", spStatus, "sp_id", spInfo.GetId(), "endpoint", spInfo.GetEndpoint())
+		return ErrSPUnavailable
+	}
+
+	bucketMeta, _, err := g.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
+	if err != nil {
+		log.Errorw("failed to query bucket info by bucket name", "bucket_name", bucketName, "error", err)
+	}
+	bucketStatus := bucketMeta.GetBucketInfo().GetBucketStatus()
+	if bucketStatus != storagetypes.BUCKET_STATUS_CREATED {
+		log.Errorw("bucket is not in created status", "bucket_name", bucketName, "bucket_status", bucketStatus,
+			"bucket_id", bucketMeta.GetBucketInfo().Id.String())
+		return ErrBucketUnavailable
+	}
+	return nil
 }
