@@ -1,5 +1,5 @@
 resources:
-  - https://github.com/node-real/greenfield-sp-k8s/base/vendors/aws/large?ref=v0.4.11  # check doco for latest version
+  - https://github.com/bnb-chain/greenfield-storage-provider/deployment/k8s/base/vendors/aws/large?ref=develop  # check doco for latest version
 
 configMapGenerator:
 - name: config
