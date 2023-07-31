@@ -19,7 +19,7 @@ Greenfield Storage Provider Deployment Guide - AWS
 * Add S3 permission policy - This is where SP stores its user uploaded content.
 ![2](imgs/iam-k8s-role-s3.png "IAM Role S3")
 
-* Add Secret Manager permission policy - K8S will retrieve secret from here as app parameters
+* (Optional) Add Secret Manager permission policy - K8S will retrieve secret from here as app parameters
 ![3](imgs/iam-k8s-role-sm.png "IAM Role Secret Manager")
 
 * Bind K8S service account to this IAM role
@@ -30,19 +30,19 @@ Greenfield Storage Provider Deployment Guide - AWS
 
 * Create RDS database and jot down the connection string, username and password.
 ![5](imgs/rds.png)
-after RDS created, need to init DB by creating databse:
-1. db storage_provider_db
-2. db block_syncer
-3. db block_syncer_backup
+after RDS created, need to init DB by creating database:
+1. storage_provider_db
+2. block_syncer
+3. block_syncer_backup
 
 
 #### S3 Bucket
 
 * Create S3 bucket
-![6](imgs/rds.png)
+![6](imgs/s3.png)
 
 
-#### Secret Manager
+#### Secret Manager (Optional)
 
 * Create secret and update secret value (example provided below)
 ![7](imgs/secret-manager.png)
