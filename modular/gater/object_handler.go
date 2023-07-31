@@ -61,9 +61,10 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
 	startAuthenticationTime := time.Now()
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
+		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
@@ -179,6 +180,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
+
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
@@ -264,8 +266,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	log.CtxDebugw(ctx, "succeed to upload payload data")
-
+	log.CtxDebug(ctx, "succeed to upload payload data")
 }
 
 // queryResumeOffsetHandler handles the resumable put object

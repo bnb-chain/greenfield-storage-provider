@@ -230,7 +230,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 	offset := task.GetResumeOffset()
 	var (
 		err           error
-		segIdx        uint32 = uint32(int64(offset) / segmentSize)
+		segIdx        = uint32(int64(offset) / segmentSize)
 		pieceKey      string
 		integrity     []byte
 		readN         int
@@ -264,8 +264,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
-					log.CtxErrorw(ctx, "put segment piece to piece store",
-						"piece_key", pieceKey, "error", err)
+					log.CtxErrorw(ctx, "put segment piece to piece store", "piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
 				err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), primarySPRedundancyIdx, hash.GenerateChecksum(data))
