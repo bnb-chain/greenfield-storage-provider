@@ -62,6 +62,10 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
+		return
+	}
 	startAuthenticationTime := time.Now()
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
 		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
@@ -181,6 +185,10 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
+		return
+	}
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
