@@ -99,16 +99,17 @@ type OffChainAuthKey struct {
 
 // MigrateGVGUnitMeta is used to record migrate type/meta/status/progress.
 type MigrateGVGUnitMeta struct {
-	MigrateGVGKey        string // as primary key
-	SwapOutKey           string
-	GlobalVirtualGroupID uint32 // is used by sp exit/bucket migrate
-	VirtualGroupFamilyID uint32 // is used by sp exit
-	RedundancyIndex      int32  // is used by sp exit
-	BucketID             uint64 // is used by bucket migrate
-	SrcSPID              uint32
-	DestSPID             uint32
-	LastMigratedObjectID uint64
-	MigrateStatus        int // scheduler assign unit status.
+	MigrateGVGKey            string // as primary key
+	SwapOutKey               string
+	GlobalVirtualGroupID     uint32 // is used by sp exit/bucket migrate
+	VirtualGroupFamilyID     uint32 // is used by sp exit
+	RedundancyIndex          int32  // is used by sp exit
+	BucketID                 uint64 // is used by bucket migrate
+	SrcSPID                  uint32
+	DestSPID                 uint32
+	LastMigratedObjectID     uint64
+	MigrateStatus            int    // scheduler assign unit status.
+	DestGlobalVirtualGroupID uint32 // is used by sp exit/bucket migrate
 }
 
 // SwapOutMeta is used to record swap out meta.

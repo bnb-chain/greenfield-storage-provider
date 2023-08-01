@@ -170,11 +170,11 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 		return err
 	}
 	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+		log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
 		// TODO(chris)
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			return nil
 		} else {
-			log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
 			return ErrGfSpDB
 		}
 	}
