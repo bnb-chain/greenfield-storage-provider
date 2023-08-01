@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -405,16 +407,25 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	queryParams := r.URL.Query()
-	gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
-	gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
-	gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+	offChainAuthUserAddressParam := queryParams.Get(OffChainAuthUserAddressQuery)
+	offChainAuthAppDomainParam := queryParams.Get(OffChainAuthAppDomainQuery)
+	offChainAuthAuthorizationParam := queryParams.Get(OffChainAuthAuthorizationQuery)
 
 	// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
-	if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" {
-		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
-		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
-		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
-		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
+	if offChainAuthUserAddressParam != "" && offChainAuthAppDomainParam != "" && offChainAuthAuthorizationParam != "" {
+		vars := mux.Vars(r)
+		objectName := vars["object"]
+		r.Header.Set(GnfdUserAddressHeader, offChainAuthUserAddressParam)
+		r.Header.Set(GnfdOffChainAuthAppDomainHeader, offChainAuthAppDomainParam)
+		r.Header.Set(GnfdAuthorizationHeader, offChainAuthAuthorizationParam)
+
+		// default set content-disposition to download, if specified in query param as view, then set to view
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+objectName+"\"")
+		offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
+		isView, _ := strconv.ParseBool(offChainAuthViewParam)
+		if isView {
+			w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
+		}
 	}
 
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
