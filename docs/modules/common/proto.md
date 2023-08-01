@@ -1,6 +1,6 @@
 # Proto Definition
 
-GfSp framework uses protobuf to define structured data which is language-neutral, platform-neutral and extensible mechanism for serializing data. This section will display used protobuf definiton in GfSp code.
+GfSp framework uses protobuf to define structured data which is language-neutral, platform-neutral and extensible mechanism for serializing data. This section will display used protobuf definition in GfSp code.
 
 ## GfSpTask Proto
 
@@ -15,7 +15,9 @@ message GfSpTask {
   int32 task_priority = 5;
   int64 retry = 6;
   int64 max_retry = 7;
-  base.types.gfsperrors.GfSpError err = 8;
+  string user_address = 8;
+  string logs = 9;
+  base.types.gfsperrors.GfSpError err = 10;
 }
 ```
 
@@ -25,6 +27,16 @@ message GfSpTask {
 message GfSpCreateBucketApprovalTask {
   GfSpTask task = 1;
   greenfield.storage.MsgCreateBucket create_bucket_info = 2;
+}
+```
+
+### GfSpMigrateBucketApprovalTask Proto
+
+
+```proto
+message GfSpMigrateBucketApprovalTask {
+  GfSpTask task = 1;
+  greenfield.storage.MsgMigrateBucket migrate_bucket_info = 2;
 }
 ```
 
@@ -59,8 +71,23 @@ message GfSpReplicatePieceApprovalTask {
 ```proto
 message GfSpUploadObjectTask {
   GfSpTask task = 1;
+  uint32 virtual_group_family_id = 2;
+  greenfield.storage.ObjectInfo object_info = 3;
+  greenfield.storage.Params storage_params = 4;
+}
+```
+
+### GfSpResumableUploadObjectTask Proto
+
+```proto
+message GfSpResumableUploadObjectTask {
+  GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
+  uint64 offset = 4;
+  uint64 length = 5;
+  bool completed = 6;
+  uint32 virtual_group_family_id = 7;
 }
 ```
 
@@ -71,8 +98,26 @@ message GfSpReplicatePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  repeated bytes secondary_signature = 4;
-  bool sealed = 5;
+  repeated string secondary_addresses = 4;
+  repeated bytes secondary_signatures = 5;
+  bool sealed = 6;
+  uint32 global_virtual_group_id = 7;
+  repeated string secondary_endpoints = 8;
+}
+```
+
+### GfSpRecoverPieceTask Proto
+
+```proto
+message GfSpRecoverPieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  uint32 segment_idx = 5;
+  int32 ec_idx = 6;
+  uint64 piece_size = 7;
+  bytes signature = 8;
+  bool recovered = 9;
 }
 ```
 
@@ -83,12 +128,15 @@ message GfSpReceivePieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  uint32 replicate_idx = 4;
-  int32 piece_idx = 5;
+  uint32 segment_idx = 4;
+  int32 redundancy_idx = 5;
   int64 piece_size = 6;
   bytes piece_checksum = 7;
   bytes signature = 8;
   bool sealed = 9;
+  bool finished = 10;
+  uint32 global_virtual_group_id = 11;
+  bool bucket_migration = 12;
 }
 ```
 
@@ -99,7 +147,10 @@ message GfSpSealObjectTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  repeated bytes secondary_signature = 4;
+  repeated string secondary_addresses = 4;
+  repeated bytes secondary_signatures = 5;
+  uint32 global_virtual_group_id = 6;
+  repeated string secondary_endpoints = 7;
 }
 ```
 
@@ -111,9 +162,8 @@ message GfSpDownloadObjectTask {
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.BucketInfo bucket_info = 3;
   greenfield.storage.Params storage_params = 4;
-  string user_address = 5;
-  int64 low = 6;
-  int64 high = 7;
+  int64 low = 5;
+  int64 high = 6;
 }
 ```
 
@@ -126,11 +176,10 @@ message GfSpDownloadPieceTask {
   greenfield.storage.BucketInfo bucket_info = 3;
   greenfield.storage.Params storage_params = 4;
   bool enable_check = 5; // check read quota, only in first piece
-  string user_address = 6;
-  uint64 total_size = 7;
-  string piece_key = 8;
-  uint64 piece_offset = 9;
-  uint64 piece_length = 10;
+  uint64 total_size = 6;
+  string piece_key = 7;
+  uint64 piece_offset = 8;
+  uint64 piece_length = 9;
 }
 ```
 
@@ -142,12 +191,11 @@ message GfSpChallengePieceTask {
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.BucketInfo bucket_info = 3;
   greenfield.storage.Params storage_params = 4;
-  string user_address = 5;
-  uint32 segment_idx = 6;
-  int32 redundancy_idx = 7;
-  bytes integrity_hash = 8;
-  repeated bytes piece_hash = 9;
-  int64 piece_data_size = 10;
+  uint32 segment_idx = 5;
+  int32 redundancy_idx = 6;
+  bytes integrity_hash = 7;
+  repeated bytes piece_hash = 8;
+  int64 piece_data_size = 9;
 }
 ```
 
@@ -186,6 +234,35 @@ message GfSpGCMetaTask {
 }
 ```
 
+### GfSpMigrateGVGTask Proto
+
+```proto
+message GfSpMigrateGVGTask {
+  GfSpTask task = 1;
+  uint64 bucket_id = 2;
+  greenfield.virtualgroup.GlobalVirtualGroup src_gvg = 3;
+  greenfield.virtualgroup.GlobalVirtualGroup dest_gvg = 4;
+  int32 redundancy_idx = 5;
+  greenfield.sp.StorageProvider src_sp = 6;
+  uint64 last_migrated_object_id = 7;
+  bool finished = 8;
+}
+```
+
+### GfSpMigratePieceTask Proto
+
+```proto
+message GfSpMigratePieceTask {
+  GfSpTask task = 1;
+  greenfield.storage.ObjectInfo object_info = 2;
+  greenfield.storage.Params storage_params = 3;
+  string src_sp_endpoint = 4;
+  uint32 segment_idx = 5;
+  int32 redundancy_idx = 6;
+  bytes signature = 7;
+}
+```
+
 ## Greenfield Proto
 
 Some structured data used in GfSp is deinfed in Greenfield chain repo, we display them as follows.
@@ -198,21 +275,44 @@ message MsgCreateBucket {
 
   // creator defines the account address of bucket creator, it is also the bucket owner.
   string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // bucket_name defines a globally unique name of bucket
   string bucket_name = 2;
+
   // visibility means the bucket is private or public. if private, only bucket owner or grantee can read it,
   // otherwise every greenfield user can read it.
   VisibilityType visibility = 3;
+
   // payment_address defines an account address specified by bucket owner to pay the read fee. Default: creator
   string payment_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // primary_sp_address defines the address of primary sp.
-  string primary_sp_address = 6 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string primary_sp_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // primary_sp_approval defines the approval info of the primary SP which indicates that primary sp confirm the user's request.
-  Approval primary_sp_approval = 7;
+  common.Approval primary_sp_approval = 6;
+
   // charged_read_quota defines the read data that users are charged for, measured in bytes.
   // The available read data for each user is the sum of the free read data provided by SP and
   // the ChargeReadQuota specified here.
-  uint64 charged_read_quota = 8;
+  uint64 charged_read_quota = 7;
+}
+```
+
+### MsgMigrateBucket Proto
+
+```proto
+message MsgMigrateBucket {
+  option (cosmos.msg.v1.signer) = "operator";
+
+  // operator defines the account address of the operator who initial the migrate bucket
+  string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // bucket_name defines the name of the bucket that need to be migrated
+  string bucket_name = 2;
+  // dst_primary_sp_id defines the destination SP for migration
+  uint32 dst_primary_sp_id = 3;
+  // dst_primary_sp_approval defines the approval of destination sp
+  common.Approval dst_primary_sp_approval = 4;
 }
 ```
 
@@ -224,25 +324,31 @@ message MsgCreateObject {
 
   // creator defines the account address of object uploader
   string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // bucket_name defines the name of the bucket where the object is stored.
   string bucket_name = 2;
+
   // object_name defines the name of object
   string object_name = 3;
+
   // payload_size defines size of the object's payload
   uint64 payload_size = 4;
+
   // visibility means the object is private or public. if private, only object owner or grantee can access it,
   // otherwise every greenfield user can access it.
   VisibilityType visibility = 5;
+
   // content_type defines a standard MIME type describing the format of the object.
   string content_type = 6;
+
   // primary_sp_approval defines the approval info of the primary SP which indicates that primary sp confirm the user's request.
-  Approval primary_sp_approval = 7;
+  common.Approval primary_sp_approval = 7;
+
   // expect_checksums defines a list of hashes which was generate by redundancy algorithm.
   repeated bytes expect_checksums = 8;
+
   // redundancy_type can be ec or replica
   RedundancyType redundancy_type = 9;
-  // expect_secondarySPs defines a list of StorageProvider address, which is optional
-  repeated string expect_secondary_sp_addresses = 10 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 ```
 
@@ -268,17 +374,14 @@ message BucketInfo {
   int64 create_at = 6;
   // payment_address is the address of the payment account
   string payment_address = 7 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // primary_sp_address is the address of the primary sp. Objects belongs to this bucket will never
-  // leave this SP, unless you explicitly shift them to another SP.
-  string primary_sp_address = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // global_virtual_group_family_id defines the unique id of gvg family
+  uint32 global_virtual_group_family_id = 8;
   // charged_read_quota defines the traffic quota for read in bytes per month.
   // The available read data for each user is the sum of the free read data provided by SP and
   // the ChargeReadQuota specified here.
   uint64 charged_read_quota = 9;
-  // billing info of the bucket
-  BillingInfo billing_info = 10 [(gogoproto.nullable) = false];
   // bucket_status define the status of the bucket.
-  BucketStatus bucket_status = 11;
+  BucketStatus bucket_status = 10;
 }
 ```
 
@@ -286,36 +389,38 @@ message BucketInfo {
 
 ```proto
 message ObjectInfo {
+  // owner is the object owner
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // creator is the address of the uploader, it always be same as owner address
+  string creator = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // bucket_name is the name of the bucket
-  string bucket_name = 2;
+  string bucket_name = 3;
   // object_name is the name of object
-  string object_name = 3;
+  string object_name = 4;
   // id is the unique identifier of object
-  string id = 4 [
+  string id = 5 [
     (cosmos_proto.scalar) = "cosmos.Uint",
     (gogoproto.customtype) = "Uint",
     (gogoproto.nullable) = false
   ];
+  uint32 local_virtual_group_id = 6;
   // payloadSize is the total size of the object payload
-  uint64 payload_size = 5;
+  uint64 payload_size = 7;
   // visibility defines the highest permissions for object. When an object is public, everyone can access it.
-  VisibilityType visibility = 6;
+  VisibilityType visibility = 8;
   // content_type define the format of the object which should be a standard MIME type.
-  string content_type = 7;
+  string content_type = 9;
   // create_at define the block timestamp when the object is created
-  int64 create_at = 8;
+  int64 create_at = 10;
   // object_status define the upload status of the object.
-  ObjectStatus object_status = 9;
+  ObjectStatus object_status = 11;
   // redundancy_type define the type of the redundancy which can be multi-replication or EC.
-  RedundancyType redundancy_type = 10;
+  RedundancyType redundancy_type = 12;
   // source_type define the source of the object.
-  SourceType source_type = 11;
+  SourceType source_type = 13;
   // checksums define the root hash of the pieces which stored in a SP.
   // add omit tag to omit the field when converting to NFT metadata
-  repeated bytes checksums = 12 [(gogoproto.moretags) = "traits:\"omit\""];
-  // secondary_sp_addresses define the addresses of secondary_sps
-  repeated string secondary_sp_addresses = 13 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated bytes checksums = 14 [(gogoproto.moretags) = "traits:\"omit\""];
 }
 ```
 
@@ -403,15 +508,19 @@ message MsgSealObject {
 
   // operator defines the account address of primary SP
   string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // bucket_name defines the name of the bucket where the object is stored.
   string bucket_name = 2;
+
   // object_name defines the name of object to be sealed.
   string object_name = 3;
-  // secondary_sp_addresses defines a list of storage provider which store the redundant data.
-  repeated string secondary_sp_addresses = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // secondary_sp_signatures defines the signature of the secondary sp that can
+
+  // global_virtual_group_id defines the id of global virtual group
+  uint32 global_virtual_group_id = 4;
+
+  // secondary_sp_bls_agg_signatures defines the aggregate bls signature of the secondary sp that can
   // acknowledge that the payload data has received and stored.
-  repeated bytes secondary_sp_signatures = 5;
+  bytes secondary_sp_bls_agg_signatures = 5;
 }
 ```
 
@@ -423,8 +532,10 @@ message MsgRejectSealObject {
 
   // operator defines the account address of the object owner
   string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // bucket_name defines the name of the bucket where the object is stored.
   string bucket_name = 2;
+
   // object_name defines the name of unsealed object to be reject.
   string object_name = 3;
 }
@@ -442,5 +553,129 @@ message MsgDiscontinueBucket {
   string bucket_name = 2;
   // the reason for the request.
   string reason = 3;
+}
+```
+
+### MsgCreateGlobalVirtualGroup
+
+```proto
+message MsgCreateGlobalVirtualGroup {
+  option (cosmos.msg.v1.signer) = "storage_provider";
+
+  // storage_provider defines the operator account address of the storage provider who create the global virtual group.
+  string storage_provider = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // family_id is the identifier for the virtual group's family.
+  uint32 family_id = 2;
+  // secondary_sp_id is a list of secondary storage provider IDs associated with the virtual group.
+  repeated uint32 secondary_sp_ids = 3;
+  // total_deposit is the total deposit amount required for the virtual group.
+  // The tokens needs deposited and the size of storage are correlated.
+  cosmos.base.v1beta1.Coin deposit = 4 [(gogoproto.nullable) = false];
+}
+```
+
+### MsgCompleteMigrateBucket
+
+```proto
+message MsgCompleteMigrateBucket {
+  option (cosmos.msg.v1.signer) = "operator";
+
+  // operator defines the account address of the msg operator.
+  // The CompleteMigrateBucket transaction must be initiated by the destination SP of the migration
+  string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // bucket_name defines the name of the bucket that need to be migrated
+  string bucket_name = 2;
+  // global_virtual_group_family_id defines the family id which the bucket migrate to
+  uint32 global_virtual_group_family_id = 3;
+  // gvg_mappings defines the src and dst gvg mapping relationships which the bucket migrate to
+  repeated GVGMapping gvg_mappings = 4;
+}
+```
+
+### MsgUpdateSpStoragePrice
+
+```proto
+message MsgUpdateSpStoragePrice {
+  option (cosmos.msg.v1.signer) = "sp_address";
+
+  // sp address
+  string sp_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // read price, in bnb wei per charge byte
+  string read_price = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  // free read quota, in byte
+  uint64 free_read_quota = 3;
+  // store price, in bnb wei per charge byte
+  string store_price = 4 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+```
+
+### MsgSwapOut
+
+```proto
+message MsgSwapOut {
+  option (cosmos.msg.v1.signer) = "storage_provider";
+
+  // storage_provider defines the operator account address of the storage provider who want to swap out from the global virtual group.
+  string storage_provider = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // virtual_group_family_id is the identifier of the virtual group family.
+  // if it set to non-zero, it represents that the operator swap out as the primary storage provider
+  // it it set to zero, it represents that the operator swap out as the secondary storage provider.
+  uint32 global_virtual_group_family_id = 2;
+  // global_virtual_group_ids is a list of global virtual group IDs associated with the swap out.
+  // It allows to be empty only when the operator is the primary storage provider.
+  repeated uint32 global_virtual_group_ids = 3;
+  // successor_sp_id is the unique id of the successor storage provider.
+  uint32 successor_sp_id = 4;
+  // approval includes an expiration time and a signature.
+  // The fields to be signed with contains the necessary information of the successor.
+  common.Approval successor_sp_approval = 5;
+}
+```
+
+### MsgCompleteSwapOut
+
+```proto
+message MsgCompleteSwapOut {
+  option (cosmos.msg.v1.signer) = "storage_provider";
+
+  // storage_provider defines the operator account address of the storage provider who complete swap out task.
+  string storage_provider = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // virtual_group_family_id is the identifier of the virtual group family.
+  // if it set to non-zero, it represents that the operator swap out as the primary storage provider
+  // it it set to zero, it represents that the operator swap out as the secondary storage provider.
+  uint32 global_virtual_group_family_id = 2;
+  // global_virtual_group_ids is a list of global virtual group IDs associated with the swap out.
+  // It allows to be empty only when the operator is the primary storage provider.
+  repeated uint32 global_virtual_group_ids = 3;
+}
+```
+
+### MsgStorageProviderExit
+
+```proto
+message MsgStorageProviderExit {
+  option (cosmos.msg.v1.signer) = "storage_provider";
+
+  // storage_provider defines the operator account address of the storage provider who want to exit from the greenfield storage network.
+  string storage_provider = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+```
+
+### MsgCompleteStorageProviderExit
+
+```proto
+message MsgCompleteStorageProviderExit {
+  option (cosmos.msg.v1.signer) = "storage_provider";
+
+  // storage_provider defines the operator account address of the storage provider who want to exit from the greenfield storage network.
+  string storage_provider = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 ```

@@ -1,8 +1,8 @@
-# TaskExecutor
+# Executor
 
-TaskExecutor is the execution unit of SP background tasks. It is a resource consuming service, for which we introduce a resource manager, which will stop pulling(supported in the future) or accept tasks when the resource limit is reached.
+Executor is the execution unit of SP background tasks. It is a resource consuming service, for which we introduce a resource manager, which will stop pulling(supported in the future) or accept tasks when the resource limit is reached.
 
-TaskExecutor is an abstract interface to handle background tasks. It will ask tasks from manager modular, handle tasks and report the results or status to the manager modular. It can handle these tasks: ReplicatePieceTask, SealObjectTask, ReceivePieceTask, GCObjectTask, GCZombiePieceTask, GCMetaTask. Therefore, you can rewrite these methods to meet your own requirements.
+TaskExecutor is an abstract interface to handle background tasks. It will ask tasks from manager modular, handle tasks and report the results or status to the manager modular. It can handle these tasks: ReplicatePieceTask, SealObjectTask, ReceivePieceTask, GCObjectTask, GCZombiePieceTask, GCMetaTask, MigrateGVGTask. Therefore, you can rewrite these methods to meet your own requirements.
 
 ```go
 type TaskExecutor interface {
@@ -22,12 +22,14 @@ type TaskExecutor interface {
     HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask)
     // HandleGCMetaTask handles the GCMetaTask that is asked from manager module.
     HandleGCMetaTask(ctx context.Context, task task.GCMetaTask)
+    // HandleMigrateGVGTask handles the MigrateGVGTask that is asked from manager module
+    HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask)
     // ReportTask reports the results or status of running task to manager module.
     ReportTask(ctx context.Context, task task.Task) error
 }
 ```
 
-TaskExecutor interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so TaskExecutor module can be managed by lifycycle and resource manager.  As we can see from the second parameter of the methods defined in `TaskExecutor` interface, there are many tasks. They are also defined as an interface. We can report tasks of TaskExecutor to Manager module.
+TaskExecutor interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so TaskExecutor module can be managed by lifecycle and resource manager.  As we can see from the second parameter of the methods defined in `TaskExecutor` interface, there are many tasks. They are also defined as an interface. We can report tasks of Executor to Manager module.
 
 ## GC
 
@@ -109,6 +111,16 @@ The corresponding interfaces definition is shown below:
 The corresponding `protobuf` definition is shown below:
 
 - [GfSpGCMetaTask](./common/proto.md#gfspgcmetatask-proto)
+
+## HandleMigrateGVGTask
+
+The corresponding interfaces definition is shown below:
+
+- [MigrateGVGTask](./common/task.md#migrategvgtask)
+
+The corresponding `protobuf` definition is shown below:
+
+- [GfSpMigrateGVGTask](./common/proto.md#gfspmigrategvgtask-proto)
 
 ## GfSp Framework TaskExecutor Code
 

@@ -19,7 +19,7 @@ type Authenticator interface {
     VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error)
 }
 
-// AuthOpType defines the operator type used to verify authentication.
+// AuthOpType defines the operator type used to authentication verification.
 type AuthOpType int32
 
 const (
@@ -27,6 +27,8 @@ const (
     AuthOpTypeUnKnown AuthOpType = iota
     // AuthOpAskCreateBucketApproval defines the AskCreateBucketApproval operator
     AuthOpAskCreateBucketApproval
+    // AuthOpAskMigrateBucketApproval defines the AskMigrateBucketApproval operator
+    AuthOpAskMigrateBucketApproval
     // AuthOpAskCreateObjectApproval defines the AskCreateObjectApproval operator
     AuthOpAskCreateObjectApproval
     // AuthOpTypeGetChallengePieceInfo defines the GetChallengePieceInfo operator
@@ -41,10 +43,12 @@ const (
     AuthOpTypeGetBucketQuota
     // AuthOpTypeListBucketReadRecord defines the ListBucketReadRecord operator
     AuthOpTypeListBucketReadRecord
+    // AuthOpTypeGetRecoveryPiece defines the GetRecoveryPiece operator
+    AuthOpTypeGetRecoveryPiece
 )
 ```
 
-Authenticator interface inherits [Modular interface](./lifecycle_modular.md#modular-interface), so Approver module can be managed by lifycycle and resource manager.
+Authenticator interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Authenticator module can be managed by lifecycle and resource manager.
 
 You can overwrite `VerifyAuthentication` to implement your own authentication mode by different AuthOpType. This is the most basic authentication.
 

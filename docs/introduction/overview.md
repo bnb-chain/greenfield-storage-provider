@@ -31,26 +31,26 @@ recommended that they advertise their information and prove to the community.
 SP contains fifteen core modules as show below:
 
 - **Gater**: It serves as the gateway for SP, providing HTTP services and adhering to the S3 protocol. It generates tasks
-- corresponding to user requests and forwards them to other modules within SP. Since Gater does not allow customization,
-- no interface is defined in the modular file.
+corresponding to user requests and forwards them to other modules within SP. Since Gater does not allow customization,
+no interface is defined in the modular file.
 
-- **Authorizer**: It is responsible for verifying authorization.
+- **Authenticator**: It is responsible for verifying authorization.
 
-- **Approver**: It is responsible for handling approval requests, specifically `CreateBucketApproval` and `CreateObjectApproval`.
+- **Approver**: It is responsible for handling approval requests, specifically `CreateBucketApproval` and `CreateObjectApproval` etc.
 
 - **Uploader**: It handles the put object requests from user accounts and stores payload data into piece store of the primary SP.
 
 - **Downloader**: It is responsible for handling get object request from user account and get challenge info request from other components in the Greenfield system.
 
-- **TaskExecutor**: It is responsible for handling background task. This module can request tasks from the Manager module, execute them and report the results or status back to the Manager.
+- **Executor**: It is responsible for handling background task. This module can request tasks from the Manager module, execute them and report the results or status back to the Manager.
 
-- **Manager**: It is responsible for managing task scheduling of SP and other management functions.
+- **Manager**: It is responsible for managing task scheduling of SP and other management functions, such as migrate bucket and sp exit procedure.
 
-- **P2P**: It is responsible for handling the interaction of control information between SPs. It handles ask replicate piece approval requests by broadcasting the approval to other SPs, waiting for responses and returning the approvals if the minimum or maximum approved number is reached before the timeout.
+- **P2P**: It is responsible for handling the interaction of control information between SPs.
 
 - **Receiver**: It receives data from the primary SP, calculates the integrity hash of the data, signs it, and returns it to the primary SP for sealing on a greenfield.
 
-- **Signer**: It handles the signing of the SP data on the greenfield chain operator and holds all of the SP's private keys. Due to the sequence number of the SP account, it must be a singleton.
+- **Signer**: It handles the signing of the SP data on the greenfield chain operator and holds all the SP's private keys. Due to the sequence number of the SP account, it must be a singleton.
 
 - **Metadata**: It is used to provide efficient query interface for meta info in SP. This module achieves low latency and high-performance SP requirements.
 
