@@ -152,10 +152,10 @@ function make_config() {
     sed -i -e "s/Dsn = '.*'/Dsn = \"${USER}:${PWD}@tcp(${ADDRESS})\/${DATABASE}?parseTime=true\&multiStatements=true\&loc=Local\&interpolateParams=true\"/g" config.toml
 
     # manager
-    sed -i -e "s/GVGPreferSPList = \[\]/GVGPreferSPList = \[1,2,3,9\]/g" config.toml
     sed -i -e "s/SubscribeSPExitEventIntervalSec = '.*'/SubscribeSPExitEventIntervalSec=1/g" config.toml
     sed -i -e "s/SubscribeSwapOutExitEventIntervalSec = '.*'/SubscribeSwapOutExitEventIntervalSec=1/g" config.toml
     sed -i -e "s/SubscribeBucketMigrateEventIntervalSec = '.*'/SubscribeBucketMigrateEventIntervalSec=1/g" config.toml
+    sed -i -e "s/GVGPreferSPList = \[\]/GVGPreferSPList = \[1,2,3,4,5,6,7,8\]/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null
