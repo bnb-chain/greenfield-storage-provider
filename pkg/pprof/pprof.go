@@ -67,15 +67,11 @@ func (p *PProf) serve() {
 	}
 }
 
-func (p *PProf) ReserveResource(
-	ctx context.Context,
-	state *corercmgr.ScopeStat) (
-	corercmgr.ResourceScopeSpan, error) {
+func (p *PProf) ReserveResource(ctx context.Context, state *corercmgr.ScopeStat) (corercmgr.ResourceScopeSpan, error) {
 	return &corercmgr.NullScope{}, nil
 }
-func (p *PProf) ReleaseResource(
-	ctx context.Context,
-	scope corercmgr.ResourceScopeSpan) {
+
+func (p *PProf) ReleaseResource(ctx context.Context, scope corercmgr.ResourceScopeSpan) {
 	scope.Done()
 }
 
