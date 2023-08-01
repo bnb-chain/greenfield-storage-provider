@@ -225,14 +225,20 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus()); err != nil {
 		return err
 	}
-	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+	if cfg.Manager.SubscribeSPExitEventIntervalMillisecond == 0 {
 		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalMillisecond
+	} else {
+		manager.subscribeSPExitEventInterval = cfg.Manager.SubscribeSPExitEventIntervalMillisecond
 	}
-	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
-		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
-	}
-	if cfg.Manager.SubscribeSwapOutExitEventIntervalSec == 0 {
+	if cfg.Manager.SubscribeSwapOutExitEventIntervalMillisecond == 0 {
 		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalMillisecond
+	} else {
+		manager.subscribeSwapOutEventInterval = cfg.Manager.SubscribeSwapOutExitEventIntervalMillisecond
+	}
+	if cfg.Manager.SubscribeBucketMigrateEventIntervalMillisecond == 0 {
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
+	} else {
+		manager.subscribeBucketMigrateEventInterval = cfg.Manager.SubscribeBucketMigrateEventIntervalMillisecond
 	}
 	manager.gvgPreferSPList = cfg.Manager.GVGPreferSPList
 

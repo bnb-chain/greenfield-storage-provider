@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -407,8 +406,6 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			s.lastSubscribedBlockHeight++
 			log.Infow("bucket migrate subscribe progress", "last_subscribed_block_height", s.lastSubscribedBlockHeight)
 		}
-		log.Infow("print bucket event", "subscribeBucketMigrateEventInterval", s.manager.subscribeBucketMigrateEventInterval)
-		log.AddSync(os.Stderr)
 		subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Millisecond)
 		defer subscribeBucketMigrateEventsTicker.Stop()
 
