@@ -1,6 +1,6 @@
 # Downloader
 
-Downloader is responsible for downloading object data (including range download) and challenge piece. The workflow of Uploader users can refer [Downloader](../workflow/workflow.md#downloader). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Downloader module provides an abstract interface, which is called `Downloader`, as follows:
+Downloader is responsible for downloading object data (including range download) and challenge piece. The workflow of Downloader users can refer [Downloader](../workflow/workflow.md#downloader). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Downloader module provides an abstract interface, which is called `Downloader`, as follows:
 
 Downloader is an abstract interface to handle getting object requests from users' account, and getting challenge info requests from other components in the system.
 
@@ -38,7 +38,7 @@ type Downloader interface {
 }
 ```
 
-Downloader interface inherits [Modular interface](./lifecycle_modular.md#modular-interface), so Downloader module can be managed by lifycycle and resource manager. In terms of the functions provided by Downloader module, it can be divided into three parts: DownloadObject, DownloadPiece and ChallengePiece. They all have three methods: PreXXX, HanldeXXX and PostXXX. Therefore, you can rewrite these methods to meet your own requirements. As we can see from the second parameter of the methods defined in `Downloader` interface, DownloadObject is splitted into `DownloadObjectTask`, DownloadPiece is splitted into `DownloadPieceTask` and ChallengePiece is splitted into `ChallengePieceTask`. They are also defined as an interface. We can query DownloadObject, DownloadPiece and ChallengePiece tasks that we care about by `QueryTasks` method through using subKey.
+Downloader interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Downloader module can be managed by lifecycle and resource manager. In terms of the functions provided by Downloader module, it can be divided into three parts: DownloadObject, DownloadPiece and ChallengePiece. They all have three methods: PreXXX, HanldeXXX and PostXXX. Therefore, you can rewrite these methods to meet your own requirements. As we can see from the second parameter of the methods defined in `Downloader` interface, DownloadObject is splitted into `DownloadObjectTask`, DownloadPiece is splitted into `DownloadPieceTask` and ChallengePiece is splitted into `ChallengePieceTask`. They are also defined as an interface. We can query DownloadObject, DownloadPiece and ChallengePiece tasks that we care about by `QueryTasks` method through using subKey.
 
 ## ObjectTask
 

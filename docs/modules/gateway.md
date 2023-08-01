@@ -1,11 +1,11 @@
 # Gateway
 
 The Gateway service serves as the unified entrance of HTTP requests for SP, providing a standardized `HTTP RESTful API` for application programming.
-If you are interested in the HTTP RESTful API, we invite you to the [following page](https://greenfield.bnbchain.org/docs/api-sdk/storgae-provider-rest/).
+If you are interested in the HTTP Restful API, we invite you to the [following page](https://greenfield.bnbchain.org/docs/api-sdk/storgae-provider-rest/).
 
 ## Overview
 
-<div align=center><img src="../../..//asset/05-SP-Gateway.jpg" width="700px"></div>
+<div align=center><img src="../asset/11-gater.jpg" width="700px"></div>
 <div align="center"><i>Gateway Architecture</i></div>
 
 ### Authorization Checker

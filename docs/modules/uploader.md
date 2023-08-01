@@ -15,12 +15,22 @@ type Uploader interface {
     // PostUploadObject is called after HandleUploadObjectTask, it can recycle
     // resources, make statistics and do some other operations.
     PostUploadObject(ctx context.Context, task task.UploadObjectTask)
+    
+    // PreResumableUploadObject prepares to handle ResumableUploadObject, it can do some checks
+    // such as checking for duplicates, if limitation of SP has been reached, etc.
+    PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error
+    // HandleResumableUploadObjectTask handles the ResumableUploadObject, store payload data into piece store by data stream.
+    HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error
+    // PostResumableUploadObject is called after HandleResumableUploadObjectTask, it can recycle
+    // resources, statistics and other operations.
+    PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask)
+    
     // QueryTasks queries upload object tasks that running on uploading by task sub-key.
     QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
 ```
 
-Uploader interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Uploader module can be managed by lifycycle and resource manager. In terms of the functions provided by Uploader module, there is only one part: just upload object. It has three methods: PreXXX, HanldeXXX and PostXXX. Therefore, you can rewrite these methods to meet your own requirements. As we can see from the second parameter of the methods defined in `Uploader` interface, uploadObject is splitted into `UploadObjectTask`. They are also defined as an interface. We can query UploadObject tasks that we care about by `QueryTasks` method through using subKey.
+Uploader interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Uploader module can be managed by lifecycle and resource manager. In terms of the functions provided by Uploader module, there is only one part: just upload object. It has three methods: PreXXX, HanldeXXX and PostXXX. Therefore, you can rewrite these methods to meet your own requirements. As we can see from the second parameter of the methods defined in `Uploader` interface, uploadObject is split into `UploadObjectTask`. They are also defined as an interface. We can query UploadObject tasks that we care about by `QueryTasks` method through using subKey.
 
 ## UploadObjectTask
 
@@ -34,6 +44,21 @@ ObjectTask inherits [Task interface](./common/task.md#task). UploadObjectTask al
 The corresponding `protobuf` definition is shown below:
 
 - [GfSpUploadObjectTask](./common/proto.md#gfspuploadobjecttask-proto)
+- [ObjectInfo](./common/proto.md#objectinfo-proto)
+- [Params](./common/proto.md#params-proto)
+
+## ResumableUploadObjectTask
+
+The corresponding interfaces definition is shown below:
+
+- [ObjectTask](./common/task.md#objecttask)
+- [ResumableUploadObjectTask](./common/task.md#resumableuploadobjecttask)
+
+ObjectTask inherits [Task interface](./common/task.md#task). UploadObjectTask also defines ten methods to help query info or set data. You can overwrite all these methods in your own.
+
+The corresponding `protobuf` definition is shown below:
+
+- [GfSpResumableUploadObjectTask](./common/proto.md#gfspresumableuploadobjecttask-proto)
 - [ObjectInfo](./common/proto.md#objectinfo-proto)
 - [Params](./common/proto.md#params-proto)
 
