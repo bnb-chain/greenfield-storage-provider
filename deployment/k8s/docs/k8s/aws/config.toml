@@ -1,0 +1,116 @@
+# also check secret file as empty values here may be replaced by env var
+Env = ""
+Server = []
+GRPCAddress = '0.0.0.0:9333'
+
+[SpDB]
+User = ''
+Passwd = ''
+Address = ''
+Database = 'storage_provider_db'
+
+[BsDB]
+User = ''
+Passwd = ''
+Address = ''
+Database = 'block_syncer'
+
+[BsDBBackup]
+User = ''
+Passwd = ''
+Address = ''
+Database = 'block_syncer_backup'
+
+[PieceStore]
+Shards = 0
+
+[PieceStore.Store]
+Storage = 's3'
+# BucketURL = ''  # provided in secret
+MaxRetries = 5
+MinRetryDelay = 0
+TLSInsecureSkipVerify = false
+IAMType = 'SA'
+
+[Chain]
+ChainID = 'greenfield_5600-1'
+ChainAddress = ['https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org:443']
+
+[SpAccount]
+SpOperatorAddress = '0x0000000000000000000000000000000000000000'
+# OperatorPrivateKey = ''
+# FundingPrivateKey = ''
+# SealPrivateKey = ''
+# ApprovalPrivateKey = ''
+# GcPrivateKey = ''
+
+[Endpoint]
+ApproverEndpoint = 'approver:9333'
+ManagerEndpoint = 'manager:9333'
+DownloaderEndpoint = 'downloader:9333'
+ReceiverEndpoint = 'receiver:9333'
+MetadataEndpoint = 'metadata:9333'
+UploaderEndpoint = 'uploader:9333'
+P2PEndpoint = 'p2p:9333'
+SignerEndpoint = 'signer:9333'
+AuthenticatorEndpoint = 'localhost:9333'
+
+[Gateway]
+DomainName = 'your-domain.com'
+HTTPAddress = '0.0.0.0:9033'
+
+[P2P]
+#P2PPrivateKey = ''
+P2PAddress = '0.0.0.0:9933'
+P2PAntAddress = ''
+P2PBootstrap = []
+# P2PPingPeriod = 0
+
+[Parallel]
+DiscontinueBucketEnabled = false
+DiscontinueBucketKeepAliveDays = 2
+UploadObjectParallelPerNode = 10240
+ReceivePieceParallelPerNode = 10240
+DownloadObjectParallelPerNode = 10240
+ChallengePieceParallelPerNode = 10240
+AskReplicateApprovalParallelPerNode = 10240
+GlobalCreateBucketApprovalParallel = 10240
+GlobalCreateObjectApprovalParallel = 10240
+GlobalMaxUploadingParallel = 10240
+GlobalUploadObjectParallel = 10240
+GlobalReplicatePieceParallel = 10240
+GlobalSealObjectParallel = 10240
+GlobalReceiveObjectParallel = 10240
+
+[Monitor]
+DisableMetrics = false
+DisablePProf = false
+MetricsHTTPAddress = '0.0.0.0:24367'
+PProfHTTPAddress = '0.0.0.0:24368'
+
+[Rcmgr]
+DisableRcmgr = false
+
+[Metadata]
+IsMasterDB = true
+BsDBSwitchCheckIntervalSec = 30
+
+[BlockSyncer]
+Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree', 'virtual_group','sp_exit_events','object_id_map']
+Dsn = ""
+DsnSwitched = ''
+Workers = 50
+EnableDualDB = false
+
+[APIRateLimiter]
+PathPattern = [{Key = ".*request_nonc.*", RateLimit = 10, RatePeriod = 'S'},{Key = ".*1l65v.*", RateLimit = 20, RatePeriod = 'S'}]
+HostPattern = [{Key = ".*vfdxy.*", RateLimit = 15, RatePeriod = 'S'}]
+[APIRateLimiter.IPLimitCfg]
+On = true
+RateLimit = 5000
+RatePeriod = 'S'
+
+[Manager]
+EnableLoadTask = true
+GVGPreferSPList = [1,2,3,4,5,6,7]
+

@@ -1,0 +1,55 @@
+resources:
+  - https://github.com/bnb-chain/greenfield-storage-provider/deployment/k8s/base/vendors/aws/large?ref=develop  # check doco for latest version
+
+configMapGenerator:
+- name: config
+  files:
+  - ./config.toml  # check and replace values in this config file
+
+images:
+- name: ghcr.io/bnb-chain/greenfield-storage-provider
+  newTag: 0.2.3-alpha.15  # check doco for latest version
+
+patches:
+- target:
+    kind: ServiceAccount
+  patch: |-
+    - op: replace
+      path: "/metadata/annotations/pod-identity.alibabacloud.com~1role-name"
+      value: your-aliyun-ram-role-name-mapped-to-k8s-sa  # replace with your RAM role name
+
+- target:
+    kind: Ingress
+    name: gateway
+  patch: |-
+    - op: replace
+      path: /spec/rules/0/host
+      value: yourdomain.com  # replace with your domain name
+    - op: replace
+      path: /spec/rules/1/host
+      value: "*.yourdomain.com"  # replace with your domain name
+
+# replace the following "values" for the correct zone, required for OSS (aliyunfs) integration
+- target:
+    kind: Deployment
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: AWS_REGION
+        value: oss-ap-northeast-1
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: ALIBABA_CLOUD_REGION
+        value: oss-ap-northeast-1
+
+# required to export metrics
+- target:
+    kind: ServiceMonitor
+    name: default
+  patch: |-
+    - op: replace
+      path: /spec/namespaceSelector/matchNames/0
+      value: yournamespace  # replace with your k8s namespace
+
