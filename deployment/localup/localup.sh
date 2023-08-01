@@ -5,8 +5,6 @@ workspace=${basedir}
 source ${workspace}/env.info
 sp_bin_name=gnfd-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
-gnfd_bin=${workspace}/../../greenfield/build/bin/gnfd
-gnfd_workspace=${workspace}/../../greenfield/deployment/localup/
 
 #########################
 # the command line help #
@@ -152,9 +150,9 @@ function make_config() {
     sed -i -e "s/Dsn = '.*'/Dsn = \"${USER}:${PWD}@tcp(${ADDRESS})\/${DATABASE}?parseTime=true\&multiStatements=true\&loc=Local\&interpolateParams=true\"/g" config.toml
 
     # manager
-    sed -i -e "s/SubscribeSPExitEventIntervalSec = '.*'/SubscribeSPExitEventIntervalSec=1/g" config.toml
-    sed -i -e "s/SubscribeSwapOutExitEventIntervalSec = '.*'/SubscribeSwapOutExitEventIntervalSec=1/g" config.toml
-    sed -i -e "s/SubscribeBucketMigrateEventIntervalSec = '.*'/SubscribeBucketMigrateEventIntervalSec=1/g" config.toml
+    sed -i -e "s/SubscribeSPExitEventIntervalSec = .*/SubscribeSPExitEventIntervalSec = 100/g" config.toml
+    sed -i -e "s/SubscribeSwapOutExitEventIntervalSec = .*/SubscribeSwapOutExitEventIntervalSec = 100/g" config.toml
+    sed -i -e "s/SubscribeBucketMigrateEventIntervalSec = .*/SubscribeBucketMigrateEventIntervalSec = 100/g" config.toml
     sed -i -e "s/GVGPreferSPList = \[\]/GVGPreferSPList = \[1,2,3,4,5,6,7,8\]/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}

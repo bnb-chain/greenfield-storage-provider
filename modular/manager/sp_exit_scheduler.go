@@ -22,7 +22,7 @@ import (
 const (
 	SwapOutFamilyKeyPrefix  = "familyID-"
 	SwapOutGVGListKeyPrefix = "gvgIDList-"
-	logNumber               = 100
+	printLogPerN            = 100
 )
 
 func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
@@ -325,15 +325,15 @@ func (s *SPExitScheduler) subscribeEvents() {
 			s.lastSubscribedSPExitBlockHeight++
 			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
 		}
-		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
+		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Millisecond)
 		defer subscribeSPExitEventsTicker.Stop()
 
-		printLogPerN := 0
+		logNumber := 0
 		for range subscribeSPExitEventsTicker.C {
 			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				printLogPerN++
-				if (printLogPerN % logNumber) == 0 {
+				logNumber++
+				if (logNumber % printLogPerN) == 0 {
 					log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
 				}
 				continue
@@ -374,10 +374,10 @@ func (s *SPExitScheduler) subscribeEvents() {
 			s.lastSubscribedSwapOutBlockHeight++
 			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
 		}
-		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
+		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Millisecond)
 		defer subscribeSwapOutEventsTicker.Stop()
 
-		printLogPerN := 0
+		logNumber := 0
 		for range subscribeSwapOutEventsTicker.C {
 			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {
 				continue
@@ -385,8 +385,8 @@ func (s *SPExitScheduler) subscribeEvents() {
 
 			swapOutEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSwapOutEvents(context.Background(), s.lastSubscribedSwapOutBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				printLogPerN++
-				if (printLogPerN % logNumber) == 0 {
+				logNumber++
+				if (logNumber % printLogPerN) == 0 {
 					log.Errorw("failed to subscribe swap out event", "error", subscribeError)
 				}
 				continue
