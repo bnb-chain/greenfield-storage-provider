@@ -168,6 +168,14 @@ const (
 	// BlockIDQuery defines the block id
 	BlockIDQuery         = "block-id"
 	OperatorAddressQuery = "operator-address"
+	// OffChainAuthAuthorizationQuery defines the authorization query used by offchain-auth
+	OffChainAuthAuthorizationQuery = "authorization"
+	// OffChainAuthUserAddressQuery defines the user address query used by offchain-auth
+	OffChainAuthUserAddressQuery = "user-address"
+	// OffChainAuthAppDomainQuery defines the app domain query used by offchain-auth
+	OffChainAuthAppDomainQuery = "app-domain"
+	// OffChainAuthViewQuery defines the view query used by offchain-auth
+	OffChainAuthViewQuery = "view"
 	// GetChallengeInfoPath defines get challenge info path style suffix
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
