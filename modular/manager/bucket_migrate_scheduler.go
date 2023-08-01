@@ -407,7 +407,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			log.Infow("bucket migrate subscribe progress", "last_subscribed_block_height", s.lastSubscribedBlockHeight)
 		}
 
-		subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Millisecond)
+		subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Second)
 		defer subscribeBucketMigrateEventsTicker.Stop()
 		for range subscribeBucketMigrateEventsTicker.C {
 			// 1. subscribe migrate bucket events

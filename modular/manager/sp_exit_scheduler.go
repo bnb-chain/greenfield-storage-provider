@@ -324,7 +324,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 			s.lastSubscribedSPExitBlockHeight++
 			log.Infow("sp exit subscribe progress", "last_subscribed_block_height", s.lastSubscribedSPExitBlockHeight)
 		}
-		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Millisecond)
+		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
 		defer subscribeSPExitEventsTicker.Stop()
 		for range subscribeSPExitEventsTicker.C {
 			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.selfSP.GetId())
@@ -369,7 +369,7 @@ func (s *SPExitScheduler) subscribeEvents() {
 			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
 		}
 
-		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Millisecond)
+		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
 		defer subscribeSwapOutEventsTicker.Stop()
 		for range subscribeSwapOutEventsTicker.C {
 			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {

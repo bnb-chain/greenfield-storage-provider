@@ -78,12 +78,12 @@ const (
 	DefaultLoadReplicateTimeout int64 = 60
 	// DefaultLoadSealTimeout defines the task timeout that load seal tasks from sp db
 	DefaultLoadSealTimeout int64 = 180
-	// DefaultSubscribeSPExitEventIntervalMillisecond define the default time interval to subscribe sp exit event from metadata.
-	DefaultSubscribeSPExitEventIntervalMillisecond = 100
-	// DefaultSubscribeBucketMigrateEventIntervalMillisecond define the default time interval to subscribe bucket migrate event from metadata.
-	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 100
-	// DefaultSubscribeSwapOutEventIntervalMillisecond define the default time interval to subscribe gvg swap out event from metadata.
-	DefaultSubscribeSwapOutEventIntervalMillisecond = 100
+	// DefaultSubscribeSPExitEventIntervalSecond define the default time interval to subscribe sp exit event from metadata.
+	DefaultSubscribeSPExitEventIntervalSecond = 2
+	// DefaultSubscribeBucketMigrateEventIntervalSecond define the default time interval to subscribe bucket migrate event from metadata.
+	DefaultSubscribeBucketMigrateEventIntervalSecond = 2
+	// DefaultSubscribeSwapOutEventIntervalSecond define the default time interval to subscribe gvg swap out event from metadata.
+	DefaultSubscribeSwapOutEventIntervalSecond = 2
 )
 
 const (
@@ -226,13 +226,13 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		return err
 	}
 	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
-		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalMillisecond
+		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalSecond
 	}
 	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
-		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalSecond
 	}
 	if cfg.Manager.SubscribeSwapOutExitEventIntervalSec == 0 {
-		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalMillisecond
+		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalSecond
 	}
 	manager.gvgPreferSPList = cfg.Manager.GVGPreferSPList
 
