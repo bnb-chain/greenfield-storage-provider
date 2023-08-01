@@ -15,6 +15,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
+const logNumber = 100
+
 func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -644,7 +646,7 @@ func (s *GfSpClient) ListMigrateBucketEvents(ctx context.Context, blockID uint64
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListMigrateBucketEvents(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to list migrate bucket events", "error", err)
+		// log.CtxErrorw(ctx, "client failed to list migrate bucket events", "error", err)
 		return nil, ErrRpcUnknown
 	}
 	return resp.Events, nil
@@ -663,7 +665,7 @@ func (s *GfSpClient) ListSwapOutEvents(ctx context.Context, blockID uint64, spID
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListSwapOutEvents(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to list migrate swap out events", "error", err)
+		// log.CtxErrorw(ctx, "client failed to list migrate swap out events", "error", err)
 		return nil, ErrRpcUnknown
 	}
 	return resp.Events, nil
@@ -682,7 +684,7 @@ func (s *GfSpClient) ListSpExitEvents(ctx context.Context, blockID uint64, spID 
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListSpExitEvents(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to list sp exit events", "error", err)
+		// log.CtxErrorw(ctx, "client failed to list sp exit events", "error", err)
 		return nil, ErrRpcUnknown
 	}
 	return resp.Events, nil

@@ -22,6 +22,7 @@ import (
 const (
 	SwapOutFamilyKeyPrefix  = "familyID-"
 	SwapOutGVGListKeyPrefix = "gvgIDList-"
+	logNumber               = 100
 )
 
 func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
@@ -326,10 +327,15 @@ func (s *SPExitScheduler) subscribeEvents() {
 		}
 		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Second)
 		defer subscribeSPExitEventsTicker.Stop()
+
+		printLogPerN := 0
 		for range subscribeSPExitEventsTicker.C {
 			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
+				printLogPerN++
+				if (printLogPerN % logNumber) == 0 {
+					log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
+				}
 				continue
 			}
 			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents, "block_id", s.lastSubscribedSPExitBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
@@ -368,9 +374,10 @@ func (s *SPExitScheduler) subscribeEvents() {
 			s.lastSubscribedSwapOutBlockHeight++
 			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
 		}
-
 		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Second)
 		defer subscribeSwapOutEventsTicker.Stop()
+
+		printLogPerN := 0
 		for range subscribeSwapOutEventsTicker.C {
 			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {
 				continue
@@ -378,7 +385,10 @@ func (s *SPExitScheduler) subscribeEvents() {
 
 			swapOutEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSwapOutEvents(context.Background(), s.lastSubscribedSwapOutBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				log.Errorw("failed to subscribe swap out event", "error", subscribeError)
+				printLogPerN++
+				if (printLogPerN % logNumber) == 0 {
+					log.Errorw("failed to subscribe swap out event", "error", subscribeError)
+				}
 				continue
 			}
 			if s.isExited {
