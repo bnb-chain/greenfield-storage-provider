@@ -79,11 +79,11 @@ const (
 	// DefaultLoadSealTimeout defines the task timeout that load seal tasks from sp db
 	DefaultLoadSealTimeout int64 = 180
 	// DefaultSubscribeSPExitEventIntervalMillisecond define the default time interval to subscribe sp exit event from metadata.
-	DefaultSubscribeSPExitEventIntervalMillisecond = 100
+	DefaultSubscribeSPExitEventIntervalMillisecond = 2000
 	// DefaultSubscribeBucketMigrateEventIntervalMillisecond define the default time interval to subscribe bucket migrate event from metadata.
-	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 100
+	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 2000
 	// DefaultSubscribeSwapOutEventIntervalMillisecond define the default time interval to subscribe gvg swap out event from metadata.
-	DefaultSubscribeSwapOutEventIntervalMillisecond = 100
+	DefaultSubscribeSwapOutEventIntervalMillisecond = 2000
 )
 
 const (
@@ -225,14 +225,20 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus()); err != nil {
 		return err
 	}
-	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+	if cfg.Manager.SubscribeSPExitEventIntervalMillisecond == 0 {
 		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalMillisecond
+	} else {
+		manager.subscribeSPExitEventInterval = cfg.Manager.SubscribeSPExitEventIntervalMillisecond
 	}
-	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
-		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
-	}
-	if cfg.Manager.SubscribeSwapOutExitEventIntervalSec == 0 {
+	if cfg.Manager.SubscribeSwapOutExitEventIntervalMillisecond == 0 {
 		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalMillisecond
+	} else {
+		manager.subscribeSwapOutEventInterval = cfg.Manager.SubscribeSwapOutExitEventIntervalMillisecond
+	}
+	if cfg.Manager.SubscribeBucketMigrateEventIntervalMillisecond == 0 {
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
+	} else {
+		manager.subscribeBucketMigrateEventInterval = cfg.Manager.SubscribeBucketMigrateEventIntervalMillisecond
 	}
 	manager.gvgPreferSPList = cfg.Manager.GVGPreferSPList
 

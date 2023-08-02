@@ -88,9 +88,9 @@ type ManageModular struct {
 	bucketMigrateScheduler *BucketMigrateScheduler
 	spExitScheduler        *SPExitScheduler
 
-	subscribeSPExitEventInterval        int
-	subscribeBucketMigrateEventInterval int
-	subscribeSwapOutEventInterval       int
+	subscribeSPExitEventInterval        uint
+	subscribeBucketMigrateEventInterval uint
+	subscribeSwapOutEventInterval       uint
 
 	loadReplicateTimeout int64
 	loadSealTimeout      int64
@@ -498,7 +498,7 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
 	// TODO if add some expire mechanism
 	return false
-	//return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	// return qTask.ExceedRetry() || qTask.ExceedTimeout()
 }
 
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {

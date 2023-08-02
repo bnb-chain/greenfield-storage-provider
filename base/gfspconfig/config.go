@@ -246,9 +246,9 @@ type MetadataConfig struct {
 }
 
 type ManagerConfig struct {
-	EnableLoadTask                         bool     `comment:"optional"`
-	SubscribeSPExitEventIntervalSec        int      `comment:"optional"`
-	SubscribeSwapOutExitEventIntervalSec   int      `comment:"optional"`
-	SubscribeBucketMigrateEventIntervalSec int      `comment:"optional"`
-	GVGPreferSPList                        []uint32 `comment:"optional"`
+	EnableLoadTask                                 bool     `comment:"optional"`
+	SubscribeSPExitEventIntervalMillisecond        uint     `comment:"optional"`
+	SubscribeSwapOutExitEventIntervalMillisecond   uint     `comment:"optional"`
+	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`
+	GVGPreferSPList                                []uint32 `comment:"optional"`
 }

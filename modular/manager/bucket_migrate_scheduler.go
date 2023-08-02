@@ -406,14 +406,19 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			s.lastSubscribedBlockHeight++
 			log.Infow("bucket migrate subscribe progress", "last_subscribed_block_height", s.lastSubscribedBlockHeight)
 		}
-
 		subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Millisecond)
 		defer subscribeBucketMigrateEventsTicker.Stop()
+
+		logNumber := 0
 		for range subscribeBucketMigrateEventsTicker.C {
 			// 1. subscribe migrate bucket events
 			migrationBucketEvents, subscribeError := s.manager.baseApp.GfSpClient().ListMigrateBucketEvents(context.Background(), s.lastSubscribedBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				log.Errorw("failed to list migrate bucket events", "block_id", s.lastSubscribedBlockHeight+1, "error", subscribeError)
+				logNumber++
+				if (logNumber % printLogPerN) == 0 {
+					log.Errorw("failed to list migrate bucket events", "block_id", s.lastSubscribedBlockHeight+1,
+						"error", subscribeError)
+				}
 				continue
 			}
 			log.Infow("loop subscribe bucket migrate event", "migrationBucketEvents", migrationBucketEvents, "block_id", s.lastSubscribedBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
