@@ -223,100 +223,122 @@ func DefaultGfSpClientOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 	return nil
 }
 
+var spdbOnce = sync.Once{}
+
 func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Customize.GfSpDB != nil {
 		app.gfSpDB = cfg.Customize.GfSpDB
 		return nil
 	}
-	if val, ok := os.LookupEnv(sqldb.SpDBUser); ok {
-		cfg.SpDB.User = val
+	for _, v := range cfg.Server {
+		if v == coremodule.BlockSyncerModularName || v == coremodule.MetadataModularName {
+			log.Infof("[%s] module doesn't need sp db", v)
+			continue
+		}
+		spdbOnce.Do(func() {
+			if val, ok := os.LookupEnv(sqldb.SpDBUser); ok {
+				cfg.SpDB.User = val
+			}
+			if val, ok := os.LookupEnv(sqldb.SpDBPasswd); ok {
+				cfg.SpDB.Passwd = val
+			}
+			if val, ok := os.LookupEnv(sqldb.SpDBAddress); ok {
+				cfg.SpDB.Address = val
+			}
+			if val, ok := os.LookupEnv(sqldb.SpDBDataBase); ok {
+				cfg.SpDB.Database = val
+			}
+			if cfg.SpDB.ConnMaxLifetime == 0 {
+				cfg.SpDB.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
+			}
+			if cfg.SpDB.ConnMaxIdleTime == 0 {
+				cfg.SpDB.ConnMaxIdleTime = sqldb.DefaultConnMaxIdleTime
+			}
+			if cfg.SpDB.MaxIdleConns == 0 {
+				cfg.SpDB.MaxIdleConns = sqldb.DefaultMaxIdleConns
+			}
+			if cfg.SpDB.MaxOpenConns == 0 {
+				cfg.SpDB.MaxOpenConns = sqldb.DefaultMaxOpenConns
+			}
+			if cfg.SpDB.User == "" {
+				cfg.SpDB.User = "root"
+			}
+			if cfg.SpDB.Passwd == "" {
+				cfg.SpDB.Passwd = "test"
+			}
+			if cfg.SpDB.Address == "" {
+				cfg.SpDB.Address = "127.0.0.1:3306"
+			}
+			if cfg.SpDB.Database == "" {
+				cfg.SpDB.Database = "storage_provider_db"
+			}
+			dbCfg := &cfg.SpDB
+			db, err := sqldb.NewSpDB(dbCfg)
+			if err != nil {
+				log.Panicw("failed to new spdb", "error", err)
+				return
+			}
+			app.gfSpDB = db
+		})
 	}
-	if val, ok := os.LookupEnv(sqldb.SpDBPasswd); ok {
-		cfg.SpDB.Passwd = val
-	}
-	if val, ok := os.LookupEnv(sqldb.SpDBAddress); ok {
-		cfg.SpDB.Address = val
-	}
-	if val, ok := os.LookupEnv(sqldb.SpDBDataBase); ok {
-		cfg.SpDB.Database = val
-	}
-	if cfg.SpDB.ConnMaxLifetime == 0 {
-		cfg.SpDB.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
-	}
-	if cfg.SpDB.ConnMaxIdleTime == 0 {
-		cfg.SpDB.ConnMaxIdleTime = sqldb.DefaultConnMaxIdleTime
-	}
-	if cfg.SpDB.MaxIdleConns == 0 {
-		cfg.SpDB.MaxIdleConns = sqldb.DefaultMaxIdleConns
-	}
-	if cfg.SpDB.MaxOpenConns == 0 {
-		cfg.SpDB.MaxOpenConns = sqldb.DefaultMaxOpenConns
-	}
-	if cfg.SpDB.User == "" {
-		cfg.SpDB.User = "root"
-	}
-	if cfg.SpDB.Passwd == "" {
-		cfg.SpDB.Passwd = "test"
-	}
-	if cfg.SpDB.Address == "" {
-		cfg.SpDB.Address = "127.0.0.1:3306"
-	}
-	if cfg.SpDB.Database == "" {
-		cfg.SpDB.Database = "storage_provider_db"
-	}
-	dbCfg := &cfg.SpDB
-	db, err := sqldb.NewSpDB(dbCfg)
-	if err != nil {
-		log.Warnw("if not use spdb, please ignore: failed to new spdb", "error", err)
-		return nil
-	}
-	app.gfSpDB = db
+
 	return nil
 }
 
+var bsdbOnce = sync.Once{}
+
 func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
-		cfg.BsDB.User = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
-		cfg.BsDB.Passwd = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
-		cfg.BsDB.Address = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
-		cfg.BsDB.Database = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
-		cfg.BsDBBackup.User = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
-		cfg.BsDBBackup.Passwd = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
-		cfg.BsDBBackup.Address = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
-		cfg.BsDBBackup.Database = val
-	}
+	for _, v := range cfg.Server {
+		if v != coremodule.BlockSyncerModularName && v != coremodule.MetadataModularName {
+			log.Infof("[%s] module doesn't need bs db", v)
+			continue
+		}
 
-	DefaultGfBsDB(&cfg.BsDB)
-	DefaultGfBsDB(&cfg.BsDBBackup)
+		bsdbOnce.Do(func() {
+			if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
+				cfg.BsDB.User = val
+			}
+			if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
+				cfg.BsDB.Passwd = val
+			}
+			if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
+				cfg.BsDB.Address = val
+			}
+			if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
+				cfg.BsDB.Database = val
+			}
+			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
+				cfg.BsDBBackup.User = val
+			}
+			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
+				cfg.BsDBBackup.Passwd = val
+			}
+			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
+				cfg.BsDBBackup.Address = val
+			}
+			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
+				cfg.BsDBBackup.Database = val
+			}
 
-	bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
-	if err != nil {
-		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
-		return nil
+			DefaultGfBsDB(&cfg.BsDB)
+			DefaultGfBsDB(&cfg.BsDBBackup)
+
+			bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+			if err != nil {
+				log.Panicw("failed to new bsdb", "error", err)
+				return
+			}
+
+			bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
+			if err != nil {
+				log.Panicw("failed to new backup bsdb", "error", err)
+				return
+			}
+
+			app.gfBsDBMaster = bsDBBlockSyncerMaster
+			app.gfBsDBBackup = bsDBBlockSyncerBackUp
+		})
 	}
-
-	bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
-	if err != nil {
-		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
-		return nil
-	}
-
-	app.gfBsDBMaster = bsDBBlockSyncerMaster
-	app.gfBsDBBackup = bsDBBlockSyncerBackUp
 
 	return nil
 }
@@ -349,7 +371,7 @@ func DefaultGfBsDB(config *config.SQLDBConfig) {
 	}
 }
 
-var pieceOnce = sync.Once{}
+var pieceStoreOnce = sync.Once{}
 
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Customize.PieceStore != nil {
@@ -362,22 +384,22 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 			log.Infof("[%s] module doesn't need piece store", v)
 			continue
 		}
-		if cfg.PieceStore.Store.Storage == "" {
-			cfg.PieceStore.Store.Storage = "file"
-		}
-		if cfg.PieceStore.Store.BucketURL == "" {
-			cfg.PieceStore.Store.BucketURL = "./data"
-		}
-		if cfg.PieceStore.Store.MaxRetries == 0 {
-			cfg.PieceStore.Store.MaxRetries = 5
-		}
-		if cfg.PieceStore.Store.MinRetryDelay == 0 {
-			cfg.PieceStore.Store.MinRetryDelay = 1
-		}
-		if cfg.PieceStore.Store.IAMType == "" {
-			cfg.PieceStore.Store.IAMType = "SA"
-		}
-		pieceOnce.Do(func() {
+		pieceStoreOnce.Do(func() {
+			if cfg.PieceStore.Store.Storage == "" {
+				cfg.PieceStore.Store.Storage = "file"
+			}
+			if cfg.PieceStore.Store.BucketURL == "" {
+				cfg.PieceStore.Store.BucketURL = "./data"
+			}
+			if cfg.PieceStore.Store.MaxRetries == 0 {
+				cfg.PieceStore.Store.MaxRetries = 5
+			}
+			if cfg.PieceStore.Store.MinRetryDelay == 0 {
+				cfg.PieceStore.Store.MinRetryDelay = 1
+			}
+			if cfg.PieceStore.Store.IAMType == "" {
+				cfg.PieceStore.Store.IAMType = "SA"
+			}
 			pieceStore, err := psclient.NewStoreClient(&cfg.PieceStore)
 			if err != nil {
 				log.Panicw("failed to new piece store", "error", err)
