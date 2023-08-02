@@ -322,13 +322,13 @@ func TestStringToBytesSlice(t *testing.T) {
 		{
 			name:        "right",
 			str:         "48656c6c6f20476f7068657221",
-			wantedSlice: [][]uint8([][]uint8{[]uint8{0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x47, 0x6f, 0x70, 0x68, 0x65, 0x72, 0x21}}),
+			wantedSlice: [][]uint8{{0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x47, 0x6f, 0x70, 0x68, 0x65, 0x72, 0x21}},
 			wantedIsErr: false,
 		},
 		{
 			name:        "wrong",
 			str:         "string",
-			wantedSlice: [][]uint8{[]uint8{}},
+			wantedSlice: [][]uint8{{}},
 			wantedIsErr: true,
 		},
 	}

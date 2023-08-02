@@ -16,7 +16,7 @@ func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.Uploa
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRpcUnknown
+		return ErrRPCUnknown
 	}
 	req := &gfspserver.GfSpBeginTaskRequest{
 		Request: &gfspserver.GfSpBeginTaskRequest_UploadObjectTask{
@@ -26,7 +26,7 @@ func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.Uploa
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to create upload object task", "error", err)
-		return ErrRpcUnknown
+		return ErrRPCUnknown
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -38,7 +38,7 @@ func (s *GfSpClient) CreateResumableUploadObject(ctx context.Context, task coret
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRpcUnknown
+		return ErrRPCUnknown
 	}
 	req := &gfspserver.GfSpBeginTaskRequest{
 		Request: &gfspserver.GfSpBeginTaskRequest_ResumableUploadObjectTask{
@@ -48,7 +48,7 @@ func (s *GfSpClient) CreateResumableUploadObject(ctx context.Context, task coret
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to create resummable upload object task", "error", err)
-		return ErrRpcUnknown
+		return ErrRPCUnknown
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -60,7 +60,7 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return nil, ErrRpcUnknown
+		return nil, ErrRPCUnknown
 	}
 	req := &gfspserver.GfSpAskTaskRequest{
 		NodeLimit: limit.(*gfsplimit.GfSpLimit),
@@ -68,7 +68,7 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpAskTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask task", "error", err)
-		return nil, ErrRpcUnknown
+		return nil, ErrRPCUnknown
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -99,7 +99,7 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRpcUnknown
+		return ErrRPCUnknown
 	}
 	req := &gfspserver.GfSpReportTaskRequest{}
 	switch t := report.(type) {
@@ -158,7 +158,7 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpReportTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to report task", "error", err)
-		return ErrRpcUnknown
+		return ErrRPCUnknown
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -170,7 +170,7 @@ func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return 0, ErrRpcUnknown
+		return 0, ErrRPCUnknown
 	}
 	req := &gfspserver.GfSpPickVirtualGroupFamilyRequest{
 		CreateBucketApprovalTask: task.(*gfsptask.GfSpCreateBucketApprovalTask),
@@ -186,7 +186,7 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRpcUnknown
+		return ErrRPCUnknown
 	}
 	req := &gfspserver.GfSpNotifyMigrateSwapOutRequest{
 		SwapOut: swapOut,
