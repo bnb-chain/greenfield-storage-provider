@@ -232,7 +232,7 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	}
 	for _, v := range cfg.Server {
 		if v == coremodule.BlockSyncerModularName || v == coremodule.MetadataModularName {
-			log.Infof("[%s] module doesn't need bs db", v)
+			log.Infof("[%s] module doesn't need sp db", v)
 			continue
 		}
 		spdbOnce.Do(func() {
