@@ -274,49 +274,101 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	return nil
 }
 
+var bsdbOnce = sync.Once{}
+
 func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
-	if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
-		cfg.BsDB.User = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
-		cfg.BsDB.Passwd = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
-		cfg.BsDB.Address = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
-		cfg.BsDB.Database = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
-		cfg.BsDBBackup.User = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
-		cfg.BsDBBackup.Passwd = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
-		cfg.BsDBBackup.Address = val
-	}
-	if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
-		cfg.BsDBBackup.Database = val
-	}
+	for _, v := range cfg.Server {
+		if v != coremodule.BlockSyncerModularName && v != coremodule.MetadataModularName {
+			log.Infof("[%s] module doesn't need bs db", v)
+			continue
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
+			cfg.BsDB.User = val
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
+			cfg.BsDB.Passwd = val
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
+			cfg.BsDB.Address = val
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
+			cfg.BsDB.Database = val
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
+			cfg.BsDBBackup.User = val
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
+			cfg.BsDBBackup.Passwd = val
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
+			cfg.BsDBBackup.Address = val
+		}
+		if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
+			cfg.BsDBBackup.Database = val
+		}
 
-	DefaultGfBsDB(&cfg.BsDB)
-	DefaultGfBsDB(&cfg.BsDBBackup)
+		DefaultGfBsDB(&cfg.BsDB)
+		DefaultGfBsDB(&cfg.BsDBBackup)
 
-	bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
-	if err != nil {
-		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
-		return nil
+		bsdbOnce.Do(func() {
+			bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+			if err != nil {
+				log.Panicw("failed to new bsdb", "error", err)
+				return
+			}
+
+			bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
+			if err != nil {
+				log.Panicw("failed to new backup bsdb", "error", err)
+				return
+			}
+
+			app.gfBsDBMaster = bsDBBlockSyncerMaster
+			app.gfBsDBBackup = bsDBBlockSyncerBackUp
+		})
 	}
-
-	bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
-	if err != nil {
-		log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
-		return nil
-	}
-
-	app.gfBsDBMaster = bsDBBlockSyncerMaster
-	app.gfBsDBBackup = bsDBBlockSyncerBackUp
+	// if val, ok := os.LookupEnv(bsdb.BsDBUser); ok {
+	// 	cfg.BsDB.User = val
+	// }
+	// if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
+	// 	cfg.BsDB.Passwd = val
+	// }
+	// if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
+	// 	cfg.BsDB.Address = val
+	// }
+	// if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
+	// 	cfg.BsDB.Database = val
+	// }
+	// if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
+	// 	cfg.BsDBBackup.User = val
+	// }
+	// if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
+	// 	cfg.BsDBBackup.Passwd = val
+	// }
+	// if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
+	// 	cfg.BsDBBackup.Address = val
+	// }
+	// if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
+	// 	cfg.BsDBBackup.Database = val
+	// }
+	//
+	// DefaultGfBsDB(&cfg.BsDB)
+	// DefaultGfBsDB(&cfg.BsDBBackup)
+	//
+	// bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+	// if err != nil {
+	// 	log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
+	// 	return nil
+	// }
+	//
+	// bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
+	// if err != nil {
+	// 	log.Warnw("if not use bsdb, please ignore: failed to new bsdb", "error", err)
+	// 	return nil
+	// }
+	//
+	// app.gfBsDBMaster = bsDBBlockSyncerMaster
+	// app.gfBsDBBackup = bsDBBlockSyncerBackUp
 
 	return nil
 }
@@ -349,7 +401,7 @@ func DefaultGfBsDB(config *config.SQLDBConfig) {
 	}
 }
 
-var pieceOnce = sync.Once{}
+var pieceStoreOnce = sync.Once{}
 
 func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Customize.PieceStore != nil {
@@ -377,7 +429,7 @@ func DefaultGfSpPieceStoreOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) e
 		if cfg.PieceStore.Store.IAMType == "" {
 			cfg.PieceStore.Store.IAMType = "SA"
 		}
-		pieceOnce.Do(func() {
+		pieceStoreOnce.Do(func() {
 			pieceStore, err := psclient.NewStoreClient(&cfg.PieceStore)
 			if err != nil {
 				log.Panicw("failed to new piece store", "error", err)
