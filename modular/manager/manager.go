@@ -118,7 +118,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.recoveryQueue.SetRetireTaskStrategy(m.GCRecoverQueue)
 	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
-	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
+	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -143,7 +143,7 @@ func (m *ManageModular) delayStartMigrateScheduler() {
 	// delay start to wait metadata service ready.
 	// migrate scheduler init depend metadata.
 	for {
-		time.Sleep(60 * time.Second)
+		time.Sleep(5 * time.Second)
 		var err error
 		if m.bucketMigrateScheduler == nil {
 			if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
@@ -496,9 +496,8 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
-	// TODO if add some expire mechanism
-	return false
-	// return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	task := qTask.(task.MigrateGVGTask)
+	return task.GetFinished()
 }
 
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
@@ -527,6 +526,16 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 		return true
 	}
 	if qTask.GetRetry() == 0 {
+		return true
+	}
+	return false
+}
+
+func (m *ManageModular) FilterGVGTask(qTask task.Task) bool {
+	if qTask.GetRetry() == 0 {
+		return true
+	}
+	if qTask.ExceedTimeout() {
 		return true
 	}
 	return false
@@ -680,7 +689,7 @@ func (m *ManageModular) backUpTask() {
 	}
 	targetTask = m.recoveryQueue.PopByLimit(limit)
 	if targetTask != nil {
-		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "recovery task_key", targetTask.Key().String(),
+		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "task_key", targetTask.Key().String(),
 			"task_limit", targetTask.EstimateLimit().String())
 		backupTasks = append(backupTasks, targetTask)
 	}
@@ -688,9 +697,6 @@ func (m *ManageModular) backUpTask() {
 	if targetTask != nil {
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", targetTask.Key().String())
 		backupTasks = append(backupTasks, targetTask)
-	}
-	if m.migrateGVGQueue.Len() != 0 {
-		log.CtxDebugw(ctx, "ManageModular DispatchTask", "migrateGVGQueue len", m.migrateGVGQueue.Len())
 	}
 
 	targetTask, reservedTasks = m.PickUpTask(ctx, backupTasks)

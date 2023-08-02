@@ -177,10 +177,11 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 	log.Infow("update migrate progress", "gvg_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
 		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx(), "last_migrated_object_id", task.GetLastMigratedObjectID())
 	migrateKey = MakeGVGMigrateKey(task.GetSrcGvg().GetId(), task.GetSrcGvg().GetFamilyId(), task.GetRedundancyIdx())
+	if err = s.taskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID()); err != nil {
+		return err
+	}
 	if task.GetFinished() {
 		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
-	} else {
-		err = s.taskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
 	}
 	return err
 }

@@ -609,6 +609,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		return ErrDanglingTask
 	}
 	var err error
+	task.SetUpdateTime(time.Now().Unix())
 	if task.GetBucketID() != 0 {
 		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
 	} else {
