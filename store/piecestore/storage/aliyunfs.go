@@ -77,7 +77,7 @@ func (c *aliyunCredProvider) Retrieve() (credentials.Value, error) {
 func (c *aliyunCredProvider) IsExpired() bool {
 	// The default expiration time of aliyun credential is 1 hour.
 	// Here we try to update the credential every 30 minutes.
-	return time.Since(c.lastRetrieveTime) >= 30*time.Minute
+	return time.Since(c.lastRetrieveTime) >= 1*time.Minute
 }
 
 type aliyunfsStore struct {
