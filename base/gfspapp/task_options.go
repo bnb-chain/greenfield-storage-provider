@@ -52,9 +52,9 @@ const (
 	// MaxMigratePieceTime defines the max timeout to migrate piece.
 	MaxMigratePieceTime int64 = 50
 	// MinMigrateGVGTime defines the min timeout to migrate gvg.
-	MinMigrateGVGTime int64 = 10
+	MinMigrateGVGTime int64 = 1800 // 0.5 hour
 	// MaxMigrateGVGTime defines the max timeout to migrate gvg.
-	MaxMigrateGVGTime int64 = 50
+	MaxMigrateGVGTime int64 = 3600 // 1 hour
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -198,6 +198,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		if g.migrateGVGTimeout > MaxMigrateGVGTime {
 			return MaxMigrateGVGTime
 		}
+		return g.migrateGVGTimeout
 	}
 	return NotUseTimeout
 }

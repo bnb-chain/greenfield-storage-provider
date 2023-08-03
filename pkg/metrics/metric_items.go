@@ -76,7 +76,9 @@ var MetricsItems = []prometheus.Collector{
 
 	// sp exit and bucket migration category
 	MigrateGVGTimeHistogram,
-	MigrateGVGCouter,
+	MigrateGVGCounter,
+	MigrateObjectTimeHistogram,
+	MigrateObjectCounter,
 }
 
 // basic metrics items
@@ -303,8 +305,17 @@ var (
 		Help:    "Track migrate gvg workflow costs",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"migrate_gvg_time"})
-	MigrateGVGCouter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	MigrateGVGCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "migrate_gvg_counter",
 		Help: "Track migrate gvg number",
 	}, []string{"migrate_gvg_counter"})
+	MigrateObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "migrate_object_time",
+		Help:    "Track migrate object workflow costs",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"migrate_object_time"})
+	MigrateObjectCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "migrate_object_counter",
+		Help: "Track migrate object number",
+	}, []string{"migrate_object_counter"})
 )

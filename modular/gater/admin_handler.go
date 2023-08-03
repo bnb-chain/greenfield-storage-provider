@@ -400,12 +400,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			metrics.ReqTime.WithLabelValues(GatewayFailureReplicatePiece).Observe(time.Since(receivePieceStartTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
-			log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(receivePieceStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewaySuccessReplicatePiece).Inc()
 			metrics.ReqTime.WithLabelValues(GatewaySuccessReplicatePiece).Observe(time.Since(receivePieceStartTime).Seconds())
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask

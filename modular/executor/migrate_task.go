@@ -18,25 +18,30 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
-const primarySPRedundancyIdx = -1
+const (
+	primarySPRedundancyIdx = -1
+	queryLimit             = uint32(100)
+	reportProgressPerN     = 10
+)
 
-// HandleMigrateGVGTask handles migrate gvg task.
-// There are two cases: sp exit and bucket migration.
+// HandleMigrateGVGTask handles migrate gvg task, including two cases: sp exit and bucket migration.
 // srcSP is a sp who wants to exit or need to migrate bucket, destSP is used to accept data from srcSP.
 func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) {
 	var (
-		srcGvgID             = task.GetSrcGvg().GetId()
-		bucketID             = task.GetBucketID()
-		lastMigratedObjectID = task.GetLastMigratedObjectID()
-		objectList           []*metadatatypes.ObjectDetails
-		err                  error
-		queryLimit           = uint32(100)
-		batchSize            = 10
+		srcGvgID                  = task.GetSrcGvg().GetId()
+		bucketID                  = task.GetBucketID()
+		lastMigratedObjectID      = task.GetLastMigratedObjectID()
+		objectList                []*metadatatypes.ObjectDetails
+		err                       error
+		migratedObjectNumberInGVG = 0
+		startMigrateGVGTime       = time.Now()
 	)
-	startMigrateGVGTime := time.Now()
+
 	defer func() {
 		metrics.MigrateGVGTimeHistogram.WithLabelValues("migrate_gvg_cost").Observe(time.Since(startMigrateGVGTime).Seconds())
-		metrics.MigrateGVGCouter.WithLabelValues("migrate_gvg_counter").Inc()
+		metrics.MigrateGVGCounter.WithLabelValues("migrate_gvg_counter").Inc()
+		log.CtxInfow(ctx, "finished to migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
+			"total_migrated_object_number", migratedObjectNumberInGVG, "last_migrated_object_id", lastMigratedObjectID, "error", err)
 	}()
 
 	for {
@@ -51,25 +56,27 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 			return
 		}
 
-		length := len(objectList)
 		for index, object := range objectList {
 			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil {
-				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID, "object_info", object, "error", err)
+				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
+					"bucket_id", bucketID, "object_info", object, "error", err)
 				return
 			}
-			if (index+1)%batchSize == 0 || index == length-1 { // report task per 10 objects
-				log.Infow("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID, "last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
+			if (index+1)%reportProgressPerN == 0 || index == len(objectList)-1 {
+				log.Infow("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID,
+					"current_migrated_object_number", migratedObjectNumberInGVG,
+					"last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
 				task.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
 				if err = e.ReportTask(ctx, task); err != nil {
-					log.CtxErrorw(ctx, "failed to report task", "error", err)
+					log.CtxErrorw(ctx, "failed to report migrate gvg task progress", "task_info", task, "error", err)
 					return
 				}
 			}
 			lastMigratedObjectID = object.GetObject().GetObjectInfo().Id.Uint64()
+			migratedObjectNumberInGVG++
 		}
-		if len(objectList) < int(queryLimit) {
-			log.Infow("finished to migrate gvg task", "object_number", len(objectList), "gvg_id", srcGvgID, "bucket_id", bucketID)
-			// when the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
+		if len(objectList) < int(queryLimit) { // it indicates that gvg all objects have been migrated.
+			task.SetLastMigratedObjectID(lastMigratedObjectID)
 			task.SetFinished(true)
 			return
 		}
@@ -78,7 +85,18 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 
 func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.MigrateGVGTask, bucketID uint64,
 	objectDetails *metadatatypes.ObjectDetails) error {
-	object := objectDetails.GetObject()
+	var (
+		err                    error
+		startMigrateObjectTime = time.Now()
+		object                 = objectDetails.GetObject()
+	)
+
+	defer func() {
+		metrics.MigrateObjectTimeHistogram.WithLabelValues("migrate_object_cost").Observe(time.Since(startMigrateObjectTime).Seconds())
+		metrics.MigrateObjectCounter.WithLabelValues("migrate_object_counter").Inc()
+		log.CtxDebugw(ctx, "finish to migrate object", "task_info", task, "bucket_id", bucketID, "object_info", objectDetails, "error", err)
+	}()
+
 	params, err := e.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, object.GetObjectInfo().GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query storage params by timestamp", "object_id",
@@ -296,11 +314,12 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	)
 	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectID, redundancyIdx, segmentCount)
 	if err != nil {
-		log.Errorw("failed to get checksum from db", "error", err)
+		log.Errorw("failed to get checksum from db", "object_info", objectInfo, "error", err)
 		return ErrGfSpDB
 	}
 	if len(pieceChecksums) != int(segmentCount) {
-		log.Errorw("returned piece checksum length does not match segment count")
+		log.Errorw("returned piece checksum length does not match segment count",
+			"expected_segment_number", segmentCount, "actual_segment_number", len(pieceChecksums))
 		return ErrInvalidPieceChecksumLength
 	}
 	migratedIntegrityHash := hash.GenerateIntegrityHash(pieceChecksums)
