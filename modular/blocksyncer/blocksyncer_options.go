@@ -206,6 +206,7 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 				}
 			}
 		}
+		time.Sleep(time.Second)
 	}
 }
 
@@ -269,6 +270,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 		}
 
 		b.fetchData(startBlock, endBlock)
+		time.Sleep(time.Millisecond * time.Duration(300))
 	}
 }
 
