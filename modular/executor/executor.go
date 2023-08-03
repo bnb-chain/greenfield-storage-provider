@@ -72,7 +72,7 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 					err := e.AskTask(ctx)
 					if err != nil {
 						rand.New(rand.NewSource(time.Now().Unix()))
-						sleep := rand.Intn(int(DefaultExecutorMaxExecuteNum)) + 1
+						sleep := rand.Intn(int(e.maxExecuteNum)) + 1
 						time.Sleep(time.Duration(sleep) * time.Millisecond)
 					}
 				}

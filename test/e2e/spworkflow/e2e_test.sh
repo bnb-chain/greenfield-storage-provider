@@ -3,7 +3,7 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
+GREENFIELD_REPO_TAG="v0.2.3"
 # greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
 # greenfield go sdk branch name: develop

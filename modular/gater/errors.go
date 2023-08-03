@@ -69,7 +69,6 @@ func MakeErrorResponse(w http.ResponseWriter, err error) {
 	}
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
-	w.Write(xmlBody)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write error response", "error", gfspErr.String())
 	}

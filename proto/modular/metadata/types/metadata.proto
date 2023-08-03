@@ -626,8 +626,8 @@ message GfSpListGlobalVirtualGroupsByBucketResponse {
 message GfSpListSpExitEventsRequest {
   // block_id is the unique identification for block
   uint64 block_id = 1;
-  // operator_address is the unique identification address for operator
-  string operator_address = 2;
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 2;
 }
 
 // ListSpExitEvents is the combination of sp exit events
