@@ -320,13 +320,13 @@ func TestStringToBytesSlice(t *testing.T) {
 		wantedIsErr bool
 	}{
 		{
-			name:        "right",
+			name:        "Convert string to bytes slice successfully",
 			str:         "48656c6c6f20476f7068657221",
 			wantedSlice: [][]uint8{{0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x47, 0x6f, 0x70, 0x68, 0x65, 0x72, 0x21}},
 			wantedIsErr: false,
 		},
 		{
-			name:        "wrong",
+			name:        "Convert string to bytes slice unsuccessfully",
 			str:         "string",
 			wantedSlice: [][]uint8{{}},
 			wantedIsErr: true,
@@ -358,13 +358,13 @@ func TestStringToUint32Slice(t *testing.T) {
 		wantedIsErr bool
 	}{
 		{
-			name:        "right",
+			name:        "Convert string to uint32 slice successfully",
 			str:         "1,2,3",
 			wantedSlice: []uint32{1, 2, 3},
 			wantedIsErr: false,
 		},
 		{
-			name:        "wrong",
+			name:        "Convert string to uint32 slice unsuccessfully",
 			str:         "string",
 			wantedSlice: nil,
 			wantedIsErr: true,
@@ -391,13 +391,13 @@ func TestStringArrayToUint32Slice(t *testing.T) {
 		wantedIsErr bool
 	}{
 		{
-			name:        "right",
+			name:        "Convert string array to uint32 slice successfully",
 			arr:         pq.StringArray{"123"},
 			wantedSlice: []uint32{0x7b},
 			wantedIsErr: false,
 		},
 		{
-			name:        "wrong",
+			name:        "Convert string array to uint32 slice unsuccessfully",
 			arr:         pq.StringArray{"test"},
 			wantedSlice: nil,
 			wantedIsErr: true,

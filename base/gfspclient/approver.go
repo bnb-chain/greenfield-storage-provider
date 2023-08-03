@@ -9,6 +9,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
+// ApproverAPI for mock use
+//
+//go:generate mockgen -source=./approver.go -destination=./approver_mock.go -package=gfspclient
+type ApproverAPI interface {
+	AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (bool, coretask.ApprovalCreateBucketTask, error)
+	AskMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) (bool, coretask.ApprovalMigrateBucketTask, error)
+	AskCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) (bool, coretask.ApprovalCreateObjectTask, error)
+}
+
 func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (
 	bool, coretask.ApprovalCreateBucketTask, error) {
 	conn, connErr := s.ApproverConn(ctx)

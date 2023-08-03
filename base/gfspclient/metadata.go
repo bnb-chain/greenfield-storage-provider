@@ -15,6 +15,48 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
+// MetadataAPI for mock sue
+//
+//go:generate mockgen -source=./metadata.go -destination=./metadata_mock.go -package=gfspclient
+type MetadataAPI interface {
+	GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error)
+	ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error)
+	GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error)
+	ListObjectsByBucketName(ctx context.Context, bucketName string, accountId string, maxKeys uint64, startAfter string, continuationToken string, delimiter string, prefix string, includeRemoved bool, opts ...grpc.DialOption) (
+		objects []*types.Object, KeyCount uint64, MaxKeys uint64, IsTruncated bool, NextContinuationToken string, Name string, Prefix string, Delimiter string, CommonPrefixes []string, ContinuationToken string, err error)
+	GetBucketByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error)
+	GetBucketByBucketID(ctx context.Context, bucketId int64, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error)
+	ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpID uint32, limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error)
+	GetObjectMeta(ctx context.Context, objectName string, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Object, error)
+	GetPaymentByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error)
+	GetPaymentByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error)
+	VerifyPermission(ctx context.Context, Operator string, bucketName string, objectName string, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)
+	GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, *payment_types.StreamRecord, error)
+	GetEndpointBySpId(ctx context.Context, spId uint32, opts ...grpc.DialOption) (string, error)
+	GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, opts ...grpc.DialOption) (uint64, uint64, uint64, error)
+	ListBucketReadRecord(ctx context.Context, bucket *storage_types.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error)
+	GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error)
+	GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error)
+	GetGroupList(ctx context.Context, name string, prefix string, sourceType string, limit int64, offset int64, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Group, int64, error)
+	ListBucketsByBucketID(ctx context.Context, bucketIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Bucket, error)
+	ListObjectsByObjectID(ctx context.Context, objectIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Object, error)
+	ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroupFamily, error)
+	GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error)
+	ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error)
+	ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error)
+	ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error)
+	GetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroupFamily, error)
+	GetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error)
+	ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error)
+	ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error)
+	ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListMigrateBucketEvents, error)
+	ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListSwapOutEvents, error)
+	ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error)
+	GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*storage_types.ObjectInfo, error)
+	VerifyPermissionByID(ctx context.Context, Operator string, resourceType resource.ResourceType, resourceID uint64, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)
+	GetSPInfo(ctx context.Context, operatorAddress string, opts ...grpc.DialOption) (*sptypes.StorageProvider, error)
+}
+
 func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -397,15 +439,8 @@ func (s *GfSpClient) GetUploadObjectSegment(ctx context.Context, objectID uint64
 	return resp.GetSegmentCount(), nil
 }
 
-func (s *GfSpClient) GetGroupList(
-	ctx context.Context,
-	name string,
-	prefix string,
-	sourceType string,
-	limit int64,
-	offset int64,
-	includeRemoved bool,
-	opts ...grpc.DialOption) ([]*types.Group, int64, error) {
+func (s *GfSpClient) GetGroupList(ctx context.Context, name string, prefix string, sourceType string, limit int64,
+	offset int64, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Group, int64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)

@@ -13,6 +13,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
+// DownloaderAPI for mock use
+type DownloaderAPI interface {
+	GetObject(ctx context.Context, downloadObjectTask coretask.DownloadObjectTask, opts ...grpc.DialOption) ([]byte, error)
+	GetPiece(ctx context.Context, downloadPieceTask coretask.DownloadPieceTask, opts ...grpc.DialOption) ([]byte, error)
+	GetChallengeInfo(ctx context.Context, challengePieceTask coretask.ChallengePieceTask, opts ...grpc.DialOption) ([]byte, [][]byte, []byte, error)
+}
+
 func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.DownloadObjectTask, opts ...grpc.DialOption) (
 	[]byte, error) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)

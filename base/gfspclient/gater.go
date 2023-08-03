@@ -56,6 +56,17 @@ const (
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 )
 
+// GaterAPI for mock use
+type GaterAPI interface {
+	ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error
+	GetPieceFromECChunks(ctx context.Context, endpoint string, task coretask.RecoveryPieceTask) (io.ReadCloser, error)
+	DoneReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask) ([]byte, error)
+	MigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
+	NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtualgrouptypes.MsgSwapOut) error
+	GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
+	GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (*virtualgrouptypes.MsgSwapOut, error)
+}
+
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, bytes.NewReader(data))
 	if err != nil {

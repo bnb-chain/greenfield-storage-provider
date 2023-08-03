@@ -575,15 +575,14 @@ func (m *GfSpResumableUploadObjectTask) GetVirtualGroupFamilyId() uint32 {
 }
 
 type GfSpReplicatePieceTask struct {
-	Task                *GfSpTask         `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
-	ObjectInfo          *types.ObjectInfo `protobuf:"bytes,2,opt,name=object_info,json=objectInfo,proto3" json:"object_info,omitempty"`
-	StorageParams       *types.Params     `protobuf:"bytes,3,opt,name=storage_params,json=storageParams,proto3" json:"storage_params,omitempty"`
-	SecondaryAddresses  []string          `protobuf:"bytes,4,rep,name=secondary_addresses,json=secondaryAddresses,proto3" json:"secondary_addresses,omitempty"`
-	SecondarySignatures [][]byte          `protobuf:"bytes,5,rep,name=secondary_signatures,json=secondarySignatures,proto3" json:"secondary_signatures,omitempty"`
-	Sealed              bool              `protobuf:"varint,6,opt,name=sealed,proto3" json:"sealed,omitempty"`
-	// TODO: refine it.
-	GlobalVirtualGroupId uint32   `protobuf:"varint,7,opt,name=global_virtual_group_id,json=globalVirtualGroupId,proto3" json:"global_virtual_group_id,omitempty"`
-	SecondaryEndpoints   []string `protobuf:"bytes,8,rep,name=secondary_endpoints,json=secondaryEndpoints,proto3" json:"secondary_endpoints,omitempty"`
+	Task                 *GfSpTask         `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
+	ObjectInfo           *types.ObjectInfo `protobuf:"bytes,2,opt,name=object_info,json=objectInfo,proto3" json:"object_info,omitempty"`
+	StorageParams        *types.Params     `protobuf:"bytes,3,opt,name=storage_params,json=storageParams,proto3" json:"storage_params,omitempty"`
+	SecondaryAddresses   []string          `protobuf:"bytes,4,rep,name=secondary_addresses,json=secondaryAddresses,proto3" json:"secondary_addresses,omitempty"`
+	SecondarySignatures  [][]byte          `protobuf:"bytes,5,rep,name=secondary_signatures,json=secondarySignatures,proto3" json:"secondary_signatures,omitempty"`
+	Sealed               bool              `protobuf:"varint,6,opt,name=sealed,proto3" json:"sealed,omitempty"`
+	GlobalVirtualGroupId uint32            `protobuf:"varint,7,opt,name=global_virtual_group_id,json=globalVirtualGroupId,proto3" json:"global_virtual_group_id,omitempty"`
+	SecondaryEndpoints   []string          `protobuf:"bytes,8,rep,name=secondary_endpoints,json=secondaryEndpoints,proto3" json:"secondary_endpoints,omitempty"`
 }
 
 func (m *GfSpReplicatePieceTask) Reset()         { *m = GfSpReplicatePieceTask{} }

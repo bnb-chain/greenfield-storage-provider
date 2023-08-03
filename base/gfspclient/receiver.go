@@ -13,6 +13,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
+// ReceiverAPI for mock use
+type ReceiverAPI interface {
+	ReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, data []byte, opts ...grpc.DialOption) error
+	DoneReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, opts ...grpc.DialOption) ([]byte, []byte, error)
+}
+
 func (s *GfSpClient) ReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, data []byte,
 	opts ...grpc.DialOption) error {
 	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)

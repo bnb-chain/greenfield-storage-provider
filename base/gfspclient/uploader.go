@@ -12,6 +12,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
+// UploaderAPI for mock use
+type UploaderAPI interface {
+	UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error
+	ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader) error
+}
+
 func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error {
 	startTime := time.Now()
 	conn, connErr := s.Connection(ctx, s.uploaderEndpoint)

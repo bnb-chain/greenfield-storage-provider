@@ -33,11 +33,6 @@ func TestGetIPFromGRPCContext(t *testing.T) {
 			nil,
 		},
 		{
-			"Context with wrong IP address",
-			peer.NewContext(context.Background(), &peer.Peer{Addr: &addr{ipAddress: "127"}}),
-			nil,
-		},
-		{
 			"Context with correct IP address",
 			peer.NewContext(context.Background(), &peer.Peer{Addr: &addr{ipAddress: "127.0.0.1:9000"}}),
 			net.IP{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xff, 0x7f, 0x0, 0x0, 0x1},

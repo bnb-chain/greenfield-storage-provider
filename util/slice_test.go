@@ -25,6 +25,12 @@ func TestContainOnlyOneDifferentElement(t *testing.T) {
 			[]uint32{1, 2, 3, 7, 8, 6},
 			-1,
 		},
+		{
+			"The length of two slices are different",
+			[]uint32{1, 2, 3, 4, 5, 6},
+			[]uint32{1, 2, 3, 7, 8},
+			-1,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

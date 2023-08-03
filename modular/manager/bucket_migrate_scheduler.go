@@ -193,6 +193,7 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 		}
 		secondarySigs = append(secondarySigs, sig)
 	}
+	log.Infow("uweuewdewi", "BlsAggregate", secondarySigs)
 	aggBlsSig, err := util.BlsAggregate(secondarySigs)
 	if err != nil {
 		log.Errorw("failed to aggregate secondary sp bls signatures", "error", err)
