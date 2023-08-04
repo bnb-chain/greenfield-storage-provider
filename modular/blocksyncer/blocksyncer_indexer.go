@@ -110,12 +110,10 @@ func (i *Impl) Process(height uint64) error {
 	beginBlockEvents := events.BeginBlockEvents
 	endBlockEvents := events.EndBlockEvents
 	txCount := len(txs)
-	eventCount := 0
 	allSQL := make([]map[string][]interface{}, 0)
 
 	// 1. handle events in startBlock
 	if len(beginBlockEvents) > 0 {
-		eventCount += len(beginBlockEvents)
 		sqls, err := i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
@@ -134,7 +132,6 @@ func (i *Impl) Process(height uint64) error {
 
 	// 3. handle events in endBlock
 	if len(endBlockEvents) > 0 {
-		eventCount += len(endBlockEvents)
 		sqls, err = i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
@@ -157,7 +154,9 @@ func (i *Impl) Process(height uint64) error {
 		}
 	}
 
-	metrics.BlocksyncerLogicTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(startTime).Milliseconds()))
+	sqlCount := len(allSQL)
+
+	metrics.BlocksyncerLogicTime.Set(float64(time.Since(startTime).Milliseconds()))
 
 	dbStartTime := time.Now()
 	tx := i.DB.Begin(context.TODO())
@@ -171,11 +170,11 @@ func (i *Impl) Process(height uint64) error {
 		log.Errorw("failed to commit db", "error", txErr)
 		return txErr
 	}
-	metrics.BlocksyncerWriteDBTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(dbStartTime).Milliseconds()))
+	metrics.BlocksyncerWriteDBTime.Set(float64(time.Since(dbStartTime).Milliseconds()))
 
 	log.Infof("handle&write data cost: %d", time.Since(startTime).Milliseconds())
-	log.Infof("height :%d tx count:%d event count:%d", height, txCount, eventCount)
-	metrics.BlockEventCount.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(eventCount))
+	log.Infof("height :%d tx count:%d sql count:%d", height, txCount, sqlCount)
+	metrics.BlockEventCount.Set(float64(sqlCount))
 
 	blockMap.Delete(heightKey)
 	eventMap.Delete(heightKey)
@@ -185,7 +184,7 @@ func (i *Impl) Process(height uint64) error {
 	log.Infof("total cost: %d", time.Since(startTime).Milliseconds())
 
 	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
-	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(startTime).Milliseconds()))
+	metrics.BlocksyncerCatchTime.Set(float64(time.Since(startTime).Milliseconds()))
 
 	return nil
 }
