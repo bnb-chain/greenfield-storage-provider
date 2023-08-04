@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru"
+
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 
@@ -24,6 +26,10 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+)
+
+const (
+	bucketCacheSize = int(100)
 )
 
 var _ vgmgr.GVGPickFilter = &PickDestGVGFilter{}
@@ -274,6 +280,7 @@ type BucketMigrateScheduler struct {
 	selfSP                    *sptypes.StorageProvider
 	lastSubscribedBlockHeight uint64                               // load from db
 	executePlanIDMap          map[uint64]*BucketMigrateExecutePlan // bucketID -> BucketMigrateExecutePlan
+	bucketCache               *lru.Cache
 	// src sp swap unit plan.
 	mutex sync.RWMutex
 }
@@ -304,6 +311,11 @@ func (s *BucketMigrateScheduler) Init(m *ManageModular) error {
 	}
 	s.executePlanIDMap = make(map[uint64]*BucketMigrateExecutePlan)
 
+	s.bucketCache, err = lru.New(bucketCacheSize)
+	if err != nil {
+		return err
+	}
+
 	// plan load from db
 	s.loadBucketMigrateExecutePlansFromDB()
 
@@ -318,10 +330,25 @@ func (s *BucketMigrateScheduler) Start() error {
 // Before processing MigrateBucketEvents, first check if the status of the bucket on the chain meets the expectations. If it meets the expectations, proceed with the execution; otherwise, skip this MigrateBucketEvent event.
 func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	// check the chain's bucket is migrating
-	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketId)
-	if err != nil {
-		return false, err
+	key := cacheKey(bucketId)
+	var (
+		bucketInfo *storagetypes.BucketInfo
+	)
+	elem, has := s.bucketCache.Get(key)
+	if has {
+		value, ok := elem.(storagetypes.BucketInfo)
+		if !ok {
+			return false, err
+		}
+		bucketInfo = &value
+	} else {
+		bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketId)
+		if err != nil {
+			return false, err
+		}
+		s.bucketCache.Add(key, bucketInfo)
 	}
+
 	if bucketInfo.BucketStatus != expectedStatus {
 		log.Debugw("the bucket status is not same, the event will skip", "bucketInfo", bucketInfo, "expectedStatus", expectedStatus)
 		return false, nil
@@ -875,4 +902,8 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	log.Debugw("bucket migrate scheduler load from db success", "bucketIDs", migratingBucketIDs)
 
 	return err
+}
+
+func cacheKey(bucketId uint64) string {
+	return fmt.Sprintf("bucketid:%d", bucketId)
 }
