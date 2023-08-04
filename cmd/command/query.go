@@ -151,7 +151,7 @@ get sp exit swap plan and migrate gvg task status.`,
 }
 
 func listModularAction(ctx *cli.Context) error {
-	fmt.Print(gfspapp.GetRegisterModulusDescription())
+	fmt.Print(gfspapp.GetRegisterModuleDescription())
 	return nil
 }
 

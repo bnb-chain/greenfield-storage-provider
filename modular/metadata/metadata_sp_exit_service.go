@@ -213,11 +213,13 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
 			}
 		}
-		res = append(res, &types.ListMigrateBucketEvents{
-			Events:         spEvent,
-			CompleteEvents: spCompleteEvent,
-			CancelEvents:   spCancelEvent,
-		})
+		if spCompleteEvent == nil {
+			res = append(res, &types.ListMigrateBucketEvents{
+				Events:         spEvent,
+				CompleteEvents: spCompleteEvent,
+				CancelEvents:   spCancelEvent,
+			})
+		}
 	}
 
 	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
@@ -404,7 +406,7 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		return nil, ErrExceedBlockHeight
 	}
 
-	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
+	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list sp exit events", "error", err)
 		return nil, err

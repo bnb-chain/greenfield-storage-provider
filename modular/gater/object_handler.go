@@ -1,15 +1,16 @@
 package gater
 
 import (
-	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gorilla/mux"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -62,9 +63,14 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
+		return
+	}
 	startAuthenticationTime := time.Now()
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
+		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
@@ -180,6 +186,11 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
+		return
+	}
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
@@ -265,8 +276,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	log.CtxDebugw(ctx, "succeed to upload payload data")
-
+	log.CtxDebug(ctx, "succeed to upload payload data")
 }
 
 // queryResumeOffsetHandler handles the resumable put object
@@ -397,15 +407,25 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	queryParams := r.URL.Query()
-	gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
-	gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
-	gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+	offChainAuthUserAddressParam := queryParams.Get(OffChainAuthUserAddressQuery)
+	offChainAuthAppDomainParam := queryParams.Get(OffChainAuthAppDomainQuery)
+	offChainAuthAuthorizationParam := queryParams.Get(OffChainAuthAuthorizationQuery)
 
 	// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
-	if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" {
-		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
-		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
-		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
+	if offChainAuthUserAddressParam != "" && offChainAuthAppDomainParam != "" && offChainAuthAuthorizationParam != "" {
+		vars := mux.Vars(r)
+		objectName := vars["object"]
+		r.Header.Set(GnfdUserAddressHeader, offChainAuthUserAddressParam)
+		r.Header.Set(GnfdOffChainAuthAppDomainHeader, offChainAuthAppDomainParam)
+		r.Header.Set(GnfdAuthorizationHeader, offChainAuthAuthorizationParam)
+
+		// default set content-disposition to download, if specified in query param as view, then set to view
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+objectName+"\"")
+		offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
+		isView, _ := strconv.ParseBool(offChainAuthViewParam)
+		if isView {
+			w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
+		}
 	}
 
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
@@ -714,15 +734,10 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			"bucket_sp_id", bucketSPID, "self_sp_id", spID,
 		)
 
-		// TODO might need to edit GetEndpointBySpId to reduce call to chain
-		sp, queryErr := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
-		if queryErr != nil {
-			err = ErrConsensus
-			return
-		}
-		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
+		// get the endpoint where the bucket actually is in
+		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpId(reqCtx.Context(), bucketSPID)
 		if getEndpointErr != nil || spEndpoint == "" {
-			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
+			log.Errorw("failed to get endpoint by id ", "sp_id", bucketSPID, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}

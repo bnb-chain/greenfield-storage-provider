@@ -9,27 +9,26 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
-// GfSpGetEndpointBySpAddress get endpoint by sp address
-func (r *MetadataModular) GfSpGetEndpointBySpAddress(
+// GfSpGetEndpointBySpId get endpoint by sp id
+func (r *MetadataModular) GfSpGetEndpointBySpId(
 	ctx context.Context,
-	req *types.GfSpGetEndpointBySpAddressRequest) (
-	resp *types.GfSpGetEndpointBySpAddressResponse, err error) {
+	req *types.GfSpGetEndpointBySpIdRequest) (
+	resp *types.GfSpGetEndpointBySpIdResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	sp, err := r.baseApp.GfSpDB().GetSpByAddress(req.SpAddress, spdb.OperatorAddressType)
+	sp, err := r.baseApp.GfSpDB().GetSpById(req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get sp", "error", err)
 		return
 	}
 
-	resp = &types.GfSpGetEndpointBySpAddressResponse{Endpoint: sp.Endpoint}
-	log.CtxInfow(ctx, "succeed to get endpoint by a sp address")
+	resp = &types.GfSpGetEndpointBySpIdResponse{Endpoint: sp.Endpoint}
+	log.CtxInfow(ctx, "succeed to get endpoint by a sp id")
 	return resp, nil
 }
 

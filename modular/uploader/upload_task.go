@@ -119,7 +119,8 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 					return ErrPieceStore
 				}
 			}
-			if !bytes.Equal(hash.GenerateIntegrityHash(checksums), uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
+			integrity = hash.GenerateIntegrityHash(checksums)
+			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
@@ -229,7 +230,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 	offset := task.GetResumeOffset()
 	var (
 		err           error
-		segIdx        uint32 = uint32(int64(offset) / segmentSize)
+		segIdx        = uint32(int64(offset) / segmentSize)
 		pieceKey      string
 		integrity     []byte
 		readN         int
@@ -263,8 +264,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
-					log.CtxErrorw(ctx, "put segment piece to piece store",
-						"piece_key", pieceKey, "error", err)
+					log.CtxErrorw(ctx, "put segment piece to piece store", "piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
 				err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), primarySPRedundancyIdx, hash.GenerateChecksum(data))

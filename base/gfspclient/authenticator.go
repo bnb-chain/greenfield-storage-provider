@@ -12,6 +12,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
+// AuthenticatorAPI for mock use
+type AuthenticatorAPI interface {
+	VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error)
+	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.CallOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
+	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error)
+	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string, opts ...grpc.CallOption) (bool, error)
+}
+
 func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
 	startTime := time.Now()
 	defer metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
@@ -19,7 +27,7 @@ func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.A
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_create_conn_time").Observe(time.Since(startTime).Seconds())
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
-		return false, ErrRpcUnknown
+		return false, ErrRPCUnknown
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpAuthenticationRequest{
@@ -33,7 +41,7 @@ func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.A
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_network_time").Observe(time.Since(startRequestTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to verify authentication", "error", err)
-		return false, ErrRpcUnknown
+		return false, ErrRPCUnknown
 	}
 	if resp.GetErr() != nil {
 		return false, resp.GetErr()
@@ -46,7 +54,7 @@ func (s *GfSpClient) GetAuthNonce(ctx context.Context, account string, domain st
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
-		return 0, 0, "", 0, ErrRpcUnknown
+		return 0, 0, "", 0, ErrRPCUnknown
 	}
 	defer conn.Close()
 	req := &gfspserver.GetAuthNonceRequest{
@@ -70,7 +78,7 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
-		return false, ErrRpcUnknown
+		return false, ErrRPCUnknown
 	}
 	req := &gfspserver.UpdateUserPublicKeyRequest{
 		AccountId:     account,
@@ -97,7 +105,7 @@ func (s *GfSpClient) VerifyOffChainSignature(ctx context.Context, account string
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
-		return false, ErrRpcUnknown
+		return false, ErrRPCUnknown
 	}
 	req := &gfspserver.VerifyOffChainSignatureRequest{
 		AccountId:     account,

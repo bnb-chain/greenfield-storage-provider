@@ -22,6 +22,7 @@ import (
 const (
 	SwapOutFamilyKeyPrefix  = "familyID-"
 	SwapOutGVGListKeyPrefix = "gvgIDList-"
+	printLogPerN            = 100
 )
 
 func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
@@ -120,7 +121,7 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 		return err
 	}
 	spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(),
-		s.lastSubscribedSPExitBlockHeight, s.manager.baseApp.OperatorAddress())
+		s.lastSubscribedSPExitBlockHeight, s.selfSP.GetId())
 	if subscribeError != nil {
 		log.Errorw("failed to init due to subscribe sp exit", "error", subscribeError)
 		return subscribeError
@@ -146,7 +147,7 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 	}
 	log.Infow("succeed to init sp exit scheduler", "is_exiting", s.isExiting, "is_exited", s.isExited,
 		"last_subscribed_sp_exit_block_height", s.lastSubscribedSPExitBlockHeight,
-		"last_subscribed_bucket_migrate_block_height", s.lastSubscribedSwapOutBlockHeight,
+		"last_subscribed_swap_out_block_height", s.lastSubscribedSwapOutBlockHeight,
 		"src_sp_swap_out_plan", s.swapOutPlan,
 		"dest_sp_task_runner", s.taskRunner)
 	return nil
@@ -173,13 +174,14 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err        error
 		migrateKey string
 	)
-	log.Infow("update migrate progress", "sp_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
-		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx())
+	log.Infow("update migrate progress", "gvg_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
+		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx(), "last_migrated_object_id", task.GetLastMigratedObjectID())
 	migrateKey = MakeGVGMigrateKey(task.GetSrcGvg().GetId(), task.GetSrcGvg().GetFamilyId(), task.GetRedundancyIdx())
+	if err = s.taskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID()); err != nil {
+		return err
+	}
 	if task.GetFinished() {
 		err = s.taskRunner.UpdateMigrateGVGStatus(migrateKey, Migrated)
-	} else {
-		err = s.taskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
 	}
 	return err
 }
@@ -297,14 +299,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 	}
 
 	for _, gvg := range gvgList {
-		redundancyIndex := int32(-1)
-		if gvg.GetFamilyId() == 0 {
-			if redundancyIndex, err = util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId()); err != nil {
-				log.Errorw("failed to add swap out to task runner due to get redundancy index",
-					"gvg_info", gvg, "sp_id", srcSP.GetId(), "error", err)
-				return err
-			}
-		}
+		redundancyIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId())
 		gUnit := &SPExitGVGExecuteUnit{}
 		gUnit.srcGVG = gvg
 		gUnit.redundancyIndex = redundancyIndex
@@ -316,6 +311,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 			log.Errorw("failed to add swap out to task runner", "gvg_unit", gUnit, "error", err)
 			return err
 		}
+		log.Infow("succeed to add gvg unit to task runner", "gvg_unit", gUnit)
 	}
 	return s.taskRunner.AddNewSwapOut(swapOut)
 }
@@ -332,10 +328,15 @@ func (s *SPExitScheduler) subscribeEvents() {
 		}
 		subscribeSPExitEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSPExitEventInterval) * time.Millisecond)
 		defer subscribeSPExitEventsTicker.Stop()
+
+		logNumber := 0
 		for range subscribeSPExitEventsTicker.C {
-			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.manager.baseApp.OperatorAddress())
+			spExitEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSpExitEvents(context.Background(), s.lastSubscribedSPExitBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
+				logNumber++
+				if (logNumber % printLogPerN) == 0 {
+					log.Errorw("failed to subscribe sp exit event", "error", subscribeError)
+				}
 				continue
 			}
 			log.Infow("loop subscribe sp exit event", "sp_exit_events", spExitEvents, "block_id", s.lastSubscribedSPExitBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
@@ -374,9 +375,10 @@ func (s *SPExitScheduler) subscribeEvents() {
 			s.lastSubscribedSwapOutBlockHeight++
 			log.Infow("swap out subscribe progress", "last_subscribed_block_height", s.lastSubscribedSwapOutBlockHeight)
 		}
-
 		subscribeSwapOutEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeSwapOutEventInterval) * time.Millisecond)
 		defer subscribeSwapOutEventsTicker.Stop()
+
+		logNumber := 0
 		for range subscribeSwapOutEventsTicker.C {
 			if s.lastSubscribedSwapOutBlockHeight >= s.lastSubscribedSPExitBlockHeight {
 				continue
@@ -384,7 +386,10 @@ func (s *SPExitScheduler) subscribeEvents() {
 
 			swapOutEvents, subscribeError := s.manager.baseApp.GfSpClient().ListSwapOutEvents(context.Background(), s.lastSubscribedSwapOutBlockHeight+1, s.selfSP.GetId())
 			if subscribeError != nil {
-				log.Errorw("failed to subscribe swap out event", "error", subscribeError)
+				logNumber++
+				if (logNumber % printLogPerN) == 0 {
+					log.Errorw("failed to subscribe swap out event", "error", subscribeError)
+				}
 				continue
 			}
 			if s.isExited {
@@ -1007,7 +1012,6 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
 					0, unit.srcGVG, unit.redundancyIndex,
 					unit.srcSP,
-					// TODO if add add a new tasktimeout
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					runner.manager.baseApp.TaskMaxRetry(migrateGVGTask))
 				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {

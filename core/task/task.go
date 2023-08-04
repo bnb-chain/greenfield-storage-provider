@@ -338,7 +338,7 @@ type ReceivePieceTask interface {
 	SetFinished(bool)
 	// GetGlobalVirtualGroupId returns the object's global virtual group id.
 	GetGlobalVirtualGroupId() uint32
-	// SetGlobalVirtualGroupId sets the object's global virtual group id.
+	// SetGlobalVirtualGroupID sets the object's global virtual group id.
 	SetGlobalVirtualGroupID(uint32)
 	// GetBucketMigration returns whether receiver does bucket migration
 	GetBucketMigration() bool

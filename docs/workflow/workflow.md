@@ -1,12 +1,10 @@
 # SP Workflow
 
-This section will combine together all the current and existing workflows of SP to help you understand how SP works and how internal state flows.
-
-The workflow of SP is divided into the following six parts: `GetApproval, UploadObject(Upload to PrimarySP，Replicate to SecondarySP), DownloadObject, ChallengePiece, GCObject and QueryMeta. GetApproval, UploadObject and DownloadObject` belongs to front modules. Therefore, you should firstly send GetApproval requests before uploading objects. Then you can upload objects into SP and finally download objects from SP or query meta info about objects. ChallengePiece and GCObject belongs to background modules, you are not aware of these two modules.
+This section will combine all the current and existing workflows of SP to help you understand how SP works and how internal state flows.
 
 ## Get Approval
 
-Get Approval API provides two actions: CreateBucket and CreateObject. To upload an object into SP, you must first send a CreateBucket approval request, which will create a bucket on the Greenfield blockchain. If the request is successful, you can then send a CreateObject approval request. Both of these actions are used to determine whether SP is willing to serve the request. SP may reject users with a bad reputation or specific objects or buckets. SP approves the request by signing a message for the action and responding to the users. By default, SP will serve the request, but it can refuse if it chooses to do so. Each SP can customize its own strategy for accepting or rejecting requests.
+Get Approval API includes actions: CreateBucket and CreateObject. To upload an object into SP, you must first send a CreateBucket approval request, which will create a bucket on the Greenfield blockchain. If the request is successful, you can then send a CreateObject approval request. Both of these actions are used to determine whether SP is willing to serve the request. SP may reject users with a bad reputation or specific objects or buckets. SP approves the request by signing a message for the action and responding to the users. By default, SP will serve the request, but it can refuse if it chooses to do so. Each SP can customize its own strategy for accepting or rejecting requests.
 
 The flow chart is shown below:
 
@@ -15,8 +13,8 @@ The flow chart is shown below:
 
 - Gateway receives GetApproval requests from the request originator.
 - Gateway verifies the signature of request to ensure that the request has not been tampered with.
-- Gateway invokes Authorizer to check the authorization to ensure the corresponding account is existed.
-- Fills the CreateBucket/CreateObject message timeout field and dispatches the request to Signer service.
+- Gateway invokes Authenticator to check the authorization to ensure the corresponding account is existed.
+- Gateway invokes Approver to fills the CreateBucket/CreateObject message timeout field and dispatches the request to Signer service.
 - Gets Signature from Signer, fills the message's approval signature field, and returns to the request originator.
 
 **Note**
@@ -40,7 +38,7 @@ Upload to PrimarySP flow chart is shown below:
 
 - Gateway receives PutObject requests from client.
 - Gateway verifies the signature of request to ensure that the request has not been tampered with.
-- Gateway invokes Authorizer to check the authorization to ensure the corresponding account has permissions on resources.
+- Gateway invokes Authenticator to check the authorization to ensure the corresponding account has permissions on resources.
 - Dispatches the request to Uploader module.
 
 ### Uploader
@@ -50,16 +48,17 @@ Upload to PrimarySP flow chart is shown below:
 - After uploading all segments, insert segments data checksums and root checksum into the SP DB.
 - Uploader creates an upload object task for Manager and returns a success message to the client indicating that the put object request is successful.
 
+
+
+### TaskExecutor
+
 Replicate to SecondarySP flow chart is shown below:
 
 <div align=center><img src="../asset/04-replicate_object.jpg" width="800"/></div>
 <div align="center"><i>Replicate Piece Flowchart</i></div>
 
-### TaskExecutor
-
-- TaskExecutor requests tasks from the Manager, which then dispatches various job tasks such as ReplicatePieceTask, SealObjectTask, ChallengePieceTask, GCObjectTask, and so on.
-- The object data is asynchronously replicated to secondary SPs, and Uploader can quickly receive a success message from TaskExecutor. The JobContext's state changes from `UPLOAD_OBJECT_DONE` to `ALLOC_SECONDARY_DOING`.
-- TaskExecutor sends a GetSecondarySPApproval request to the P2P node, which broadcasts it to other SPs and collects the results back to the TaskExecutor for selecting the secondary SPs. The JobContext's state is immediately changed from `REPLICATE_OBJECT_DOING` into `ALLOC_SECONDARY_DONE`.
+- Executor fetch ReplicatePieceTask from the Manager which help pick a proper virtual group.
+- The object data is asynchronously replicated to virtual group secondary SPs.
 - TaskExecutor retrieves segments from the PieceStore in parallel and uses `Erasure Coding(EC)` to compute a data redundancy solution for these segments, generating the corresponding EC pieces. The EC pieces are then organized into six replicate data groups, with each group containing several EC pieces based on the Redundancy policy.
 - Then sends the replicate data groups in streaming to the selected secondary SPs in parallel.
 - The JobContext's secondary SP information is updated once the replication of a secondary SP is completed. The JobContext's state changes from `REPLICATE_OBJECT_DOING` to `REPLICATE_OBJECT_DONE` only after all secondary SPs have completed replication.
@@ -72,7 +71,7 @@ Replicate to SecondarySP flow chart is shown below:
 
 ### TaskExecutor
 
-- Receives the response from secondary SPs' Receiver, and unsign the signature to compare with the secondary SP's approval public key.
+- Receives the response from secondary SPs' Receiver, and unsigned the signature to compare with the secondary SP's approval public key.
 - Sends the MsgSealObject to the Signer for signing the seal object transaction and broadcasting to the Greenfield chain with the secondary SPs' integrity hash and signature. The state of the JobContext turns to `SIGN_OBJECT_DOING` from `REPLICATE_OBJECT_DONE`. If Signer succeeds to broadcast the SealObjectTX, changes `SEAL_OBJECT_TX_DOING` state immediately into `SIGN_OBJECT_DONE` state.
 - Monitor the execution results of seal object transaction on the Greenfield chain to determine whether the seal is successful. If so, the JobContext state is changed into `SEAL_OBJECT_DONE` state.
 
@@ -122,7 +121,7 @@ Users maybe want to query some metadata about buckets, objects, bucket read quot
 - Metadata receives the QueryMeta request from Gateway.
 - Metadata queries bucket or object from SP DB or BS DB.
 
-## Challenge Piece
+## Get Challenge Piece Info
 
 Ensuring data integrity and availability is always the top priority for any decentralized storage network. To achieve better high availability (HA), we use data challenges instead of storage proofs. The system continuously issues data challenges to random pieces on the greenfield chain, and SP that stores the challenged piece responds using the challenge workflow. Each SP splits the object payload data into segments, stores the segment data in the PieceStore, and stores the segment checksum in SP DB.
 
@@ -157,3 +156,35 @@ The flow chart is shown below:
 - Manager dispatches GCObjectTask to TaskExecutor.
 - TaskExecutor send requests to Metadata to query deleted objects in order.
 - TaskExecutor delete payload data which is stored in PieceStore.
+
+## Migrate Bucket 
+
+Bucket user can select primary sp freely and use the migration bucket to migrate the sp service when they feel that the SP service quality is poor.
+
+The flow chart is shown below:
+
+<div align=center><img src="../asset/13-bucket_migrate.jpg" width="400"/></div>
+<div align="center"><i>Bucket Migrate Flowchart</i></div>
+
+- The bucket user should ask new primary sp for migration bucket, and get the approval of the new primary SP.
+- The bucket user submits a MigrationBucket transaction with the approval of the new primary SP.
+- The dest sp subscribes event from chain, and produce migrate execute plan.
+- The dest sp executor fetch migrate gvg task to execute, and period report progress.
+- The dest sp sends the complete tx if all the gvg task are completed in execute plan.
+
+## SP Exit
+
+Greenfield allows for the participation of SPs and also allows them to exit according to their wishes.
+
+The flow chart is shown below:
+
+<div align=center><img src="../asset/14-sp_exit.jpg" width="400"/></div>
+<div align="center"><i>SP Exit Flowchart</i></div>
+
+- The src sp self applying for exit by sending the StorageProviderExit transaction to the blockchain.
+- The src sp subscribes event from chain, and produce exit execute plan.
+- The src sp dispatches swap out info dest sp.
+- The dest sp produces gvg migrate task by swap out unit.
+- The dest sp executor fetch migrate gvg task to execute, and period report progress.
+- The dest sp sends the complete swap out tx if all the gvg task are completed in swap out.
+- The src sp sends the complete sp exit tx if all the swap out are completed.

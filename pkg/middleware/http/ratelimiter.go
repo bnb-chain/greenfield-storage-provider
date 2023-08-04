@@ -22,16 +22,16 @@ type RateLimiterCell struct {
 }
 
 type IPLimitConfig struct {
-	On         bool
-	RateLimit  int
-	RatePeriod string
+	On         bool   `comment:"optional"`
+	RateLimit  int    `comment:"optional"`
+	RatePeriod string `comment:"optional"`
 }
 
 type RateLimiterConfig struct {
 	IPLimitCfg  IPLimitConfig
-	PathPattern []RateLimiterCell
-	HostPattern []RateLimiterCell
-	APILimits   []RateLimiterCell
+	PathPattern []RateLimiterCell `comment:"optional"`
+	HostPattern []RateLimiterCell `comment:"optional"`
+	APILimits   []RateLimiterCell `comment:"optional"`
 }
 
 type MemoryLimiterConfig struct {

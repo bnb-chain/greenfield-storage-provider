@@ -22,7 +22,7 @@ The core function of PieceStore module is to be compatible with multiple object 
 
 ### API Interfaces
 
-PieceStore provides encapsulating interfaces for upper-layer services to use. Now these APIs are called by local pakcage functions. We provide two interfaces to visit PieceStore as follows:
+PieceStore provides encapsulating interfaces for upper-layer services to use. Now these APIs are called by local package functions. We provide two interfaces to visit PieceStore as follows:
 
 ```go
 // PieceOp is the helper interface for piece key operator and piece size calculate.
@@ -30,10 +30,10 @@ type PieceOp interface {
     // SegmentPieceKey returns the segment piece key used as the key of store piece store.
     SegmentPieceKey(objectID uint64, segmentIdx uint32) string
     // ECPieceKey returns the ec piece key used as the key of store piece store.
-    ECPieceKey(objectID uint64, segmentIdx uint32, replicateIdx uint32) string
+    ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32) string
     // ChallengePieceKey returns the  piece key used as the key of challenge piece key.
     // if replicateIdx < 0 , returns the SegmentPieceKey, otherwise returns the ECPieceKey.
-    ChallengePieceKey(objectID uint64, segmentIdx uint32, replicateIdx int32) string
+    ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32) string
     // MaxSegmentPieceSize returns the object max segment piece size by object payload size and
     // max segment size that comes from storage params.
     MaxSegmentPieceSize(payloadSize uint64, maxSegmentSize uint64) int64
@@ -46,6 +46,10 @@ type PieceOp interface {
     // ECPieceSize returns the ec piece size of ec index, by object payload size, max segment
     // size and chunk number that ths last two params comes from storage params.
     ECPieceSize(payloadSize uint64, segmentIdx uint32, maxSegmentSize uint64, chunkNum uint32) int64
+    // ParseSegmentIdx returns the segment index according to the segment piece key
+    ParseSegmentIdx(segmentKey string) (uint32, error)
+    // ParseChallengeIdx returns the segment index and EC piece index  according to the challenge piece key
+    ParseChallengeIdx(challengeKey string) (uint32, int32, error)
 }
 
 // PieceStore is the interface to piece store that store the object payload data.
@@ -68,11 +72,11 @@ PieceOp interface describes how you can combine segmentPieceKey or ECPieceKey an
 
 PieceStore provides sharding function for data high availability. PieceStore uses `fnv` algorithm to shard piece data. If users want to use data sharding, you can configure `Shards = a(a is a number which 2 <= a <= 256)` in config.toml.
 
-**Note** The current implementation of sharding can only be used for multiple buckets in one region. The support of multi-region would be added in the future which will be more higher availability.
+**Note** The current implementation of sharding can only be used for multiple buckets in one region. The support of multi-region would be added in the future which will be higher availability.
 
-### Compatibile With Multi Object Storage
+### Compatible With Multi Object Storage
 
-PieceStore is vendor-agnostic, so it will be compatibile with multi object storage. Now SP supports based storage such as `S3, MinIO, LDFS, OSS, DiskFile and Memory`.
+PieceStore is vendor-agnostic, so it will be compatible with multi object storage. Now SP supports based storage such as `S3, MinIO, LDFS, OSS, DiskFile and Memory`.
 Recommend using S3 or MinIO in production environment and [the releated config document is here](https://github.com/bnb-chain/greenfield-storage-provider/blob/master/store/piecestore/README.md). Users can experience PieceStore in local by DiskFile or Memory. The common interface is as follows:
 
 ```go
@@ -101,15 +105,15 @@ type ObjectStorage interface {
 }
 ```
 
-If you want use a new storage system, you can implement the methods of ObjectStorage interface. It's very convenient!
+If you want to use a new storage system, you can implement the methods of ObjectStorage interface. It's very convenient!
 
 ### Outlook
 
-PieceStore provides some fundamental functions: wrapped API interfaces, sharding and compatibile with multiple storage systems. However, there are more functions to be added in the future.
+PieceStore provides some fundamental functions: wrapped API interfaces, sharding and compatible with multiple storage systems. However, there are more functions to be added in the future.
 
 1. Data Cache
 
-PieceStore is combined with object storage, cache is an important component for interacting efficiently between the local client and remote services. Read and write data can be loaded into cache in advance or asynchronously. Using caching technology can significantly reduce the latency of storag operations and increase data throughput compared to interact with remote services directly.
+PieceStore is combined with object storage, cache is an important component for interacting efficiently between the local client and remote services. Read and write data can be loaded into cache in advance or asynchronously. Using caching technology can significantly reduce the latency of storage operations and increase data throughput compared to interact with remote services directly.
 
 2. Data sync
 

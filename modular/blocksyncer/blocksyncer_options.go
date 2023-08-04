@@ -9,8 +9,10 @@ import (
 	"sync"
 	"time"
 
+	cometbfttypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/forbole/juno/v4/cmd"
 	parsecmdtypes "github.com/forbole/juno/v4/cmd/parse/types"
+	"github.com/forbole/juno/v4/common"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
 	"github.com/forbole/juno/v4/modules"
@@ -33,9 +35,10 @@ import (
 
 func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	junoCfg := makeBlockSyncerConfig(cfg)
+
 	MainService = &BlockSyncerModular{
 		config:  junoCfg,
-		name:    BlockSyncerModularName,
+		name:    coremodule.BlockSyncerModularName,
 		baseApp: app,
 	}
 	blockMap = new(sync.Map)
@@ -46,7 +49,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 		return nil, err
 	}
 
-	//prepare master table
+	// prepare master table
 	FlagDB = db.Cast(MainService.parserCtx.Database)
 	MainService.prepareMasterFlagTable()
 	mainServiceDB, _ := FlagDB.GetMasterDB(context.TODO())
@@ -59,7 +62,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 
 	// when NeedBackup config true Or backup db is current master DB, init backup service
 	if NeedBackup || !mainServiceDB.IsMaster {
-		//create backup block syncer
+		// create backup block syncer
 		if blockSyncerBackup, err := newBackupBlockSyncerService(junoCfg, mainDBIsMaster); err != nil {
 			return nil, err
 		} else {
@@ -82,7 +85,7 @@ func (b *BlockSyncerModular) initClient() error {
 	cmdCfg := junoConfig.GetParseConfig()
 	cmdCfg.WithTomlConfig(b.config)
 
-	//set toml config to juno config
+	// set toml config to juno config
 	if readErr := parsecmdtypes.ReadConfigPreRunE(cmdCfg)(nil, nil); readErr != nil {
 		log.Infof("readErr: %v", readErr)
 		return readErr
@@ -90,7 +93,7 @@ func (b *BlockSyncerModular) initClient() error {
 
 	// get DSN from env first
 	var dbEnv string
-	if b.Name() == BlockSyncerModularName {
+	if b.Name() == coremodule.BlockSyncerModularName {
 		dbEnv = DsnBlockSyncer
 	} else {
 		dbEnv = DsnBlockSyncerSwitched
@@ -242,17 +245,16 @@ func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
 		if latestBlockHeight == int64(endBlock) {
 			continue
 		}
-		log.Info(count*(cycle+1) + startHeight - 1)
-		log.Info(latestBlockHeight)
+
 		if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 			startBlock = count*cycle + startHeight
 			endBlock = count*(cycle+1) + startHeight - 1
-			//processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
-			//if processedHeight != 0 && startBlock-processedHeight > MaxHeightGapFactor*count {
-			//	log.Infof("processedHeight: %d", processedHeight)
-			//	time.Sleep(time.Second)
-			//	continue
-			//}
+			processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
+			if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
+				log.Infof("processedHeight: %d", processedHeight)
+				time.Sleep(time.Second)
+				continue
+			}
 			cycle++
 		} else if flag != 0 {
 			startBlock = endBlock + 1
@@ -293,11 +295,13 @@ func (b *BlockSyncerModular) fetchData(start, end uint64) {
 					log.Warnf("failed to get block results from node: %s", err)
 					continue
 				}
-				txs, err := b.parserCtx.Node.Txs(block)
-				if err != nil {
-					log.Warnf("failed to get block results from node: %s", err)
-					continue
+				txs := make(map[common.Hash][]cometbfttypes.Event)
+				for idx := 0; idx < len(events.TxsResults); idx++ {
+					k := block.Block.Data.Txs[idx]
+					v := events.TxsResults[idx].GetEvents()
+					txs[common.BytesToHash(k.Hash())] = v
 				}
+
 				heightKey := fmt.Sprintf("%s-%d", b.Name(), height)
 				blockMap.Store(heightKey, block)
 				eventMap.Store(heightKey, events)
@@ -318,7 +322,7 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 	if err != nil {
 		return err
 	}
-	//not exist
+	// not exist
 	if !masterRecord.OneRowId {
 		if err = FlagDB.SetMasterDB(context.TODO(), &bsdb.MasterDB{
 			OneRowId: true,
@@ -446,12 +450,12 @@ func SwitchMasterDBFlag() error {
 		return err
 	}
 
-	//switch flag
+	// switch flag
 	masterFlag.IsMaster = !masterFlag.IsMaster
 	if err = FlagDB.SetMasterDB(context.TODO(), masterFlag); err != nil {
 		return err
 	}
-	log.Infof("DB switched")
+	log.Info("DB switched")
 	return nil
 }
 

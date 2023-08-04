@@ -133,7 +133,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "segment_piece_key", segmentPieceKey, "error", err)
 			return
 		}
 	} else { // in this case, we should migrate pieces from secondary SP
@@ -146,13 +146,14 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
 		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "ec_piece_key", ecPieceKey, "error", err)
 			return
 		}
 	}
 
 	w.Write(pieceData)
-	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "objectID", objectID, "segmentIdx",
-		segmentIdx, "redundancyIdx", redundancyIdx)
+	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "object_id", objectID, "segment_piece_index",
+		segmentIdx, "redundancy_index", redundancyIdx)
 }
 
 // getSecondaryBlsMigrationBucketApprovalHandler handles the bucket migration approval request for secondarySP using bls

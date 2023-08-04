@@ -1,0 +1,15 @@
+apiVersion: alibabacloud.com/v1
+kind: AlbConfig
+metadata:
+  name: gf-sp
+spec:
+  config:
+    id: replace-me
+    forceOverride: true
+  listeners:
+  - caEnabled: false
+    certificates:
+    - CertificateId: replace-me
+      IsDefault: true
+    port: 443
+    protocol: HTTPS

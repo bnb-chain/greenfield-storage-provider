@@ -11,14 +11,13 @@ import (
 	"github.com/forbole/juno/v4/types/config"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 )
 
 var (
-	BlockSyncerModularName        = strings.ToLower("BlockSyncer")
-	BlockSyncerModularDescription = "Synchronize data on the chain to SP"
-	BlockSyncerModularBackupName  = strings.ToLower("BlockSyncerBackup")
+	BlockSyncerModularBackupName = strings.ToLower("BlockSyncerBackup")
 	// DsnBlockSyncer defines env variable name for block syncer dsn
 	DsnBlockSyncer = "BLOCK_SYNCER_DSN"
 	// DsnBlockSyncerSwitched defines env variable name for block syncer backup dsn
@@ -70,7 +69,7 @@ var (
 )
 
 func (b *BlockSyncerModular) Name() string {
-	return BlockSyncerModularName
+	return coremodule.BlockSyncerModularName
 }
 
 func (b *BlockSyncerModular) Start(ctx context.Context) error {
@@ -93,7 +92,7 @@ func (b *BlockSyncerModular) Start(ctx context.Context) error {
 
 	go MainService.serve(CtxMain)
 
-	//create backup blocksyncer
+	// create backup blocksyncer
 	if NeedBackup {
 		ctxBackup := context.WithValue(context.Background(), MigrateDBKey{}, true)
 		BackupService.context = ctxBackup
@@ -132,7 +131,7 @@ func determineMainService() error {
 		return err
 	}
 	if !masterFlag.IsMaster {
-		//switch role
+		// switch role
 		temp := MainService
 		MainService = BackupService
 		BackupService = temp

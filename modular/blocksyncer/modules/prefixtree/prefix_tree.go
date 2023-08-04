@@ -33,22 +33,15 @@ var BuildPrefixTreeEvents = map[string]bool{
 	EventRejectSealObject:   true,
 }
 
-func (m *Module) ExtractEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
-	return nil, nil
-}
-
-// HandleEvent handles the events relevant to the building of the PrefixTree.
-// It checks the type of the event and calls the appropriate handler for it.
-func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
-	log.Infof("prefixhandleevent")
+func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
 	if !BuildPrefixTreeEvents[event.Type] {
-		return nil
+		return nil, nil
 	}
 
 	typedEvent, err := sdk.ParseTypedEvent(abci.Event(event))
 	if err != nil {
 		log.Errorw("parse typed events error", "module", m.Name(), "event", event, "err", err)
-		return err
+		return nil, err
 	}
 
 	switch event.Type {
@@ -56,38 +49,44 @@ func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, t
 		createObject, ok := typedEvent.(*storagetypes.EventCreateObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventCreateObject", "event", typedEvent)
-			return errors.New("create object event assert error")
+			return nil, errors.New("create object event assert error")
 		}
 		return m.handleCreateObject(ctx, createObject)
 	case EventDeleteObject:
 		deleteObject, ok := typedEvent.(*storagetypes.EventDeleteObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventDeleteObject", "event", typedEvent)
-			return errors.New("delete object event assert error")
+			return nil, errors.New("delete object event assert error")
 		}
 		return m.handleDeleteObject(ctx, deleteObject)
 	case EventCancelCreateObject:
 		cancelObject, ok := typedEvent.(*storagetypes.EventCancelCreateObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventCancelCreateObject", "event", typedEvent)
-			return errors.New("cancel create object event assert error")
+			return nil, errors.New("cancel create object event assert error")
 		}
 		return m.handleCancelCreateObject(ctx, cancelObject)
 	case EventRejectSealObject:
 		rejectSealObject, ok := typedEvent.(*storagetypes.EventRejectSealObject)
 		if !ok {
 			log.Errorw("type assert error", "type", "EventRejectSealObject", "event", typedEvent)
-			return errors.New("reject seal object event assert error")
+			return nil, errors.New("reject seal object event assert error")
 		}
 		return m.handleRejectSealObject(ctx, rejectSealObject)
 	default:
-		return nil
+		return nil, nil
 	}
+}
+
+// HandleEvent handles the events relevant to the building of the PrefixTree.
+// It checks the type of the event and calls the appropriate handler for it.
+func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
+	return nil
 }
 
 // handleCreateObject handles EventCreateObject.
 // It builds the directory tree structure for the object if necessary.
-func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetypes.EventCreateObject) error {
+func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetypes.EventCreateObject) (map[string][]interface{}, error) {
 	var nodes []*bsdb.SlashPrefixTreeNode
 	objectPath := sealObject.ObjectName
 	bucketName := sealObject.BucketName
@@ -103,7 +102,7 @@ func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetype
 		tree, err := m.db.GetPrefixTree(ctx, path, bucketName)
 		if err != nil {
 			log.Errorw("failed to get prefix tree", "error", err)
-			return err
+			return nil, err
 		}
 		if tree == nil {
 			// If the directory does not exist, create it
@@ -126,7 +125,7 @@ func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetype
 	object, err := m.db.GetPrefixTreeObject(ctx, common.BigToHash(objectID.BigInt()), bucketName)
 	if err != nil {
 		log.Errorw("failed to get prefix tree object", "error", err)
-		return err
+		return nil, err
 	}
 	if object == nil {
 		objectNode := &bsdb.SlashPrefixTreeNode{
@@ -142,31 +141,34 @@ func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetype
 		nodes = append(nodes, objectNode)
 	}
 	if len(nodes) == 0 {
-		return nil
+		return nil, nil
 	}
-	return m.db.CreatePrefixTree(ctx, nodes)
+	k, v := m.db.CreatePrefixTree(ctx, nodes)
+	return map[string][]interface{}{
+		k: v,
+	}, nil
 }
 
 // handleDeleteObject handles EventDeleteObject.
 // It removes the directory tree structure associated with the object.
-func (m *Module) handleDeleteObject(ctx context.Context, deleteObject *storagetypes.EventDeleteObject) error {
+func (m *Module) handleDeleteObject(ctx context.Context, deleteObject *storagetypes.EventDeleteObject) (map[string][]interface{}, error) {
 	return m.deleteObject(ctx, deleteObject.ObjectName, deleteObject.BucketName)
 }
 
 // handleCancelCreateObject handles EventCancelCreateObject.
 // It removes the directory tree structure associated with the object.
-func (m *Module) handleCancelCreateObject(ctx context.Context, cancelCreateObject *storagetypes.EventCancelCreateObject) error {
+func (m *Module) handleCancelCreateObject(ctx context.Context, cancelCreateObject *storagetypes.EventCancelCreateObject) (map[string][]interface{}, error) {
 	return m.deleteObject(ctx, cancelCreateObject.ObjectName, cancelCreateObject.BucketName)
 }
 
 // handleRejectSealObject handles EventRejectSealObject.
 // It removes the directory tree structure associated with the object.
-func (m *Module) handleRejectSealObject(ctx context.Context, cancelCreateObject *storagetypes.EventRejectSealObject) error {
+func (m *Module) handleRejectSealObject(ctx context.Context, cancelCreateObject *storagetypes.EventRejectSealObject) (map[string][]interface{}, error) {
 	return m.deleteObject(ctx, cancelCreateObject.ObjectName, cancelCreateObject.BucketName)
 }
 
 // deleteObject according to the given object path and bucket name.
-func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string) error {
+func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string) (map[string][]interface{}, error) {
 	var nodes []*bsdb.SlashPrefixTreeNode
 
 	// Split full path to get the directories
@@ -183,7 +185,7 @@ func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string
 		count, err := m.db.GetPrefixTreeCount(ctx, path, bucketName)
 		if err != nil {
 			log.Errorw("failed to get prefix tree count", "error", err)
-			return err
+			return nil, err
 		}
 		if count <= 1 {
 			nodes = append(nodes, &bsdb.SlashPrefixTreeNode{
@@ -197,7 +199,10 @@ func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string
 		}
 	}
 	if len(nodes) == 0 {
-		return nil
+		return nil, nil
 	}
-	return m.db.DeletePrefixTree(ctx, nodes)
+	k, v := m.db.DeletePrefixTree(ctx, nodes)
+	return map[string][]interface{}{
+		k: v,
+	}, nil
 }
