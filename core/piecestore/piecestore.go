@@ -4,6 +4,10 @@ import (
 	"context"
 )
 
+const (
+	PrimarySPRedundancyIndex = -1
+)
+
 // PieceOp is a helper interface for piece key operator and piece size calculate.
 type PieceOp interface {
 	// SegmentPieceKey returns the segment piece key used as the key of store piece store.

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -14,10 +15,6 @@ import (
 	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-)
-
-const (
-	primarySPECIdx = -1
 )
 
 // dest sp receive migrate gvg notify from src sp.
@@ -60,14 +57,13 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 }
 
 // migratePieceHandler handles migrate piece request between SPs which is used in SP exiting case.
-// First, gateway should verify Authorization header to ensure the requests are from correct SPs.
-// Second, retrieve and get data from downloader module including: PrimarySP and SecondarySP pieces
-// Third, transfer data to client which is a selected SP.
 func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
 		reqCtx     *RequestContext
 		migrateMsg []byte
+		pieceKey   string
+		pieceSize  int64
 		pieceData  []byte
 	)
 	defer func() {
@@ -83,7 +79,6 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-
 	migrateHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
 	migrateMsg, err = hex.DecodeString(migrateHeader)
 	if err != nil {
@@ -101,7 +96,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}
 	objectInfo := migratePiece.GetObjectInfo()
 	if objectInfo == nil {
-		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info")
+		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info due to has no object info")
 		err = ErrInvalidHeader
 		return
 	}
@@ -112,43 +107,32 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	maxECIdx := int32(migratePiece.GetStorageParams().GetRedundantDataChunkNum()+migratePiece.GetStorageParams().GetRedundantParityChunkNum()) - 1
+	redundancyNumber := int32(migratePiece.GetStorageParams().GetRedundantDataChunkNum()+migratePiece.GetStorageParams().GetRedundantParityChunkNum()) - 1
 	objectID := migratePiece.GetObjectInfo().Id.Uint64()
 	segmentIdx := migratePiece.GetSegmentIdx()
 	redundancyIdx := migratePiece.GetRedundancyIdx()
-	if redundancyIdx < primarySPECIdx || redundancyIdx > maxECIdx {
+	if redundancyIdx < piecestore.PrimarySPRedundancyIndex || redundancyIdx > redundancyNumber {
 		err = ErrInvalidRedundancyIndex
 		return
 	}
+	if redundancyIdx == piecestore.PrimarySPRedundancyIndex {
+		pieceKey = g.baseApp.PieceOp().SegmentPieceKey(objectID, segmentIdx)
+		pieceSize = g.baseApp.PieceOp().SegmentPieceSize(migratePiece.ObjectInfo.GetPayloadSize(),
+			segmentIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
+	} else {
+		pieceKey = g.baseApp.PieceOp().ECPieceKey(objectID, segmentIdx, uint32(redundancyIdx))
+		pieceSize = g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), segmentIdx,
+			migratePiece.GetStorageParams().GetMaxSegmentSize(), migratePiece.GetStorageParams().GetRedundantDataChunkNum())
+	}
 
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
-	// if ecIdx is equal to -1, we should migrate pieces from primary SP
-	if redundancyIdx == primarySPECIdx {
-		segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(objectID, segmentIdx)
-		segmentPieceSize := g.baseApp.PieceOp().SegmentPieceSize(migratePiece.ObjectInfo.GetPayloadSize(),
-			segmentIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
-		log.Infow("migrate primary sp", "segmentPieceKey", segmentPieceKey, "segmentPieceSize", segmentPieceSize)
-		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
-			uint64(segmentPieceSize), segmentPieceKey, 0, uint64(segmentPieceSize),
-			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
-		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "segment_piece_key", segmentPieceKey, "error", err)
-			return
-		}
-	} else { // in this case, we should migrate pieces from secondary SP
-		ecPieceKey := g.baseApp.PieceOp().ECPieceKey(objectID, segmentIdx, uint32(redundancyIdx))
-		ecPieceSize := g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), segmentIdx,
-			migratePiece.GetStorageParams().GetMaxSegmentSize(), migratePiece.GetStorageParams().GetRedundantDataChunkNum())
-		log.Infow("migrate secondary sp", "ecPieceKey", ecPieceKey, "ecPieceSize", ecPieceSize)
-		pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, false, "",
-			uint64(ecPieceSize), ecPieceKey, 0, uint64(ecPieceSize),
-			g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
-		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "ec_piece_key", ecPieceKey, "error", err)
-			return
-		}
+	pieceTask.InitDownloadPieceTask(chainObjectInfo, bucketInfo, params, coretask.DefaultSmallerPriority, migratePiece.GetIsBucketMigrate(), bucketInfo.Owner,
+		uint64(pieceSize), pieceKey, 0, uint64(pieceSize),
+		g.baseApp.TaskTimeout(pieceTask, objectInfo.GetPayloadSize()), g.baseApp.TaskMaxRetry(pieceTask))
+	pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to download segment piece", "piece_key", pieceKey, "error", err)
+		return
 	}
 
 	w.Write(pieceData)

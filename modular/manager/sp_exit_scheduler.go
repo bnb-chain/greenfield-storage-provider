@@ -10,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
@@ -186,7 +187,7 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 	return err
 }
 
-// ListSPExitPlan is used to update migrate status from task executor.
+// ListSPExitPlan is used to query sp exit status.
 func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse, error) {
 	res := &gfspserver.GfSpQuerySpExitResponse{}
 	// src SP SwapOut Plan
@@ -197,12 +198,12 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 
 		for _, unit := range s.swapOutPlan.swapOutUnitMap {
 			swapOutKey := GetSwapOutKey(unit.swapOut)
-			gfspunit := &gfspserver.SwapOutUnit{
+			swapOutUnit := &gfspserver.SwapOutUnit{
 				SwapOutKey:    swapOutKey,
 				SuccessorSpId: unit.swapOut.SuccessorSpId,
 				Status:        int32(Migrating),
 			}
-			swapOutSrcUnitMap[swapOutKey] = gfspunit
+			swapOutSrcUnitMap[swapOutKey] = swapOutUnit
 		}
 		for _, unit := range s.swapOutPlan.completedSwapOut {
 			swapOutKey := GetSwapOutKey(unit.swapOut)
@@ -222,12 +223,12 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 
 		for _, unit := range s.taskRunner.swapOutUnitMap {
 			swapOutKey := GetSwapOutKey(unit.swapOut)
-			gfspunit := &gfspserver.SwapOutUnit{
+			swapOutUnit := &gfspserver.SwapOutUnit{
 				SuccessorSpId: unit.swapOut.SuccessorSpId,
 				SwapOutKey:    swapOutKey,
 			}
 
-			swapOutUnitMap[swapOutKey] = gfspunit
+			swapOutUnitMap[swapOutKey] = swapOutUnit
 		}
 
 		// scan gvg
@@ -248,7 +249,7 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 		res.SelfSpId = s.selfSP.GetId()
 	}
 
-	log.Debugw("SPExitScheduler ListSPExitPlan", "res swap out", res)
+	log.Debugw("succeed to query sp exit", "response", res)
 	return res, nil
 }
 
@@ -838,7 +839,7 @@ func (runner *DestSPTaskRunner) LoadFromDB() error {
 			}
 			for _, gvg := range allGVGList {
 				if _, found := completedMap[gvg.GetId()]; !found {
-					migrateKey := MakeGVGMigrateKey(gvg.GetId(), gvg.GetFamilyId(), -1)
+					migrateKey := MakeGVGMigrateKey(gvg.GetId(), gvg.GetFamilyId(), piecestore.PrimarySPRedundancyIndex)
 					gvgMeta, queryErr := runner.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(migrateKey)
 					if queryErr != nil {
 						log.Errorw("failed to query migrate gvg unit", "error", queryErr)
