@@ -109,7 +109,7 @@ type MigrateGVGUnitMeta struct {
 	DestSPID                 uint32
 	LastMigratedObjectID     uint64
 	MigrateStatus            int    // scheduler assign unit status.
-	DestGlobalVirtualGroupID uint32 // is used by sp exit/bucket migrate
+	DestGlobalVirtualGroupID uint32 // is used by bucket migrate
 }
 
 // SwapOutMeta is used to record swap out meta.
