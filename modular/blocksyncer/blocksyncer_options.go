@@ -146,6 +146,8 @@ func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 
 // serve start BlockSyncer rpc service
 func (b *BlockSyncerModular) serve(ctx context.Context) {
+	// test code
+	time.Sleep(10 * time.Minute)
 	migrateDBAny := ctx.Value(MigrateDBKey{})
 	if migrateDB, ok := migrateDBAny.(bool); ok && migrateDB {
 		err := b.initDB(true)
@@ -177,7 +179,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	}
 
 	// fetch block data
-	go b.quickFetchBlockData(lastDbBlockHeight + 1)
+	go b.quickFetchBlockData(ctx, lastDbBlockHeight+1)
 
 	go b.enqueueNewBlocks(ctx, exportQueue, lastDbBlockHeight+1)
 
@@ -187,6 +189,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
 func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQueue types.HeightQueue, currHeight uint64) {
+	ticker := time.NewTicker(1500 * time.Millisecond)
 	// Enqueue upcoming heights
 	for {
 		select {
@@ -194,8 +197,9 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 			log.Infof("Receive cancel signal, enqueueNewBlocks routine will stop")
 			// close channel
 			close(exportQueue)
+			ticker.Stop()
 			return
-		default:
+		case <-ticker.C:
 			{
 				latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 				latestBlockHeight := latestBlockHeightAny.(int64)
@@ -210,12 +214,14 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 }
 
 func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
+	ticker := time.NewTicker(1500 * time.Millisecond)
 	for {
 		select {
 		case <-ctx.Done():
 			log.Infof("Receive cancel signal, getLatestBlockHeight routine will stop")
+			ticker.Stop()
 			return
-		default:
+		case <-ticker.C:
 			{
 				latestBlockHeight, err := b.parserCtx.Node.LatestHeight()
 				if err != nil {
@@ -225,50 +231,58 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 					continue
 				}
 				Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
-
-				time.Sleep(time.Second)
 			}
 		}
 	}
 }
 
-func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
+func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeight uint64) {
 	count := uint64(b.config.Parser.Workers)
 	cycle := uint64(0)
 	startBlock := uint64(0)
 	endBlock := uint64(0)
 	flag := 0
 
-	for {
-		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
-		latestBlockHeight := latestBlockHeightAny.(int64)
-		if latestBlockHeight == int64(endBlock) {
-			continue
-		}
+	ticker := time.NewTicker(500 * time.Millisecond)
 
-		if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
-			startBlock = count*cycle + startHeight
-			endBlock = count*(cycle+1) + startHeight - 1
-			processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
-			if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
-				log.Infof("processedHeight: %d", processedHeight)
-				time.Sleep(time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("Receive cancel signal, quickFetchBlockData routine will stop")
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
+			latestBlockHeight := latestBlockHeightAny.(int64)
+			if latestBlockHeight == int64(endBlock) {
 				continue
 			}
-			cycle++
-		} else if flag != 0 {
-			startBlock = endBlock + 1
-			if startBlock > uint64(latestBlockHeight) {
-				startBlock = uint64(latestBlockHeight)
-			}
-			endBlock = uint64(latestBlockHeight)
-		} else {
-			flag = 1
-			startBlock = startHeight
-			endBlock = uint64(latestBlockHeight)
-		}
 
-		b.fetchData(startBlock, endBlock)
+			if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
+				startBlock = count*cycle + startHeight
+				endBlock = count*(cycle+1) + startHeight - 1
+				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
+				flag = 1
+				if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
+					log.Infof("processedHeight: %d", processedHeight)
+					time.Sleep(time.Second)
+					continue
+				}
+				cycle++
+			} else if flag != 0 {
+				startBlock = endBlock + 1
+				if startBlock > uint64(latestBlockHeight) {
+					startBlock = uint64(latestBlockHeight)
+				}
+				endBlock = uint64(latestBlockHeight)
+			} else {
+				flag = 1
+				startBlock = startHeight
+				endBlock = uint64(latestBlockHeight)
+			}
+
+			b.fetchData(startBlock, endBlock)
+		}
 	}
 }
 
