@@ -9,7 +9,7 @@ import (
 // ObjectStorage is a common interface that must be implemented if some users want to use an object
 // storage (such as S3, Azure Blob, Minio, OSS, COS, etc)
 //
-//go:generate mockgen -source=./interface.go -destination=./mock/interface_mock.go -package=mock
+//go:generate mockgen -source=./interface.go -destination=./interface_mock.go -package=storage
 type ObjectStorage interface {
 	// String the description of an object storage
 	String() string
