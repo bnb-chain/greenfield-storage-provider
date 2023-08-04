@@ -7,14 +7,12 @@ import (
 	"sync"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
-
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
-
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	lru "github.com/hashicorp/golang-lru"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -328,12 +326,10 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 // Before processing MigrateBucketEvents, first check if the status of the bucket on the chain meets the expectations. If it meets the expectations, proceed with the execution; otherwise, skip this MigrateBucketEvent event.
-func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
+func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	// check the chain's bucket is migrating
-	key := cacheKey(bucketId)
-	var (
-		bucketInfo *storagetypes.BucketInfo
-	)
+	key := cacheKey(bucketID)
+	var bucketInfo *storagetypes.BucketInfo
 	elem, has := s.bucketCache.Get(key)
 	if has {
 		value, ok := elem.(storagetypes.BucketInfo)
@@ -342,7 +338,7 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint64, expectedS
 		}
 		bucketInfo = &value
 	} else {
-		bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketId)
+		bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketID)
 		if err != nil {
 			return false, err
 		}
@@ -356,19 +352,19 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketId uint64, expectedS
 	return true, nil
 }
 
-func (s *BucketMigrateScheduler) doneMigrateBucket(bucketId uint64) error {
-	expected, err := s.checkBucketFromChain(bucketId, storagetypes.BUCKET_STATUS_CREATED)
+func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
+	expected, err := s.checkBucketFromChain(bucketID, storagetypes.BUCKET_STATUS_CREATED)
 	if err != nil {
 		return err
 	}
 	if !expected {
 		return nil
 	}
-	executePlan, err := s.getExecutePlanByBucketID(bucketId)
+	executePlan, err := s.getExecutePlanByBucketID(bucketID)
 	// 1) Received the CompleteEvents event for the first time.
 	// 2) Subsequently received the CompleteEvents event.
 	if err != nil {
-		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket, the event may already finished", "bucket_id", bucketId)
+		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket, the event may already finished", "bucket_id", bucketID)
 		return err
 	}
 
@@ -377,7 +373,7 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketId uint64) error {
 			log.Errorw("report task may error, unit should be migrated", "unit", unit)
 		}
 	}
-	s.deleteExecutePlanByBucketID(bucketId)
+	s.deleteExecutePlanByBucketID(bucketID)
 	executePlan.stopSPSchedule()
 	return nil
 }
