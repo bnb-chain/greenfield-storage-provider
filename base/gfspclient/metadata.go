@@ -15,6 +15,24 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
+// // GfSpClientAPI for mock use
+// //
+// //go:generate mockgen -source=./metadata.go -destination=./interface_mock.go -package=gfspclient
+// type GfSpClientAPI interface {
+// 	ApproverAPI
+// 	AuthenticatorAPI
+// 	DownloaderAPI
+// 	GaterAPI
+// 	ManagerAPI
+// 	MetadataAPI
+// 	P2PAPI
+// 	QueryAPI
+// 	ReceiverAPI
+// 	SignerAPI
+// 	UploaderAPI
+// 	Close() error
+// }
+
 // MetadataAPI for mock sue
 //
 //go:generate mockgen -source=./metadata.go -destination=./metadata_mock.go -package=gfspclient

@@ -17,6 +17,7 @@ import (
 func NewPieceStore(pieceConfig *storage.PieceStoreConfig) (*PieceStore, error) {
 	if err := checkConfig(pieceConfig); err != nil {
 		log.Errorw("failed to check piece store config", "error", err)
+		return nil, err
 	}
 	blob, err := createStorage(*pieceConfig)
 	if err != nil {
