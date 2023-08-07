@@ -68,7 +68,7 @@ func TestRandInt64(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			num := RandInt64(tt.min, tt.max)
 			assert.NotEmpty(t, num)
-			assert.Greater(t, num, tt.min)
+			assert.GreaterOrEqual(t, num, tt.min)
 		})
 	}
 }
