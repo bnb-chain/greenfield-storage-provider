@@ -42,20 +42,20 @@ var (
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
 	ErrInvalidExpiryDateParam = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50024, "The "+commonhttp.HTTPHeaderExpiryTimestamp+" parameter is incorrect. "+
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
-	ErrNoSuchObject    = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 50025, "no such object")
-	ErrForbidden       = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50026, "Forbidden to access")
-	ErrInvalidComplete = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50027, "invalid complete")
-	ErrInvalidOffset   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50028, "invalid offset")
-
-	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
-
-	ErrApprovalExpired        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 550015, "approval expired")
+	ErrNoSuchObject           = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 50025, "no such object")
+	ErrForbidden              = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50026, "Forbidden to access")
+	ErrInvalidComplete        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50027, "invalid complete")
+	ErrInvalidOffset          = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50028, "invalid offset")
+	ErrSPUnavailable          = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50029, "sp is not in service status")
 	ErrRecoverySP             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50030, "The SP is not the correct SP to recovery")
 	ErrRecoveryRedundancyType = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50031, "The redundancy type of the recovering piece is not EC")
 	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50032, "System busy, try to request later")
 	ErrMigrateApproval        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50033, "server slipped away, try again later")
 	ErrNotifySwapOut          = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50034, "server slipped away, try again later")
 	ErrInvalidRedundancyIndex = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50035, "invalid redundancy index")
+	ErrBucketUnavailable      = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50036, "bucket is not in service status")
+
+	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 )
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {
@@ -74,7 +74,6 @@ func MakeErrorResponse(w http.ResponseWriter, err error) {
 	}
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
-	w.Write(xmlBody)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write error response", "error", gfspErr.String())
 	}

@@ -7,7 +7,7 @@ GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
 # greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
 # greenfield go sdk branch name: develop
-GREENFIELD_GO_SDK_TAG="5614440e16f1a01491169ee985de1257808ab2e2"
+GREENFIELD_GO_SDK_TAG="7eb5316b7919b3b7b48ec3804dc302679eb2d804"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -61,7 +61,7 @@ function greenfield_sp() {
   bash ./deployment/localup/localup.sh --generate ${workspace}/greenfield/sp.json ${MYSQL_USER} ${MYSQL_PASSWORD} ${MYSQL_ADDRESS}
   bash ./deployment/localup/localup.sh --reset
   bash ./deployment/localup/localup.sh --start
-  sleep 25
+  sleep 60
   ./deployment/localup/local_env/sp0/gnfd-sp0 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp0/config.toml
   ./deployment/localup/local_env/sp1/gnfd-sp1 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp1/config.toml
   ./deployment/localup/local_env/sp2/gnfd-sp2 update.quota  --quota 5000000000 -c deployment/localup/local_env/sp2/config.toml
@@ -245,10 +245,24 @@ function run_sp_exit_e2e() {
 # run go-sdk e2e #
 ###################
 function run_go_sdk_e2e() {
-  set -e
+  set +e
   cd ${workspace}/greenfield-go-sdk/
   echo 'run greenfield go sdk e2e test'
   go test -v e2e/e2e_migrate_bucket_test.go
+  exit_status_command=$?
+  if [ $exit_status_command -eq 0 ]; then
+    echo "make e2e_test successful."
+  else
+    cat ${workspace}/deployment/localup/local_env/sp0/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp1/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp2/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp3/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp4/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp5/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp6/log.txt
+    cat ${workspace}/deployment/localup/local_env/sp7/log.txt
+    exit $exit_status_command
+  fi
 }
 
 function main() {

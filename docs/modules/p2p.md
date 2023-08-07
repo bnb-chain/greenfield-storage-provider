@@ -30,7 +30,7 @@ type P2P interface {
 }
 ```
 
-P2P interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so P2P module can be managed by lifycycle and resource manager.
+P2P interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so P2P module can be managed by lifecycle and resource manager.
 
 In terms of the functions provided by P2P module, there are three methods: HandleReplicatePieceApproval, HandleQueryBootstrap and QueryTasks.
 

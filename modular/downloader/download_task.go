@@ -76,7 +76,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 	}
 
 	// TODO:: spilt check and add record steps, check in pre download, add record in post download
-	if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+	if err = d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 		&spdb.ReadRecord{
 			BucketID:        downloadObjectTask.GetBucketInfo().Id.Uint64(),
 			ObjectID:        downloadObjectTask.GetObjectInfo().Id.Uint64(),
@@ -260,7 +260,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 				return ErrConsensus
 			}
 			log.CtxDebugw(ctx, "finish init bucket traffic table", "charged_quota", downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
-				"freeQuota", freeQuotaSize)
+				"free_quota", freeQuotaSize)
 
 			// only need to set the free quota when init the traffic table
 			err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{

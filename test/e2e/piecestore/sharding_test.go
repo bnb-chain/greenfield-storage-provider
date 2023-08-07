@@ -19,7 +19,7 @@ var shardNum = 5
 
 func TestSharding(t *testing.T) {
 	// init PieceStore
-	handler, err := setup(t, storage.DiskFileStore, "./data/test%d", shardNum, storage.AKSKIAMType)
+	handler, err := setup(t, storage.DiskFileStore, "./data/test%d", shardNum)
 	assert.Equal(t, err, nil)
 
 	err = createFiles(shardNum)
@@ -50,7 +50,7 @@ func doShardingOperations(t *testing.T, handler *piece.PieceStore, shards int) {
 
 		// 3. head object
 		log.Info("Get piece info")
-		object, err := handler.GetPieceInfo(context.Background(), key)
+		object, err := handler.Head(context.Background(), key)
 		assert.Equal(t, nil, err)
 		assert.Equal(t, key, object.Key())
 		assert.Equal(t, false, object.IsSymlink())

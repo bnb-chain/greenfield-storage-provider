@@ -8,7 +8,7 @@ import (
 
 const (
 	// DefaultExecutorMaxExecuteNum defines the default max parallel execute task number.
-	DefaultExecutorMaxExecuteNum int64 = 16
+	DefaultExecutorMaxExecuteNum int64 = 64
 	// DefaultExecutorAskTaskInterval defines the default ask task interval from manager.
 	DefaultExecutorAskTaskInterval int = 1
 	// DefaultExecutorAskReplicateApprovalTimeout defines the ask replicate piece approval
@@ -40,33 +40,33 @@ const (
 )
 
 const (
-	ExeutorSuccessAskTask   = "executor_ask_task_success"
-	ExeutorRunTask          = "executor_run_task"
-	ExeutorFailureAskTask   = "executor_ask_task_failure"
-	ExeutorFailureAskNoTask = "executor_ask_no_task_failure"
+	ExecutorSuccessAskTask   = "executor_ask_task_success"
+	ExecutorRunTask          = "executor_run_task"
+	ExecutorFailureAskTask   = "executor_ask_task_failure"
+	ExecutorFailureAskNoTask = "executor_ask_no_task_failure"
 
-	ExeutorSuccessReplicateTask  = "executor_replicate_task_success"
-	ExeutorFailureReplicateTask  = "executor_replicate_task_failure"
-	ExeutorSuccessSealObjectTask = "executor_seal_object_task_success"
-	ExeutorFailureSealObjectTask = "executor_seal_object_task_failure"
-	ExeutorSuccessReceiveTask    = "executor_receive_task_success"
-	ExeutorFailureReceiveTask    = "executor_receive_task_failure"
-	ExeutorSuccessRecoveryTask   = "executor_recovery_task_success"
-	ExeutorFailureRecoveryTask   = "executor_recovery_task_failure"
+	ExecutorSuccessReplicateTask  = "executor_replicate_task_success"
+	ExecutorFailureReplicateTask  = "executor_replicate_task_failure"
+	ExecutorSuccessSealObjectTask = "executor_seal_object_task_success"
+	ExecutorFailureSealObjectTask = "executor_seal_object_task_failure"
+	ExecutorSuccessReceiveTask    = "executor_receive_task_success"
+	ExecutorFailureReceiveTask    = "executor_receive_task_failure"
+	ExecutorSuccessRecoveryTask   = "executor_recovery_task_success"
+	ExecutorFailureRecoveryTask   = "executor_recovery_task_failure"
 
-	ExeutorSuccessReportTask = "executor_report_task_to_manager_success"
-	ExeutorFailureReportTask = "executor_report_task_to_manager_failure"
+	ExecutorSuccessReportTask = "executor_report_task_to_manager_success"
+	ExecutorFailureReportTask = "executor_report_task_to_manager_failure"
 
-	ExeutorSuccessP2P                = "executor_p2p_success"
-	ExeutorFailureP2P                = "executor_p2p_failure"
-	ExeutorSuccessReplicateAllPiece  = "executor_replicate_all_piece_success"
-	ExeutorFailureReplicateAllPiece  = "executor_replicate_all_piece_failure"
-	ExeutorSuccessReplicateOnePiece  = "executor_replicate_one_piece_success"
-	ExeutorFailureReplicateOnePiece  = "executor_replicate_one_piece_failure"
-	ExeutorSuccessDoneReplicatePiece = "executor_done_replicate_piece_success"
-	ExeutorFailureDoneReplicatePiece = "executor_done_replicate_piece_failure"
-	ExeutorSuccessSealObject         = "executor_seal_object_success"
-	ExeutorFailureSealObject         = "executor_seal_object_failure"
+	ExecutorSuccessP2P                = "executor_p2p_success"
+	ExecutorFailureP2P                = "executor_p2p_failure"
+	ExecutorSuccessReplicateAllPiece  = "executor_replicate_all_piece_success"
+	ExecutorFailureReplicateAllPiece  = "executor_replicate_all_piece_failure"
+	ExecutorSuccessReplicateOnePiece  = "executor_replicate_one_piece_success"
+	ExecutorFailureReplicateOnePiece  = "executor_replicate_one_piece_failure"
+	ExecutorSuccessDoneReplicatePiece = "executor_done_replicate_piece_success"
+	ExecutorFailureDoneReplicatePiece = "executor_done_replicate_piece_failure"
+	ExecutorSuccessSealObject         = "executor_seal_object_success"
+	ExecutorFailureSealObject         = "executor_seal_object_failure"
 )
 
 func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {

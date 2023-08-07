@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"sync/atomic"
 	"time"
+
+	"gorm.io/gorm"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -17,20 +18,11 @@ import (
 	"github.com/forbole/juno/v4/database"
 	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
-	"github.com/forbole/juno/v4/modules/bucket"
-	"github.com/forbole/juno/v4/modules/group"
-	"github.com/forbole/juno/v4/modules/object"
-	"github.com/forbole/juno/v4/modules/payment"
-	"github.com/forbole/juno/v4/modules/permission"
-	storageprovider "github.com/forbole/juno/v4/modules/storage_provider"
-	virtualgroup "github.com/forbole/juno/v4/modules/virtual_group"
 	"github.com/forbole/juno/v4/node"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
 
-	localdb "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
-	spExit "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/events"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/prefixtree"
+	localDB "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
@@ -52,7 +44,6 @@ type Impl struct {
 	codec   codec.Codec
 	Node    node.Node
 	DB      database.Database
-	//LocalDb localDB.DB
 
 	LatestBlockHeight atomic.Value
 	ProcessedHeight   uint64
@@ -62,39 +53,36 @@ type Impl struct {
 	ServiceName string
 }
 
+func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
+	return nil
+}
+
+func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
+	return nil
+}
+
 // ExportBlock accepts a finalized block and persists then inside the database.
 // An error is returned if write fails.
 func (i *Impl) ExportBlock(block *coretypes.ResultBlock, events *coretypes.ResultBlockResults, txs []*types.Tx, getTmcValidators modules.GetTmcValidators) error {
 	return nil
 }
 
-// HandleEvent accepts the transaction and handles events contained inside the transaction.
-func (i *Impl) HandleEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
+// ExtractEvent accepts the transaction and handles events contained inside the transaction.
+func (i *Impl) ExtractEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
+	allSQL := make(map[string][]interface{})
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
-			err := eventModule.HandleEvent(ctx, block, txHash, event)
+			sqls, err := eventModule.ExtractEventStatements(ctx, block, txHash, event)
 			if err != nil {
 				log.Errorw("failed to handle event", "module", module.Name(), "event", event, "error", err)
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (i *Impl) ExtractEvent(ctx context.Context, block *coretypes.ResultBlock, txHash common.Hash, event sdk.Event) (interface{}, error) {
-	for _, module := range i.Modules {
-		if eventModule, ok := module.(modules.EventModule); ok {
-			data, err := eventModule.ExtractEvent(ctx, block, txHash, event)
-			if err != nil {
 				return nil, err
 			}
-			if data != nil {
-				return data, nil
+			for k, v := range sqls {
+				allSQL[k] = v
 			}
 		}
 	}
-	return nil, nil
+	return allSQL, nil
 }
 
 // Process fetches a block for a given height and associated metadata and export it to a database.
@@ -103,93 +91,114 @@ func (i *Impl) Process(height uint64) error {
 	// log.Debugw("processing block", "height", height)
 	var block *coretypes.ResultBlock
 	var events *coretypes.ResultBlockResults
-	var txs []*types.Tx
-	var err error
+	var txs map[common.Hash][]abci.Event
+
 	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
 	blockAny, okb := blockMap.Load(heightKey)
 	eventsAny, oke := eventMap.Load(heightKey)
 	txsAny, okt := txMap.Load(heightKey)
 	block, _ = blockAny.(*coretypes.ResultBlock)
 	events, _ = eventsAny.(*coretypes.ResultBlockResults)
-	txs, _ = txsAny.([]*types.Tx)
+	txs, _ = txsAny.(map[common.Hash][]abci.Event)
 	if !okb || !oke || !okt {
 		log.Warnf("failed to get map data height: %d", height)
 		return ErrBlockNotFound
 	}
 
-	startTime := time.Now().UnixMilli()
+	startTime := time.Now()
 
 	beginBlockEvents := events.BeginBlockEvents
 	endBlockEvents := events.EndBlockEvents
 	txCount := len(txs)
 	eventCount := 0
+	allSQL := make([]map[string][]interface{}, 0)
 
 	// 1. handle events in startBlock
-
 	if len(beginBlockEvents) > 0 {
 		eventCount += len(beginBlockEvents)
-		err = i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
+		sqls, err := i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
 		}
+		allSQL = append(allSQL, sqls...)
 	}
 
 	// 2. handle events in txs
-	err = i.ExportEventsInTxs(context.Background(), block, txs)
+	sqls, err := i.ExportEventsInTxs(context.Background(), block, txs)
 	if err != nil {
 		log.Errorf("failed to export events in txs: %s", err)
 		return err
 	}
+	allSQL = append(allSQL, sqls...)
 
 	// 3. handle events in endBlock
 	if len(endBlockEvents) > 0 {
 		eventCount += len(endBlockEvents)
-		err = i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
+		sqls, err = i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
 		}
+		allSQL = append(allSQL, sqls...)
 	}
 
-	err = i.ExportEpoch(block)
-	if err != nil {
-		log.Errorf("failed to export epoch: %s", err)
-		return err
+	sql, val := i.SaveEpoch(block)
+	allSQL = append(allSQL, map[string][]interface{}{
+		sql: val,
+	})
+
+	finalSQL := ""
+	finalVal := make([]interface{}, 0)
+	for _, m := range allSQL {
+		for k, v := range m {
+			finalSQL += fmt.Sprintf("%s;   ", k)
+			finalVal = append(finalVal, v...)
+		}
 	}
 
-	log.Infof("handle&write data cost: %d", time.Now().UnixMilli()-startTime)
+	metrics.BlocksyncerLogicTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(startTime).Milliseconds()))
+
+	dbStartTime := time.Now()
+	tx := i.DB.Begin(context.TODO())
+	if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
+		log.Errorw("failed to exec sql", "error", txErr)
+		tx.Rollback()
+		return txErr
+	}
+
+	if txErr := tx.Commit(); txErr != nil {
+		log.Errorw("failed to commit db", "error", txErr)
+		return txErr
+	}
+	metrics.BlocksyncerWriteDBTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(dbStartTime).Milliseconds()))
+
+	log.Infof("handle&write data cost: %d", time.Since(startTime).Milliseconds())
 	log.Infof("height :%d tx count:%d event count:%d", height, txCount, eventCount)
+	metrics.BlockEventCount.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(eventCount))
 
 	blockMap.Delete(heightKey)
 	eventMap.Delete(heightKey)
 	txMap.Delete(heightKey)
 	i.ProcessedHeight = height
 
-	cost := time.Now().UnixMilli() - startTime
-	log.Infof("total cost: %d", cost)
-	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(cost))
+	log.Infof("total cost: %d", time.Since(startTime).Milliseconds())
+
+	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
+	metrics.BlocksyncerCatchTime.WithLabelValues(fmt.Sprintf("%d", height)).Set(float64(time.Since(startTime).Milliseconds()))
 
 	return nil
 }
 
-// ExportEpoch accept a block result data and persist basic info into db to record current sync progress
-func (i *Impl) ExportEpoch(block *coretypes.ResultBlock) error {
-	// Save the block
-	err := i.DB.SaveEpoch(context.Background(), &models.Epoch{
+// SaveEpoch accept a block result data and persist basic info into db to record current sync progress
+func (i *Impl) SaveEpoch(block *coretypes.ResultBlock) (string, []interface{}) {
+	log.Infof(common.BytesToHash(block.BlockID.Hash).String())
+	return localDB.Cast(i.DB).SaveEpochToSQL(context.Background(), &models.Epoch{
 		OneRowId:    true,
 		BlockHeight: block.Block.Height,
-		BlockHash:   common.HexToHash(block.BlockID.Hash.String()),
+		BlockHash:   common.BytesToHash(block.BlockID.Hash),
 		UpdateTime:  block.Block.Time.Unix(),
 	})
-	if err != nil {
-		log.Errorf("failed to persist block: %s", err)
-		return err
-	}
-
-	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
-
-	return nil
 }
 
 // ExportTxs accepts a slice of transactions and persists then inside the database.
@@ -231,248 +240,34 @@ type TxHashEvent struct {
 }
 
 // ExportEventsInTxs accepts a slice of events in tx in order to save in database.
-func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs []*types.Tx) error {
-	bucketEvent := make([]TxHashEvent, 0)
-	groupEvent := make([]TxHashEvent, 0)
-	permissionEvent := make([]TxHashEvent, 0)
-	spEvent := make([]TxHashEvent, 0)
-	prefixEvent := make([]TxHashEvent, 0)
-	exitEvent := make([]TxHashEvent, 0)
-	virtualGroupEvent := make([]TxHashEvent, 0)
-	objectEvent := make([]TxHashEvent, 0)
-	objectIDEvent := make([]TxHashEvent, 0)
-	dataList := make([]interface{}, 0)
-
-	for _, tx := range txs {
-		txHash := common.HexToHash(tx.TxHash)
-		for _, event := range tx.Events {
-			e := TxHashEvent{Event: sdk.Event(event), TxHash: txHash}
-			if bucket.BucketEvents[event.Type] {
-				bucketEvent = append(bucketEvent, e)
-			} else if group.GroupEvents[event.Type] {
-				groupEvent = append(groupEvent, e)
-			} else if permission.PolicyEvents[event.Type] {
-				permissionEvent = append(permissionEvent, e)
-			} else if storageprovider.StorageProviderEvents[event.Type] {
-				spEvent = append(spEvent, e)
-			} else if virtualgroup.VirtualGroupEvents[event.Type] {
-				virtualGroupEvent = append(virtualGroupEvent, e)
-			} else if spExit.SpExitEvents[event.Type] {
-				exitEvent = append(exitEvent, e)
-			} else if event.Type == object.EventDeleteObject || event.Type == object.EventCreateObject || payment.PaymentEvents[event.Type] {
-				data, err := i.ExtractEvent(ctx, block, common.Hash{}, sdk.Event(event))
-				if err != nil {
-					return err
-				}
-				dataList = append(dataList, data)
-				prefixEvent = append(prefixEvent, e)
-				objectIDEvent = append(objectIDEvent, e)
-			} else if object.ObjectEvents[event.Type] {
-				objectEvent = append(objectEvent, e)
+func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs map[common.Hash][]abci.Event) ([]map[string][]interface{}, error) {
+	allSQL := make([]map[string][]interface{}, 0)
+	for k, v := range txs {
+		for _, event := range v {
+			// log.Infof("sdkevent: %v", event)
+			sqls, err := i.ExtractEvent(ctx, block, k, sdk.Event(event))
+			if err != nil {
+				return nil, err
 			}
-			if prefixtree.BuildPrefixTreeEvents[event.Type] {
-				prefixEvent = append(prefixEvent, e)
-			}
+			allSQL = append(allSQL, sqls)
 		}
 	}
-
-	if len(dataList) > 0 {
-		err := i.BatchHandle(ctx, dataList, block, common.Hash{})
-		if err != nil {
-			return err
-		}
-	}
-
-	allEvents := make([][]TxHashEvent, 0)
-	allEvents = append(allEvents, bucketEvent)
-	allEvents = append(allEvents, groupEvent)
-	allEvents = append(allEvents, objectEvent)
-	allEvents = append(allEvents, permissionEvent)
-	allEvents = append(allEvents, spEvent)
-	allEvents = append(allEvents, prefixEvent)
-	allEvents = append(allEvents, virtualGroupEvent)
-	allEvents = append(allEvents, exitEvent)
-	allEvents = append(allEvents, objectIDEvent)
-	return i.concurrenceHandleEvent(ctx, block, allEvents)
-}
-
-func (i *Impl) BatchHandle(ctx context.Context, dataList []interface{}, block *coretypes.ResultBlock, txHash common.Hash) error {
-	objects := make([]*models.Object, 0)
-	objectIDMap := make(map[common.Hash]bool, 0)
-	bucketNameMap := make(map[string][]common.Hash)
-	streamRecords := make([]*models.StreamRecord, 0)
-	paymentAccount := make([]*models.PaymentAccount, 0)
-
-	for _, data := range dataList {
-		switch m := data.(type) {
-		case *models.Object:
-			objects = append(objects, m)
-			objectIDMap[m.ObjectID] = true
-			tmp := bucketNameMap[m.BucketName]
-			if tmp == nil {
-				tmp = make([]common.Hash, 0)
-			}
-			tmp = append(tmp, m.ObjectID)
-			bucketNameMap[m.BucketName] = tmp
-		case *models.StreamRecord:
-			streamRecords = append(streamRecords, m)
-		case *models.PaymentAccount:
-			paymentAccount = append(paymentAccount, m)
-		}
-	}
-
-	localDB := localdb.Cast(i.DB)
-	if len(paymentAccount) > 0 {
-		if err := localDB.BatchSavePaymentAccount(ctx, paymentAccount); err != nil {
-			return err
-		}
-	}
-	if len(streamRecords) > 0 {
-		if err := localDB.BatchSaveStreamRecord(ctx, streamRecords); err != nil {
-			return err
-		}
-	}
-
-	insert := make(map[string][]*models.Object)
-	update := make(map[string][]*models.Object)
-
-	objResults, err := localDB.GetObjectList(ctx, bucketNameMap)
-	if err != nil {
-		return err
-	}
-	resMap := make(map[common.Hash]*models.Object)
-	for _, obj := range objResults {
-		resMap[obj.ObjectID] = obj
-	}
-
-	for _, obj := range objects {
-		res, ok := resMap[obj.ObjectID]
-		if !ok {
-			tmp := insert[obj.BucketName]
-			if tmp == nil {
-				tmp = make([]*models.Object, 0)
-			}
-			tmp = append(tmp, obj)
-			insert[obj.BucketName] = tmp
-			continue
-		}
-		if obj.Removed {
-			res.Removed = true
-			res.BucketName = obj.BucketName
-			res.ObjectName = obj.ObjectName
-			res.ObjectID = obj.ObjectID
-			res.LocalVirtualGroupId = obj.LocalVirtualGroupId
-			res.UpdateAt = block.Block.Height
-			res.UpdateTxHash = txHash
-			res.UpdateTime = time.Now().UTC().Unix()
-		}
-		resMap[obj.ObjectID] = res
-	}
-
-	if len(insert) > 0 {
-		if err := localDB.BatchSaveObject(ctx, insert); err != nil {
-			return err
-		}
-	}
-	for _, v := range resMap {
-		tmp := update[v.BucketName]
-		if tmp == nil {
-			tmp = make([]*models.Object, 0)
-		}
-		tmp = append(tmp, v)
-		update[v.BucketName] = tmp
-	}
-	if len(update) > 0 {
-		if err := localDB.BatchSaveObject(ctx, update); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (i *Impl) concurrenceHandleEvent(ctx context.Context, block *coretypes.ResultBlock, allEvents [][]TxHashEvent) error {
-	wg := &sync.WaitGroup{}
-	wg.Add(len(allEvents))
-	var handleErr error
-	for _, events := range allEvents {
-		go func(event []TxHashEvent) {
-			defer wg.Done()
-			for _, e := range event {
-				if err := i.HandleEvent(ctx, block, e.TxHash, e.Event); err != nil {
-					log.Errorf("failed to HandleEvent err:%v", err)
-					handleErr = err
-					return
-				}
-			}
-		}(events)
-	}
-	wg.Wait()
-	return handleErr
+	return allSQL, nil
 }
 
 // ExportEventsWithoutTx accepts a slice of events not in tx in order to save in database.
 // events here don't have txHash
-func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.ResultBlock, events []abci.Event) error {
-	bucketEvent := make([]TxHashEvent, 0)
-	groupEvent := make([]TxHashEvent, 0)
-	permissionEvent := make([]TxHashEvent, 0)
-	spEvent := make([]TxHashEvent, 0)
-	prefixEvent := make([]TxHashEvent, 0)
-	exitEvent := make([]TxHashEvent, 0)
-	VirtualGroupEvent := make([]TxHashEvent, 0)
-	objectEvent := make([]TxHashEvent, 0)
-	objectIDEvent := make([]TxHashEvent, 0)
-	dataList := make([]interface{}, 0)
-
+func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.ResultBlock, events []abci.Event) ([]map[string][]interface{}, error) {
+	// call the event handlers
+	allSQL := make([]map[string][]interface{}, 0)
 	for _, event := range events {
-		e := TxHashEvent{Event: sdk.Event(event)}
-		if bucket.BucketEvents[event.Type] {
-			bucketEvent = append(bucketEvent, e)
-		} else if group.GroupEvents[event.Type] {
-			groupEvent = append(groupEvent, e)
-		} else if permission.PolicyEvents[event.Type] {
-			permissionEvent = append(permissionEvent, e)
-		} else if storageprovider.StorageProviderEvents[event.Type] {
-			spEvent = append(spEvent, e)
-		} else if virtualgroup.VirtualGroupEvents[event.Type] {
-			VirtualGroupEvent = append(VirtualGroupEvent, e)
-		} else if spExit.SpExitEvents[event.Type] {
-			exitEvent = append(exitEvent, e)
-		} else if event.Type == object.EventDeleteObject || event.Type == object.EventCreateObject || payment.PaymentEvents[event.Type] || virtualgroup.VirtualGroupEvents[event.Type] {
-			data, err := i.ExtractEvent(ctx, block, common.Hash{}, e.Event)
-			if err != nil {
-				return err
-			}
-			dataList = append(dataList, data)
-			objectIDEvent = append(objectIDEvent, e)
-			prefixEvent = append(prefixEvent, e)
-		} else if object.ObjectEvents[event.Type] {
-			objectEvent = append(objectEvent, e)
-		}
-		if prefixtree.BuildPrefixTreeEvents[event.Type] {
-			prefixEvent = append(prefixEvent, e)
-		}
-	}
-
-	if len(dataList) > 0 {
-		err := i.BatchHandle(ctx, dataList, block, common.Hash{})
+		sqls, err := i.ExtractEvent(ctx, block, common.Hash{}, sdk.Event(event))
 		if err != nil {
-			return err
+			return nil, err
 		}
+		allSQL = append(allSQL, sqls)
 	}
-
-	allEvents := make([][]TxHashEvent, 0)
-	allEvents = append(allEvents, bucketEvent)
-	allEvents = append(allEvents, groupEvent)
-	allEvents = append(allEvents, objectEvent)
-	allEvents = append(allEvents, permissionEvent)
-	allEvents = append(allEvents, spEvent)
-	allEvents = append(allEvents, prefixEvent)
-	allEvents = append(allEvents, VirtualGroupEvent)
-	allEvents = append(allEvents, exitEvent)
-	allEvents = append(allEvents, objectIDEvent)
-
-	return i.concurrenceHandleEvent(ctx, block, allEvents)
+	return allSQL, nil
 }
 
 // HandleGenesis accepts a GenesisDoc and calls all the registered genesis handlers in the order in which they have been registered.

@@ -1834,14 +1834,15 @@ func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Re
 // listSpExitEventsHandler list sp exit events
 func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                    error
-		b                      bytes.Buffer
-		reqCtx                 *RequestContext
-		requestOperatorAddress string
-		requestBlockID         string
-		blockID                uint64
-		events                 *types.ListSpExitEvents
-		queryParams            url.Values
+		err            error
+		b              bytes.Buffer
+		reqCtx         *RequestContext
+		requestSpID    string
+		requestBlockID string
+		blockID        uint64
+		spID           uint32
+		events         *types.ListSpExitEvents
+		queryParams    url.Values
 	)
 
 	defer func() {
@@ -1856,7 +1857,7 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 	reqCtx, _ = NewRequestContext(r, g)
 
 	queryParams = reqCtx.request.URL.Query()
-	requestOperatorAddress = queryParams.Get(OperatorAddressQuery)
+	requestSpID = queryParams.Get(SpIDQuery)
 	requestBlockID = queryParams.Get(BlockIDQuery)
 
 	if blockID, err = util.StringToUint64(requestBlockID); err != nil {
@@ -1865,12 +1866,13 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if ok := common.IsHexAddress(requestOperatorAddress); !ok {
-		log.Errorw("failed to check operator", "operator-address", requestOperatorAddress, "error", err)
+	if spID, err = util.StringToUint32(requestSpID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestSpID, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
-	events, err = g.baseApp.GfSpClient().ListSpExitEvents(reqCtx.Context(), blockID, requestOperatorAddress)
+	events, err = g.baseApp.GfSpClient().ListSpExitEvents(reqCtx.Context(), blockID, spID)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list sp exit events", "error", err)
 		return

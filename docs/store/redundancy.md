@@ -36,8 +36,8 @@ All these segments and SPs information are stored on the Greenfield blockchain a
 
 Below is how the key of each piece is defined:
 
-1. The key is `"objectID_s"+"segIndex"` for each segment piece, such as `objectID_s0`.
+1. The key is `"sobjectID"+"ssegIndex"` for each segment piece, such as `sobjectID_s0`.
 
-2. The key is `"objectID_s"+"segIndex_p"+"SPIndex"` for each groups after EC, such as `objectID_s0_p0`.
+2. The key is `"eobjectID"+"ssegIndex"+"pSPIndex"` for each groups after EC, such as `eobjectID_s0_p0`.
 
 The same column data will be stored into same SP.

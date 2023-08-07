@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -455,6 +458,37 @@ func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (bucketInfo *
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query bucket", "bucket_name", bucket, "error", err)
+		return nil, err
+	}
+	return resp.GetBucketInfo(), nil
+}
+
+// QueryBucketInfoById returns the bucket info by name.
+func (g *Gnfd) QueryBucketInfoById(ctx context.Context, bucketId uint64) (bucketInfo *storagetypes.BucketInfo, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryBucketInfo).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryBucketInfo).Observe(
+				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryBucketInfo).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryBucketInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	client := g.getCurrentClient().GnfdClient()
+	id := sdkmath.NewUint(bucketId)
+	resp, err := client.HeadBucketById(ctx, &storagetypes.QueryHeadBucketByIdRequest{BucketId: id.String()})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query bucket", "bucket_id", bucketId, "error", err)
 		return nil, err
 	}
 	return resp.GetBucketInfo(), nil

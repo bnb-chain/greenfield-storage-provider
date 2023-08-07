@@ -162,7 +162,7 @@ type TaskExecutor interface {
 	ReportTask(ctx context.Context, task task.Task) error
 }
 
-// Manager is an abstract interface to do some internal services management, it is responsible for task
+// Manager is an abstract interface to do some internal service management, it is responsible for task
 // scheduling and other management of SP.
 type Manager interface {
 	Modular
@@ -178,7 +178,6 @@ type Manager interface {
 	// HandleCreateUploadObjectTask handles the CreateUploadObject request from Uploader, before Uploader handles
 	// the users' UploadObject requests, it should send CreateUploadObject requests to Manager ask if it's ok.
 	// Through this interface SP implements the global uploading object strategy.
-	//
 	// For example: control the concurrency of global uploads, avoid repeated uploads, rate control, etc.
 	HandleCreateUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error
 	// HandleDoneUploadObjectTask handles the result of uploading object payload data to primary, Manager should
@@ -188,7 +187,6 @@ type Manager interface {
 	// Uploader, before Uploader handles the user's UploadObject request, it should
 	// send CreateUploadObject request to Manager ask if it's ok. Through this
 	// interface that SP implements the global upload object strategy.
-	//
 	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
 
 	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,

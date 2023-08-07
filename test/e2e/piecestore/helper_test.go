@@ -19,7 +19,7 @@ const (
 	// virtualPath = "https://test.s3.us-east-1.amazonaws.com"
 )
 
-func setup(t *testing.T, storageType, bucketURL string, shards int, iamType string) (*piece.PieceStore, error) {
+func setup(t *testing.T, storageType, bucketURL string, shards int) (*piece.PieceStore, error) {
 	t.Helper()
 	return piece.NewPieceStore(&storage.PieceStoreConfig{
 		Shards: shards,
@@ -27,7 +27,7 @@ func setup(t *testing.T, storageType, bucketURL string, shards int, iamType stri
 			Storage:    storageType,
 			BucketURL:  bucketURL,
 			MaxRetries: 5,
-			IAMType:    iamType,
+			IAMType:    storage.AKSKIAMType,
 		},
 	})
 }
@@ -49,8 +49,8 @@ func doOperations(t *testing.T, handler *piece.PieceStore) {
 	assert.Contains(t, string(data), "Hello, World!\n")
 
 	// 3. head object
-	log.Info("Get piece info")
-	object, err := handler.GetPieceInfo(context.Background(), pieceKey)
+	log.Info("Head piece info")
+	object, err := handler.Head(context.Background(), pieceKey)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, pieceKey, object.Key())
 	assert.Equal(t, false, object.IsSymlink())

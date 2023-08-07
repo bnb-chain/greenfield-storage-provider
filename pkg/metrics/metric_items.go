@@ -67,9 +67,18 @@ var MetricsItems = []prometheus.Collector{
 
 	// blocksyncer metrics category
 	BlocksyncerCatchTime,
+	BlockEventCount,
+	BlocksyncerLogicTime,
+	BlocksyncerWriteDBTime,
 
 	// metadata metrics category
 	MetadataReqTime,
+
+	// sp exit and bucket migration category
+	MigrateGVGTimeHistogram,
+	MigrateGVGCounter,
+	MigrateObjectTimeHistogram,
+	MigrateObjectCounter,
 }
 
 // basic metrics items
@@ -263,6 +272,22 @@ var (
 		Name: "blocksyncer_catch_time",
 		Help: "Track the time of catch block time. ",
 	}, []string{"height"})
+	BlocksyncerLogicTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "blocksyncer_logic_time",
+		Help: "Track the time of catch block time. ",
+	}, []string{"height"})
+	BlocksyncerWriteDBTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "blocksyncer_write_db_time",
+		Help: "Track the time of catch block time. ",
+	}, []string{"height"})
+	ChainRPCTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "chain_rpc_time",
+		Help: "Track the time of chain rpc. ",
+	})
+	BlockEventCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "block_event_count",
+		Help: "Track the time of chain rpc. ",
+	}, []string{"height"})
 )
 
 var (
@@ -274,4 +299,23 @@ var (
 )
 
 // SP exit and bucket migration metrics
-var ()
+var (
+	MigrateGVGTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "migrate_gvg_time",
+		Help:    "Track migrate gvg workflow costs",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"migrate_gvg_time"})
+	MigrateGVGCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "migrate_gvg_counter",
+		Help: "Track migrate gvg number",
+	}, []string{"migrate_gvg_counter"})
+	MigrateObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "migrate_object_time",
+		Help:    "Track migrate object workflow costs",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"migrate_object_time"})
+	MigrateObjectCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "migrate_object_counter",
+		Help: "Track migrate object number",
+	}, []string{"migrate_object_counter"})
+)

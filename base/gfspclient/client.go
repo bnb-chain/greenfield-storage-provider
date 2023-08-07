@@ -19,17 +19,17 @@ const (
 	MaxClientCallMsgSize = 3 * 1024 * 1024 * 1024
 	// ClientCodeSpace defines the code space for gfsp client
 	ClientCodeSpace = "GfSpClient"
-	// HttpMaxIdleConns defines the max idle connections for HTTP server
-	HttpMaxIdleConns = 20
-	// HttpIdleConnTimout defines the idle time of connection for closing
-	HttpIdleConnTimout = 60 * time.Second
+	// HTTPMaxIdleConns defines the max idle connections for HTTP server
+	HTTPMaxIdleConns = 20
+	// HTTPIdleConnTimout defines the idle time of connection for closing
+	HTTPIdleConnTimout = 60 * time.Second
 
 	// DefaultStreamBufSize defines gateway stream forward payload buf size
 	DefaultStreamBufSize = 16 * 1024 * 1024
 )
 
 var (
-	ErrRpcUnknown       = gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, "server slipped away, try again later")
+	ErrRPCUnknown       = gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, "server slipped away, try again later")
 	ErrExceptionsStream = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98002, "stream closed abnormally")
 	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98101, "response type mismatch")
 	ErrNoSuchObject     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98093, "no such object from metadata")
@@ -96,7 +96,7 @@ func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (
 		conn, err := s.Connection(ctx, s.managerEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRpcUnknown
+			return nil, ErrRPCUnknown
 		}
 		s.managerConn = conn
 	}
@@ -114,7 +114,7 @@ func (s *GfSpClient) ApproverConn(ctx context.Context, opts ...grpc.DialOption) 
 		conn, err := s.Connection(ctx, s.approverEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRpcUnknown
+			return nil, ErrRPCUnknown
 		}
 		s.approverConn = conn
 	}
@@ -132,7 +132,7 @@ func (s *GfSpClient) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grp
 		conn, err := s.Connection(ctx, s.p2pEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRpcUnknown
+			return nil, ErrRPCUnknown
 		}
 		s.p2pConn = conn
 	}
@@ -150,7 +150,7 @@ func (s *GfSpClient) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*
 		conn, err := s.Connection(ctx, s.signerEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRpcUnknown
+			return nil, ErrRPCUnknown
 		}
 		s.signerConn = conn
 	}
@@ -163,8 +163,8 @@ func (s *GfSpClient) HTTPClient(ctx context.Context) *http.Client {
 	if s.httpClient == nil {
 		s.httpClient = &http.Client{
 			Transport: &http.Transport{
-				MaxIdleConns:    HttpMaxIdleConns,
-				IdleConnTimeout: HttpIdleConnTimout,
+				MaxIdleConns:    HTTPMaxIdleConns,
+				IdleConnTimeout: HTTPIdleConnTimout,
 			}}
 	}
 	return s.httpClient

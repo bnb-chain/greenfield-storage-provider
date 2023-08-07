@@ -67,15 +67,11 @@ func (p *PProf) serve() {
 	}
 }
 
-func (p *PProf) ReserveResource(
-	ctx context.Context,
-	state *corercmgr.ScopeStat) (
-	corercmgr.ResourceScopeSpan, error) {
+func (p *PProf) ReserveResource(ctx context.Context, state *corercmgr.ScopeStat) (corercmgr.ResourceScopeSpan, error) {
 	return &corercmgr.NullScope{}, nil
 }
-func (p *PProf) ReleaseResource(
-	ctx context.Context,
-	scope corercmgr.ResourceScopeSpan) {
+
+func (p *PProf) ReleaseResource(ctx context.Context, scope corercmgr.ResourceScopeSpan) {
 	scope.Done()
 }
 
@@ -86,4 +82,13 @@ func (p *PProf) registerProfiler(r *mux.Router) {
 	r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	r.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	r.Handle("/debug/fgprof", fgprof.Handler())
+
+	// Manually add support for paths linked to by index page at /debug/pprof/
+	r.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	r.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	r.Handle("/debug/pprof/allocs", pprof.Handler("allocs"))
+	r.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	r.Handle("/debug/pprof/block", pprof.Handler("block"))
+	r.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
+
 }
