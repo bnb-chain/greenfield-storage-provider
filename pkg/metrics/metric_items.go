@@ -70,6 +70,8 @@ var MetricsItems = []prometheus.Collector{
 	BlockEventCount,
 	BlocksyncerLogicTime,
 	BlocksyncerWriteDBTime,
+	ChainLatestHeight,
+	ChainRPCTime,
 
 	// metadata metrics category
 	MetadataReqTime,
