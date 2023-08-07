@@ -12,7 +12,8 @@ import (
 	types0 "github.com/bnb-chain/greenfield/x/sp/types"
 	types1 "github.com/bnb-chain/greenfield/x/storage/types"
 	types2 "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	types3 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	types3 "github.com/cosmos/cosmos-sdk/types"
+	types4 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -53,6 +54,21 @@ func (mr *MockConsensusMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockConsensus)(nil).Close))
 }
 
+// ConfirmTransaction mocks base method.
+func (m *MockConsensus) ConfirmTransaction(ctx context.Context, txHash string) (*types3.TxResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConfirmTransaction", ctx, txHash)
+	ret0, _ := ret[0].(*types3.TxResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConfirmTransaction indicates an expected call of ConfirmTransaction.
+func (mr *MockConsensusMockRecorder) ConfirmTransaction(ctx, txHash interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfirmTransaction", reflect.TypeOf((*MockConsensus)(nil).ConfirmTransaction), ctx, txHash)
+}
+
 // CurrentHeight mocks base method.
 func (m *MockConsensus) CurrentHeight(ctx context.Context) (uint64, error) {
 	m.ctrl.T.Helper()
@@ -84,10 +100,10 @@ func (mr *MockConsensusMockRecorder) HasAccount(ctx, account interface{}) *gomoc
 }
 
 // ListBondedValidators mocks base method.
-func (m *MockConsensus) ListBondedValidators(ctx context.Context) ([]types3.Validator, error) {
+func (m *MockConsensus) ListBondedValidators(ctx context.Context) ([]types4.Validator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListBondedValidators", ctx)
-	ret0, _ := ret[0].([]types3.Validator)
+	ret0, _ := ret[0].([]types4.Validator)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -427,4 +443,18 @@ func (m *MockConsensus) VerifyPutObjectPermission(ctx context.Context, account, 
 func (mr *MockConsensusMockRecorder) VerifyPutObjectPermission(ctx, account, bucket, object interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyPutObjectPermission", reflect.TypeOf((*MockConsensus)(nil).VerifyPutObjectPermission), ctx, account, bucket, object)
+}
+
+// WaitForNextBlock mocks base method.
+func (m *MockConsensus) WaitForNextBlock(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WaitForNextBlock", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WaitForNextBlock indicates an expected call of WaitForNextBlock.
+func (mr *MockConsensusMockRecorder) WaitForNextBlock(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitForNextBlock", reflect.TypeOf((*MockConsensus)(nil).WaitForNextBlock), ctx)
 }

@@ -276,7 +276,7 @@ type Signer interface {
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
-	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
+	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
 	// SignMigratePiece signs the GfSpMigratePieceTask for migrating piece
 	SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
 	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
