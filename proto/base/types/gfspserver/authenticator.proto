@@ -86,8 +86,16 @@ message VerifyGNFD1EddsaSignatureRequest {
   bytes real_msg_to_sign = 4;
 }
 
+// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
 // VerifyOffChainSignatureResponse is response type for the VerifyOffChainSignature RPC method.
 message VerifyOffChainSignatureResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  // result defines the result of if the OffChainSignature is verified
+  bool result = 2;
+}
+
+// VerifyGNFD1EddsaSignatureResponse is response type for the VerifyOffChainSignature RPC method.
+message VerifyGNFD1EddsaSignatureResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // result defines the result of if the OffChainSignature is verified
   bool result = 2;
@@ -103,5 +111,5 @@ service GfSpAuthenticationService {
   // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
   rpc VerifyOffChainSignature(VerifyOffChainSignatureRequest) returns (VerifyOffChainSignatureResponse) {}
   // VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
-  rpc VerifyGNFD1EddsaSignature(VerifyGNFD1EddsaSignatureRequest) returns (VerifyOffChainSignatureResponse) {}
+  rpc VerifyGNFD1EddsaSignature(VerifyGNFD1EddsaSignatureRequest) returns (VerifyGNFD1EddsaSignatureResponse) {}
 }

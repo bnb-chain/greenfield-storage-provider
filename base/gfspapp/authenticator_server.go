@@ -80,11 +80,11 @@ func (g *GfSpBaseApp) VerifyOffChainSignature(ctx context.Context, req *gfspserv
 }
 
 // VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
-func (g *GfSpBaseApp) VerifyGNFD1EddsaSignature(ctx context.Context, req *gfspserver.VerifyGNFD1EddsaSignatureRequest) (*gfspserver.VerifyOffChainSignatureResponse, error) {
+func (g *GfSpBaseApp) VerifyGNFD1EddsaSignature(ctx context.Context, req *gfspserver.VerifyGNFD1EddsaSignatureRequest) (*gfspserver.VerifyGNFD1EddsaSignatureResponse, error) {
 	log.CtxDebugw(ctx, "begin to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "off_chain_sig", req.OffChainSig, "real_msg_to_sign", req.RealMsgToSign)
 	resp, err := g.authenticator.VerifyGNFD1EddsaSignature(ctx, req.AccountId, req.Domain, req.OffChainSig, req.RealMsgToSign)
 	log.CtxDebugw(ctx, "finish to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
-	return &gfspserver.VerifyOffChainSignatureResponse{
+	return &gfspserver.VerifyGNFD1EddsaSignatureResponse{
 		Err:    gfsperrors.MakeGfSpError(err),
 		Result: resp,
 	}, nil
