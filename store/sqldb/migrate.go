@@ -279,12 +279,13 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		insertMigrateGVG *MigrateGVGTable
 	)
 	insertMigrateGVG = &MigrateGVGTable{
-		MigrateKey:           meta.MigrateGVGKey,
-		SwapOutKey:           meta.SwapOutKey,
-		GlobalVirtualGroupID: meta.GlobalVirtualGroupID,
-		VirtualGroupFamilyID: meta.VirtualGroupFamilyID,
-		BucketID:             meta.BucketID,
-		RedundancyIndex:      meta.RedundancyIndex,
+		MigrateKey:               meta.MigrateGVGKey,
+		SwapOutKey:               meta.SwapOutKey,
+		GlobalVirtualGroupID:     meta.GlobalVirtualGroupID,
+		DestGlobalVirtualGroupID: meta.DestGlobalVirtualGroupID,
+		VirtualGroupFamilyID:     meta.VirtualGroupFamilyID,
+		BucketID:                 meta.BucketID,
+		RedundancyIndex:          meta.RedundancyIndex,
 
 		SrcSPID:              meta.SrcSPID,
 		DestSPID:             meta.DestSPID,
@@ -333,14 +334,15 @@ func (s *SpDBImpl) QueryMigrateGVGUnit(migrateKey string) (*spdb.MigrateGVGUnitM
 		return nil, result.Error
 	}
 	return &spdb.MigrateGVGUnitMeta{
-		GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
-		VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-		RedundancyIndex:      queryReturn.RedundancyIndex,
-		BucketID:             queryReturn.BucketID,
-		SrcSPID:              queryReturn.SrcSPID,
-		DestSPID:             queryReturn.DestSPID,
-		LastMigratedObjectID: queryReturn.LastMigratedObjectID,
-		MigrateStatus:        queryReturn.MigrateStatus,
+		GlobalVirtualGroupID:     queryReturn.GlobalVirtualGroupID,
+		DestGlobalVirtualGroupID: queryReturn.DestGlobalVirtualGroupID,
+		VirtualGroupFamilyID:     queryReturn.VirtualGroupFamilyID,
+		RedundancyIndex:          queryReturn.RedundancyIndex,
+		BucketID:                 queryReturn.BucketID,
+		SrcSPID:                  queryReturn.SrcSPID,
+		DestSPID:                 queryReturn.DestSPID,
+		LastMigratedObjectID:     queryReturn.LastMigratedObjectID,
+		MigrateStatus:            queryReturn.MigrateStatus,
 	}, nil
 }
 
@@ -353,14 +355,15 @@ func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*spdb.Migra
 	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
 	for _, queryReturn := range queryReturns {
 		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-			RedundancyIndex:      queryReturn.RedundancyIndex,
-			BucketID:             queryReturn.BucketID,
-			SrcSPID:              queryReturn.SrcSPID,
-			DestSPID:             queryReturn.DestSPID,
-			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
-			MigrateStatus:        queryReturn.MigrateStatus,
+			GlobalVirtualGroupID:     queryReturn.GlobalVirtualGroupID,
+			DestGlobalVirtualGroupID: queryReturn.DestGlobalVirtualGroupID,
+			VirtualGroupFamilyID:     queryReturn.VirtualGroupFamilyID,
+			RedundancyIndex:          queryReturn.RedundancyIndex,
+			BucketID:                 queryReturn.BucketID,
+			SrcSPID:                  queryReturn.SrcSPID,
+			DestSPID:                 queryReturn.DestSPID,
+			LastMigratedObjectID:     queryReturn.LastMigratedObjectID,
+			MigrateStatus:            queryReturn.MigrateStatus,
 		})
 	}
 	return returns, nil
