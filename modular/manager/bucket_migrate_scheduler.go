@@ -1066,7 +1066,6 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromDB(primarySPGVGL
 			bucketUnit := newBucketMigrateGVGExecuteUnit(bucketID, srcGvg, srcSP, destSP, MigrateStatus(migrateGVG.MigrateStatus), migrateGVG.DestSPID, migrateGVG.LastMigratedObjectID, destGvg)
 			bucketMigrateUnits = append(bucketMigrateUnits, bucketUnit)
 			log.Debugw("succeeded to generate a new bucket migrate uint", "migrate_execute_unit", bucketUnit, "bucket_id", bucketID)
-
 		} else {
 			// gvgChecker has verified and this scenario should not occur.
 			log.Debugw("failed to get src gvg", "gvg_id", migrateGVG.GlobalVirtualGroupID)
@@ -1087,13 +1086,13 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromMemory(primarySP
 		// check sp exiting
 		secondarySPIDs, err := checker.replaceExitingSP(srcSecondarySPIDs)
 		if err != nil {
-			log.Errorw("pick sp to replace exiting sp error", "srcSecondarySPIDs", srcSecondarySPIDs, "secondarySPIDs", secondarySPIDs, "bucket_id", checker.bucketID)
+			log.Errorw("failed to pick sp to replace exiting sp", "srcSecondarySPIDs", srcSecondarySPIDs, "secondarySPIDs", secondarySPIDs, "bucket_id", checker.bucketID)
 			return nil, err
 		}
 
 		// check conflicts.
 		conflictedIndex, errNotInSecondarySPs := util.GetSecondarySPIndexFromGVG(srcGVG, checker.selfSP.GetId())
-		log.Debugw("prepare to check conflicts", "srcGVG", srcGVG, "destSP", checker.selfSP, "conflictedIndex", conflictedIndex, "errNotInSecondarySPs", errNotInSecondarySPs, "bucket_id", checker.bucketID)
+		log.Debugw("prepare to check conflicts", "srcGVG", srcGVG, "destSP", checker.selfSP, "conflictedIndex", conflictedIndex, "bucket_id", checker.bucketID)
 		if errNotInSecondarySPs == nil {
 			// gvg has conflicts.
 			excludedSPIDs := srcGVG.GetSecondarySpIds()
