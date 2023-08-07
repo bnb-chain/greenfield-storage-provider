@@ -341,7 +341,6 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectSegment(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
-		return
 	}
 
 	offset = uint64(segmentCount) * params.GetMaxSegmentSize()
@@ -366,7 +365,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		err = ErrEncodeResponse
 		return
 	}
-	log.Debugw("succeed to query resumable offset ", "xml_info", xmlInfo)
+	log.Debugw("succeed to query resumable offset", "xml_info", xmlInfo)
 }
 
 // getObjectHandler handles the download object request.
