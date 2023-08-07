@@ -2,7 +2,6 @@ package vgmgr
 
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
@@ -40,12 +39,6 @@ type GVGPickFilter interface {
 	CheckFamily(familyID uint32) bool
 	// CheckGVG returns true when match pick request condition.
 	CheckGVG(gvgMeta *GlobalVirtualGroupMeta) bool
-}
-
-// GVGMetaChecker is used to check sp pick condition.
-type GVGMetaChecker interface {
-	// CheckGVG returns true when match pick request condition.
-	CheckGVG(migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta) bool
 }
 
 // GenerateGVGSecondarySPsPolicy is used to generate gvg secondary sp list.

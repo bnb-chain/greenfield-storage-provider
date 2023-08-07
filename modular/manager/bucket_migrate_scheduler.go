@@ -31,7 +31,6 @@ const (
 )
 
 var _ vgmgr.GVGPickFilter = &PickDestGVGFilter{}
-var _ vgmgr.GVGMetaChecker = &LoadGVGMetaChecker{}
 
 // PickDestGVGFilter is used to pick dest gvg for bucket migrate.
 type PickDestGVGFilter struct {
@@ -66,20 +65,12 @@ func (f *PickDestGVGFilter) CheckGVG(gvgMeta *vgmgr.GlobalVirtualGroupMeta) bool
 	return false
 }
 
-// LoadGVGMetaChecker is used to check gvg meta when load from db.
-type LoadGVGMetaChecker struct {
-	expectedSPGVGList []*virtualgrouptypes.GlobalVirtualGroup
-}
-
-func NewLoadGVGMetaChecker(SPGVGList []*virtualgrouptypes.GlobalVirtualGroup) *LoadGVGMetaChecker {
-	return &LoadGVGMetaChecker{expectedSPGVGList: SPGVGList}
-}
-
-func (c *LoadGVGMetaChecker) CheckGVG(migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta) bool {
-	if len(c.expectedSPGVGList) == len(migrateGVGUnitMeta) {
+// GVGMetaCheck verifies whether expectedSPGVGList completely matches with the migrateGVGUnitMeta loaded from the database.
+func GVGMetaCheck(expectedSPGVGList []*virtualgrouptypes.GlobalVirtualGroup, migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta) bool {
+	if len(expectedSPGVGList) == len(migrateGVGUnitMeta) {
 		chainGvgMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
 		existMaps := make(map[uint32]bool)
-		for _, gvg := range c.expectedSPGVGList {
+		for _, gvg := range expectedSPGVGList {
 			chainGvgMaps[gvg.GetId()] = gvg
 		}
 
@@ -643,10 +634,8 @@ func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnitFromDB(prima
 		return nil, err
 	}
 
-	gvgChecker := NewLoadGVGMetaChecker(primarySPGVGList)
-
 	// 2) not match, generate migrate gvg again
-	if !gvgChecker.CheckGVG(migrateGVGUnitMeta) {
+	if !GVGMetaCheck(primarySPGVGList, migrateGVGUnitMeta) {
 		srcSP, destSP, err := s.getSrcSPAndDestSPFromMigrateEvent(event)
 		if err != nil {
 			return nil, err
