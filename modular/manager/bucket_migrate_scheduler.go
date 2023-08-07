@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"container/list"
 	"context"
 	"errors"
 	"fmt"
@@ -9,12 +10,10 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	lru "github.com/hashicorp/golang-lru"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
@@ -24,6 +23,7 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -31,6 +31,7 @@ const (
 )
 
 var _ vgmgr.GVGPickFilter = &PickDestGVGFilter{}
+var _ vgmgr.GVGMetaChecker = &LoadGVGMetaChecker{}
 
 // PickDestGVGFilter is used to pick dest gvg for bucket migrate.
 type PickDestGVGFilter struct {
@@ -65,6 +66,42 @@ func (f *PickDestGVGFilter) CheckGVG(gvgMeta *vgmgr.GlobalVirtualGroupMeta) bool
 	return false
 }
 
+// LoadGVGMetaChecker is used to check gvg meta when load from db.
+type LoadGVGMetaChecker struct {
+	expectedSPGVGList []*virtualgrouptypes.GlobalVirtualGroup
+}
+
+func NewLoadGVGMetaChecker(SPGVGList []*virtualgrouptypes.GlobalVirtualGroup) *LoadGVGMetaChecker {
+	return &LoadGVGMetaChecker{expectedSPGVGList: SPGVGList}
+}
+
+func (c *LoadGVGMetaChecker) CheckGVG(migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta) bool {
+	if len(c.expectedSPGVGList) == len(migrateGVGUnitMeta) {
+		chainGvgMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
+		existMaps := make(map[uint32]bool)
+		for _, gvg := range c.expectedSPGVGList {
+			chainGvgMaps[gvg.GetId()] = gvg
+		}
+
+		for _, migrateGVG := range migrateGVGUnitMeta {
+			srcGvg, ok := chainGvgMaps[migrateGVG.GlobalVirtualGroupID]
+			if !ok {
+				return false
+			}
+			existMaps[srcGvg.GetId()] = true
+		}
+
+		for _, exist := range existMaps {
+			if !exist {
+				return false
+			}
+		}
+
+		return true
+	}
+	return false
+}
+
 // BucketMigrateExecutePlan is used to manage bucket migrate process.
 type BucketMigrateExecutePlan struct {
 	manager    *ManageModular
@@ -94,14 +131,14 @@ func (plan *BucketMigrateExecutePlan) storeToDB() error {
 		if err = plan.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
 			MigrateGVGKey:            migrateGVGUnit.Key(),
 			GlobalVirtualGroupID:     migrateGVGUnit.srcGVG.GetId(),
+			DestGlobalVirtualGroupID: migrateGVGUnit.destGVGID,
 			VirtualGroupFamilyID:     migrateGVGUnit.srcGVG.GetFamilyId(),
-			RedundancyIndex:          -1,
+			RedundancyIndex:          piecestore.PrimarySPRedundancyIndex,
 			BucketID:                 migrateGVGUnit.bucketID,
 			SrcSPID:                  migrateGVGUnit.srcSP.GetId(),
 			DestSPID:                 migrateGVGUnit.destSP.GetId(),
 			LastMigratedObjectID:     migrateGVGUnit.lastMigratedObjectID,
 			MigrateStatus:            int(migrateGVGUnit.migrateStatus),
-			DestGlobalVirtualGroupID: migrateGVGUnit.destGVGID,
 		}); err != nil {
 			log.Errorw("failed to store to db", "error", err)
 			return err
@@ -278,7 +315,7 @@ type BucketMigrateScheduler struct {
 	selfSP                    *sptypes.StorageProvider
 	lastSubscribedBlockHeight uint64                               // load from db
 	executePlanIDMap          map[uint64]*BucketMigrateExecutePlan // bucketID -> BucketMigrateExecutePlan
-	bucketCache               *lru.Cache
+	bucketCache               *BucketCache
 	// src sp swap unit plan.
 	mutex sync.RWMutex
 }
@@ -309,7 +346,7 @@ func (s *BucketMigrateScheduler) Init(m *ManageModular) error {
 	}
 	s.executePlanIDMap = make(map[uint64]*BucketMigrateExecutePlan)
 
-	s.bucketCache, err = lru.New(bucketCacheSize)
+	s.bucketCache = NewBucketCache(bucketCacheSize, 30*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -330,19 +367,26 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedS
 	// check the chain's bucket is migrating
 	key := cacheKey(bucketID)
 	var bucketInfo *storagetypes.BucketInfo
-	elem, has := s.bucketCache.Get(key)
-	if has {
-		value, ok := elem.(storagetypes.BucketInfo)
-		if !ok {
-			return false, err
-		}
-		bucketInfo = &value
-	} else {
+	QueryBucketInfoFromChainFunc := func() (bool, error) {
 		bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketID)
 		if err != nil {
 			return false, err
 		}
-		s.bucketCache.Add(key, bucketInfo)
+		s.bucketCache.Set(key, bucketInfo)
+		return true, nil
+	}
+
+	elem, has := s.bucketCache.Get(key)
+	if has {
+		value, ok := elem.(storagetypes.BucketInfo)
+		if !ok {
+			log.Debugw("failed to get bucketinfo from bucket cache", "key", key)
+			s.bucketCache.Delete(key)
+			QueryBucketInfoFromChainFunc()
+		}
+		bucketInfo = &value
+	} else {
+		QueryBucketInfoFromChainFunc()
 	}
 
 	if bucketInfo.BucketStatus != expectedStatus {
@@ -593,8 +637,10 @@ func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnitFromDB(prima
 		return nil, err
 	}
 
+	gvgChecker := NewLoadGVGMetaChecker(primarySPGVGList)
+
 	// 2) not match, generate migrate gvg again
-	if len(primarySPGVGList) != len(migrateGVGUnitMeta) {
+	if !gvgChecker.CheckGVG(migrateGVGUnitMeta) {
 		srcSP, destSP, err := s.getSrcSPAndDestSPFromMigrateEvent(event)
 		if err != nil {
 			return nil, err
@@ -626,6 +672,7 @@ func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnitFromDB(prima
 				bucketUnit := newBucketMigrateGVGExecuteUnit(bucketID, srcGvg, srcSP, destSP, MigrateStatus(migrateGVG.MigrateStatus), migrateGVG.DestSPID, migrateGVG.LastMigratedObjectID, destGvg)
 				executePlan.gvgUnitMap[srcGvg.GetId()] = bucketUnit
 			} else {
+				// gvgChecker has verified and this scenario should not occur.
 				log.Debugw("failed to get src gvg", "gvg_id", migrateGVG.GlobalVirtualGroupID)
 			}
 		}
@@ -902,4 +949,174 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 
 func cacheKey(bucketId uint64) string {
 	return fmt.Sprintf("bucketid:%d", bucketId)
+}
+
+// BucketCache is an LRU cache.
+type BucketCache struct {
+	sync.RWMutex
+	// MaxEntries is the maximum number of cache entries before
+	// an item is evicted. Zero means no limit.
+	maxEntries int
+
+	lruIndex   *list.List
+	ttlIndex   []*list.Element
+	cache      map[string]*list.Element
+	expiration time.Duration
+}
+
+type bucketEntry struct {
+	key       string
+	value     interface{}
+	timestamp time.Time
+}
+
+// NewBucketCache creates a new Cache.
+// If maxEntries is zero, the cache has no limit and it's assumed
+// that eviction is done by the caller.
+func NewBucketCache(maxEntries int, expire time.Duration) *BucketCache {
+	c := &BucketCache{
+		maxEntries: maxEntries,
+		expiration: expire,
+		lruIndex:   list.New(),
+		cache:      make(map[string]*list.Element),
+	}
+	if c.expiration > 0 {
+		c.ttlIndex = make([]*list.Element, 0)
+		go c.cleanExpired()
+	}
+	return c
+}
+
+// cleans expired entries performing minimal checks
+func (c *BucketCache) cleanExpired() {
+	for {
+		c.RLock()
+		if len(c.ttlIndex) == 0 {
+			c.RUnlock()
+			time.Sleep(c.expiration)
+			continue
+		}
+		e := c.ttlIndex[0]
+
+		en := e.Value.(*bucketEntry)
+		exp := en.timestamp.Add(c.expiration)
+		c.RUnlock()
+		if time.Now().After(exp) {
+			c.Lock()
+			c.removeElement(e)
+			c.Unlock()
+		} else {
+			time.Sleep(time.Since(exp))
+		}
+	}
+}
+
+// Set adds a value to the cache
+func (c *BucketCache) Set(key string, value interface{}) {
+	c.Lock()
+	if c.cache == nil {
+		c.cache = make(map[string]*list.Element)
+		c.lruIndex = list.New()
+		if c.expiration > 0 {
+			c.ttlIndex = make([]*list.Element, 0)
+		}
+	}
+
+	if e, ok := c.cache[key]; ok {
+		c.lruIndex.MoveToFront(e)
+
+		en := e.Value.(*bucketEntry)
+		en.value = value
+		en.timestamp = time.Now()
+
+		c.Unlock()
+		return
+	}
+	e := c.lruIndex.PushFront(&bucketEntry{key: key, value: value, timestamp: time.Now()})
+	if c.expiration > 0 {
+		c.ttlIndex = append(c.ttlIndex, e)
+	}
+	c.cache[key] = e
+
+	if c.maxEntries != 0 && c.lruIndex.Len() > c.maxEntries {
+		c.removeOldest()
+	}
+	c.Unlock()
+}
+
+// Get looks up a key's value from the cache.
+func (c *BucketCache) Get(key string) (value interface{}, ok bool) {
+	c.Lock()
+	defer c.Unlock()
+	if c.cache == nil {
+		return
+	}
+	if e, hit := c.cache[key]; hit {
+		c.lruIndex.MoveToFront(e)
+		return e.Value.(*bucketEntry).value, true
+	}
+	return
+}
+
+// Delete removes the provided key from the cache.
+func (c *BucketCache) Delete(key string) {
+	c.Lock()
+	defer c.Unlock()
+	if c.cache == nil {
+		return
+	}
+	if e, hit := c.cache[key]; hit {
+		c.removeElement(e)
+	}
+}
+
+// RemoveOldest removes the oldest item from the cache.
+func (c *BucketCache) removeOldest() {
+	if c.cache == nil {
+		return
+	}
+	e := c.lruIndex.Back()
+	if e != nil {
+		c.removeElement(e)
+	}
+}
+
+func (c *BucketCache) removeElement(e *list.Element) {
+	c.lruIndex.Remove(e)
+	if c.expiration > 0 {
+		for i, se := range c.ttlIndex {
+			if se == e {
+				//delete
+				copy(c.ttlIndex[i:], c.ttlIndex[i+1:])
+				c.ttlIndex[len(c.ttlIndex)-1] = nil
+				c.ttlIndex = c.ttlIndex[:len(c.ttlIndex)-1]
+				break
+			}
+		}
+	}
+	if e.Value != nil {
+		kv := e.Value.(*bucketEntry)
+		delete(c.cache, kv.key)
+	}
+}
+
+// Len returns the number of items in the cache.
+func (c *BucketCache) Len() int {
+	c.RLock()
+	defer c.RUnlock()
+	if c.cache == nil {
+		return 0
+	}
+	return c.lruIndex.Len()
+}
+
+// Flush empties the whole cache
+func (c *BucketCache) Flush() {
+	c.Lock()
+	defer c.Unlock()
+	c.lruIndex = list.New()
+	if c.expiration > 0 {
+		c.ttlIndex = make([]*list.Element, 0)
+	}
+	c.cache = make(map[string]*list.Element)
 }
