@@ -294,11 +294,7 @@ func (plan *BucketMigrateExecutePlan) stopSPSchedule() {
 }
 
 func (plan *BucketMigrateExecutePlan) Start() error {
-	var err error
-	if err = plan.storeToDB(); err != nil {
-		log.Errorw("failed to start migrate execute plan due to store db", "error", err)
-		return err
-	}
+
 	log.Debugf("BucketMigrateExecutePlan Start success")
 	go plan.startSPSchedule()
 	return nil
@@ -360,7 +356,7 @@ func (s *BucketMigrateScheduler) Start() error {
 // Before processing MigrateBucketEvents, first check if the status of the bucket on the chain meets the expectations. If it meets the expectations, proceed with the execution; otherwise, skip this MigrateBucketEvent event.
 func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	// check the chain's bucket is migrating
-	key := cacheKey(bucketID)
+	key := bucketCacheKey(bucketID)
 	var bucketInfo *storagetypes.BucketInfo
 	QueryBucketInfoFromChainFunc := func() error {
 		bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketID)
@@ -580,31 +576,6 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 	})
 }
 
-// replace SecondarySp which is in STATUS_GRACEFUL_EXITING
-func (s *BucketMigrateScheduler) replaceExitingSP(secondarySPIDs []uint32) ([]uint32, error) {
-	replacedSPIDs := secondarySPIDs
-	excludedSPIDs := secondarySPIDs
-
-	for idx, spID := range secondarySPIDs {
-		sp, err := s.manager.virtualGroupManager.QuerySPByID(spID)
-		if err != nil {
-			log.Errorw("failed to query sp", "error", err)
-			return nil, err
-		}
-		if sp.Status == sptypes.STATUS_GRACEFUL_EXITING {
-			replacedSP, pickErr := s.manager.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(excludedSPIDs))
-			if pickErr != nil {
-				log.Errorw("failed to pick new sp to replace exiting secondary sp", "excludedSPIDs", excludedSPIDs, "error", pickErr)
-				return nil, pickErr
-			}
-			replacedSPIDs[idx] = replacedSP.GetId()
-			excludedSPIDs = append(excludedSPIDs, replacedSP.GetId())
-		}
-	}
-
-	return replacedSPIDs, nil
-}
-
 func (s *BucketMigrateScheduler) getSrcSPAndDestSPFromMigrateEvent(event *storagetypes.EventMigrationBucket) (srcSP, destSP *sptypes.StorageProvider, err error) {
 	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), event.BucketId.Uint64())
 	if err != nil {
@@ -679,7 +650,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 			// delete db & gerenate again
 			migrateBucketUnits, err = conflictChecker.GenerateMigrateBucketUnits(false)
 		} else {
-
+			migrateBucketUnits, err = conflictChecker.GenerateMigrateBucketUnits(true)
 		}
 
 	} else {
@@ -712,10 +683,11 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 		return nil, nil
 	}
 
-	err = plan.storeToDB()
+	if err = plan.storeToDB(); err != nil {
+		log.Errorw("failed to generate migrate execute plan due to store db", "error", err)
+	}
 
 	return plan, err
-
 }
 
 func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*BucketMigrateExecutePlan, error) {
@@ -846,7 +818,7 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	return err
 }
 
-func cacheKey(bucketId uint64) string {
+func bucketCacheKey(bucketId uint64) string {
 	return fmt.Sprintf("bucketid:%d", bucketId)
 }
 
