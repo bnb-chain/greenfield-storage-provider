@@ -1,20 +1,19 @@
 package storage
 
 import (
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/stretchr/testify/assert"
 )
 
-const mockB2Bucket = "b2Bucket"
+const mockLdfsBucket = "ldfsBucket"
 
-func setupB2Test(t *testing.T) *b2Store {
-	return &b2Store{s3Store{bucketName: mockB2Bucket}}
+func setupLdfsTest(t *testing.T) *ldfsStore {
+	return &ldfsStore{s3Store{bucketName: mockLdfsBucket}}
 }
 
-func TestB2Store_newB2Store(t *testing.T) {
+func TestLdfsStore_newLdfsStore(t *testing.T) {
 	cases := []struct {
 		name         string
 		cfg          ObjectStorageConfig
@@ -22,20 +21,20 @@ func TestB2Store_newB2Store(t *testing.T) {
 		wantedErrStr string
 	}{
 		{
-			name: "succeed to new b2 store",
+			name: "new ldfs store successfully",
 			cfg: ObjectStorageConfig{
-				Storage:   B2Store,
-				BucketURL: "https://s3.us-east-1.backblazeb2.com/b2Bucket",
+				Storage:   LdfsStore,
+				BucketURL: "https://ldfs.us-east-1.aliyun.com/ldfsBucket",
 				IAMType:   AKSKIAMType,
 			},
 			wantedIsErr:  false,
 			wantedErrStr: emptyString,
 		},
 		{
-			name: "failed to new b2 store",
+			name: "failed to new ldfs store",
 			cfg: ObjectStorageConfig{
-				Storage:   B2Store,
-				BucketURL: "https://s3.us-east-1.backblazeb2.com/b2Bucket\r\n",
+				Storage:   LdfsStore,
+				BucketURL: "https://ldfs.us-east-1.aliyun.com/ldfsBucket\r\n",
 				IAMType:   AKSKIAMType,
 			},
 			wantedIsErr:  true,
@@ -44,7 +43,7 @@ func TestB2Store_newB2Store(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := newB2Store(tt.cfg)
+			result, err := newLdfsStore(tt.cfg)
 			if tt.wantedIsErr {
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 				assert.Nil(t, result)
@@ -56,35 +55,29 @@ func TestB2Store_newB2Store(t *testing.T) {
 	}
 }
 
-func TestB2Store_newB2SessionWithCache(t *testing.T) {
-	_ = os.Setenv(B2AccessKey, mockAccessKey)
-	_ = os.Setenv(B2SecretKey, mockSecretKey)
-	_ = os.Setenv(B2SessionToken, mockSessionToken)
-	defer os.Unsetenv(B2AccessKey)
-	defer os.Unsetenv(B2SecretKey)
-	defer os.Unsetenv(B2SessionToken)
+func TestLdfsStore_newLdfsSessionWithCache(t *testing.T) {
 	cfg := ObjectStorageConfig{
-		Storage:   B2Store,
-		BucketURL: "https://s3.us-east-1.backblazeb2.com/b2Bucket",
+		Storage:   LdfsStore,
+		BucketURL: "https://ldfs.us-east-1.aliyun.com/ldfsBucket",
 		IAMType:   AKSKIAMType,
 	}
-	result1, result2, err := b2SessionCache.newB2Session(cfg)
-	defer b2SessionCache.clear()
+	result1, result2, err := ldfsSessionCache.newLdfsSession(cfg)
+	defer ldfsSessionCache.clear()
 	assert.NotNil(t, result1)
-	assert.Equal(t, result2, "b2Bucket")
+	assert.Equal(t, result2, "ldfsBucket")
 	assert.Nil(t, err)
 
 	// get result from map cache
-	_, bucketName1, err1 := b2SessionCache.newB2Session(cfg)
+	_, bucketName1, err1 := ldfsSessionCache.newLdfsSession(cfg)
 	if err1 != nil {
 		t.Fatal(err)
 	}
-	if bucketName1 != "b2Bucket" {
-		t.Fatalf("expected b2Bucket, got %v", bucketName1)
+	if bucketName1 != "ldfsBucket" {
+		t.Fatalf("expected ldfsBucket, got %v", bucketName1)
 	}
 }
 
-func TestB2Store_newB2Session(t *testing.T) {
+func TestLdfsStore_newLdfsSession(t *testing.T) {
 	cases := []struct {
 		name         string
 		cfg          ObjectStorageConfig
@@ -95,8 +88,8 @@ func TestB2Store_newB2Session(t *testing.T) {
 		{
 			name: "wrong bucket url",
 			cfg: ObjectStorageConfig{
-				Storage:   B2Store,
-				BucketURL: "https://s3.us-east-1.backblazeb2.com/b2Bucket\r\n",
+				Storage:   LdfsStore,
+				BucketURL: "https://ldfs.us-east-1.aliyun.com/ldfsBucket\r\n",
 				IAMType:   AKSKIAMType,
 			},
 			wantedResult: "",
@@ -106,8 +99,8 @@ func TestB2Store_newB2Session(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			result1, result2, err := b2SessionCache.newB2Session(tt.cfg)
-			defer b2SessionCache.clear()
+			result1, result2, err := ldfsSessionCache.newLdfsSession(tt.cfg)
+			defer ldfsSessionCache.clear()
 			assert.Equal(t, &session.Session{}, result1)
 			assert.Equal(t, tt.wantedResult, result2)
 			assert.Contains(t, err.Error(), tt.wantedErrStr)
@@ -115,53 +108,62 @@ func TestB2Store_newB2Session(t *testing.T) {
 	}
 }
 
-func TestB2Store_String(t *testing.T) {
-	m := setupB2Test(t)
+func TestLdfsStore_String(t *testing.T) {
+	m := setupLdfsTest(t)
 	result := m.String()
-	assert.Equal(t, "b2://b2Bucket/", result)
+	assert.Equal(t, "ldfs://ldfsBucket/", result)
 }
 
-func TestB2Store_parseB2BucketURL(t *testing.T) {
+func TestLdfsStore_parseLdfsBucketURL(t *testing.T) {
 	cases := []struct {
 		name          string
 		bucketURL     string
 		wantedResult1 string
 		wantedResult2 string
-		wantedResult3 string
+		wantedResult3 bool
 		wantedIsErr   bool
 		wantedErrStr  string
 	}{
 		{
-			name:          "correct b2 bucket url path style",
-			bucketURL:     "https://s3.us-east-1.backblazeb2.com/b2Bucket",
-			wantedResult1: "s3.us-east-1.backblazeb2.com",
-			wantedResult2: "us-east-1",
-			wantedResult3: "b2Bucket",
+			name:          "correct ldfs bucket url",
+			bucketURL:     "https://ldfs.us-east-1.aliyun.com/ldfsBucket",
+			wantedResult1: "ldfs.us-east-1.aliyun.com",
+			wantedResult2: "ldfsBucket",
+			wantedResult3: true,
 			wantedIsErr:   false,
 			wantedErrStr:  "",
 		},
 		{
-			name:          "correct b2 bucket url virtual style",
-			bucketURL:     "http://b2Bucket.s3.us-east-1.backblazeb2.com",
-			wantedResult1: "s3.us-east-1.backblazeb2.com",
-			wantedResult2: "us-east-1",
-			wantedResult3: "b2Bucket",
+			name:          "ldfs bucket url without scheme",
+			bucketURL:     "ldfs.us-east-1.aliyun.com/ldfsBucket",
+			wantedResult1: "ldfs.us-east-1.aliyun.com",
+			wantedResult2: "ldfsBucket",
+			wantedResult3: false,
 			wantedIsErr:   false,
 			wantedErrStr:  "",
 		},
 		{
-			name:          "invalid b2 bucket url",
-			bucketURL:     "https://s3.us-east-1.backblazeb2.com/b2Bucket\n",
+			name:          "invalid ldfs bucket url",
+			bucketURL:     "http://ldfs.us-east-1.aliyun.com/ldfsBucket\n",
 			wantedResult1: emptyString,
 			wantedResult2: emptyString,
-			wantedResult3: "",
+			wantedResult3: false,
 			wantedIsErr:   true,
 			wantedErrStr:  "net/url: invalid control character in URL",
+		},
+		{
+			name:          "no buket name provided in bucket url",
+			bucketURL:     "http://ldfs.us-east-1.aliyun.com",
+			wantedResult1: emptyString,
+			wantedResult2: emptyString,
+			wantedResult3: false,
+			wantedIsErr:   true,
+			wantedErrStr:  "no bucket name provided in",
 		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			result1, result2, result3, err := parseB2BucketURL(tt.bucketURL)
+			result1, result2, result3, err := parseLdfsBucketURL(tt.bucketURL)
 			if tt.wantedIsErr {
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 			} else {

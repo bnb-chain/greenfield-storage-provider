@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const mockFileBucket = "fileBucket"
+
 func setupDiskFileTest(t *testing.T) *diskFileStore {
 	return &diskFileStore{root: emptyString}
 }
@@ -27,16 +29,23 @@ func createTempFile(t *testing.T) *os.File {
 	return f
 }
 
-func TestDiskFile_String(t *testing.T) {
-	store := &diskFileStore{root: mockBucket}
+func TestDiskFileStore_String(t *testing.T) {
+	store := &diskFileStore{root: mockFileBucket}
 	result := store.String()
 	if runtime.GOOS == windowsOS {
-		assert.Equal(t, "file:///mockBucket", result)
+		assert.Equal(t, "file:///fileBucket", result)
 	}
-	assert.Equal(t, "file://mockBucket", result)
+	assert.Equal(t, "file://fileBucket", result)
 }
 
-func TestDiskFile_GetSuccess(t *testing.T) {
+func TestDiskFileStore_CreateBucket(t *testing.T) {
+	store := &diskFileStore{root: mockFileBucket}
+	defer os.Remove(mockFileBucket)
+	err := store.CreateBucket(context.TODO())
+	assert.Nil(t, err)
+}
+
+func TestDiskFileStore_GetObjectSuccess(t *testing.T) {
 	f := createTempFile(t)
 	tmpdir := t.TempDir()
 	cases := []struct {
@@ -82,14 +91,14 @@ func TestDiskFile_GetSuccess(t *testing.T) {
 			assert.Equal(t, tt.wantedErr, err)
 			data1, err := io.ReadAll(data)
 			if err != nil {
-				t.Fatalf("Get io.ReadAll error: %s", err)
+				t.Fatalf("io ReadAll error: %s", err)
 			}
 			assert.Equal(t, tt.wantedResult, string(data1))
 		})
 	}
 }
 
-func TestDiskFile_GetError(t *testing.T) {
+func TestDiskFileStore_GetObjectFailure(t *testing.T) {
 	f := createTempFile(t)
 	cases := []struct {
 		name      string
@@ -121,7 +130,7 @@ func TestDiskFile_GetError(t *testing.T) {
 	}
 }
 
-func TestDiskFile_PutSuccess(t *testing.T) {
+func TestDiskFileStore_PutObjectSuccess(t *testing.T) {
 	f := createTempFile(t)
 	defer func() {
 		_ = os.Remove("test/")
@@ -165,7 +174,7 @@ func TestDiskFile_PutSuccess(t *testing.T) {
 	}
 }
 
-func TestDiskFile_PutError(t *testing.T) {
+func TestDiskFileStore_PutObjectFailure(t *testing.T) {
 	defer func() {
 		fileList, err := filepath.Glob("...tmp*")
 		if err != nil {
@@ -198,7 +207,7 @@ func TestDiskFile_PutError(t *testing.T) {
 	}
 }
 
-func TestDiskFile_Delete(t *testing.T) {
+func TestDiskFileStore_DeleteObject(t *testing.T) {
 	f := createTempFile(t)
 	cases := []struct {
 		name         string
@@ -226,7 +235,13 @@ func TestDiskFile_Delete(t *testing.T) {
 	}
 }
 
-func TestDiskFile_HeadSuccess(t *testing.T) {
+func TestDiskFileStore_HeadBucket(t *testing.T) {
+	store := &diskFileStore{root: "./const.go"}
+	err := store.HeadBucket(context.TODO())
+	assert.Nil(t, err)
+}
+
+func TestDiskFileStore_HeadObject(t *testing.T) {
 	f := createTempFile(t)
 	cases := []struct {
 		name         string
@@ -234,26 +249,40 @@ func TestDiskFile_HeadSuccess(t *testing.T) {
 		offset       int64
 		limit        int64
 		wantedResult interface{}
-		wantedErr    error
+		wantedIsErr  bool
+		wantedErrStr string
 	}{
 		{
 			name:         "disk_file_head_success_test1",
 			key:          f.Name(),
 			wantedResult: f.Name(),
-			wantedErr:    nil,
+			wantedIsErr:  false,
+			wantedErrStr: "",
+		},
+		{
+			name:         "disk_file_head_failure",
+			key:          "./text.txt",
+			wantedResult: f.Name(),
+			wantedIsErr:  true,
+			wantedErrStr: "no such file or directory",
 		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			store := setupDiskFileTest(t)
 			obj, err := store.HeadObject(context.TODO(), tt.key)
-			assert.Equal(t, tt.wantedErr, err)
-			assert.Equal(t, tt.wantedResult, obj.Key())
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErrStr)
+				assert.Nil(t, obj)
+			} else {
+				assert.Empty(t, err)
+				assert.Equal(t, tt.wantedResult, obj.Key())
+			}
 		})
 	}
 }
 
-func TestDiskFile_HeadDirSuccess(t *testing.T) {
+func TestDiskFileStore_HeadDirSuccess(t *testing.T) {
 	dir := t.TempDir()
 	cases := []struct {
 		name          string
@@ -284,19 +313,19 @@ func TestDiskFile_HeadDirSuccess(t *testing.T) {
 	}
 }
 
-func TestDiskFile_List(t *testing.T) {
+func TestDiskFileStore_ListObjects(t *testing.T) {
 	store := setupDiskFileTest(t)
 	_, err := store.ListObjects(context.TODO(), emptyString, emptyString, emptyString, 0)
 	assert.Equal(t, ErrUnsupportedMethod, err)
 }
 
-func TestDiskFile_ListAll(t *testing.T) {
+func TestDiskFileStore_ListAllObjects(t *testing.T) {
 	store := setupDiskFileTest(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
 	assert.Equal(t, ErrUnsupportedMethod, err)
 }
 
-func TestPath(t *testing.T) {
+func TestDiskFileStore_path(t *testing.T) {
 	cases := []struct {
 		name         string
 		key          string

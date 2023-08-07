@@ -232,7 +232,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	endpoint, bucketName, region, err := parseEndpoint(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse S3 endpoint", "error", err)
-		return nil, "", err
+		return &session.Session{}, "", err
 	}
 	log.Debugw("S3 storage info", "endpoint", endpoint, "bucketName", bucketName, "region", region)
 
@@ -278,11 +278,11 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 				}))
 			log.Debug("use sa to access s3")
 		} else {
-			return nil, "", fmt.Errorf("failed to use sa to access s3")
+			return &session.Session{}, "", fmt.Errorf("failed to use sa to access s3")
 		}
 	default:
 		log.Errorf("unknown IAM type: %s", cfg.IAMType)
-		return nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
+		return &session.Session{}, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
 	}
 
 	sc.sessions[cfg] = sess
@@ -371,9 +371,6 @@ func parseRegion(endpoint string) string {
 }
 
 func getHTTPClient(tlsInsecureSkipVerify bool) *http.Client {
-	resolver := dnscache.New(time.Minute)
-	rand.New(rand.NewSource(time.Now().Unix()))
-
 	return &http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -383,37 +380,45 @@ func getHTTPClient(tlsInsecureSkipVerify bool) *http.Client {
 			ResponseHeaderTimeout: time.Second * 30,
 			IdleConnTimeout:       time.Second * 300,
 			MaxIdleConnsPerHost:   5000,
-			DialContext: func(ctx context.Context, network string, address string) (net.Conn, error) {
-				separator := strings.LastIndex(address, ":")
-				host := address[:separator]
-				port := address[separator:]
-				ips, err := resolver.Fetch(host)
-				if err != nil {
-					return nil, err
-				}
-				if len(ips) == 0 {
-					return nil, fmt.Errorf("No such host: %s", host)
-				}
-
-				var conn net.Conn
-				n := len(ips)
-				first := rand.Intn(n)
-				dialer := &net.Dialer{Timeout: time.Second * 10}
-				for i := 0; i < n; i++ {
-					ip := ips[(first+i)%n]
-					address = ip.String()
-					if port != "" {
-						address = net.JoinHostPort(address, port[1:])
-					}
-					conn, err = dialer.DialContext(ctx, network, address)
-					if err == nil {
-						return conn, nil
-					}
-				}
-				return nil, err
-			},
-			DisableCompression: true,
+			DialContext:           dialContext,
+			DisableCompression:    true,
 		},
 		Timeout: time.Hour,
 	}
+}
+
+func dialContext(ctx context.Context, network string, address string) (net.Conn, error) {
+	resolver := dnscache.New(time.Minute)
+	rand.New(rand.NewSource(time.Now().Unix()))
+
+	separator := strings.LastIndex(address, ":")
+	if separator == -1 {
+		return nil, fmt.Errorf("invalid address: %s", address)
+	}
+	host := address[:separator]
+	port := address[separator:]
+	ips, err := resolver.Fetch(host)
+	if err != nil {
+		return nil, err
+	}
+	if len(ips) == 0 {
+		return nil, fmt.Errorf("no such host: %s", host)
+	}
+
+	var conn net.Conn
+	n := len(ips)
+	first := rand.Intn(n)
+	dialer := &net.Dialer{Timeout: time.Second * 10}
+	for i := 0; i < n; i++ {
+		ip := ips[(first+i)%n]
+		address = ip.String()
+		if port != "" {
+			address = net.JoinHostPort(address, port[1:])
+		}
+		conn, err = dialer.DialContext(ctx, network, address)
+		if err == nil {
+			return conn, nil
+		}
+	}
+	return nil, err
 }

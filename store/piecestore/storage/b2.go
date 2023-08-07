@@ -43,7 +43,7 @@ func (sc *SessionCache) newB2Session(cfg ObjectStorageConfig) (*session.Session,
 	endpoint, region, bucketName, err := parseB2BucketURL(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse b2 bucket url", "error", err)
-		return nil, "", err
+		return &session.Session{}, "", err
 	}
 
 	if sess, ok := sc.sessions[cfg]; ok {
@@ -62,7 +62,7 @@ func (sc *SessionCache) newB2Session(cfg ObjectStorageConfig) (*session.Session,
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to create b2 session: %s", err)
+		return &session.Session{}, "", fmt.Errorf("failed to create b2 session: %s", err)
 	}
 
 	sc.sessions[cfg] = sess
@@ -77,8 +77,7 @@ func parseB2BucketURL(bucketURL string) (endpoint, region, bucketName string, er
 	bucketURL = strings.Trim(bucketURL, "/")
 	uri, err := url.ParseRequestURI(bucketURL)
 	if err != nil {
-		err = fmt.Errorf("failed to parse b2 bucket url: %s", err)
-		return
+		return "", "", "", fmt.Errorf("failed to parse b2 bucket url: %s", err)
 	}
 
 	ssl := strings.ToLower(uri.Scheme) == "https"
@@ -100,5 +99,5 @@ func parseB2BucketURL(bucketURL string) (endpoint, region, bucketName string, er
 	}
 
 	region = parseRegion(endpoint)
-	return
+	return endpoint, region, bucketName, nil
 }

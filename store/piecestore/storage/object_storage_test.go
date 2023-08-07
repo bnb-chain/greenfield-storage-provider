@@ -75,6 +75,8 @@ func Test_file(t *testing.T) {
 	assert.Equal(t, f.isSymlink, isSymlink)
 	isDir := f.IsDir()
 	assert.Equal(t, f.isDir, isDir)
+	isSym := f.object.IsSymlink()
+	assert.Equal(t, false, isSym)
 }
 
 func Test_getSecretKeyFromEnv(t *testing.T) {

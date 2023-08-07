@@ -52,6 +52,7 @@ func (m *memoryStore) GetObject(ctx context.Context, key string, offset, limit i
 		offset = int64(len(d.data))
 	}
 	data := d.data[offset:]
+	log.Infow("uu", "limit", limit, "length", len(data))
 	if limit > 0 && limit < int64(len(data)) {
 		data = data[:limit]
 	}

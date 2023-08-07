@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"compress/flate"
 	"context"
 	"io"
 	"os"
@@ -10,27 +11,49 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const mockMemoryBucket = "memoryBucket"
+
 func setupMemoryTest(t *testing.T) *memoryStore {
-	return &memoryStore{name: mockBucket}
+	return &memoryStore{name: mockMemoryBucket}
 }
 
-func TestMemory_String(t *testing.T) {
+func TestMemoryStore_String(t *testing.T) {
 	store := setupMemoryTest(t)
 	result := store.String()
-	assert.Equal(t, "memory://mockBucket/", result)
+	assert.Equal(t, "memory://memoryBucket/", result)
 }
 
-func TestMemory_GetSuccess(t *testing.T) {
+func TestMemoryStore_GetObjectSuccess(t *testing.T) {
 	cases := []struct {
 		name         string
 		key          string
+		offset       int64
+		limit        int64
 		wantedResult string
 		wantedErr    error
 	}{
 		{
 			name:         "memory_get_success_test1",
 			key:          mockKey,
+			offset:       0,
+			limit:        0,
 			wantedResult: mockAccessKey,
+			wantedErr:    nil,
+		},
+		{
+			name:         "memory_get_success_test2",
+			key:          mockKey,
+			offset:       15,
+			limit:        5,
+			wantedResult: "",
+			wantedErr:    nil,
+		},
+		{
+			name:         "memory_get_success_test3",
+			key:          mockKey,
+			offset:       10,
+			limit:        1,
+			wantedResult: "K",
 			wantedErr:    nil,
 		},
 	}
@@ -40,18 +63,18 @@ func TestMemory_GetSuccess(t *testing.T) {
 			store.objects = map[string]*memoryObject{
 				mockKey: {data: []byte(mockAccessKey)},
 			}
-			data, err := store.GetObject(context.TODO(), tt.key, 0, 0)
+			data, err := store.GetObject(context.TODO(), tt.key, tt.offset, tt.limit)
 			assert.Equal(t, tt.wantedErr, err)
 			data1, err := io.ReadAll(data)
 			if err != nil {
-				t.Fatalf("Get io.ReadAll error: %s", err)
+				t.Fatalf("io ReadAll error: %s", err)
 			}
 			assert.Equal(t, tt.wantedResult, string(data1))
 		})
 	}
 }
 
-func TestMemory_GetError(t *testing.T) {
+func TestMemoryStore_GetObjectFailure(t *testing.T) {
 	cases := []struct {
 		name      string
 		key       string
@@ -81,24 +104,30 @@ func TestMemory_GetError(t *testing.T) {
 	}
 }
 
-func TestMemory_Put(t *testing.T) {
+func TestMemoryStore_PutObject(t *testing.T) {
 	cases := []struct {
 		name      string
 		key       string
-		data      string
+		reader    io.Reader
 		wantedErr error
 	}{
 		{
 			name:      "memory_put_test1",
 			key:       emptyString,
-			data:      mockEndpoint,
+			reader:    strings.NewReader(mockEndpoint),
 			wantedErr: ErrInvalidObjectKey,
 		},
 		{
 			name:      "memory_put_test2",
 			key:       mockAccessKey,
-			data:      mockEndpoint,
+			reader:    strings.NewReader(mockEndpoint),
 			wantedErr: nil,
+		},
+		{
+			name:      "memory_put_test3",
+			key:       mockAccessKey,
+			reader:    flate.NewReader(strings.NewReader("test")),
+			wantedErr: io.ErrUnexpectedEOF,
 		},
 	}
 	for _, tt := range cases {
@@ -107,13 +136,13 @@ func TestMemory_Put(t *testing.T) {
 			store.objects = map[string]*memoryObject{
 				mockAccessKey: {data: []byte(mockSecretKey)},
 			}
-			err := store.PutObject(context.TODO(), tt.key, strings.NewReader(tt.data))
+			err := store.PutObject(context.TODO(), tt.key, tt.reader)
 			assert.Equal(t, tt.wantedErr, err)
 		})
 	}
 }
 
-func TestMemory_Delete(t *testing.T) {
+func TestMemoryStore_DeleteObject(t *testing.T) {
 	cases := []struct {
 		name      string
 		key       string
@@ -142,7 +171,7 @@ func TestMemory_Delete(t *testing.T) {
 	}
 }
 
-func TestMemory_HeadSuccess(t *testing.T) {
+func TestMemoryStore_HeadObjectSuccess(t *testing.T) {
 	cases := []struct {
 		name      string
 		key       string
@@ -167,7 +196,7 @@ func TestMemory_HeadSuccess(t *testing.T) {
 	}
 }
 
-func TestMemory_HeadError(t *testing.T) {
+func TestMemoryStore_HeadObjectError(t *testing.T) {
 	cases := []struct {
 		name      string
 		key       string
@@ -194,15 +223,29 @@ func TestMemory_HeadError(t *testing.T) {
 	}
 }
 
-func TestMemory_ListSuccess(t *testing.T) {
+func TestMemoryStore_ListObjectsSuccess(t *testing.T) {
 	cases := []struct {
 		name      string
 		prefix    string
+		marker    string
+		delimiter string
+		limit     int64
 		wantedErr error
 	}{
 		{
 			name:      "memory_list_success_test1",
 			prefix:    mockAccessKey,
+			marker:    emptyString,
+			delimiter: emptyString,
+			limit:     1,
+			wantedErr: nil,
+		},
+		{
+			name:      "memory_list_success_test2",
+			prefix:    emptyString,
+			marker:    "a",
+			delimiter: emptyString,
+			limit:     1,
 			wantedErr: nil,
 		},
 	}
@@ -211,15 +254,16 @@ func TestMemory_ListSuccess(t *testing.T) {
 			store := setupMemoryTest(t)
 			store.objects = map[string]*memoryObject{
 				mockAccessKey: {data: []byte(mockSecretKey)},
+				"test":        {data: []byte("hello")},
 			}
-			objs, err := store.ListObjects(context.TODO(), tt.prefix, emptyString, emptyString, 1)
+			objs, err := store.ListObjects(context.TODO(), tt.prefix, tt.marker, tt.delimiter, tt.limit)
 			assert.Equal(t, tt.wantedErr, err)
 			assert.Equal(t, mockAccessKey, objs[0].Key())
 		})
 	}
 }
 
-func TestMemory_ListError(t *testing.T) {
+func TestMemoryStore_ListObjectsError(t *testing.T) {
 	cases := []struct {
 		name      string
 		delimiter string
@@ -241,7 +285,7 @@ func TestMemory_ListError(t *testing.T) {
 	}
 }
 
-func TestMemory_ListAll(t *testing.T) {
+func TestMemoryStore_ListAllObjects(t *testing.T) {
 	store := setupMemoryTest(t)
 	_, err := store.ListAllObjects(context.TODO(), emptyString, emptyString)
 	assert.Equal(t, ErrUnsupportedMethod, err)
