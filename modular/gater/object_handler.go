@@ -438,7 +438,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
 			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
 
-				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(commonhttp.Gnfd1Ecdsa+","):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
 				} else {
@@ -674,15 +674,16 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
+			spErrCode := gfsperrors.MakeGfSpError(err).GetInnerCode()
 			if isRequestFromBrowser {
 				reqCtx.SetHttpCode(http.StatusOK)
 				errorCodeForPage := "INTERNAL_ERROR" // default errorCode in built-in error page
-				switch err {
-				case downloader.ErrExceedBucketQuota:
+				switch spErrCode {
+				case downloader.ErrExceedBucketQuota.GetInnerCode():
 					errorCodeForPage = "NO_ENOUGH_QUOTA"
-				case ErrNoSuchObject:
+				case ErrNoSuchObject.GetInnerCode():
 					errorCodeForPage = "FILE_NOT_FOUND"
-				case ErrForbidden:
+				case ErrForbidden.GetInnerCode():
 					errorCodeForPage = "NO_PERMISSION"
 				}
 				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
