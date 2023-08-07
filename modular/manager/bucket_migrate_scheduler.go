@@ -27,7 +27,8 @@ import (
 )
 
 const (
-	bucketCacheSize = int(100)
+	bucketCacheSize   = int(100)
+	bucketCacheExpire = 30 * time.Minute
 )
 
 var _ vgmgr.GVGPickFilter = &PickDestGVGFilter{}
@@ -66,24 +67,27 @@ func (f *PickDestGVGFilter) CheckGVG(gvgMeta *vgmgr.GlobalVirtualGroupMeta) bool
 }
 
 // CheckGVGMetaConsistent verifies whether expectedSPGVGList completely matches with the migrateGVGUnitMeta loaded from the database.
-func CheckGVGMetaConsistent(expectedSPGVGList []*virtualgrouptypes.GlobalVirtualGroup, migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta) bool {
-	if len(expectedSPGVGList) == len(migrateGVGUnitMeta) {
+func CheckGVGMetaConsistent(chainMetaList []*virtualgrouptypes.GlobalVirtualGroup, dbMetaList []*spdb.MigrateGVGUnitMeta) bool {
+	if len(chainMetaList) == len(dbMetaList) {
 		chainGvgMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
-		existMaps := make(map[uint32]bool)
-		for _, gvg := range expectedSPGVGList {
+		dbGvgMaps := make(map[uint32]*spdb.MigrateGVGUnitMeta)
+		for _, gvg := range chainMetaList {
 			chainGvgMaps[gvg.GetId()] = gvg
 		}
+		for _, dbGVG := range dbMetaList {
+			dbGvgMaps[dbGVG.GlobalVirtualGroupID] = dbGVG
+		}
 
-		for _, migrateGVG := range migrateGVGUnitMeta {
-			srcGvg, ok := chainGvgMaps[migrateGVG.GlobalVirtualGroupID]
+		for _, chainGVG := range chainMetaList {
+			_, ok := dbGvgMaps[chainGVG.GetId()]
 			if !ok {
 				return false
 			}
-			existMaps[srcGvg.GetId()] = true
 		}
 
-		for _, exist := range existMaps {
-			if !exist {
+		for _, dbGVG := range dbMetaList {
+			_, ok := chainGvgMaps[dbGVG.GlobalVirtualGroupID]
+			if !ok {
 				return false
 			}
 		}
@@ -337,7 +341,7 @@ func (s *BucketMigrateScheduler) Init(m *ManageModular) error {
 	}
 	s.executePlanIDMap = make(map[uint64]*BucketMigrateExecutePlan)
 
-	s.bucketCache = NewBucketCache(bucketCacheSize, 30*time.Minute)
+	s.bucketCache = NewBucketCache(bucketCacheSize, bucketCacheExpire)
 	if err != nil {
 		return err
 	}
