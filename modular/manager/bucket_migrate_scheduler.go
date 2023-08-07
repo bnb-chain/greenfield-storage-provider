@@ -373,17 +373,16 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedS
 			log.Debugw("failed to get bucketinfo from bucket cache", "key", key)
 			s.bucketCache.Delete(key)
 			err = QueryBucketInfoFromChainFunc()
-			if err != nil {
-				return false, err
-			}
 		} else {
 			bucketInfo = &value
 		}
 	} else {
 		err = QueryBucketInfoFromChainFunc()
-		if err != nil {
-			return false, err
-		}
+
+	}
+
+	if err != nil || bucketInfo == nil {
+		return false, err
 	}
 
 	if bucketInfo.BucketStatus != expectedStatus {
@@ -802,12 +801,11 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 			return err
 		}
 		if plan != nil {
-			log.Debugw("bucket migrate scheduler load from db", "executePlan", plan, "bucketID", bucketID)
+			log.Debugw("bucket migrate scheduler load from db", "executePlan", plan, "bucket_id", bucketID)
 			if err = plan.Start(); err != nil {
 				log.Errorw("failed to start bucket migrate execute plan", "Events", bucketMigrateEvent.Events, "executePlan", plan, "error", err)
 				return err
 			}
-
 			s.executePlanIDMap[plan.bucketID] = plan
 		}
 	}
@@ -1041,9 +1039,9 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromDB(primarySPGVGL
 		return nil, err
 	}
 
-	chainGvgMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
+	chainGVGMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
 	for _, gvg := range primarySPGVGList {
-		chainGvgMaps[gvg.GetId()] = gvg
+		chainGVGMaps[gvg.GetId()] = gvg
 	}
 
 	// Using migrateGVGUnitMeta to construct PrimaryGVGIDMapMigrateUnits and execute them one by one.
@@ -1059,7 +1057,7 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromDB(primarySPGVGL
 			return nil, queryErr
 		}
 
-		srcGvg, ok := chainGvgMaps[migrateGVG.GlobalVirtualGroupID]
+		srcGvg, ok := chainGVGMaps[migrateGVG.GlobalVirtualGroupID]
 		if ok {
 			destGvg, err := checker.plan.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), migrateGVG.DestGlobalVirtualGroupID)
 			if err != nil {
