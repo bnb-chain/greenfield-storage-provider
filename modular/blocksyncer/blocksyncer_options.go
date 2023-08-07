@@ -30,6 +30,7 @@ import (
 	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	registrar "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
@@ -177,7 +178,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	}
 
 	// fetch block data
-	go b.quickFetchBlockData(lastDbBlockHeight + 1)
+	go b.quickFetchBlockData(ctx, lastDbBlockHeight+1)
 
 	go b.enqueueNewBlocks(ctx, exportQueue, lastDbBlockHeight+1)
 
@@ -187,6 +188,8 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
 func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQueue types.HeightQueue, currHeight uint64) {
+	ticker := time.NewTicker(20 * time.Millisecond)
+	defer ticker.Stop()
 	// Enqueue upcoming heights
 	for {
 		select {
@@ -195,7 +198,7 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 			// close channel
 			close(exportQueue)
 			return
-		default:
+		case <-ticker.C:
 			{
 				latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 				latestBlockHeight := latestBlockHeightAny.(int64)
@@ -206,17 +209,18 @@ func (b *BlockSyncerModular) enqueueNewBlocks(context context.Context, exportQue
 				}
 			}
 		}
-		time.Sleep(time.Second)
 	}
 }
 
 func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			log.Infof("Receive cancel signal, getLatestBlockHeight routine will stop")
 			return
-		default:
+		case <-ticker.C:
 			{
 				latestBlockHeight, err := b.parserCtx.Node.LatestHeight()
 				if err != nil {
@@ -225,52 +229,60 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 						"retry interval", config.GetAvgBlockTime())
 					continue
 				}
+				metrics.ChainLatestHeight.Set(float64(latestBlockHeight))
 				Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
-
-				time.Sleep(time.Second)
 			}
 		}
 	}
 }
 
-func (b *BlockSyncerModular) quickFetchBlockData(startHeight uint64) {
+func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeight uint64) {
 	count := uint64(b.config.Parser.Workers)
 	cycle := uint64(0)
 	startBlock := uint64(0)
 	endBlock := uint64(0)
 	flag := 0
 
-	for {
-		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
-		latestBlockHeight := latestBlockHeightAny.(int64)
-		if latestBlockHeight == int64(endBlock) {
-			continue
-		}
+	ticker := time.NewTicker(20 * time.Millisecond)
+	defer ticker.Stop()
 
-		if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
-			startBlock = count*cycle + startHeight
-			endBlock = count*(cycle+1) + startHeight - 1
-			processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
-			if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
-				log.Infof("processedHeight: %d", processedHeight)
-				time.Sleep(time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("Receive cancel signal, quickFetchBlockData routine will stop")
+			return
+		case <-ticker.C:
+			latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
+			latestBlockHeight := latestBlockHeightAny.(int64)
+			if latestBlockHeight == int64(endBlock) {
 				continue
 			}
-			cycle++
-		} else if flag != 0 {
-			startBlock = endBlock + 1
-			if startBlock > uint64(latestBlockHeight) {
-				startBlock = uint64(latestBlockHeight)
-			}
-			endBlock = uint64(latestBlockHeight)
-		} else {
-			flag = 1
-			startBlock = startHeight
-			endBlock = uint64(latestBlockHeight)
-		}
 
-		b.fetchData(startBlock, endBlock)
-		time.Sleep(time.Millisecond * time.Duration(300))
+			if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
+				startBlock = count*cycle + startHeight
+				endBlock = count*(cycle+1) + startHeight - 1
+				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
+				flag = 1
+				if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
+					log.Infof("processedHeight: %d", processedHeight)
+					time.Sleep(time.Second)
+					continue
+				}
+				cycle++
+			} else if flag != 0 {
+				startBlock = endBlock + 1
+				if startBlock > uint64(latestBlockHeight) {
+					startBlock = uint64(latestBlockHeight)
+				}
+				endBlock = uint64(latestBlockHeight)
+			} else {
+				flag = 1
+				startBlock = startHeight
+				endBlock = uint64(latestBlockHeight)
+			}
+
+			b.fetchData(startBlock, endBlock)
+		}
 	}
 }
 
@@ -286,17 +298,20 @@ func (b *BlockSyncerModular) fetchData(start, end uint64) {
 			defer wg.Done()
 
 			for {
+				rpcStartTime := time.Now()
 				block, err := b.parserCtx.Node.Block(int64(height))
 				if err != nil {
 					log.Warnf("failed to get block from node: %s", err)
 					continue
 				}
-
+				metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
+				rpcStartTime = time.Now()
 				events, err := b.parserCtx.Node.BlockResults(int64(height))
 				if err != nil {
 					log.Warnf("failed to get block results from node: %s", err)
 					continue
 				}
+				metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
 				txs := make(map[common.Hash][]cometbfttypes.Event)
 				for idx := 0; idx < len(events.TxsResults); idx++ {
 					k := block.Block.Data.Txs[idx]
