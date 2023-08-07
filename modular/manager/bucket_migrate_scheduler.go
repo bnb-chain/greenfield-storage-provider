@@ -69,24 +69,24 @@ func (f *PickDestGVGFilter) CheckGVG(gvgMeta *vgmgr.GlobalVirtualGroupMeta) bool
 // CheckGVGMetaConsistent verifies whether expectedSPGVGList completely matches with the migrateGVGUnitMeta loaded from the database.
 func CheckGVGMetaConsistent(chainMetaList []*virtualgrouptypes.GlobalVirtualGroup, dbMetaList []*spdb.MigrateGVGUnitMeta) bool {
 	if len(chainMetaList) == len(dbMetaList) {
-		chainGvgMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
-		dbGvgMaps := make(map[uint32]*spdb.MigrateGVGUnitMeta)
+		chainGVGMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
+		dbGVGMaps := make(map[uint32]*spdb.MigrateGVGUnitMeta)
 		for _, gvg := range chainMetaList {
-			chainGvgMaps[gvg.GetId()] = gvg
+			chainGVGMaps[gvg.GetId()] = gvg
 		}
 		for _, dbGVG := range dbMetaList {
-			dbGvgMaps[dbGVG.GlobalVirtualGroupID] = dbGVG
+			dbGVGMaps[dbGVG.GlobalVirtualGroupID] = dbGVG
 		}
 
 		for _, chainGVG := range chainMetaList {
-			_, ok := dbGvgMaps[chainGVG.GetId()]
+			_, ok := dbGVGMaps[chainGVG.GetId()]
 			if !ok {
 				return false
 			}
 		}
 
 		for _, dbGVG := range dbMetaList {
-			_, ok := chainGvgMaps[dbGVG.GlobalVirtualGroupID]
+			_, ok := chainGVGMaps[dbGVG.GlobalVirtualGroupID]
 			if !ok {
 				return false
 			}
@@ -294,8 +294,7 @@ func (plan *BucketMigrateExecutePlan) stopSPSchedule() {
 }
 
 func (plan *BucketMigrateExecutePlan) Start() error {
-
-	log.Debugf("BucketMigrateExecutePlan Start success")
+	log.Debugf("succeed to start bucket migrate plan", "plan", plan)
 	go plan.startSPSchedule()
 	return nil
 }
@@ -732,7 +731,7 @@ func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketM
 	}
 	res.BucketMigrate = plans
 	res.SelfSpId = s.selfSP.GetId()
-	log.Debugw("BucketMigrateScheduler listExecutePlan", "plans res", res)
+	log.Debugw("succeed to query bucket migrate", "response", res)
 	return &res, nil
 }
 
