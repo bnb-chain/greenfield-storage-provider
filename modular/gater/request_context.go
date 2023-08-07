@@ -152,20 +152,6 @@ func signaturePrefix(version, algorithm string) string {
 }
 
 func (r *RequestContext) VerifySignature() (string, error) {
-	// check expiry header
-	requestExpiredTimestamp := r.request.Header.Get(commonhttp.HTTPHeaderExpiryTimestamp)
-	if requestExpiredTimestamp == "" {
-		requestExpiredTimestamp = r.request.URL.Query().Get(commonhttp.HTTPHeaderExpiryTimestamp)
-	}
-	expiryDate, parseErr := time.Parse(ExpiryDateFormat, requestExpiredTimestamp)
-	if parseErr != nil {
-		return "", ErrInvalidExpiryDateHeader
-	}
-	expiryAge := int32(time.Until(expiryDate).Seconds())
-	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
-		return "", ErrInvalidExpiryDateHeader
-	}
-
 	// check sig
 	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
 	v1SignaturePrefix := signaturePrefix(SignTypeV1, SignAlgorithm)
@@ -185,11 +171,97 @@ func (r *RequestContext) VerifySignature() (string, error) {
 		}
 		return accAddress.String(), nil
 	}
+
+	// todo clyde.m to remove the above code and their reference once all SPs have deployed the latest version which includes GNFD1 auth
+
+	// check expiry header
+	requestExpiredTimestamp := r.request.Header.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+	if requestExpiredTimestamp == "" {
+		requestExpiredTimestamp = r.request.URL.Query().Get(commonhttp.HTTPHeaderExpiryTimestamp)
+	}
+	expiryDate, parseErr := time.Parse(ExpiryDateFormat, requestExpiredTimestamp)
+	if parseErr != nil {
+		return "", ErrInvalidExpiryDateHeader
+	}
+	expiryAge := int32(time.Until(expiryDate).Seconds())
+	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
+		return "", ErrInvalidExpiryDateHeader
+	}
+
+	// GNFD1-ECDSA
+	if strings.HasPrefix(requestSignature, commonhttp.Gnfd1Ecdsa) {
+		accAddress, err := r.verifySignatureForGNFD1Ecdsa(requestSignature[len(v1SignaturePrefix):])
+		if err != nil {
+			return "", err
+		}
+		return accAddress.String(), nil
+	}
+
+	// GNFD1-EDDSA
+	if strings.HasPrefix(requestSignature, commonhttp.Gnfd1Eddsa) {
+		accAddress, err := r.verifySignatureForGNFD1Eddsa(requestSignature[len(v1SignaturePrefix):])
+		if err != nil {
+			return "", err
+		}
+		return accAddress.String(), nil
+	}
+
 	return "", ErrUnsupportedSignType
+
 }
 
+// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
 // verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
 func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddress, error) {
+	var (
+		signedMsg string
+		signature []byte
+		err       error
+	)
+	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) < 2 {
+		return nil, ErrAuthorizationHeaderFormat
+	}
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return nil, ErrAuthorizationHeaderFormat
+		}
+		switch pair[0] {
+		case SignedMsg:
+			signedMsg = pair[1]
+		case Signature:
+			if signature, err = hex.DecodeString(pair[1]); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, ErrAuthorizationHeaderFormat
+		}
+	}
+
+	// check request integrity
+	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
+	if hex.EncodeToString(realMsgToSign) != signedMsg {
+		log.CtxErrorw(r.ctx, "failed to check signed msg")
+		return nil, ErrRequestConsistent
+	}
+
+	// check signature consistent
+	addr, pk, err := RecoverAddr(realMsgToSign, signature)
+	if err != nil {
+		log.CtxErrorw(r.ctx, "failed to recover address")
+		return nil, ErrRequestConsistent
+	}
+	if !secp256k1.VerifySignature(pk.Bytes(), realMsgToSign, signature[:len(signature)-1]) {
+		log.CtxErrorw(r.ctx, "failed to verify signature")
+		return nil, ErrRequestConsistent
+	}
+	return addr, nil
+}
+
+// verifySignatureForGNFD1Ecdsa used to verify request type GNFD1_ECDSA, return (address, nil) if check succeed
+func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signature []byte
 		err       error
@@ -212,7 +284,7 @@ func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddr
 	}
 
 	// check request integrity
-	realMsgToSign := commonhttp.GetMsgToSign(r.request)
+	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
 
 	// check signature consistent
 	addr, pk, err := RecoverAddr(realMsgToSign, signature)
@@ -260,22 +332,22 @@ func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature 
 	return addr, nil
 }
 
+// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
 // verifyOffChainSignature used to verify off-chain-auth signature, return (address, nil) if check succeed
 func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.AccAddress, error) {
 	var (
-		err error
+		signedMsg *string
+		err       error
 	)
-	_, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
 	if err != nil {
 		return nil, err
 	}
 
-	// check request integrity
-	realMsgToSign := commonhttp.GetMsgToSign(r.request)
-
 	account := r.request.Header.Get(GnfdUserAddressHeader)
 	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 	offChainSig := *sigString
+	realMsgToSign := *signedMsg
 
 	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyOffChainSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
@@ -290,8 +362,38 @@ func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.A
 	}
 }
 
+// verifySignatureForGNFD1Eddsa used to verify off-chain-auth signature, return (address, nil) if check succeed
+func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (sdk.AccAddress, error) {
+	var (
+		err error
+	)
+	_, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	// check request integrity
+	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
+
+	account := r.request.Header.Get(GnfdUserAddressHeader)
+	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+	offChainSig := *sigString
+
+	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
+	if err != nil {
+		log.Errorf("failed to verify signature for GNFD1-Eddsa", "error", err)
+		return nil, err
+	}
+	if verifyOffChainSignatureResp {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
+		return userAddress, nil
+	} else {
+		return nil, err
+	}
+}
+
 // verifyOffChainSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed.  The auth information will be parsed from URL.
-func (r *RequestContext) verifyOffChainSignatureFromPreSignedURL(authenticationStr string, account string, domain string) (sdk.AccAddress, error) {
+func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticationStr string, account string, domain string) (sdk.AccAddress, error) {
 	var (
 		err error
 	)
@@ -301,11 +403,11 @@ func (r *RequestContext) verifyOffChainSignatureFromPreSignedURL(authenticationS
 	}
 
 	// check request integrity
-	realMsgToSign := commonhttp.GetMsgToSignForPreSignedURL(r.request)
+	realMsgToSign := commonhttp.GetMsgToSignInGNFD1AuthForPreSignedURL(r.request)
 
 	offChainSig := *sigString
 
-	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyOffChainSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
+	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
 		log.Errorf("failed to verify off chain signature", "error", err)
 		return nil, err

@@ -437,7 +437,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
 			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
 
-				account, preSignedURLErr := reqCtx.verifyOffChainSignatureFromPreSignedURL(gnfdAuthorizationParam[len(signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
 				} else {

@@ -157,7 +157,11 @@ func (*NullModular) UpdateUserPublicKey(ctx context.Context, account string, dom
 	return false, ErrNilModular
 }
 
-func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error) {
+func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
+	return false, ErrNilModular
+}
+
+func (*NullModular) VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error) {
 	return false, ErrNilModular
 }
 

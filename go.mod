@@ -8,7 +8,7 @@ require (
 	github.com/aliyun/credentials-go v1.3.0
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.2.3-alpha.7
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20230724122553-ecdf648b1937
+	github.com/bnb-chain/greenfield-common/go v0.0.0-20230807072950-7d065b289ab9
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.1
 	github.com/consensys/gnark-crypto v0.7.0
