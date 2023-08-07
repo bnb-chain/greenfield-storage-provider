@@ -10,7 +10,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gorilla/mux"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -437,20 +436,20 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
 			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
-    
+
 				account, preSignedURLErr := reqCtx.verifyOffChainSignatureFromPreSignedURL(gnfdAuthorizationParam[len(signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
 				} else {
 					reqCtx.account = account.String()
 					reqCtxErr = nil
-          // default set content-disposition to download, if specified in query param as view, then set to view
-          w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
-          offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
-          isView, _ := strconv.ParseBool(offChainAuthViewParam)
-          if isView {
-            w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
-          }
+					// default set content-disposition to download, if specified in query param as view, then set to view
+					w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
+					offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
+					isView, _ := strconv.ParseBool(offChainAuthViewParam)
+					if isView {
+						w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
+					}
 				}
 			}
 		}

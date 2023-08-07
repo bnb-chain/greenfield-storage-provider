@@ -17,7 +17,7 @@ type AuthenticatorAPI interface {
 	VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error)
 	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.CallOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error)
-	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string, opts ...grpc.CallOption) (bool, error)
+	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error)
 }
 
 func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {

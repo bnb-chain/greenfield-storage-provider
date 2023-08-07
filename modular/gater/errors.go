@@ -33,7 +33,7 @@ var (
 	ErrInvalidRegNonceHeader     = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50019, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
 	ErrSignedMsgNotMatchHeaders  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50020, "The signed message in "+GnfdAuthorizationHeader+" does not match the content in headers.")
 	ErrSignedMsgNotMatchSPAddr   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50021, "The SP addr in the signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
-	ErrSignedMsgNotMatchSPNonce  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50036, "The SP Nonce in the signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
+	ErrSignedMsgNotMatchSPNonce  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50040, "The SP Nonce in the signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
 	ErrSignedMsgNotMatchDomain   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50037, "The domain in the signed message in "+GnfdAuthorizationHeader+" does not match this website.")
 	ErrSignedMsgNotMatchExpiry   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50038, "The expiry time in signed message in "+GnfdAuthorizationHeader+" does not match the expiry time in the header "+GnfdOffChainAuthAppRegExpiryDateHeader+".")
 	ErrSignedMsgNotMatchPubKey   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50039, "The public key in signed message in "+GnfdAuthorizationHeader+" does not match the expiry time in the header "+GnfdOffChainAuthAppRegPublicKeyHeader+".")
