@@ -189,8 +189,9 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	}
 
 	// GNFD1-ECDSA
-	if strings.HasPrefix(requestSignature, commonhttp.Gnfd1Ecdsa) {
-		accAddress, err := r.verifySignatureForGNFD1Ecdsa(requestSignature[len(v1SignaturePrefix):])
+	gnfd1EcdsaSignaturePrefix := commonhttp.Gnfd1Ecdsa + ","
+	if strings.HasPrefix(requestSignature, gnfd1EcdsaSignaturePrefix) {
+		accAddress, err := r.verifySignatureForGNFD1Ecdsa(requestSignature[len(gnfd1EcdsaSignaturePrefix):])
 		if err != nil {
 			return "", err
 		}
@@ -198,8 +199,9 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	}
 
 	// GNFD1-EDDSA
-	if strings.HasPrefix(requestSignature, commonhttp.Gnfd1Eddsa) {
-		accAddress, err := r.verifySignatureForGNFD1Eddsa(requestSignature[len(v1SignaturePrefix):])
+	gnfd1EddsaSignaturePrefix := commonhttp.Gnfd1Eddsa + ","
+	if strings.HasPrefix(requestSignature, gnfd1EddsaSignaturePrefix) {
+		accAddress, err := r.verifySignatureForGNFD1Eddsa(requestSignature[len(gnfd1EddsaSignaturePrefix):])
 		if err != nil {
 			return "", err
 		}
@@ -268,9 +270,7 @@ func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (
 	)
 	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
 	signatureItems := strings.Split(requestSignature, ",")
-	if len(signatureItems) < 2 {
-		return nil, ErrAuthorizationHeaderFormat
-	}
+
 	for _, item := range signatureItems {
 		pair := strings.Split(item, "=")
 		switch pair[0] {

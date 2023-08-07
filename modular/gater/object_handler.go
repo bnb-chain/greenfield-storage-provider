@@ -406,6 +406,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
+	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
+	reqCtx, reqCtxErr = NewRequestContext(r, g)
+
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
@@ -424,8 +427,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
 
 	if !authenticated {
-		// V1 or OffChainAuth authentication, by checking the headers.
-		reqCtx, reqCtxErr = NewRequestContext(r, g)
 		// if not passed, then check authentication parameters
 		if reqCtxErr != nil {
 			queryParams := r.URL.Query()
