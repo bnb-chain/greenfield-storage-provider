@@ -646,6 +646,10 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 		// 2) not match, generate migrate gvg again
 		if !CheckGVGMetaConsistent(primarySPGVGList, migrateGVGUnitMeta) {
 			// delete db & gerenate again
+			err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
+			if err != nil {
+				return nil, err
+			}
 			migrateBucketUnits, err = conflictChecker.GenerateMigrateBucketUnits(false)
 		} else {
 			migrateBucketUnits, err = conflictChecker.GenerateMigrateBucketUnits(true)
