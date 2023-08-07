@@ -612,7 +612,6 @@ func (s *BucketMigrateScheduler) replaceExitingSP(secondarySPIDs []uint32) ([]ui
 	}
 
 	return replacedSPIDs, nil
-
 }
 
 func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnitFromDB(primarySPGVGList []*virtualgrouptypes.GlobalVirtualGroup, bucketID uint64, executePlan *BucketMigrateExecutePlan, event *storagetypes.EventMigrationBucket) (*BucketMigrateExecutePlan, error) {
