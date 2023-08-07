@@ -815,7 +815,6 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	}
 
 	log.Debugw("bucket migrate scheduler load from db success", "bucketIDs", migratingBucketIDs)
-
 	return err
 }
 
