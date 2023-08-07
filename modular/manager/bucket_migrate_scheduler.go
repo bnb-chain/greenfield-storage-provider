@@ -367,13 +367,13 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedS
 	// check the chain's bucket is migrating
 	key := cacheKey(bucketID)
 	var bucketInfo *storagetypes.BucketInfo
-	QueryBucketInfoFromChainFunc := func() (bool, error) {
+	QueryBucketInfoFromChainFunc := func() error {
 		bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketID)
 		if err != nil {
-			return false, err
+			return err
 		}
 		s.bucketCache.Set(key, bucketInfo)
-		return true, nil
+		return nil
 	}
 
 	elem, has := s.bucketCache.Get(key)
@@ -382,11 +382,18 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedS
 		if !ok {
 			log.Debugw("failed to get bucketinfo from bucket cache", "key", key)
 			s.bucketCache.Delete(key)
-			QueryBucketInfoFromChainFunc()
+			err = QueryBucketInfoFromChainFunc()
+			if err != nil {
+				return false, err
+			}
+		} else {
+			bucketInfo = &value
 		}
-		bucketInfo = &value
 	} else {
-		QueryBucketInfoFromChainFunc()
+		err = QueryBucketInfoFromChainFunc()
+		if err != nil {
+			return false, err
+		}
 	}
 
 	if bucketInfo.BucketStatus != expectedStatus {
