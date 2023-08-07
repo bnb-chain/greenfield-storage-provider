@@ -65,8 +65,8 @@ func (f *PickDestGVGFilter) CheckGVG(gvgMeta *vgmgr.GlobalVirtualGroupMeta) bool
 	return false
 }
 
-// GVGMetaCheck verifies whether expectedSPGVGList completely matches with the migrateGVGUnitMeta loaded from the database.
-func GVGMetaCheck(expectedSPGVGList []*virtualgrouptypes.GlobalVirtualGroup, migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta) bool {
+// CheckGVGMetaConsistent verifies whether expectedSPGVGList completely matches with the migrateGVGUnitMeta loaded from the database.
+func CheckGVGMetaConsistent(expectedSPGVGList []*virtualgrouptypes.GlobalVirtualGroup, migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta) bool {
 	if len(expectedSPGVGList) == len(migrateGVGUnitMeta) {
 		chainGvgMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
 		existMaps := make(map[uint32]bool)
@@ -635,7 +635,7 @@ func (s *BucketMigrateScheduler) generateBucketMigrateGVGExecuteUnitFromDB(prima
 	}
 
 	// 2) not match, generate migrate gvg again
-	if !GVGMetaCheck(primarySPGVGList, migrateGVGUnitMeta) {
+	if !CheckGVGMetaConsistent(primarySPGVGList, migrateGVGUnitMeta) {
 		srcSP, destSP, err := s.getSrcSPAndDestSPFromMigrateEvent(event)
 		if err != nil {
 			return nil, err
