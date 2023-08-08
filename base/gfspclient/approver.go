@@ -13,9 +13,9 @@ import (
 //
 //go:generate mockgen -source=./approver.go -destination=./approver_mock.go -package=gfspclient
 type ApproverAPI interface {
-	AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (bool, coretask.ApprovalCreateBucketTask, error)
-	AskMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) (bool, coretask.ApprovalMigrateBucketTask, error)
-	AskCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) (bool, coretask.ApprovalCreateObjectTask, error)
+	AskCreateBucketApproval(ctx context.Context, t coretask.ApprovalCreateBucketTask) (bool, coretask.ApprovalCreateBucketTask, error)
+	AskMigrateBucketApproval(ctx context.Context, t coretask.ApprovalMigrateBucketTask) (bool, coretask.ApprovalMigrateBucketTask, error)
+	AskCreateObjectApproval(ctx context.Context, t coretask.ApprovalCreateObjectTask) (bool, coretask.ApprovalCreateObjectTask, error)
 }
 
 func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (

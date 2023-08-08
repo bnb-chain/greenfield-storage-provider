@@ -133,10 +133,10 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vg
 		if !vgfFilter.Check(vgfID) {
 			continue
 		}
-		picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 		if !gvgFilter.CheckFamily(vgfID) {
 			continue
 		}
+		picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 		for _, gvg := range vgf.GVGMap {
 			log.Debugw("prepare to add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			if gvgFilter.CheckGVG(gvg) {
