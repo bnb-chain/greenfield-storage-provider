@@ -429,80 +429,6 @@ func (m *UpdateUserPublicKeyResponse) GetResult() bool {
 	return false
 }
 
-// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
-// VerifyOffChainSignatureRequest is request type for the VerifyOffChainSignature RPC method.
-type VerifyOffChainSignatureRequest struct {
-	// account_id is the account address of user
-	AccountId string `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	// domain is the DApp domain for which the public key is updated
-	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
-	// off_chain_sig is the off chain signature signed by user's eddsa seed private key
-	OffChainSig string `protobuf:"bytes,3,opt,name=off_chain_sig,json=offChainSig,proto3" json:"off_chain_sig,omitempty"`
-	// real_msg_to_sign is the msg that the off_chain_sig is signed for
-	RealMsgToSign string `protobuf:"bytes,4,opt,name=real_msg_to_sign,json=realMsgToSign,proto3" json:"real_msg_to_sign,omitempty"`
-}
-
-func (m *VerifyOffChainSignatureRequest) Reset()         { *m = VerifyOffChainSignatureRequest{} }
-func (m *VerifyOffChainSignatureRequest) String() string { return proto.CompactTextString(m) }
-func (*VerifyOffChainSignatureRequest) ProtoMessage()    {}
-func (*VerifyOffChainSignatureRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{6}
-}
-func (m *VerifyOffChainSignatureRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *VerifyOffChainSignatureRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_VerifyOffChainSignatureRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *VerifyOffChainSignatureRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VerifyOffChainSignatureRequest.Merge(m, src)
-}
-func (m *VerifyOffChainSignatureRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *VerifyOffChainSignatureRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_VerifyOffChainSignatureRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_VerifyOffChainSignatureRequest proto.InternalMessageInfo
-
-func (m *VerifyOffChainSignatureRequest) GetAccountId() string {
-	if m != nil {
-		return m.AccountId
-	}
-	return ""
-}
-
-func (m *VerifyOffChainSignatureRequest) GetDomain() string {
-	if m != nil {
-		return m.Domain
-	}
-	return ""
-}
-
-func (m *VerifyOffChainSignatureRequest) GetOffChainSig() string {
-	if m != nil {
-		return m.OffChainSig
-	}
-	return ""
-}
-
-func (m *VerifyOffChainSignatureRequest) GetRealMsgToSign() string {
-	if m != nil {
-		return m.RealMsgToSign
-	}
-	return ""
-}
-
 // VerifyGNFD1EddsaSignatureRequest is request type for the VerifyGNFD1EddsaSignature RPC method.
 type VerifyGNFD1EddsaSignatureRequest struct {
 	// account_id is the account address of user
@@ -519,7 +445,7 @@ func (m *VerifyGNFD1EddsaSignatureRequest) Reset()         { *m = VerifyGNFD1Edd
 func (m *VerifyGNFD1EddsaSignatureRequest) String() string { return proto.CompactTextString(m) }
 func (*VerifyGNFD1EddsaSignatureRequest) ProtoMessage()    {}
 func (*VerifyGNFD1EddsaSignatureRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{7}
+	return fileDescriptor_30ebf94e0d260942, []int{6}
 }
 func (m *VerifyGNFD1EddsaSignatureRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -576,61 +502,6 @@ func (m *VerifyGNFD1EddsaSignatureRequest) GetRealMsgToSign() []byte {
 	return nil
 }
 
-// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
-// VerifyOffChainSignatureResponse is response type for the VerifyOffChainSignature RPC method.
-type VerifyOffChainSignatureResponse struct {
-	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
-	// result defines the result of if the OffChainSignature is verified
-	Result bool `protobuf:"varint,2,opt,name=result,proto3" json:"result,omitempty"`
-}
-
-func (m *VerifyOffChainSignatureResponse) Reset()         { *m = VerifyOffChainSignatureResponse{} }
-func (m *VerifyOffChainSignatureResponse) String() string { return proto.CompactTextString(m) }
-func (*VerifyOffChainSignatureResponse) ProtoMessage()    {}
-func (*VerifyOffChainSignatureResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{8}
-}
-func (m *VerifyOffChainSignatureResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *VerifyOffChainSignatureResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_VerifyOffChainSignatureResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *VerifyOffChainSignatureResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VerifyOffChainSignatureResponse.Merge(m, src)
-}
-func (m *VerifyOffChainSignatureResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *VerifyOffChainSignatureResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_VerifyOffChainSignatureResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_VerifyOffChainSignatureResponse proto.InternalMessageInfo
-
-func (m *VerifyOffChainSignatureResponse) GetErr() *gfsperrors.GfSpError {
-	if m != nil {
-		return m.Err
-	}
-	return nil
-}
-
-func (m *VerifyOffChainSignatureResponse) GetResult() bool {
-	if m != nil {
-		return m.Result
-	}
-	return false
-}
-
 // VerifyGNFD1EddsaSignatureResponse is response type for the VerifyOffChainSignature RPC method.
 type VerifyGNFD1EddsaSignatureResponse struct {
 	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
@@ -642,7 +513,7 @@ func (m *VerifyGNFD1EddsaSignatureResponse) Reset()         { *m = VerifyGNFD1Ed
 func (m *VerifyGNFD1EddsaSignatureResponse) String() string { return proto.CompactTextString(m) }
 func (*VerifyGNFD1EddsaSignatureResponse) ProtoMessage()    {}
 func (*VerifyGNFD1EddsaSignatureResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{9}
+	return fileDescriptor_30ebf94e0d260942, []int{7}
 }
 func (m *VerifyGNFD1EddsaSignatureResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -692,9 +563,7 @@ func init() {
 	proto.RegisterType((*GetAuthNonceResponse)(nil), "base.types.gfspserver.GetAuthNonceResponse")
 	proto.RegisterType((*UpdateUserPublicKeyRequest)(nil), "base.types.gfspserver.UpdateUserPublicKeyRequest")
 	proto.RegisterType((*UpdateUserPublicKeyResponse)(nil), "base.types.gfspserver.UpdateUserPublicKeyResponse")
-	proto.RegisterType((*VerifyOffChainSignatureRequest)(nil), "base.types.gfspserver.VerifyOffChainSignatureRequest")
 	proto.RegisterType((*VerifyGNFD1EddsaSignatureRequest)(nil), "base.types.gfspserver.VerifyGNFD1EddsaSignatureRequest")
-	proto.RegisterType((*VerifyOffChainSignatureResponse)(nil), "base.types.gfspserver.VerifyOffChainSignatureResponse")
 	proto.RegisterType((*VerifyGNFD1EddsaSignatureResponse)(nil), "base.types.gfspserver.VerifyGNFD1EddsaSignatureResponse")
 }
 
@@ -703,55 +572,53 @@ func init() {
 }
 
 var fileDescriptor_30ebf94e0d260942 = []byte{
-	// 767 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0x4d, 0x6f, 0xf3, 0x44,
-	0x10, 0x8e, 0xc9, 0x9b, 0xd0, 0x4c, 0x12, 0x51, 0x6d, 0x4b, 0x49, 0x5d, 0x91, 0xa6, 0x46, 0x82,
-	0xf2, 0x51, 0x87, 0x06, 0xf1, 0x71, 0x2d, 0xf4, 0x43, 0x08, 0x28, 0xc8, 0x6d, 0x39, 0x70, 0x31,
-	0xfe, 0x18, 0xbb, 0xdb, 0x26, 0x5e, 0xb3, 0xbb, 0x2e, 0xcd, 0x05, 0x89, 0x2b, 0xa7, 0xfe, 0x01,
-	0x6e, 0x88, 0x03, 0xbf, 0x84, 0x63, 0x6f, 0x70, 0x41, 0x42, 0xed, 0x1f, 0x41, 0x6b, 0x3b, 0x69,
-	0x9b, 0xc6, 0x15, 0x51, 0x40, 0x7a, 0x4f, 0xed, 0xce, 0x3c, 0xf3, 0xcc, 0x33, 0xb3, 0xb3, 0x13,
-	0xc3, 0x9b, 0xae, 0x23, 0xb0, 0x2b, 0x87, 0x31, 0x8a, 0x6e, 0x18, 0x88, 0x58, 0x20, 0xbf, 0x40,
-	0xde, 0x75, 0x12, 0x79, 0x8a, 0x91, 0xa4, 0x9e, 0x23, 0x19, 0x37, 0x63, 0xce, 0x24, 0x23, 0x2f,
-	0x2b, 0xa8, 0x99, 0x42, 0xcd, 0x3b, 0xa8, 0xbe, 0x31, 0xc1, 0x80, 0x9c, 0x33, 0x2e, 0xba, 0xe9,
-	0x9f, 0x2c, 0xd2, 0xf8, 0x59, 0x83, 0xd5, 0x83, 0xe0, 0x28, 0xde, 0xb9, 0x63, 0xa5, 0x2c, 0xb2,
-	0xf0, 0xbb, 0x04, 0x85, 0x24, 0x6b, 0x50, 0x53, 0xe9, 0x6c, 0x45, 0xd1, 0xd2, 0x3a, 0xda, 0x66,
-	0xc5, 0x5a, 0x50, 0x86, 0xe3, 0x61, 0x8c, 0x64, 0x03, 0x1a, 0x89, 0x40, 0x6e, 0x3b, 0x9e, 0xc7,
-	0x92, 0x48, 0xb6, 0x5e, 0xe8, 0x68, 0x9b, 0x35, 0xab, 0xae, 0x6c, 0x3b, 0x99, 0x89, 0xac, 0x43,
-	0xdd, 0x4d, 0xbc, 0x73, 0x94, 0x76, 0xe4, 0x0c, 0xb0, 0x55, 0x4e, 0x11, 0x90, 0x99, 0x0e, 0x9d,
-	0x01, 0x2a, 0x00, 0x73, 0xcf, 0xd0, 0xcb, 0x01, 0xcf, 0x32, 0x40, 0x66, 0x52, 0x00, 0xe3, 0x0c,
-	0xf4, 0x69, 0xf2, 0x44, 0xcc, 0x22, 0x81, 0xa4, 0x07, 0x65, 0xe4, 0x3c, 0x55, 0x56, 0xef, 0x75,
-	0xcc, 0x89, 0x2e, 0x64, 0xe5, 0x9a, 0x2a, 0x7e, 0x4f, 0xfd, 0x6b, 0x29, 0x30, 0x69, 0xc1, 0x8b,
-	0x4e, 0xbf, 0xcf, 0xbe, 0x47, 0x3f, 0x55, 0xbc, 0x60, 0x8d, 0x8e, 0xc6, 0xe7, 0xb0, 0x74, 0x80,
-	0x52, 0xa5, 0x3a, 0x64, 0x91, 0x87, 0xa3, 0x26, 0xbc, 0x0a, 0x90, 0x97, 0x68, 0x53, 0x3f, 0xcd,
-	0x55, 0xb3, 0x6a, 0xb9, 0xe5, 0x53, 0x9f, 0xac, 0x40, 0xd5, 0x67, 0x03, 0x87, 0x46, 0x79, 0x03,
-	0xf2, 0x93, 0xf1, 0x97, 0x06, 0xcb, 0x0f, 0xe9, 0xe6, 0x10, 0xfd, 0x1a, 0x34, 0xbd, 0x84, 0x73,
-	0x8c, 0xa4, 0x1d, 0x29, 0xb2, 0x34, 0x57, 0xc5, 0x6a, 0xe4, 0xc6, 0x34, 0x81, 0x12, 0x1a, 0xe1,
-	0xe5, 0x08, 0x51, 0x4e, 0x11, 0x35, 0x65, 0xc9, 0xdc, 0xef, 0x00, 0x19, 0x71, 0xc4, 0x89, 0xdb,
-	0xa7, 0x9e, 0x7d, 0x8e, 0xc3, 0xbc, 0xe5, 0x8b, 0xb9, 0xe7, 0xab, 0xd4, 0xf1, 0x19, 0x0e, 0xd5,
-	0xcd, 0xe0, 0x65, 0x4c, 0xf9, 0xd0, 0xf6, 0x1d, 0x89, 0xad, 0x4a, 0x47, 0xdb, 0x2c, 0x5b, 0x90,
-	0x99, 0x76, 0x1d, 0x89, 0xc6, 0x1f, 0x1a, 0xe8, 0x27, 0xb1, 0x72, 0x9e, 0x08, 0xe4, 0xe3, 0xc0,
-	0xf9, 0xba, 0xf6, 0xb8, 0xd0, 0xf2, 0x94, 0x42, 0x97, 0xa1, 0x92, 0x39, 0x9f, 0xa5, 0xce, 0xec,
-	0x40, 0x5e, 0x87, 0x97, 0xd2, 0x79, 0xbc, 0x57, 0x5c, 0x25, 0xe5, 0x6e, 0x26, 0xf7, 0x05, 0x4e,
-	0x56, 0x56, 0x7d, 0x54, 0x19, 0x85, 0xb5, 0xa9, 0x85, 0xcd, 0x71, 0x7f, 0x2b, 0x50, 0xe5, 0x28,
-	0x92, 0xbe, 0xcc, 0x67, 0x2e, 0x3f, 0x19, 0xbf, 0x68, 0xd0, 0xfe, 0x1a, 0x39, 0x0d, 0x86, 0x5f,
-	0x06, 0xc1, 0x27, 0xa7, 0x0e, 0x8d, 0x8e, 0x68, 0x18, 0x39, 0x32, 0xe1, 0x73, 0x8e, 0x1f, 0x31,
-	0xa0, 0xc9, 0x82, 0xc0, 0xf6, 0x14, 0xa7, 0x2d, 0x68, 0x98, 0x3f, 0xbe, 0x3a, 0xbb, 0xcb, 0x43,
-	0xde, 0x80, 0x45, 0x8e, 0x4e, 0xdf, 0x1e, 0x88, 0xd0, 0x96, 0x4c, 0xa1, 0xa2, 0x7c, 0x1e, 0x9a,
-	0xca, 0xfe, 0x85, 0x08, 0x8f, 0x99, 0xd2, 0x63, 0xfc, 0xaa, 0x41, 0x27, 0x93, 0x79, 0x70, 0xb8,
-	0xbf, 0xbb, 0xbd, 0xe7, 0xfb, 0xc2, 0x79, 0x1e, 0x84, 0x36, 0x26, 0x85, 0x0e, 0x60, 0xbd, 0xb0,
-	0x9d, 0xff, 0xc3, 0xf5, 0x31, 0xd8, 0x78, 0xa2, 0x2d, 0xff, 0x7d, 0xc2, 0xde, 0x6f, 0x95, 0x69,
-	0xeb, 0xfa, 0x08, 0xf9, 0x05, 0xf5, 0x90, 0xfc, 0xa8, 0x41, 0x4b, 0x79, 0x33, 0x4d, 0x0f, 0x31,
-	0xe4, 0x5d, 0x73, 0xea, 0x8f, 0x84, 0x59, 0xb8, 0xfd, 0xf5, 0xed, 0x19, 0x22, 0xb2, 0x5a, 0x8d,
-	0x12, 0xa1, 0xd0, 0xb8, 0xbf, 0xf5, 0xc8, 0x5b, 0x45, 0x24, 0x8f, 0x37, 0xad, 0xfe, 0xf6, 0xbf,
-	0xc2, 0x8e, 0x53, 0xfd, 0x00, 0x4b, 0x53, 0xde, 0x29, 0x29, 0x92, 0x5d, 0xbc, 0xac, 0xf4, 0xde,
-	0x2c, 0x21, 0xe3, 0xfc, 0x3f, 0x69, 0xf0, 0x4a, 0xc1, 0xb4, 0x91, 0xf7, 0x0b, 0x18, 0x9f, 0x7e,
-	0xec, 0xfa, 0x07, 0xb3, 0x86, 0x8d, 0xc5, 0x5c, 0x69, 0xb0, 0x5a, 0x38, 0x8b, 0xe4, 0xc3, 0x27,
-	0x79, 0x8b, 0x1f, 0xb5, 0xfe, 0xd1, 0xec, 0x81, 0x23, 0x49, 0x1f, 0x7f, 0xfb, 0xfb, 0x4d, 0x5b,
-	0xbb, 0xbe, 0x69, 0x6b, 0x7f, 0xdf, 0xb4, 0xb5, 0xab, 0xdb, 0x76, 0xe9, 0xfa, 0xb6, 0x5d, 0xfa,
-	0xf3, 0xb6, 0x5d, 0xfa, 0x66, 0x3f, 0xa4, 0xf2, 0x34, 0x71, 0x4d, 0x8f, 0x0d, 0xba, 0x6e, 0xe4,
-	0x6e, 0xa5, 0x8f, 0xbf, 0x1b, 0x72, 0xc4, 0x28, 0xa0, 0xd8, 0xf7, 0xb7, 0x84, 0x64, 0xdc, 0x09,
-	0x71, 0x2b, 0xe6, 0xec, 0x82, 0xfa, 0xc8, 0xbb, 0x53, 0xbf, 0x85, 0xdc, 0x6a, 0xfa, 0x11, 0xf3,
-	0xde, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xe5, 0x1b, 0xe8, 0x13, 0x2b, 0x09, 0x00, 0x00,
+	// 722 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcb, 0x6e, 0x13, 0x49,
+	0x14, 0x75, 0x8f, 0x63, 0x4f, 0x5c, 0xb6, 0x35, 0x51, 0x25, 0x13, 0x39, 0x8e, 0xc6, 0xe3, 0xf4,
+	0x48, 0x43, 0x78, 0xa4, 0x4d, 0xcc, 0x02, 0xb6, 0x81, 0x3c, 0x84, 0x80, 0x08, 0xb5, 0x13, 0x16,
+	0x6c, 0x9a, 0x7e, 0xdc, 0xee, 0x54, 0x62, 0x57, 0x35, 0x55, 0xd5, 0x21, 0xde, 0x20, 0xf1, 0x07,
+	0xf9, 0x81, 0x6c, 0xf9, 0x16, 0x96, 0xd9, 0xc1, 0x06, 0x09, 0x25, 0x3f, 0x82, 0xaa, 0xba, 0x9d,
+	0xa7, 0x0d, 0x44, 0x66, 0x65, 0xd7, 0xb9, 0xe7, 0xde, 0x7b, 0xce, 0xad, 0x47, 0xa3, 0xdb, 0x9e,
+	0x2b, 0xa0, 0x25, 0xfb, 0x31, 0x88, 0x56, 0x14, 0x8a, 0x58, 0x00, 0xdf, 0x07, 0xde, 0x72, 0x13,
+	0xb9, 0x03, 0x54, 0x12, 0xdf, 0x95, 0x8c, 0x5b, 0x31, 0x67, 0x92, 0xe1, 0xbf, 0x15, 0xd5, 0xd2,
+	0x54, 0xeb, 0x9c, 0x5a, 0x5f, 0xb8, 0x52, 0x01, 0x38, 0x67, 0x5c, 0xb4, 0xf4, 0x4f, 0x9a, 0x69,
+	0x1e, 0x19, 0x68, 0x6e, 0x23, 0xec, 0xc4, 0x2b, 0xe7, 0x55, 0x09, 0xa3, 0x36, 0xbc, 0x4d, 0x40,
+	0x48, 0x3c, 0x8f, 0x4a, 0xaa, 0x9d, 0xa3, 0x4a, 0xd4, 0x8c, 0xa6, 0xb1, 0x58, 0xb0, 0x27, 0x15,
+	0xb0, 0xd5, 0x8f, 0x01, 0x2f, 0xa0, 0x4a, 0x22, 0x80, 0x3b, 0xae, 0xef, 0xb3, 0x84, 0xca, 0xda,
+	0x1f, 0x4d, 0x63, 0xb1, 0x64, 0x97, 0x15, 0xb6, 0x92, 0x42, 0xf8, 0x5f, 0x54, 0xf6, 0x12, 0x7f,
+	0x0f, 0xa4, 0x43, 0xdd, 0x1e, 0xd4, 0xf2, 0x9a, 0x81, 0x52, 0x68, 0xd3, 0xed, 0x81, 0x22, 0x30,
+	0x6f, 0x17, 0xfc, 0x8c, 0x30, 0x91, 0x12, 0x52, 0x48, 0x11, 0xcc, 0x5d, 0x54, 0x1f, 0x26, 0x4f,
+	0xc4, 0x8c, 0x0a, 0xc0, 0x6d, 0x94, 0x07, 0xce, 0xb5, 0xb2, 0x72, 0xbb, 0x69, 0x5d, 0x99, 0x42,
+	0x6a, 0xd7, 0x52, 0xf9, 0x6b, 0xea, 0xaf, 0xad, 0xc8, 0xb8, 0x86, 0xfe, 0x74, 0xbb, 0x5d, 0xf6,
+	0x0e, 0x02, 0xad, 0x78, 0xd2, 0x1e, 0x2c, 0xcd, 0xe7, 0x68, 0x7a, 0x03, 0xa4, 0x6a, 0xb5, 0xc9,
+	0xa8, 0x0f, 0x83, 0x21, 0xfc, 0x83, 0x50, 0x66, 0xd1, 0x21, 0x81, 0xee, 0x55, 0xb2, 0x4b, 0x19,
+	0xf2, 0x34, 0xc0, 0xb3, 0xa8, 0x18, 0xb0, 0x9e, 0x4b, 0x68, 0x36, 0x80, 0x6c, 0x65, 0x7e, 0x35,
+	0xd0, 0xcc, 0xe5, 0x72, 0x63, 0x88, 0xfe, 0x0f, 0x55, 0xfd, 0x84, 0x73, 0xa0, 0xd2, 0xa1, 0xaa,
+	0x98, 0xee, 0x55, 0xb0, 0x2b, 0x19, 0xa8, 0x1b, 0x28, 0xa1, 0x14, 0x0e, 0x06, 0x8c, 0xbc, 0x66,
+	0x94, 0x14, 0x92, 0x86, 0xef, 0x21, 0x3c, 0xa8, 0x11, 0x27, 0x5e, 0x97, 0xf8, 0xce, 0x1e, 0xf4,
+	0xb3, 0x91, 0x4f, 0x65, 0x91, 0x97, 0x3a, 0xf0, 0x0c, 0xfa, 0x6a, 0x67, 0xe0, 0x20, 0x26, 0xbc,
+	0xef, 0x04, 0xae, 0x84, 0x5a, 0xa1, 0x69, 0x2c, 0xe6, 0x6d, 0x94, 0x42, 0xab, 0xae, 0x04, 0xf3,
+	0xb3, 0x81, 0xea, 0xdb, 0xb1, 0x0a, 0x6e, 0x0b, 0xe0, 0x67, 0x89, 0xe3, 0x4d, 0xed, 0xba, 0xd1,
+	0xfc, 0x10, 0xa3, 0x33, 0xa8, 0x90, 0x06, 0x27, 0x74, 0x30, 0x5d, 0xe0, 0xff, 0xd1, 0x5f, 0xfa,
+	0x3c, 0x5e, 0x30, 0x57, 0xd0, 0xb5, 0xab, 0xc9, 0x45, 0x81, 0x57, 0x9d, 0x15, 0xaf, 0x39, 0x23,
+	0x68, 0x7e, 0xa8, 0xb1, 0x31, 0xf6, 0x6f, 0x16, 0x15, 0x39, 0x88, 0xa4, 0x2b, 0xb3, 0x33, 0x97,
+	0xad, 0xcc, 0x8f, 0x06, 0x6a, 0xbe, 0x02, 0x4e, 0xc2, 0xfe, 0xc6, 0xe6, 0xfa, 0xea, 0xf2, 0x5a,
+	0x10, 0x08, 0xb7, 0x43, 0x22, 0xea, 0xca, 0x84, 0x8f, 0x79, 0x00, 0xb1, 0x89, 0xaa, 0x2c, 0x0c,
+	0x1d, 0x7f, 0xc7, 0x25, 0xd4, 0x11, 0x24, 0xca, 0xae, 0x5f, 0x99, 0x85, 0xe1, 0x13, 0x85, 0x75,
+	0x48, 0x84, 0x6f, 0xa1, 0x29, 0x0e, 0x6e, 0xd7, 0xe9, 0x89, 0xc8, 0x91, 0x4c, 0xb1, 0xa8, 0x1e,
+	0x6a, 0xc5, 0xae, 0x2a, 0xfc, 0x85, 0x88, 0xb6, 0x98, 0xd2, 0x63, 0x32, 0xb4, 0xf0, 0x03, 0x9d,
+	0xbf, 0x7f, 0x32, 0xed, 0xa3, 0x89, 0x61, 0x0f, 0x53, 0x07, 0xf8, 0x3e, 0xf1, 0x01, 0x7f, 0x30,
+	0x50, 0x4d, 0x45, 0x53, 0x4d, 0x97, 0x39, 0xf8, 0xbe, 0x35, 0xf4, 0x39, 0xb4, 0x46, 0xbe, 0x73,
+	0xf5, 0xe5, 0x1b, 0x64, 0xa4, 0x5e, 0xcd, 0x1c, 0x26, 0xa8, 0x72, 0xf1, 0x7e, 0xe3, 0x3b, 0xa3,
+	0x8a, 0x5c, 0x7f, 0x53, 0xea, 0x77, 0x7f, 0x89, 0x7b, 0xd6, 0xea, 0x3d, 0x9a, 0x1e, 0x72, 0x22,
+	0xf1, 0x28, 0xd9, 0xa3, 0xaf, 0x65, 0xbd, 0x7d, 0x93, 0x94, 0xb3, 0xfe, 0x87, 0x06, 0x9a, 0x1b,
+	0xb9, 0xfd, 0xf8, 0xe1, 0x88, 0x9a, 0x3f, 0x3b, 0xd8, 0xf5, 0x47, 0x37, 0x4f, 0x1c, 0x48, 0x7a,
+	0xfc, 0xe6, 0xd3, 0x49, 0xc3, 0x38, 0x3e, 0x69, 0x18, 0xdf, 0x4e, 0x1a, 0xc6, 0xe1, 0x69, 0x23,
+	0x77, 0x7c, 0xda, 0xc8, 0x7d, 0x39, 0x6d, 0xe4, 0x5e, 0xaf, 0x47, 0x44, 0xee, 0x24, 0x9e, 0xe5,
+	0xb3, 0x5e, 0xcb, 0xa3, 0xde, 0x92, 0xbe, 0x00, 0xad, 0x88, 0x03, 0xd0, 0x90, 0x40, 0x37, 0x58,
+	0x12, 0x92, 0x71, 0x37, 0x82, 0xa5, 0x98, 0xb3, 0x7d, 0x12, 0x00, 0x6f, 0x0d, 0xfd, 0xd0, 0x7a,
+	0x45, 0xfd, 0x85, 0x7c, 0xf0, 0x3d, 0x00, 0x00, 0xff, 0xff, 0xe6, 0x86, 0x75, 0x02, 0x88, 0x07,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -771,9 +638,6 @@ type GfSpAuthenticationServiceClient interface {
 	GetAuthNonce(ctx context.Context, in *GetAuthNonceRequest, opts ...grpc.CallOption) (*GetAuthNonceResponse, error)
 	// UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
 	UpdateUserPublicKey(ctx context.Context, in *UpdateUserPublicKeyRequest, opts ...grpc.CallOption) (*UpdateUserPublicKeyResponse, error)
-	// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
-	// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-	VerifyOffChainSignature(ctx context.Context, in *VerifyOffChainSignatureRequest, opts ...grpc.CallOption) (*VerifyOffChainSignatureResponse, error)
 	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 	VerifyGNFD1EddsaSignature(ctx context.Context, in *VerifyGNFD1EddsaSignatureRequest, opts ...grpc.CallOption) (*VerifyGNFD1EddsaSignatureResponse, error)
 }
@@ -813,15 +677,6 @@ func (c *gfSpAuthenticationServiceClient) UpdateUserPublicKey(ctx context.Contex
 	return out, nil
 }
 
-func (c *gfSpAuthenticationServiceClient) VerifyOffChainSignature(ctx context.Context, in *VerifyOffChainSignatureRequest, opts ...grpc.CallOption) (*VerifyOffChainSignatureResponse, error) {
-	out := new(VerifyOffChainSignatureResponse)
-	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpAuthenticationService/VerifyOffChainSignature", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *gfSpAuthenticationServiceClient) VerifyGNFD1EddsaSignature(ctx context.Context, in *VerifyGNFD1EddsaSignatureRequest, opts ...grpc.CallOption) (*VerifyGNFD1EddsaSignatureResponse, error) {
 	out := new(VerifyGNFD1EddsaSignatureResponse)
 	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpAuthenticationService/VerifyGNFD1EddsaSignature", in, out, opts...)
@@ -838,9 +693,6 @@ type GfSpAuthenticationServiceServer interface {
 	GetAuthNonce(context.Context, *GetAuthNonceRequest) (*GetAuthNonceResponse, error)
 	// UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
 	UpdateUserPublicKey(context.Context, *UpdateUserPublicKeyRequest) (*UpdateUserPublicKeyResponse, error)
-	// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
-	// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-	VerifyOffChainSignature(context.Context, *VerifyOffChainSignatureRequest) (*VerifyOffChainSignatureResponse, error)
 	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 	VerifyGNFD1EddsaSignature(context.Context, *VerifyGNFD1EddsaSignatureRequest) (*VerifyGNFD1EddsaSignatureResponse, error)
 }
@@ -857,9 +709,6 @@ func (*UnimplementedGfSpAuthenticationServiceServer) GetAuthNonce(ctx context.Co
 }
 func (*UnimplementedGfSpAuthenticationServiceServer) UpdateUserPublicKey(ctx context.Context, req *UpdateUserPublicKeyRequest) (*UpdateUserPublicKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserPublicKey not implemented")
-}
-func (*UnimplementedGfSpAuthenticationServiceServer) VerifyOffChainSignature(ctx context.Context, req *VerifyOffChainSignatureRequest) (*VerifyOffChainSignatureResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyOffChainSignature not implemented")
 }
 func (*UnimplementedGfSpAuthenticationServiceServer) VerifyGNFD1EddsaSignature(ctx context.Context, req *VerifyGNFD1EddsaSignatureRequest) (*VerifyGNFD1EddsaSignatureResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyGNFD1EddsaSignature not implemented")
@@ -923,24 +772,6 @@ func _GfSpAuthenticationService_UpdateUserPublicKey_Handler(srv interface{}, ctx
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GfSpAuthenticationService_VerifyOffChainSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyOffChainSignatureRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GfSpAuthenticationServiceServer).VerifyOffChainSignature(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/base.types.gfspserver.GfSpAuthenticationService/VerifyOffChainSignature",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GfSpAuthenticationServiceServer).VerifyOffChainSignature(ctx, req.(*VerifyOffChainSignatureRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _GfSpAuthenticationService_VerifyGNFD1EddsaSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyGNFD1EddsaSignatureRequest)
 	if err := dec(in); err != nil {
@@ -974,10 +805,6 @@ var _GfSpAuthenticationService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateUserPublicKey",
 			Handler:    _GfSpAuthenticationService_UpdateUserPublicKey_Handler,
-		},
-		{
-			MethodName: "VerifyOffChainSignature",
-			Handler:    _GfSpAuthenticationService_VerifyOffChainSignature_Handler,
 		},
 		{
 			MethodName: "VerifyGNFD1EddsaSignature",
@@ -1280,57 +1107,6 @@ func (m *UpdateUserPublicKeyResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *VerifyOffChainSignatureRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *VerifyOffChainSignatureRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *VerifyOffChainSignatureRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.RealMsgToSign) > 0 {
-		i -= len(m.RealMsgToSign)
-		copy(dAtA[i:], m.RealMsgToSign)
-		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.RealMsgToSign)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.OffChainSig) > 0 {
-		i -= len(m.OffChainSig)
-		copy(dAtA[i:], m.OffChainSig)
-		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.OffChainSig)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Domain) > 0 {
-		i -= len(m.Domain)
-		copy(dAtA[i:], m.Domain)
-		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.Domain)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.AccountId) > 0 {
-		i -= len(m.AccountId)
-		copy(dAtA[i:], m.AccountId)
-		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.AccountId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *VerifyGNFD1EddsaSignatureRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1376,51 +1152,6 @@ func (m *VerifyGNFD1EddsaSignatureRequest) MarshalToSizedBuffer(dAtA []byte) (in
 		i -= len(m.AccountId)
 		copy(dAtA[i:], m.AccountId)
 		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.AccountId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *VerifyOffChainSignatureResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *VerifyOffChainSignatureResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *VerifyOffChainSignatureResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Result {
-		i--
-		if m.Result {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Err != nil {
-		{
-			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintAuthenticator(dAtA, i, uint64(size))
-		}
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1612,31 +1343,6 @@ func (m *UpdateUserPublicKeyResponse) Size() (n int) {
 	return n
 }
 
-func (m *VerifyOffChainSignatureRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.AccountId)
-	if l > 0 {
-		n += 1 + l + sovAuthenticator(uint64(l))
-	}
-	l = len(m.Domain)
-	if l > 0 {
-		n += 1 + l + sovAuthenticator(uint64(l))
-	}
-	l = len(m.OffChainSig)
-	if l > 0 {
-		n += 1 + l + sovAuthenticator(uint64(l))
-	}
-	l = len(m.RealMsgToSign)
-	if l > 0 {
-		n += 1 + l + sovAuthenticator(uint64(l))
-	}
-	return n
-}
-
 func (m *VerifyGNFD1EddsaSignatureRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1658,22 +1364,6 @@ func (m *VerifyGNFD1EddsaSignatureRequest) Size() (n int) {
 	l = len(m.RealMsgToSign)
 	if l > 0 {
 		n += 1 + l + sovAuthenticator(uint64(l))
-	}
-	return n
-}
-
-func (m *VerifyOffChainSignatureResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Err != nil {
-		l = m.Err.Size()
-		n += 1 + l + sovAuthenticator(uint64(l))
-	}
-	if m.Result {
-		n += 2
 	}
 	return n
 }
@@ -2569,184 +2259,6 @@ func (m *UpdateUserPublicKeyResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *VerifyOffChainSignatureRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuthenticator
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: VerifyOffChainSignatureRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: VerifyOffChainSignatureRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuthenticator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AccountId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuthenticator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Domain = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OffChainSig", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuthenticator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.OffChainSig = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RealMsgToSign", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuthenticator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RealMsgToSign = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuthenticator(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *VerifyGNFD1EddsaSignatureRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2906,112 +2418,6 @@ func (m *VerifyGNFD1EddsaSignatureRequest) Unmarshal(dAtA []byte) error {
 				m.RealMsgToSign = []byte{}
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAuthenticator(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *VerifyOffChainSignatureResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAuthenticator
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: VerifyOffChainSignatureResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: VerifyOffChainSignatureResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuthenticator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthAuthenticator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Err == nil {
-				m.Err = &gfsperrors.GfSpError{}
-			}
-			if err := m.Err.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAuthenticator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Result = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAuthenticator(dAtA[iNdEx:])

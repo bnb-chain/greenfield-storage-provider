@@ -65,9 +65,7 @@ type Authenticator interface {
 	// UpdateUserPublicKey updates the user public key once the dApp or client generates the EDDSA key pairs.
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32,
 		userPublicKey string, expiryDate int64) (bool, error)
-	// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
-	// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error)
+	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error)
 }
 

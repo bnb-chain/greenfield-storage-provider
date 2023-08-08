@@ -154,25 +154,6 @@ func signaturePrefix(version, algorithm string) string {
 func (r *RequestContext) VerifySignature() (string, error) {
 	// check sig
 	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
-	v1SignaturePrefix := signaturePrefix(SignTypeV1, SignAlgorithm)
-	if strings.HasPrefix(requestSignature, v1SignaturePrefix) {
-		accAddress, err := r.verifySignatureV1(requestSignature[len(v1SignaturePrefix):])
-		if err != nil {
-			return "", err
-		}
-		return accAddress.String(), nil
-	}
-
-	OffChainSignaturePrefix := signaturePrefix(SignTypeOffChain, SignAlgorithmEddsa)
-	if strings.HasPrefix(requestSignature, OffChainSignaturePrefix) {
-		accAddress, err := r.verifyOffChainSignature(requestSignature[len(OffChainSignaturePrefix):])
-		if err != nil {
-			return "", err
-		}
-		return accAddress.String(), nil
-	}
-
-	// todo clyde.m to remove the above code and their reference once all SPs have deployed the latest version which includes GNFD1 auth
 
 	// check expiry header
 	requestExpiredTimestamp := r.request.Header.Get(commonhttp.HTTPHeaderExpiryTimestamp)
@@ -210,56 +191,6 @@ func (r *RequestContext) VerifySignature() (string, error) {
 
 	return "", ErrUnsupportedSignType
 
-}
-
-// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
-// verifySignatureV1 used to verify request type v1 signature, return (address, nil) if check succeed
-func (r *RequestContext) verifySignatureV1(requestSignature string) (sdk.AccAddress, error) {
-	var (
-		signedMsg string
-		signature []byte
-		err       error
-	)
-	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
-	signatureItems := strings.Split(requestSignature, ",")
-	if len(signatureItems) < 2 {
-		return nil, ErrAuthorizationHeaderFormat
-	}
-	for _, item := range signatureItems {
-		pair := strings.Split(item, "=")
-		if len(pair) != 2 {
-			return nil, ErrAuthorizationHeaderFormat
-		}
-		switch pair[0] {
-		case SignedMsg:
-			signedMsg = pair[1]
-		case Signature:
-			if signature, err = hex.DecodeString(pair[1]); err != nil {
-				return nil, err
-			}
-		default:
-			return nil, ErrAuthorizationHeaderFormat
-		}
-	}
-
-	// check request integrity
-	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
-	if hex.EncodeToString(realMsgToSign) != signedMsg {
-		log.CtxErrorw(r.ctx, "failed to check signed msg")
-		return nil, ErrRequestConsistent
-	}
-
-	// check signature consistent
-	addr, pk, err := RecoverAddr(realMsgToSign, signature)
-	if err != nil {
-		log.CtxErrorw(r.ctx, "failed to recover address")
-		return nil, ErrRequestConsistent
-	}
-	if !secp256k1.VerifySignature(pk.Bytes(), realMsgToSign, signature[:len(signature)-1]) {
-		log.CtxErrorw(r.ctx, "failed to verify signature")
-		return nil, ErrRequestConsistent
-	}
-	return addr, nil
 }
 
 // verifySignatureForGNFD1Ecdsa used to verify request type GNFD1_ECDSA, return (address, nil) if check succeed
@@ -330,36 +261,6 @@ func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature 
 		return nil, err
 	}
 	return addr, nil
-}
-
-// Deprecated: This method will be deleted in future versions, once most SP and clients migrates to GNFD1 Auth.
-// verifyOffChainSignature used to verify off-chain-auth signature, return (address, nil) if check succeed
-func (r *RequestContext) verifyOffChainSignature(requestSignature string) (sdk.AccAddress, error) {
-	var (
-		signedMsg *string
-		err       error
-	)
-	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
-	if err != nil {
-		return nil, err
-	}
-
-	account := r.request.Header.Get(GnfdUserAddressHeader)
-	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
-	offChainSig := *sigString
-	realMsgToSign := *signedMsg
-
-	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyOffChainSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
-	if err != nil {
-		log.Errorf("failed to verify off chain signature", "error", err)
-		return nil, err
-	}
-	if verifyOffChainSignatureResp {
-		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
-		return userAddress, nil
-	} else {
-		return nil, err
-	}
 }
 
 // verifySignatureForGNFD1Eddsa used to verify off-chain-auth signature, return (address, nil) if check succeed
