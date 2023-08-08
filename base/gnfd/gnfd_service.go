@@ -91,6 +91,11 @@ const (
 	ChainSuccessVerifyPutObjectPermission = "verify_putt_object_permission_success"
 	// ChainFailureVerifyPutObjectPermission defines the metrics label of unsuccessfully verify put object permission
 	ChainFailureVerifyPutObjectPermission = "verify_put_object_permission_failure"
+
+	// ConfirmBlockNumber defines wait block number.
+	ConfirmBlockNumber = 3
+	// WaitForNextBlockTimeout define wait block timeout.
+	WaitForNextBlockTimeout = 30 * time.Second
 )
 
 // CurrentHeight the block height sub one as the stable height.
@@ -793,16 +798,14 @@ func (g *Gnfd) ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxRe
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("confirm_transaction").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
-	completeRetry := false
-	for {
+	for i := 0; i < ConfirmBlockNumber; i++ {
 		txResponse, err := client.GetTx(ctx, &tx.GetTxRequest{Hash: txHash})
 		if err != nil {
-			if strings.Contains(err.Error(), "not found") && !completeRetry {
+			if strings.Contains(err.Error(), "not found") {
 				// Tx not found, wait for next block and try again
 				if err = g.WaitForNextBlock(ctx); err != nil {
 					return nil, err
 				}
-				completeRetry = true
 				continue
 			}
 			return nil, err
@@ -810,6 +813,7 @@ func (g *Gnfd) ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxRe
 		// Tx found
 		return txResponse.TxResponse, nil
 	}
+	return nil, fmt.Errorf("failed to confirm transaction, tx_hash=%s", txHash)
 }
 
 // WaitForNextBlock is used to chain generate a new block.
@@ -825,7 +829,7 @@ func (g *Gnfd) WaitForNextBlock(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*30)
+	ctxTimeout, cancel := context.WithTimeout(ctx, WaitForNextBlockTimeout)
 	defer cancel()
 
 	ticker := time.NewTicker(time.Second)
