@@ -10,8 +10,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gorilla/mux"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -408,29 +408,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	queryParams := r.URL.Query()
-	offChainAuthUserAddressParam := queryParams.Get(OffChainAuthUserAddressQuery)
-	offChainAuthAppDomainParam := queryParams.Get(OffChainAuthAppDomainQuery)
-	offChainAuthAuthorizationParam := queryParams.Get(OffChainAuthAuthorizationQuery)
-
-	// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
-	if offChainAuthUserAddressParam != "" && offChainAuthAppDomainParam != "" && offChainAuthAuthorizationParam != "" {
-		vars := mux.Vars(r)
-		objectName := vars["object"]
-		r.Header.Set(GnfdUserAddressHeader, offChainAuthUserAddressParam)
-		r.Header.Set(GnfdOffChainAuthAppDomainHeader, offChainAuthAppDomainParam)
-		r.Header.Set(GnfdAuthorizationHeader, offChainAuthAuthorizationParam)
-
-		// default set content-disposition to download, if specified in query param as view, then set to view
-		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+objectName+"\"")
-		offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
-		isView, _ := strconv.ParseBool(offChainAuthViewParam)
-		if isView {
-			w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
-		}
-	}
-
+	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
+
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
@@ -449,11 +429,47 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
 
 	if !authenticated {
+		// if not passed, then check authentication parameters
+		if reqCtxErr != nil {
+			queryParams := r.URL.Query()
+			gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
+			gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
+			gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+			gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+
+			// GNFD1-EDDSA
+			gnfd1EddsaSignaturePrefix := commonhttp.Gnfd1Eddsa + ","
+			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
+				err = ErrUnsupportedSignType
+				return
+			}
+
+			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
+			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
+
+				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				if preSignedURLErr != nil {
+					reqCtxErr = preSignedURLErr
+				} else {
+					reqCtx.account = account.String()
+					reqCtxErr = nil
+					// default set content-disposition to download, if specified in query param as view, then set to view
+					w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
+					offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
+					isView, _ := strconv.ParseBool(offChainAuthViewParam)
+					if isView {
+						w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
+					}
+				}
+			}
+		}
+
 		if reqCtxErr != nil {
 			err = reqCtxErr
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
+		// check permission
 		authTime := time.Now()
 		if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
@@ -522,6 +538,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set(ContentTypeHeader, objectInfo.GetContentType())
+	w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	if isRange {
 		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(lowOffset))+
 			"-"+util.Uint64ToString(uint64(highOffset)))
@@ -666,15 +683,16 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
+			spErrCode := gfsperrors.MakeGfSpError(err).GetInnerCode()
 			if isRequestFromBrowser {
 				reqCtx.SetHttpCode(http.StatusOK)
 				errorCodeForPage := "INTERNAL_ERROR" // default errorCode in built-in error page
-				switch err {
-				case downloader.ErrExceedBucketQuota:
+				switch spErrCode {
+				case downloader.ErrExceedBucketQuota.GetInnerCode():
 					errorCodeForPage = "NO_ENOUGH_QUOTA"
-				case ErrNoSuchObject:
+				case ErrNoSuchObject.GetInnerCode():
 					errorCodeForPage = "FILE_NOT_FOUND"
-				case ErrForbidden:
+				case ErrForbidden.GetInnerCode():
 					errorCodeForPage = "NO_PERMISSION"
 				}
 				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
@@ -781,8 +799,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		}
 
 		queryParams := r.URL.Query()
-		if queryParams["expiry"] != nil {
-			expiry = queryParams["expiry"][0]
+		if queryParams[commonhttp.HTTPHeaderExpiryTimestamp] != nil {
+			expiry = queryParams[commonhttp.HTTPHeaderExpiryTimestamp][0]
 		}
 		if queryParams["signature"] != nil {
 			signature = queryParams["signature"][0]
@@ -792,14 +810,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			expiryDate, dateParseErr := time.Parse(ExpiryDateFormat, expiry)
 			if dateParseErr != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid format", "expiry", expiry)
-				err = ErrInvalidExpiryDate
+				err = ErrInvalidExpiryDateParam
 				return
 			}
-			log.Infof("%s", time.Until(expiryDate).Seconds())
-			log.Infof("%s", MaxExpiryAgeInSec)
 			expiryAge := int32(time.Until(expiryDate).Seconds())
 			if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
-				err = ErrInvalidExpiryDate
+				err = ErrInvalidExpiryDateParam
 				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid expiry value", "expiry", expiry)
 				return
 			}
@@ -844,9 +860,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
 			if htmlConfig == "" {
-				log.CtxErrorw(reqCtx.Context(), "chain id is not found", "chain id ", g.baseApp.ChainID())
-				err = gfsperrors.MakeGfSpError(fmt.Errorf("chain id is not found"))
-				return
+				htmlConfig = htmlConfigMap["greenfield_5600-1"] // use testnet by default, actually, we only need the metamask sign function, regardless which greenfield network the metamask is going to connect.
 			}
 			hc, _ := json.Marshal(htmlConfig)
 			html := strings.Replace(GnfdBuiltInUniversalEndpointDappHtml, "<% env %>", string(hc), 1)

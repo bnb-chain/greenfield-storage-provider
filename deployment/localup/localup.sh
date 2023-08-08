@@ -18,6 +18,7 @@ function display_help() {
     echo "   --start          start storage providers"
     echo "   --stop           stop storage providers"
     echo "   --clean          clean local sp env"
+    echo "   --rebuild        rebuild sp code"
     echo "   --print          print sp local env work directory"
     echo
     exit 0
@@ -271,6 +272,9 @@ function main() {
     ;;
   --print)
     print_work_dir
+    ;;
+  --rebuild)
+    rebuild
     ;;
   --help|*)
     display_help

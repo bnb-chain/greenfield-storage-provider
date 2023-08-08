@@ -10,14 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield/types/resource"
-	resource_types "github.com/bnb-chain/greenfield/types/resource"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
-	sp_types "github.com/bnb-chain/greenfield/x/sp/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
@@ -28,6 +20,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/types/resource"
+	resource_types "github.com/bnb-chain/greenfield/types/resource"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
+	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
+	sp_types "github.com/bnb-chain/greenfield/x/sp/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (

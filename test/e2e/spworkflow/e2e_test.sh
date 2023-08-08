@@ -3,7 +3,7 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="b4b658a83d6a3d375f29a62ee7ceb27689807525"
+GREENFIELD_REPO_TAG="e207200b5009d77dec449afb06b18685fc240701"
 # greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="307a86067fa1a869d8287a1dac401e0722893a9b"
 # greenfield go sdk branch name: develop
@@ -26,7 +26,7 @@ function greenfield_chain() {
   # build Greenfield chain
   echo ${workspace}
   cd ${workspace}
-  git clone https://github.com/alexgao001/greenfield.git
+  git clone https://github.com/bnb-chain/greenfield.git
   cd greenfield/
   git checkout ${GREENFIELD_REPO_TAG}
   make proto-gen & make build
@@ -132,7 +132,7 @@ function test_file_size_less_than_16_mb() {
   set -e
   cd ${workspace}/greenfield-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://${BUCKET_NAME}
-  sleep 16
+  sleep 32
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://${BUCKET_NAME}/example.json ./test_data.json
   check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./test_data.json
   cat test_data.json
@@ -146,7 +146,7 @@ function test_file_size_greater_than_16_mb() {
   cd ${workspace}/greenfield-cmd/build/
   dd if=/dev/urandom of=./random_file bs=17M count=1
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/octet-stream" ./random_file gnfd://${BUCKET_NAME}/random_file
-  sleep 16
+  sleep 32
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://${BUCKET_NAME}/random_file ./new_random_file
   sleep 10
   check_md5 ./random_file ./new_random_file

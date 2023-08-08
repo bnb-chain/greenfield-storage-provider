@@ -161,6 +161,10 @@ func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string,
 	return false, ErrNilModular
 }
 
+func (*NullModular) VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error) {
+	return false, ErrNilModular
+}
+
 var _ TaskExecutor = (*NilModular)(nil)
 var _ P2P = (*NilModular)(nil)
 var _ Signer = (*NilModular)(nil)

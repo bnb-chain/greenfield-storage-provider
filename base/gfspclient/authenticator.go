@@ -17,7 +17,7 @@ type AuthenticatorAPI interface {
 	VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error)
 	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.CallOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error)
-	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string, opts ...grpc.CallOption) (bool, error)
+	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error)
 }
 
 func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error) {
@@ -100,20 +100,20 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 	return resp.Result, nil
 }
 
-// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-func (s *GfSpClient) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string, opts ...grpc.CallOption) (bool, error) {
+// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
+func (s *GfSpClient) VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error) {
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRPCUnknown
 	}
-	req := &gfspserver.VerifyOffChainSignatureRequest{
+	req := &gfspserver.VerifyGNFD1EddsaSignatureRequest{
 		AccountId:     account,
 		Domain:        domain,
 		OffChainSig:   offChainSig,
 		RealMsgToSign: realMsgToSign,
 	}
-	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).VerifyOffChainSignature(ctx, req, opts...)
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).VerifyGNFD1EddsaSignature(ctx, req, opts...)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify off-chain signature rpc", "error", err)

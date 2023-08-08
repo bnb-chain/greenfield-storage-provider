@@ -1,6 +1,8 @@
 package bsdb
 
-import "time"
+import (
+	"time"
+)
 
 // GetLatestBlockNumber get current latest block number
 func (b *BsDBImpl) GetLatestBlockNumber() (int64, error) {
