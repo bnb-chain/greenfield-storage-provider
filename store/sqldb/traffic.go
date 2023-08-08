@@ -152,12 +152,9 @@ func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *
 		ModifiedTime:          time.Now(),
 	}
 	result := s.db.Create(insertBucketTraffic)
-	if result.Error != nil {
+	if result.Error != nil && MysqlErrCode(result.Error) != ErrDuplicateEntryCode {
 		err := fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
 		return err
-	}
-	if result.RowsAffected != 1 {
-		log.Infow("insert traffic", "RowsAffected", result.RowsAffected, "quota", quota)
 	}
 
 	return nil
