@@ -7,9 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -21,30 +22,32 @@ import (
 )
 
 const (
-	SwapOutFamilyKeyPrefix  = "familyID-"
-	SwapOutGVGListKeyPrefix = "gvgIDList-"
+	swapOutFamilyKeyPrefix  = "familyID-"
+	swapOutGVGListKeyPrefix = "gvgIDList-"
 	printLogPerN            = 100
+	confirmRetryNumber      = 3
+	backoffSecondInterval   = 10
 )
 
-func GetSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
+func makeSwapOutKey(swapOut *virtualgrouptypes.MsgSwapOut) string {
 	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
-		return SwapOutFamilyKeyPrefix + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
+		return swapOutFamilyKeyPrefix + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
 	} else {
-		return SwapOutGVGListKeyPrefix + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
+		return swapOutGVGListKeyPrefix + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
 	}
 }
 
-func GetEventSwapOutKey(swapOut *virtualgrouptypes.EventCompleteSwapOut) string {
+func makeEventSwapOutKey(swapOut *virtualgrouptypes.EventCompleteSwapOut) string {
 	if swapOut.GetGlobalVirtualGroupFamilyId() != 0 {
-		return SwapOutFamilyKeyPrefix + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
+		return swapOutFamilyKeyPrefix + util.Uint32ToString(swapOut.GetGlobalVirtualGroupFamilyId())
 	} else {
-		return SwapOutGVGListKeyPrefix + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
+		return swapOutGVGListKeyPrefix + util.Uint32SliceToString(swapOut.GetGlobalVirtualGroupIds())
 	}
 }
 
 var _ vgmgr.SPPickFilter = &PickDestSPFilter{}
 
-// PickDestSPFilter is used to pick sp id which is not in excluded sp ids.
+// PickDestSPFilter is used to pick sp id which is not in excluded sp ids,
 // which is used by src sp to pick dest sp.
 type PickDestSPFilter struct {
 	excludedSPIDs []uint32
@@ -113,7 +116,8 @@ func (s *SPExitScheduler) Init(m *ManageModular) error {
 	)
 	s.manager = m
 	if sp, err = s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress()); err != nil {
-		log.Errorw("failed to init sp exit scheduler due to query sp error", "error", err)
+		log.Errorw("failed to init sp exit scheduler due to query sp error",
+			"operator_address", s.manager.baseApp.OperatorAddress(), "error", err)
 		return err
 	}
 	s.selfSP = sp
@@ -175,7 +179,7 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 		err        error
 		migrateKey string
 	)
-	log.Infow("update migrate progress", "gvg_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
+	log.Infow("update migrate gvg progress", "gvg_id", task.GetSrcGvg().GetId(), "family_id", task.GetSrcGvg().GetFamilyId(),
 		"finished", task.GetFinished(), "redundancy_idx", task.GetRedundancyIdx(), "last_migrated_object_id", task.GetLastMigratedObjectID())
 	migrateKey = MakeGVGMigrateKey(task.GetSrcGvg().GetId(), task.GetSrcGvg().GetFamilyId(), task.GetRedundancyIdx())
 	if err = s.taskRunner.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID()); err != nil {
@@ -190,14 +194,14 @@ func (s *SPExitScheduler) UpdateMigrateProgress(task task.MigrateGVGTask) error 
 // ListSPExitPlan is used to query sp exit status.
 func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse, error) {
 	res := &gfspserver.GfSpQuerySpExitResponse{}
-	// src SP SwapOut Plan
+	// src sp swap out plan
 	if s.swapOutPlan != nil {
 		s.swapOutPlan.swapOutUnitMapMutex.Lock()
 		defer s.swapOutPlan.swapOutUnitMapMutex.Unlock()
 		swapOutSrcUnitMap := make(map[string]*gfspserver.SwapOutUnit)
 
 		for _, unit := range s.swapOutPlan.swapOutUnitMap {
-			swapOutKey := GetSwapOutKey(unit.swapOut)
+			swapOutKey := makeSwapOutKey(unit.swapOut)
 			swapOutUnit := &gfspserver.SwapOutUnit{
 				SwapOutKey:    swapOutKey,
 				SuccessorSpId: unit.swapOut.SuccessorSpId,
@@ -206,7 +210,7 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 			swapOutSrcUnitMap[swapOutKey] = swapOutUnit
 		}
 		for _, unit := range s.swapOutPlan.completedSwapOut {
-			swapOutKey := GetSwapOutKey(unit.swapOut)
+			swapOutKey := makeSwapOutKey(unit.swapOut)
 			swapOutSrcUnitMap[swapOutKey].Status = int32(Migrated)
 		}
 
@@ -222,7 +226,7 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 		swapOutUnitMap := make(map[string]*gfspserver.SwapOutUnit)
 
 		for _, unit := range s.taskRunner.swapOutUnitMap {
-			swapOutKey := GetSwapOutKey(unit.swapOut)
+			swapOutKey := makeSwapOutKey(unit.swapOut)
 			swapOutUnit := &gfspserver.SwapOutUnit{
 				SuccessorSpId: unit.swapOut.SuccessorSpId,
 				SwapOutKey:    swapOutKey,
@@ -260,6 +264,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 		srcSP           *sptypes.StorageProvider
 		swapOutFamilyID uint32
 		gvgList         []*virtualgrouptypes.GlobalVirtualGroup
+		txHash          string
 	)
 	if srcSP, err = s.manager.baseApp.Consensus().QuerySP(context.Background(), swapOut.GetStorageProvider()); err != nil {
 		log.Errorw("failed to add swap out to task runner", "error", err)
@@ -280,8 +285,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 				StorageProvider:            s.manager.baseApp.OperatorAddress(),
 				GlobalVirtualGroupFamilyId: swapOutFamilyID,
 			}
-			txHash, err := s.manager.baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg)
-			if err != nil {
+			if err = SendAndConfirmCompleteSwapOutTx(s.manager.baseApp, msg); err != nil {
 				log.Errorw("failed to send complete swap out", "family_id", swapOutFamilyID, "error", err)
 				return err
 			}
@@ -304,7 +308,7 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 		gUnit := &SPExitGVGExecuteUnit{}
 		gUnit.srcGVG = gvg
 		gUnit.redundancyIndex = redundancyIndex
-		gUnit.swapOutKey = GetSwapOutKey(swapOut)
+		gUnit.swapOutKey = makeSwapOutKey(swapOut)
 		gUnit.srcSP = srcSP
 		gUnit.destSP = s.selfSP
 		gUnit.migrateStatus = WaitForMigrate
@@ -436,7 +440,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 			return nil, getFamilySwapOutErr
 		}
 		for _, sUnit := range swapOutUnits {
-			plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
+			plan.swapOutUnitMap[makeSwapOutKey(sUnit.swapOut)] = sUnit
 		}
 	}
 	if secondaryGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(context.Background(), s.selfSP.GetId()); err != nil {
@@ -463,7 +467,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 		needSendTX := true
 		if buildMetaByDB {
 			// check db meta, avoid repeated send tx
-			swapOutDBMeta, _ := s.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(GetSwapOutKey(swapOut))
+			swapOutDBMeta, _ := s.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(makeSwapOutKey(swapOut))
 			if swapOutDBMeta != nil {
 				if swapOutDBMeta.SwapOutMsg.SuccessorSpId == swapOut.SuccessorSpId {
 					needSendTX = false
@@ -472,7 +476,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 		}
 
 		if needSendTX {
-			swapOut, err = GetSwapOutApprovalAndSendTx(plan.manager.baseApp.GfSpClient(), destSecondarySP, swapOut)
+			swapOut, err = GetSwapOutApprovalAndSendTx(plan.manager.baseApp, destSecondarySP, swapOut)
 			if err != nil {
 				return nil, err
 			}
@@ -484,7 +488,7 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 			isSecondary:  true,
 			swapOut:      swapOut,
 		}
-		plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
+		plan.swapOutUnitMap[makeSwapOutKey(sUnit.swapOut)] = sUnit
 	}
 
 	if len(plan.swapOutUnitMap) == 0 {
@@ -492,8 +496,8 @@ func (s *SPExitScheduler) produceSwapOutPlan(buildMetaByDB bool) (*SrcSPSwapOutP
 		msg := &virtualgrouptypes.MsgCompleteStorageProviderExit{
 			StorageProvider: plan.manager.baseApp.OperatorAddress(),
 		}
-		txHash, sendTxError := plan.manager.baseApp.GfSpClient().CompleteSPExit(context.Background(), msg)
-		log.Infow("sp is empty, send complete sp exit tx directly", "tx_hash", txHash, "error", sendTxError)
+		sendTxError := SendAndConfirmCompleteSPExitTx(plan.manager.baseApp, msg)
+		log.Infow("sp is empty, send complete sp exit tx directly", "complete_sp_exit_msg", msg, "error", sendTxError)
 	}
 
 	log.Infow("succeed to produce swap out plan")
@@ -557,8 +561,8 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *SPExitGVGExecuteUnit,
 		GlobalVirtualGroupFamilyId: s.swapOut.GetGlobalVirtualGroupFamilyId(),
 		GlobalVirtualGroupIds:      s.swapOut.GetGlobalVirtualGroupIds(),
 	}
-	txHash, err := runner.manager.baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg)
-	log.Infow("send complete swap out tx", "swap_out", msg, "tx_hash", txHash, "error", err)
+	err := SendAndConfirmCompleteSwapOutTx(runner.manager.baseApp, msg)
+	log.Infow("send complete swap out tx", "complete_swap_out", msg, "error", err)
 	return err
 }
 
@@ -615,7 +619,7 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 		SuccessorSpId:              destFamilySP.GetId(),
 	}
 
-	swapOut, err = GetSwapOutApprovalAndSendTx(plan.manager.baseApp.GfSpClient(), destFamilySP, swapOut)
+	swapOut, err = GetSwapOutApprovalAndSendTx(plan.manager.baseApp, destFamilySP, swapOut)
 	if err != nil {
 		return err
 	}
@@ -626,10 +630,10 @@ func (plan *SrcSPSwapOutPlan) recheckConflictAndAddFamilySwapOut(s *SwapOutUnit)
 		swapOut:      swapOut,
 	}
 
-	plan.swapOutUnitMap[GetSwapOutKey(sUnit.swapOut)] = sUnit
+	plan.swapOutUnitMap[makeSwapOutKey(sUnit.swapOut)] = sUnit
 
 	if err = plan.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
-		SwapOutKey: GetSwapOutKey(sUnit.swapOut),
+		SwapOutKey: makeSwapOutKey(sUnit.swapOut),
 		IsDestSP:   false,
 		SwapOutMsg: sUnit.swapOut,
 	}); err != nil {
@@ -647,7 +651,7 @@ func (plan *SrcSPSwapOutPlan) checkAllCompletedAndSendCompleteSPExitTx() error {
 			return nil
 		}
 		if runningSwapOut.isConflicted {
-			swapKey := SwapOutFamilyKeyPrefix + util.Uint32ToString(runningSwapOut.conflictedFamilyID)
+			swapKey := swapOutFamilyKeyPrefix + util.Uint32ToString(runningSwapOut.conflictedFamilyID)
 			if _, found := plan.completedSwapOut[swapKey]; !found { // not completed
 				log.Infow("swap out list are not all completed", "not_completed_swap_out", swapKey)
 				return nil
@@ -659,8 +663,8 @@ func (plan *SrcSPSwapOutPlan) checkAllCompletedAndSendCompleteSPExitTx() error {
 	msg := &virtualgrouptypes.MsgCompleteStorageProviderExit{
 		StorageProvider: plan.manager.baseApp.OperatorAddress(),
 	}
-	txHash, err := plan.manager.baseApp.GfSpClient().CompleteSPExit(context.Background(), msg)
-	log.Infow("send complete sp exit tx", "sp_exit", msg, "tx_hash", txHash, "error", err)
+	err := SendAndConfirmCompleteSPExitTx(plan.manager.baseApp, msg)
+	log.Infow("send complete sp exit tx", "sp_exit", msg, "complete_sp_exit_msg", msg, "error", err)
 	return err
 }
 
@@ -671,18 +675,18 @@ func (plan *SrcSPSwapOutPlan) CheckAndSendCompleteSPExitTx(event *virtualgroupty
 	plan.swapOutUnitMapMutex.Lock()
 	defer plan.swapOutUnitMapMutex.Unlock()
 
-	if _, found := plan.swapOutUnitMap[GetEventSwapOutKey(event)]; !found {
+	if _, found := plan.swapOutUnitMap[makeEventSwapOutKey(event)]; !found {
 		return fmt.Errorf("not found swap out key")
 	}
 
-	unit := plan.swapOutUnitMap[GetEventSwapOutKey(event)]
+	unit := plan.swapOutUnitMap[makeEventSwapOutKey(event)]
 	if unit.isConflicted {
 		err = plan.recheckConflictAndAddFamilySwapOut(unit)
 		if err != nil {
 			return err
 		}
 	}
-	plan.completedSwapOut[GetEventSwapOutKey(event)] = unit
+	plan.completedSwapOut[makeEventSwapOutKey(event)] = unit
 	return plan.checkAllCompletedAndSendCompleteSPExitTx()
 }
 
@@ -979,11 +983,11 @@ func (runner *DestSPTaskRunner) AddNewMigrateGVGUnit(remotedGVGUnit *SPExitGVGEx
 func (runner *DestSPTaskRunner) AddNewSwapOut(swapOut *virtualgrouptypes.MsgSwapOut) error {
 	var err error
 	runner.mutex.Lock()
-	if _, found := runner.swapOutUnitMap[GetSwapOutKey(swapOut)]; found {
+	if _, found := runner.swapOutUnitMap[makeSwapOutKey(swapOut)]; found {
 		runner.mutex.Unlock()
 		return nil
 	}
-	runner.swapOutUnitMap[GetSwapOutKey(swapOut)] = &SwapOutUnit{
+	runner.swapOutUnitMap[makeSwapOutKey(swapOut)] = &SwapOutUnit{
 		swapOut:      swapOut,
 		completedGVG: make(map[uint32]*SPExitGVGExecuteUnit),
 	}
@@ -991,7 +995,7 @@ func (runner *DestSPTaskRunner) AddNewSwapOut(swapOut *virtualgrouptypes.MsgSwap
 
 	// add to db
 	if err = runner.manager.baseApp.GfSpDB().InsertSwapOutUnit(&spdb.SwapOutMeta{
-		SwapOutKey: GetSwapOutKey(swapOut),
+		SwapOutKey: makeSwapOutKey(swapOut),
 		IsDestSP:   true,
 		SwapOutMsg: swapOut,
 	}); err != nil {
@@ -1104,7 +1108,7 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) (
 			}
 			// resolve conflict, swap out secondarySPIDBindingLeastGVGs.
 			for _, gvg := range familyGVGs {
-				if redundancyIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, secondarySPIDBindingLeastGVGs); redundancyIndex > 0 {
+				if redundancyIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, secondarySPIDBindingLeastGVGs); redundancyIndex >= 0 {
 					// gvg has conflicts.
 					destSecondarySP, pickErr := checker.plan.virtualGroupManager.PickSPByFilter(NewPickDestSPFilterWithSlice(gvg.GetSecondarySpIds()))
 					if pickErr != nil {
@@ -1122,7 +1126,7 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) (
 					needSendTX := true
 					if buildMetaByDB {
 						// check db meta, avoid repeated send tx
-						swapOutDBMeta, _ := checker.plan.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(GetSwapOutKey(swapOut))
+						swapOutDBMeta, _ := checker.plan.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(makeSwapOutKey(swapOut))
 						if swapOutDBMeta != nil {
 							if swapOutDBMeta.SwapOutMsg.SuccessorSpId == swapOut.SuccessorSpId {
 								needSendTX = false
@@ -1131,7 +1135,7 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) (
 					}
 
 					if needSendTX {
-						swapOut, err = GetSwapOutApprovalAndSendTx(checker.plan.manager.baseApp.GfSpClient(), destSecondarySP, swapOut)
+						swapOut, err = GetSwapOutApprovalAndSendTx(checker.plan.manager.baseApp, destSecondarySP, swapOut)
 						if err != nil {
 							return nil, err
 						}
@@ -1155,7 +1159,7 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) (
 			needSendTX := true
 			if buildMetaByDB {
 				// check db meta, avoid repeated send tx
-				swapOutDBMeta, _ := checker.plan.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(GetSwapOutKey(swapOut))
+				swapOutDBMeta, _ := checker.plan.manager.baseApp.GfSpDB().QuerySwapOutUnitInSrcSP(makeSwapOutKey(swapOut))
 				if swapOutDBMeta != nil {
 					if swapOutDBMeta.SwapOutMsg.SuccessorSpId == swapOut.SuccessorSpId {
 						needSendTX = false
@@ -1164,7 +1168,7 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) (
 			}
 
 			if needSendTX {
-				swapOut, err = GetSwapOutApprovalAndSendTx(checker.plan.manager.baseApp.GfSpClient(), destFamilySP, swapOut)
+				swapOut, err = GetSwapOutApprovalAndSendTx(checker.plan.manager.baseApp, destFamilySP, swapOut)
 				if err != nil {
 					return nil, err
 				}
@@ -1182,21 +1186,91 @@ func (checker *FamilyConflictChecker) GenerateSwapOutUnits(buildMetaByDB bool) (
 }
 
 // GetSwapOutApprovalAndSendTx is used to get approval from dest sp and notify it to start migrate swap out's gvg tasks.
-func GetSwapOutApprovalAndSendTx(client *gfspclient.GfSpClient, destSP *sptypes.StorageProvider, originMsg *virtualgrouptypes.MsgSwapOut) (*virtualgrouptypes.MsgSwapOut, error) {
-	ctx := context.Background()
-	approvalSwapOut, err := client.GetSwapOutApproval(ctx, destSP.GetEndpoint(), originMsg)
-	if err != nil {
+func GetSwapOutApprovalAndSendTx(baseApp *gfspapp.GfSpBaseApp, destSP *sptypes.StorageProvider, originMsg *virtualgrouptypes.MsgSwapOut) (*virtualgrouptypes.MsgSwapOut, error) {
+	var (
+		ctx             = context.Background()
+		err             error
+		approvalSwapOut *virtualgrouptypes.MsgSwapOut
+	)
+	if approvalSwapOut, err = baseApp.GfSpClient().GetSwapOutApproval(ctx, destSP.GetEndpoint(), originMsg); err != nil {
 		log.Errorw("failed to get swap out approval from dest sp", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
-	if _, err = client.SwapOut(ctx, approvalSwapOut); err != nil && !isAlreadyExists(err) {
-		log.Errorw("failed to send swap out tx to chain", "swap_out_msg", approvalSwapOut, "error", err)
+	if err = SendAndConfirmTx(baseApp.Consensus(),
+		func() (string, error) {
+			var (
+				txHash string
+				txErr  error
+			)
+			if txHash, txErr = baseApp.GfSpClient().SwapOut(ctx, approvalSwapOut); txErr != nil && !isAlreadyExists(txErr) {
+				log.Errorw("failed to send swap out tx to chain", "swap_out_msg", approvalSwapOut, "error", txErr)
+				return "", err
+			}
+			return txHash, nil
+		}); err != nil {
+		log.Errorw("failed to send swap out tx and confirm", "swap_out_msg", approvalSwapOut, "error", err)
 		return nil, err
 	}
+
 	log.Infow("succeed to get approval and send swap out tx", "dest_sp", destSP.GetEndpoint(), "swap_out_msg", approvalSwapOut)
 	return approvalSwapOut, nil
 }
 
+func SendAndConfirmCompleteSwapOutTx(baseApp *gfspapp.GfSpBaseApp, msg *virtualgrouptypes.MsgCompleteSwapOut) error {
+	return SendAndConfirmTx(baseApp.Consensus(),
+		func() (string, error) {
+			var (
+				txHash string
+				txErr  error
+			)
+			if txHash, txErr = baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
+				log.Errorw("failed to send complete swap out", "complete_swap_out_msg", msg, "error", txErr)
+				return "", txErr
+			}
+			return txHash, nil
+		})
+}
+
+func SendAndConfirmCompleteSPExitTx(baseApp *gfspapp.GfSpBaseApp, msg *virtualgrouptypes.MsgCompleteStorageProviderExit) error {
+	return SendAndConfirmTx(baseApp.Consensus(),
+		func() (string, error) {
+			var (
+				txHash string
+				txErr  error
+			)
+			if txHash, txErr = baseApp.GfSpClient().CompleteSPExit(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
+				log.Errorw("failed to send complete sp exit", "complete_sp_exit_msg", msg, "error", txErr)
+				return "", txErr
+			}
+			return txHash, nil
+		})
+}
+
 func isAlreadyExists(err error) bool {
 	return strings.Contains(err.Error(), "already exist")
+}
+
+type SendTxFunc func() (string, error)
+
+func SendAndConfirmTx(chainClient consensus.Consensus, sendTxFunc SendTxFunc) error {
+	var (
+		txHash string
+		err    error
+		ctx    = context.Background()
+	)
+	for i := 0; i < confirmRetryNumber; i++ {
+		time.Sleep(time.Duration(i*backoffSecondInterval) * time.Second)
+		txHash, err = sendTxFunc()
+		if err != nil {
+			log.Errorw("failed to send tx", "error", err)
+			continue
+		}
+		_, err = chainClient.ConfirmTransaction(ctx, txHash)
+		if err != nil {
+			log.Errorw("failed to confirm tx", "error", err)
+			continue
+		}
+		return nil // succeed
+	}
+	return err
 }

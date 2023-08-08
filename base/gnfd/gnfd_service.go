@@ -2,12 +2,16 @@ package gnfd
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -87,6 +91,11 @@ const (
 	ChainSuccessVerifyPutObjectPermission = "verify_putt_object_permission_success"
 	// ChainFailureVerifyPutObjectPermission defines the metrics label of unsuccessfully verify put object permission
 	ChainFailureVerifyPutObjectPermission = "verify_put_object_permission_failure"
+
+	// ConfirmBlockNumber defines wait block number.
+	ConfirmBlockNumber = 3
+	// WaitForNextBlockTimeout define wait block timeout.
+	WaitForNextBlockTimeout = 30 * time.Second
 )
 
 // CurrentHeight the block height sub one as the stable height.
@@ -782,4 +791,70 @@ func (g *Gnfd) VerifyPutObjectPermission(ctx context.Context, account, bucket, o
 		return true, err
 	}
 	return false, err
+}
+
+// ConfirmTransaction is used to confirm whether the transaction is on the chain.
+func (g *Gnfd) ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("confirm_transaction").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	for i := 0; i < ConfirmBlockNumber; i++ {
+		txResponse, err := client.GetTx(ctx, &tx.GetTxRequest{Hash: txHash})
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				// Tx not found, wait for next block and try again
+				if err = g.WaitForNextBlock(ctx); err != nil {
+					return nil, err
+				}
+				continue
+			}
+			return nil, err
+		}
+		// Tx found
+		return txResponse.TxResponse, nil
+	}
+	return nil, fmt.Errorf("failed to confirm transaction, tx_hash=%s", txHash)
+}
+
+// WaitForNextBlock is used to chain generate a new block.
+func (g *Gnfd) WaitForNextBlock(ctx context.Context) error {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("wait_for_next_block").Observe(time.Since(startTime).Seconds())
+	var (
+		err               error
+		height            int64
+		latestBlockHeight int64
+	)
+	height, err = g.getLatestBlockHeight(ctx)
+	if err != nil {
+		return err
+	}
+	ctxTimeout, cancel := context.WithTimeout(ctx, WaitForNextBlockTimeout)
+	defer cancel()
+
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		if latestBlockHeight, err = g.getLatestBlockHeight(ctx); err != nil {
+			return err
+		}
+		if latestBlockHeight >= height+1 {
+			return nil
+		}
+		select {
+		case <-ctxTimeout.Done():
+			return fmt.Errorf("timeout exceeded waiting for block")
+		case <-ticker.C:
+		}
+	}
+}
+
+func (g *Gnfd) getLatestBlockHeight(ctx context.Context) (int64, error) {
+	client := g.getCurrentClient().GnfdClient()
+	block, err := client.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
+	if err != nil {
+		return 0, err
+	}
+	return block.SdkBlock.Header.Height, nil
 }

@@ -124,5 +124,6 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 		return err
 	}
 	signer.client = client
+	client.signer = signer
 	return nil
 }

@@ -2,14 +2,11 @@ package signer
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -71,6 +68,8 @@ type GasInfo struct {
 
 // GreenfieldChainSignClient the greenfield chain client
 type GreenfieldChainSignClient struct {
+	signer *SignModular
+
 	opLock   sync.Mutex
 	sealLock sync.Mutex
 	gcLock   sync.Mutex
@@ -101,6 +100,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 	}
 	operatorAccNonce, err := operatorClient.GetNonce(context.Background())
 	if err != nil {
+		log.Errorw("failed to get operator nonce", "error", err)
 		return nil, err
 	}
 	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
@@ -132,7 +132,7 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 	}
 	sealAccNonce, err := sealClient.GetNonce(context.Background())
 	if err != nil {
-		log.Errorw("failed to get nonce", "error", err)
+		log.Errorw("failed to get seal nonce", "error", err)
 		return nil, err
 	}
 
@@ -149,14 +149,17 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 
 	gcKM, err := keys.NewPrivateKeyManager(gcPrivateKey)
 	if err != nil {
+		log.Errorw("failed to new gc private key manager", "error", err)
 		return nil, err
 	}
 	gcClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(gcKM))
 	if err != nil {
+		log.Errorw("failed to new gc greenfield client", "error", err)
 		return nil, err
 	}
 	gcAccNonce, err := gcClient.GetNonce(context.Background())
 	if err != nil {
+		log.Errorw("failed to get gc nonce", "error", err)
 		return nil, err
 	}
 
@@ -258,7 +261,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		}
 
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "error", err, "retry", i)
+			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "retry_number", i, "error", err)
 			continue
 		}
 		client.sealAccNonce = nonce + 1
@@ -275,7 +278,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context, scope SignType,
 	rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
 	if rejectObject == nil {
-		log.CtxError(ctx, "reject unseal object msg pointer dangling")
+		log.CtxError(ctx, "failed to reject unseal object due to pointer dangling")
 		return "", ErrDanglingPointer
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, rejectObject.GetBucketName())
@@ -320,7 +323,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context,
 		}
 
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast reject unseal object", "error", err, "retry", i)
+			log.CtxErrorw(ctx, "failed to broadcast reject unseal object", "retry_number", i, "error", err)
 			continue
 		}
 
@@ -378,63 +381,64 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 }
 
 func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType,
-	gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) ([]byte, error) {
-	log.Infow("signer start to create a new global virtual group", "scope", scope)
+	gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
+	log.Infow("signer starts to create a new global virtual group", "scope", scope)
 	if gvg == nil {
-		log.CtxError(ctx, "create virtual group msg pointer dangling")
-		return nil, ErrDanglingPointer
+		log.CtxError(ctx, "failed to create virtual group due to pointer dangling")
+		return "", ErrDanglingPointer
 	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
-		return nil, ErrSignMsg
+		return "", ErrSignMsg
 	}
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
-	nonce := client.operatorAccNonce
 
 	msgCreateGlobalVirtualGroup := virtualgrouptypes.NewMsgCreateGlobalVirtualGroup(km.GetAddr(),
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
-	log.Debugf("CreateGlobalVirtualGroup bucket migrate :%s", msgCreateGlobalVirtualGroup)
+	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
-	txOpt := &ctypes.TxOption{
-		Mode:      &mode,
-		GasLimit:  client.gasInfo[CreateGlobalVirtualGroup].GasLimit,
-		FeeAmount: client.gasInfo[CreateGlobalVirtualGroup].FeeAmount,
-		Nonce:     nonce,
-	}
-
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)
-	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
-		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
-		if nonceErr != nil {
-			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
-			ErrCreateGVGOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
-			return nil, ErrCreateGVGOnChain
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Mode:      &mode,
+			GasLimit:  client.gasInfo[CreateGlobalVirtualGroup].GasLimit,
+			FeeAmount: client.gasInfo[CreateGlobalVirtualGroup].FeeAmount,
+			Nonce:     nonce,
 		}
-		client.operatorAccNonce = nonce
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
+				ErrCreateGVGOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
+				return "", ErrCreateGVGOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast global virtual group tx", "global_virtual_group",
+				msgCreateGlobalVirtualGroup.String(), "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast create virtual group tx", "tx_hash", txHash,
+			"virtual_group_msg", msgCreateGlobalVirtualGroup)
+		return txHash, nil
+
 	}
+
 	// failed to broadcast tx
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to broadcast global virtual group", "error", err, "global_virtual_group",
-			msgCreateGlobalVirtualGroup.String())
-		ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast create global virtual group, error: %v", err))
-		return nil, ErrCompleteMigrateBucketOnChain
-	}
-
-	txHashByte, err := hex.DecodeString(txHash)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to marshal tx hash", "error", err, "global_virtual_group",
-			msgCreateGlobalVirtualGroup.String())
-		return nil, ErrCreateGVGOnChain
-	}
-
-	// update nonce when tx is successful submitted
-	client.operatorAccNonce = nonce + 1
-	return txHashByte, nil
+	ErrCreateGVGOnChain.SetError(fmt.Errorf("failed to broadcast create virtual group tx, error: %v", err))
+	return "", ErrCreateGVGOnChain
 }
 
 func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Context, scope SignType,
@@ -483,7 +487,7 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 			client.operatorAccNonce = nonce
 		}
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast complete migrate bucket tx", "error", err, "retry", i)
+			log.CtxErrorw(ctx, "failed to broadcast complete migrate bucket tx", "retry_number", i, "error", err)
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
@@ -555,7 +559,7 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 	swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
 	log.Infow("signer starts to swap out", "scope", scope)
 	if swapOut == nil {
-		log.CtxError(ctx, "swap out msg pointer dangling")
+		log.CtxError(ctx, "failed to swap out due to pointer dangling")
 		return "", ErrDanglingPointer
 	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
@@ -594,14 +598,14 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
-				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 				ErrSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
 				return "", ErrSwapOutOnChain
 			}
 			client.operatorAccNonce = nonce
 		}
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast swap out", "error", err, "swap_out", msgSwapOut.String())
+			log.CtxErrorw(ctx, "failed to broadcast swap out", "retry_number", i, "swap_out", msgSwapOut.String(), "error", err)
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
@@ -654,14 +658,14 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
-				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
-				ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
+				ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
 				return "", ErrCompleteSwapOutOnChain
 			}
 			client.operatorAccNonce = nonce
 		}
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast complete swap out tx", "error", err, "retry", i)
+			log.CtxErrorw(ctx, "failed to broadcast complete swap out tx", "retry_number", i, "error", err)
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
@@ -711,14 +715,14 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
-				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
-				ErrSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
+				ErrSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
 				return "", ErrSPExitOnChain
 			}
 			client.operatorAccNonce = nonce
 		}
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast start sp exit tx", "error", err, "retry", i)
+			log.CtxErrorw(ctx, "failed to broadcast start sp exit tx", "retry_number", i, "error", err)
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
@@ -768,14 +772,14 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
-				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
-				ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
+				ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
 				return "", ErrCompleteSPExitOnChain
 			}
 			client.operatorAccNonce = nonce
 		}
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast complete sp exit tx", "error", err, "retry", i)
+			log.CtxErrorw(ctx, "failed to broadcast complete sp exit tx", "retry_number", i, "error", err)
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
@@ -788,14 +792,14 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 }
 
 func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.GreenfieldClient) (uint64, error) {
-	err := waitForNextBlock(ctx, gnfdClient)
+	err := client.signer.baseApp.Consensus().WaitForNextBlock(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to wait next block", "error", err)
 		return 0, err
 	}
 	nonce, err := gnfdClient.GetNonce(context.Background())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get seal account nonce on chain", "error", err)
+		log.CtxErrorw(ctx, "failed to get nonce on chain", "error", err)
 		return 0, err
 	}
 	return nonce, nil
@@ -817,36 +821,4 @@ func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdCl
 		return "", fmt.Errorf("failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
 	}
 	return resp.TxResponse.TxHash, nil
-}
-
-func waitForNextBlock(ctx context.Context, client *client.GreenfieldClient) error {
-	height, err := latestBlockHeight(ctx, client)
-	if err != nil {
-		return err
-	}
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		latestBlockHeight, err := latestBlockHeight(ctx, client)
-		if err != nil {
-			return err
-		}
-		if latestBlockHeight >= height+1 {
-			return nil
-		}
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("timeout exceeded waiting for block")
-		case <-ticker.C:
-		}
-	}
-}
-
-func latestBlockHeight(ctx context.Context, client *client.GreenfieldClient) (int64, error) {
-	block, err := client.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
-	if err != nil {
-		return 0, err
-	}
-	return block.SdkBlock.Header.Height, nil
 }

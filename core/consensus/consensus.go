@@ -3,6 +3,7 @@ package consensus
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
@@ -66,6 +67,10 @@ type Consensus interface {
 	ListenObjectSeal(ctx context.Context, objectID uint64, timeOutHeight int) (bool, error)
 	// ListenRejectUnSealObject returns an indication of the object is rejected.
 	ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error)
+	// ConfirmTransaction is used to confirm whether the transaction is on the chain.
+	ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error)
+	// WaitForNextBlock is used to chain generate a new block.
+	WaitForNextBlock(ctx context.Context) error
 	// Close the Consensus interface.
 	Close() error
 }
@@ -90,7 +95,7 @@ func (*NullConsensus) QuerySPFreeQuota(context.Context, string) (uint64, error) 
 	return 0, nil
 }
 
-func (*NullConsensus) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
+func (*NullConsensus) QuerySPPrice(context.Context, string) (sptypes.SpStoragePrice, error) {
 	return sptypes.SpStoragePrice{}, nil
 }
 
@@ -110,15 +115,15 @@ func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32)
 	return nil, nil
 }
 
-func (*NullConsensus) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+func (*NullConsensus) QueryVirtualGroupFamily(context.Context, uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	return nil, nil
 }
 
-func (*NullConsensus) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (*NullConsensus) QueryGlobalVirtualGroup(context.Context, uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
 	return nil, nil
 }
 
-func (*NullConsensus) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
+func (*NullConsensus) QueryVirtualGroupParams(context.Context) (*virtualgrouptypes.Params, error) {
 	return nil, nil
 }
 
@@ -158,4 +163,12 @@ func (*NullConsensus) ListenObjectSeal(context.Context, uint64, int) (bool, erro
 func (*NullConsensus) ListenRejectUnSealObject(context.Context, uint64, int) (bool, error) {
 	return false, nil
 }
+func (*NullConsensus) ConfirmTransaction(context.Context, string) (*sdk.TxResponse, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) WaitForNextBlock(context.Context) error {
+	return nil
+}
+
 func (*NullConsensus) Close() error { return nil }
