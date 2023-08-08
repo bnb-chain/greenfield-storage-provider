@@ -5,13 +5,13 @@ import (
 	"errors"
 
 	"cosmossdk.io/math"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
 // GfSpGetEndpointBySpId get endpoint by sp id

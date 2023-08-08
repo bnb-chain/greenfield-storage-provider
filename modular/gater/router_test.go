@@ -346,7 +346,7 @@ func TestRouters(t *testing.T) {
 			method:           http.MethodGet,
 			url:              scheme + testDomain + AuthRequestNoncePath,
 			shouldMatch:      true,
-			wantedRouterName: requestNonceName,
+			wantedRouterName: requestNonceRouterName,
 		},
 		{
 			name:             "offchain-auth update key router",
@@ -354,7 +354,7 @@ func TestRouters(t *testing.T) {
 			method:           http.MethodPost,
 			url:              scheme + testDomain + AuthUpdateKeyPath,
 			shouldMatch:      true,
-			wantedRouterName: updateUserPublicKey,
+			wantedRouterName: updateUserPublicKeyRouterName,
 		},
 		{
 			name:             "Get payment by bucket id router",

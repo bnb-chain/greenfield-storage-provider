@@ -4,10 +4,10 @@ workspace=${GITHUB_WORKSPACE}
 
 # some constants
 GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
-# greenfield cmd branch name: feat-adaptor-sp-exit
-GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
-# greenfield go sdk branch name: develop
-GREENFIELD_GO_SDK_TAG="7eb5316b7919b3b7b48ec3804dc302679eb2d804"
+# greenfield cmd branch name: auth-refactoring
+GREENFIELD_CMD_TAG="af884ea4797a6851eaccd67f48004fb68262f576"
+# greenfield go sdk branch name: feat/auth-refactor
+GREENFIELD_GO_SDK_TAG="e7bb9b9cd47023e6d3b1da1b63e21913e6f2e38f"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -90,7 +90,7 @@ function build_cmd() {
   # generate a keystore file to manage private key information
   touch key.txt & echo ${TEST_ACCOUNT_PRIVATE_KEY} > key.txt
   touch password.txt & echo "test_sp_function" > password.txt
-  ./gnfd-cmd --home ./ keystore generate --privKeyFile key.txt --passwordfile password.txt
+  ./gnfd-cmd --home ./ --passwordfile password.txt account import key.txt
 
   # construct config.toml
   touch config.toml
@@ -120,7 +120,7 @@ function test_create_bucket() {
   cd ${workspace}/greenfield-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
   sleep 5
-  ./gnfd-cmd -c ./config.toml --home ./ bucket create gnfd://${BUCKET_NAME}
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt bucket create gnfd://${BUCKET_NAME}
   ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://${BUCKET_NAME}
   sleep 10
 }
@@ -131,9 +131,9 @@ function test_create_bucket() {
 function test_file_size_less_than_16_mb() {
   set -e
   cd ${workspace}/greenfield-cmd/build/
-  ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://${BUCKET_NAME}
-  sleep 16
-  ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://${BUCKET_NAME}/example.json ./test_data.json
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://${BUCKET_NAME}
+  sleep 32
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://${BUCKET_NAME}/example.json ./test_data.json
   check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./test_data.json
   cat test_data.json
 }
@@ -145,9 +145,9 @@ function test_file_size_greater_than_16_mb() {
   set -e
   cd ${workspace}/greenfield-cmd/build/
   dd if=/dev/urandom of=./random_file bs=17M count=1
-  ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/octet-stream" ./random_file gnfd://${BUCKET_NAME}/random_file
-  sleep 16
-  ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://${BUCKET_NAME}/random_file ./new_random_file
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/octet-stream" ./random_file gnfd://${BUCKET_NAME}/random_file
+  sleep 32
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://${BUCKET_NAME}/random_file ./new_random_file
   sleep 10
   check_md5 ./random_file ./new_random_file
 }
@@ -164,15 +164,15 @@ function test_sp_exit() {
     cd ${workspace}/greenfield-cmd/build/
     ls
     dd if=/dev/urandom of=./random_file bs=17M count=1
-    ./gnfd-cmd -c ./config.toml --home ./ bucket create --primarySP ${operator_address} gnfd://spexit
+    ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt  bucket create --primarySP ${operator_address} gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
-    ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/octet-stream" ./random_file gnfd://spexit/random_file
-    ./gnfd-cmd -c ./config.toml --home ./ object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://spexit/example.json
+    ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/octet-stream" ./random_file gnfd://spexit/random_file
+    ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://spexit/example.json
     sleep 16
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/random_file
-    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/random_file  ./new_random_file
+    ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt  object get gnfd://spexit/random_file  ./new_random_file
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
-    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/example.json ./new.json
+    ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/example.json ./new.json
 
     sleep 10
     check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new.json
@@ -187,8 +187,8 @@ function test_sp_exit() {
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
-    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/example.json ./new1.json
-    ./gnfd-cmd -c ./config.toml --home ./ object get gnfd://spexit/random_file  ./new_random_file1
+    ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/example.json ./new1.json
+    ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/random_file  ./new_random_file1
     sleep 10
     check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new1.json
     check_md5 ./random_file ./new_random_file1

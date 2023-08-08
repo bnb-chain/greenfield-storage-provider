@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -31,11 +32,15 @@ var (
 	ErrInvalidPublicKeyHeader    = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50018, "The "+GnfdOffChainAuthAppRegPublicKeyHeader+" header is incorrect.")
 	ErrInvalidRegNonceHeader     = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50019, "The "+GnfdOffChainAuthAppRegNonceHeader+" header is incorrect.")
 	ErrSignedMsgNotMatchHeaders  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50020, "The signed message in "+GnfdAuthorizationHeader+" does not match the content in headers.")
-	ErrSignedMsgNotMatchSPAddr   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50021, "The signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
+	ErrSignedMsgNotMatchSPAddr   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50021, "The SP addr in the signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
+	ErrSignedMsgNotMatchSPNonce  = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50040, "The SP Nonce in the signed message in "+GnfdAuthorizationHeader+" is not for the this SP.")
+	ErrSignedMsgNotMatchDomain   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50037, "The domain in the signed message in "+GnfdAuthorizationHeader+" does not match this website.")
+	ErrSignedMsgNotMatchExpiry   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50038, "The expiry time in signed message in "+GnfdAuthorizationHeader+" does not match the expiry time in the header "+GnfdOffChainAuthAppRegExpiryDateHeader+".")
+	ErrSignedMsgNotMatchPubKey   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50039, "The public key in signed message in "+GnfdAuthorizationHeader+" does not match the expiry time in the header "+GnfdOffChainAuthAppRegPublicKeyHeader+".")
 	ErrSignedMsgNotMatchTemplate = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50022, "The signed message in "+GnfdAuthorizationHeader+" does not match the template.")
-	ErrInvalidExpiryDateHeader   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50023, "The "+GnfdOffChainAuthAppRegExpiryDateHeader+" header is incorrect. "+
+	ErrInvalidExpiryDateHeader   = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50023, "The "+commonhttp.HTTPHeaderExpiryTimestamp+" header is incorrect. "+
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
-	ErrInvalidExpiryDate = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50024, "The expiry parameter is incorrect. "+
+	ErrInvalidExpiryDateParam = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50024, "The "+commonhttp.HTTPHeaderExpiryTimestamp+" parameter is incorrect. "+
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in YYYY-DD-MM HH:MM:SS 'GMT'Z, e.g. 2023-04-20 16:34:12 GMT+08:00 . ")
 	ErrNoSuchObject           = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 50025, "no such object")
 	ErrForbidden              = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50026, "Forbidden to access")

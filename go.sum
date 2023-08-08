@@ -176,8 +176,10 @@ github.com/bnb-chain/greenfield-cometbft v0.0.2-alpha.2 h1:ys9kmgtRx04wcCextE6Cr
 github.com/bnb-chain/greenfield-cometbft v0.0.2-alpha.2/go.mod h1:EBmwmUdaNbGPyGjf1cMuoN3pAeM2tQu7Lfg95813EAw=
 github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1 h1:XcWulGacHVRiSCx90Q8Y//ajOrLNBQWR/KDB89dy3cU=
 github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1/go.mod h1:ey1CiK4bYo1RBNJLRiVbYr5CMdSxci9S/AZRINLtppI=
-github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf h1:5HxLNqgYHNV7Cfaepws3vejeI49aWry7ON2k+a23K10=
-github.com/bnb-chain/greenfield-common/go v0.0.0-20230512062756-5d7790d0ccbf/go.mod h1:mDgMyrO4J019EsGm96DLg78GlcVW8RVzJLzHzppOaOk=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230807023829-a6f5d8d75f1f h1:CWEvDMYmvBp3KoGCJfzbrDF+KmSpr0Bp89/C89Oje94=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230807023829-a6f5d8d75f1f/go.mod h1:GEjCahULmz99qx5k8WGWa7cTXIUjoNMNW+J92I+kTWg=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230807072950-7d065b289ab9 h1:WcnWlEIgua/k3Ho78JVPKQXR/bFrpgs8k+f9m/YwYLU=
+github.com/bnb-chain/greenfield-common/go v0.0.0-20230807072950-7d065b289ab9/go.mod h1:GEjCahULmz99qx5k8WGWa7cTXIUjoNMNW+J92I+kTWg=
 github.com/bnb-chain/greenfield-cosmos-sdk v0.2.3-alpha.5 h1:VZKjhnM/GvdG6iTXj63SrBgDQLtXG4piDDG2fTMTiV4=
 github.com/bnb-chain/greenfield-cosmos-sdk v0.2.3-alpha.5/go.mod h1:EghjYxFg4NRNMfTJ6g9rVhjImhXQm+tuboknHqeGmJA=
 github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe9 h1:6fLpmmI0EZvDTfPvI0zy5dBaaTUboHnEkoC5/p/w8TQ=
@@ -864,8 +866,8 @@ github.com/klauspost/cpuid/v2 v2.2.4/go.mod h1:RVVoqg1df56z8g3pUjL/3lE5UfnlrJX8t
 github.com/klauspost/crc32 v0.0.0-20161016154125-cb6bfca970f6/go.mod h1:+ZoRqAPRLkC4NPOvfYeR5KNOrY6TD+/sAC3HXPZgDYg=
 github.com/klauspost/pgzip v1.0.2-0.20170402124221-0bf5dcad4ada/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/klauspost/reedsolomon v1.9.3/go.mod h1:CwCi+NUr9pqSVktrkN+Ondf06rkhYZ/pcNv7fu+8Un4=
-github.com/klauspost/reedsolomon v1.11.7 h1:9uaHU0slncktTEEg4+7Vl7q7XUNMBUOK4R9gnKhMjAU=
-github.com/klauspost/reedsolomon v1.11.7/go.mod h1:4bXRN+cVzMdml6ti7qLouuYi32KHJ5MGv0Qd8a47h6A=
+github.com/klauspost/reedsolomon v1.11.8 h1:s8RpUW5TK4hjr+djiOpbZJB4ksx+TdYbRH7vHQpwPOY=
+github.com/klauspost/reedsolomon v1.11.8/go.mod h1:4bXRN+cVzMdml6ti7qLouuYi32KHJ5MGv0Qd8a47h6A=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
