@@ -18,6 +18,21 @@ const (
 	DefaultBsDBSwitchCheckIntervalSec = 30
 )
 
+var (
+	BsBlockHeight  string
+	BsBlockHash    string
+	BsUpdateTime   string
+	BsModules      []string
+	BsEnableDualDB bool
+	BsWorkers      uint
+
+	ChainID      string
+	ChainAddress []string
+
+	SpOperatorAddress string
+	GatewayDomainName string
+)
+
 func NewMetadataModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	metadata := &MetadataModular{baseApp: app}
 	if err := DefaultMetadataOptions(metadata, cfg); err != nil {
@@ -47,6 +62,14 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	} else {
 		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBBackup())
 	}
+
+	BsModules = cfg.BlockSyncer.Modules
+	BsEnableDualDB = cfg.BlockSyncer.EnableDualDB
+	BsWorkers = cfg.BlockSyncer.Workers
+	ChainID = cfg.Chain.ChainID
+	ChainAddress = cfg.Chain.ChainAddress
+	SpOperatorAddress = cfg.SpAccount.SpOperatorAddress
+	GatewayDomainName = cfg.Gateway.DomainName
 
 	startDBSwitchListener(time.Second*time.Duration(cfg.Metadata.BsDBSwitchCheckIntervalSec), cfg, metadata)
 

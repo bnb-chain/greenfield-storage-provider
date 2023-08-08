@@ -49,8 +49,8 @@ func doOperations(t *testing.T, handler *piece.PieceStore) {
 	assert.Contains(t, string(data), "Hello, World!\n")
 
 	// 3. head object
-	log.Info("Get piece info")
-	object, err := handler.GetPieceInfo(context.Background(), pieceKey)
+	log.Info("Head piece info")
+	object, err := handler.Head(context.Background(), pieceKey)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, pieceKey, object.Key())
 	assert.Equal(t, false, object.IsSymlink())

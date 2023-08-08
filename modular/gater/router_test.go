@@ -540,6 +540,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: getSPInfoRouterName,
 		},
+		{
+			name:             "Get sp status",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/status",
+			shouldMatch:      true,
+			wantedRouterName: getStatusRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

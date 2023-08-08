@@ -176,7 +176,6 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 		return err
 	}
 	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
-		// TODO(chris)
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			return nil
 		} else {

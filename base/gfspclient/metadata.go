@@ -15,6 +15,24 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
+// // GfSpClientAPI for mock use
+// //
+// //go:generate mockgen -source=./metadata.go -destination=./interface_mock.go -package=gfspclient
+// type GfSpClientAPI interface {
+// 	ApproverAPI
+// 	AuthenticatorAPI
+// 	DownloaderAPI
+// 	GaterAPI
+// 	ManagerAPI
+// 	MetadataAPI
+// 	P2PAPI
+// 	QueryAPI
+// 	ReceiverAPI
+// 	SignerAPI
+// 	UploaderAPI
+// 	Close() error
+// }
+
 // MetadataAPI for mock sue
 //
 //go:generate mockgen -source=./metadata.go -destination=./metadata_mock.go -package=gfspclient
@@ -792,4 +810,20 @@ func (s *GfSpClient) GetSPInfo(ctx context.Context, operatorAddress string, opts
 		return nil, ErrRPCUnknown
 	}
 	return resp.GetStorageProvider(), nil
+}
+
+func (s *GfSpClient) GetStatus(ctx context.Context, opts ...grpc.DialOption) (*types.Status, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetStatusRequest{}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetStatus(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get debug info", "error", err)
+		return nil, ErrRPCUnknown
+	}
+	return resp.GetStatus(), nil
 }

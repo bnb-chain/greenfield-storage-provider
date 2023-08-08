@@ -88,7 +88,7 @@ func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint str
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to replicate piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
+		return fmt.Errorf("failed to replicate piece, status_code(%d) endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	return nil
 }
@@ -115,7 +115,7 @@ func (s *GfSpClient) GetPieceFromECChunks(ctx context.Context, endpoint string, 
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get recovery piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
+		return nil, fmt.Errorf("failed to get recovery piece, status_code(%d) endpoint(%s)", resp.StatusCode, endpoint)
 	}
 
 	return resp.Body, nil
@@ -143,7 +143,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to replicate piece, StatusCode(%d) Endpoint(%s)", resp.StatusCode, endpoint)
+		return nil, fmt.Errorf("failed to replicate piece, status_code(%d) endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	signature, err := hex.DecodeString(resp.Header.Get(GnfdIntegrityHashSignatureHeader))
 	if err != nil {
@@ -230,7 +230,7 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, secondarySPEndpoint)
+		return nil, fmt.Errorf("failed to get resp body, status_code(%d), endpoint(%s)", resp.StatusCode, secondarySPEndpoint)
 	}
 	signature, err := hex.DecodeString(resp.Header.Get(GnfdSecondarySPMigrationBucketApprovalHeader))
 	if err != nil {
@@ -260,7 +260,7 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get resp body, StatusCode(%d), Endpoint(%s)", resp.StatusCode, destSPEndpoint)
+		return nil, fmt.Errorf("failed to get resp body, statue_code(%d), endpoint(%s)", resp.StatusCode, destSPEndpoint)
 	}
 	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
 	if err != nil {

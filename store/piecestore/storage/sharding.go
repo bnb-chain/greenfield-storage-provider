@@ -20,7 +20,7 @@ func NewSharded(cfg PieceStoreConfig) (ObjectStorage, error) {
 	for i := range stores {
 		ep := fmt.Sprintf(shardingURL, i)
 		if strings.HasSuffix(ep, "%!(EXTRA int=0)") {
-			return nil, fmt.Errorf("can not generate different endpoint using %s", shardingURL)
+			return nil, fmt.Errorf("can not generate different endpoint using [%s]", shardingURL)
 		}
 		cfg.Store.BucketURL = ep
 		stores[i], err = NewObjectStorage(cfg.Store)

@@ -78,10 +78,6 @@ const (
 	MinRecoveryRetry = 2
 	// MaxRecoveryRetry  defines the max retry number to recovery piece.
 	MaxRecoveryRetry = 3
-	// MinMigratePieceRetry defines the min retry number to migrate piece.
-	MinMigratePieceRetry = 2
-	// MaxMigratePieceRetry  defines the max retry number to migrate piece.
-	MaxMigratePieceRetry = 3
 	// MinMigrateGVGRetry defines the min retry number to migrate gvg.
 	MinMigrateGVGRetry = 2
 	// MaxMigrateGVGRetry  defines the max retry number to migrate gvg.
@@ -275,12 +271,7 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 		}
 		return g.recoveryRetry
 	case coretask.TypeTaskMigratePiece:
-		if g.migratePieceRetry < MinMigratePieceRetry {
-			return MinMigratePieceRetry
-		}
-		if g.migratePieceRetry > MaxMigratePieceRetry {
-			return MaxMigratePieceRetry
-		}
+		return NotUseRetry
 	case coretask.TypeTaskMigrateGVG:
 		if g.migrateGVGRetry < MinMigrateGVGRetry {
 			return MinMigrateGVGRetry
@@ -288,6 +279,7 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 		if g.migrateGVGRetry > MaxMigrateGVGRetry {
 			return MaxMigrateGVGRetry
 		}
+		return g.migrateGVGRetry
 	}
 	return 0
 }

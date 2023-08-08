@@ -8,6 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
@@ -19,9 +20,15 @@ import (
 )
 
 const (
-	primarySPRedundancyIdx = -1
-	queryLimit             = uint32(100)
-	reportProgressPerN     = 10
+	queryLimit         = uint32(100)
+	reportProgressPerN = 10
+
+	migrateGVGCostLabel              = "migrate_gvg_cost"
+	migrateGVGSucceedCounterLabel    = "migrate_gvg_succeed_counter"
+	migrateGVGFailedCounterLabel     = "migrate_gvg_failed_counter"
+	migrateObjectCostLabel           = "migrate_object_cost"
+	migrateObjectSucceedCounterLabel = "migrate_object_succeed_counter"
+	migrateObjectFailedCounterLabel  = "migrate_object_failed_counter"
 )
 
 // HandleMigrateGVGTask handles migrate gvg task, including two cases: sp exit and bucket migration.
@@ -38,8 +45,12 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 	)
 
 	defer func() {
-		metrics.MigrateGVGTimeHistogram.WithLabelValues("migrate_gvg_cost").Observe(time.Since(startMigrateGVGTime).Seconds())
-		metrics.MigrateGVGCounter.WithLabelValues("migrate_gvg_counter").Inc()
+		metrics.MigrateGVGTimeHistogram.WithLabelValues(migrateGVGCostLabel).Observe(time.Since(startMigrateGVGTime).Seconds())
+		if err == nil {
+			metrics.MigrateGVGCounter.WithLabelValues(migrateGVGSucceedCounterLabel).Inc()
+		} else {
+			metrics.MigrateGVGCounter.WithLabelValues(migrateGVGFailedCounterLabel).Inc()
+		}
 		log.CtxInfow(ctx, "finished to migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
 			"total_migrated_object_number", migratedObjectNumberInGVG, "last_migrated_object_id", lastMigratedObjectID, "error", err)
 	}()
@@ -87,13 +98,18 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 	objectDetails *metadatatypes.ObjectDetails) error {
 	var (
 		err                    error
+		isBucketMigrate        bool
 		startMigrateObjectTime = time.Now()
 		object                 = objectDetails.GetObject()
 	)
 
 	defer func() {
-		metrics.MigrateObjectTimeHistogram.WithLabelValues("migrate_object_cost").Observe(time.Since(startMigrateObjectTime).Seconds())
-		metrics.MigrateObjectCounter.WithLabelValues("migrate_object_counter").Inc()
+		metrics.MigrateObjectTimeHistogram.WithLabelValues(migrateObjectCostLabel).Observe(time.Since(startMigrateObjectTime).Seconds())
+		if err == nil {
+			metrics.MigrateObjectCounter.WithLabelValues(migrateObjectSucceedCounterLabel).Inc()
+		} else {
+			metrics.MigrateObjectCounter.WithLabelValues(migrateObjectFailedCounterLabel).Inc()
+		}
 		log.CtxDebugw(ctx, "finish to migrate object", "task_info", task, "bucket_id", bucketID, "object_info", objectDetails, "error", err)
 	}()
 
@@ -109,6 +125,7 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
 			log.Debugw("no gvg conflict", "error", err)
 		}
+		isBucketMigrate = true
 	}
 
 	selfSpID := task.GetSrcSp().GetId()
@@ -118,12 +135,13 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 		return fmt.Errorf("invalid sp id: %d", selfSpID)
 	}
 	migratePieceTask := &gfsptask.GfSpMigratePieceTask{
-		ObjectInfo:    object.GetObjectInfo(),
-		StorageParams: params,
-		SrcSpEndpoint: task.GetSrcSp().GetEndpoint(),
+		ObjectInfo:      object.GetObjectInfo(),
+		StorageParams:   params,
+		SrcSpEndpoint:   task.GetSrcSp().GetEndpoint(),
+		IsBucketMigrate: isBucketMigrate,
 	}
 	if !isSecondary && isPrimary {
-		migratePieceTask.RedundancyIdx = primarySPRedundancyIdx
+		migratePieceTask.RedundancyIdx = piecestore.PrimarySPRedundancyIndex
 	} else {
 		migratePieceTask.RedundancyIdx = int32(redundancyIdx)
 	}
@@ -264,7 +282,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 		}
 
 		var pieceKey string
-		if redundancyIdx == primarySPRedundancyIdx {
+		if redundancyIdx == piecestore.PrimarySPRedundancyIndex {
 			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectID, uint32(i))
 		} else {
 			pieceKey = e.baseApp.PieceOp().ECPieceKey(objectID, uint32(i), uint32(redundancyIdx))

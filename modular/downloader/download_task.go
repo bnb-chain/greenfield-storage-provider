@@ -259,7 +259,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 				return ErrConsensus
 			}
 			log.CtxDebugw(ctx, "finish init bucket traffic table", "charged_quota", downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
-				"freeQuota", freeQuotaSize)
+				"free_quota", freeQuotaSize)
 
 			// only need to set the free quota when init the traffic table
 			err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{

@@ -250,8 +250,8 @@ func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSe
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) (string, error) {
 	return "", nil
 }
-func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
-	return ErrNilModular
+func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
+	return "", ErrNilModular
 }
 func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	return nil, ErrNilModular

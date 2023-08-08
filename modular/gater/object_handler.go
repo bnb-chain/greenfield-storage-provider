@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -339,7 +340,8 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectSegment(reqCtx.Context(), objectInfo.Id.Uint64())
-	if err != nil {
+	if err != nil && err.Error() != metadata.ErrNoRecord.String() {
+		// ignore metadata.ErrNoRecord error
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return
 	}
@@ -366,7 +368,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		err = ErrEncodeResponse
 		return
 	}
-	log.Debugw("succeed to query resumable offset ", "xml_info", xmlInfo)
+	log.Debugw("succeed to query resumable offset", "xml_info", xmlInfo)
 }
 
 // getObjectHandler handles the download object request.

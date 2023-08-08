@@ -61,6 +61,7 @@ const (
 	listSpExitEventsRouterName                     = "ListSpExitEvents"
 	verifyPermissionByIDRouterName                 = "VerifyPermissionByID"
 	getSPInfoRouterName                            = "GetSPInfo"
+	getStatusRouterName                            = "GetStatus"
 )
 
 const (
@@ -124,6 +125,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
 	router.Path("/view").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
 		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.viewObjectByUniversalEndpointHandler)
+
+	router.Path(StatusPath).Name(getStatusRouterName).Methods(http.MethodGet).HandlerFunc(g.getStatusHandler)
 
 	var routers []*mux.Router
 	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())

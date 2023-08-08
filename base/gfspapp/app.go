@@ -74,7 +74,6 @@ type GfSpBaseApp struct {
 	gcZombieRetry       int64
 	gcMetaRetry         int64
 	recoveryRetry       int64
-	migratePieceRetry   int64
 	migrateGVGRetry     int64
 }
 

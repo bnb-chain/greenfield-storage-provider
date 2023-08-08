@@ -157,9 +157,8 @@ func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetype
 	return s.client.DiscontinueBucket(ctx, SignGc, bucket)
 }
 
-func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
-	_, err := s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
-	return err
+func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
+	return s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
 }
 
 func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMigratePieceTask) ([]byte, error) {

@@ -268,6 +268,8 @@ const (
 	UniversalEndpointSpecialSuffixQuery = "objectPath"
 	// objectSpecialSuffixUrlReplacement defines the replacement part for universal endpoint object url with special suffix
 	objectSpecialSuffixUrlReplacement = "?" + UniversalEndpointSpecialSuffixQuery + "="
+	// StatusPath defines the path for sp status
+	StatusPath = "/status"
 )
 
 const (

@@ -7,6 +7,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
 
+// PieceAPI for mock use
+//
+//go:generate mockgen -source=./api.go -destination=./api_mock.go -package=piece
+type PieceAPI interface {
+	Get(ctx context.Context, key string, offset, limit int64) (io.ReadCloser, error)
+	Put(ctx context.Context, key string, reader io.Reader) error
+	Delete(ctx context.Context, key string) error
+}
+
 type PieceStore struct {
 	storeAPI storage.ObjectStorage
 }
@@ -26,7 +35,7 @@ func (p *PieceStore) Delete(ctx context.Context, key string) error {
 	return p.storeAPI.DeleteObject(ctx, key)
 }
 
-// GetPieceInfo returns piece info in PieceStore
-func (p *PieceStore) GetPieceInfo(ctx context.Context, key string) (storage.Object, error) {
+// Head returns piece info in PieceStore
+func (p *PieceStore) Head(ctx context.Context, key string) (storage.Object, error) {
 	return p.storeAPI.HeadObject(ctx, key)
 }
