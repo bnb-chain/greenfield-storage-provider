@@ -4,9 +4,9 @@ workspace=${GITHUB_WORKSPACE}
 
 # some constants
 GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
-# greenfield cmd branch name: feat-adaptor-sp-exit
-GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
-# greenfield go sdk branch name: develop
+# greenfield cmd branch name: auth-refactoring
+GREENFIELD_CMD_TAG="af884ea4797a6851eaccd67f48004fb68262f576"
+# greenfield go sdk branch name: feat/auth-refactor
 GREENFIELD_GO_SDK_TAG="e7bb9b9cd47023e6d3b1da1b63e21913e6f2e38f"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
