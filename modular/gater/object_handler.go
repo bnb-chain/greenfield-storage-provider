@@ -435,10 +435,17 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
 			gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
 
+			// GNFD1-EDDSA
+			gnfd1EddsaSignaturePrefix := commonhttp.Gnfd1Eddsa + ","
+			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
+				err = ErrUnsupportedSignType
+				return
+			}
+
 			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
 			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
 
-				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(commonhttp.Gnfd1Ecdsa+","):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
 				} else {

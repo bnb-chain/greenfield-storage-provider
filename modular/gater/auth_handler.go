@@ -24,7 +24,6 @@ const (
 	MaxExpiryAgeInSec         int32  = commonhttp.MaxExpiryAgeInSec // 7 days
 	ExpiryDateFormat          string = time.RFC3339
 	ExpectedEddsaPubKeyLength int    = 64
-	ExpectedPersonalSigLength int    = 132
 )
 
 // requestNonceHandler handle requestNonce request
@@ -110,19 +109,23 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	personalSignSignaturePrefix := signaturePrefix(SignTypePersonal, SignAlgorithm)
 	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
 
-	if strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
-		accAddress, personalSignVerifyErr := verifyPersonalSignatureFromRequest(strings.TrimPrefix(requestSignature, personalSignSignaturePrefix))
-		if personalSignVerifyErr != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
-			err = personalSignVerifyErr
-			return
-		}
-		account = accAddress.String()
-		reqCtx.account = account
-	} else {
+	if !strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
 		err = ErrUnsupportedSignType
 		return
 	}
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(strings.TrimPrefix(requestSignature, personalSignSignaturePrefix))
+	if err != nil {
+		return
+	}
+	accAddress, personalSignVerifyErr := VerifyPersonalSignature(*signedMsg, *sigString)
+
+	if personalSignVerifyErr != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
+		err = personalSignVerifyErr
+		return
+	}
+	account = accAddress.String()
+	reqCtx.account = account
 
 	domain = reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 	origin = reqCtx.request.Header.Get("Origin")
@@ -171,11 +174,6 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	signedMsg, _, err := parseSignedMsgAndSigFromRequest(requestSignature[len(personalSignSignaturePrefix):])
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey when parseSignedMsgAndSigFromRequest")
-		return
-	}
 	err = g.verifySignedContent(*signedMsg, domain, nonce, userPublicKey, expiryDateStr)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey due to bad signed content.")
@@ -201,15 +199,33 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	w.Write(b)
 }
 
-func verifyPersonalSignatureFromRequest(requestSignature string) (sdk.AccAddress, error) {
-	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
-	if len(*sigString) != ExpectedPersonalSigLength {
-		return nil, ErrSignature
+// parseSignedMsgAndSigFromRequest get sig for personal auth, it expects the auth string should look like "Signature=xxxxx,SignedMsg=xxx".
+func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
+	var (
+		signedMsg string
+		signature string
+	)
+	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
+	signatureItems := strings.Split(requestSignature, ",")
+	if len(signatureItems) != 2 { // requestSignature should be "Signature=xxxxx,SignedMsg=xxxxx"
+		return nil, nil, ErrAuthorizationHeaderFormat
 	}
-	if err != nil {
-		return nil, err
+	for _, item := range signatureItems {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return nil, nil, ErrAuthorizationHeaderFormat
+		}
+		switch pair[0] {
+		case SignedMsg:
+			signedMsg = pair[1]
+		case Signature:
+			signature = pair[1]
+		default:
+			return nil, nil, ErrAuthorizationHeaderFormat
+		}
 	}
-	return VerifyPersonalSignature(*signedMsg, *sigString)
+
+	return &signedMsg, &signature, nil
 }
 
 func VerifyPersonalSignature(signedMsg string, sigString string) (sdk.AccAddress, error) {

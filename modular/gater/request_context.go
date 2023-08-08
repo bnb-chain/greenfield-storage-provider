@@ -80,6 +80,12 @@ func NewRequestContext(r *http.Request, g *GateModular) (*RequestContext, error)
 	if slices.Contains(skipAuthRouterNames, routerName) {
 		return reqCtx, nil
 	}
+
+	err := reqCtx.CheckIfSigExpiry()
+	if err != nil {
+		return reqCtx, err
+	}
+
 	account, err := reqCtx.VerifySignature()
 	if err != nil {
 		return reqCtx, err
@@ -155,20 +161,6 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	// check sig
 	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
 
-	// check expiry header
-	requestExpiredTimestamp := r.request.Header.Get(commonhttp.HTTPHeaderExpiryTimestamp)
-	if requestExpiredTimestamp == "" {
-		requestExpiredTimestamp = r.request.URL.Query().Get(commonhttp.HTTPHeaderExpiryTimestamp)
-	}
-	expiryDate, parseErr := time.Parse(ExpiryDateFormat, requestExpiredTimestamp)
-	if parseErr != nil {
-		return "", ErrInvalidExpiryDateHeader
-	}
-	expiryAge := int32(time.Until(expiryDate).Seconds())
-	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
-		return "", ErrInvalidExpiryDateHeader
-	}
-
 	// GNFD1-ECDSA
 	gnfd1EcdsaSignaturePrefix := commonhttp.Gnfd1Ecdsa + ","
 	if strings.HasPrefix(requestSignature, gnfd1EcdsaSignaturePrefix) {
@@ -193,38 +185,43 @@ func (r *RequestContext) VerifySignature() (string, error) {
 
 }
 
+func (r *RequestContext) CheckIfSigExpiry() error {
+	// check expiry header
+	requestExpiredTimestamp := r.request.Header.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+	if requestExpiredTimestamp == "" {
+		requestExpiredTimestamp = r.request.URL.Query().Get(commonhttp.HTTPHeaderExpiryTimestamp)
+	}
+	expiryDate, parseErr := time.Parse(ExpiryDateFormat, requestExpiredTimestamp)
+	if parseErr != nil {
+		return ErrInvalidExpiryDateHeader
+	}
+	expiryAge := int32(time.Until(expiryDate).Seconds())
+	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
+		return ErrInvalidExpiryDateHeader
+	}
+	return nil
+}
+
 // verifySignatureForGNFD1Ecdsa used to verify request type GNFD1_ECDSA, return (address, nil) if check succeed
 func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (sdk.AccAddress, error) {
 	var (
 		signature []byte
 		err       error
 	)
-	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
-	signatureItems := strings.Split(requestSignature, ",")
-
-	for _, item := range signatureItems {
-		pair := strings.Split(item, "=")
-		switch pair[0] {
-		case Signature:
-			if signature, err = hex.DecodeString(pair[1]); err != nil {
-				return nil, err
-			}
-		default:
-			return nil, ErrAuthorizationHeaderFormat
-		}
+	sigStr, err := parseSignatureFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
 	}
-
+	if signature, err = hex.DecodeString(*sigStr); err != nil {
+		return nil, err
+	}
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
 
 	// check signature consistent
-	addr, pk, err := RecoverAddr(realMsgToSign, signature)
+	addr, _, err := RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.CtxErrorw(r.ctx, "failed to recover address")
-		return nil, ErrRequestConsistent
-	}
-	if !secp256k1.VerifySignature(pk.Bytes(), realMsgToSign, signature[:len(signature)-1]) {
-		log.CtxErrorw(r.ctx, "failed to verify signature")
 		return nil, ErrRequestConsistent
 	}
 	return addr, nil
@@ -268,7 +265,7 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 	var (
 		err error
 	)
-	_, sigString, err := parseSignedMsgAndSigFromRequest(requestSignature)
+	sigString, err := parseSignatureFromRequest(requestSignature)
 	if err != nil {
 		return nil, err
 	}
@@ -280,16 +277,13 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 	offChainSig := *sigString
 
-	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
+	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
 		log.Errorf("failed to verify signature for GNFD1-Eddsa", "error", err)
 		return nil, err
-	}
-	if verifyOffChainSignatureResp {
+	} else {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
 		return userAddress, nil
-	} else {
-		return nil, err
 	}
 }
 
@@ -298,7 +292,7 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 	var (
 		err error
 	)
-	_, sigString, err := parseSignedMsgAndSigFromRequest(authenticationStr)
+	sigString, err := parseSignatureFromRequest(authenticationStr)
 	if err != nil {
 		return nil, err
 	}
@@ -308,43 +302,31 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 
 	offChainSig := *sigString
 
-	verifyOffChainSignatureResp, err := r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
+	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
 		log.Errorf("failed to verify off chain signature", "error", err)
 		return nil, err
-	}
-	if verifyOffChainSignatureResp {
+	} else {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
 		return userAddress, nil
-	} else {
-		return nil, err
 	}
 }
 
-func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
+// parseSignatureFromRequest get sig for both ECDSA and EDDSA auth, it expects the auth string should look like "Signature=xxxxx".
+func parseSignatureFromRequest(requestSignature string) (*string, error) {
 	var (
-		signedMsg string
 		signature string
 	)
-	requestSignature = strings.ReplaceAll(requestSignature, "\\n", "\n")
-	signatureItems := strings.Split(requestSignature, ",")
-
-	for _, item := range signatureItems {
-		pair := strings.Split(item, "=")
-		if len(pair) != 2 {
-			return nil, nil, ErrAuthorizationHeaderFormat
-		}
-		switch pair[0] {
-		case SignedMsg:
-			// for off-chain-auth, client doesn't need to pass the signedMsg, as SP will generate the signed msg by itself.
-			// but this method is also used by updateUserPublicKeyHandler API, which uses the personal sign verification and require clients to send a signed Msg.
-			signedMsg = pair[1]
-		case Signature:
-			signature = pair[1]
-		default:
-			return nil, nil, ErrAuthorizationHeaderFormat
-		}
+	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
+	pair := strings.Split(requestSignature, "=")
+	if len(pair) != 2 {
+		return nil, ErrAuthorizationHeaderFormat
 	}
-
-	return &signedMsg, &signature, nil
+	switch pair[0] {
+	case Signature:
+		signature = pair[1]
+		return &signature, nil
+	default:
+		return nil, ErrAuthorizationHeaderFormat
+	}
 }
