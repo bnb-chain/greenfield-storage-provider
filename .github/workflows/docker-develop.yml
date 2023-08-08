@@ -2,7 +2,7 @@ name: Docker-CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ develop, feat-bs-group]
 
 env:
   IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider-invisible
