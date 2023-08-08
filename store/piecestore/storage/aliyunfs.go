@@ -76,7 +76,7 @@ func (c *aliyunCredProvider) Retrieve() (credentials.Value, error) {
 // to be retrieved.
 func (c *aliyunCredProvider) IsExpired() bool {
 	// The default expiration time of aliyun credential is 1 hour.
-	// Here we try to update the credential every 1 minutes.
+	// Here we try to update the credential every 1 minute.
 	return time.Since(c.lastRetrieveTime) >= 1*time.Minute
 }
 
@@ -101,7 +101,7 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 	endpoint, bucketName, disableSSL, err := parseAliyunfsBucketURL(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse aliyunfs bucket url", "error", err)
-		return nil, "", err
+		return &session.Session{}, "", err
 	}
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
@@ -123,7 +123,7 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 	var sess *session.Session
 	switch cfg.IAMType {
 	case AKSKIAMType:
-		key := getAliyunSecretKeyFromEnv(AliyunRegion, AliyunAccessKey, AliyunSecretKey, AliyunSessionToken)
+		key = getAliyunSecretKeyFromEnv(AliyunRegion, AliyunAccessKey, AliyunSecretKey, AliyunSessionToken)
 		if key.accessKey == "NoSignRequest" {
 			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if key.accessKey != "" && key.secretKey != "" {
@@ -138,19 +138,18 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		if irsa {
 			cred, err := credentials_aliyun.NewCredential(nil)
 			if err != nil {
-				return nil, "", err
+				return &session.Session{}, "", err
 			}
-
 			awsConfig.Credentials = credentials.NewCredentials(newAliyunCredProvider(cred))
 		} else {
-			return nil, "", fmt.Errorf("failed to use sa to access aliyunfs")
+			return &session.Session{}, "", fmt.Errorf("failed to use sa to access aliyunfs")
 		}
 		sess = session.Must(session.NewSession(awsConfig))
 		log.Debugw("use sa to access aliyunfs", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
 
 	default:
 		log.Errorf("unknown IAM type: %s", cfg.IAMType)
-		return nil, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
+		return &session.Session{}, "", fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
 	}
 	sc.sessions[cfg] = sess
 	return sess, bucketName, nil
