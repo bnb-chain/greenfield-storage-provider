@@ -1937,3 +1937,41 @@ func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
 }
+
+// getStatusHandler get status info for the current SP
+func (g *GateModular) getStatusHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      bytes.Buffer
+		reqCtx *RequestContext
+		status *types.Status
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get status", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	status, err = g.baseApp.GfSpClient().GetStatus(reqCtx.Context())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get status", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetStatusResponse{Status: status}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get status", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
