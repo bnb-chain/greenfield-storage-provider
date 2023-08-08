@@ -8,7 +8,7 @@ workspace=${GITHUB_WORKSPACE}
 # some constants
 GREENFIELD_REPO_TAG="v0.2.4-alpha.1"
 # greenfield cmd branch name: auth-refactoring
-GREENFIELD_CMD_TAG="db9fb7793837c2aa04d0ab31081ff368dfca2414"
+GREENFIELD_CMD_TAG="v0.1.0-alpha.1"
 # greenfield go sdk branch name: feat/auth-refactor
 GREENFIELD_GO_SDK_TAG="v0.2.4-alpha.1"
 MYSQL_USER="root"

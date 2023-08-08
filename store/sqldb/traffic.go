@@ -68,20 +68,11 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	// the ChargedQuotaSize
 	if bucketTraffic.ChargedQuotaSize != quota.ChargedQuotaSize {
 		// update if chain quota has changed
-		result := s.db.Model(&BucketTrafficTable{}).
-			Where("bucket_id = ?", bucketTraffic.BucketID).
-			Updates(BucketTrafficTable{
-				ChargedQuotaSize: quota.ChargedQuotaSize,
-				ModifiedTime:     time.Now(),
-			})
-		if result.Error != nil {
-			err = fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+		if err = s.updateChargedQuota(quota.ChargedQuotaSize, bucketTraffic); err != nil {
+			log.Errorw("failed to commit the transaction of updating bucketTraffic table, ", "error", err)
 			return err
 		}
-		// TODO:: change the transaction way to update
-		if result.RowsAffected != 1 {
-			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
-		}
+
 		bucketTraffic.ChargedQuotaSize = quota.ChargedQuotaSize
 		log.Infow("updated charged quota", "db quota:", quota.ChargedQuotaSize)
 	}
@@ -107,20 +98,10 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 		}
 	}
 
-	// update bucket traffic
-	result := s.db.Model(&BucketTrafficTable{}).
-		Where("bucket_id = ?", bucketTraffic.BucketID).
-		Updates(BucketTrafficTable{
-			ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
-			FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
-			ModifiedTime:          time.Now(),
-		})
-	if result.Error != nil {
-		err = fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+	err = s.updateConsumedQuota(bucketTraffic)
+	if err != nil {
+		log.Errorw("failed to commit the transaction of updating bucketTraffic table, ", "error", err)
 		return err
-	}
-	if result.RowsAffected != 1 {
-		log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 	}
 
 	// add read record
@@ -133,7 +114,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 		ObjectName:      record.ObjectName,
 		ReadSize:        record.ReadSize,
 	}
-	result = s.db.Create(insertReadRecord)
+	result := s.db.Create(insertReadRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
 		err = fmt.Errorf("failed to insert read record table: %s", result.Error)
 		return err
@@ -141,19 +122,79 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	return nil
 }
 
+// updateChargedQuota update the charged quota of BucketTraffic table in the transaction way
+func (s *SpDBImpl) updateChargedQuota(chargedQuota uint64, bucketTraffic *corespdb.BucketTraffic) error {
+	// update the BucketTraffic table in the transaction way
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		result := s.db.Model(&BucketTrafficTable{}).
+			Where("bucket_id = ?", bucketTraffic.BucketID).
+			Updates(BucketTrafficTable{
+				ChargedQuotaSize: chargedQuota,
+				ModifiedTime:     time.Now(),
+			})
+		if result.Error != nil {
+			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+		}
+
+		if result.RowsAffected != 1 {
+			return fmt.Errorf("update traffic of %s has affected more than one rows %d, "+
+				"update charged quota %d", bucketTraffic.BucketName, result.RowsAffected, chargedQuota)
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+// updateConsumedQuota update the consumed quota of BucketTraffic table in the transaction way
+func (s *SpDBImpl) updateConsumedQuota(bucketTraffic *corespdb.BucketTraffic) error {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&BucketTrafficTable{}).
+			Where("bucket_id = ?", bucketTraffic.BucketID).
+			Updates(BucketTrafficTable{
+				ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
+				FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
+				ModifiedTime:          time.Now(),
+			})
+		if result.RowsAffected != 1 {
+			return fmt.Errorf("update traffic of %s has affected more than one rows %d "+
+				"consumed quota %d", bucketTraffic.BucketName, result.RowsAffected, bucketTraffic.ReadConsumedSize)
+		}
+
+		if result.Error != nil {
+			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+// InitBucketTraffic init the bucket traffic table
 func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *corespdb.BucketQuota) error {
-	insertBucketTraffic := &BucketTrafficTable{
-		BucketID:              bucketID,
-		FreeQuotaSize:         quota.FreeQuotaSize,
-		FreeQuotaConsumedSize: 0,
-		BucketName:            bucketName,
-		ReadConsumedSize:      0,
-		ChargedQuotaSize:      quota.ChargedQuotaSize,
-		ModifiedTime:          time.Now(),
-	}
-	result := s.db.Create(insertBucketTraffic)
-	if result.Error != nil && MysqlErrCode(result.Error) != ErrDuplicateEntryCode {
-		err := fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		insertBucketTraffic := &BucketTrafficTable{
+			BucketID:              bucketID,
+			FreeQuotaSize:         quota.FreeQuotaSize,
+			FreeQuotaConsumedSize: 0,
+			BucketName:            bucketName,
+			ReadConsumedSize:      0,
+			ChargedQuotaSize:      quota.ChargedQuotaSize,
+			ModifiedTime:          time.Now(),
+		}
+		result := tx.Create(insertBucketTraffic)
+
+		if result.Error != nil && MysqlErrCode(result.Error) != ErrDuplicateEntryCode {
+			return fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Errorw("failed to execute init traffic transaction", "error", err)
 		return err
 	}
 	return nil
