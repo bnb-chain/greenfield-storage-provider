@@ -33,6 +33,28 @@ type SPPickFilter interface {
 	Check(spID uint32) bool
 }
 
+// VGFPickFilter is used to check virtual group families qualification
+type VGFPickFilter interface {
+	Check(vgfID uint32) bool
+}
+
+type PickVGFFilter struct {
+	AvailableVgfIDSet map[uint32]struct{}
+}
+
+func NewPickVGFFilter(availableVgfIDs []uint32) *PickVGFFilter {
+	idSet := make(map[uint32]struct{})
+	for _, id := range availableVgfIDs {
+		idSet[id] = struct{}{}
+	}
+	return &PickVGFFilter{AvailableVgfIDSet: idSet}
+}
+
+func (p *PickVGFFilter) Check(vgfID uint32) bool {
+	_, ok := p.AvailableVgfIDSet[vgfID]
+	return ok
+}
+
 // GVGPickFilter is used to check sp pick condition.
 type GVGPickFilter interface {
 	// CheckFamily returns true when match pick request condition.
