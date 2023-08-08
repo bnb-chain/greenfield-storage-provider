@@ -212,7 +212,7 @@ func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (
 	if err != nil {
 		return nil, err
 	}
-	if signature, err = hex.DecodeString(*sigStr); err != nil {
+	if signature, err = hex.DecodeString(sigStr); err != nil {
 		return nil, err
 	}
 	// check request integrity
@@ -265,7 +265,7 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 	var (
 		err error
 	)
-	sigString, err := parseSignatureFromRequest(requestSignature)
+	offChainSig, err := parseSignatureFromRequest(requestSignature)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +275,6 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 
 	account := r.request.Header.Get(GnfdUserAddressHeader)
 	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
-	offChainSig := *sigString
 
 	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
@@ -292,15 +291,13 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 	var (
 		err error
 	)
-	sigString, err := parseSignatureFromRequest(authenticationStr)
+	offChainSig, err := parseSignatureFromRequest(authenticationStr)
 	if err != nil {
 		return nil, err
 	}
 
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1AuthForPreSignedURL(r.request)
-
-	offChainSig := *sigString
 
 	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
@@ -313,20 +310,20 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 }
 
 // parseSignatureFromRequest get sig for both ECDSA and EDDSA auth, it expects the auth string should look like "Signature=xxxxx".
-func parseSignatureFromRequest(requestSignature string) (*string, error) {
+func parseSignatureFromRequest(requestSignature string) (string, error) {
 	var (
 		signature string
 	)
 	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
 	pair := strings.Split(requestSignature, "=")
 	if len(pair) != 2 {
-		return nil, ErrAuthorizationHeaderFormat
+		return "", ErrAuthorizationHeaderFormat
 	}
 	switch pair[0] {
 	case Signature:
 		signature = pair[1]
-		return &signature, nil
+		return signature, nil
 	default:
-		return nil, ErrAuthorizationHeaderFormat
+		return "", ErrAuthorizationHeaderFormat
 	}
 }
