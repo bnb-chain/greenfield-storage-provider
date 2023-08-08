@@ -88,9 +88,9 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		spStatus := spInfo.GetStatus()
-		if spStatus != sptypes.STATUS_IN_SERVICE {
+		if spStatus != sptypes.STATUS_IN_SERVICE && !fromSpMaintenanceAcct(spStatus, spInfo.MaintenanceAddress, createBucketApproval.Creator) {
 			log.Errorw("sp is not in service status", "operator_address", g.baseApp.OperatorAddress(),
-				"sp_status", spStatus, "sp_id", spInfo.GetId(), "endpoint", spInfo.GetEndpoint())
+				"sp_status", spStatus, "sp_id", spInfo.GetId(), "endpoint", spInfo.GetEndpoint(), "request_acct", reqCtx.account)
 			err = ErrSPUnavailable
 			return
 		}
@@ -193,7 +193,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
-		if err = g.checkSPAndBucketStatus(reqCtx.Context(), createObjectApproval.GetBucketName()); err != nil {
+		if err = g.checkSPAndBucketStatus(reqCtx.Context(), createObjectApproval.GetBucketName(), createObjectApproval.Creator); err != nil {
 			log.Errorw("create object approval failed to check sp and bucket status", "error", err)
 			return
 		}
