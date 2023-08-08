@@ -425,6 +425,7 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvents != nil {
+		log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
 		expected, err := s.checkBucketFromChain(migrateBucketEvents.CancelEvents.BucketId.Uint64(), storagetypes.BUCKET_STATUS_CREATED)
 		if err != nil {
 			return err
@@ -439,6 +440,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 		}
 		s.deleteExecutePlanByBucketID(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		executePlan.stopSPSchedule()
+		log.Infow("success to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
 	}
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
@@ -466,13 +468,13 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 	go func() {
 		logNumber := uint64(0)
 
-		UpdateBucketMigrateSubscribeProgressFunc := func(idx uint64) {
+		UpdateBucketMigrateSubscribeProgressFunc := func(num uint64) {
 			updateErr := s.manager.baseApp.GfSpDB().UpdateBucketMigrateSubscribeProgress(s.lastSubscribedBlockHeight + 1)
 			if updateErr != nil {
 				log.Errorw("failed to update bucket migrate progress", "error", updateErr)
 			}
 			s.lastSubscribedBlockHeight++
-			if (idx % printLogPerN) == 0 {
+			if (num % printLogPerN) == 0 {
 				log.Infow("bucket migrate subscribe progress", "last_subscribed_block_height", s.lastSubscribedBlockHeight)
 			}
 		}
