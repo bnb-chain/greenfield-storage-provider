@@ -340,12 +340,10 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectSegment(reqCtx.Context(), objectInfo.Id.Uint64())
-	if err != nil {
+	if err != nil && err.Error() != metadata.ErrNoRecord.String() {
 		// ignore metadata.ErrNoRecord error
-		if err.Error() != metadata.ErrNoRecord.String() {
-			log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
-			return
-		}
+		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+		return
 	}
 
 	offset = uint64(segmentCount) * params.GetMaxSegmentSize()
