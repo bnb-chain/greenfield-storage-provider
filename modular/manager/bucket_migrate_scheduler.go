@@ -69,24 +69,24 @@ func (f *PickDestGVGFilter) CheckGVG(gvgMeta *vgmgr.GlobalVirtualGroupMeta) bool
 // CheckGVGMetaConsistent verifies whether expectedSPGVGList completely matches with the migrateGVGUnitMeta loaded from the database.
 func CheckGVGMetaConsistent(chainMetaList []*virtualgrouptypes.GlobalVirtualGroup, dbMetaList []*spdb.MigrateGVGUnitMeta) bool {
 	if len(chainMetaList) == len(dbMetaList) {
-		chainGVGMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
-		dbGVGMaps := make(map[uint32]*spdb.MigrateGVGUnitMeta)
+		chainGVGMap := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
+		dbGVGMap := make(map[uint32]*spdb.MigrateGVGUnitMeta)
 		for _, gvg := range chainMetaList {
-			chainGVGMaps[gvg.GetId()] = gvg
+			chainGVGMap[gvg.GetId()] = gvg
 		}
 		for _, dbGVG := range dbMetaList {
-			dbGVGMaps[dbGVG.GlobalVirtualGroupID] = dbGVG
+			dbGVGMap[dbGVG.GlobalVirtualGroupID] = dbGVG
 		}
 
 		for _, chainGVG := range chainMetaList {
-			_, ok := dbGVGMaps[chainGVG.GetId()]
+			_, ok := dbGVGMap[chainGVG.GetId()]
 			if !ok {
 				return false
 			}
 		}
 
 		for _, dbGVG := range dbMetaList {
-			_, ok := chainGVGMaps[dbGVG.GlobalVirtualGroupID]
+			_, ok := chainGVGMap[dbGVG.GlobalVirtualGroupID]
 			if !ok {
 				return false
 			}
@@ -244,14 +244,14 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 	return aggBlsSig, nil
 }
 
-func (plan *BucketMigrateExecutePlan) startSPSchedule() {
+func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 	// dispatch to task-dispatcher
 	for {
 		select {
 		case <-plan.stopSignal:
 			return // Terminate the scheduling
 		default:
-			log.Debugw("BucketMigrateExecutePlan Start startSPSchedule", "gvgUnitMap", plan.gvgUnitMap)
+			log.Debugw("BucketMigrateExecutePlan Start startMigrateSchedule", "gvgUnitMap", plan.gvgUnitMap)
 			for _, migrateGVGUnit := range plan.gvgUnitMap {
 
 				// Skipping units that have already been scheduled
@@ -295,7 +295,7 @@ func (plan *BucketMigrateExecutePlan) stopSPSchedule() {
 
 func (plan *BucketMigrateExecutePlan) Start() error {
 	log.Debugf("succeed to start bucket migrate plan", "plan", plan)
-	go plan.startSPSchedule()
+	go plan.startMigrateSchedule()
 	return nil
 }
 
@@ -1042,9 +1042,9 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromDB(primarySPGVGL
 		return nil, err
 	}
 
-	chainGVGMaps := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
+	chainGVGMap := make(map[uint32]*virtualgrouptypes.GlobalVirtualGroup)
 	for _, gvg := range primarySPGVGList {
-		chainGVGMaps[gvg.GetId()] = gvg
+		chainGVGMap[gvg.GetId()] = gvg
 	}
 
 	// Using migrateGVGUnitMeta to construct PrimaryGVGIDMapMigrateUnits and execute them one by one.
@@ -1060,7 +1060,7 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromDB(primarySPGVGL
 			return nil, queryErr
 		}
 
-		srcGvg, ok := chainGVGMaps[migrateGVG.GlobalVirtualGroupID]
+		srcGvg, ok := chainGVGMap[migrateGVG.GlobalVirtualGroupID]
 		if ok {
 			destGvg, err := checker.plan.manager.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), migrateGVG.DestGlobalVirtualGroupID)
 			if err != nil {
