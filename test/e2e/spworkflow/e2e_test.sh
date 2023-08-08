@@ -3,11 +3,11 @@
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
+GREENFIELD_REPO_TAG="b4b658a83d6a3d375f29a62ee7ceb27689807525"
 # greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
 # greenfield go sdk branch name: develop
-GREENFIELD_GO_SDK_TAG="7eb5316b7919b3b7b48ec3804dc302679eb2d804"
+GREENFIELD_GO_SDK_TAG="32f1595170af9e4a6fed8c8c61c1a36fa99da74f"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -26,7 +26,7 @@ function greenfield_chain() {
   # build Greenfield chain
   echo ${workspace}
   cd ${workspace}
-  git clone https://github.com/bnb-chain/greenfield.git
+  git clone https://github.com/alexgao001/greenfield.git
   cd greenfield/
   git checkout ${GREENFIELD_REPO_TAG}
   make proto-gen & make build

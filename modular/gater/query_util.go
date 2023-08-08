@@ -62,6 +62,6 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 	return nil
 }
 
-func fromSpMaintenanceAcct(spStatus sptypes.Status, spTestAddr, creatorAddr string) bool {
-	return spStatus == sptypes.STATUS_IN_MAINTENANCE && spTestAddr == creatorAddr
+func fromSpMaintenanceAcct(spStatus sptypes.Status, spMaintenanceAddr, creatorAddr string) bool {
+	return spStatus == sptypes.STATUS_IN_MAINTENANCE && spMaintenanceAddr == creatorAddr
 }
