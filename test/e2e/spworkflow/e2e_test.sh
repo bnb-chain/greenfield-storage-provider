@@ -7,7 +7,7 @@ GREENFIELD_REPO_TAG="b4b658a83d6a3d375f29a62ee7ceb27689807525"
 # greenfield cmd branch name: feat-adaptor-sp-exit
 GREENFIELD_CMD_TAG="a573d064056c82a5062430fbb87e32251bfe6d2b"
 # greenfield go sdk branch name: develop
-GREENFIELD_GO_SDK_TAG="32f1595170af9e4a6fed8c8c61c1a36fa99da74f"
+GREENFIELD_GO_SDK_TAG="83f4b5eec291eb5ae723335b5843de1a27431e2a"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
