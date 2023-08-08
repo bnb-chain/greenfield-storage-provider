@@ -55,6 +55,8 @@ type ExcludeFilter interface {
 	Apply(id uint32) bool
 }
 
+// ExcludeIDFilter The sp freeze pool decides excludeIDFilter ExcludeIDs. When this filter is applied on a sp's id, meeting
+// the condition means it is one of freeze sp should be excluded.
 type ExcludeIDFilter struct {
 	ExcludeIDs map[uint32]struct{}
 }
