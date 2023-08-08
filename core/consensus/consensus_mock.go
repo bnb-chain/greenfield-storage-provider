@@ -40,6 +40,21 @@ func (m *MockConsensus) EXPECT() *MockConsensusMockRecorder {
 	return m.recorder
 }
 
+// AvailableGlobalVirtualGroupFamilies mocks base method.
+func (m *MockConsensus) AvailableGlobalVirtualGroupFamilies(ctx context.Context, globalVirtualGroupFamiliesIDs []uint32) ([]uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AvailableGlobalVirtualGroupFamilies", ctx, globalVirtualGroupFamiliesIDs)
+	ret0, _ := ret[0].([]uint32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AvailableGlobalVirtualGroupFamilies indicates an expected call of AvailableGlobalVirtualGroupFamilies.
+func (mr *MockConsensusMockRecorder) AvailableGlobalVirtualGroupFamilies(ctx, globalVirtualGroupFamiliesIDs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AvailableGlobalVirtualGroupFamilies", reflect.TypeOf((*MockConsensus)(nil).AvailableGlobalVirtualGroupFamilies), ctx, globalVirtualGroupFamiliesIDs)
+}
+
 // Close mocks base method.
 func (m *MockConsensus) Close() error {
 	m.ctrl.T.Helper()

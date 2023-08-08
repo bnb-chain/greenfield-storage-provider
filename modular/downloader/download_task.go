@@ -53,7 +53,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 
 	bucketID := downloadObjectTask.GetBucketInfo().Id.Uint64()
 	bucketName := downloadObjectTask.GetBucketInfo().GetBucketName()
-	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(downloadObjectTask.GetBucketInfo().Id.Uint64())
+	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(bucketID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}

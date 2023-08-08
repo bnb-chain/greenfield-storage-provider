@@ -82,15 +82,17 @@ func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	return 0, fmt.Errorf("failed to pick weighted random index")
 }
 
-func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
 	var (
 		picker   FreeStorageSizeWeightPicker
 		familyID uint32
 		err      error
 	)
 	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
-	for _, f := range vgfm.vgfIDToVgf {
-		picker.addVirtualGroupFamily(f)
+	for id, f := range vgfm.vgfIDToVgf {
+		if filter.Check(id) {
+			picker.addVirtualGroupFamily(f)
+		}
 	}
 	if familyID, err = picker.pickIndex(); err != nil {
 		log.Errorw("failed to pick vgf", "error", err)
@@ -123,7 +125,7 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filt
 	return vgfm.vgfIDToVgf[vgfID].GVGMap[globalVirtualGroupID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(filter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vgfFilter vgmgr.VGFPickFilter, gvgFilter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -131,13 +133,16 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(fi
 	)
 
 	for vgfID, vgf := range vgfm.vgfIDToVgf {
-		picker.freeStorageSizeWeightMap = make(map[uint32]float64)
-		if !filter.CheckFamily(vgfID) {
+		if !vgfFilter.Check(vgfID) {
 			continue
 		}
+		if !gvgFilter.CheckFamily(vgfID) {
+			continue
+		}
+		picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 		for _, gvg := range vgf.GVGMap {
 			log.Debugw("prepare to add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
-			if filter.CheckGVG(gvg) {
+			if gvgFilter.CheckGVG(gvg) {
 				picker.addGlobalVirtualGroup(gvg)
 				log.Debugw("add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			}
@@ -346,7 +351,11 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickVirtualGroupFamily()
+	filter, err := vgm.genVgfFilter()
+	if err != nil {
+		return nil, err
+	}
+	return vgm.vgfManager.pickVirtualGroupFamily(filter)
 }
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
@@ -362,7 +371,11 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.Glo
 func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(filter)
+	vgfFilter, err := vgm.genVgfFilter()
+	if err != nil {
+		return nil, err
+	}
+	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(vgfFilter, filter)
 }
 
 // PickMigrateDestGlobalVirtualGroup picks a global virtual group(If failed to pick,
@@ -407,6 +420,23 @@ func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvid
 	}
 	// query chain if it is not found in memory topology.
 	return vgm.chainClient.QuerySPByID(context.Background(), spID)
+}
+
+func (vgm *virtualGroupManager) genVgfFilter() (*vgmgr.PickVGFFilter, error) {
+	vgfIDS := make([]uint32, len(vgm.vgfManager.vgfIDToVgf))
+	if len(vgfIDS) == 0 {
+		return nil, ErrFailedPickVGF
+	}
+	i := 0
+	for k := range vgm.vgfManager.vgfIDToVgf {
+		vgfIDS[i] = k
+		i++
+	}
+	availableVgfIDs, err := vgm.chainClient.AvailableGlobalVirtualGroupFamilies(context.Background(), vgfIDS)
+	if err != nil {
+		return nil, err
+	}
+	return vgmgr.NewPickVGFFilter(availableVgfIDs), nil
 }
 
 // FreezeSPAndGVGs freeze a secondary SP and its GVGs
