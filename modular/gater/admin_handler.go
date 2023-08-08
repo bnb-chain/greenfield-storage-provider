@@ -88,7 +88,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		spStatus := spInfo.GetStatus()
-		if spStatus != sptypes.STATUS_IN_SERVICE && !fromSpMaintenanceAcct(spStatus, spInfo.MaintenanceAddress, createBucketApproval.Creator) {
+		if spStatus != sptypes.STATUS_IN_SERVICE && !fromSpMaintenanceAcct(spStatus, spInfo.MaintenanceAddress, reqCtx.account) {
 			log.Errorw("sp is not in service status", "operator_address", g.baseApp.OperatorAddress(),
 				"sp_status", spStatus, "sp_id", spInfo.GetId(), "endpoint", spInfo.GetEndpoint(), "request_acct", reqCtx.account)
 			err = ErrSPUnavailable
