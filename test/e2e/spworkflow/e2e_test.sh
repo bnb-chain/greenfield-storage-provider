@@ -5,7 +5,7 @@ workspace=${GITHUB_WORKSPACE}
 # some constants
 GREENFIELD_REPO_TAG="v0.2.3-alpha.7"
 # greenfield cmd branch name: auth-refactoring
-GREENFIELD_CMD_TAG="af884ea4797a6851eaccd67f48004fb68262f576"
+GREENFIELD_CMD_TAG="v0.0.9-hf.1"
 # greenfield go sdk branch name: feat/auth-refactor
 GREENFIELD_GO_SDK_TAG="e7bb9b9cd47023e6d3b1da1b63e21913e6f2e38f"
 MYSQL_USER="root"
@@ -90,7 +90,7 @@ function build_cmd() {
   # generate a keystore file to manage private key information
   touch key.txt & echo ${TEST_ACCOUNT_PRIVATE_KEY} > key.txt
   touch password.txt & echo "test_sp_function" > password.txt
-  ./gnfd-cmd --home ./ keystore generate --privKeyFile key.txt --passwordfile password.txt
+  ./gnfd-cmd --home ./ --passwordfile password.txt account import key.txt
 
   # construct config.toml
   touch config.toml
