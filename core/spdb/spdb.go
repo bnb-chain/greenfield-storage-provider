@@ -154,6 +154,8 @@ type MigrateDB interface {
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
+	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
+	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
 }
 
 type SPDB interface {
