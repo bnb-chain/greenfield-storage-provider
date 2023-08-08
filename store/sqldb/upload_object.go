@@ -3,10 +3,11 @@ package sqldb
 import (
 	"fmt"
 
+	"gorm.io/gorm"
+
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"gorm.io/gorm"
 )
 
 func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {

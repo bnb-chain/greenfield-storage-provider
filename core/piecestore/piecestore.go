@@ -4,15 +4,19 @@ import (
 	"context"
 )
 
+const (
+	PrimarySPRedundancyIndex = -1
+)
+
 // PieceOp is a helper interface for piece key operator and piece size calculate.
 type PieceOp interface {
 	// SegmentPieceKey returns the segment piece key used as the key of store piece store.
 	SegmentPieceKey(objectID uint64, segmentIdx uint32) string
 	// ECPieceKey returns the ec piece key used as the key of store piece store.
-	ECPieceKey(objectID uint64, segmentIdx uint32, replicateIdx uint32) string
+	ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32) string
 	// ChallengePieceKey returns the  piece key used as the key of challenge piece key.
 	// if replicateIdx < 0 , returns the SegmentPieceKey, otherwise returns the ECPieceKey.
-	ChallengePieceKey(objectID uint64, segmentIdx uint32, replicateIdx int32) string
+	ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32) string
 	// MaxSegmentPieceSize returns the object max segment piece size by object payload size and
 	// max segment size that comes from storage params.
 	MaxSegmentPieceSize(payloadSize uint64, maxSegmentSize uint64) int64

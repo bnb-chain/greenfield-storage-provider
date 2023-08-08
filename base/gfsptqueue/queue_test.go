@@ -3,12 +3,12 @@ package gfsptqueue
 import (
 	"testing"
 
-	"github.com/bnb-chain/greenfield/types/common"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield/types/common"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func TestApprovalTaskRetireByExpiredHeight(t *testing.T) {

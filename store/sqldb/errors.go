@@ -1,6 +1,8 @@
 package sqldb
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// ErrCheckQuotaEnough defines check quota is enough

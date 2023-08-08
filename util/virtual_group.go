@@ -6,12 +6,12 @@ import (
 	"math"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
@@ -39,7 +39,7 @@ func TotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, staki
 }
 
 // ValidateAndGetSPIndexWithinGVGSecondarySPs return whether current sp is one of the object gvg's secondary sp and its index within GVG(if is)
-func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfspclient.GfSpClient, selfSpID uint32,
+func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client gfspclient.GfSpClientAPI, selfSpID uint32,
 	bucketID uint64, lvgID uint32) (int, bool, error) {
 	gvg, err := client.GetGlobalVirtualGroup(ctx, bucketID, lvgID)
 	if err != nil {
@@ -53,6 +53,21 @@ func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfs
 	return -1, false, nil
 }
 
+// ValidateSecondarySPs returns whether current sp is one of the object gvg's secondary sp and its index within GVG(if is)
+func ValidateSecondarySPs(selfSpID uint32, secondarySpIDs []uint32) (int, bool) {
+	for i, sspID := range secondarySpIDs {
+		if selfSpID == sspID {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+// ValidatePrimarySP returns whether selfSpID is primarySpID
+func ValidatePrimarySP(selfSpID, primarySpID uint32) bool {
+	return selfSpID == primarySpID
+}
+
 // BlsAggregate aggregate secondary sp bls signature
 func BlsAggregate(secondarySigs [][]byte) ([]byte, error) {
 	blsSigs, err := bls.MultipleSignaturesFromBytes(secondarySigs)
@@ -63,10 +78,11 @@ func BlsAggregate(secondarySigs [][]byte) ([]byte, error) {
 	return aggBlsSig, nil
 }
 
+// GetBucketPrimarySPID return bucket sp id by vgf id
 func GetBucketPrimarySPID(ctx context.Context, chainClient consensus.Consensus, bucketInfo *storagetypes.BucketInfo) (uint32, error) {
 	resp, err := chainClient.QueryVirtualGroupFamily(ctx, bucketInfo.GetGlobalVirtualGroupFamilyId())
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	return resp.GetPrimarySpId(), nil
 }

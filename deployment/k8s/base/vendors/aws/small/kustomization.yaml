@@ -1,0 +1,4 @@
+resources:
+  - ../../../components/shared/aws
+  - ../../../components/combo/all-in-one
+

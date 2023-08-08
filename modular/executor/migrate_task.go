@@ -4,35 +4,56 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
-	primarySPRedundancyIdx = -1
-	queryLimit             = 100
+	queryLimit         = uint32(100)
+	reportProgressPerN = 10
+
+	migrateGVGCostLabel              = "migrate_gvg_cost"
+	migrateGVGSucceedCounterLabel    = "migrate_gvg_succeed_counter"
+	migrateGVGFailedCounterLabel     = "migrate_gvg_failed_counter"
+	migrateObjectCostLabel           = "migrate_object_cost"
+	migrateObjectSucceedCounterLabel = "migrate_object_succeed_counter"
+	migrateObjectFailedCounterLabel  = "migrate_object_failed_counter"
 )
 
-// HandleMigrateGVGTask handles migrate gvg task.
-// There are two cases: sp exit and bucket migration.
+// HandleMigrateGVGTask handles migrate gvg task, including two cases: sp exit and bucket migration.
 // srcSP is a sp who wants to exit or need to migrate bucket, destSP is used to accept data from srcSP.
 func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) {
 	var (
-		srcGvgID             = task.GetSrcGvg().GetId()
-		bucketID             = task.GetBucketID()
-		lastMigratedObjectID = task.GetLastMigratedObjectID()
-		objectList           []*metadatatypes.Object
-		err                  error
+		srcGvgID                  = task.GetSrcGvg().GetId()
+		bucketID                  = task.GetBucketID()
+		lastMigratedObjectID      = task.GetLastMigratedObjectID()
+		objectList                []*metadatatypes.ObjectDetails
+		err                       error
+		migratedObjectNumberInGVG = 0
+		startMigrateGVGTime       = time.Now()
 	)
+
+	defer func() {
+		metrics.MigrateGVGTimeHistogram.WithLabelValues(migrateGVGCostLabel).Observe(time.Since(startMigrateGVGTime).Seconds())
+		if err == nil {
+			metrics.MigrateGVGCounter.WithLabelValues(migrateGVGSucceedCounterLabel).Inc()
+		} else {
+			metrics.MigrateGVGCounter.WithLabelValues(migrateGVGFailedCounterLabel).Inc()
+		}
+		log.CtxInfow(ctx, "finished to migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
+			"total_migrated_object_number", migratedObjectNumberInGVG, "last_migrated_object_id", lastMigratedObjectID, "error", err)
+	}()
 
 	for {
 		if bucketID == 0 { // sp exit task
@@ -40,40 +61,58 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		} else { // bucket migrate task
 			objectList, err = e.baseApp.GfSpClient().ListObjectsInGVGAndBucket(ctx, srcGvgID, bucketID, lastMigratedObjectID, queryLimit)
 		}
-		log.Infow("migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
-			"last_migrated_object_id", lastMigratedObjectID, "object_list", objectList, "error", err)
 		if err != nil {
+			log.Errorw("migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
+				"last_migrated_object_id", lastMigratedObjectID, "object_list", objectList, "error", err)
 			return
 		}
+
 		for index, object := range objectList {
-			if object.GetRemoved() || object.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-				log.CtxInfow(ctx, "object has been removed or object status is not sealed", "removed",
-					object.GetRemoved(), "object_status", object.GetObjectInfo().GetObjectStatus(), "object_id",
-					object.GetObjectInfo().Id.String(), "object_name", object.GetObjectInfo().GetObjectName())
-				continue
-			}
-			if err = e.doMigrationGVGTask(ctx, task, object, bucketID); err != nil {
-				log.CtxErrorw(ctx, "failed to do migration gvg task", "error", err)
+			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil {
+				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
+					"bucket_id", bucketID, "object_info", object, "error", err)
 				return
 			}
-			if index%10 == 0 { // report task per 10 objects
-				log.Info("migrate gvg report task")
+			if (index+1)%reportProgressPerN == 0 || index == len(objectList)-1 {
+				log.Infow("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID,
+					"current_migrated_object_number", migratedObjectNumberInGVG,
+					"last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
+				task.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
 				if err = e.ReportTask(ctx, task); err != nil {
-					log.CtxErrorw(ctx, "failed to report task", "index", index, "error", err)
+					log.CtxErrorw(ctx, "failed to report migrate gvg task progress", "task_info", task, "error", err)
+					return
 				}
 			}
+			lastMigratedObjectID = object.GetObject().GetObjectInfo().Id.Uint64()
+			migratedObjectNumberInGVG++
 		}
-		if len(objectList) < queryLimit {
-			log.Infow("migrate gvg task finished", "object list length", len(objectList))
-			// When the total count of objectList is less than queryLimit, it indicates that this gvg has finished.
+		if len(objectList) < int(queryLimit) { // it indicates that gvg all objects have been migrated.
+			task.SetLastMigratedObjectID(lastMigratedObjectID)
 			task.SetFinished(true)
 			return
 		}
 	}
 }
 
-func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.MigrateGVGTask, object *metadatatypes.Object,
-	bucketID uint64) error {
+func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.MigrateGVGTask, bucketID uint64,
+	objectDetails *metadatatypes.ObjectDetails) error {
+	var (
+		err                    error
+		isBucketMigrate        bool
+		startMigrateObjectTime = time.Now()
+		object                 = objectDetails.GetObject()
+	)
+
+	defer func() {
+		metrics.MigrateObjectTimeHistogram.WithLabelValues(migrateObjectCostLabel).Observe(time.Since(startMigrateObjectTime).Seconds())
+		if err == nil {
+			metrics.MigrateObjectCounter.WithLabelValues(migrateObjectSucceedCounterLabel).Inc()
+		} else {
+			metrics.MigrateObjectCounter.WithLabelValues(migrateObjectFailedCounterLabel).Inc()
+		}
+		log.CtxDebugw(ctx, "finish to migrate object", "task_info", task, "bucket_id", bucketID, "object_info", objectDetails, "error", err)
+	}()
+
 	params, err := e.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, object.GetObjectInfo().GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query storage params by timestamp", "object_id",
@@ -81,34 +120,28 @@ func (e *ExecuteModular) doMigrationGVGTask(ctx context.Context, task coretask.M
 		return err
 	}
 
-	bucketName := object.GetObjectInfo().GetBucketName()
-	bucketInfo, err := e.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to query bucket info by bucket name", "bucket_name", bucketName, "error", err)
-		return err
-	}
-	// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another SP
 	if bucketID != 0 {
+		// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another secondary SP
 		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
 			log.Debugw("no gvg conflict", "error", err)
 		}
-	} else {
-		bucketID = bucketInfo.Id.Uint64()
+		isBucketMigrate = true
 	}
 
-	redundancyIdx, isSecondary, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, e.baseApp.GfSpClient(),
-		task.GetSrcSp().GetId(), bucketID, object.GetObjectInfo().GetLocalVirtualGroupId())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to validate and get sp index within gvg secondary sps", "error", err)
-		return err
+	selfSpID := task.GetSrcSp().GetId()
+	redundancyIdx, isSecondary := util.ValidateSecondarySPs(selfSpID, objectDetails.GetGvg().GetSecondarySpIds())
+	isPrimary := util.ValidatePrimarySP(selfSpID, objectDetails.GetGvg().GetPrimarySpId())
+	if !isPrimary && !isSecondary {
+		return fmt.Errorf("invalid sp id: %d", selfSpID)
 	}
 	migratePieceTask := &gfsptask.GfSpMigratePieceTask{
-		ObjectInfo:    object.GetObjectInfo(),
-		StorageParams: params,
-		SrcSpEndpoint: task.GetSrcSp().GetEndpoint(),
+		ObjectInfo:      object.GetObjectInfo(),
+		StorageParams:   params,
+		SrcSpEndpoint:   task.GetSrcSp().GetEndpoint(),
+		IsBucketMigrate: isBucketMigrate,
 	}
-	if redundancyIdx == primarySPRedundancyIdx && !isSecondary {
-		migratePieceTask.RedundancyIdx = primarySPRedundancyIdx
+	if !isSecondary && isPrimary {
+		migratePieceTask.RedundancyIdx = piecestore.PrimarySPRedundancyIndex
 	} else {
 		migratePieceTask.RedundancyIdx = int32(redundancyIdx)
 	}
@@ -182,7 +215,7 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 		return err
 	}
 	receive.SetSignature(signature)
-	if err := e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, destSPEndpoint, receive, data); err != nil {
+	if err = e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, destSPEndpoint, receive, data); err != nil {
 		log.CtxErrorw(ctx, "failed to replicate piece", "segment_piece_index", segmentIdx,
 			"redundancy_index", redundancyIdx, "error", err)
 	}
@@ -214,7 +247,7 @@ func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, 
 	return nil
 }
 
-// HandleMigratePieceTask handles the migrate piece task
+// HandleMigratePieceTask handles migrate piece task
 // It will send requests to the src SP(exiting SP or bucket migration) to get piece data. Using piece data to generate
 // piece checksum and integrity hash, if integrity hash is similar to chain's, piece data would be written into PieceStore,
 // generated piece checksum and integrity hash will be written into sql db.
@@ -228,47 +261,49 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 	var (
 		segmentCount = e.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 			task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
-		pieceDataList = make([][]byte, segmentCount)
 		redundancyIdx = task.GetRedundancyIdx()
+		objectID      = task.GetObjectInfo().Id.Uint64()
 	)
 
 	if task == nil {
 		return ErrDanglingPointer
 	}
 
+	// get a piece of data, calculate a piece checksum once, store it into db and piece store
+	// finally verify the integrity hash, and incorrect objects are deleted by gc
 	for i := 0; i < int(segmentCount); i++ {
 		task.SegmentIdx = uint32(i)
-		pieceDataList[i] = nil
 		pieceData, err := e.sendRequest(ctx, task)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to migrate piece data", "object_id", task.GetObjectInfo().Id.Uint64(),
+			log.CtxErrorw(ctx, "failed to migrate piece data", "object_id", objectID,
 				"object_name", task.GetObjectInfo().GetObjectName(), "segment_piece_index", task.GetSegmentIdx(), "sp_endpoint",
 				task.GetSrcSpEndpoint(), "error", err)
 			return err
 		}
-		pieceDataList[i] = pieceData
+
+		var pieceKey string
+		if redundancyIdx == piecestore.PrimarySPRedundancyIndex {
+			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectID, uint32(i))
+		} else {
+			pieceKey = e.baseApp.PieceOp().ECPieceKey(objectID, uint32(i), uint32(redundancyIdx))
+		}
+		if err = e.baseApp.PieceStore().PutPiece(ctx, pieceKey, pieceData); err != nil {
+			log.CtxErrorw(ctx, "failed to put piece data into primary sp", "piece_key", pieceKey, "error", err)
+			return ErrPieceStore
+		}
+
+		pieceChecksum := hash.GenerateChecksum(pieceData)
+		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, uint32(i), redundancyIdx, pieceChecksum); err != nil {
+			log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", task.GetObjectInfo().Id.Uint64(),
+				"segment_index", i, "redundancy_index", redundancyIdx, "error", err)
+			return ErrGfSpDB
+		}
 	}
 
-	if err := e.setMigratePiecesMetadata(task.GetObjectInfo(), pieceDataList, task.GetRedundancyIdx()); err != nil {
-		log.CtxErrorw(ctx, "failed to set piece checksum and integrity hash into sp db", "object_id",
-			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "error", err)
+	if err := e.setMigratePiecesMetadata(task.GetObjectInfo(), segmentCount, redundancyIdx); err != nil {
+		log.Errorw("failed to set object integrity meta", "error", err)
 		return err
 	}
-
-	for index, pieceData := range pieceDataList {
-		var pieceKey string
-		if redundancyIdx == primarySPRedundancyIdx {
-			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), uint32(index))
-		} else {
-			pieceKey = e.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(), uint32(index), uint32(redundancyIdx))
-		}
-		if err := e.baseApp.PieceStore().PutPiece(ctx, pieceKey, pieceData); err != nil {
-			log.CtxErrorw(ctx, "failed to put piece data to primary sp", "piece_key", pieceKey, "error", err)
-			return err
-		}
-	}
-	log.Infow("succeed to migrate all pieces", "object_id", task.GetObjectInfo().Id.Uint64(),
-		"object_name", task.GetObjectInfo().GetObjectName(), "sp_endpoint", task.GetSrcSpEndpoint())
 	return nil
 }
 
@@ -280,7 +315,7 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMig
 	pieceData, err = e.baseApp.GfSpClient().MigratePiece(ctx, task)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to migrate piece data", "object_id",
-			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "error", err)
+			task.GetObjectInfo().Id.Uint64(), "object_name", task.GetObjectInfo().GetObjectName(), "task_info", task, "error", err)
 		return nil, err
 	}
 	log.CtxInfow(ctx, "succeed to get piece from another sp", "object_id", task.GetObjectInfo().Id.Uint64(),
@@ -289,24 +324,25 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, task *gfsptask.GfSpMig
 }
 
 // setMigratePiecesMetadata writes integrity hash into db
-// 1. generate piece checksum list and integrity hash
+// 1. get piece checksum list from db and generate integrity hash
 // 2. compare generated integrity hash to chain integrity hash, if they are equal write to db
-func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.ObjectInfo, pieceData [][]byte, redundancyIdx int32) error {
+func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.ObjectInfo, segmentCount uint32, redundancyIdx int32) error {
 	var (
-		pieceChecksumList     = make([][]byte, len(pieceData))
-		migratedIntegrityHash []byte
-		err                   error
+		objectID = objectInfo.Id.Uint64()
 	)
-	for i, v := range pieceData {
-		pieceChecksumList[i] = nil
-		checksum := hash.GenerateChecksum(v)
-		pieceChecksumList[i] = checksum
+	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectID, redundancyIdx, segmentCount)
+	if err != nil {
+		log.Errorw("failed to get checksum from db", "object_info", objectInfo, "error", err)
+		return ErrGfSpDB
 	}
-	migratedIntegrityHash = hash.GenerateIntegrityHash(pieceChecksumList)
+	if len(pieceChecksums) != int(segmentCount) {
+		log.Errorw("returned piece checksum length does not match segment count",
+			"expected_segment_number", segmentCount, "actual_segment_number", len(pieceChecksums))
+		return ErrInvalidPieceChecksumLength
+	}
+	migratedIntegrityHash := hash.GenerateIntegrityHash(pieceChecksums)
+
 	var chainIntegrityHash []byte
-	if redundancyIdx < -1 || redundancyIdx > 5 {
-		return ErrInvalidRedundancyIndex
-	}
 	if redundancyIdx == -1 {
 		// primarySP
 		chainIntegrityHash = objectInfo.GetChecksums()[0]
@@ -321,16 +357,19 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	}
 
 	if err = e.baseApp.GfSpDB().SetObjectIntegrity(&corespdb.IntegrityMeta{
-		ObjectID:          objectInfo.Id.Uint64(),
+		ObjectID:          objectID,
 		RedundancyIndex:   redundancyIdx,
 		IntegrityChecksum: migratedIntegrityHash,
-		PieceChecksumList: pieceChecksumList,
+		PieceChecksumList: pieceChecksums,
 	}); err != nil {
-		log.Errorw("failed to set object integrity into sp db", "object_id", objectInfo.Id.String(),
+		log.Errorw("failed to set object integrity into sp db", "object_id", objectID,
 			"object_name", objectInfo.GetObjectName(), "error", err)
 		return ErrSetObjectIntegrity
 	}
-	log.Infow("succeed to compute and set object integrity", "object_id", objectInfo.Id.String(),
+	if err = e.baseApp.GfSpDB().DeleteAllReplicatePieceChecksum(objectID, redundancyIdx, segmentCount); err != nil {
+		log.Errorw("failed to delete all migrated piece checksum", "error", err)
+	}
+	log.Infow("succeed to compute and set object integrity", "object_id", objectID,
 		"object_name", objectInfo.GetObjectName())
 	return nil
 }

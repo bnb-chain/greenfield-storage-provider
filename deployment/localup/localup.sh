@@ -5,8 +5,6 @@ workspace=${basedir}
 source ${workspace}/env.info
 sp_bin_name=gnfd-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
-gnfd_bin=${workspace}/../../greenfield/build/bin/gnfd
-gnfd_workspace=${workspace}/../../greenfield/deployment/localup/
 
 #########################
 # the command line help #
@@ -114,7 +112,6 @@ function make_config() {
     sed -i -e "s/GcPrivateKey = '.*'/GcPrivateKey = '${GC_PRIVATE_KEY}'/g" config.toml
     sed -i -e "s/BlsPrivateKey = '.*'/BlsPrivateKey = '${BLS_PRIVATE_KEY}'/g" config.toml
 
-
     # gateway
     sed -i -e "s/DomainName = '.*'/DomainName = 'gnfd.test-sp.com'/g" config.toml
     sed -i -e "s/^HTTPAddress = '.*'/HTTPAddress = '${SP_ENDPOINT}'/g" config.toml
@@ -147,9 +144,15 @@ function make_config() {
     # blocksyncer
     sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\]/g" config.toml
     sed -i -e "s/RecreateTables = false/RecreateTables = true/g" config.toml
-    WORKERS=1
+    WORKERS=10
     sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml
-    sed -i -e "s/Dsn = '.*'/Dsn = \"${USER}:${PWD}@tcp(${ADDRESS})\/${DATABASE}?parseTime=true\&multiStatements=true\&loc=Local\"/g" config.toml
+    sed -i -e "s/Dsn = '.*'/Dsn = \"${USER}:${PWD}@tcp(${ADDRESS})\/${DATABASE}?parseTime=true\&multiStatements=true\&loc=Local\&interpolateParams=true\"/g" config.toml
+
+    # manager
+    sed -i -e "s/SubscribeSPExitEventIntervalMillisecond = .*/SubscribeSPExitEventIntervalMillisecond = 100/g" config.toml
+    sed -i -e "s/SubscribeSwapOutExitEventIntervalMillisecond = .*/SubscribeSwapOutExitEventIntervalMillisecond = 100/g" config.toml
+    sed -i -e "s/SubscribeBucketMigrateEventIntervalMillisecond = .*/SubscribeBucketMigrateEventIntervalMillisecond = 100/g" config.toml
+    sed -i -e "s/GVGPreferSPList = \[\]/GVGPreferSPList = \[1,2,3,4,5,6,7,8\]/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null

@@ -11,7 +11,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -24,30 +23,32 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
-	ErrDanglingPointer         = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 40001, "OoooH.... request lost")
-	ErrInsufficientApproval    = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40002, "insufficient approvals from p2p")
-	ErrUnsealed                = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 40003, "seal object on chain failed")
-	ErrExhaustedApproval       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40004, "approvals exhausted")
-	ErrInvalidIntegrity        = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40005, "secondary integrity hash verification failed")
-	ErrSecondaryMismatch       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40006, "secondary sp mismatch")
-	ErrReplicateIdsOutOfBounds = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
-	ErrGfSpDB                  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
-	ErrRecoveryRedundancyType  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
-	ErrRecoveryPieceNotEnough  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "failed to get enough piece data to recovery")
-	ErrRecoveryDecode          = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
-	ErrPieceStore              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
-	ErrRecoveryPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
-	ErrRecoveryPieceLength     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45207, "get secondary piece data length error")
-	ErrPrimaryNotFound         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recovering")
-	ErrRecoveryPieceIndex      = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
-	ErrMigratedPieceChecksum   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
-	ErrConsensus               = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 45211, "server slipped away, try again later")
-	ErrInvalidRedundancyIndex  = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "invalid redundancy index")
-	ErrSetObjectIntegrity      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45213, "failed to set object integrity into spdb")
+	ErrDanglingPointer            = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 40001, "OoooH.... request lost")
+	ErrInsufficientApproval       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40002, "insufficient approvals from p2p")
+	ErrUnsealed                   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 40003, "seal object on chain failed")
+	ErrExhaustedApproval          = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40004, "approvals exhausted")
+	ErrInvalidIntegrity           = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40005, "secondary integrity hash verification failed")
+	ErrSecondaryMismatch          = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40006, "secondary sp mismatch")
+	ErrReplicateIdsOutOfBounds    = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
+	ErrGfSpDB                     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
+	ErrRecoveryRedundancyType     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
+	ErrRecoveryPieceNotEnough     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "failed to get enough piece data to recovery")
+	ErrRecoveryDecode             = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
+	ErrPieceStore                 = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
+	ErrRecoveryPieceChecksum      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
+	ErrRecoveryPieceLength        = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45207, "get secondary piece data length error")
+	ErrPrimaryNotFound            = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recovering")
+	ErrRecoveryPieceIndex         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
+	ErrMigratedPieceChecksum      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
+	ErrConsensus                  = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 45211, "server slipped away, try again later")
+	ErrInvalidRedundancyIndex     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "invalid redundancy index")
+	ErrSetObjectIntegrity         = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45213, "failed to set object integrity into spdb")
+	ErrInvalidPieceChecksumLength = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45214, "invalid piece checksum length")
 )
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
@@ -81,11 +82,11 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureSealObject).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorFailureSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorFailureSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorFailureSealObject).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessSealObject).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessSealObject).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorSuccessSealObject).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
@@ -169,10 +170,9 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	if err != nil {
 		return
 	}
-	if int(task.GetReplicateIdx()) >= len(gvg.GetSecondarySpIds()) {
+	if int(task.GetRedundancyIdx()) >= len(gvg.GetSecondarySpIds()) {
 		log.CtxErrorw(ctx, "failed to confirm receive task, replicate idx out of bounds",
-			"replicate_idx", task.GetReplicateIdx(),
-			"secondary_sp_len", len(gvg.GetSecondarySpIds()))
+			"redundancy_idx", task.GetRedundancyIdx(), "secondary_sp_len", len(gvg.GetSecondarySpIds()))
 		task.SetError(ErrReplicateIdsOutOfBounds)
 		return
 	}
@@ -181,12 +181,11 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 	if err != nil {
 		return
 	}
-	if gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())] != spID {
+	if gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())] != spID {
 		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
-			"expect", gvg.GetSecondarySpIds()[int(task.GetReplicateIdx())],
-			"current", e.baseApp.OperatorAddress())
+			"expect", gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())], "current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
-		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64(), int32(task.GetReplicateIdx()))
+		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delete integrity")
 		}
@@ -195,8 +194,8 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 			task.GetStorageParams().GetMaxPayloadSize())
 		for i := uint32(0); i < segmentCount; i++ {
 			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-				pieceKey = e.baseApp.PieceOp().ECPieceKey(offChainObject.Id.Uint64(),
-					i, task.GetReplicateIdx())
+				pieceKey = e.baseApp.PieceOp().ECPieceKey(offChainObject.Id.Uint64(), i,
+					uint32(task.GetRedundancyIdx()))
 			} else {
 				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(offChainObject.Id.Uint64(), i)
 			}
@@ -207,7 +206,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		}
 		return
 	}
-	log.CtxDebugw(ctx, "succeed to handle confirm receive piece task")
+	log.CtxDebug(ctx, "succeed to handle confirm receive piece task")
 }
 
 func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.GCObjectTask) {

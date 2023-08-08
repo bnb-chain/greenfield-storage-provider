@@ -57,17 +57,24 @@ type ReadRecord struct {
 
 // BucketQuota defines read quota of a bucket.
 type BucketQuota struct {
-	ReadQuotaSize uint64
+	ChargedQuotaSize uint64 // the charged quota of bucket on greenfield chain meta
+	FreeQuotaSize    uint64 // the free quota of SP on greenfield chain
+}
+
+// BucketFreeQuota defines free quota of a bucket.
+type BucketFreeQuota struct {
+	QuotaSize uint64
 }
 
 // BucketTraffic is record traffic by year and month.
 type BucketTraffic struct {
-	BucketID         uint64
-	YearMonth        string // YearMonth is traffic's YearMonth, format "2023-02".
-	BucketName       string
-	ReadConsumedSize uint64
-	ReadQuotaSize    uint64
-	ModifyTime       int64
+	BucketID              uint64
+	BucketName            string
+	ReadConsumedSize      uint64
+	FreeQuotaSize         uint64 // the total free quota size of SP price meta
+	FreeQuotaConsumedSize uint64 // the consumed free quota size
+	ChargedQuotaSize      uint64 // the total charged quota of bucket
+	ModifyTime            int64
 }
 
 // TrafficTimeRange is used by query, return records in [StartTimestampUs, EndTimestampUs).
@@ -92,16 +99,17 @@ type OffChainAuthKey struct {
 
 // MigrateGVGUnitMeta is used to record migrate type/meta/status/progress.
 type MigrateGVGUnitMeta struct {
-	MigrateGVGKey        string // as primary key
-	SwapOutKey           string
-	GlobalVirtualGroupID uint32 // is used by sp exit/bucket migrate
-	VirtualGroupFamilyID uint32 // is used by sp exit
-	RedundancyIndex      int32  // is used by sp exit
-	BucketID             uint64 // is used by bucket migrate
-	SrcSPID              uint32
-	DestSPID             uint32
-	LastMigratedObjectID uint64
-	MigrateStatus        int // scheduler assign unit status.
+	MigrateGVGKey            string // as primary key
+	SwapOutKey               string
+	GlobalVirtualGroupID     uint32 // is used by sp exit/bucket migrate
+	DestGlobalVirtualGroupID uint32 // is used by bucket migrate
+	VirtualGroupFamilyID     uint32 // is used by sp exit
+	RedundancyIndex          int32  // is used by sp exit
+	BucketID                 uint64 // is used by bucket migrate
+	SrcSPID                  uint32
+	DestSPID                 uint32
+	LastMigratedObjectID     uint64
+	MigrateStatus            int // scheduler assign unit status.
 }
 
 // SwapOutMeta is used to record swap out meta.

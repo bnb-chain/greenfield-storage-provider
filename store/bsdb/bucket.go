@@ -2,6 +2,7 @@ package bsdb
 
 import (
 	"errors"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
@@ -16,6 +17,15 @@ func (b *BsDBImpl) GetUserBuckets(accountID common.Address, includeRemoved bool)
 		buckets []*Bucket
 		err     error
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if includeRemoved {
 		err = b.db.Table((&Bucket{}).TableName()).
@@ -42,6 +52,16 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, includePrivate bool) (*Buc
 		err    error
 	)
 
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	if includePrivate {
 		err = b.db.Take(&bucket, "bucket_name = ? and removed = false", bucketName).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -64,6 +84,16 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, 
 		err          error
 		bucketIDHash common.Hash
 	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	bucketIDHash = common.BigToHash(math.NewInt(bucketID).BigInt())
 	if includePrivate {
@@ -88,6 +118,16 @@ func (b *BsDBImpl) GetUserBucketsCount(accountID common.Address, includeRemoved 
 		err   error
 	)
 
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	if includeRemoved {
 		err = b.db.Table((&Bucket{}).TableName()).Select("count(1)").Take(&count, "owner = ?", accountID).Error
 	} else {
@@ -102,6 +142,16 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, li
 		buckets []*Bucket
 		err     error
 	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	if limit < 1 || limit > ExpiredBucketsDefaultSize {
 		limit = ExpiredBucketsDefaultSize
@@ -130,6 +180,16 @@ func (b *BsDBImpl) GetBucketMetaByName(bucketName string, includePrivate bool) (
 		err            error
 	)
 
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	if includePrivate {
 		err = b.db.Table((&Bucket{}).TableName()).
 			Select("*").
@@ -156,6 +216,16 @@ func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool)
 		filters []func(*gorm.DB) *gorm.DB
 	)
 
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	if !includeRemoved {
 		filters = append(filters, RemovedFilter(includeRemoved))
 	}
@@ -168,70 +238,23 @@ func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool)
 	return buckets, err
 }
 
-// ListBucketsBindingOnPrimarySP list buckets by primary sp id
-func (b *BsDBImpl) ListBucketsBindingOnPrimarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
-	var (
-		families []*GlobalVirtualGroupFamily
-		buckets  []*Bucket
-		vgfIDs   []uint32
-		err      error
-	)
-
-	families, err = b.ListVirtualGroupFamiliesBySpID(spID)
-	if err != nil || len(families) == 0 {
-		return nil, err
-	}
-
-	vgfIDs = make([]uint32, len(families))
-	for i, family := range families {
-		vgfIDs[i] = family.GlobalVirtualGroupFamilyId
-	}
-
-	buckets, err = b.ListBucketsByVgfID(vgfIDs, startAfter, limit)
-	return buckets, err
-}
-
-// ListBucketsBindingOnSecondarySP list buckets by secondary sp id
-func (b *BsDBImpl) ListBucketsBindingOnSecondarySP(spID uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
-	var (
-		groups   []*GlobalVirtualGroup
-		families []*GlobalVirtualGroupFamily
-		buckets  []*Bucket
-		gvgIDs   []uint32
-		vgfIDs   []uint32
-		err      error
-	)
-
-	groups, err = b.ListGvgBySecondarySpID(spID)
-	if err != nil || groups == nil {
-		return nil, err
-	}
-
-	gvgIDs = make([]uint32, len(groups))
-	for i, group := range groups {
-		gvgIDs[i] = group.GlobalVirtualGroupId
-	}
-
-	families, err = b.ListVgfByGvgID(gvgIDs)
-	if err != nil || families == nil {
-		return nil, err
-	}
-
-	vgfIDs = make([]uint32, len(groups))
-	for i, family := range families {
-		vgfIDs[i] = family.GlobalVirtualGroupFamilyId
-	}
-
-	buckets, err = b.ListBucketsByVgfID(vgfIDs, startAfter, limit)
-	return buckets, err
-}
-
 func (b *BsDBImpl) ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, limit int) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket
 		err     error
 		filters []func(*gorm.DB) *gorm.DB
 	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
 	filters = append(filters, ObjectIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
 	err = b.db.Table((&Bucket{}).TableName()).
 		Select("*").

@@ -127,7 +127,6 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	// begin to sign the new approval task
 	currentHeight = a.GetCurrentBlockHeight()
 	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
-	// TODO: modify to migrate proto.
 	signature, err = a.baseApp.GfSpClient().SignMigrateBucketApproval(ctx, task.GetMigrateBucketInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the migrate bucket approval", "error", err)

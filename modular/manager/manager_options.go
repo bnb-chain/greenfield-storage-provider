@@ -4,6 +4,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 )
 
 const (
@@ -23,6 +24,9 @@ const (
 	// DefaultGlobalReceiveObjectParallel defines the default max parallel confirming
 	// receive pieces on greenfield in SP system.
 	DefaultGlobalReceiveObjectParallel int = 10240 * 10
+	// DefaultGlobalBackupTaskParallel defines the default parallel backup tasks for
+	// dispatching to task executor
+	DefaultGlobalBackupTaskParallel int = 10240 * 100
 	// DefaultGlobalGCObjectParallel defines the default max parallel gc objects in SP
 	// system.
 	DefaultGlobalGCObjectParallel int = 4
@@ -70,14 +74,16 @@ const (
 	// the interval, buckets will be discontinued, used for test net.
 	DefaultDiscontinueBucketKeepAliveDays = 7
 
+	// DefaultLoadReplicateTimeout defines the task timeout that load replicate tasks from sp db
 	DefaultLoadReplicateTimeout int64 = 60
-	DefaultLoadSealTimeout      int64 = 180
+	// DefaultLoadSealTimeout defines the task timeout that load seal tasks from sp db
+	DefaultLoadSealTimeout int64 = 180
 	// DefaultSubscribeSPExitEventIntervalMillisecond define the default time interval to subscribe sp exit event from metadata.
-	DefaultSubscribeSPExitEventIntervalMillisecond = 100
+	DefaultSubscribeSPExitEventIntervalMillisecond = 2000
 	// DefaultSubscribeBucketMigrateEventIntervalMillisecond define the default time interval to subscribe bucket migrate event from metadata.
-	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 100
+	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 2000
 	// DefaultSubscribeSwapOutEventIntervalMillisecond define the default time interval to subscribe gvg swap out event from metadata.
-	DefaultSubscribeSwapOutEventIntervalMillisecond = 100
+	DefaultSubscribeSwapOutEventIntervalMillisecond = 2000
 )
 
 const (
@@ -135,6 +141,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Parallel.GlobalMigrateGVGParallel == 0 {
 		cfg.Parallel.GlobalMigrateGVGParallel = DefaultGlobalMigrateGVGParallel
 	}
+	if cfg.Parallel.GlobalBackupTaskParallel == 0 {
+		cfg.Parallel.GlobalMigrateGVGParallel = DefaultGlobalBackupTaskParallel
+	}
 
 	if cfg.Parallel.GlobalDownloadObjectTaskCacheSize == 0 {
 		cfg.Parallel.GlobalDownloadObjectTaskCacheSize = DefaultGlobalDownloadObjectTaskCacheSize
@@ -187,6 +196,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
 	manager.loadReplicateTimeout = cfg.Parallel.LoadReplicateTimeout
 	manager.loadSealTimeout = cfg.Parallel.LoadSealTimeout
+	manager.taskCh = make(chan task.Task, cfg.Parallel.GlobalMigrateGVGParallel)
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.resumableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
@@ -215,15 +225,22 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus()); err != nil {
 		return err
 	}
-	if cfg.Manager.SubscribeSPExitEventIntervalSec == 0 {
+	if cfg.Manager.SubscribeSPExitEventIntervalMillisecond == 0 {
 		manager.subscribeSPExitEventInterval = DefaultSubscribeSPExitEventIntervalMillisecond
+	} else {
+		manager.subscribeSPExitEventInterval = cfg.Manager.SubscribeSPExitEventIntervalMillisecond
 	}
-	if cfg.Manager.SubscribeBucketMigrateEventIntervalSec == 0 {
-		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
-	}
-	if cfg.Manager.SubscribeSwapOutExitEventIntervalSec == 0 {
+	if cfg.Manager.SubscribeSwapOutExitEventIntervalMillisecond == 0 {
 		manager.subscribeSwapOutEventInterval = DefaultSubscribeSwapOutEventIntervalMillisecond
+	} else {
+		manager.subscribeSwapOutEventInterval = cfg.Manager.SubscribeSwapOutExitEventIntervalMillisecond
 	}
+	if cfg.Manager.SubscribeBucketMigrateEventIntervalMillisecond == 0 {
+		manager.subscribeBucketMigrateEventInterval = DefaultSubscribeBucketMigrateEventIntervalMillisecond
+	} else {
+		manager.subscribeBucketMigrateEventInterval = cfg.Manager.SubscribeBucketMigrateEventIntervalMillisecond
+	}
+	manager.gvgPreferSPList = cfg.Manager.GVGPreferSPList
 
 	return nil
 }

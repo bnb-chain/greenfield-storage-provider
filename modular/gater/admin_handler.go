@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
+	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -24,6 +24,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
@@ -39,6 +40,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		createBucketApproval  = storagetypes.MsgCreateBucket{}
 		migrateBucketApproval = storagetypes.MsgMigrateBucket{}
 		createObjectApproval  = storagetypes.MsgCreateObject{}
+		spInfo                *sptypes.StorageProvider
 		authenticated         bool
 	)
 	startTime := time.Now()
@@ -78,6 +80,21 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 
 	switch approvalType {
 	case createBucketApprovalAction:
+		// check sp status firstly
+		spInfo, err = g.baseApp.Consensus().QuerySP(reqCtx.Context(), g.baseApp.OperatorAddress())
+		if err != nil {
+			log.Errorw("failed to query sp by operator address", "operator_address", g.baseApp.OperatorAddress(),
+				"error", err)
+			return
+		}
+		spStatus := spInfo.GetStatus()
+		if spStatus != sptypes.STATUS_IN_SERVICE {
+			log.Errorw("sp is not in service status", "operator_address", g.baseApp.OperatorAddress(),
+				"sp_status", spStatus, "sp_id", spInfo.GetId(), "endpoint", spInfo.GetEndpoint())
+			err = ErrSPUnavailable
+			return
+		}
+
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createBucketApproval); err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
 				r.Header.Get(GnfdUnsignedApprovalMsgHeader), "error", err)
@@ -176,6 +193,11 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
+		if err = g.checkSPAndBucketStatus(reqCtx.Context(), createObjectApproval.GetBucketName()); err != nil {
+			log.Errorw("create object approval failed to check sp and bucket status", "error", err)
+			return
+		}
+
 		startVerifyAuthentication := time.Now()
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
 			reqCtx.Context(), coremodule.AuthOpAskCreateObjectApproval,
@@ -378,12 +400,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 			metrics.ReqTime.WithLabelValues(GatewayFailureReplicatePiece).Observe(time.Since(receivePieceStartTime).Seconds())
 		} else {
 			reqCtx.SetHttpCode(http.StatusOK)
-			log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(receivePieceStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewaySuccessReplicatePiece).Inc()
 			metrics.ReqTime.WithLabelValues(GatewaySuccessReplicatePiece).Observe(time.Since(receivePieceStartTime).Seconds())
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
@@ -415,7 +437,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the request account is the primary SP of the object of the receive task
+	// check if the request account is the primary SP of the object of the receiving task
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
 	if err != nil {
 		err = ErrConsensus
@@ -426,13 +448,11 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensus
 		return
 	}
-
 	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketSPID)
 	if err != nil {
 		err = ErrConsensus
 		return
 	}
-
 	if bucketPrimarySp.OperatorAddress != requestAccount.String() {
 		log.CtxErrorw(reqCtx.Context(), "the request account of replicate object is not primary SP", "expected:", bucketPrimarySp.OperatorAddress,
 			"actual sp:", requestAccount.String())
@@ -440,9 +460,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if receiveTask.GetObjectInfo() == nil ||
-		int(receiveTask.GetReplicateIdx()) >=
-			len(receiveTask.GetObjectInfo().GetChecksums()) {
+	if receiveTask.GetObjectInfo() == nil || int(receiveTask.GetRedundancyIdx()) >= len(receiveTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(reqCtx.Context(), "receive task params error")
 		err = ErrInvalidHeader
 		return
@@ -455,7 +473,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrExceptionStream
 		return
 	}
-	if receiveTask.GetPieceIdx() >= 0 {
+	if !receiveTask.GetFinished() {
 		metrics.ReqPieceSize.WithLabelValues(GatewayReplicatePieceSize).Observe(float64(len(data)))
 		handlePieceTime := time.Now()
 		err = g.baseApp.GfSpClient().ReplicatePiece(reqCtx.Context(), &receiveTask, data)

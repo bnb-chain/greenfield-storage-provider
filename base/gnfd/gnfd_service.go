@@ -2,13 +2,18 @@ package gnfd
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -18,6 +23,7 @@ import (
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (
@@ -85,6 +91,11 @@ const (
 	ChainSuccessVerifyPutObjectPermission = "verify_putt_object_permission_success"
 	// ChainFailureVerifyPutObjectPermission defines the metrics label of unsuccessfully verify put object permission
 	ChainFailureVerifyPutObjectPermission = "verify_put_object_permission_failure"
+
+	// ConfirmBlockNumber defines wait block number.
+	ConfirmBlockNumber = 3
+	// WaitForNextBlockTimeout define wait block timeout.
+	WaitForNextBlockTimeout = 30 * time.Second
 )
 
 // CurrentHeight the block height sub one as the stable height.
@@ -200,6 +211,36 @@ func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.St
 	return resp.GetStorageProvider(), nil
 }
 
+// QuerySPFreeQuota returns the sp free quota
+func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (uint64, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_quota").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+		SpAddr: operatorAddress,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return 0, err
+	}
+	return resp.GetSpStoragePrice().FreeReadQuota, nil
+}
+
+// QuerySPPrice returns the sp price info
+func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("query_sp_price").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+		SpAddr: operatorAddress,
+	})
+	if err != nil {
+		log.Errorw("failed to query storage provider", "error", err)
+		return sptypes.SpStoragePrice{}, err
+	}
+	return resp.GetSpStoragePrice(), nil
+}
+
 // QuerySPByID returns the sp info.
 func (g *Gnfd) QuerySPByID(ctx context.Context, spID uint32) (*sptypes.StorageProvider, error) {
 	startTime := time.Now()
@@ -297,12 +338,11 @@ func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virt
 }
 
 // ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
-func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, spID, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_by_family_id").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupByFamilyID(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupByFamilyIDRequest{
-		StorageProviderId:          spID,
 		GlobalVirtualGroupFamilyId: vgfID,
 	})
 	if err != nil {
@@ -441,6 +481,37 @@ func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (bucketInfo *
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query bucket", "bucket_name", bucket, "error", err)
+		return nil, err
+	}
+	return resp.GetBucketInfo(), nil
+}
+
+// QueryBucketInfoById returns the bucket info by name.
+func (g *Gnfd) QueryBucketInfoById(ctx context.Context, bucketId uint64) (bucketInfo *storagetypes.BucketInfo, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryBucketInfo).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryBucketInfo).Observe(
+				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryBucketInfo).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryBucketInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	client := g.getCurrentClient().GnfdClient()
+	id := sdkmath.NewUint(bucketId)
+	resp, err := client.HeadBucketById(ctx, &storagetypes.QueryHeadBucketByIdRequest{BucketId: id.String()})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query bucket", "bucket_id", bucketId, "error", err)
 		return nil, err
 	}
 	return resp.GetBucketInfo(), nil
@@ -735,4 +806,70 @@ func (g *Gnfd) VerifyPutObjectPermission(ctx context.Context, account, bucket, o
 		return true, err
 	}
 	return false, err
+}
+
+// ConfirmTransaction is used to confirm whether the transaction is on the chain.
+func (g *Gnfd) ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error) {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("confirm_transaction").Observe(time.Since(startTime).Seconds())
+	client := g.getCurrentClient().GnfdClient()
+	for i := 0; i < ConfirmBlockNumber; i++ {
+		txResponse, err := client.GetTx(ctx, &tx.GetTxRequest{Hash: txHash})
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				// Tx not found, wait for next block and try again
+				if err = g.WaitForNextBlock(ctx); err != nil {
+					return nil, err
+				}
+				continue
+			}
+			return nil, err
+		}
+		// Tx found
+		return txResponse.TxResponse, nil
+	}
+	return nil, fmt.Errorf("failed to confirm transaction, tx_hash=%s", txHash)
+}
+
+// WaitForNextBlock is used to chain generate a new block.
+func (g *Gnfd) WaitForNextBlock(ctx context.Context) error {
+	startTime := time.Now()
+	defer metrics.GnfdChainTime.WithLabelValues("wait_for_next_block").Observe(time.Since(startTime).Seconds())
+	var (
+		err               error
+		height            int64
+		latestBlockHeight int64
+	)
+	height, err = g.getLatestBlockHeight(ctx)
+	if err != nil {
+		return err
+	}
+	ctxTimeout, cancel := context.WithTimeout(ctx, WaitForNextBlockTimeout)
+	defer cancel()
+
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		if latestBlockHeight, err = g.getLatestBlockHeight(ctx); err != nil {
+			return err
+		}
+		if latestBlockHeight >= height+1 {
+			return nil
+		}
+		select {
+		case <-ctxTimeout.Done():
+			return fmt.Errorf("timeout exceeded waiting for block")
+		case <-ticker.C:
+		}
+	}
+}
+
+func (g *Gnfd) getLatestBlockHeight(ctx context.Context) (int64, error) {
+	client := g.getCurrentClient().GnfdClient()
+	block, err := client.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})
+	if err != nil {
+		return 0, err
+	}
+	return block.SdkBlock.Header.Height, nil
 }

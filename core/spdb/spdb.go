@@ -60,22 +60,24 @@ type SignatureDB interface {
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
 	// SetReplicatePieceChecksum sets(maybe overwrite) the piece hash.
-	SetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32, checksum []byte) error
+	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
 	// GetAllReplicatePieceChecksum gets all piece hashes.
-	GetAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) ([][]byte, error)
+	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
-	DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) error
+	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
 }
 
 // TrafficDB defines a series of traffic interfaces.
 type TrafficDB interface {
-	// CheckQuotaAndAddReadRecord create bucket traffic firstly if bucket is not existed,
-	// and check whether the added traffic record exceeds the quota, if it exceeds the quota,
+	// CheckQuotaAndAddReadRecord get the traffic info from db, update the quota meta and check
+	// whether the added traffic record exceeds the quota, if it exceeds the quota,
 	// it will return error, Otherwise, add a record and return nil.
 	CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error
+	// InitBucketTraffic init the traffic info
+	InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error
 	// GetBucketTraffic return bucket traffic info,
 	// notice maybe return (nil, nil) while there is no bucket traffic.
-	GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error)
+	GetBucketTraffic(bucketID uint64) (*BucketTraffic, error)
 	// GetReadRecord return record list by time range.
 	GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 	// GetBucketReadRecord return bucket record list by time range.
@@ -99,6 +101,8 @@ type SPInfoDB interface {
 	GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error)
 	// GetSpByEndpoint return sp info by endpoint.
 	GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
+	// GetSpById return sp info by id.
+	GetSpById(id uint32) (*sptypes.StorageProvider, error)
 	// GetOwnSpInfo return own sp info.
 	GetOwnSpInfo() (*sptypes.StorageProvider, error)
 	// SetOwnSpInfo set(maybe overwrite) own sp info.
@@ -150,6 +154,8 @@ type MigrateDB interface {
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
+	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
+	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
 }
 
 type SPDB interface {

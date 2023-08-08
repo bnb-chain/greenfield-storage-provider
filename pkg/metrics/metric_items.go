@@ -66,9 +66,21 @@ var MetricsItems = []prometheus.Collector{
 	PerfChallengeTimeHistogram,
 
 	// blocksyncer metrics category
-	ProcessBlockTime,
-	//EventAvgTime,
-	//TxAvgTime,
+	BlocksyncerCatchTime,
+	BlockEventCount,
+	BlocksyncerLogicTime,
+	BlocksyncerWriteDBTime,
+	ChainLatestHeight,
+	ChainRPCTime,
+
+	// metadata metrics category
+	MetadataReqTime,
+
+	// sp exit and bucket migration category
+	MigrateGVGTimeHistogram,
+	MigrateGVGCounter,
+	MigrateObjectTimeHistogram,
+	MigrateObjectCounter,
 }
 
 // basic metrics items
@@ -258,19 +270,58 @@ var (
 )
 
 var (
-	ProcessBlockTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "process_block_time",
-		Help:    "Track process block workflow costs.",
+	BlocksyncerCatchTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "blocksyncer_catch_time",
+		Help: "Track the time of catch block time. ",
+	})
+	BlocksyncerLogicTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "blocksyncer_logic_time",
+		Help: "Track the time of catch block time. ",
+	})
+	BlocksyncerWriteDBTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "blocksyncer_write_db_time",
+		Help: "Track the time of catch block time. ",
+	})
+	ChainRPCTime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "chain_rpc_time",
+		Help: "Track the time of chain rpc. ",
+	})
+	BlockEventCount = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "block_event_count",
+		Help: "Track the sql count of block. ",
+	})
+	ChainLatestHeight = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "chain_latest_height",
+		Help: "Track the height of chain. ",
+	})
+)
+
+var (
+	MetadataReqTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "metadata_request_time",
+		Help:    "Track the metadata request time.",
 		Buckets: prometheus.DefBuckets,
-	}, []string{"process_block_time"})
-	//EventAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	//	Name:    "process_block_time",
-	//	Help:    "Track process block workflow costs.",
-	//	Buckets: prometheus.DefBuckets,
-	//}, []string{"event_avg_time"})
-	//TxAvgTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	//	Name:    "process_block_time",
-	//	Help:    "Track process block workflow costs.",
-	//	Buckets: prometheus.DefBuckets,
-	//}, []string{"tx_avg_time"})
+	}, []string{"status", "level", "method_name", "code_or_msg"})
+)
+
+// SP exit and bucket migration metrics
+var (
+	MigrateGVGTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "migrate_gvg_time",
+		Help:    "Track migrate gvg workflow costs",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"migrate_gvg_time"})
+	MigrateGVGCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "migrate_gvg_counter",
+		Help: "Track migrate gvg number",
+	}, []string{"migrate_gvg_counter"})
+	MigrateObjectTimeHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "migrate_object_time",
+		Help:    "Track migrate object workflow costs",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"migrate_object_time"})
+	MigrateObjectCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "migrate_object_counter",
+		Help: "Track migrate object number",
+	}, []string{"migrate_object_counter"})
 )

@@ -7,6 +7,7 @@ import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
 import "greenfield/permission/common.proto";
 import "greenfield/resource/types.proto";
+import "greenfield/sp/types.proto";
 import "greenfield/storage/events.proto";
 import "greenfield/storage/query.proto";
 import "greenfield/storage/types.proto";
@@ -60,6 +61,16 @@ message Object {
   string update_tx_hash = 9;
   // seal_tx_hash defines the sealed transaction hash of object
   string seal_tx_hash = 10;
+}
+
+// ObjectDetails defines object related bucket and gvg info
+message ObjectDetails {
+  // object is the structure for user object
+  Object object = 1;
+  // bucket is the structure for user bucket
+  Bucket bucket = 2;
+  // gvg defines a global virtual group consists of one primary SP (SP) and multiple secondary SP
+  greenfield.virtualgroup.GlobalVirtualGroup gvg = 3;
 }
 
 // GfSpGetUserBucketsRequest is request type for the GfSpGetUserBuckets RPC method.
@@ -258,14 +269,14 @@ message GfSpGetBucketMetaResponse {
   greenfield.payment.StreamRecord stream_record = 2;
 }
 
-// GfSpGetEndpointBySpAddressRequest is request type for the GfSpGetEndpointBySpAddress RPC method
-message GfSpGetEndpointBySpAddressRequest {
-  // sp_address is the address of the sp
-  string sp_address = 1;
+// GfSpGetEndpointBySpIdRequest is request type for the GfSpGetEndpointBySpId RPC method
+message GfSpGetEndpointBySpIdRequest {
+  // sp_id is the id of the sp
+  uint32 sp_id = 1;
 }
 
-// GfSpGetEndpointBySpAddressResponse is response type for the GfSpGetEndpointBySpAddress RPC method.
-message GfSpGetEndpointBySpAddressResponse {
+// GfSpGetEndpointBySpIdResponse is response type for the GfSpGetEndpointBySpId RPC method.
+message GfSpGetEndpointBySpIdResponse {
   // endpoint defines endpoint of a sp
   string endpoint = 1;
 }
@@ -274,8 +285,6 @@ message GfSpGetEndpointBySpAddressResponse {
 message GfSpGetBucketReadQuotaRequest {
   // bucket info from the greenfield chain
   greenfield.storage.BucketInfo bucket_info = 1;
-  // year_month is the query bucket quota's month, like "2023-03"
-  string year_month = 2;
 }
 
 // GfSpGetBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuota RPC method.
@@ -463,74 +472,6 @@ message GfSpGetGlobalVirtualGroupByGvgIDResponse {
   greenfield.virtualgroup.GlobalVirtualGroup global_virtual_group = 1;
 }
 
-// GfSpListBucketsBindingOnPrimarySPRequest is request type for the GfSpListBucketsBindingOnPrimarySP RPC method
-message GfSpListBucketsBindingOnPrimarySPRequest {
-  // sp_id is the unique identification for sp
-  uint32 sp_id = 1;
-  // start_after is where you want to start listing from
-  uint64 start_after = 2;
-  // defines the number of results that should be returned in response, the maximum is 1000, default 50
-  uint32 limit = 3;
-}
-
-// GfSpListBucketsBindingOnPrimarySPResponse is response type for the GfSpListBucketsBindingOnPrimarySP RPC method
-message GfSpListBucketsBindingOnPrimarySPResponse {
-  // buckets defines the list of bucket
-  repeated Bucket buckets = 1;
-}
-
-// GfSpListBucketsBindingOnSecondarySPRequest is request type for the GfSpListBucketsBindingOnSecondarySP RPC method
-message GfSpListBucketsBindingOnSecondarySPRequest {
-  // sp_id is the unique identification for sp
-  uint32 sp_id = 1;
-  // start_after is where you want to start listing from
-  uint64 start_after = 2;
-  // defines the number of results that should be returned in response, the maximum is 1000, default 50
-  uint32 limit = 3;
-}
-
-// GfSpListBucketsBindingOnSecondarySPResponse is response type for the GfSpListBucketsBindingOnSecondarySP RPC method
-message GfSpListBucketsBindingOnSecondarySPResponse {
-  // buckets defines the list of bucket
-  repeated Bucket buckets = 1;
-}
-
-// GfSpListPrimaryObjectsRequest is request type for the GfSpListPrimaryObjects RPC method
-message GfSpListPrimaryObjectsRequest {
-  // sp_id is the unique identification for sp
-  uint32 sp_id = 1;
-  // bucket_id is the unique identification for bucket
-  uint64 bucket_id = 2;
-  // start_after is where you want to start listing from
-  uint64 start_after = 3;
-  // defines the number of results that should be returned in response, the maximum is 1000, default 50
-  uint32 limit = 4;
-}
-
-// GfSpListPrimaryObjectsResponse is response type for the GfSpListPrimaryObjects RPC method
-message GfSpListPrimaryObjectsResponse {
-  // objects defines the list of object
-  repeated Object objects = 1;
-}
-
-// GfSpListSecondaryObjectsRequest is request type for the GfSpListSecondaryObjects RPC method
-message GfSpListSecondaryObjectsRequest {
-  // sp_id is the unique identification for sp
-  uint32 sp_id = 1;
-  // bucket_id is the unique identification for bucket
-  uint64 bucket_id = 2;
-  // start_after is where you want to start listing from
-  uint64 start_after = 3;
-  // defines the number of results that should be returned in response, the maximum is 1000, default 50
-  uint32 limit = 4;
-}
-
-// GfSpListSecondaryObjectsResponse is response type for the GfSpListSecondaryObjects RPC method
-message GfSpListSecondaryObjectsResponse {
-  // objects defines the list of object
-  repeated Object objects = 1;
-}
-
 // GfSpGetVirtualGroupFamilyRequest is request type for the GfSpGetVirtualGroupFamily RPC method
 message GfSpGetVirtualGroupFamilyRequest {
   // vgf_id is the unique identification for vgf
@@ -569,8 +510,8 @@ message GfSpListObjectsInGVGRequest {
 
 // GfSpListObjectsInGVGResponse is response type for the GfSpListObjectsInGVG RPC method
 message GfSpListObjectsInGVGResponse {
-  // objects defines the list of object
-  repeated Object objects = 1;
+  // object defines object related bucket and gvg info
+  repeated ObjectDetails objects = 1;
 }
 
 // GfSpListObjectsInGVGAndBucketRequest is request type for the GfSpListObjectsInGVGAndBucket RPC method
@@ -587,8 +528,26 @@ message GfSpListObjectsInGVGAndBucketRequest {
 
 // GfSpListObjectsInGVGAndBucketResponse is response type for the GfSpListObjectsInGVGAndBucket RPC method
 message GfSpListObjectsInGVGAndBucketResponse {
-  // objects defines the list of object
-  repeated Object objects = 1;
+  // object defines object related bucket and gvg info
+  repeated ObjectDetails objects = 1;
+}
+
+// GfSpListObjectByGVGAndBucketForGCRequest is request type for the GfSpListObjectByGVGAndBucketForGC RPC method
+message GfSpListObjectsByGVGAndBucketForGCRequest {
+  // gvg_id is the unique identification for gvg
+  uint32 gvg_id = 1;
+  // bucket_id is the unique identification for bucket
+  uint64 bucket_id = 2;
+  // start_after is where you want to start listing from
+  uint64 start_after = 3;
+  // defines the number of results that should be returned in response, the maximum is 1000, default 50
+  uint32 limit = 4;
+}
+
+// GfSpListObjectByGVGAndBucketForGCResponse is response type for the GfSpListObjectByGVGAndBucketForGC RPC method
+message GfSpListObjectsByGVGAndBucketForGCResponse {
+  // object defines object related bucket and gvg info
+  repeated ObjectDetails objects = 1;
 }
 
 // GfSpListMigrateBucketEventsRequest is request type for the GfSpListMigrateBucketEvents RPC method
@@ -667,8 +626,8 @@ message GfSpListGlobalVirtualGroupsByBucketResponse {
 message GfSpListSpExitEventsRequest {
   // block_id is the unique identification for block
   uint64 block_id = 1;
-  // operator_address is the unique identification address for operator
-  string operator_address = 2;
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 2;
 }
 
 // ListSpExitEvents is the combination of sp exit events
@@ -685,6 +644,58 @@ message GfSpListSpExitEventsResponse {
   ListSpExitEvents events = 1;
 }
 
+// GfSpGetSPInfoRequest is request type for the GfSpGetSPInfo RPC method
+message GfSpGetSPInfoRequest {
+  // operator_address is the unique identification address for operator
+  string operator_address = 1;
+}
+
+// GfSpGetSPInfoResponse is response type for the GfSpGetSPInfo RPC method
+message GfSpGetSPInfoResponse {
+  // sp defines the meta info of storage provider
+  greenfield.sp.StorageProvider storage_provider = 1;
+}
+
+message Status {
+  StorageProviderInfo storage_provider_info = 1;
+  BlockSyncerInfo block_syncer_info = 2;
+  ChainInfo chain_info = 3;
+}
+
+// BlockSyncerInfo is the debug info for block syncer
+message BlockSyncerInfo {
+  int64 bs_block_height = 1;
+  string bs_block_hash = 2;
+  int64 bs_update_time = 3;
+  string bs_mysql_version = 4;
+  string bs_default_character_set_name = 5;
+  string bs_default_collation_name = 6;
+  repeated string bs_modules = 7;
+  uint32 bs_workers = 8;
+  bool bs_enable_dual_db = 9;
+}
+
+message ChainInfo {
+  string chain_id = 1;
+  repeated string chain_address = 2;
+}
+
+message StorageProviderInfo {
+  string sp_code_version = 1;
+  string sp_code_commit = 2;
+  string sp_architecture = 3;
+  string sp_go_version = 4;
+  string sp_operating_system = 5;
+  string sp_operator_address = 6;
+  string sp_domain_name = 7;
+}
+
+message GfSpGetStatusRequest {}
+
+message GfSpGetStatusResponse {
+  Status status = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -698,7 +709,7 @@ service GfSpMetadataService {
   rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {}
   rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
-  rpc GfSpGetEndpointBySpAddress(GfSpGetEndpointBySpAddressRequest) returns (GfSpGetEndpointBySpAddressResponse) {}
+  rpc GfSpGetEndpointBySpId(GfSpGetEndpointBySpIdRequest) returns (GfSpGetEndpointBySpIdResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
@@ -709,17 +720,16 @@ service GfSpMetadataService {
   rpc GfSpVerifyPermissionByID(GfSpVerifyPermissionByIDRequest) returns (GfSpVerifyPermissionByIDResponse) {}
   rpc GfSpListVirtualGroupFamiliesBySpID(GfSpListVirtualGroupFamiliesBySpIDRequest) returns (GfSpListVirtualGroupFamiliesBySpIDResponse) {}
   rpc GfSpGetGlobalVirtualGroupByGvgID(GfSpGetGlobalVirtualGroupByGvgIDRequest) returns (GfSpGetGlobalVirtualGroupByGvgIDResponse) {}
-  rpc GfSpListBucketsBindingOnPrimarySP(GfSpListBucketsBindingOnPrimarySPRequest) returns (GfSpListBucketsBindingOnPrimarySPResponse) {}
-  rpc GfSpListBucketsBindingOnSecondarySP(GfSpListBucketsBindingOnSecondarySPRequest) returns (GfSpListBucketsBindingOnSecondarySPResponse) {}
-  rpc GfSpListPrimaryObjects(GfSpListPrimaryObjectsRequest) returns (GfSpListPrimaryObjectsResponse) {}
-  rpc GfSpListSecondaryObjects(GfSpListSecondaryObjectsRequest) returns (GfSpListSecondaryObjectsResponse) {}
   rpc GfSpGetVirtualGroupFamily(GfSpGetVirtualGroupFamilyRequest) returns (GfSpGetVirtualGroupFamilyResponse) {}
   rpc GfSpGetGlobalVirtualGroup(GfSpGetGlobalVirtualGroupRequest) returns (GfSpGetGlobalVirtualGroupResponse) {}
   rpc GfSpListObjectsInGVG(GfSpListObjectsInGVGRequest) returns (GfSpListObjectsInGVGResponse) {}
   rpc GfSpListObjectsInGVGAndBucket(GfSpListObjectsInGVGAndBucketRequest) returns (GfSpListObjectsInGVGAndBucketResponse) {}
+  rpc GfSpListObjectsByGVGAndBucketForGC(GfSpListObjectsByGVGAndBucketForGCRequest) returns (GfSpListObjectsByGVGAndBucketForGCResponse) {}
   rpc GfSpListGlobalVirtualGroupsBySecondarySP(GfSpListGlobalVirtualGroupsBySecondarySPRequest) returns (GfSpListGlobalVirtualGroupsBySecondarySPResponse) {}
   rpc GfSpListGlobalVirtualGroupsByBucket(GfSpListGlobalVirtualGroupsByBucketRequest) returns (GfSpListGlobalVirtualGroupsByBucketResponse) {}
   rpc GfSpListMigrateBucketEvents(GfSpListMigrateBucketEventsRequest) returns (GfSpListMigrateBucketEventsResponse) {}
   rpc GfSpListSwapOutEvents(GfSpListSwapOutEventsRequest) returns (GfSpListSwapOutEventsResponse) {}
   rpc GfSpListSpExitEvents(GfSpListSpExitEventsRequest) returns (GfSpListSpExitEventsResponse) {}
+  rpc GfSpGetSPInfo(GfSpGetSPInfoRequest) returns (GfSpGetSPInfoResponse) {}
+  rpc GfSpGetStatus(GfSpGetStatusRequest) returns (GfSpGetStatusResponse) {}
 }

@@ -41,9 +41,9 @@ func registerModular() {
 	gfspapp.RegisterModular(module.P2PModularName, module.P2PModularDescription, p2p.NewP2PModular)
 	gfspapp.RegisterModular(module.ReceiveModularName, module.ReceiveModularDescription, receiver.NewReceiveModular)
 	gfspapp.RegisterModular(module.SignModularName, module.SignModularDescription, signer.NewSignModular)
-	gfspapp.RegisterModular(metadata.MetadataModularName, metadata.MetadataModularDescription, metadata.NewMetadataModular)
+	gfspapp.RegisterModular(module.MetadataModularName, module.MetadataModularDescription, metadata.NewMetadataModular)
 	gfspapp.RegisterModular(module.UploadModularName, module.UploadModularDescription, uploader.NewUploadModular)
-	gfspapp.RegisterModular(blocksyncer.BlockSyncerModularName, blocksyncer.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
+	gfspapp.RegisterModular(module.BlockSyncerModularName, module.BlockSyncerModularDescription, blocksyncer.NewBlockSyncerModular)
 }
 
 var (
@@ -104,6 +104,8 @@ func init() {
 		command.GetObjectCmd,
 		command.ChallengePieceCmd,
 		command.GetSegmentIntegrityCmd,
+		command.QueryBucketMigrateCmd,
+		command.QuerySPExitCmd,
 		// p2p category commands
 		command.P2PCreateKeysCmd,
 		// miscellaneous category commands
@@ -118,6 +120,8 @@ func init() {
 		command.RecoverPieceCmd,
 		// sp exit
 		command.SPExitCmd,
+		// update quota
+		command.SetQuotaCmd,
 	}
 	registerModular()
 }

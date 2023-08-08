@@ -1,6 +1,6 @@
 # Common Abstract Interface
 
-Every service implements Lifecycle and Modular interface. Therefore, we can So we can do a unified lifecycle and resource management through GfSp framework.
+Every service implements Lifecycle and Modular interface. Therefore, we can do a unified lifecycle and resource management through GfSp framework.
 
 ## Lifecycle Interface
 

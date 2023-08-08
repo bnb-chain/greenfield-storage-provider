@@ -54,11 +54,14 @@ const (
 	listGlobalVirtualGroupsBySecondarySPRouterName = "ListGlobalVirtualGroupsBySecondarySP"
 	listGlobalVirtualGroupsByBucketRouterName      = "ListGlobalVirtualGroupsByBucket"
 	listObjectsInGVGAndBucketRouterName            = "ListObjectsInGVGAndBucket"
+	listObjectsByGVGAndBucketForGCRouterName       = "ListObjectsByGVGAndBucketForGC"
 	listObjectsInGVGRouterName                     = "ListObjectsInGVG"
 	listMigrateBucketEventsRouterName              = "ListMigrateBucketEvents"
 	listSwapOutEventsRouterName                    = "ListSwapOutEvents"
 	listSpExitEventsRouterName                     = "ListSpExitEvents"
 	verifyPermissionByIDRouterName                 = "VerifyPermissionByID"
+	getSPInfoRouterName                            = "GetSPInfo"
+	getStatusRouterName                            = "GetStatus"
 )
 
 const (
@@ -115,9 +118,15 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
+	router.Path("/download").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
+		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
 	// universal endpoint view
 	router.Path("/view/{bucket:[^/]*}/{object:.+}").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
 		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
+	router.Path("/view").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
+		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.viewObjectByUniversalEndpointHandler)
+
+	router.Path(StatusPath).Name(getStatusRouterName).Methods(http.MethodGet).HandlerFunc(g.getStatusHandler)
 
 	var routers []*mux.Router
 	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())
@@ -234,6 +243,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		router.Path("/").Name(listObjectsInGVGAndBucketRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGAndBucketQuery, "").HandlerFunc(g.listObjectsInGVGAndBucketHandler)
 
 		// List Objects By Gvg And Bucket ID
+		router.Path("/").Name(listObjectsByGVGAndBucketForGCRouterName).Methods(http.MethodGet).Queries(ListObjectsByGVGAndBucketForGCQuery, "").HandlerFunc(g.listObjectsByGVGAndBucketForGCHandler)
+
+		// List Objects By Gvg And Bucket ID
 		router.Path("/").Name(listObjectsInGVGRouterName).Methods(http.MethodGet).Queries(ListObjectsInGVGQuery, "").HandlerFunc(g.listObjectsInGVGHandler)
 
 		// List Migrate Bucket Events
@@ -244,6 +256,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// List Sp Exit Events
 		router.Path("/").Name(listSpExitEventsRouterName).Methods(http.MethodGet).Queries(ListSpExitEventsQuery, "").HandlerFunc(g.listSpExitEventsHandler)
+
+		// Get Sp info by operator address
+		router.Path("/").Name(getSPInfoRouterName).Methods(http.MethodGet).Queries(GetSPInfoQuery, "").HandlerFunc(g.getSPInfoHandler)
 	}
 
 	router.Path("/").

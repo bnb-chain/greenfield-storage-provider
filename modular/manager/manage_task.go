@@ -2,12 +2,14 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -22,7 +24,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -36,100 +37,23 @@ var (
 )
 
 func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error) {
-	var (
-		backupTasks   []task.Task
-		reservedTasks []task.Task
-		task          task.Task
-	)
-	task = m.replicateQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add replicate piece task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.sealQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add seal object task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.gcObjectQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add gc object task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.gcZombieQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add gc zombie piece task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.gcMetaQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add gc meta task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.receiveQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add confirm receive piece to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.recoveryQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "recovery task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.migrateGVGQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
-		backupTasks = append(backupTasks, task)
-	}
-	if m.migrateGVGQueue.Len() != 0 {
-		log.CtxDebugw(ctx, "ManageModular DispatchTask", "migrateGVGQueue len", m.migrateGVGQueue.Len())
-	}
-
-	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
-	go func() {
-		if len(reservedTasks) == 0 {
-			return
-		}
-		for _, reservedTask := range reservedTasks {
-			switch t := reservedTask.(type) {
-			case *gfsptask.GfSpReplicatePieceTask:
-				err := m.replicateQueue.Push(t)
-				log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpSealObjectTask:
-				err := m.sealQueue.Push(t)
-				log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpReceivePieceTask:
-				err := m.receiveQueue.Push(t)
-				log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpGCObjectTask:
-				err := m.gcObjectQueue.Push(t)
-				log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpGCZombiePieceTask:
-				err := m.gcZombieQueue.Push(t)
-				log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpGCMetaTask:
-				err := m.gcMetaQueue.Push(t)
-				log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpRecoverPieceTask:
-				err := m.recoveryQueue.Push(t)
-				log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpMigrateGVGTask:
-				err := m.migrateGVGQueue.Push(t)
-				log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
+	for {
+		select {
+		case <-ctx.Done():
+			log.CtxErrorw(ctx, "dispatch task context is canceled")
+			return nil, nil
+		case dispatchTask := <-m.taskCh:
+			if !limit.NotLess(dispatchTask.EstimateLimit()) {
+				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String())
+				go func() {
+					m.taskCh <- dispatchTask
+				}()
+				continue
 			}
+			log.CtxDebugw(ctx, "dispatch task to executor", "key_info", dispatchTask.Info())
+			return dispatchTask, nil
 		}
-	}()
-	if task == nil {
-		return nil, nil
 	}
-	return task, nil
 }
 
 func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error {
@@ -212,6 +136,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
+	go m.backUpTask()
 	go func() {
 		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
@@ -245,11 +170,10 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 		return err
 	}
 	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
-		log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
-		// TODO(chris)
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			return nil
 		} else {
+			log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
 			return ErrGfSpDB
 		}
 	}
@@ -312,6 +236,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
+	go m.backUpTask()
 	go func() error {
 		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
@@ -387,6 +312,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
+	go m.backUpTask()
 	go func() {
 		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:             task.GetObjectInfo().Id.Uint64(),
@@ -541,6 +467,9 @@ func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.Re
 			task.SetUpdateTime(time.Now().Unix())
 			err := m.receiveQueue.Push(task)
 			log.CtxErrorw(ctx, "push receive task to queue", "error", err)
+			if err == nil {
+				go m.backUpTask()
+			}
 		}()
 	}
 	return nil
@@ -679,6 +608,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		return ErrDanglingTask
 	}
 	var err error
+	task.SetUpdateTime(time.Now().Unix())
 	if task.GetBucketID() != 0 {
 		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
 	} else {
@@ -715,6 +645,26 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	return tasks, nil
 }
 
+func (m *ManageModular) QueryBucketMigrate(ctx context.Context) (res *gfspserver.GfSpQueryBucketMigrateResponse, err error) {
+	if m.bucketMigrateScheduler != nil {
+		res, err = m.bucketMigrateScheduler.listExecutePlan()
+	} else {
+		res, err = nil, errors.New("bucketMigrateScheduler not exit")
+	}
+
+	return res, err
+}
+
+func (m *ManageModular) QuerySpExit(ctx context.Context) (res *gfspserver.GfSpQuerySpExitResponse, err error) {
+	if m.spExitScheduler != nil {
+		res, err = m.spExitScheduler.ListSPExitPlan()
+	} else {
+		res, err = nil, errors.New("spExitScheduler not exit")
+	}
+
+	return res, err
+}
+
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
 func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
 	var (
@@ -738,6 +688,46 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 	return vgf.ID, nil
 }
 
+var _ vgmgr.GenerateGVGSecondarySPsPolicy = &GenerateGVGSecondarySPsPolicyByPrefer{}
+
+type GenerateGVGSecondarySPsPolicyByPrefer struct {
+	expectedSecondarySPNumber int
+	preferSPIDMap             map[uint32]bool
+	preferSPIDList            []uint32
+	backupSPIDList            []uint32
+}
+
+func NewGenerateGVGSecondarySPsPolicyByPrefer(p *storagetypes.Params, preferSPIDList []uint32) *GenerateGVGSecondarySPsPolicyByPrefer {
+	policy := &GenerateGVGSecondarySPsPolicyByPrefer{
+		expectedSecondarySPNumber: int(p.GetRedundantDataChunkNum() + p.GetRedundantParityChunkNum()),
+		preferSPIDMap:             make(map[uint32]bool),
+		preferSPIDList:            make([]uint32, 0),
+		backupSPIDList:            make([]uint32, 0),
+	}
+	for _, spID := range preferSPIDList {
+		policy.preferSPIDMap[spID] = true
+	}
+	return policy
+}
+
+func (p *GenerateGVGSecondarySPsPolicyByPrefer) AddCandidateSP(spID uint32) {
+	if _, found := p.preferSPIDMap[spID]; found {
+		p.preferSPIDList = append(p.preferSPIDList, spID)
+	} else {
+		p.backupSPIDList = append(p.backupSPIDList, spID)
+	}
+
+}
+func (p *GenerateGVGSecondarySPsPolicyByPrefer) GenerateGVGSecondarySPs() ([]uint32, error) {
+	if p.expectedSecondarySPNumber > len(p.preferSPIDList)+len(p.backupSPIDList) {
+		return nil, fmt.Errorf("no enough sp")
+	}
+	resultSPList := make([]uint32, 0)
+	resultSPList = append(resultSPList, p.preferSPIDList...)
+	resultSPList = append(resultSPList, p.backupSPIDList...)
+	return resultSPList[0:p.expectedSecondarySPNumber], nil
+}
+
 func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagetypes.Params) error {
 	var err error
 	if params == nil {
@@ -745,7 +735,7 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 			return err
 		}
 	}
-	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(params)
+	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, m.gvgPreferSPList))
 	if err != nil {
 		return err
 	}

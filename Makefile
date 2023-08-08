@@ -1,44 +1,43 @@
 SHELL := /bin/bash
 
-.PHONY: all check format vet generate install-tools buf-gen build test tidy clean
+.PHONY: all build clean format install-tools generate lint test tidy vet buf-gen proto-clean
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
-	@echo "  vet                 to do static check"
-	@echo "  build               to create bin directory and build"
-	@echo "  generate            to generate code"
+	@echo "  build                 to create build directory and compile sp"
+	@echo "  clean                 to remove build directory"
+	@echo "  format                to format sp code"
+	@echo "  generate              to generate mock code"
+	@echo "  install-tools         to install mockgen, buf and protoc-gen-gocosmos tools"
+	@echo "  lint                  to run golangci lint"
+	@echo "  test                  to run all sp unit tests"
+	@echo "  tidy                  to run go mod tidy and verify"
+	@echo "  vet                   to do static check"
+	@echo "  buf-gen               to use buf to generate pb.go files"
+	@echo "  proto-clean           to remove generated pb.go files"
+	@echo "  proto-format          to format proto files"
+	@echo "  proto-format-check    to check proto files"
+
+build:
+	bash +x ./build.sh
+
+clean:
+	rm -rf ./build
 
 format:
 	bash script/format.sh
 	gofmt -w -l .
 
-proto-format:
-	buf format -w
-
-proto-format-check:
-	buf format --diff --exit-code
-
-vet:
-	go vet ./...
-
 generate:
 	go generate ./...
 
 install-tools:
-	go install github.com/golang/mock/mockgen@v1.6.0
-	go install github.com/bufbuild/buf/cmd/buf@v1.13.1
+	go install go.uber.org/mock/mockgen@latest
+	go install github.com/bufbuild/buf/cmd/buf@v1.25.0
 	go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
 
-buf-gen:
-	rm -rf ./base/types/*/*.pb.go && rm -rf ./modular/metadata/types/*.pb.go && rm -rf ./store/types/*.pb.go
-	buf generate
-
-build:
-	bash +x ./build.sh
-
-tidy:
-	go mod tidy
-	go mod verify
+lint:
+	golangci-lint run --fix
 
 # only run unit test, exclude e2e tests
 test:
@@ -47,8 +46,22 @@ test:
 	go test `go list ./... | grep -v /test/`
 	# go test -cover ./...
 
-clean:
+tidy:
+	go mod tidy
+	go mod verify
+
+vet:
+	go vet ./...
+
+buf-gen:
+	rm -rf ./base/types/*/*.pb.go && rm -rf ./modular/metadata/types/*.pb.go && rm -rf ./store/types/*.pb.go
+	buf generate
+
+proto-clean:
 	rm -rf ./base/types/*/*.pb.go && rm -rf ./modular/metadata/types/*.pb.go && rm -rf ./store/types/*.pb.go
 
-lint:
-	golangci-lint run --fix
+proto-format:
+	buf format -w
+
+proto-format-check:
+	buf format --diff --exit-code

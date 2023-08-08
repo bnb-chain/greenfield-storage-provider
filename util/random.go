@@ -16,17 +16,17 @@ const (
 )
 
 func rdm(n int, data string) string {
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	ran := rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = data[rand.Int63()%int64(len(data))]
+		b[i] = data[ran.Int63()%int64(len(data))]
 	}
 	return string(b)
 }
 
 func RandomNum(n, scope int) int {
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return rand.Intn(n) + scope
+	ran := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return ran.Intn(n) + scope
 }
 
 // RandInt64 generate random int64 between min and max
@@ -50,12 +50,12 @@ func RandHexKey() string {
 	key, _ := crypto.GenerateKey()
 
 	keyBytes := crypto.FromECDSA(key)
-	hexkey := hexutil.Encode(keyBytes)[2:]
-	return hexkey
+	hexKey := hexutil.Encode(keyBytes)[2:]
+	return hexKey
 }
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyz01234569"
 const (
+	letterBytes   = "abcdefghijklmnopqrstuvwxyz0123456789"
 	letterIdxBits = 6                    // 6 bits to represent a letter index
 	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits

@@ -325,6 +325,22 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: viewObjectByUniversalEndpointName,
 		},
 		{
+			name:             "universal endpoint download pdf/xml special router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/download" + objectSpecialSuffixUrlReplacement + "test_bucket_name/test_object_name",
+			shouldMatch:      true,
+			wantedRouterName: downloadObjectByUniversalEndpointName,
+		},
+		{
+			name:             "universal endpoint view pdf/xml special router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/view" + objectSpecialSuffixUrlReplacement + "test_bucket_name/test_object_name",
+			shouldMatch:      true,
+			wantedRouterName: viewObjectByUniversalEndpointName,
+		},
+		{
 			name:             "offchain-auth request nonce router",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -477,6 +493,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: listObjectsInGVGAndBucketRouterName,
 		},
 		{
+			name:             "List objects by gvg and bucket id for gc",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListObjectsByGVGAndBucketForGCQuery + "&" + GvgIDQuery + "&" + BucketIDQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery,
+			shouldMatch:      true,
+			wantedRouterName: listObjectsByGVGAndBucketForGCRouterName,
+		},
+		{
 			name:             "List objects by gvg id",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -507,6 +531,22 @@ func TestRouters(t *testing.T) {
 			url:              scheme + testDomain + "/?" + ListSpExitEventsQuery + "&" + SpIDQuery + "&" + BlockIDQuery,
 			shouldMatch:      true,
 			wantedRouterName: listSpExitEventsRouterName,
+		},
+		{
+			name:             "Get sp info by operator address",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetSPInfoQuery + "&" + OperatorAddressQuery,
+			shouldMatch:      true,
+			wantedRouterName: getSPInfoRouterName,
+		},
+		{
+			name:             "Get sp status",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/status",
+			shouldMatch:      true,
+			wantedRouterName: getStatusRouterName,
 		},
 	}
 	for _, testCase := range testCases {

@@ -6,10 +6,11 @@ import (
 	"errors"
 	"fmt"
 
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"gorm.io/gorm"
 )
 
 const (
@@ -278,12 +279,13 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		insertMigrateGVG *MigrateGVGTable
 	)
 	insertMigrateGVG = &MigrateGVGTable{
-		MigrateKey:           meta.MigrateGVGKey,
-		SwapOutKey:           meta.SwapOutKey,
-		GlobalVirtualGroupID: meta.GlobalVirtualGroupID,
-		VirtualGroupFamilyID: meta.VirtualGroupFamilyID,
-		BucketID:             meta.BucketID,
-		RedundancyIndex:      meta.RedundancyIndex,
+		MigrateKey:               meta.MigrateGVGKey,
+		SwapOutKey:               meta.SwapOutKey,
+		GlobalVirtualGroupID:     meta.GlobalVirtualGroupID,
+		DestGlobalVirtualGroupID: meta.DestGlobalVirtualGroupID,
+		VirtualGroupFamilyID:     meta.VirtualGroupFamilyID,
+		BucketID:                 meta.BucketID,
+		RedundancyIndex:          meta.RedundancyIndex,
 
 		SrcSPID:              meta.SrcSPID,
 		DestSPID:             meta.DestSPID,
@@ -332,14 +334,15 @@ func (s *SpDBImpl) QueryMigrateGVGUnit(migrateKey string) (*spdb.MigrateGVGUnitM
 		return nil, result.Error
 	}
 	return &spdb.MigrateGVGUnitMeta{
-		GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
-		VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-		RedundancyIndex:      queryReturn.RedundancyIndex,
-		BucketID:             queryReturn.BucketID,
-		SrcSPID:              queryReturn.SrcSPID,
-		DestSPID:             queryReturn.DestSPID,
-		LastMigratedObjectID: queryReturn.LastMigratedObjectID,
-		MigrateStatus:        queryReturn.MigrateStatus,
+		GlobalVirtualGroupID:     queryReturn.GlobalVirtualGroupID,
+		DestGlobalVirtualGroupID: queryReturn.DestGlobalVirtualGroupID,
+		VirtualGroupFamilyID:     queryReturn.VirtualGroupFamilyID,
+		RedundancyIndex:          queryReturn.RedundancyIndex,
+		BucketID:                 queryReturn.BucketID,
+		SrcSPID:                  queryReturn.SrcSPID,
+		DestSPID:                 queryReturn.DestSPID,
+		LastMigratedObjectID:     queryReturn.LastMigratedObjectID,
+		MigrateStatus:            queryReturn.MigrateStatus,
 	}, nil
 }
 
@@ -352,15 +355,27 @@ func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*spdb.Migra
 	returns := make([]*spdb.MigrateGVGUnitMeta, 0)
 	for _, queryReturn := range queryReturns {
 		returns = append(returns, &spdb.MigrateGVGUnitMeta{
-			GlobalVirtualGroupID: queryReturn.GlobalVirtualGroupID,
-			VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-			RedundancyIndex:      queryReturn.RedundancyIndex,
-			BucketID:             queryReturn.BucketID,
-			SrcSPID:              queryReturn.SrcSPID,
-			DestSPID:             queryReturn.DestSPID,
-			LastMigratedObjectID: queryReturn.LastMigratedObjectID,
-			MigrateStatus:        queryReturn.MigrateStatus,
+			GlobalVirtualGroupID:     queryReturn.GlobalVirtualGroupID,
+			DestGlobalVirtualGroupID: queryReturn.DestGlobalVirtualGroupID,
+			VirtualGroupFamilyID:     queryReturn.VirtualGroupFamilyID,
+			RedundancyIndex:          queryReturn.RedundancyIndex,
+			BucketID:                 queryReturn.BucketID,
+			SrcSPID:                  queryReturn.SrcSPID,
+			DestSPID:                 queryReturn.DestSPID,
+			LastMigratedObjectID:     queryReturn.LastMigratedObjectID,
+			MigrateStatus:            queryReturn.MigrateStatus,
 		})
 	}
 	return returns, nil
+}
+
+func (s *SpDBImpl) DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error {
+	var results []MigrateGVGTable
+
+	result := s.db.Where("bucket_id = ?", bucketID).Find(&results).Delete(&results)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete migrate gvg table: %s", result.Error)
+	}
+
+	return nil
 }

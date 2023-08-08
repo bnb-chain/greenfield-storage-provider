@@ -3,21 +3,13 @@ name: Gosec
 on:
   push:
     branches:
-      - main
+      - master
       - develop
-      - ci-*
-      - release*
       - fix-release*
-      - feat-*
 
   pull_request:
     branches:
-      - master
-      - develop
-      - release*
-      - ci-*
-      - fix-release*
-      - feat-*
+
 
 jobs:
   gosec:

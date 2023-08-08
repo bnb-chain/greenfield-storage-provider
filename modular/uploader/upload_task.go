@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
@@ -115,17 +116,15 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
 				metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(startTime).Seconds())
 				if err != nil {
-					err = ErrPieceStore
-					log.CtxErrorw(ctx, "failed to put segment piece to piece store",
-						"piece_key", pieceKey, "error", err)
+					log.CtxErrorw(ctx, "failed to put segment piece to piece store", "piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
 			}
-			if !bytes.Equal(hash.GenerateIntegrityHash(checksums), uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
+			integrity = hash.GenerateIntegrityHash(checksums)
+			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
-				err = ErrInvalidIntegrity
 				return ErrInvalidIntegrity
 			}
 			integrityMeta := &corespdb.IntegrityMeta{
@@ -139,7 +138,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_cost").Observe(time.Since(startUpdateSignature).Seconds())
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 			if err != nil {
-				err = ErrGfSpDB
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 				return ErrGfSpDB
 			}
@@ -147,7 +145,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			return nil
 		}
 		if err != nil {
-			err = ErrClosedStream
 			log.CtxErrorw(ctx, "stream closed abnormally", "piece_key", pieceKey, "error", err)
 			return ErrClosedStream
 		}
@@ -158,7 +155,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_cost").Observe(time.Since(startPutPiece).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
-			err = ErrPieceStore
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
 			return ErrPieceStore
 		}
@@ -217,9 +213,6 @@ func (u *UploadModular) PreResumableUploadObject(
 	return nil
 }
 
-// primarySPRedundancyIdx represents this object info belongs to primary SP
-const primarySPRedundancyIdx = -1
-
 func (u *UploadModular) HandleResumableUploadObjectTask(
 	ctx context.Context,
 	task coretask.ResumableUploadObjectTask,
@@ -231,12 +224,11 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 	defer u.resumeableUploadQueue.PopByKey(task.Key())
 
 	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(
-		task.GetObjectInfo().GetPayloadSize(),
-		task.GetStorageParams().GetMaxSegmentSize())
+		task.GetObjectInfo().GetPayloadSize(), task.GetStorageParams().GetMaxSegmentSize())
 	offset := task.GetResumeOffset()
 	var (
 		err           error
-		segIdx        uint32 = uint32(int64(offset) / segmentSize)
+		segIdx        = uint32(int64(offset) / segmentSize)
 		pieceKey      string
 		integrity     []byte
 		readN         int
@@ -270,18 +262,17 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
-					log.CtxErrorw(ctx, "put segment piece to piece store",
-						"piece_key", pieceKey, "error", err)
+					log.CtxErrorw(ctx, "put segment piece to piece store", "piece_key", pieceKey, "error", err)
 					return ErrPieceStore
 				}
-				err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), primarySPRedundancyIdx, hash.GenerateChecksum(data))
+				err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
 					return ErrGfSpDB
 				}
 			}
 			if task.GetCompleted() {
-				integrityMeta, err = u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), primarySPRedundancyIdx)
+				integrityMeta, err = u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to get object integrity hash", "error", err)
 					return err

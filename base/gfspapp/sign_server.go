@@ -154,7 +154,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessReplicateApproval).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup:
-		err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
+		txHash, err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
 			StorageProvider: g.operatorAddress,
 			FamilyId:        t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),
 			SecondarySpIds:  t.CreateGlobalVirtualGroup.GetSecondarySpIds(),
@@ -214,6 +214,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		txHash, err = g.signer.CompleteSPExit(ctx, t.CompleteSpExit)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete sp exit", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_SpStoragePrice:
+		txHash, err = g.signer.UpdateSPPrice(ctx, t.SpStoragePrice)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to update sp price", "error", err)
 		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")

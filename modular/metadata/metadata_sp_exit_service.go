@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // GfSpListVirtualGroupFamiliesBySpID list virtual group families by sp id
@@ -151,9 +151,19 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		completeEventsMap map[common.Hash]*model.EventCompleteMigrationBucket
 		cancelEventsMap   map[common.Hash]*model.EventCancelMigrationBucket
 		res               []*types.ListMigrateBucketEvents
+		latestBlock       int64
 	)
 
 	ctx = log.Context(ctx, req)
+	latestBlock, err = r.baseApp.GfBsDB().GetLatestBlockNumber()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
+		return nil, err
+	}
+	if uint64(latestBlock) < req.BlockId {
+		log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
+		return nil, ErrExceedBlockHeight
+	}
 	log.Debugw("GfSpListMigrateBucketEvents", "sp-id", req.SpId, "block-id", req.BlockId)
 	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
 	if err != nil {
@@ -194,8 +204,6 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				BucketName:                 complete.BucketName,
 				BucketId:                   math.NewUintFromBigInt(complete.BucketID.Big()),
 				GlobalVirtualGroupFamilyId: complete.GlobalVirtualGroupFamilyId,
-				// TODO BARRY
-				// GvgMappings:                event.GvgMappings,
 			}
 		}
 		if cancel != nil && cancel.CreateAt >= event.CreateAt && complete == nil {
@@ -205,11 +213,13 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
 			}
 		}
-		res = append(res, &types.ListMigrateBucketEvents{
-			Events:         spEvent,
-			CompleteEvents: spCompleteEvent,
-			CancelEvents:   spCancelEvent,
-		})
+		if spCompleteEvent == nil {
+			res = append(res, &types.ListMigrateBucketEvents{
+				Events:         spEvent,
+				CompleteEvents: spCompleteEvent,
+				CancelEvents:   spCancelEvent,
+			})
+		}
 	}
 
 	resp = &types.GfSpListMigrateBucketEventsResponse{Events: res}
@@ -231,9 +241,19 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		cancelEventsMap   map[string]*model.EventCancelSwapOut
 		res               []*types.ListSwapOutEvents
 		idx               string
+		latestBlock       int64
 	)
 
 	ctx = log.Context(ctx, req)
+	latestBlock, err = r.baseApp.GfBsDB().GetLatestBlockNumber()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
+		return nil, err
+	}
+	if uint64(latestBlock) < req.BlockId {
+		log.CtxError(ctx, "failed to list migrate swap out events due to request block id exceed current block syncer block height")
+		return nil, ErrExceedBlockHeight
+	}
 	log.Debugw("GfSpListSwapOutEvents", "sp-id", req.SpId, "block-id", req.BlockId)
 	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListSwapOutEvents(req.BlockId, req.SpId)
 	if err != nil {
@@ -373,9 +393,20 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		completeEvent   *model.EventCompleteStorageProviderExit
 		spEvent         *virtual_types.EventStorageProviderExit
 		spCompleteEvent *virtual_types.EventCompleteStorageProviderExit
+		latestBlock     int64
 	)
 	ctx = log.Context(ctx, req)
-	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, common.HexToAddress(req.OperatorAddress))
+	latestBlock, err = r.baseApp.GfBsDB().GetLatestBlockNumber()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list sp exit events", "error", err)
+		return nil, err
+	}
+	if uint64(latestBlock) < req.BlockId {
+		log.CtxError(ctx, "failed to list sp exit events due to request block id exceed current block syncer block height")
+		return nil, ErrExceedBlockHeight
+	}
+
+	event, completeEvent, err = r.baseApp.GfBsDB().ListSpExitEvents(req.BlockId, req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list sp exit events", "error", err)
 		return nil, err
