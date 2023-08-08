@@ -1,10 +1,11 @@
 package gfspvgmgr
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"sync"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 const (

@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"net/http"
 	"strings"
 	"time"
+
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
