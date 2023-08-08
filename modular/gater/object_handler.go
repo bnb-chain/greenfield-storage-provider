@@ -16,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -340,7 +341,11 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 
 	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectSegment(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+		// ignore metadata.ErrNoRecord error
+		if err != metadata.ErrNoRecord {
+			log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+			return
+		}
 	}
 
 	offset = uint64(segmentCount) * params.GetMaxSegmentSize()
