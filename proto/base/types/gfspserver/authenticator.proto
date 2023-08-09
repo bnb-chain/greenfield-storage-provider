@@ -61,8 +61,8 @@ message UpdateUserPublicKeyResponse {
   bool result = 2;
 }
 
-// VerifyOffChainSignatureRequest is request type for the VerifyOffChainSignature RPC method.
-message VerifyOffChainSignatureRequest {
+// VerifyGNFD1EddsaSignatureRequest is request type for the VerifyGNFD1EddsaSignature RPC method.
+message VerifyGNFD1EddsaSignatureRequest {
   // account_id is the account address of user
   string account_id = 1;
   // domain is the DApp domain for which the public key is updated
@@ -70,11 +70,11 @@ message VerifyOffChainSignatureRequest {
   // off_chain_sig is the off chain signature signed by user's eddsa seed private key
   string off_chain_sig = 3;
   // real_msg_to_sign is the msg that the off_chain_sig is signed for
-  string real_msg_to_sign = 4;
+  bytes real_msg_to_sign = 4;
 }
 
-// VerifyOffChainSignatureResponse is response type for the VerifyOffChainSignature RPC method.
-message VerifyOffChainSignatureResponse {
+// VerifyGNFD1EddsaSignatureResponse is response type for the VerifyOffChainSignature RPC method.
+message VerifyGNFD1EddsaSignatureResponse {
   base.types.gfsperrors.GfSpError err = 1;
   // result defines the result of if the OffChainSignature is verified
   bool result = 2;
@@ -86,6 +86,6 @@ service GfSpAuthenticationService {
   rpc GetAuthNonce(GetAuthNonceRequest) returns (GetAuthNonceResponse) {}
   // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
   rpc UpdateUserPublicKey(UpdateUserPublicKeyRequest) returns (UpdateUserPublicKeyResponse) {}
-  // VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-  rpc VerifyOffChainSignature(VerifyOffChainSignatureRequest) returns (VerifyOffChainSignatureResponse) {}
+  // VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
+  rpc VerifyGNFD1EddsaSignature(VerifyGNFD1EddsaSignatureRequest) returns (VerifyGNFD1EddsaSignatureResponse) {}
 }

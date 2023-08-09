@@ -102,7 +102,7 @@ func Uint32ToString(u uint32) string {
 	return Uint64ToString(uint64(u))
 }
 
-// BytesSliceToString is used to serialize
+// BytesSliceToString converts bytes slice to string
 func BytesSliceToString(bytes [][]byte) string {
 	stringList := make([]string, len(bytes))
 	for index, h := range bytes {
@@ -111,27 +111,7 @@ func BytesSliceToString(bytes [][]byte) string {
 	return JoinWithComma(stringList)
 }
 
-func Uint32SliceToString(ids []uint32) string {
-	stringList := make([]string, len(ids))
-	for index, id := range ids {
-		stringList[index] = Uint32ToString(id)
-	}
-	return JoinWithComma(stringList)
-}
-
-func StringToUint32Slice(str string) ([]uint32, error) {
-	var err error
-	stringList := SplitByComma(str)
-	idList := make([]uint32, len(stringList))
-	for idx := range stringList {
-		if idList[idx], err = StringToUint32(stringList[idx]); err != nil {
-			return nil, err
-		}
-	}
-	return idList, nil
-}
-
-// StringToBytesSlice is used to deserialize
+// StringToBytesSlice convert string to bytes slice
 func StringToBytesSlice(str string) ([][]byte, error) {
 	var err error
 	stringList := SplitByComma(str)
@@ -144,6 +124,29 @@ func StringToBytesSlice(str string) ([][]byte, error) {
 	return hashList, nil
 }
 
+// Uint32SliceToString converts uint32 slices to string
+func Uint32SliceToString(ids []uint32) string {
+	stringList := make([]string, len(ids))
+	for index, id := range ids {
+		stringList[index] = Uint32ToString(id)
+	}
+	return JoinWithComma(stringList)
+}
+
+// StringToUint32Slice coverts string to uint32 slice
+func StringToUint32Slice(str string) ([]uint32, error) {
+	var err error
+	stringList := SplitByComma(str)
+	idList := make([]uint32, len(stringList))
+	for idx := range stringList {
+		if idList[idx], err = StringToUint32(stringList[idx]); err != nil {
+			return nil, err
+		}
+	}
+	return idList, nil
+}
+
+// StringArrayToUint32Slice convert string array to uin32 slice
 func StringArrayToUint32Slice(arr pq.StringArray) ([]uint32, error) {
 	uint32Slice := make([]uint32, len(arr))
 	for i, str := range arr {

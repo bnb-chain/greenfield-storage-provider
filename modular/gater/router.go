@@ -24,8 +24,8 @@ const (
 	verifyPermissionRouterName                     = "VerifyPermission"
 	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
-	requestNonceName                               = "RequestNonce"
-	updateUserPublicKey                            = "UpdateUserPublicKey"
+	requestNonceRouterName                         = "RequestNonce"
+	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
 	queryUploadProgressRouterName                  = "QueryUploadProgress"
 	downloadObjectByUniversalEndpointName          = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName              = "ViewObjectByUniversalEndpoint"
@@ -61,6 +61,7 @@ const (
 	listSpExitEventsRouterName                     = "ListSpExitEvents"
 	verifyPermissionByIDRouterName                 = "VerifyPermissionByID"
 	getSPInfoRouterName                            = "GetSPInfo"
+	getStatusRouterName                            = "GetStatus"
 )
 
 const (
@@ -81,11 +82,11 @@ func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// off-chain-auth router
 	router.Path(AuthRequestNoncePath).
-		Name(requestNonceName).
+		Name(requestNonceRouterName).
 		Methods(http.MethodGet).
 		HandlerFunc(g.requestNonceHandler)
 	router.Path(AuthUpdateKeyPath).
-		Name(updateUserPublicKey).
+		Name(updateUserPublicKeyRouterName).
 		Methods(http.MethodPost).
 		HandlerFunc(g.updateUserPublicKeyHandler)
 
@@ -124,6 +125,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
 	router.Path("/view").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
 		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.viewObjectByUniversalEndpointHandler)
+
+	router.Path(StatusPath).Name(getStatusRouterName).Methods(http.MethodGet).HandlerFunc(g.getStatusHandler)
 
 	var routers []*mux.Router
 	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())

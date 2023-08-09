@@ -2,12 +2,12 @@ package config
 
 // SQLDBConfig is sql db config
 type SQLDBConfig struct {
-	User            string
-	Passwd          string
-	Address         string
-	Database        string
-	ConnMaxLifetime int
-	ConnMaxIdleTime int
-	MaxIdleConns    int
-	MaxOpenConns    int
+	User            string `comment:"required"`
+	Passwd          string `comment:"required"`
+	Address         string `comment:"required"`
+	Database        string `comment:"required"`
+	ConnMaxLifetime int    `comment:"optional"`
+	ConnMaxIdleTime int    `comment:"optional"`
+	MaxIdleConns    int    `comment:"optional"`
+	MaxOpenConns    int    `comment:"optional"`
 }

@@ -82,15 +82,17 @@ func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	return 0, fmt.Errorf("failed to pick weighted random index")
 }
 
-func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
 	var (
 		picker   FreeStorageSizeWeightPicker
 		familyID uint32
 		err      error
 	)
 	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
-	for _, f := range vgfm.vgfIDToVgf {
-		picker.addVirtualGroupFamily(f)
+	for id, f := range vgfm.vgfIDToVgf {
+		if filter.Check(id) {
+			picker.addVirtualGroupFamily(f)
+		}
 	}
 	if familyID, err = picker.pickIndex(); err != nil {
 		log.Errorw("failed to pick vgf", "error", err)
@@ -99,7 +101,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily() (*vgmgr.VirtualG
 	return vgfm.vgfIDToVgf[familyID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -110,6 +112,9 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vg
 		return nil, ErrStaledMetadata
 	}
 	for _, g := range vgfm.vgfIDToVgf[vgfID].GVGMap {
+		if filter != nil && filter.Apply(g.ID) {
+			continue
+		}
 		picker.addGlobalVirtualGroup(g)
 	}
 
@@ -120,7 +125,7 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32) (*vg
 	return vgfm.vgfIDToVgf[vgfID].GVGMap[globalVirtualGroupID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(filter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vgfFilter vgmgr.VGFPickFilter, gvgFilter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -128,16 +133,16 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(fi
 	)
 
 	for vgfID, vgf := range vgfm.vgfIDToVgf {
-		picker.freeStorageSizeWeightMap = make(map[uint32]float64)
-		if !filter.CheckFamily(vgfID) {
+		if !vgfFilter.Check(vgfID) {
 			continue
 		}
+		if !gvgFilter.CheckFamily(vgfID) {
+			continue
+		}
+		picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 		for _, gvg := range vgf.GVGMap {
 			log.Debugw("prepare to add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
-			if filter.CheckGVG(&vgmgr.GlobalVirtualGroupMeta{
-				SecondarySPIDs:     gvg.SecondarySPIDs,
-				StakingStorageSize: gvg.StakingStorageSize,
-			}) {
+			if gvgFilter.CheckGVG(gvg) {
 				picker.addGlobalVirtualGroup(gvg)
 				log.Debugw("add pickGlobalVirtualGroupForBucketMigrate", "gvg", gvg)
 			}
@@ -157,9 +162,12 @@ type spManager struct {
 	otherSPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy, filter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	for _, sp := range sm.otherSPs {
 		if !sp.IsInService() {
+			continue
+		}
+		if filter != nil && filter.Apply(sp.Id) {
 			continue
 		}
 		genPolicy.AddCandidateSP(sp.GetId())
@@ -168,6 +176,7 @@ func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSeconda
 	if err != nil {
 		return nil, err
 	}
+
 	return &vgmgr.GlobalVirtualGroupMeta{
 		PrimarySPID:        sm.selfSP.Id,
 		SecondarySPIDs:     secondarySPIDs,
@@ -208,6 +217,7 @@ type virtualGroupManager struct {
 	spManager           *spManager // is used to generate a new gvg
 	vgParams            *virtualgrouptypes.Params
 	vgfManager          *virtualGroupFamilyManager
+	freezeSPPool        *FreezeSPPool
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
@@ -215,6 +225,7 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
 		chainClient:         chainClient,
+		freezeSPPool:        NewFreezeSPPool(),
 	}
 	vgm.refreshMeta()
 	go func() {
@@ -225,6 +236,7 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 			// log.Info("finish to refresh virtual group manager meta")
 		}
 	}()
+	go vgm.releaseSPAndGVGLoop()
 	return vgm, nil
 }
 
@@ -339,7 +351,11 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickVirtualGroupFamily()
+	filter, err := vgm.genVgfFilter()
+	if err != nil {
+		return nil, err
+	}
+	return vgm.vgfManager.pickVirtualGroupFamily(filter)
 }
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
@@ -347,7 +363,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFam
 func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)))
 }
 
 // PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
@@ -355,7 +371,11 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.Glo
 func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vgmgr.GVGPickFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(filter)
+	vgfFilter, err := vgm.genVgfFilter()
+	if err != nil {
+		return nil, err
+	}
+	return vgm.vgfManager.pickGlobalVirtualGroupForBucketMigrate(vgfFilter, filter)
 }
 
 // PickMigrateDestGlobalVirtualGroup picks a global virtual group(If failed to pick,
@@ -363,7 +383,7 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vg
 func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)))
 }
 
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
@@ -380,7 +400,7 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.generateVirtualGroupMeta(genPolicy)
+	return vgm.spManager.generateVirtualGroupMeta(genPolicy, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeSPIDs()))
 }
 
 // PickSPByFilter is used to pick sp by filter check.
@@ -400,4 +420,34 @@ func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvid
 	}
 	// query chain if it is not found in memory topology.
 	return vgm.chainClient.QuerySPByID(context.Background(), spID)
+}
+
+func (vgm *virtualGroupManager) genVgfFilter() (*vgmgr.PickVGFFilter, error) {
+	vgfIDS := make([]uint32, len(vgm.vgfManager.vgfIDToVgf))
+	if len(vgfIDS) == 0 {
+		return nil, ErrFailedPickVGF
+	}
+	i := 0
+	for k := range vgm.vgfManager.vgfIDToVgf {
+		vgfIDS[i] = k
+		i++
+	}
+	availableVgfIDs, err := vgm.chainClient.AvailableGlobalVirtualGroupFamilies(context.Background(), vgfIDS)
+	if err != nil {
+		return nil, err
+	}
+	return vgmgr.NewPickVGFFilter(availableVgfIDs), nil
+}
+
+// FreezeSPAndGVGs freeze a secondary SP and its GVGs
+func (vgm *virtualGroupManager) FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrouptypes.GlobalVirtualGroup) {
+	vgm.freezeSPPool.FreezeSPAndGVGs(spID, gvgs)
+}
+
+// releaseSPAndGVGLoop runs periodically to release SP from the freeze pool
+func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
+	ticker := time.NewTicker(ReleaseSPJobInterval)
+	for range ticker.C {
+		vgm.freezeSPPool.ReleaseSP()
+	}
 }

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -37,100 +39,23 @@ var (
 )
 
 func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error) {
-	var (
-		backupTasks   []task.Task
-		reservedTasks []task.Task
-		task          task.Task
-	)
-	task = m.replicateQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add replicate piece task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.sealQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add seal object task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.gcObjectQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add gc object task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.gcZombieQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add gc zombie piece task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.gcMetaQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add gc meta task to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.receiveQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add confirm receive piece to backup set", "task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.recoveryQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "recovery task_key", task.Key().String(),
-			"task_limit", task.EstimateLimit().String())
-		backupTasks = append(backupTasks, task)
-	}
-	task = m.migrateGVGQueue.PopByLimit(limit)
-	if task != nil {
-		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", task.Key().String())
-		backupTasks = append(backupTasks, task)
-	}
-	if m.migrateGVGQueue.Len() != 0 {
-		log.CtxDebugw(ctx, "ManageModular DispatchTask", "migrateGVGQueue len", m.migrateGVGQueue.Len())
-	}
-
-	task, reservedTasks = m.PickUpTask(ctx, backupTasks)
-	go func() {
-		if len(reservedTasks) == 0 {
-			return
-		}
-		for _, reservedTask := range reservedTasks {
-			switch t := reservedTask.(type) {
-			case *gfsptask.GfSpReplicatePieceTask:
-				err := m.replicateQueue.Push(t)
-				log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpSealObjectTask:
-				err := m.sealQueue.Push(t)
-				log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpReceivePieceTask:
-				err := m.receiveQueue.Push(t)
-				log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpGCObjectTask:
-				err := m.gcObjectQueue.Push(t)
-				log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpGCZombiePieceTask:
-				err := m.gcZombieQueue.Push(t)
-				log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpGCMetaTask:
-				err := m.gcMetaQueue.Push(t)
-				log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpRecoverPieceTask:
-				err := m.recoveryQueue.Push(t)
-				log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
-			case *gfsptask.GfSpMigrateGVGTask:
-				err := m.migrateGVGQueue.Push(t)
-				log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
+	for {
+		select {
+		case <-ctx.Done():
+			log.CtxErrorw(ctx, "dispatch task context is canceled")
+			return nil, nil
+		case dispatchTask := <-m.taskCh:
+			if !limit.NotLess(dispatchTask.EstimateLimit()) {
+				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String())
+				go func() {
+					m.taskCh <- dispatchTask
+				}()
+				continue
 			}
+			log.CtxDebugw(ctx, "dispatch task to executor", "key_info", dispatchTask.Info())
+			return dispatchTask, nil
 		}
-	}()
-	if task == nil {
-		return nil, nil
 	}
-	return task, nil
 }
 
 func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error {
@@ -190,8 +115,12 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
+}
+
+func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task task.ObjectTask) error {
 	startPickGVGTime := time.Now()
-	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, vgfID, task.GetStorageParams())
 	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
 	if err != nil {
 		return err
@@ -213,6 +142,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
+	go m.backUpTask()
 	go func() {
 		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
@@ -246,11 +176,10 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 		return err
 	}
 	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
-		log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
-		// TODO(chris)
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			return nil
 		} else {
+			log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
 			return ErrGfSpDB
 		}
 	}
@@ -313,6 +242,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
+	go m.backUpTask()
 	go func() error {
 		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
@@ -388,6 +318,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
+	go m.backUpTask()
 	go func() {
 		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
 			ObjectID:             task.GetObjectInfo().Id.Uint64(),
@@ -406,6 +337,32 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 }
 
 func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask task.ReplicatePieceTask) error {
+	if handleTask.GetNotAvailableSpIdx() != -1 {
+		gvgID := handleTask.GetGlobalVirtualGroupId()
+		gvg, err := m.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
+		if err != nil {
+			log.Errorw("failed to query global virtual group from chain, ", "gvgID", gvgID, "error", err)
+			return err
+		}
+		sspID := gvg.GetSecondarySpIds()[handleTask.GetNotAvailableSpIdx()]
+		sspJoinGVGs, err := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
+		if err != nil {
+			log.Errorw("failed to list GVGs by secondary sp", "spID", sspID, "error", err)
+			return err
+		}
+		shouldFreezeGVGs := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+		for _, g := range sspJoinGVGs {
+			if g.GetPrimarySpId() == m.spID {
+				shouldFreezeGVGs = append(shouldFreezeGVGs, g)
+			}
+		}
+		m.virtualGroupManager.FreezeSPAndGVGs(sspID, shouldFreezeGVGs)
+		log.CtxDebugw(ctx, "add sp to freeze pool", "spID", sspID, "excludedGVGs", shouldFreezeGVGs)
+		m.replicateQueue.PopByKey(handleTask.Key())
+
+		return m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask)
+	}
+
 	shadowTask := handleTask
 	oldTask := m.replicateQueue.PopByKey(handleTask.Key())
 	if m.TaskUploading(ctx, handleTask) {
@@ -542,6 +499,9 @@ func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.Re
 			task.SetUpdateTime(time.Now().Unix())
 			err := m.receiveQueue.Push(task)
 			log.CtxErrorw(ctx, "push receive task to queue", "error", err)
+			if err == nil {
+				go m.backUpTask()
+			}
 		}()
 	}
 	return nil
@@ -680,6 +640,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		return ErrDanglingTask
 	}
 	var err error
+	task.SetUpdateTime(time.Now().Unix())
 	if task.GetBucketID() != 0 {
 		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
 	} else {

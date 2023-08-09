@@ -92,9 +92,19 @@ type Metadata interface {
 	// ListSwapOutEvents list swap out events
 	ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapOut, []*EventCompleteSwapOut, []*EventCancelSwapOut, error)
 	// ListSpExitEvents list sp exit events
-	ListSpExitEvents(blockID uint64, operatorAddress common.Address) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error)
+	ListSpExitEvents(blockID uint64, spID uint32) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error)
 	// GetSPByAddress get sp info by operator address
 	GetSPByAddress(operatorAddress common.Address) (*StorageProvider, error)
+	// GetMysqlVersion get currently running mysql version of block syncer
+	GetMysqlVersion() (string, error)
+	// GetEpoch get current epoch of block syncer
+	GetEpoch() (*Epoch, error)
+	// GetSpVersion get the system version info of SP
+	GetSpVersion() *SpVersion
+	// GetDefaultCharacterSet get the current mysql default character set
+	GetDefaultCharacterSet() (string, error)
+	// GetDefaultCollationName get the current mysql default collation name
+	GetDefaultCollationName() (string, error)
 }
 
 // BSDB contains all the methods required by block syncer database

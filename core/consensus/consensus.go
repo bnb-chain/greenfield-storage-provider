@@ -3,6 +3,7 @@ package consensus
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
@@ -13,6 +14,8 @@ import (
 
 // Consensus is the interface to query greenfield consensus data. the consensus
 // data can come from validator, full-node, or other off-chain data service
+//
+//go:generate mockgen -source=./consensus.go -destination=./consensus_mock.go -package=consensus
 type Consensus interface {
 	// CurrentHeight returns the current greenfield height - 1,
 	CurrentHeight(ctx context.Context) (uint64, error)
@@ -38,6 +41,8 @@ type Consensus interface {
 	QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error)
 	// ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
 	ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
+	// AvailableGlobalVirtualGroupFamilies submits a list global virtual group families Id to chain and return the filtered families which are able to serve create bucket request.
+	AvailableGlobalVirtualGroupFamilies(ctx context.Context, globalVirtualGroupFamiliesIDs []uint32) ([]uint32, error)
 	// QueryVirtualGroupParams returns the virtual group params.
 	QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error)
 	// QueryStorageParams returns the storage params.
@@ -46,6 +51,8 @@ type Consensus interface {
 	QueryStorageParamsByTimestamp(ctx context.Context, timestamp int64) (params *storagetypes.Params, err error)
 	// QueryBucketInfo returns the bucket info by bucket name.
 	QueryBucketInfo(ctx context.Context, bucket string) (*storagetypes.BucketInfo, error)
+	// QueryBucketInfoById returns the bucket info by bucket id.
+	QueryBucketInfoById(ctx context.Context, bucketId uint64) (bucketInfo *storagetypes.BucketInfo, err error)
 	// QueryObjectInfo returns the object info by bucket and object name.
 	QueryObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ObjectInfo, error)
 	// QueryObjectInfoByID returns the object info by object ID.
@@ -62,6 +69,10 @@ type Consensus interface {
 	ListenObjectSeal(ctx context.Context, objectID uint64, timeOutHeight int) (bool, error)
 	// ListenRejectUnSealObject returns an indication of the object is rejected.
 	ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error)
+	// ConfirmTransaction is used to confirm whether the transaction is on the chain.
+	ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error)
+	// WaitForNextBlock is used to chain generate a new block.
+	WaitForNextBlock(ctx context.Context) error
 	// Close the Consensus interface.
 	Close() error
 }
@@ -86,7 +97,7 @@ func (*NullConsensus) QuerySPFreeQuota(context.Context, string) (uint64, error) 
 	return 0, nil
 }
 
-func (*NullConsensus) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
+func (*NullConsensus) QuerySPPrice(context.Context, string) (sptypes.SpStoragePrice, error) {
 	return sptypes.SpStoragePrice{}, nil
 }
 
@@ -106,15 +117,19 @@ func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32)
 	return nil, nil
 }
 
-func (*NullConsensus) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
+func (*NullConsensus) AvailableGlobalVirtualGroupFamilies(context.Context, []uint32) ([]uint32, error) {
 	return nil, nil
 }
 
-func (*NullConsensus) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
+func (*NullConsensus) QueryVirtualGroupFamily(context.Context, uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	return nil, nil
 }
 
-func (*NullConsensus) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
+func (*NullConsensus) QueryGlobalVirtualGroup(context.Context, uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) QueryVirtualGroupParams(context.Context) (*virtualgrouptypes.Params, error) {
 	return nil, nil
 }
 
@@ -125,6 +140,9 @@ func (*NullConsensus) QueryStorageParamsByTimestamp(context.Context, int64) (*st
 	return nil, nil
 }
 func (*NullConsensus) QueryBucketInfo(context.Context, string) (*storagetypes.BucketInfo, error) {
+	return nil, nil
+}
+func (*NullConsensus) QueryBucketInfoById(context.Context, uint64) (*storagetypes.BucketInfo, error) {
 	return nil, nil
 }
 func (*NullConsensus) QueryObjectInfo(context.Context, string, string) (*storagetypes.ObjectInfo, error) {
@@ -151,4 +169,12 @@ func (*NullConsensus) ListenObjectSeal(context.Context, uint64, int) (bool, erro
 func (*NullConsensus) ListenRejectUnSealObject(context.Context, uint64, int) (bool, error) {
 	return false, nil
 }
+func (*NullConsensus) ConfirmTransaction(context.Context, string) (*sdk.TxResponse, error) {
+	return nil, nil
+}
+
+func (*NullConsensus) WaitForNextBlock(context.Context) error {
+	return nil
+}
+
 func (*NullConsensus) Close() error { return nil }

@@ -290,6 +290,21 @@ func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(res
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockMetadata)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
 }
 
+// GetSPByAddress mocks base method.
+func (m *MockMetadata) GetSPByAddress(operatorAddress common.Address) (*StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSPByAddress", operatorAddress)
+	ret0, _ := ret[0].(*StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSPByAddress indicates an expected call of GetSPByAddress.
+func (mr *MockMetadataMockRecorder) GetSPByAddress(operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPByAddress", reflect.TypeOf((*MockMetadata)(nil).GetSPByAddress), operatorAddress)
+}
+
 // GetStatementsByPolicyID mocks base method.
 func (m *MockMetadata) GetStatementsByPolicyID(policyIDList []common.Hash, includeRemoved bool) ([]*Statement, error) {
 	m.ctrl.T.Helper()
@@ -633,9 +648,9 @@ func (mr *MockMetadataMockRecorder) ListObjectsInGVGAndBucket(bucketID, gvgID, s
 }
 
 // ListSpExitEvents mocks base method.
-func (m *MockMetadata) ListSpExitEvents(blockID uint64, operatorAddress common.Address) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error) {
+func (m *MockMetadata) ListSpExitEvents(blockID uint64, spID uint32) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSpExitEvents", blockID, operatorAddress)
+	ret := m.ctrl.Call(m, "ListSpExitEvents", blockID, spID)
 	ret0, _ := ret[0].(*EventStorageProviderExit)
 	ret1, _ := ret[1].(*EventCompleteStorageProviderExit)
 	ret2, _ := ret[2].(error)
@@ -643,9 +658,9 @@ func (m *MockMetadata) ListSpExitEvents(blockID uint64, operatorAddress common.A
 }
 
 // ListSpExitEvents indicates an expected call of ListSpExitEvents.
-func (mr *MockMetadataMockRecorder) ListSpExitEvents(blockID, operatorAddress interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListSpExitEvents(blockID, spID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockMetadata)(nil).ListSpExitEvents), blockID, operatorAddress)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockMetadata)(nil).ListSpExitEvents), blockID, spID)
 }
 
 // ListSwapOutEvents mocks base method.
@@ -971,6 +986,21 @@ func (m *MockBSDB) GetPermissionsByResourceAndPrincipleType(resourceType, princi
 func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockBSDB)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
+}
+
+// GetSPByAddress mocks base method.
+func (m *MockBSDB) GetSPByAddress(operatorAddress common.Address) (*StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSPByAddress", operatorAddress)
+	ret0, _ := ret[0].(*StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSPByAddress indicates an expected call of GetSPByAddress.
+func (mr *MockBSDBMockRecorder) GetSPByAddress(operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPByAddress", reflect.TypeOf((*MockBSDB)(nil).GetSPByAddress), operatorAddress)
 }
 
 // GetStatementsByPolicyID mocks base method.
@@ -1316,9 +1346,9 @@ func (mr *MockBSDBMockRecorder) ListObjectsInGVGAndBucket(bucketID, gvgID, start
 }
 
 // ListSpExitEvents mocks base method.
-func (m *MockBSDB) ListSpExitEvents(blockID uint64, operatorAddress common.Address) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error) {
+func (m *MockBSDB) ListSpExitEvents(blockID uint64, spID uint32) (*EventStorageProviderExit, *EventCompleteStorageProviderExit, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListSpExitEvents", blockID, operatorAddress)
+	ret := m.ctrl.Call(m, "ListSpExitEvents", blockID, spID)
 	ret0, _ := ret[0].(*EventStorageProviderExit)
 	ret1, _ := ret[1].(*EventCompleteStorageProviderExit)
 	ret2, _ := ret[2].(error)
@@ -1326,9 +1356,9 @@ func (m *MockBSDB) ListSpExitEvents(blockID uint64, operatorAddress common.Addre
 }
 
 // ListSpExitEvents indicates an expected call of ListSpExitEvents.
-func (mr *MockBSDBMockRecorder) ListSpExitEvents(blockID, operatorAddress interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListSpExitEvents(blockID, spID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockBSDB)(nil).ListSpExitEvents), blockID, operatorAddress)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockBSDB)(nil).ListSpExitEvents), blockID, spID)
 }
 
 // ListSwapOutEvents mocks base method.

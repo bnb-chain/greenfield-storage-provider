@@ -286,6 +286,10 @@ type ReplicatePieceTask interface {
 	GetGlobalVirtualGroupId() uint32
 	// GetSecondaryEndpoints return the secondary sp domain.
 	GetSecondaryEndpoints() []string
+	// GetNotAvailableSpIdx gets the secondary sp Index in GVG if fail to replicate data
+	GetNotAvailableSpIdx() int32
+	// SetNotAvailableSpIdx sets the secondary sp Index in GVG if fail to replicate data
+	SetNotAvailableSpIdx(int32)
 }
 
 // ReceivePieceTask is an abstract interface to record the information for receiving pieces
@@ -334,7 +338,7 @@ type ReceivePieceTask interface {
 	SetFinished(bool)
 	// GetGlobalVirtualGroupId returns the object's global virtual group id.
 	GetGlobalVirtualGroupId() uint32
-	// SetGlobalVirtualGroupId sets the object's global virtual group id.
+	// SetGlobalVirtualGroupID sets the object's global virtual group id.
 	SetGlobalVirtualGroupID(uint32)
 	// GetBucketMigration returns whether receiver does bucket migration
 	GetBucketMigration() bool

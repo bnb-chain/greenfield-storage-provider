@@ -3,9 +3,7 @@ package authenticator
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -106,10 +104,6 @@ func (a *AuthenticationModular) ReleaseResource(
 	span.Done()
 }
 
-const (
-	OffChainAuthSigExpiryAgeInSec int32 = 60 * 5 // in 300 seconds
-)
-
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
 func (a *AuthenticationModular) GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error) {
 	authKey, err := a.baseApp.GfSpDB().GetAuthKey(account, domain)
@@ -132,8 +126,9 @@ func (a *AuthenticationModular) UpdateUserPublicKey(ctx context.Context, account
 	return true, nil
 }
 
-// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-func (a *AuthenticationModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
+// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
+// no need to verify if the sig is expired.  This method only need verify the account address and leave the expiration checking to gateway.
+func (a *AuthenticationModular) VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error) {
 	signature, err := hex.DecodeString(offChainSig)
 	if err != nil {
 		return false, ErrBadSignature
@@ -148,26 +143,7 @@ func (a *AuthenticationModular) VerifyOffChainSignature(ctx context.Context, acc
 	}
 	userPublicKey := getAuthNonceResp.CurrentPublicKey
 
-	// signedMsg must be formatted as `${actionContent}_${expiredTimestamp}` and timestamp must be within $OffChainAuthSigExpiryAgeInSec seconds, actionContent could be any string
-	signedMsgParts := strings.Split(realMsgToSign, "_")
-	if len(signedMsgParts) < 2 {
-		log.CtxErrorw(ctx, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
-		return false, ErrSignedMsgFormat
-	}
-
-	signedMsgExpiredTimestamp, err := strconv.Atoi(signedMsgParts[len(signedMsgParts)-1])
-	if err != nil {
-		log.CtxErrorw(ctx, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
-		return false, ErrExpiredTimestampFormat
-	}
-	expiredAge := time.Until(time.UnixMilli(int64(signedMsgExpiredTimestamp))).Seconds()
-
-	if float64(OffChainAuthSigExpiryAgeInSec) < expiredAge || expiredAge < 0 { // nonce must be the same as NextNonce
-		err = fmt.Errorf("expiredTimestamp in signed msg must be within %d seconds. ExpiredTimestamp in sig is %d, while the current server timestamp is %d ", OffChainAuthSigExpiryAgeInSec, signedMsgExpiredTimestamp, time.Now().UnixMilli())
-		return false, gfsperrors.MakeGfSpError(err)
-	}
-
-	err = VerifyEddsaSignature(userPublicKey, signature, []byte(realMsgToSign))
+	err = VerifyEddsaSignature(userPublicKey, signature, realMsgToSign)
 	if err != nil {
 		return false, gfsperrors.MakeGfSpError(err)
 	}

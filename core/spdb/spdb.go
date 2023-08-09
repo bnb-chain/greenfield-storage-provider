@@ -101,6 +101,8 @@ type SPInfoDB interface {
 	GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error)
 	// GetSpByEndpoint return sp info by endpoint.
 	GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
+	// GetSpById return sp info by id.
+	GetSpById(id uint32) (*sptypes.StorageProvider, error)
 	// GetOwnSpInfo return own sp info.
 	GetOwnSpInfo() (*sptypes.StorageProvider, error)
 	// SetOwnSpInfo set(maybe overwrite) own sp info.
@@ -152,6 +154,8 @@ type MigrateDB interface {
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
+	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
+	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
 }
 
 type SPDB interface {

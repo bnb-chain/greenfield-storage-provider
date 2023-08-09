@@ -8,6 +8,7 @@ import (
 
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -15,6 +16,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+)
+
+var (
+	RtyAttem = retry.Attempts(uint(5))
+	RtyDelay = retry.Delay(time.Millisecond * 500)
+	RtyErr   = retry.LastErrorOnly(true)
 )
 
 func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
@@ -48,8 +55,8 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		return
 	} else {
 		task.AppendLog("executor-end-replicate-object")
-		metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateAllPiece).Inc()
-		metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
+		metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessReplicateAllPiece).Inc()
+		metrics.ExecutorTime.WithLabelValues(ExecutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
 	}
 	sealMsg := &storagetypes.MsgSealObject{
 		Operator:                    e.baseApp.OperatorAddress(),
@@ -81,22 +88,34 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 
 	log.Debugw("replicate task info", "task_sps", rTask.GetSecondaryEndpoints())
 
-	doReplicateECPiece := func(segIdx uint32, data [][]byte) {
+	doReplicateECPiece := func(segIdx uint32, data [][]byte, errChan chan error) {
 		log.Debug("start to replicate ec piece")
 		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate ec piece", "sp", sp)
 			wg.Add(1)
-			go e.doReplicatePiece(ctx, &wg, rTask, sp, segIdx, int32(redundancyIdx), data[redundancyIdx])
+			go func(redundancyIdx int, sp string) {
+				err = e.doReplicatePiece(ctx, &wg, rTask, sp, segIdx, int32(redundancyIdx), data[redundancyIdx])
+				if err != nil {
+					rTask.SetNotAvailableSpIdx(int32(redundancyIdx))
+					errChan <- err
+				}
+			}(redundancyIdx, sp)
 		}
 		wg.Wait()
 		log.Debug("finish to replicate ec piece")
 	}
-	doReplicateSegmentPiece := func(segIdx uint32, data []byte) {
+	doReplicateSegmentPiece := func(segIdx uint32, data []byte, errChan chan error) {
 		log.Debug("start to replicate segment piece")
 		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate segment piece", "sp", sp)
 			wg.Add(1)
-			go e.doReplicatePiece(ctx, &wg, rTask, sp, segIdx, int32(redundancyIdx), data)
+			go func(redundancyIdx int, sp string) {
+				err = e.doReplicatePiece(ctx, &wg, rTask, sp, segIdx, int32(redundancyIdx), data)
+				if err != nil {
+					rTask.SetNotAvailableSpIdx(int32(redundancyIdx))
+					errChan <- err
+				}
+			}(redundancyIdx, sp)
 		}
 		wg.Wait()
 		log.Debug("finish to replicate segment piece")
@@ -108,55 +127,65 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, int32(rIdx))
 			if innerErr == nil {
 				secondarySignatures[rIdx] = signature
-				metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
+				metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessDoneReplicatePiece).Inc()
 			} else {
-				metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
+				metrics.ExecutorCounter.WithLabelValues(ExecutorFailureDoneReplicatePiece).Inc()
 				return innerErr
 			}
 		}
 		log.Debug("finish to done replicate")
 		return nil
 	}
-
 	startReplicatePieceTime := time.Now()
-	for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
-		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
-		startGetPieceTime := time.Now()
-		segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
-		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
-		metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get segment data from piece store", "error", err)
-			rTask.SetError(err)
-			return err
-		}
-		if rTask.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-			ecTime := time.Now()
-			ecData, err := redundancy.EncodeRawSegment(segData,
-				int(rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()),
-				int(rTask.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()))
-			metrics.PerfPutObjectTime.WithLabelValues("background_ec_time").Observe(time.Since(ecTime).Seconds())
-			metrics.PerfPutObjectTime.WithLabelValues("background_ec_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
+	errChan := make(chan error)
+	quitChan := make(chan struct{})
+	go func() {
+		for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
+			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
+			startGetPieceTime := time.Now()
+			segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
+			metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
+			metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to ec encode data", "error", err)
+				log.CtxErrorw(ctx, "failed to get segment data from piece store", "error", err)
 				rTask.SetError(err)
-				return err
+				errChan <- err
 			}
-			doReplicateECPiece(segIdx, ecData)
-		} else {
-			doReplicateSegmentPiece(segIdx, segData)
+			if rTask.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
+				ecTime := time.Now()
+				ecData, err := redundancy.EncodeRawSegment(segData,
+					int(rTask.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()),
+					int(rTask.GetStorageParams().VersionedParams.GetRedundantParityChunkNum()))
+				metrics.PerfPutObjectTime.WithLabelValues("background_ec_time").Observe(time.Since(ecTime).Seconds())
+				metrics.PerfPutObjectTime.WithLabelValues("background_ec_end_time").Observe(time.Since(time.Unix(rTask.GetCreateTime(), 0)).Seconds())
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to ec encode data", "error", err)
+					rTask.SetError(err)
+					errChan <- err
+				}
+				doReplicateECPiece(segIdx, ecData, errChan)
+			} else {
+				doReplicateSegmentPiece(segIdx, segData, errChan)
+			}
 		}
+		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
+		doneTime := time.Now()
+		err = doneReplicate()
+		metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_time").Observe(time.Since(doneTime).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
+		if err == nil {
+			rTask.SetSecondarySignatures(secondarySignatures)
+			quitChan <- struct{}{}
+		}
+	}()
+
+	select {
+	case err = <-errChan:
+		return err
+	case <-quitChan:
+		return nil
 	}
-	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
-	doneTime := time.Now()
-	err = doneReplicate()
-	metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_time").Observe(time.Since(doneTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
-	if err == nil {
-		rTask.SetSecondarySignatures(secondarySignatures)
-	}
-	return err
 }
 
 func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.ReplicatePieceTask,
@@ -168,13 +197,13 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 		if err != nil {
 			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sIdx:%d-rIdx-%d-error:%s-endpoint:%s",
 				segmentIdx, redundancyIdx, err.Error(), spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureReplicateOnePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorFailureReplicateOnePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorFailureReplicateOnePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorFailureReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		} else {
 			rTask.AppendLog(fmt.Sprintf("executor-end-replicate-piece-sIdx:%d-rIdx-%d-endpoint:%s",
 				segmentIdx, redundancyIdx, spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessReplicateOnePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessReplicateOnePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessReplicateOnePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorSuccessReplicateOnePiece).Observe(time.Since(startTime).Seconds())
 		}
 		waitGroup.Done()
 	}()
@@ -194,14 +223,15 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
-	err = e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, spEndpoint, receive, data)
-	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_cost").Observe(time.Since(replicateOnePieceTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_end").Observe(time.Since(startTime).Seconds())
-	if err != nil {
+	if err = retry.Do(func() error {
+		return e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, spEndpoint, receive, data)
+	}, retry.Context(ctx), RtyAttem, RtyDelay, RtyErr); err != nil {
 		log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx,
 			"redundancy_idx", redundancyIdx, "error", err)
-		return
+		return err
 	}
+	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_cost").Observe(time.Since(replicateOnePieceTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_end").Observe(time.Since(startTime).Seconds())
 	log.CtxDebugw(ctx, "succeed to replicate piece", "segment_idx", segmentIdx,
 		"redundancy_idx", redundancyIdx)
 	return
@@ -220,13 +250,13 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 		if err != nil {
 			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-rIdx-%d-error:%s-endpoint:%s",
 				redundancyIdx, err.Error(), spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExeutorFailureDoneReplicatePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorFailureDoneReplicatePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorFailureDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		} else {
 			rTask.AppendLog(fmt.Sprintf("executor-begin-done_replicate-piece-rIdx-%d-endpoint:%s",
 				redundancyIdx, spEndpoint))
-			metrics.ExecutorCounter.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Inc()
-			metrics.ExecutorTime.WithLabelValues(ExeutorSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
+			metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessDoneReplicatePiece).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorSuccessDoneReplicatePiece).Observe(time.Since(startTime).Seconds())
 		}
 	}()
 
@@ -244,14 +274,16 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	}
 	receive.SetSignature(taskSignature)
 	doneReplicateTime := time.Now()
-	signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, spEndpoint, receive)
-	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_cost").Observe(time.Since(doneReplicateTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_end").Observe(time.Since(signTime).Seconds())
-	if err != nil {
+	if err = retry.Do(func() error {
+		signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, spEndpoint, receive)
+		return err
+	}, retry.Context(ctx), RtyAttem, RtyDelay, RtyErr); err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint,
 			"redundancy_idx", redundancyIdx, "error", err)
 		return nil, err
 	}
+	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_cost").Observe(time.Since(doneReplicateTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_end").Observe(time.Since(signTime).Seconds())
 	if int(redundancyIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "redundancy_idx", redundancyIdx)
 		return nil, ErrReplicateIdsOutOfBounds

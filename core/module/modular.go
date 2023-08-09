@@ -65,8 +65,8 @@ type Authenticator interface {
 	// UpdateUserPublicKey updates the user public key once the dApp or client generates the EDDSA key pairs.
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32,
 		userPublicKey string, expiryDate int64) (bool, error)
-	// VerifyOffChainSignature verifies the signature signed by user's EDDSA private key.
-	VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error)
+	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
+	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error)
 }
 
 // Approver is an abstract interface to handle asking approval requests.
@@ -162,7 +162,7 @@ type TaskExecutor interface {
 	ReportTask(ctx context.Context, task task.Task) error
 }
 
-// Manager is an abstract interface to do some internal services management, it is responsible for task
+// Manager is an abstract interface to do some internal service management, it is responsible for task
 // scheduling and other management of SP.
 type Manager interface {
 	Modular
@@ -178,7 +178,6 @@ type Manager interface {
 	// HandleCreateUploadObjectTask handles the CreateUploadObject request from Uploader, before Uploader handles
 	// the users' UploadObject requests, it should send CreateUploadObject requests to Manager ask if it's ok.
 	// Through this interface SP implements the global uploading object strategy.
-	//
 	// For example: control the concurrency of global uploads, avoid repeated uploads, rate control, etc.
 	HandleCreateUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error
 	// HandleDoneUploadObjectTask handles the result of uploading object payload data to primary, Manager should
@@ -188,7 +187,6 @@ type Manager interface {
 	// Uploader, before Uploader handles the user's UploadObject request, it should
 	// send CreateUploadObject request to Manager ask if it's ok. Through this
 	// interface that SP implements the global upload object strategy.
-	//
 	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
 
 	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,
@@ -278,7 +276,7 @@ type Signer interface {
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
-	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
+	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
 	// SignMigratePiece signs the GfSpMigratePieceTask for migrating piece
 	SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
 	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.

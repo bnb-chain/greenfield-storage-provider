@@ -269,14 +269,14 @@ message GfSpGetBucketMetaResponse {
   greenfield.payment.StreamRecord stream_record = 2;
 }
 
-// GfSpGetEndpointBySpAddressRequest is request type for the GfSpGetEndpointBySpAddress RPC method
-message GfSpGetEndpointBySpAddressRequest {
-  // sp_address is the address of the sp
-  string sp_address = 1;
+// GfSpGetEndpointBySpIdRequest is request type for the GfSpGetEndpointBySpId RPC method
+message GfSpGetEndpointBySpIdRequest {
+  // sp_id is the id of the sp
+  uint32 sp_id = 1;
 }
 
-// GfSpGetEndpointBySpAddressResponse is response type for the GfSpGetEndpointBySpAddress RPC method.
-message GfSpGetEndpointBySpAddressResponse {
+// GfSpGetEndpointBySpIdResponse is response type for the GfSpGetEndpointBySpId RPC method.
+message GfSpGetEndpointBySpIdResponse {
   // endpoint defines endpoint of a sp
   string endpoint = 1;
 }
@@ -626,8 +626,8 @@ message GfSpListGlobalVirtualGroupsByBucketResponse {
 message GfSpListSpExitEventsRequest {
   // block_id is the unique identification for block
   uint64 block_id = 1;
-  // operator_address is the unique identification address for operator
-  string operator_address = 2;
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 2;
 }
 
 // ListSpExitEvents is the combination of sp exit events
@@ -656,6 +656,46 @@ message GfSpGetSPInfoResponse {
   greenfield.sp.StorageProvider storage_provider = 1;
 }
 
+message Status {
+  StorageProviderInfo storage_provider_info = 1;
+  BlockSyncerInfo block_syncer_info = 2;
+  ChainInfo chain_info = 3;
+}
+
+// BlockSyncerInfo is the debug info for block syncer
+message BlockSyncerInfo {
+  int64 bs_block_height = 1;
+  string bs_block_hash = 2;
+  int64 bs_update_time = 3;
+  string bs_mysql_version = 4;
+  string bs_default_character_set_name = 5;
+  string bs_default_collation_name = 6;
+  repeated string bs_modules = 7;
+  uint32 bs_workers = 8;
+  bool bs_enable_dual_db = 9;
+}
+
+message ChainInfo {
+  string chain_id = 1;
+  repeated string chain_address = 2;
+}
+
+message StorageProviderInfo {
+  string sp_code_version = 1;
+  string sp_code_commit = 2;
+  string sp_architecture = 3;
+  string sp_go_version = 4;
+  string sp_operating_system = 5;
+  string sp_operator_address = 6;
+  string sp_domain_name = 7;
+}
+
+message GfSpGetStatusRequest {}
+
+message GfSpGetStatusResponse {
+  Status status = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -669,7 +709,7 @@ service GfSpMetadataService {
   rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {}
   rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
-  rpc GfSpGetEndpointBySpAddress(GfSpGetEndpointBySpAddressRequest) returns (GfSpGetEndpointBySpAddressResponse) {}
+  rpc GfSpGetEndpointBySpId(GfSpGetEndpointBySpIdRequest) returns (GfSpGetEndpointBySpIdResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
@@ -691,4 +731,5 @@ service GfSpMetadataService {
   rpc GfSpListSwapOutEvents(GfSpListSwapOutEventsRequest) returns (GfSpListSwapOutEventsResponse) {}
   rpc GfSpListSpExitEvents(GfSpListSpExitEventsRequest) returns (GfSpListSpExitEventsResponse) {}
   rpc GfSpGetSPInfo(GfSpGetSPInfoRequest) returns (GfSpGetSPInfoResponse) {}
+  rpc GfSpGetStatus(GfSpGetStatusRequest) returns (GfSpGetStatusResponse) {}
 }

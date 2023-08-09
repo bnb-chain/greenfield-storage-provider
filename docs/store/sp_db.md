@@ -10,14 +10,14 @@ type SPDB interface {
     GCObjectProgressDB
     SignatureDB
     TrafficDB
-    SPInfoDB
     OffChainAuthKeyDB
+    MigrateDB
 }
 ```
 
 ## UploadObjectProgressDB
 
-UploadObjectProgressDB interface which records upload object related progress(includeing foreground and background) and state. You can overwrite all these methods to meet your requirements.
+UploadObjectProgressDB interface which records upload object related progress(including foreground and background) and state. You can overwrite all these methods to meet your requirements.
 
 ```go
 type UploadObjectProgressDB interface {
@@ -28,22 +28,25 @@ type UploadObjectProgressDB interface {
     // UpdateUploadProgress updates the upload object progress state.
     UpdateUploadProgress(uploadMeta *UploadObjectMeta) error
     // GetUploadState queries the task state by object id.
-    GetUploadState(objectID uint64) (storetypes.TaskState, error)
+    GetUploadState(objectID uint64) (storetypes.TaskState, string, error)
     // GetUploadMetasToReplicate queries the latest upload_done/replicate_doing object to continue replicate.
     // It is only used in startup.
-    GetUploadMetasToReplicate(limit int) ([]*UploadObjectMeta, error)
+    GetUploadMetasToReplicate(limit int, timeout int64) ([]*UploadObjectMeta, error)
     // GetUploadMetasToSeal queries the latest replicate_done/seal_doing object to continue seal.
     // It is only used in startup.
-    GetUploadMetasToSeal(limit int) ([]*UploadObjectMeta, error)
+    GetUploadMetasToSeal(limit int, timeout int64) ([]*UploadObjectMeta, error)
+    // InsertPutEvent inserts a new upload event progress.
+    InsertPutEvent(task coretask.Task) error
 }
 
 // UploadObjectMeta defines the upload object state and related seal info, etc.
 type UploadObjectMeta struct {
-    ObjectID            uint64
-    TaskState           storetypes.TaskState
-    SecondaryAddresses  []string
-    SecondarySignatures [][]byte
-    ErrorDescription    string
+    ObjectID             uint64
+    TaskState            storetypes.TaskState
+    GlobalVirtualGroupID uint32
+    SecondaryEndpoints   []string
+    SecondarySignatures  [][]byte
+    ErrorDescription     string
 }
 ```
 
@@ -72,6 +75,8 @@ enum TaskState {
   TASK_STATE_SEAL_OBJECT_DOING = 13;
   TASK_STATE_SEAL_OBJECT_DONE = 14;
   TASK_STATE_SEAL_OBJECT_ERROR = 15;
+
+  TASK_STATE_OBJECT_DISCONTINUED = 16;
 }
 ```
 
@@ -111,29 +116,33 @@ type SignatureDB interface {
     /*
         Object Signature is used to get challenge info.
     */
-    // GetObjectIntegrity gets integrity meta info by object id.
-    GetObjectIntegrity(objectID uint64) (*IntegrityMeta, error)
+    // GetObjectIntegrity gets integrity meta info by object id and redundancy index.
+    GetObjectIntegrity(objectID uint64, redundancyIndex int32) (*IntegrityMeta, error)
     // SetObjectIntegrity sets(maybe overwrite) integrity hash info to db.
     SetObjectIntegrity(integrity *IntegrityMeta) error
     // DeleteObjectIntegrity deletes the integrity hash.
-    DeleteObjectIntegrity(objectID uint64) error
+    DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error
+    // UpdateIntegrityChecksum update IntegrityMetaTable's integrity checksum
+    UpdateIntegrityChecksum(integrity *IntegrityMeta) error
+    // UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
+    UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
     /*
         Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
     */
     // SetReplicatePieceChecksum sets(maybe overwrite) the piece hash.
-    SetReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceIdx uint32, checksum []byte) error
+    SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
     // GetAllReplicatePieceChecksum gets all piece hashes.
-    GetAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) ([][]byte, error)
+    GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
     // DeleteAllReplicatePieceChecksum deletes all piece hashes.
-    DeleteAllReplicatePieceChecksum(objectID uint64, replicateIdx uint32, pieceCount uint32) error
+    DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
 }
 
 // IntegrityMeta defines the payload integrity hash and piece checksum with objectID.
 type IntegrityMeta struct {
     ObjectID          uint64
+    RedundancyIndex   int32
     IntegrityChecksum []byte
     PieceChecksumList [][]byte
-    Signature         []byte
 }
 ```
 
@@ -143,13 +152,15 @@ TrafficDB defines a series of traffic interfaces. You can overwrite all these me
 
 ```go
 type TrafficDB interface {
-    // CheckQuotaAndAddReadRecord create bucket traffic firstly if bucket is not existed,
-    // and check whether the added traffic record exceeds the quota, if it exceeds the quota,
+    // CheckQuotaAndAddReadRecord get the traffic info from db, update the quota meta and check
+    // whether the added traffic record exceeds the quota, if it exceeds the quota,
     // it will return error, Otherwise, add a record and return nil.
     CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error
+    // InitBucketTraffic init the traffic info
+    InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error
     // GetBucketTraffic return bucket traffic info,
     // notice maybe return (nil, nil) while there is no bucket traffic.
-    GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error)
+    GetBucketTraffic(bucketID uint64) (*BucketTraffic, error)
     // GetReadRecord return record list by time range.
     GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error)
     // GetBucketReadRecord return bucket record list by time range.
@@ -173,17 +184,19 @@ type ReadRecord struct {
 
 // BucketQuota defines read quota of a bucket.
 type BucketQuota struct {
-    ReadQuotaSize uint64
+    ChargedQuotaSize uint64 // the charged quota of bucket on greenfield chain meta
+    FreeQuotaSize    uint64 // the free quota of SP on greenfield chain
 }
 
 // BucketTraffic is record traffic by year and month.
 type BucketTraffic struct {
-    BucketID         uint64
-    YearMonth        string // YearMonth is traffic's YearMonth, format "2023-02".
-    BucketName       string
-    ReadConsumedSize uint64
-    ReadQuotaSize    uint64
-    ModifyTime       int64
+    BucketID              uint64
+    BucketName            string
+    ReadConsumedSize      uint64
+    FreeQuotaSize         uint64 // the total free quota size of SP price meta
+    FreeQuotaConsumedSize uint64 // the consumed free quota size
+    ChargedQuotaSize      uint64 // the total charged quota of bucket
+    ModifyTime            int64
 }
 
 // TrafficTimeRange is used by query, return records in [StartTimestampUs, EndTimestampUs).
@@ -191,70 +204,6 @@ type TrafficTimeRange struct {
     StartTimestampUs int64
     EndTimestampUs   int64
     LimitNum         int // is unlimited if LimitNum <= 0.
-}
-```
-
-## SPInfoDB
-
-SPInfoDB defines a series of sp interfaces. You can overwrite all these methods to meet your requirements.
-
-```go
-type SPInfoDB interface {
-    // UpdateAllSp update all sp info, delete old sp info.
-    UpdateAllSp(spList []*sptypes.StorageProvider) error
-    // FetchAllSp if status is nil return all sp info; otherwise return sp info by status.
-    FetchAllSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error)
-    // FetchAllSpWithoutOwnSp if status is nil return all sp info without own sp;
-    // otherwise return sp info by status without own sp.
-    FetchAllSpWithoutOwnSp(status ...sptypes.Status) ([]*sptypes.StorageProvider, error)
-    // GetSpByAddress return sp info by address and addressType.
-    GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error)
-    // GetSpByEndpoint return sp info by endpoint.
-    GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
-    // GetOwnSpInfo return own sp info.
-    GetOwnSpInfo() (*sptypes.StorageProvider, error)
-    // SetOwnSpInfo set(maybe overwrite) own sp info.
-    SetOwnSpInfo(sp *sptypes.StorageProvider) error
-}
-
-// SpAddressType identify address type of SP.
-type SpAddressType int32
-
-const (
-    OperatorAddressType SpAddressType = iota + 1
-    FundingAddressType
-    SealAddressType
-    ApprovalAddressType
-)
-```
-
-protobuf definition is as follwos:
-
-```proto
-// StorageProvider defines the meta info of storage provider
-message StorageProvider {
-  // operator_address defines the account address of the storage provider's operator; It also is the unique index key of sp.
-  string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // funding_address defines one of the storage provider's accounts which is used to deposit and reward.
-  string funding_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // seal_address defines one of the storage provider's accounts which is used to SealObject
-  string seal_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // approval_address defines one of the storage provider's accounts which is used to approve use's createBucket/createObject request
-  string approval_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // gc_address defines one of the storage provider's accounts which is used for gc purpose.
-  string gc_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // total_deposit defines the number of tokens deposited by this storage provider for staking.
-  string total_deposit = 6 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-  // status defines the current service status of this storage provider
-  Status status = 7;
-  // endpoint define the storage provider's network service address
-  string endpoint = 8;
-  // description defines the description terms for the storage provider.
-  Description description = 9 [(gogoproto.nullable) = false];
 }
 ```
 
@@ -281,5 +230,71 @@ type OffChainAuthKey struct {
 
     CreatedTime  time.Time
     ModifiedTime time.Time
+}
+```
+
+
+## MigrateDB
+
+MigrateDB is used to support sp exit and bucket migrate.
+
+```go
+type MigrateDB interface {
+	// UpdateSPExitSubscribeProgress includes insert and update.
+	UpdateSPExitSubscribeProgress(blockHeight uint64) error
+	// QuerySPExitSubscribeProgress returns blockHeight which is called at startup.
+	QuerySPExitSubscribeProgress() (uint64, error)
+	// UpdateSwapOutSubscribeProgress includes insert and update.
+	UpdateSwapOutSubscribeProgress(blockHeight uint64) error
+	// QuerySwapOutSubscribeProgress returns blockHeight which is called at startup.
+	QuerySwapOutSubscribeProgress() (uint64, error)
+	// UpdateBucketMigrateSubscribeProgress includes insert and update.
+	UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error
+	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
+	QueryBucketMigrateSubscribeProgress() (uint64, error)
+
+	// InsertSwapOutUnit is used to insert a swap out unit.
+	InsertSwapOutUnit(meta *SwapOutMeta) error
+	// UpdateSwapOutUnitCompletedGVGList is used to record dest swap out progress, manager restart can load it.
+	UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error
+	// QuerySwapOutUnitInSrcSP is used to rebuild swap out plan at startup.
+	QuerySwapOutUnitInSrcSP(swapOutKey string) (*SwapOutMeta, error)
+	// ListDestSPSwapOutUnits is used to rebuild swap out plan at startup.
+	ListDestSPSwapOutUnits() ([]*SwapOutMeta, error)
+
+	// InsertMigrateGVGUnit inserts a new gvg migrate unit.
+	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
+	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
+
+	// UpdateMigrateGVGUnitStatus updates gvg unit status.
+	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
+	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
+	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
+
+	// QueryMigrateGVGUnit returns the gvg migrate unit info.
+	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
+	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
+	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
+}
+
+type SwapOutMeta struct {
+    SwapOutKey    string // as primary key
+    IsDestSP      bool
+    SwapOutMsg    *virtualgrouptypes.MsgSwapOut
+    CompletedGVGs []uint32
+}
+
+type MigrateGVGUnitMeta struct {
+    MigrateGVGKey        string // as primary key
+    SwapOutKey           string
+    GlobalVirtualGroupID uint32 // is used by sp exit/bucket migrate
+    VirtualGroupFamilyID uint32 // is used by sp exit
+    RedundancyIndex      int32  // is used by sp exit
+    BucketID             uint64 // is used by bucket migrate
+    SrcSPID              uint32
+    DestSPID             uint32
+    LastMigratedObjectID uint64
+    MigrateStatus        int // scheduler assign unit status.
 }
 ```

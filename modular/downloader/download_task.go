@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
@@ -18,7 +20,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"gorm.io/gorm"
 )
 
 var (
@@ -53,7 +54,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 
 	bucketID := downloadObjectTask.GetBucketInfo().Id.Uint64()
 	bucketName := downloadObjectTask.GetBucketInfo().GetBucketName()
-	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(downloadObjectTask.GetBucketInfo().Id.Uint64())
+	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(bucketID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
@@ -75,7 +76,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 	}
 
 	// TODO:: spilt check and add record steps, check in pre download, add record in post download
-	if err := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
+	if err = d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
 		&spdb.ReadRecord{
 			BucketID:        downloadObjectTask.GetBucketInfo().Id.Uint64(),
 			ObjectID:        downloadObjectTask.GetObjectInfo().Id.Uint64(),
@@ -259,7 +260,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 				return ErrConsensus
 			}
 			log.CtxDebugw(ctx, "finish init bucket traffic table", "charged_quota", downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
-				"freeQuota", freeQuotaSize)
+				"free_quota", freeQuotaSize)
 
 			// only need to set the free quota when init the traffic table
 			err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{

@@ -328,20 +328,6 @@ func (mr *MockSignatureDBMockRecorder) SetReplicatePieceChecksum(objectID, segme
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum)
 }
 
-// UpdatePieceChecksum mocks base method.
-func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdatePieceChecksum", objectID, redundancyIndex, checksum)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdatePieceChecksum indicates an expected call of UpdatePieceChecksum.
-func (mr *MockSignatureDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
-}
-
 // UpdateIntegrityChecksum mocks base method.
 func (m *MockSignatureDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) error {
 	m.ctrl.T.Helper()
@@ -354,6 +340,20 @@ func (m *MockSignatureDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) erro
 func (mr *MockSignatureDBMockRecorder) UpdateIntegrityChecksum(integrity interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateIntegrityChecksum), integrity)
+}
+
+// UpdatePieceChecksum mocks base method.
+func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePieceChecksum", objectID, redundancyIndex, checksum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePieceChecksum indicates an expected call of UpdatePieceChecksum.
+func (mr *MockSignatureDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
 }
 
 // MockTrafficDB is a mock of TrafficDB interface.
@@ -586,6 +586,21 @@ func (m *MockSPInfoDB) GetSpByEndpoint(endpoint string) (*types0.StorageProvider
 func (mr *MockSPInfoDBMockRecorder) GetSpByEndpoint(endpoint interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByEndpoint", reflect.TypeOf((*MockSPInfoDB)(nil).GetSpByEndpoint), endpoint)
+}
+
+// GetSpById mocks base method.
+func (m *MockSPInfoDB) GetSpById(id uint32) (*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSpById", id)
+	ret0, _ := ret[0].(*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSpById indicates an expected call of GetSpById.
+func (mr *MockSPInfoDBMockRecorder) GetSpById(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpById", reflect.TypeOf((*MockSPInfoDB)(nil).GetSpById), id)
 }
 
 // SetOwnSpInfo mocks base method.
@@ -1244,6 +1259,21 @@ func (m *MockSPDB) GetSpByEndpoint(endpoint string) (*types0.StorageProvider, er
 func (mr *MockSPDBMockRecorder) GetSpByEndpoint(endpoint interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByEndpoint", reflect.TypeOf((*MockSPDB)(nil).GetSpByEndpoint), endpoint)
+}
+
+// GetSpById mocks base method.
+func (m *MockSPDB) GetSpById(id uint32) (*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSpById", id)
+	ret0, _ := ret[0].(*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSpById indicates an expected call of GetSpById.
+func (mr *MockSPDBMockRecorder) GetSpById(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpById", reflect.TypeOf((*MockSPDB)(nil).GetSpById), id)
 }
 
 // GetUploadMetasToReplicate mocks base method.

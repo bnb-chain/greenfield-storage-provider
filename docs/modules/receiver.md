@@ -17,11 +17,11 @@ type Receiver interface {
 }
 ```
 
-Receiver interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Receiver module can be managed by lifycycle and resource manager.
+Receiver interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Receiver module can be managed by lifecycle and resource manager.
 
 In terms of the functions provided by Receiver module, there is only one part: receive piece data. There are three methods in Receiver interface. Therefore, you can rewrite these methods to meet your own requirements.
 
-As we can see from the second parameter of the methods defined in `Receiver` interface, ReceivePiece is splitted into `ReceivePieceTask`. They are also defined as an interface.
+As we can see from the second parameter of the methods defined in `Receiver` interface, ReceivePiece is split into `ReceivePieceTask`. They are also defined as an interface.
 
 We can query ReceivePiece tasks that we care about by `QueryTasks` method through using subKey.
 

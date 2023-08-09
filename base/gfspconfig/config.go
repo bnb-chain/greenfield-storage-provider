@@ -35,11 +35,11 @@ type Customize struct {
 
 // GfSpConfig defines the GfSp configuration.
 type GfSpConfig struct {
-	Env            string
-	AppID          string
-	Server         []string
-	GRPCAddress    string
-	Customize      *Customize
+	Env            string     `comment:"optional"`
+	AppID          string     `comment:"optional"`
+	Server         []string   `comment:"optional"`
+	GRPCAddress    string     `comment:"optional"`
+	Customize      *Customize `comment:"optional"`
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig
 	BsDBBackup     storeconfig.SQLDBConfig
@@ -55,7 +55,7 @@ type GfSpConfig struct {
 	Parallel       ParallelConfig
 	Task           TaskConfig
 	Monitor        MonitorConfig
-	Rcmgr          RcmgrConfig
+	Rcmgr          RcmgrConfig `comment:"optional"`
 	Log            LogConfig
 	Metadata       MetadataConfig
 	BlockSyncer    BlockSyncerConfig
@@ -87,165 +87,168 @@ func (cfg *GfSpConfig) String() string {
 }
 
 type ChainConfig struct {
-	ChainID                           string
-	ChainAddress                      []string
-	SealGasLimit                      uint64
-	SealFeeAmount                     uint64
-	RejectSealGasLimit                uint64
-	RejectSealFeeAmount               uint64
-	DiscontinueBucketGasLimit         uint64
-	DiscontinueBucketFeeAmount        uint64
-	CreateGlobalVirtualGroupGasLimit  uint64
-	CreateGlobalVirtualGroupFeeAmount uint64
-	CompleteMigrateBucketGasLimit     uint64
-	CompleteMigrateBucketFeeAmount    uint64
+	ChainID                           string   `comment:"required"`
+	ChainAddress                      []string `comment:"required"`
+	SealGasLimit                      uint64   `comment:"optional"`
+	SealFeeAmount                     uint64   `comment:"optional"`
+	RejectSealGasLimit                uint64   `comment:"optional"`
+	RejectSealFeeAmount               uint64   `comment:"optional"`
+	DiscontinueBucketGasLimit         uint64   `comment:"optional"`
+	DiscontinueBucketFeeAmount        uint64   `comment:"optional"`
+	CreateGlobalVirtualGroupGasLimit  uint64   `comment:"optional"`
+	CreateGlobalVirtualGroupFeeAmount uint64   `comment:"optional"`
+	CompleteMigrateBucketGasLimit     uint64   `comment:"optional"`
+	CompleteMigrateBucketFeeAmount    uint64   `comment:"optional"`
 }
 
 type SpAccountConfig struct {
-	SpOperatorAddress  string
-	OperatorPrivateKey string
-	FundingPrivateKey  string
-	SealPrivateKey     string
-	ApprovalPrivateKey string
-	GcPrivateKey       string
-	BlsPrivateKey      string
+	SpOperatorAddress  string `comment:"required"`
+	OperatorPrivateKey string `comment:"required"`
+	FundingPrivateKey  string `comment:"required"`
+	SealPrivateKey     string `comment:"required"`
+	ApprovalPrivateKey string `comment:"required"`
+	GcPrivateKey       string `comment:"required"`
+	BlsPrivateKey      string `comment:"required"`
 }
 
 type EndpointConfig struct {
-	ApproverEndpoint      string
-	ManagerEndpoint       string
-	DownloaderEndpoint    string
-	ReceiverEndpoint      string
-	MetadataEndpoint      string
-	UploaderEndpoint      string
-	P2PEndpoint           string
-	SignerEndpoint        string
-	AuthenticatorEndpoint string
+	ApproverEndpoint      string `comment:"required"`
+	ManagerEndpoint       string `comment:"required"`
+	DownloaderEndpoint    string `comment:"required"`
+	ReceiverEndpoint      string `comment:"required"`
+	MetadataEndpoint      string `comment:"required"`
+	UploaderEndpoint      string `comment:"required"`
+	P2PEndpoint           string `comment:"required"`
+	SignerEndpoint        string `comment:"required"`
+	AuthenticatorEndpoint string `comment:"required"`
 }
 
 type ApprovalConfig struct {
-	BucketApprovalTimeoutHeight uint64
-	ObjectApprovalTimeoutHeight uint64
-	ReplicatePieceTimeoutHeight uint64
+	BucketApprovalTimeoutHeight uint64 `comment:"optional"`
+	ObjectApprovalTimeoutHeight uint64 `comment:"optional"`
+	ReplicatePieceTimeoutHeight uint64 `comment:"optional"`
 }
 
 type BucketConfig struct {
-	AccountBucketNumber    int64
-	FreeQuotaPerBucket     uint64
-	MaxListReadQuotaNumber int64
-	MaxPayloadSize         uint64
+	AccountBucketNumber    int64  `comment:"optional"`
+	FreeQuotaPerBucket     uint64 `comment:"optional"`
+	MaxListReadQuotaNumber int64  `comment:"optional"`
+	MaxPayloadSize         uint64 `comment:"optional"`
 }
 
 type GatewayConfig struct {
-	DomainName  string
-	HTTPAddress string
+	DomainName  string `comment:"required"`
+	HTTPAddress string `comment:"required"`
 }
 
 type ExecutorConfig struct {
-	MaxExecuteNumber             int64
-	AskTaskInterval              int
-	AskReplicateApprovalTimeout  int64
-	AskReplicateApprovalExFactor float64
-	ListenSealTimeoutHeight      int
-	ListenSealRetryTimeout       int
-	MaxListenSealRetry           int
+	MaxExecuteNumber             int64   `comment:"optional"`
+	AskTaskInterval              int     `comment:"optional"`
+	AskReplicateApprovalTimeout  int64   `comment:"optional"`
+	AskReplicateApprovalExFactor float64 `comment:"optional"`
+	ListenSealTimeoutHeight      int     `comment:"optional"`
+	ListenSealRetryTimeout       int     `comment:"optional"`
+	MaxListenSealRetry           int     `comment:"optional"`
 }
 
 type P2PConfig struct {
-	P2PPrivateKey string
-	P2PAddress    string
-	P2PAntAddress string
-	P2PBootstrap  []string
-	P2PPingPeriod int
+	P2PPrivateKey string   `comment:"required"`
+	P2PAddress    string   `comment:"required"`
+	P2PAntAddress string   `comment:"required"`
+	P2PBootstrap  []string `comment:"required"`
+	P2PPingPeriod int      `comment:"optional"`
 }
 
 type ParallelConfig struct {
-	GlobalCreateBucketApprovalParallel int
-	GlobalCreateObjectApprovalParallel int
-	GlobalMaxUploadingParallel         int // upload + replicate + seal
-	GlobalUploadObjectParallel         int // only upload
-	GlobalReplicatePieceParallel       int
-	GlobalSealObjectParallel           int
-	GlobalReceiveObjectParallel        int
-	GlobalGCObjectParallel             int
-	GlobalGCZombieParallel             int
-	GlobalGCMetaParallel               int
-	GlobalRecoveryPieceParallel        int
-	GlobalMigrateGVGParallel           int
-	GlobalDownloadObjectTaskCacheSize  int
-	GlobalChallengePieceTaskCacheSize  int
-	GlobalBatchGcObjectTimeInterval    int
-	GlobalGcObjectBlockInterval        uint64
-	GlobalGcObjectSafeBlockDistance    uint64
-	GlobalSyncConsensusInfoInterval    uint64
+	GlobalCreateBucketApprovalParallel int `comment:"optional"`
+	GlobalCreateObjectApprovalParallel int `comment:"optional"`
+	// upload + replicate + seal
+	GlobalMaxUploadingParallel int `comment:"optional"`
+	// only upload
+	GlobalUploadObjectParallel        int    `comment:"optional"`
+	GlobalReplicatePieceParallel      int    `comment:"optional"`
+	GlobalSealObjectParallel          int    `comment:"optional"`
+	GlobalReceiveObjectParallel       int    `comment:"optional"`
+	GlobalGCObjectParallel            int    `comment:"optional"`
+	GlobalGCZombieParallel            int    `comment:"optional"`
+	GlobalGCMetaParallel              int    `comment:"optional"`
+	GlobalRecoveryPieceParallel       int    `comment:"optional"`
+	GlobalMigrateGVGParallel          int    `comment:"optional"`
+	GlobalBackupTaskParallel          int    `comment:"optional"`
+	GlobalDownloadObjectTaskCacheSize int    `comment:"optional"`
+	GlobalChallengePieceTaskCacheSize int    `comment:"optional"`
+	GlobalBatchGcObjectTimeInterval   int    `comment:"optional"`
+	GlobalGcObjectBlockInterval       uint64 `comment:"optional"`
+	GlobalGcObjectSafeBlockDistance   uint64 `comment:"optional"`
+	GlobalSyncConsensusInfoInterval   uint64 `comment:"optional"`
 
-	UploadObjectParallelPerNode         int
-	ReceivePieceParallelPerNode         int
-	DownloadObjectParallelPerNode       int
-	ChallengePieceParallelPerNode       int
-	AskReplicateApprovalParallelPerNode int
-	QuerySPParallelPerNode              int64
+	UploadObjectParallelPerNode         int   `comment:"optional"`
+	ReceivePieceParallelPerNode         int   `comment:"optional"`
+	DownloadObjectParallelPerNode       int   `comment:"optional"`
+	ChallengePieceParallelPerNode       int   `comment:"optional"`
+	AskReplicateApprovalParallelPerNode int   `comment:"optional"`
+	QuerySPParallelPerNode              int64 `comment:"optional"`
 
-	DiscontinueBucketEnabled       bool
-	DiscontinueBucketTimeInterval  int
-	DiscontinueBucketKeepAliveDays int
+	DiscontinueBucketEnabled       bool `comment:"required"`
+	DiscontinueBucketTimeInterval  int  `comment:"optional"`
+	DiscontinueBucketKeepAliveDays int  `comment:"required"`
 
-	LoadReplicateTimeout int64
-	LoadSealTimeout      int64
+	LoadReplicateTimeout int64 `comment:"optional"`
+	LoadSealTimeout      int64 `comment:"optional"`
 }
 
 type TaskConfig struct {
-	UploadTaskSpeed         int64
-	DownloadTaskSpeed       int64
-	ReplicateTaskSpeed      int64
-	ReceiveTaskSpeed        int64
-	SealObjectTaskTimeout   int64
-	GcObjectTaskTimeout     int64
-	GcZombieTaskTimeout     int64
-	GcMetaTaskTimeout       int64
-	SealObjectTaskRetry     int64
-	ReplicateTaskRetry      int64
-	ReceiveConfirmTaskRetry int64
-	GcObjectTaskRetry       int64
-	GcZombieTaskRetry       int64
-	GcMetaTaskRetry         int64
+	UploadTaskSpeed         int64 `comment:"optional"`
+	DownloadTaskSpeed       int64 `comment:"optional"`
+	ReplicateTaskSpeed      int64 `comment:"optional"`
+	ReceiveTaskSpeed        int64 `comment:"optional"`
+	SealObjectTaskTimeout   int64 `comment:"optional"`
+	GcObjectTaskTimeout     int64 `comment:"optional"`
+	GcZombieTaskTimeout     int64 `comment:"optional"`
+	GcMetaTaskTimeout       int64 `comment:"optional"`
+	SealObjectTaskRetry     int64 `comment:"optional"`
+	ReplicateTaskRetry      int64 `comment:"optional"`
+	ReceiveConfirmTaskRetry int64 `comment:"optional"`
+	GcObjectTaskRetry       int64 `comment:"optional"`
+	GcZombieTaskRetry       int64 `comment:"optional"`
+	GcMetaTaskRetry         int64 `comment:"optional"`
 }
 
 type MonitorConfig struct {
-	DisableMetrics     bool
-	DisablePProf       bool
-	MetricsHTTPAddress string
-	PProfHTTPAddress   string
+	DisableMetrics     bool   `comment:"required"`
+	DisablePProf       bool   `comment:"required"`
+	MetricsHTTPAddress string `comment:"required"`
+	PProfHTTPAddress   string `comment:"required"`
 }
 
 type RcmgrConfig struct {
-	DisableRcmgr bool
+	DisableRcmgr bool `comment:"optional"`
 	GfSpLimiter  *gfsplimit.GfSpLimiter
 }
 
 type LogConfig struct {
-	Level string
-	Path  string
+	Level string `comment:"optional"`
+	Path  string `comment:"optional"`
 }
 
 type BlockSyncerConfig struct {
-	Modules      []string
-	Dsn          string
-	DsnSwitched  string
-	Workers      uint
-	EnableDualDB bool
+	Modules      []string `comment:"required"`
+	Dsn          string   `comment:"required"`
+	DsnSwitched  string   `comment:"optional"`
+	Workers      uint     `comment:"required"`
+	EnableDualDB bool     `comment:"optional"`
 }
 
 type MetadataConfig struct {
 	// IsMasterDB is used to determine if the master database (BsDBConfig) is currently being used.
-	IsMasterDB                 bool
-	BsDBSwitchCheckIntervalSec int64
+	IsMasterDB                 bool  `comment:"required"`
+	BsDBSwitchCheckIntervalSec int64 `comment:"optional"`
 }
 
 type ManagerConfig struct {
-	EnableLoadTask                         bool
-	SubscribeSPExitEventIntervalSec        int
-	SubscribeSwapOutExitEventIntervalSec   int
-	SubscribeBucketMigrateEventIntervalSec int
-	GVGPreferSPList                        []uint32
+	EnableLoadTask                                 bool     `comment:"optional"`
+	SubscribeSPExitEventIntervalMillisecond        uint     `comment:"optional"`
+	SubscribeSwapOutExitEventIntervalMillisecond   uint     `comment:"optional"`
+	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`
+	GVGPreferSPList                                []uint32 `comment:"optional"`
 }

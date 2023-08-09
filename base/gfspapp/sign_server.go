@@ -154,7 +154,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessReplicateApproval).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup:
-		err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
+		txHash, err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
 			StorageProvider: g.operatorAddress,
 			FamilyId:        t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),
 			SecondarySpIds:  t.CreateGlobalVirtualGroup.GetSecondarySpIds(),

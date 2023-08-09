@@ -17,7 +17,7 @@ const (
 	protoUNIX  = "unix"
 )
 
-//-------------------------------------------------------------
+// -------------------------------------------------------------
 
 // Parsed URL structure
 type parsedURL struct {
@@ -78,7 +78,7 @@ func (u parsedURL) GetDialAddress() string {
 	return u.GetHostWithPath()
 }
 
-//-------------------------------------------------------------
+// -------------------------------------------------------------
 
 func makeDialContext(dialer *net.Dialer, remoteAddr string) (func(ctx context.Context, network, address string) (net.Conn, error), error) {
 	u, err := newParsedURL(remoteAddr)
@@ -101,7 +101,7 @@ func makeDialContext(dialer *net.Dialer, remoteAddr string) (func(ctx context.Co
 	return dialFn, nil
 }
 
-// DefaultHTTPClient is used to create an http client with some default parameters.
+// DefaultHTTPClient is used to create a http client with some default parameters.
 // We overwrite the http.Client.Dial so we can do http over tcp or unix.
 // remoteAddr should be fully featured (eg. with tcp:// or unix://).
 // An error will be returned in case of invalid remoteAddr.

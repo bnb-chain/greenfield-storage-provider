@@ -1,21 +1,22 @@
 package gater
 
 import (
-	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"net/http"
-	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
@@ -63,9 +64,14 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
+		return
+	}
 	startAuthenticationTime := time.Now()
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
+		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
@@ -181,6 +187,11 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return
 	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
+		return
+	}
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
@@ -266,8 +277,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 	}
-	log.CtxDebugw(ctx, "succeed to upload payload data")
-
+	log.CtxDebug(ctx, "succeed to upload payload data")
 }
 
 // queryResumeOffsetHandler handles the resumable put object
@@ -330,7 +340,8 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectSegment(reqCtx.Context(), objectInfo.Id.Uint64())
-	if err != nil {
+	if err != nil && err.Error() != metadata.ErrNoRecord.String() {
+		// ignore metadata.ErrNoRecord error
 		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
 		return
 	}
@@ -357,7 +368,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		err = ErrEncodeResponse
 		return
 	}
-	log.Debugw("succeed to query resumable offset ", "xml_info", xmlInfo)
+	log.Debugw("succeed to query resumable offset", "xml_info", xmlInfo)
 }
 
 // getObjectHandler handles the download object request.
@@ -397,19 +408,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	queryParams := r.URL.Query()
-	gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
-	gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
-	gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
-
-	// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
-	if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" {
-		r.Header.Set(GnfdUserAddressHeader, gnfdUserParam)
-		r.Header.Set(GnfdOffChainAuthAppDomainHeader, gnfdOffChainAuthAppDomainParam)
-		r.Header.Set(GnfdAuthorizationHeader, gnfdAuthorizationParam)
-	}
-
+	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
+
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
@@ -428,11 +429,47 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_verify_object_permission_time").Observe(time.Since(verifyObjectPermissionTime).Seconds())
 
 	if !authenticated {
+		// if not passed, then check authentication parameters
+		if reqCtxErr != nil {
+			queryParams := r.URL.Query()
+			gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
+			gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
+			gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+			gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
+
+			// GNFD1-EDDSA
+			gnfd1EddsaSignaturePrefix := commonhttp.Gnfd1Eddsa + ","
+			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
+				err = ErrUnsupportedSignType
+				return
+			}
+
+			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
+			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
+
+				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				if preSignedURLErr != nil {
+					reqCtxErr = preSignedURLErr
+				} else {
+					reqCtx.account = account.String()
+					reqCtxErr = nil
+					// default set content-disposition to download, if specified in query param as view, then set to view
+					w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
+					offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
+					isView, _ := strconv.ParseBool(offChainAuthViewParam)
+					if isView {
+						w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
+					}
+				}
+			}
+		}
+
 		if reqCtxErr != nil {
 			err = reqCtxErr
 			log.CtxErrorw(reqCtx.Context(), "no permission to operate, object is not public", "error", err)
 			return
 		}
+		// check permission
 		authTime := time.Now()
 		if authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 			coremodule.AuthOpTypeGetObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName); err != nil {
@@ -501,6 +538,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set(ContentTypeHeader, objectInfo.GetContentType())
+	w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	if isRange {
 		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(lowOffset))+
 			"-"+util.Uint64ToString(uint64(highOffset)))
@@ -637,7 +675,6 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		rangeEnd             int64
 		redirectURL          string
 		params               *storagetypes.Params
-		escapedObjectName    string
 		isRequestFromBrowser bool
 		spEndpoint           string
 		getEndpointErr       error
@@ -646,15 +683,16 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
+			spErrCode := gfsperrors.MakeGfSpError(err).GetInnerCode()
 			if isRequestFromBrowser {
 				reqCtx.SetHttpCode(http.StatusOK)
 				errorCodeForPage := "INTERNAL_ERROR" // default errorCode in built-in error page
-				switch err {
-				case downloader.ErrExceedBucketQuota:
+				switch spErrCode {
+				case downloader.ErrExceedBucketQuota.GetInnerCode():
 					errorCodeForPage = "NO_ENOUGH_QUOTA"
-				case ErrNoSuchObject:
+				case ErrNoSuchObject.GetInnerCode():
 					errorCodeForPage = "FILE_NOT_FOUND"
-				case ErrForbidden:
+				case ErrForbidden.GetInnerCode():
 					errorCodeForPage = "NO_PERMISSION"
 				}
 				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
@@ -683,18 +721,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	// ignore the error, because the universal endpoint does not need signature
 	reqCtx, _ = NewRequestContext(r, g)
 
-	escapedObjectName, err = url.PathUnescape(reqCtx.objectName)
-	if err != nil {
-		log.Errorw("failed to unescape object name ", "object_name", reqCtx.objectName, "error", err)
-		return
-	}
-
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
 		return
 	}
-	if err = s3util.CheckValidObjectName(escapedObjectName); err != nil {
-		log.Errorw("failed to check object name", "object_name", escapedObjectName, "error", err)
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
 		return
 	}
 
@@ -722,15 +754,10 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			"bucket_sp_id", bucketSPID, "self_sp_id", spID,
 		)
 
-		// TODO might need to edit GetEndpointBySpId to reduce call to chain
-		sp, queryErr := g.baseApp.Consensus().QuerySPByID(context.Background(), spID)
-		if queryErr != nil {
-			err = ErrConsensus
-			return
-		}
-		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpAddress(reqCtx.Context(), sp.OperatorAddress)
+		// get the endpoint where the bucket actually is in
+		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpId(reqCtx.Context(), bucketSPID)
 		if getEndpointErr != nil || spEndpoint == "" {
-			log.Errorw("failed to get endpoint by address ", "sp_address", reqCtx.bucketName, "error", getEndpointErr)
+			log.Errorw("failed to get endpoint by id ", "sp_id", bucketSPID, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}
@@ -741,9 +768,9 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		http.Redirect(w, r, redirectURL, 302)
 		return
 	}
-	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), escapedObjectName, reqCtx.bucketName, true)
+	getObjectInfoRes, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
 	if err != nil || getObjectInfoRes == nil || getObjectInfoRes.GetObjectInfo() == nil {
-		log.Errorw("failed to check object meta", "object_name", escapedObjectName, "error", err)
+		log.Errorw("failed to check object meta", "object_name", reqCtx.objectName, "error", err)
 		err = ErrNoSuchObject
 		return
 	}
@@ -772,8 +799,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		}
 
 		queryParams := r.URL.Query()
-		if queryParams["expiry"] != nil {
-			expiry = queryParams["expiry"][0]
+		if queryParams[commonhttp.HTTPHeaderExpiryTimestamp] != nil {
+			expiry = queryParams[commonhttp.HTTPHeaderExpiryTimestamp][0]
 		}
 		if queryParams["signature"] != nil {
 			signature = queryParams["signature"][0]
@@ -783,14 +810,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			expiryDate, dateParseErr := time.Parse(ExpiryDateFormat, expiry)
 			if dateParseErr != nil {
 				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid format", "expiry", expiry)
-				err = ErrInvalidExpiryDate
+				err = ErrInvalidExpiryDateParam
 				return
 			}
-			log.Infof("%s", time.Until(expiryDate).Seconds())
-			log.Infof("%s", MaxExpiryAgeInSec)
 			expiryAge := int32(time.Until(expiryDate).Seconds())
 			if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
-				err = ErrInvalidExpiryDate
+				err = ErrInvalidExpiryDateParam
 				log.CtxErrorw(reqCtx.Context(), "failed to parse expiry date due to invalid expiry value", "expiry", expiry)
 				return
 			}
@@ -835,9 +860,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
 			if htmlConfig == "" {
-				log.CtxErrorw(reqCtx.Context(), "chain id is not found", "chain id ", g.baseApp.ChainID())
-				err = gfsperrors.MakeGfSpError(fmt.Errorf("chain id is not found"))
-				return
+				htmlConfig = htmlConfigMap["greenfield_5600-1"] // use testnet by default, actually, we only need the metamask sign function, regardless which greenfield network the metamask is going to connect.
 			}
 			hc, _ := json.Marshal(htmlConfig)
 			html := strings.Replace(GnfdBuiltInUniversalEndpointDappHtml, "<% env %>", string(hc), 1)
@@ -877,7 +900,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	}
 
 	if isDownload {
-		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+escapedObjectName+"\"")
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	} else {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
 	}

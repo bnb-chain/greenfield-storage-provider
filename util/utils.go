@@ -23,9 +23,5 @@ func GetIPFromGRPCContext(ctx context.Context) net.IP {
 	}
 
 	addr := strings.Split(pr.Addr.String(), ":")
-	if len(addr) < 1 {
-		return nil
-	}
-
 	return net.ParseIP(addr[0])
 }

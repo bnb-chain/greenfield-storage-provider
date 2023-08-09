@@ -340,6 +340,7 @@ func (m *GfSpReplicatePieceTask) InitReplicatePieceTask(object *storagetypes.Obj
 	m.SetPriority(priority)
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
+	m.SetNotAvailableSpIdx(-1)
 }
 
 func (m *GfSpReplicatePieceTask) Key() coretask.TKey {
@@ -429,6 +430,10 @@ func (m *GfSpReplicatePieceTask) GetPriority() coretask.TPriority {
 
 func (m *GfSpReplicatePieceTask) SetPriority(priority coretask.TPriority) {
 	m.GetTask().SetPriority(priority)
+}
+
+func (m *GfSpReplicatePieceTask) SetNotAvailableSpIdx(idx int32) {
+	m.NotAvailableSpIdx = idx
 }
 
 func (m *GfSpReplicatePieceTask) EstimateLimit() corercmgr.Limit {

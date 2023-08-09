@@ -31,22 +31,24 @@ const (
 // PieceStoreAPI provides an interface to enable mocking the
 // StoreClient's API operation. This makes unit test to test your code easier.
 //
-//go:generate mockgen -source=./piece_store_client.go -destination=./mock/piece_store_mock.go -package=mock
+//go:generate mockgen -source=./piece_store_client.go -destination=./piece_store_client_mock.go -package=client
 type PieceStoreAPI interface {
 	GetPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error)
 	PutPiece(key string, value []byte) error
+	DeletePiece(ctx context.Context, key string) error
 }
 
 var _ corepiecestore.PieceStore = &StoreClient{}
 
 type StoreClient struct {
 	name string
-	ps   *piece.PieceStore
+	ps   piece.PieceAPI
 }
 
 func NewStoreClient(pieceConfig *storage.PieceStoreConfig) (*StoreClient, error) {
 	ps, err := piece.NewPieceStore(pieceConfig)
 	if err != nil {
+		log.Errorw("failed to new piece store", "error", err)
 		return nil, err
 	}
 	return &StoreClient{ps: ps, name: pieceConfig.Store.Storage}, nil

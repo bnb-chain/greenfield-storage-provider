@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -35,6 +36,9 @@ const (
 
 	// RejectUnSealObjectTimeout defines the timeout of sending reject unseal object tx.
 	RejectUnSealObjectTimeout = 3
+
+	// DefaultBackupTaskTimeout defines the timeout of backing up task for dispatching
+	DefaultBackupTaskTimeout = 1
 )
 
 var _ module.Manager = &ManageModular{}
@@ -42,6 +46,9 @@ var _ module.Manager = &ManageModular{}
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
+
+	taskCh        chan task.Task
+	backupTaskMux sync.Mutex
 
 	// loading task at startup.
 	enableLoadTask           bool
@@ -81,9 +88,9 @@ type ManageModular struct {
 	bucketMigrateScheduler *BucketMigrateScheduler
 	spExitScheduler        *SPExitScheduler
 
-	subscribeSPExitEventInterval        int
-	subscribeBucketMigrateEventInterval int
-	subscribeSwapOutEventInterval       int
+	subscribeSPExitEventInterval        uint
+	subscribeBucketMigrateEventInterval uint
+	subscribeSwapOutEventInterval       uint
 
 	loadReplicateTimeout int64
 	loadSealTimeout      int64
@@ -111,7 +118,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.recoveryQueue.SetRetireTaskStrategy(m.GCRecoverQueue)
 	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
-	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
+	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -135,16 +142,24 @@ func (m *ManageModular) Start(ctx context.Context) error {
 func (m *ManageModular) delayStartMigrateScheduler() {
 	// delay start to wait metadata service ready.
 	// migrate scheduler init depend metadata.
-	time.Sleep(60 * time.Second)
-
-	var err error
-	if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
-		log.Errorw("failed to new bucket migrate scheduler", "error", err)
+	for {
+		time.Sleep(5 * time.Second)
+		var err error
+		if m.bucketMigrateScheduler == nil {
+			if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
+				log.Errorw("failed to new bucket migrate scheduler", "error", err)
+				continue
+			}
+		}
+		if m.spExitScheduler == nil {
+			if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
+				log.Errorw("failed to new sp exit scheduler", "error", err)
+				continue
+			}
+		}
+		log.Info("succeed to start migrate scheduler")
+		return
 	}
-	if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
-		log.Errorw("failed to new sp exit scheduler", "error", err)
-	}
-	log.Info("succeed to start migrate scheduler")
 }
 
 func (m *ManageModular) eventLoop(ctx context.Context) {
@@ -153,6 +168,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
+	backupTaskTicker := time.NewTicker(time.Duration(DefaultBackupTaskTimeout) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -161,6 +177,8 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			log.CtxDebug(ctx, m.Statistics())
 		case <-syncConsensusInfoTicker.C:
 			m.syncConsensusInfo(ctx)
+		case <-backupTaskTicker.C:
+			m.backUpTask()
 		case <-gcObjectTicker.C:
 			start := m.gcBlockHeight
 			end := m.gcBlockHeight + m.gcObjectBlockInterval
@@ -272,7 +290,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		sealMetas                    []*spdb.UploadObjectMeta
 		generateSealTaskCounter      int
 		gcObjectMetas                []*spdb.GCObjectMeta
-		generateGCOjectTaskCounter   int
+		generateGCObjectTaskCounter  int
 	)
 
 	log.Info("start to load task from sp db")
@@ -357,14 +375,14 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			log.Errorw("failed to push gc object task to queue", "gc_object_task_meta", meta, "error", pushErr)
 			continue
 		}
-		generateGCOjectTaskCounter++
+		generateGCObjectTaskCounter++
 		if meta.EndBlockHeight >= m.gcBlockHeight {
 			m.gcBlockHeight = meta.EndBlockHeight + 1
 		}
 	}
 
 	log.Infow("end to load task from sp db", "replicate_task_number", generateReplicateTaskCounter,
-		"seal_task_number", generateSealTaskCounter, "gc_object_task_number", generateGCOjectTaskCounter)
+		"seal_task_number", generateSealTaskCounter, "gc_object_task_number", generateGCObjectTaskCounter)
 	return nil
 }
 
@@ -478,9 +496,8 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
-	// TODO if add some expire mechanism
-	return false
-	//return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	task := qTask.(task.MigrateGVGTask)
+	return task.GetFinished()
 }
 
 func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
@@ -509,6 +526,16 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 		return true
 	}
 	if qTask.GetRetry() == 0 {
+		return true
+	}
+	return false
+}
+
+func (m *ManageModular) FilterGVGTask(qTask task.Task) bool {
+	if qTask.GetRetry() == 0 {
+		return true
+	}
+	if qTask.ExceedTimeout() {
 		return true
 	}
 	return false
@@ -609,4 +636,102 @@ func (m *ManageModular) Statistics() string {
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
 		m.gcBlockHeight, m.gcSafeBlockDistance)
+}
+
+func (m *ManageModular) backUpTask() {
+	m.backupTaskMux.Lock()
+	defer m.backupTaskMux.Unlock()
+
+	var (
+		backupTasks   []task.Task
+		reservedTasks []task.Task
+		targetTask    task.Task
+
+		ctx   = context.Background()
+		limit = &rcmgr.Unlimited{}
+	)
+
+	targetTask = m.replicateQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add replicate piece task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+	targetTask = m.sealQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add seal object task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+	targetTask = m.gcObjectQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add gc object task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+	targetTask = m.gcZombieQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add gc zombie piece task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+	targetTask = m.gcMetaQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add gc meta task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+	targetTask = m.receiveQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add confirm receive piece to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+	targetTask = m.recoveryQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add confirm recovery piece to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+	targetTask = m.migrateGVGQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", targetTask.Key().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
+
+	targetTask, reservedTasks = m.PickUpTask(ctx, backupTasks)
+	if targetTask != nil {
+		m.taskCh <- targetTask
+	}
+	if len(reservedTasks) == 0 {
+		return
+	}
+	for _, reservedTask := range reservedTasks {
+		switch t := reservedTask.(type) {
+		case *gfsptask.GfSpReplicatePieceTask:
+			err := m.replicateQueue.Push(t)
+			log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
+		case *gfsptask.GfSpSealObjectTask:
+			err := m.sealQueue.Push(t)
+			log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
+		case *gfsptask.GfSpReceivePieceTask:
+			err := m.receiveQueue.Push(t)
+			log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
+		case *gfsptask.GfSpGCObjectTask:
+			err := m.gcObjectQueue.Push(t)
+			log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
+		case *gfsptask.GfSpGCZombiePieceTask:
+			err := m.gcZombieQueue.Push(t)
+			log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
+		case *gfsptask.GfSpGCMetaTask:
+			err := m.gcMetaQueue.Push(t)
+			log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
+		case *gfsptask.GfSpRecoverPieceTask:
+			err := m.recoveryQueue.Push(t)
+			log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
+		case *gfsptask.GfSpMigrateGVGTask:
+			err := m.migrateGVGQueue.Push(t)
+			log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
+		}
+	}
 }

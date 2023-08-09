@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -21,11 +22,12 @@ import (
 )
 
 var (
-	ErrDanglingPointer = gfsperrors.Register(MetadataModularName, http.StatusBadRequest, 90001, "OoooH... request lost, try again later")
-	ErrExceedRequest   = gfsperrors.Register(MetadataModularName, http.StatusNotAcceptable, 90002, "request exceed")
-	ErrNoRecord        = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
-	ErrGfSpDB          = gfsperrors.Register(MetadataModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
-	ErrNoSuchSP        = gfsperrors.Register(MetadataModularName, http.StatusNotFound, 90004, "no such sp")
+	ErrDanglingPointer   = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90001, "OoooH... request lost, try again later")
+	ErrExceedRequest     = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotAcceptable, 90002, "request exceed")
+	ErrNoRecord          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
+	ErrGfSpDB            = gfsperrors.Register(coremodule.MetadataModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
+	ErrNoSuchSP          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90004, "no such sp")
+	ErrExceedBlockHeight = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90005, "request block height exceed latest height")
 )
 
 var _ types.GfSpMetadataServiceServer = &MetadataModular{}

@@ -161,6 +161,10 @@ func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string,
 	return false, ErrNilModular
 }
 
+func (*NullModular) VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error) {
+	return false, ErrNilModular
+}
+
 var _ TaskExecutor = (*NilModular)(nil)
 var _ P2P = (*NilModular)(nil)
 var _ Signer = (*NilModular)(nil)
@@ -250,8 +254,8 @@ func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSe
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) (string, error) {
 	return "", nil
 }
-func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error {
-	return ErrNilModular
+func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
+	return "", ErrNilModular
 }
 func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	return nil, ErrNilModular

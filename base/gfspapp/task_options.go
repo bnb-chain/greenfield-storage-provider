@@ -52,9 +52,9 @@ const (
 	// MaxMigratePieceTime defines the max timeout to migrate piece.
 	MaxMigratePieceTime int64 = 50
 	// MinMigrateGVGTime defines the min timeout to migrate gvg.
-	MinMigrateGVGTime int64 = 10
+	MinMigrateGVGTime int64 = 1800 // 0.5 hour
 	// MaxMigrateGVGTime defines the max timeout to migrate gvg.
-	MaxMigrateGVGTime int64 = 50
+	MaxMigrateGVGTime int64 = 3600 // 1 hour
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -78,10 +78,6 @@ const (
 	MinRecoveryRetry = 2
 	// MaxRecoveryRetry  defines the max retry number to recovery piece.
 	MaxRecoveryRetry = 3
-	// MinMigratePieceRetry defines the min retry number to migrate piece.
-	MinMigratePieceRetry = 2
-	// MaxMigratePieceRetry  defines the max retry number to migrate piece.
-	MaxMigratePieceRetry = 3
 	// MinMigrateGVGRetry defines the min retry number to migrate gvg.
 	MinMigrateGVGRetry = 2
 	// MaxMigrateGVGRetry  defines the max retry number to migrate gvg.
@@ -198,6 +194,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		if g.migrateGVGTimeout > MaxMigrateGVGTime {
 			return MaxMigrateGVGTime
 		}
+		return g.migrateGVGTimeout
 	}
 	return NotUseTimeout
 }
@@ -274,12 +271,7 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 		}
 		return g.recoveryRetry
 	case coretask.TypeTaskMigratePiece:
-		if g.migratePieceRetry < MinMigratePieceRetry {
-			return MinMigratePieceRetry
-		}
-		if g.migratePieceRetry > MaxMigratePieceRetry {
-			return MaxMigratePieceRetry
-		}
+		return NotUseRetry
 	case coretask.TypeTaskMigrateGVG:
 		if g.migrateGVGRetry < MinMigrateGVGRetry {
 			return MinMigrateGVGRetry
@@ -287,6 +279,7 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 		if g.migrateGVGRetry > MaxMigrateGVGRetry {
 			return MaxMigrateGVGRetry
 		}
+		return g.migrateGVGRetry
 	}
 	return 0
 }

@@ -75,21 +75,20 @@ message GfSpReplicatePieceTask {
   repeated string secondary_addresses = 4;
   repeated bytes secondary_signatures = 5;
   bool sealed = 6;
-  // TODO: refine it.
   uint32 global_virtual_group_id = 7;
   repeated string secondary_endpoints = 8;
-  // repeated greenfield.sp.StorageProvider secondary_sps = 8;
+  int32 not_available_sp_idx = 9;
 }
 
 message GfSpRecoverPieceTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
   greenfield.storage.Params storage_params = 3;
-  uint32 segment_idx = 5;
-  int32 ec_idx = 6;
-  uint64 piece_size = 7;
-  bytes signature = 8;
-  bool recovered = 9;
+  uint32 segment_idx = 4;
+  int32 ec_idx = 5;
+  uint64 piece_size = 6;
+  bytes signature = 7;
+  bool recovered = 8;
 }
 
 message GfSpReceivePieceTask {
@@ -192,4 +191,5 @@ message GfSpMigratePieceTask {
   uint32 segment_idx = 5;
   int32 redundancy_idx = 6;
   bytes signature = 7;
+  bool is_bucket_migrate = 8;
 }
