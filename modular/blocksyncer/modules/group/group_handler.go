@@ -235,16 +235,14 @@ func (m *Module) handleUpdateGroupMember(ctx context.Context, block *tmctypes.Re
 }
 
 func (m *Module) handleRenewGroupMember(ctx context.Context, block *tmctypes.ResultBlock, renewGroupMember *storagetypes.EventRenewGroupMember) map[string][]interface{} {
-	groups := make([]*models.Group, 0)
+	res := map[string][]interface{}{}
 	for _, e := range renewGroupMember.Members {
-		groups = append(groups, &models.Group{
+		k, v := m.db.UpdateGroupToSQL(ctx, &models.Group{
 			GroupID:        common.BigToHash(renewGroupMember.GroupId.BigInt()),
 			AccountID:      common.HexToAddress(e.Member),
 			ExpirationTime: e.ExpirationTime.Unix(),
 		})
+		res[k] = v
 	}
-	k, v := m.db.RenewGroupMemberToSQL(ctx, groups)
-	return map[string][]interface{}{
-		k: v,
-	}
+	return res
 }
