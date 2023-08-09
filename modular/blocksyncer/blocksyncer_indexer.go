@@ -119,7 +119,9 @@ func (i *Impl) Process(height uint64) error {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
 		}
-		allSQL = append(allSQL, sqls...)
+		if len(sqls) > 0 {
+			allSQL = append(allSQL, sqls...)
+		}
 	}
 
 	// 2. handle events in txs
@@ -128,7 +130,9 @@ func (i *Impl) Process(height uint64) error {
 		log.Errorf("failed to export events in txs: %s", err)
 		return err
 	}
-	allSQL = append(allSQL, sqls...)
+	if len(sqls) > 0 {
+		allSQL = append(allSQL, sqls...)
+	}
 
 	// 3. handle events in endBlock
 	if len(endBlockEvents) > 0 {
@@ -137,7 +141,9 @@ func (i *Impl) Process(height uint64) error {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
 		}
-		allSQL = append(allSQL, sqls...)
+		if len(sqls) > 0 {
+			allSQL = append(allSQL, sqls...)
+		}
 	}
 
 	sql, val := i.SaveEpoch(block)
@@ -243,12 +249,13 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 	allSQL := make([]map[string][]interface{}, 0)
 	for k, v := range txs {
 		for _, event := range v {
-			// log.Infof("sdkevent: %v", event)
 			sqls, err := i.ExtractEvent(ctx, block, k, sdk.Event(event))
 			if err != nil {
 				return nil, err
 			}
-			allSQL = append(allSQL, sqls)
+			if len(sqls) != 0 {
+				allSQL = append(allSQL, sqls)
+			}
 		}
 	}
 	return allSQL, nil
@@ -264,7 +271,9 @@ func (i *Impl) ExportEventsWithoutTx(ctx context.Context, block *coretypes.Resul
 		if err != nil {
 			return nil, err
 		}
-		allSQL = append(allSQL, sqls)
+		if len(sqls) != 0 {
+			allSQL = append(allSQL, sqls)
+		}
 	}
 	return allSQL, nil
 }

@@ -42,10 +42,13 @@ func (sc *SessionCache) newMinioSession(cfg ObjectStorageConfig) (*session.Sessi
 	sc.Lock()
 	defer sc.Unlock()
 
+	if cfg.IAMType != AKSKIAMType {
+		return &session.Session{}, "", fmt.Errorf("minio now only supports AKSK iam type")
+	}
 	endpoint, bucketName, disableSSL, err := parseMinioBucketURL(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse minio bucket url", "error", err)
-		return nil, "", err
+		return &session.Session{}, "", err
 	}
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
@@ -70,7 +73,7 @@ func (sc *SessionCache) newMinioSession(cfg ObjectStorageConfig) (*session.Sessi
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to create minio session: %s", err)
+		return &session.Session{}, "", fmt.Errorf("failed to create minio session: %s", err)
 	}
 	sc.sessions[cfg] = sess
 	return sess, bucketName, nil

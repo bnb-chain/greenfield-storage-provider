@@ -43,7 +43,7 @@ func (sc *SessionCache) newLdfsSession(cfg ObjectStorageConfig) (*session.Sessio
 	endpoint, bucketName, disableSSL, err := parseLdfsBucketURL(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse ldfs bucket url", "error", err)
-		return nil, "", err
+		return &session.Session{}, "", err
 	}
 	if sess, ok := sc.sessions[cfg]; ok {
 		return sess, bucketName, nil
@@ -63,7 +63,7 @@ func (sc *SessionCache) newLdfsSession(cfg ObjectStorageConfig) (*session.Sessio
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to create ldfs session: %s", err)
+		return &session.Session{}, "", fmt.Errorf("failed to create ldfs session: %s", err)
 	}
 	sc.sessions[cfg] = sess
 	return sess, bucketName, nil

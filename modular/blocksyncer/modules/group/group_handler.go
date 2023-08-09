@@ -20,6 +20,7 @@ var (
 	EventDeleteGroup       = proto.MessageName(&storagetypes.EventDeleteGroup{})
 	EventLeaveGroup        = proto.MessageName(&storagetypes.EventLeaveGroup{})
 	EventUpdateGroupMember = proto.MessageName(&storagetypes.EventUpdateGroupMember{})
+	EventRenewGroupMember  = proto.MessageName(&storagetypes.EventRenewGroupMember{})
 )
 
 var GroupEvents = map[string]bool{
@@ -27,6 +28,7 @@ var GroupEvents = map[string]bool{
 	EventDeleteGroup:       true,
 	EventLeaveGroup:        true,
 	EventUpdateGroupMember: true,
+	EventRenewGroupMember:  true,
 }
 
 func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
@@ -70,6 +72,13 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 			return nil, errors.New("leave group event assert error")
 		}
 		return m.handleLeaveGroup(ctx, block, leaveGroup), nil
+	case EventRenewGroupMember:
+		renewGroupMember, ok := typedEvent.(*storagetypes.EventRenewGroupMember)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventRenewGroupMember", "event", typedEvent)
+			return nil, errors.New("renew group member event assert error")
+		}
+		return m.handleRenewGroupMember(ctx, block, renewGroupMember), nil
 	}
 	return nil, nil
 }
@@ -98,24 +107,6 @@ func (m *Module) handleCreateGroup(ctx context.Context, block *tmctypes.ResultBl
 		Removed:    false,
 	}
 	membersToAddList = append(membersToAddList, groupItem)
-
-	for _, member := range createGroup.Members {
-		groupMemberItem := &models.Group{
-			Owner:      common.HexToAddress(createGroup.Owner),
-			GroupID:    common.BigToHash(createGroup.GroupId.BigInt()),
-			GroupName:  createGroup.GroupName,
-			SourceType: createGroup.SourceType.String(),
-			AccountID:  common.HexToAddress(member),
-			Extra:      createGroup.Extra,
-
-			CreateAt:   block.Block.Height,
-			CreateTime: block.Block.Time.UTC().Unix(),
-			UpdateAt:   block.Block.Height,
-			UpdateTime: block.Block.Time.UTC().Unix(),
-			Removed:    false,
-		}
-		membersToAddList = append(membersToAddList, groupMemberItem)
-	}
 
 	k, v := m.db.CreateGroupToSQL(ctx, membersToAddList)
 	return map[string][]interface{}{
@@ -193,11 +184,12 @@ func (m *Module) handleUpdateGroupMember(ctx context.Context, block *tmctypes.Re
 	if len(membersToAdd) > 0 {
 		for _, memberToAdd := range membersToAdd {
 			groupItem := &models.Group{
-				Owner:     common.HexToAddress(updateGroupMember.Owner),
-				GroupID:   common.BigToHash(updateGroupMember.GroupId.BigInt()),
-				GroupName: updateGroupMember.GroupName,
-				AccountID: common.HexToAddress(memberToAdd),
-				Operator:  common.HexToAddress(updateGroupMember.Operator),
+				Owner:          common.HexToAddress(updateGroupMember.Owner),
+				GroupID:        common.BigToHash(updateGroupMember.GroupId.BigInt()),
+				GroupName:      updateGroupMember.GroupName,
+				AccountID:      common.HexToAddress(memberToAdd.Member),
+				Operator:       common.HexToAddress(updateGroupMember.Operator),
+				ExpirationTime: memberToAdd.ExpirationTime.Unix(),
 
 				CreateAt:   block.Block.Height,
 				CreateTime: block.Block.Time.UTC().Unix(),
@@ -239,5 +231,18 @@ func (m *Module) handleUpdateGroupMember(ctx context.Context, block *tmctypes.Re
 	k, v := m.db.UpdateGroupToSQL(ctx, groupItem)
 	res[k] = v
 
+	return res
+}
+
+func (m *Module) handleRenewGroupMember(ctx context.Context, block *tmctypes.ResultBlock, renewGroupMember *storagetypes.EventRenewGroupMember) map[string][]interface{} {
+	res := map[string][]interface{}{}
+	for _, e := range renewGroupMember.Members {
+		k, v := m.db.UpdateGroupToSQL(ctx, &models.Group{
+			GroupID:        common.BigToHash(renewGroupMember.GroupId.BigInt()),
+			AccountID:      common.HexToAddress(e.Member),
+			ExpirationTime: e.ExpirationTime.Unix(),
+		})
+		res[k] = v
+	}
 	return res
 }
