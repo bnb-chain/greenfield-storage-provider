@@ -8,6 +8,17 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
+// SPDB contains all sp db operations
+type SPDB interface {
+	UploadObjectProgressDB
+	GCObjectProgressDB
+	SignatureDB
+	TrafficDB
+	SPInfoDB
+	OffChainAuthKeyDB
+	MigrateDB
+}
+
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
 type UploadObjectProgressDB interface {
 	// InsertUploadProgress inserts a new upload object progress.
@@ -31,7 +42,7 @@ type UploadObjectProgressDB interface {
 // GCObjectProgressDB interface which records gc object related progress.
 type GCObjectProgressDB interface {
 	// InsertGCObjectProgress inserts a new gc object progress.
-	InsertGCObjectProgress(taskKey string, gcMeta *GCObjectMeta) error
+	InsertGCObjectProgress(gcMeta *GCObjectMeta) error
 	// DeleteGCObjectProgress deletes the gc object progress.
 	DeleteGCObjectProgress(taskKey string) error
 	// UpdateGCObjectProgress updates the gc object progress.
@@ -156,14 +167,4 @@ type MigrateDB interface {
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
 	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
-}
-
-type SPDB interface {
-	UploadObjectProgressDB
-	GCObjectProgressDB
-	SignatureDB
-	TrafficDB
-	SPInfoDB
-	OffChainAuthKeyDB
-	MigrateDB
 }

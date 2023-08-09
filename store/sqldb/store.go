@@ -152,6 +152,89 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
+func migrateSpDBTable(db *gorm.DB) (err error) {
+	if err = db.Debug().AutoMigrate(&UploadObjectProgressTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to upload object progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&PutObjectSuccessTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&PutObjectEventTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&UploadTimeoutTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&UploadFailedTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&ReplicateTimeoutTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&ReplicateFailedTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&SealTimeoutTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to successfully put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&SealFailedTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to put event progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&GCObjectProgressTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to gc object progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&SpInfoTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to create sp info table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&PieceHashTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to create piece hash table", "error", err)
+		return err
+	}
+	for i := 0; i < IntegrityMetasNumberOfShards; i++ {
+		shardTableName := fmt.Sprintf(IntegrityMetaTable{}.TableName()+"_%02d", i)
+		if err = db.Table(shardTableName).AutoMigrate(&IntegrityMetaTable{}); err != nil && !isAlreadyExists(err) {
+			log.Errorw("failed to create integrity meta table", "error", err)
+			return err
+		}
+	}
+	if err = db.AutoMigrate(&BucketTrafficTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to create bucket traffic table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&ReadRecordTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to create read record table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&OffChainAuthKeyTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to create off-chain authKey table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&MigrateSubscribeProgressTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to migrate subscribe progress table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&SwapOutTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to swap out table", "error", err)
+		return err
+	}
+	if err = db.AutoMigrate(&MigrateGVGTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to migrate gvg table", "error", err)
+		return err
+	}
+	return nil
+}
+
 // LoadDBConfigFromEnv load db user and password from env vars
 func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
 	if val, ok := os.LookupEnv(SpDBUser); ok {

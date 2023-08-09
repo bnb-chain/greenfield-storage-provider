@@ -202,7 +202,8 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				metrics.GCBlockNumberGauge.WithLabelValues(ManagerGCBlockNumber).Set(float64(m.gcBlockHeight))
 				m.gcBlockHeight = end + 1
 
-				if err = m.baseApp.GfSpDB().InsertGCObjectProgress(task.Key().String(), &spdb.GCObjectMeta{
+				if err = m.baseApp.GfSpDB().InsertGCObjectProgress(&spdb.GCObjectMeta{
+					TaskKey:          task.Key().String(),
 					StartBlockHeight: start,
 					EndBlockHeight:   end,
 				}); err != nil {

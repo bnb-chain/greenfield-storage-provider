@@ -9,9 +9,9 @@ import (
 )
 
 // InsertGCObjectProgress is used to insert gc object progress.
-func (s *SpDBImpl) InsertGCObjectProgress(taskKey string, gcMeta *spdb.GCObjectMeta) error {
+func (s *SpDBImpl) InsertGCObjectProgress(gcMeta *spdb.GCObjectMeta) error {
 	if result := s.db.Create(&GCObjectProgressTable{
-		TaskKey:               taskKey,
+		TaskKey:               gcMeta.TaskKey,
 		StartGCBlockID:        gcMeta.StartBlockHeight,
 		EndGCBlockID:          gcMeta.EndBlockHeight,
 		CurrentGCBlockID:      0,

@@ -9,13 +9,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// QueryAPI for mock use
-type QueryAPI interface {
-	QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error)
-	QueryBucketMigrate(ctx context.Context, endpoint string) (string, error)
-	QuerySPExit(ctx context.Context, endpoint string) (string, error)
-}
-
 func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error) {
 	conn, connErr := s.Connection(ctx, endpoint)
 	if connErr != nil {
