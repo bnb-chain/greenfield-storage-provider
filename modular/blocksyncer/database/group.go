@@ -28,3 +28,8 @@ func (db *DB) UpdateGroupToSQL(ctx context.Context, group *models.Group) (string
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Group{}).TableName()).Where("group_id = ? AND account_id = ?", group.GroupID, group.AccountID).Updates(group).Statement
 	return stat.SQL.String(), stat.Vars
 }
+
+//func (db *DB) RenewGroupMemberToSQL(ctx context.Context, group *models.Group) (string, []interface{}) {
+//	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Group{}).TableName()).Where("group_id = ? AND account_id = ?", group.GroupID, group.AccountID).Updates(group).Statement
+//	return stat.SQL.String(), stat.Vars
+//}
