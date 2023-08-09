@@ -3,6 +3,7 @@ package vgmgr
 import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
@@ -71,6 +72,27 @@ type GenerateGVGSecondarySPsPolicy interface {
 	GenerateGVGSecondarySPs() ([]uint32, error)
 }
 
+// ExcludeFilter applies on an ID to check if it should be excluded
+type ExcludeFilter interface {
+	Apply(id uint32) bool
+}
+
+// ExcludeIDFilter The sp freeze pool decides excludeIDFilter ExcludeIDs. When this filter is applied on a sp's id, meeting
+// the condition means it is one of freeze sp should be excluded.
+type ExcludeIDFilter struct {
+	ExcludeIDs map[uint32]struct{}
+}
+
+func NewExcludeIDFilter(ids IDSet) ExcludeFilter {
+	return &ExcludeIDFilter{
+		ExcludeIDs: ids,
+	}
+}
+func (f *ExcludeIDFilter) Apply(id uint32) bool {
+	_, ok := f.ExcludeIDs[id]
+	return ok
+}
+
 // VirtualGroupManager is used to provide virtual group api.
 type VirtualGroupManager interface {
 	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
@@ -91,7 +113,13 @@ type VirtualGroupManager interface {
 	PickSPByFilter(filter SPPickFilter) (*sptypes.StorageProvider, error)
 	// QuerySPByID returns sp proto.
 	QuerySPByID(spID uint32) (*sptypes.StorageProvider, error)
+	// FreezeSPAndGVGs puts the secondary SP and its joining Global virtual groups into the freeze pool for a specific period,
+	// For those SPs which are in the pool will be skipped when creating a GVG, GVGs in the pool will not be chosen to seal Object
+	// until released
+	FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrouptypes.GlobalVirtualGroup)
 }
 
 // NewVirtualGroupManager is the virtual group manager init api.
 type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)
+
+type IDSet = map[uint32]struct{}

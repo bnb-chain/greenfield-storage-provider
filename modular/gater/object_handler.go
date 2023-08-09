@@ -65,7 +65,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
 		return
 	}
@@ -188,7 +188,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName); err != nil {
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
 		return
 	}

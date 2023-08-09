@@ -77,6 +77,7 @@ message GfSpReplicatePieceTask {
   bool sealed = 6;
   uint32 global_virtual_group_id = 7;
   repeated string secondary_endpoints = 8;
+  int32 not_available_sp_idx = 9;
 }
 
 message GfSpRecoverPieceTask {

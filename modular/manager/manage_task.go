@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -113,8 +115,12 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
+}
+
+func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task task.ObjectTask) error {
 	startPickGVGTime := time.Now()
-	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, vgfID, task.GetStorageParams())
 	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
 	if err != nil {
 		return err
@@ -331,6 +337,32 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 }
 
 func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask task.ReplicatePieceTask) error {
+	if handleTask.GetNotAvailableSpIdx() != -1 {
+		gvgID := handleTask.GetGlobalVirtualGroupId()
+		gvg, err := m.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
+		if err != nil {
+			log.Errorw("failed to query global virtual group from chain, ", "gvgID", gvgID, "error", err)
+			return err
+		}
+		sspID := gvg.GetSecondarySpIds()[handleTask.GetNotAvailableSpIdx()]
+		sspJoinGVGs, err := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
+		if err != nil {
+			log.Errorw("failed to list GVGs by secondary sp", "spID", sspID, "error", err)
+			return err
+		}
+		shouldFreezeGVGs := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+		for _, g := range sspJoinGVGs {
+			if g.GetPrimarySpId() == m.spID {
+				shouldFreezeGVGs = append(shouldFreezeGVGs, g)
+			}
+		}
+		m.virtualGroupManager.FreezeSPAndGVGs(sspID, shouldFreezeGVGs)
+		log.CtxDebugw(ctx, "add sp to freeze pool", "spID", sspID, "excludedGVGs", shouldFreezeGVGs)
+		m.replicateQueue.PopByKey(handleTask.Key())
+
+		return m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask)
+	}
+
 	shadowTask := handleTask
 	oldTask := m.replicateQueue.PopByKey(handleTask.Key())
 	if m.TaskUploading(ctx, handleTask) {

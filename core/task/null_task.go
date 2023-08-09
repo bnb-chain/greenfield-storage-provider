@@ -162,3 +162,6 @@ func (*NullTask) GetLastMigratedObjectID() uint64                   { return 0 }
 func (*NullTask) SetLastMigratedObjectID(uint64)                    {}
 func (*NullTask) GetFinished() bool                                 { return false }
 func (*NullTask) SetFinished(bool)                                  {}
+
+func (t *NullTask) GetNotAvailableSpIdx() int32  { return 0 }
+func (t *NullTask) SetNotAvailableSpIdx(i int32) {}
