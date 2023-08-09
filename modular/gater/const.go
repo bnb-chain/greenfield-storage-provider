@@ -27,18 +27,10 @@ const (
 	// ContentDispositionInlineValue is used to indicate inline
 	ContentDispositionInlineValue = "inline"
 
-	// SignAlgorithm uses secp256k1 with the ECDSA algorithm
-	SignAlgorithm = "ECDSA-secp256k1"
 	// SignedMsg is the request hash
 	SignedMsg = "SignedMsg"
 	// Signature is the request signature
 	Signature = "Signature"
-	// SignTypeV1 is an authentication algorithm, which is used by dapps
-	SignTypeV1 = "authTypeV1"
-
-	SignTypeOffChain   = "OffChainAuth" // sign type - off-chain-auth
-	SignTypePersonal   = "PersonalSign" // sign type -  PersonalSign
-	SignAlgorithmEddsa = "EDDSA"
 
 	// GetApprovalPath defines get-approval path style suffix
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
