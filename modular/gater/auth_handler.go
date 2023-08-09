@@ -106,7 +106,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 
 	reqCtx, _ = NewRequestContext(r, g)
 	// verify personal sign signature
-	personalSignSignaturePrefix := signaturePrefix(SignTypePersonal, SignAlgorithm)
+	personalSignSignaturePrefix := commonhttp.Gnfd1EthPersonalSign + ","
 	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
 
 	if !strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {

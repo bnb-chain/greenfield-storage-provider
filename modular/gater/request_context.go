@@ -152,11 +152,6 @@ func (r *RequestContext) String() string {
 		getRequestIP(r.request), time.Since(r.startTime), r.err)
 }
 
-// signaturePrefix return supported Authentication prefix
-func signaturePrefix(version, algorithm string) string {
-	return version + " " + algorithm + ","
-}
-
 func (r *RequestContext) VerifySignature() (string, error) {
 	// check sig
 	requestSignature := r.request.Header.Get(GnfdAuthorizationHeader)
