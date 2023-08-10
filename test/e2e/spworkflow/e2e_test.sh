@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+export CGO_CFLAGS="-O -D__BLST_PORTABLE__"
+export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
+
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
