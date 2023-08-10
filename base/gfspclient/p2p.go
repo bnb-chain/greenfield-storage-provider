@@ -9,12 +9,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// P2PAPI for mock use
-type P2PAPI interface {
-	AskSecondaryReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask, low, high int, timeout int64) ([]*gfsptask.GfSpReplicatePieceApprovalTask, error)
-	QueryP2PBootstrap(ctx context.Context) ([]string, error)
-}
-
 func (s *GfSpClient) AskSecondaryReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask,
 	low, high int, timeout int64) ([]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
 	conn, connErr := s.P2PConn(ctx)

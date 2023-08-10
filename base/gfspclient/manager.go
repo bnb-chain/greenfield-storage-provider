@@ -12,15 +12,6 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
-// ManagerAPI for mock use
-type ManagerAPI interface {
-	CreateUploadObject(ctx context.Context, task coretask.UploadObjectTask) error
-	CreateResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask) error
-	AskTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error)
-	ReportTask(ctx context.Context, report coretask.Task) error
-	PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
-}
-
 func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.UploadObjectTask) error {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {

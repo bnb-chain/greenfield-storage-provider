@@ -6,6 +6,8 @@ package sqldb
 
 // Batch is a write-only database that commits changes to its host database
 // when Write is called. A batch cannot be used concurrently.
+//
+//go:generate mockgen -source=./batch.go -destination=./batch_mock.go -package=sqldb
 type Batch interface {
 	// Put inserts the given value into the key-value data store.
 	Put(key interface{}, value interface{}) error
