@@ -39,7 +39,7 @@ func TotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, staki
 }
 
 // ValidateAndGetSPIndexWithinGVGSecondarySPs return whether current sp is one of the object gvg's secondary sp and its index within GVG(if is)
-func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client gfspclient.GfSpClientAPI, selfSpID uint32,
+func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client *gfspclient.GfSpClient, selfSpID uint32,
 	bucketID uint64, lvgID uint32) (int, bool, error) {
 	gvg, err := client.GetGlobalVirtualGroup(ctx, bucketID, lvgID)
 	if err != nil {
