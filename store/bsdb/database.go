@@ -105,6 +105,10 @@ type Metadata interface {
 	GetDefaultCharacterSet() (string, error)
 	// GetDefaultCollationName get the current mysql default collation name
 	GetDefaultCollationName() (string, error)
+	// GetUserGroups get groups info by a user address
+	GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
+	// GetGroupMembers get group members by group id
+	GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error)
 }
 
 // BSDB contains all the methods required by block syncer database

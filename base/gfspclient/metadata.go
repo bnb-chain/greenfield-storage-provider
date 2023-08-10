@@ -3,16 +3,16 @@ package gfspclient
 import (
 	"context"
 
-	"google.golang.org/grpc"
-
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield/types/resource"
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"google.golang.org/grpc"
+
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
@@ -124,7 +124,7 @@ func (s *GfSpClient) GetBucketByBucketName(ctx context.Context, bucketName strin
 }
 
 // GetBucketByBucketID get bucket info by a bucket id
-func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, includePrivate bool,
+func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketID int64, includePrivate bool,
 	opts ...grpc.DialOption) (*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -133,7 +133,7 @@ func (s *GfSpClient) GetBucketByBucketID(ctx context.Context, bucketId int64, in
 	defer conn.Close()
 
 	req := &types.GfSpGetBucketByBucketIDRequest{
-		BucketId:       bucketId,
+		BucketId:       bucketID,
 		IncludePrivate: includePrivate,
 	}
 
@@ -288,18 +288,18 @@ func (s *GfSpClient) GetBucketMeta(ctx context.Context, bucketName string, inclu
 	return resp.GetBucket(), resp.GetStreamRecord(), nil
 }
 
-// GetEndpointBySpId get endpoint by sp id
-func (s *GfSpClient) GetEndpointBySpId(ctx context.Context, spId uint32, opts ...grpc.DialOption) (string, error) {
+// GetEndpointBySpID get endpoint by sp id
+func (s *GfSpClient) GetEndpointBySpID(ctx context.Context, spId uint32, opts ...grpc.DialOption) (string, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
 		return "", ErrRPCUnknown
 	}
 	defer conn.Close()
-	req := &types.GfSpGetEndpointBySpIdRequest{
+	req := &types.GfSpGetEndpointBySpIDRequest{
 		SpId: spId,
 	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetEndpointBySpId(ctx, req)
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetEndpointBySpID(ctx, req)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to send get sp by address rpc", "error", err)
@@ -766,4 +766,44 @@ func (s *GfSpClient) GetStatus(ctx context.Context, opts ...grpc.DialOption) (*t
 		return nil, ErrRPCUnknown
 	}
 	return resp.GetStatus(), nil
+}
+
+func (s *GfSpClient) GetUserGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetUserGroupsRequest{
+		AccountId:  accountID,
+		Limit:      limit,
+		StartAfter: startAfter,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetUserGroups(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get user groups", "error", err)
+		return nil, ErrRPCUnknown
+	}
+	return resp.Groups, nil
+}
+
+func (s *GfSpClient) GetGroupMembers(ctx context.Context, groupID uint64, startAfter string, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetGroupMembersRequest{
+		GroupId:    groupID,
+		Limit:      limit,
+		StartAfter: startAfter,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetGroupMembers(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get group members", "error", err)
+		return nil, ErrRPCUnknown
+	}
+	return resp.Groups, nil
 }

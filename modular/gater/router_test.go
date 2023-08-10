@@ -548,6 +548,22 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: getStatusRouterName,
 		},
+		{
+			name:             "Get groups info by a user address",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetUserGroupsQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery,
+			shouldMatch:      true,
+			wantedRouterName: getUserGroupsRouterName,
+		},
+		{
+			name:             "Get group members by group id",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetGroupMembersQuery + "&" + GroupIDQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery,
+			shouldMatch:      true,
+			wantedRouterName: getGroupMembersRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

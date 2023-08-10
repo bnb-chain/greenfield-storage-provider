@@ -408,8 +408,15 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 			return permtypes.EFFECT_DENY, err
 		}
 		if groups != nil {
-			// store the group id into map
+			var filteredGroups []*bsdb.Group
+			// filter the group member if they are expired
 			for _, group := range groups {
+				if time.Unix(group.ExpirationTime, 0).After(time.Now()) {
+					filteredGroups = append(filteredGroups, group)
+				}
+			}
+			// store the group id into map
+			for _, group := range filteredGroups {
 				groupIDMap[group.GroupID] = true
 			}
 			// use group id map to filter the above permission list and get the permissions which related to the specific account

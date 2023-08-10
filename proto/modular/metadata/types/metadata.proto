@@ -269,14 +269,14 @@ message GfSpGetBucketMetaResponse {
   greenfield.payment.StreamRecord stream_record = 2;
 }
 
-// GfSpGetEndpointBySpIdRequest is request type for the GfSpGetEndpointBySpId RPC method
-message GfSpGetEndpointBySpIdRequest {
+// GfSpGetEndpointBySpIDRequest is request type for the GfSpGetEndpointBySpID RPC method
+message GfSpGetEndpointBySpIDRequest {
   // sp_id is the id of the sp
   uint32 sp_id = 1;
 }
 
-// GfSpGetEndpointBySpIdResponse is response type for the GfSpGetEndpointBySpId RPC method.
-message GfSpGetEndpointBySpIdResponse {
+// GfSpGetEndpointBySpIDResponse is response type for the GfSpGetEndpointBySpID RPC method.
+message GfSpGetEndpointBySpIDResponse {
   // endpoint defines endpoint of a sp
   string endpoint = 1;
 }
@@ -376,6 +376,27 @@ message Group {
   int64 update_time = 6;
   // removed defines the group is deleted or not
   bool removed = 7;
+}
+
+// GroupMember is the structure for group-account information
+message GroupMember {
+  // group defines the basic group info
+  greenfield.storage.GroupInfo group = 1;
+  string account_id = 2;
+  // operator defines operator address of group
+  string operator = 3;
+  // create_at defines the block number when the group created
+  int64 create_at = 4;
+  // create_time defines the timestamp when the group created
+  int64 create_time = 5;
+  // update_at defines the block number when the group updated
+  int64 update_at = 6;
+  // update_time defines the timestamp when the group updated
+  int64 update_time = 7;
+  // removed defines the group is deleted or not
+  bool removed = 8;
+  // expiration_time is the user expiration time for this group
+  int64 expiration_time = 9;
 }
 
 // GfSpGetGroupListRequest is request type for the GetGroupList RPC method.
@@ -696,6 +717,38 @@ message GfSpGetStatusResponse {
   Status status = 1;
 }
 
+// GfSpGetUserGroupsRequest is request type for the GfSpGetUserGroups RPC method
+message GfSpGetUserGroupsRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 2;
+  // start_after is where you want to start listing from
+  uint64 start_after = 3;
+}
+
+// GfSpGetUserGroupsResponse is response type for the GfSpGetUserGroups RPC method
+message GfSpGetUserGroupsResponse {
+  // groups defines the response of group list
+  repeated GroupMember groups = 1;
+}
+
+// GfSpGetGroupMembersRequest is request type for the GfSpGetGroupMembers RPC method
+message GfSpGetGroupMembersRequest {
+  // group_id is the id of group
+  uint64 group_id = 1;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 2;
+  // start_after is where you want to start listing from
+  string start_after = 3;
+}
+
+// GfSpGetGroupMembersResponse is response type for the GfSpGetGroupMembers RPC method
+message GfSpGetGroupMembersResponse {
+  // group defines the response of group members
+  repeated GroupMember groups = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -709,7 +762,7 @@ service GfSpMetadataService {
   rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {}
   rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
-  rpc GfSpGetEndpointBySpId(GfSpGetEndpointBySpIdRequest) returns (GfSpGetEndpointBySpIdResponse) {}
+  rpc GfSpGetEndpointBySpID(GfSpGetEndpointBySpIDRequest) returns (GfSpGetEndpointBySpIDResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
@@ -732,4 +785,6 @@ service GfSpMetadataService {
   rpc GfSpListSpExitEvents(GfSpListSpExitEventsRequest) returns (GfSpListSpExitEventsResponse) {}
   rpc GfSpGetSPInfo(GfSpGetSPInfoRequest) returns (GfSpGetSPInfoResponse) {}
   rpc GfSpGetStatus(GfSpGetStatusRequest) returns (GfSpGetStatusResponse) {}
+  rpc GfSpGetUserGroups(GfSpGetUserGroupsRequest) returns (GfSpGetUserGroupsResponse) {}
+  rpc GfSpGetGroupMembers(GfSpGetGroupMembersRequest) returns (GfSpGetGroupMembersResponse) {}
 }
