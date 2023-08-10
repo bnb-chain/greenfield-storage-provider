@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.2.4-alpha.1
+
+FEATURES
+* [#857](https://github.com/bnb-chain/greenfield-storage-provider/pull/857) feat: validate virtual group families' qualification
+* [#985](https://github.com/bnb-chain/greenfield-storage-provider/pull/985) feat:time Ticker
+* [#981](https://github.com/bnb-chain/greenfield-storage-provider/pull/981) feat: add tx confirm func and create virtual group retry
+* [#968](https://github.com/bnb-chain/greenfield-storage-provider/pull/968) feat: bucket migrate check when load from db
+
+
+REFACTOR
+* [#983](https://github.com/bnb-chain/greenfield-storage-provider/pull/983) refine: refactor bucket migrate code
+* [#953](https://github.com/bnb-chain/greenfield-storage-provider/pull/953) Refactor manager that dispatch task model
+* [#976](https://github.com/bnb-chain/greenfield-storage-provider/pull/976) chore: refine migrate piece workflow
+* [#960](https://github.com/bnb-chain/greenfield-storage-provider/pull/960) docs: polish sp docs to the lastest version
+
+BUGFIX
+* [#908](https://github.com/bnb-chain/greenfield-storage-provider/pull/908) fix: auth refactoring for security review
+* [#987](https://github.com/bnb-chain/greenfield-storage-provider/pull/987) fix: ignore duplicate entry when create bucket traffic
+* [#973](https://github.com/bnb-chain/greenfield-storage-provider/pull/973) fix: add missing path for pprof server
+* [#966](https://github.com/bnb-chain/greenfield-storage-provider/pull/966) fix: refine migrate gvg task workflow
+* [#965](https://github.com/bnb-chain/greenfield-storage-provider/pull/965) fix: repeated error xml msg
+* [#963](https://github.com/bnb-chain/greenfield-storage-provider/pull/963) fix: only metadata and blocksyncer need to load bsdb
+* [#955](https://github.com/bnb-chain/greenfield-storage-provider/pull/955) fix: check sp and bucket status when putting object
+* [#935](https://github.com/bnb-chain/greenfield-storage-provider/pull/935) fix: empty bucket when bucket migrate
+* [#927](https://github.com/bnb-chain/greenfield-storage-provider/pull/927) fix: filter complete migration buckets
+
+TEST
+* [#982](https://github.com/bnb-chain/greenfield-storage-provider/pull/982) test: piece store pkg storage dir adds unit test
+* [#977](https://github.com/bnb-chain/greenfield-storage-provider/pull/977) test: piece store pkg adds unit test
+* [#967](https://github.com/bnb-chain/greenfield-storage-provider/pull/967) test: package util adds unit test
+
 ## 0.2.3-alpha.11
 
 FEATURES

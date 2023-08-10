@@ -117,6 +117,7 @@ func (b *BlockSyncerModular) initClient() error {
 		return err
 	}
 	b.parserCtx = ctx
+	log.Infof("blocksyncer dsn : %s", config.Cfg.Database.DSN)
 	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
 		ctx.Database,

@@ -33,7 +33,7 @@ func getObjectChainMeta(reqCtx *RequestContext, baseApp *gfspapp.GfSpBaseApp, ob
 }
 
 // checkSPAndBucketStatus check sp and bucket is in right status
-func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName string) error {
+func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName string, creatorAddr string) error {
 	spInfo, err := g.baseApp.Consensus().QuerySP(ctx, g.baseApp.OperatorAddress())
 	if err != nil {
 		log.Errorw("failed to query sp by operator address", "operator_address", g.baseApp.OperatorAddress(),
@@ -41,7 +41,7 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 		return ErrConsensus
 	}
 	spStatus := spInfo.GetStatus()
-	if spStatus != sptypes.STATUS_IN_SERVICE {
+	if spStatus != sptypes.STATUS_IN_SERVICE && !fromSpMaintenanceAcct(spStatus, spInfo.MaintenanceAddress, creatorAddr) {
 		log.Errorw("sp is not in service status", "operator_address", g.baseApp.OperatorAddress(),
 			"sp_status", spStatus, "sp_id", spInfo.GetId(), "endpoint", spInfo.GetEndpoint())
 		return ErrSPUnavailable
@@ -60,4 +60,8 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 	}
 	log.Info("sp and bucket status is right")
 	return nil
+}
+
+func fromSpMaintenanceAcct(spStatus sptypes.Status, spMaintenanceAddr, creatorAddr string) bool {
+	return spStatus == sptypes.STATUS_IN_MAINTENANCE && spMaintenanceAddr == creatorAddr
 }

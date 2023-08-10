@@ -231,7 +231,7 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		return nil
 	}
 	for _, v := range cfg.Server {
-		if v == coremodule.BlockSyncerModularName || v == coremodule.MetadataModularName {
+		if v == coremodule.BlockSyncerModularName {
 			log.Infof("[%s] module doesn't need sp db", v)
 			continue
 		}
@@ -289,7 +289,7 @@ var bsdbOnce = sync.Once{}
 
 func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	for _, v := range cfg.Server {
-		if v != coremodule.BlockSyncerModularName && v != coremodule.MetadataModularName {
+		if v != coremodule.MetadataModularName {
 			log.Infof("[%s] module doesn't need bs db", v)
 			continue
 		}
