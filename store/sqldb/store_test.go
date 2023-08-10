@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -19,6 +20,8 @@ const (
 	mockDBAddress = "127.0.0.1:3306"
 	mockDatabase  = "test_db"
 )
+
+var mockDBInternalError = errors.New("db internal error")
 
 func setupDB(t *testing.T) (*SpDBImpl, sqlmock.Sqlmock) {
 	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))

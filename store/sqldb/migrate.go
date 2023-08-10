@@ -25,8 +25,8 @@ func (s *SpDBImpl) UpdateSPExitSubscribeProgress(blockHeight uint64) error {
 	var (
 		result       *gorm.DB
 		queryReturn  *MigrateSubscribeProgressTable
-		needInsert   bool
 		updateRecord *MigrateSubscribeProgressTable
+		needInsert   = false
 	)
 	queryReturn = &MigrateSubscribeProgressTable{}
 	result = s.db.First(queryReturn, "event_name = ?", SPExitProgressKey)
@@ -40,12 +40,12 @@ func (s *SpDBImpl) UpdateSPExitSubscribeProgress(blockHeight uint64) error {
 		EventName:                 SPExitProgressKey,
 		LastSubscribedBlockHeight: blockHeight,
 	}
+
 	if needInsert {
 		result = s.db.Create(updateRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert record in subscribe progress table: %s", result.Error)
 		}
-
 	} else { // update
 		result = s.db.Model(&MigrateSubscribeProgressTable{}).
 			Where("event_name = ?", SPExitProgressKey).Updates(updateRecord)
@@ -76,8 +76,8 @@ func (s *SpDBImpl) UpdateSwapOutSubscribeProgress(blockHeight uint64) error {
 	var (
 		result       *gorm.DB
 		queryReturn  *MigrateSubscribeProgressTable
-		needInsert   bool
 		updateRecord *MigrateSubscribeProgressTable
+		needInsert   = false
 	)
 	queryReturn = &MigrateSubscribeProgressTable{}
 	result = s.db.First(queryReturn, "event_name = ?", SwapOutProgressKey)
@@ -91,12 +91,12 @@ func (s *SpDBImpl) UpdateSwapOutSubscribeProgress(blockHeight uint64) error {
 		EventName:                 SwapOutProgressKey,
 		LastSubscribedBlockHeight: blockHeight,
 	}
+
 	if needInsert {
 		result = s.db.Create(updateRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert record in subscribe progress table: %s", result.Error)
 		}
-
 	} else { // update
 		result = s.db.Model(&MigrateSubscribeProgressTable{}).
 			Where("event_name = ?", SwapOutProgressKey).Updates(updateRecord)
@@ -127,8 +127,8 @@ func (s *SpDBImpl) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) erro
 	var (
 		result       *gorm.DB
 		queryReturn  *MigrateSubscribeProgressTable
-		needInsert   bool
 		updateRecord *MigrateSubscribeProgressTable
+		needInsert   = false
 	)
 	queryReturn = &MigrateSubscribeProgressTable{}
 	result = s.db.First(queryReturn, "event_name = ?", BucketMigrateProgressKey)
@@ -142,12 +142,12 @@ func (s *SpDBImpl) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) erro
 		EventName:                 BucketMigrateProgressKey,
 		LastSubscribedBlockHeight: blockHeight,
 	}
+
 	if needInsert {
 		result = s.db.Create(updateRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
 			return fmt.Errorf("failed to insert record in subscribe progress table: %s", result.Error)
 		}
-
 	} else { // update
 		result = s.db.Model(&MigrateSubscribeProgressTable{}).
 			Where("event_name = ?", BucketMigrateProgressKey).Updates(updateRecord)
@@ -371,11 +371,9 @@ func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*spdb.Migra
 
 func (s *SpDBImpl) DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error {
 	var results []MigrateGVGTable
-
 	result := s.db.Where("bucket_id = ?", bucketID).Find(&results).Delete(&results)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete migrate gvg table: %s", result.Error)
 	}
-
 	return nil
 }

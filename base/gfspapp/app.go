@@ -28,6 +28,7 @@ type GfSpBaseApp struct {
 
 	server *grpc.Server
 	client *gfspclient.GfSpClient
+	// client gfspclient.GfSpClientAPI
 
 	gfSpDB       spdb.SPDB
 	gfBsDB       bsdb.BSDB
