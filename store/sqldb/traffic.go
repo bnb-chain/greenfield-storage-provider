@@ -1,15 +1,16 @@
 package sqldb
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
 
-	"gorm.io/gorm"
-
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const (
@@ -55,50 +56,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 			time.Since(startTime).Seconds())
 	}()
 
-	bucketTraffic, err := s.GetBucketTraffic(record.BucketID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-	// bucket traffic table should be initialized before checking meta
-	if bucketTraffic == nil {
-		err = fmt.Errorf("failed to get bucket traffic table")
-		return err
-	}
-
-	// the ChargedQuotaSize
-	if bucketTraffic.ChargedQuotaSize != quota.ChargedQuotaSize {
-		// update if chain quota has changed
-		if err = s.updateChargedQuota(quota.ChargedQuotaSize, bucketTraffic); err != nil {
-			log.Errorw("failed to commit the transaction of updating bucketTraffic table, ", "error", err)
-			return err
-		}
-
-		bucketTraffic.ChargedQuotaSize = quota.ChargedQuotaSize
-		log.Infow("updated charged quota", "db quota:", quota.ChargedQuotaSize)
-	}
-
-	recordQuotaCost := record.ReadSize
-	needCheckChainQuota := true
-	freeQuotaRemain := bucketTraffic.FreeQuotaSize - bucketTraffic.FreeQuotaConsumedSize
-	// if remain free quota more than 0, consume free quota first
-	if freeQuotaRemain > 0 && recordQuotaCost < freeQuotaRemain {
-		// if free quota is enough, no need to check charged quota
-		bucketTraffic.ReadConsumedSize += recordQuotaCost
-		bucketTraffic.FreeQuotaConsumedSize += recordQuotaCost
-		needCheckChainQuota = false
-	}
-	// if free quota is not enough, check the charged quota
-	if needCheckChainQuota {
-		if bucketTraffic.ReadConsumedSize+recordQuotaCost > bucketTraffic.ChargedQuotaSize+bucketTraffic.FreeQuotaSize {
-			return ErrCheckQuotaEnough
-		}
-		bucketTraffic.ReadConsumedSize += recordQuotaCost
-		if freeQuotaRemain > 0 {
-			bucketTraffic.FreeQuotaConsumedSize += freeQuotaRemain
-		}
-	}
-
-	err = s.updateConsumedQuota(bucketTraffic)
+	err = s.updateConsumedQuota(record, quota)
 	if err != nil {
 		log.Errorw("failed to commit the transaction of updating bucketTraffic table, ", "error", err)
 		return err
@@ -147,23 +105,74 @@ func (s *SpDBImpl) updateChargedQuota(chargedQuota uint64, bucketTraffic *coresp
 	return err
 }
 
+func getUpdatedConsumedQuota(record *corespdb.ReadRecord, freeQuota, freeConsumedQuota, totalConsumeQuota, chargedQuota uint64) (uint64, uint64, error) {
+	recordQuotaCost := record.ReadSize
+	needCheckChainQuota := true
+	freeQuotaRemain := freeQuota - freeConsumedQuota
+	// if remain free quota more than 0, consume free quota first
+	if freeQuotaRemain > 0 && recordQuotaCost < freeQuotaRemain {
+		// if free quota is enough, no need to check charged quota
+		totalConsumeQuota += recordQuotaCost
+		freeConsumedQuota += recordQuotaCost
+		needCheckChainQuota = false
+	}
+	// if free quota is not enough, check the charged quota
+	if needCheckChainQuota {
+		if totalConsumeQuota+recordQuotaCost > chargedQuota+freeQuota {
+			return 0, 0, ErrCheckQuotaEnough
+		}
+		totalConsumeQuota += recordQuotaCost
+		if freeQuotaRemain > 0 {
+			freeConsumedQuota += freeQuotaRemain
+		}
+	}
+
+	return freeConsumedQuota, totalConsumeQuota, nil
+}
+
 // updateConsumedQuota update the consumed quota of BucketTraffic table in the transaction way
-func (s *SpDBImpl) updateConsumedQuota(bucketTraffic *corespdb.BucketTraffic) error {
+func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		result := tx.Model(&BucketTrafficTable{}).
-			Where("bucket_id = ?", bucketTraffic.BucketID).
-			Updates(BucketTrafficTable{
-				ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
-				FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
-				ModifiedTime:          time.Now(),
-			})
-		if result.RowsAffected != 1 {
-			return fmt.Errorf("update traffic of %s has affected more than one rows %d "+
-				"consumed quota %d", bucketTraffic.BucketName, result.RowsAffected, bucketTraffic.ReadConsumedSize)
+		var bucketTraffic BucketTrafficTable
+		var err error
+		if err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("bucket_id = ?", record.BucketID).Find(&bucketTraffic).Error; err != nil {
+			return fmt.Errorf("failed to query bucket traffic table: %v", err)
 		}
 
-		if result.Error != nil {
-			return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+		// if charged quota changed, update the new value
+		if bucketTraffic.ChargedQuotaSize != quota.ChargedQuotaSize {
+			result := tx.Model(&bucketTraffic).
+				Updates(BucketTrafficTable{
+					ChargedQuotaSize: quota.ChargedQuotaSize,
+					ModifiedTime:     time.Now(),
+				})
+			if result.Error != nil {
+				return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
+			}
+
+			if result.RowsAffected != 1 {
+				return fmt.Errorf("update traffic of %s has affected more than one rows %d, "+
+					"update charged quota %d", bucketTraffic.BucketName, result.RowsAffected, quota.ChargedQuotaSize)
+			}
+		}
+
+		updatedReadConsumedSize, updatedFreeConsumedSize, err := getUpdatedConsumedQuota(record, bucketTraffic.FreeQuotaSize, bucketTraffic.FreeQuotaConsumedSize,
+			bucketTraffic.ReadConsumedSize, bucketTraffic.ChargedQuotaSize)
+		if err != nil {
+			return err
+		}
+
+		if err = tx.Model(&bucketTraffic).
+			Updates(BucketTrafficTable{
+				ReadConsumedSize:      updatedReadConsumedSize,
+				FreeQuotaConsumedSize: updatedFreeConsumedSize,
+				ModifiedTime:          time.Now(),
+			}).Error; err != nil {
+			return fmt.Errorf("failed to update bucket traffic table: %v", err)
+		}
+		// commit transaction
+		if err = tx.Commit().Error; err != nil {
+			return fmt.Errorf("failed to commit bucket traffic table: %v", err)
 		}
 
 		return nil
@@ -174,7 +183,11 @@ func (s *SpDBImpl) updateConsumedQuota(bucketTraffic *corespdb.BucketTraffic) er
 
 // InitBucketTraffic init the bucket traffic table
 func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *corespdb.BucketQuota) error {
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	tx := s.db.Begin()
+	var bucketTraffic BucketTrafficTable
+
+	result := tx.First(&bucketTraffic, "bucket_id = ?", bucketID)
+	if result.Error != nil && result.Error == gorm.ErrRecordNotFound {
 		insertBucketTraffic := &BucketTrafficTable{
 			BucketID:              bucketID,
 			FreeQuotaSize:         quota.FreeQuotaSize,
@@ -184,19 +197,23 @@ func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *
 			ChargedQuotaSize:      quota.ChargedQuotaSize,
 			ModifiedTime:          time.Now(),
 		}
-		result := tx.Create(insertBucketTraffic)
 
+		result = tx.Create(insertBucketTraffic)
 		if result.Error != nil && MysqlErrCode(result.Error) != ErrDuplicateEntryCode {
+			tx.Rollback()
 			return fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
+
 		}
-
+	} else {
 		return nil
-	})
-
-	if err != nil {
-		log.Errorw("failed to execute init traffic transaction", "error", err)
-		return err
 	}
+
+	err := tx.Commit().Error
+	if err != nil {
+		return fmt.Errorf("failed to commit insert bucket traffic table: %s of bucket %s ", err, bucketName)
+	}
+
+	log.CtxInfow(context.Background(), "init traffic table finished", bucketName)
 	return nil
 }
 
