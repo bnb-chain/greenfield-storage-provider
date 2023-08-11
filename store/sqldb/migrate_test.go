@@ -59,10 +59,11 @@ func TestSpDBImpl_UpdateSPExitSubscribeProgressInsertFailure(t *testing.T) {
 	mock.ExpectQuery(mockMigrateSubscribeProgressQuerySQL).WithArgs(SPExitProgressKey).WillReturnError(gorm.ErrRecordNotFound)
 	mock.ExpectBegin()
 	mock.ExpectExec(mockMigrateSubscribeProgressInsertSQL).WithArgs(SPExitProgressKey, mockBlockHeight).
-		WillReturnResult(sqlmock.NewResult(1, 0))
+		WillReturnError(mockDBInternalError)
+	mock.ExpectRollback()
 	mock.ExpectCommit()
 	err := s.UpdateSPExitSubscribeProgress(mockBlockHeight)
-	assert.Contains(t, err.Error(), "failed to insert record in subscribe progress table")
+	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 }
 
 func TestSpDBImpl_UpdateSPExitSubscribeProgressUpdateFailure(t *testing.T) {

@@ -156,7 +156,6 @@ func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *
 		err := fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
 		return err
 	}
-
 	return nil
 }
 

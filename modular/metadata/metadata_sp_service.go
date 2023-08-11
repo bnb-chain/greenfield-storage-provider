@@ -21,7 +21,7 @@ func (r *MetadataModular) GfSpGetEndpointBySpID(
 	resp *types.GfSpGetEndpointBySpIDResponse, err error) {
 	ctx = log.Context(ctx, req)
 
-	sp, err := r.baseApp.GfSpDB().GetSpById(req.SpId)
+	sp, err := r.baseApp.GfSpDB().GetSpByID(req.SpId)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get sp", "error", err)
 		return

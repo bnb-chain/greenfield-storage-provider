@@ -7,9 +7,7 @@ import (
 )
 
 func TestGCObjectProgressTable_TableName(t *testing.T) {
-	gc := GCObjectProgressTable{
-		TaskKey: "mock",
-	}
+	gc := GCObjectProgressTable{TaskKey: "mock"}
 	name := gc.TableName()
 	assert.Equal(t, GCObjectProgressTableName, name)
 }
