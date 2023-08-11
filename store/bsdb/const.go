@@ -8,10 +8,14 @@ const (
 	ExpiredBucketsDefaultSize = 1000
 	// ListObjectsDefaultMaxKeys defines the default size of ListObjectsByBucketName response
 	ListObjectsDefaultMaxKeys = 50
+	// ListGroupsDefaultLimit defines the default size of GetUserGroups response
+	ListGroupsDefaultLimit = 50
 	// GetUserBucketsLimitSize defines the default limit for the number of buckets in any given account is 100
 	GetUserBucketsLimitSize = 100
 	// ListObjectsLimitSize defines the default limit of ListObjectsByBucketName response
 	ListObjectsLimitSize = 1000
+	// ListGroupsLimitSize defines the default limit of GetUserGroups response
+	ListGroupsLimitSize = 1000
 )
 
 // define table name constant of block syncer db

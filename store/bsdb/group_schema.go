@@ -22,6 +22,8 @@ type Group struct {
 	AccountID common.Address `gorm:"column:account_id"`
 	// Operator defines operator address of group
 	Operator common.Address `gorm:"column:operator"`
+	// ExpirationTime defines the expiration time of group member
+	ExpirationTime int64 `gorm:"column:expiration_time"`
 	// CreateAt defines the block number when the group created
 	CreateAt int64 `gorm:"column:create_at"`
 	// CreateTime defines the timestamp when the group created
@@ -32,6 +34,13 @@ type Group struct {
 	UpdateTime int64 `gorm:"column:update_time"`
 	// Removed defines the group is deleted or not
 	Removed bool `gorm:"column:removed"`
+}
+
+type GroupMeta struct {
+	// AccountID defines the group user address
+	AccountID common.Address `gorm:"column:account_id"`
+	// ExpirationTime defines the expiration time of group member
+	ExpirationTime int64 `gorm:"column:expiration_time"`
 }
 
 // TableName is used to set Group table name in database

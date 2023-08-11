@@ -127,8 +127,14 @@ const (
 	VerifyPermissionByIDQuery = "verify-id"
 	// GetSPInfoQuery defines query sp info, which is used to route request
 	GetSPInfoQuery = "query-sp"
+	// GetUserGroupsQuery defines get groups info by a user address, which is used to route request
+	GetUserGroupsQuery = "user-groups"
+	// GetGroupMembersQuery defines query sp info, which is used to route request
+	GetGroupMembersQuery = "group-members"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for
 	ResourceIDQuery = "resource-id"
+	// GroupIDQuery defines the unique id of group
+	GroupIDQuery = "group-id"
 	// ResourceTypeQuery defines the type of resource that grants permission for
 	ResourceTypeQuery = "resource-type"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request
