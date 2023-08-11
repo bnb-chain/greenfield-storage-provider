@@ -14,11 +14,11 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 )
 
-// GfSpGetEndpointBySpId get endpoint by sp id
-func (r *MetadataModular) GfSpGetEndpointBySpId(
+// GfSpGetEndpointBySpID get endpoint by sp id
+func (r *MetadataModular) GfSpGetEndpointBySpID(
 	ctx context.Context,
-	req *types.GfSpGetEndpointBySpIdRequest) (
-	resp *types.GfSpGetEndpointBySpIdResponse, err error) {
+	req *types.GfSpGetEndpointBySpIDRequest) (
+	resp *types.GfSpGetEndpointBySpIDResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	sp, err := r.baseApp.GfSpDB().GetSpByID(req.SpId)
@@ -27,7 +27,7 @@ func (r *MetadataModular) GfSpGetEndpointBySpId(
 		return
 	}
 
-	resp = &types.GfSpGetEndpointBySpIdResponse{Endpoint: sp.Endpoint}
+	resp = &types.GfSpGetEndpointBySpIDResponse{Endpoint: sp.Endpoint}
 	log.CtxInfow(ctx, "succeed to get endpoint by a sp id")
 	return resp, nil
 }

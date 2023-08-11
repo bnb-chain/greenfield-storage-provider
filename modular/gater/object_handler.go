@@ -755,7 +755,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		)
 
 		// get the endpoint where the bucket actually is in
-		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpId(reqCtx.Context(), bucketSPID)
+		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpID(reqCtx.Context(), bucketSPID)
 		if getEndpointErr != nil || spEndpoint == "" {
 			log.Errorw("failed to get endpoint by id ", "sp_id", bucketSPID, "error", getEndpointErr)
 			err = getEndpointErr
