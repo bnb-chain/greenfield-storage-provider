@@ -59,6 +59,21 @@ func ObjectIDStartAfterFilter(objectID common.Hash) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+func GroupIDStartAfterFilter(groupID common.Hash) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("group_id > ?", groupID)
+	}
+}
+
+// GroupAccountIDStartAfterFilter
+// In the "group" table, each group has an account ID of "0x0000000000000000000000000000000000000000" representing the group's creation information.
+// Since the "group" table maps groups to account, this special value is used to filter out non-user data
+func GroupAccountIDStartAfterFilter(accountID common.Address) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("account_id > ? and account_id != ?", accountID, common.HexToAddress("0"))
+	}
+}
+
 func CreateAtFilter(createAt int64) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("create_at <= ?", createAt)
