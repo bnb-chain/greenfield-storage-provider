@@ -9,6 +9,8 @@ import (
 )
 
 // SPDB contains all sp db operations
+//
+//go:generate mockgen -source=./spdb.go -destination=./spdb_mock.go -package=spdb
 type SPDB interface {
 	UploadObjectProgressDB
 	GCObjectProgressDB
@@ -112,8 +114,8 @@ type SPInfoDB interface {
 	GetSpByAddress(address string, addressType SpAddressType) (*sptypes.StorageProvider, error)
 	// GetSpByEndpoint return sp info by endpoint.
 	GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, error)
-	// GetSpById return sp info by id.
-	GetSpById(id uint32) (*sptypes.StorageProvider, error)
+	// GetSpByID return sp info by id.
+	GetSpByID(id uint32) (*sptypes.StorageProvider, error)
 	// GetOwnSpInfo return own sp info.
 	GetOwnSpInfo() (*sptypes.StorageProvider, error)
 	// SetOwnSpInfo set(maybe overwrite) own sp info.
