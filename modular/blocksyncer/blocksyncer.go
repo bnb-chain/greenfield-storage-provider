@@ -57,6 +57,8 @@ var (
 	eventMap *sync.Map
 	txMap    *sync.Map
 
+	RealTimeStart *atomic.Bool
+
 	MainService   *BlockSyncerModular
 	BackupService *BlockSyncerModular
 

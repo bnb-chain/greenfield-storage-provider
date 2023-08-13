@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"sync/atomic"
 	"time"
 
 	"gorm.io/gorm"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cometbfttypes "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -88,21 +90,58 @@ func (i *Impl) ExtractEvent(ctx context.Context, block *coretypes.ResultBlock, t
 // Process fetches a block for a given height and associated metadata and export it to a database.
 // It returns an error if any export process fails.
 func (i *Impl) Process(height uint64) error {
-	// log.Debugw("processing block", "height", height)
+	realTimeMode := RealTimeStart.Load()
+	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
+
 	var block *coretypes.ResultBlock
 	var events *coretypes.ResultBlockResults
 	var txs map[common.Hash][]abci.Event
+	var err error
 
-	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
-	blockAny, okb := blockMap.Load(heightKey)
-	eventsAny, oke := eventMap.Load(heightKey)
-	txsAny, okt := txMap.Load(heightKey)
-	block, _ = blockAny.(*coretypes.ResultBlock)
-	events, _ = eventsAny.(*coretypes.ResultBlockResults)
-	txs, _ = txsAny.(map[common.Hash][]abci.Event)
-	if !okb || !oke || !okt {
-		log.Warnf("failed to get map data height: %d", height)
-		return ErrBlockNotFound
+	defer func() {
+		if !realTimeMode {
+			blockMap.Delete(heightKey)
+			eventMap.Delete(heightKey)
+			txMap.Delete(heightKey)
+			block = nil
+			events = nil
+			txs = nil
+			runtime.GC()
+		}
+	}()
+
+	if realTimeMode {
+		rpcStartTime := time.Now()
+		block, err = i.Node.Block(int64(height))
+		if err != nil {
+			log.Warnf("failed to get block from node: %s", err)
+			return err
+		}
+		metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
+		rpcStartTime = time.Now()
+		events, err = i.Node.BlockResults(int64(height))
+		if err != nil {
+			log.Warnf("failed to get block results from node: %s", err)
+			return err
+		}
+		metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
+		txs = make(map[common.Hash][]cometbfttypes.Event)
+		for idx := 0; idx < len(events.TxsResults); idx++ {
+			k := block.Block.Data.Txs[idx]
+			v := events.TxsResults[idx].GetEvents()
+			txs[common.BytesToHash(k.Hash())] = v
+		}
+	} else {
+		blockAny, okb := blockMap.Load(heightKey)
+		eventsAny, oke := eventMap.Load(heightKey)
+		txsAny, okt := txMap.Load(heightKey)
+		block, _ = blockAny.(*coretypes.ResultBlock)
+		events, _ = eventsAny.(*coretypes.ResultBlockResults)
+		txs, _ = txsAny.(map[common.Hash][]abci.Event)
+		if !okb || !oke || !okt {
+			log.Warnf("failed to get map data height: %d", height)
+			return ErrBlockNotFound
+		}
 	}
 
 	startTime := time.Now()
@@ -177,20 +216,15 @@ func (i *Impl) Process(height uint64) error {
 		return txErr
 	}
 	metrics.BlocksyncerWriteDBTime.Set(float64(time.Since(dbStartTime).Milliseconds()))
-
-	log.Infof("handle&write data cost: %d", time.Since(startTime).Milliseconds())
 	log.Infof("height :%d tx count:%d sql count:%d", height, txCount, sqlCount)
 	metrics.BlockEventCount.Set(float64(sqlCount))
-
-	blockMap.Delete(heightKey)
-	eventMap.Delete(heightKey)
-	txMap.Delete(heightKey)
-	i.ProcessedHeight = height
 
 	log.Infof("total cost: %d", time.Since(startTime).Milliseconds())
 
 	metrics.BlockHeightLagGauge.WithLabelValues("blocksyncer").Set(float64(block.Block.Height))
 	metrics.BlocksyncerCatchTime.Set(float64(time.Since(startTime).Milliseconds()))
+
+	i.ProcessedHeight = height
 
 	return nil
 }
