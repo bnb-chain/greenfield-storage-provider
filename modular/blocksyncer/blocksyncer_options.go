@@ -6,7 +6,9 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	cometbfttypes "github.com/cometbft/cometbft/abci/types"
@@ -45,6 +47,10 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
 	txMap = new(sync.Map)
+
+	RealTimeStart = &atomic.Bool{}
+	RealTimeStart.Store(false)
+
 	NeedBackup = junoCfg.EnableDualDB
 	if err := MainService.initClient(); err != nil {
 		return nil, err
@@ -246,6 +252,14 @@ func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeigh
 
 	ticker := time.NewTicker(20 * time.Millisecond)
 	defer ticker.Stop()
+	defer func() {
+		log.Infof("quick fetch end")
+		blockMap = nil
+		eventMap = nil
+		txMap = nil
+		runtime.GC()
+		RealTimeStart.Store(true)
+	}()
 
 	for {
 		select {
@@ -256,7 +270,7 @@ func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeigh
 			latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 			latestBlockHeight := latestBlockHeightAny.(int64)
 			if latestBlockHeight == int64(endBlock) {
-				continue
+				return
 			}
 			if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 				startBlock = count*cycle + startHeight
