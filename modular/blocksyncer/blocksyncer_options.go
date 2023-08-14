@@ -243,6 +243,30 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 	}
 }
 
+func (b *BlockSyncerModular) mapGarbageCollection(ctx context.Context, endBLock int64) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("Receive cancel signal, quickFetchBlockData routine will stop")
+			return
+		case <-ticker.C:
+			processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
+			if endBLock == int64(processedHeight) {
+				log.Infof("quick fetch end")
+				blockMap = nil
+				eventMap = nil
+				txMap = nil
+				runtime.GC()
+				RealTimeStart.Store(true)
+				return
+			}
+		}
+	}
+}
+
 func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeight uint64) {
 	count := uint64(b.config.Parser.Workers)
 	cycle := uint64(0)
@@ -252,14 +276,6 @@ func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeigh
 
 	ticker := time.NewTicker(20 * time.Millisecond)
 	defer ticker.Stop()
-	defer func() {
-		log.Infof("quick fetch end")
-		blockMap = nil
-		eventMap = nil
-		txMap = nil
-		runtime.GC()
-		RealTimeStart.Store(true)
-	}()
 
 	for {
 		select {
@@ -270,13 +286,14 @@ func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeigh
 			latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 			latestBlockHeight := latestBlockHeightAny.(int64)
 			if latestBlockHeight == int64(endBlock) {
+				go b.mapGarbageCollection(ctx, int64(endBlock))
 				return
 			}
 			if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 				startBlock = count*cycle + startHeight
 				endBlock = count*(cycle+1) + startHeight - 1
-				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 				flag = 1
+				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 				if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
 					log.Infof("processedHeight: %d", processedHeight)
 					time.Sleep(time.Second)

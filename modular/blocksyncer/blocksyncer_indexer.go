@@ -90,7 +90,6 @@ func (i *Impl) ExtractEvent(ctx context.Context, block *coretypes.ResultBlock, t
 // Process fetches a block for a given height and associated metadata and export it to a database.
 // It returns an error if any export process fails.
 func (i *Impl) Process(height uint64) error {
-	realTimeMode := RealTimeStart.Load()
 	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
 
 	var block *coretypes.ResultBlock
@@ -99,7 +98,7 @@ func (i *Impl) Process(height uint64) error {
 	var err error
 
 	defer func() {
-		if !realTimeMode {
+		if blockMap != nil && eventMap != nil && txMap != nil {
 			blockMap.Delete(heightKey)
 			eventMap.Delete(heightKey)
 			txMap.Delete(heightKey)
@@ -109,6 +108,8 @@ func (i *Impl) Process(height uint64) error {
 			runtime.GC()
 		}
 	}()
+
+	realTimeMode := RealTimeStart.Load()
 
 	if realTimeMode {
 		rpcStartTime := time.Now()
