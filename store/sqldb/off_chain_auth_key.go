@@ -86,7 +86,6 @@ func (s *SpDBImpl) GetAuthKey(userAddress string, domain string) (*corespdb.OffC
 				return nil, fmt.Errorf("failed to InsertAuthKey: %s", insertError)
 			}
 			return newRecord, nil
-
 		}
 		return nil, fmt.Errorf("failed to query OffChainAuthKey table: %s", result.Error)
 	}
