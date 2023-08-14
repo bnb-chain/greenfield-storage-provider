@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 
 .PHONY: all build clean format install-tools generate lint test tidy vet buf-gen proto-clean
+.PHONY: install-go-test-coverage check-coverage
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
@@ -43,12 +44,21 @@ lint:
 test:
 	mockgen -source=core/spdb/spdb.go -destination=core/spdb/spdb_mock.go -package=spdb
 	mockgen -source=store/bsdb/database.go -destination=store/bsdb/database_mock.go -package=bsdb
-	go test `go list ./... | grep -v /test/`
+	go test `go list ./... | grep -v /test/` -coverpkg=./... -covermode=atomic -coverprofile=./coverage.out -timeout 99999s
 	# go test -cover ./...
 
 tidy:
 	go mod tidy
 	go mod verify
+
+clean:
+	rm -rf ./build
+
+install-go-test-coverage:
+	@go install github.com/vladopajic/go-test-coverage/v2@latest
+
+check-coverage: install-go-test-coverage
+	@go-test-coverage --config=./.testcoverage.yml || true
 
 vet:
 	go vet ./...
