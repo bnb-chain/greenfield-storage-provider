@@ -13,20 +13,20 @@ func getObjectChainMeta(reqCtx *RequestContext, baseApp *gfspapp.GfSpBaseApp, ob
 	objectInfo, err := baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), bucketName, objectName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		return nil, nil, nil, ErrConsensus
+		return nil, nil, nil, ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 	}
 
 	bucketInfo, err := baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		return nil, nil, nil, ErrConsensus
+		return nil, nil, nil, ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 	}
 
 	params, err := baseApp.Consensus().QueryStorageParamsByTimestamp(
 		reqCtx.Context(), objectInfo.GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
-		return nil, nil, nil, ErrConsensus
+		return nil, nil, nil, ErrConsensusWithDetail("failed to get storage params, error: " + err.Error())
 	}
 
 	return objectInfo, bucketInfo, params, nil
@@ -38,7 +38,8 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 	if err != nil {
 		log.Errorw("failed to query sp by operator address", "operator_address", g.baseApp.OperatorAddress(),
 			"error", err)
-		return ErrConsensus
+		return ErrConsensusWithDetail("failed to query sp by operator address, operator_address: " + g.baseApp.OperatorAddress() +
+			", error: " + err.Error())
 	}
 	spStatus := spInfo.GetStatus()
 	if spStatus != sptypes.STATUS_IN_SERVICE && !fromSpMaintenanceAcct(spStatus, spInfo.MaintenanceAddress, creatorAddr) {
@@ -50,7 +51,7 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
 	if err != nil {
 		log.Errorw("failed to query bucket info by bucket name", "bucket_name", bucketName, "error", err)
-		return ErrConsensus
+		return ErrConsensusWithDetail("failed to query bucket info by bucket name, bucket_name: " + bucketName + ", error: " + err.Error())
 	}
 	bucketStatus := bucketInfo.GetBucketStatus()
 	if bucketStatus != storagetypes.BUCKET_STATUS_CREATED {

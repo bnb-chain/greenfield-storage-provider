@@ -35,6 +35,10 @@ var (
 	ErrNoSuchObject     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98093, "no such object from metadata")
 )
 
+func ErrRPCUnknownWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, detail)
+}
+
 type GfSpClient struct {
 	approverEndpoint      string
 	managerEndpoint       string
@@ -87,7 +91,7 @@ func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (
 		conn, err := s.Connection(ctx, s.managerEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknown
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
 		}
 		s.managerConn = conn
 	}
@@ -105,7 +109,7 @@ func (s *GfSpClient) ApproverConn(ctx context.Context, opts ...grpc.DialOption) 
 		conn, err := s.Connection(ctx, s.approverEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknown
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
 		}
 		s.approverConn = conn
 	}
@@ -123,7 +127,7 @@ func (s *GfSpClient) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grp
 		conn, err := s.Connection(ctx, s.p2pEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknown
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
 		}
 		s.p2pConn = conn
 	}
@@ -141,7 +145,7 @@ func (s *GfSpClient) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*
 		conn, err := s.Connection(ctx, s.signerEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknown
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
 		}
 		s.signerConn = conn
 	}

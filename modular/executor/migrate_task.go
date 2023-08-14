@@ -290,14 +290,15 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 		}
 		if err = e.baseApp.PieceStore().PutPiece(ctx, pieceKey, pieceData); err != nil {
 			log.CtxErrorw(ctx, "failed to put piece data into primary sp", "piece_key", pieceKey, "error", err)
-			return ErrPieceStore
+			return ErrPieceStoreWithDetail("failed to put piece data into primary sp, piece_key: " + pieceKey + ",error: " + err.Error())
 		}
 
 		pieceChecksum := hash.GenerateChecksum(pieceData)
 		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, uint32(i), redundancyIdx, pieceChecksum); err != nil {
 			log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", task.GetObjectInfo().Id.Uint64(),
 				"segment_index", i, "redundancy_index", redundancyIdx, "error", err)
-			return ErrGfSpDB
+			return ErrGfSpDBWithDetail("failed to set replicate piece checksum, object_id: " + task.GetObjectInfo().Id.String() +
+				", segment_index: " + string(i) + ",redundancy_index: " + string(redundancyIdx) + ",error: " + err.Error())
 		}
 	}
 
@@ -334,7 +335,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectID, redundancyIdx, segmentCount)
 	if err != nil {
 		log.Errorw("failed to get checksum from db", "object_info", objectInfo, "error", err)
-		return ErrGfSpDB
+		return ErrGfSpDBWithDetail("failed to get checksum from db, object_info: " + objectInfo.String() + ",error: " + err.Error())
 	}
 	if len(pieceChecksums) != int(segmentCount) {
 		log.Errorw("returned piece checksum length does not match segment count",
