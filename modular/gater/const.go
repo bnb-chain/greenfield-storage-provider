@@ -79,12 +79,14 @@ const (
 	GetGroupListLimitQuery = "limit"
 	// GetGroupListOffsetQuery defines get group list offset query, which is used to route request
 	GetGroupListOffsetQuery = "offset"
+	// IDsQuery defines ids of storage metadata value
+	IDsQuery = "ids"
 	// GetGroupListGroupQuery defines get group list group query, which is used to route request
 	GetGroupListGroupQuery = "group-query"
-	// ListBucketsByBucketIDQuery defines list buckets by bucket ids, which is used to route request
-	ListBucketsByBucketIDQuery = "buckets-query"
-	// ListObjectsByObjectIDQuery defines list objects by object ids, which is used to route request
-	ListObjectsByObjectIDQuery = "objects-query"
+	// ListBucketsByIDsQuery defines list buckets by bucket ids, which is used to route request
+	ListBucketsByIDsQuery = "buckets-query"
+	// ListObjectsByIDsQuery defines list objects by object ids, which is used to route request
+	ListObjectsByIDsQuery = "objects-query"
 	// GetPaymentByBucketIDQuery defines get payment by bucket id, which is used to route request
 	GetPaymentByBucketIDQuery = "payment-id"
 	// GetPaymentByBucketNameQuery defines get payment by bucket name, which is used to route request

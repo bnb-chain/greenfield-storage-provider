@@ -186,8 +186,8 @@ func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, include
 	return object, err
 }
 
-// ListObjectsByObjectID list objects by object ids
-func (b *BsDBImpl) ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error) {
+// ListObjectsByIDs list objects by object ids
+func (b *BsDBImpl) ListObjectsByIDs(ids []common.Hash, includeRemoved bool) ([]*Object, error) {
 	var (
 		objects []*Object
 		err     error
@@ -433,7 +433,7 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 		}
 	}
 
-	buckets, err = b.ListBucketsByBucketID(bucketIDs, false)
+	buckets, err = b.ListBucketsByIDs(bucketIDs, false)
 	if err != nil {
 		return nil, nil, err
 	}

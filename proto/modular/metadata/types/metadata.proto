@@ -423,30 +423,30 @@ message GfSpGetGroupListResponse {
   int64 count = 2;
 }
 
-// GfSpGetBucketByBucketIDRequest is request type for the GfSpListBucketsByBucketID RPC method
-message GfSpListBucketsByBucketIDRequest {
+// GfSpGetBucketByIDsRequest is request type for the GfSpListBucketsByIDs RPC method
+message GfSpListBucketsByIDsRequest {
   // bucket_id is the list of unique identifier for buckets
   repeated uint64 bucket_ids = 1;
   // include_removed indicates whether this request can get the removed buckets information
   bool include_removed = 2;
 }
 
-// GfSpGetBucketByBucketIDResponse is response type for the GfSpListBucketsByBucketID RPC method.
-message GfSpListBucketsByBucketIDResponse {
+// GfSpGetBucketByIDsResponse is response type for the GfSpListBucketsByIDs RPC method.
+message GfSpListBucketsByIDsResponse {
   // buckets defines the information of a bucket map
   map<uint64, Bucket> buckets = 1;
 }
 
-// GfSpListBucketsByBucketIDRequest is request type for the GfSpListObjectsByObjectID RPC method
-message GfSpListObjectsByObjectIDRequest {
+// GfSpListObjectsByIDsRequest is request type for the GfSpListObjectsByIDs RPC method
+message GfSpListObjectsByIDsRequest {
   // object_ids is the list of unique identifier for objects
   repeated uint64 object_ids = 1;
   // include_removed indicates whether this request can get the removed objects information
   bool include_removed = 2;
 }
 
-// GfSpListObjectsByBucketIDRequest is response type for the GfSpListObjectsByObjectID RPC method.
-message GfSpListObjectsByObjectIDResponse {
+// GfSpListObjectsByIDsRequest is response type for the GfSpListObjectsByIDs RPC method.
+message GfSpListObjectsByIDsResponse {
   // objects defines the information of a object map
   map<uint64, Object> objects = 1;
 }
@@ -768,8 +768,8 @@ service GfSpMetadataService {
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
   rpc GfSpQueryResumableUploadSegment(GfSpQueryResumableUploadSegmentRequest) returns (GfSpQueryResumableUploadSegmentResponse) {}
   rpc GfSpGetGroupList(GfSpGetGroupListRequest) returns (GfSpGetGroupListResponse) {}
-  rpc GfSpListBucketsByBucketID(GfSpListBucketsByBucketIDRequest) returns (GfSpListBucketsByBucketIDResponse) {}
-  rpc GfSpListObjectsByObjectID(GfSpListObjectsByObjectIDRequest) returns (GfSpListObjectsByObjectIDResponse) {}
+  rpc GfSpListBucketsByIDs(GfSpListBucketsByIDsRequest) returns (GfSpListBucketsByIDsResponse) {}
+  rpc GfSpListObjectsByIDs(GfSpListObjectsByIDsRequest) returns (GfSpListObjectsByIDsResponse) {}
   rpc GfSpVerifyPermissionByID(GfSpVerifyPermissionByIDRequest) returns (GfSpVerifyPermissionByIDResponse) {}
   rpc GfSpListVirtualGroupFamiliesBySpID(GfSpListVirtualGroupFamiliesBySpIDRequest) returns (GfSpListVirtualGroupFamiliesBySpIDResponse) {}
   rpc GfSpGetGlobalVirtualGroupByGvgID(GfSpGetGlobalVirtualGroupByGvgIDRequest) returns (GfSpGetGlobalVirtualGroupByGvgIDResponse) {}

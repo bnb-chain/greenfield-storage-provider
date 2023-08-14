@@ -208,8 +208,8 @@ func (b *BsDBImpl) GetBucketMetaByName(bucketName string, includePrivate bool) (
 	return bucketFullMeta, err
 }
 
-// ListBucketsByBucketID list buckets by bucket ids
-func (b *BsDBImpl) ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error) {
+// ListBucketsByIDs list buckets by bucket ids
+func (b *BsDBImpl) ListBucketsByIDs(ids []common.Hash, includeRemoved bool) ([]*Bucket, error) {
 	var (
 		buckets []*Bucket
 		err     error
