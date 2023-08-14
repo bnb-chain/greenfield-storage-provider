@@ -3,7 +3,6 @@ package gater
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -18,7 +17,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/resource"
 	resource_types "github.com/bnb-chain/greenfield/types/resource"
@@ -34,6 +32,7 @@ const (
 	MaximumGetGroupListLimit         = 1000
 	MaximumGetGroupListOffset        = 100000
 	MaximumListObjectsAndBucketsSize = 1000
+	MaximumIDSize                    = 100
 	DefaultGetGroupListLimit         = 50
 	DefaultGetGroupListOffset        = 0
 	HandlerSuccess                   = "success"
@@ -568,16 +567,20 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	w.Write(b.Bytes())
 }
 
-// listObjectsByObjectIDHandler list objects by object ids
-func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *http.Request) {
+// listObjectsByIDsHandler list objects by object ids
+func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err         error
-		buf         bytes.Buffer
-		objects     map[uint64]*types.Object
-		objectIDMap map[uint64]bool
-		ok          bool
-		objectIDs   bsdb.ObjectIDs
-		reqCtx      *RequestContext
+		err              error
+		buf              bytes.Buffer
+		objects          map[uint64]*types.Object
+		objectIDMap      map[uint64]bool
+		ok               bool
+		requestObjectIDs string
+		objectID         uint64
+		idsStr           []string
+		objectIDs        []uint64
+		reqCtx           *RequestContext
+		queryParams      url.Values
 	)
 	startTime := time.Now()
 	defer func() {
@@ -594,22 +597,30 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
+	queryParams = reqCtx.request.URL.Query()
+	requestObjectIDs = queryParams.Get(IDsQuery)
 
-	err = json.NewDecoder(r.Body).Decode(&objectIDs)
-	if err != nil {
-		log.Errorf("failed to parse object ids", "error", err)
-		err = ErrInvalidQuery
-		return
+	// extract IDs from the input value, e.g., &id=1,2,3,4
+	idsStr = strings.Split(requestObjectIDs, ",")
+	for _, idStr := range idsStr {
+		objectID, err = util.StringToUint64(idStr)
+		if err != nil {
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		objectIDs = append(objectIDs, objectID)
 	}
 
-	if len(objectIDs.IDs) == 0 || len(objectIDs.IDs) > MaximumListObjectsAndBucketsSize {
+	if len(objectIDs) == 0 || len(objectIDs) > MaximumIDSize {
 		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
+	// check if the input IDs have duplicate values
 	objectIDMap = make(map[uint64]bool)
-	for _, id := range objectIDs.IDs {
+	for _, id := range objectIDs {
 		if _, ok = objectIDMap[id]; ok {
 			// repeat id keys in request
 			log.Errorf("failed to check ids", "error", err)
@@ -619,12 +630,12 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 		objectIDMap[id] = true
 	}
 
-	objects, err = g.baseApp.GfSpClient().ListObjectsByObjectID(reqCtx.Context(), objectIDs.IDs, false)
+	objects, err = g.baseApp.GfSpClient().ListObjectsByIDs(reqCtx.Context(), objectIDs, false)
 	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
 	}
-	grpcResponse := &types.GfSpListObjectsByObjectIDResponse{Objects: objects}
+	grpcResponse := &types.GfSpListObjectsByIDsResponse{Objects: objects}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&buf, grpcResponse); err != nil {
@@ -636,16 +647,20 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 	w.Write(buf.Bytes())
 }
 
-// listBucketsByBucketIDHandler list buckets by bucket ids
-func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
+// listBucketsByIDsHandler list buckets by bucket ids
+func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err         error
-		buf         bytes.Buffer
-		buckets     map[uint64]*types.Bucket
-		bucketIDMap map[uint64]bool
-		ok          bool
-		bucketIDs   bsdb.BucketIDs
-		reqCtx      *RequestContext
+		err              error
+		buf              bytes.Buffer
+		buckets          map[uint64]*types.Bucket
+		bucketIDMap      map[uint64]bool
+		ok               bool
+		requestBucketIDs string
+		bucketID         uint64
+		idsStr           []string
+		bucketIDs        []uint64
+		reqCtx           *RequestContext
+		queryParams      url.Values
 	)
 	startTime := time.Now()
 	defer func() {
@@ -662,22 +677,30 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
+	queryParams = reqCtx.request.URL.Query()
+	requestBucketIDs = queryParams.Get(IDsQuery)
 
-	err = json.NewDecoder(r.Body).Decode(&bucketIDs)
-	if err != nil {
-		log.Errorf("failed to parse bucket ids", "error", err)
-		err = ErrInvalidQuery
-		return
+	// extract IDs from the input value, e.g., &id=1,2,3,4
+	idsStr = strings.Split(requestBucketIDs, ",")
+	for _, idStr := range idsStr {
+		bucketID, err = util.StringToUint64(idStr)
+		if err != nil {
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		bucketIDs = append(bucketIDs, bucketID)
 	}
 
-	if len(bucketIDs.IDs) == 0 || len(bucketIDs.IDs) > MaximumListObjectsAndBucketsSize {
+	if len(bucketIDs) == 0 || len(bucketIDs) > MaximumIDSize {
 		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
+	// check if the input IDs have duplicate values
 	bucketIDMap = make(map[uint64]bool)
-	for _, id := range bucketIDs.IDs {
+	for _, id := range bucketIDs {
 		if _, ok = bucketIDMap[id]; ok {
 			// repeat id keys in request
 			log.Errorf("failed to check ids", "error", err)
@@ -687,12 +710,12 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 		bucketIDMap[id] = true
 	}
 
-	buckets, err = g.baseApp.GfSpClient().ListBucketsByBucketID(reqCtx.Context(), bucketIDs.IDs, false)
+	buckets, err = g.baseApp.GfSpClient().ListBucketsByIDs(reqCtx.Context(), bucketIDs, false)
 	if err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
 	}
-	grpcResponse := &types.GfSpListBucketsByBucketIDResponse{Buckets: buckets}
+	grpcResponse := &types.GfSpListBucketsByIDsResponse{Buckets: buckets}
 
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&buf, grpcResponse); err != nil {

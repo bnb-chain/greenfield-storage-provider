@@ -32,8 +32,8 @@ const (
 	getObjectMetaRouterName                        = "GetObjectMeta"
 	getBucketMetaRouterName                        = "GetBucketMeta"
 	getGroupListRouterName                         = "GetGroupList"
-	listBucketsByBucketIDRouterName                = "ListBucketsByBucketID"
-	listObjectsByObjectIDRouterName                = "ListObjectsByObjectID"
+	listBucketsByIDsRouterName                     = "ListBucketsByIDs"
+	listObjectsByIDsRouterName                     = "ListObjectsByIDs"
 	recoveryPieceRouterName                        = "RecoveryObjectPiece"
 	getPieceFromSecondaryRouterName                = "GetPieceFromSecondary"
 	getPaymentByBucketIDRouterName                 = "GetPaymentByBucketID"
@@ -193,15 +193,15 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Queries(GetGroupListGroupQuery, "").
 		HandlerFunc(g.getGroupListHandler)
 	router.Path("/").
-		Name(listObjectsByObjectIDRouterName).
-		Methods(http.MethodPost).
-		Queries(ListObjectsByObjectIDQuery, "").
-		HandlerFunc(g.listObjectsByObjectIDHandler)
+		Name(listObjectsByIDsRouterName).
+		Methods(http.MethodGet).
+		Queries(ListObjectsByIDsQuery, "").
+		HandlerFunc(g.listObjectsByIDsHandler)
 	router.Path("/").
-		Name(listBucketsByBucketIDRouterName).
-		Methods(http.MethodPost).
-		Queries(ListBucketsByBucketIDQuery, "").
-		HandlerFunc(g.listBucketsByBucketIDHandler)
+		Name(listBucketsByIDsRouterName).
+		Methods(http.MethodGet).
+		Queries(ListBucketsByIDsQuery, "").
+		HandlerFunc(g.listBucketsByIDsHandler)
 	router.Path("/").
 		Name(verifyPermissionByIDRouterName).
 		Methods(http.MethodGet).
