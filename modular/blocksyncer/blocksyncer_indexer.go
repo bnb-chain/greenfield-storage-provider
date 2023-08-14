@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -90,7 +89,6 @@ func (i *Impl) ExtractEvent(ctx context.Context, block *coretypes.ResultBlock, t
 // Process fetches a block for a given height and associated metadata and export it to a database.
 // It returns an error if any export process fails.
 func (i *Impl) Process(height uint64) error {
-	realTimeMode := RealTimeStart.Load()
 	heightKey := fmt.Sprintf("%s-%d", i.GetServiceName(), height)
 
 	var block *coretypes.ResultBlock
@@ -98,19 +96,10 @@ func (i *Impl) Process(height uint64) error {
 	var txs map[common.Hash][]abci.Event
 	var err error
 
-	defer func() {
-		if !realTimeMode {
-			blockMap.Delete(heightKey)
-			eventMap.Delete(heightKey)
-			txMap.Delete(heightKey)
-			block = nil
-			events = nil
-			txs = nil
-			runtime.GC()
-		}
-	}()
+	realTimeMode := RealTimeStart.Load()
+	catchEndBLock := CatchEndBlock.Load()
 
-	if realTimeMode {
+	if realTimeMode && catchEndBLock < int64(height) {
 		rpcStartTime := time.Now()
 		block, err = i.Node.Block(int64(height))
 		if err != nil {
@@ -225,6 +214,15 @@ func (i *Impl) Process(height uint64) error {
 	metrics.BlocksyncerCatchTime.Set(float64(time.Since(startTime).Milliseconds()))
 
 	i.ProcessedHeight = height
+	if !realTimeMode || catchEndBLock < int64(height) {
+		blockMap.Delete(heightKey)
+		eventMap.Delete(heightKey)
+		txMap.Delete(heightKey)
+		block = nil
+		events = nil
+		//nolint:all
+		txs = nil
+	}
 
 	return nil
 }

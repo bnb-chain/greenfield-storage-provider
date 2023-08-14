@@ -6,7 +6,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -50,6 +49,8 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 
 	RealTimeStart = &atomic.Bool{}
 	RealTimeStart.Store(false)
+	CatchEndBlock = &atomic.Int64{}
+	CatchEndBlock.Store(-1)
 
 	NeedBackup = junoCfg.EnableDualDB
 	if err := MainService.initClient(); err != nil {
@@ -252,14 +253,6 @@ func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeigh
 
 	ticker := time.NewTicker(20 * time.Millisecond)
 	defer ticker.Stop()
-	defer func() {
-		log.Infof("quick fetch end")
-		blockMap = nil
-		eventMap = nil
-		txMap = nil
-		runtime.GC()
-		RealTimeStart.Store(true)
-	}()
 
 	for {
 		select {
@@ -270,13 +263,15 @@ func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeigh
 			latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 			latestBlockHeight := latestBlockHeightAny.(int64)
 			if latestBlockHeight == int64(endBlock) {
+				RealTimeStart.Store(true)
+				CatchEndBlock.Store(int64(endBlock))
 				return
 			}
 			if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 				startBlock = count*cycle + startHeight
 				endBlock = count*(cycle+1) + startHeight - 1
-				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 				flag = 1
+				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 				if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
 					log.Infof("processedHeight: %d", processedHeight)
 					time.Sleep(time.Second)
