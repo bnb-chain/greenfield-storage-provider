@@ -365,8 +365,8 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 	return resp, nil
 }
 
-// GfSpListBucketsByBucketID list buckets by bucket ids
-func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *types.GfSpListBucketsByBucketIDRequest) (resp *types.GfSpListBucketsByBucketIDResponse, err error) {
+// GfSpListBucketsByIDs list buckets by bucket ids
+func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.GfSpListBucketsByIDsRequest) (resp *types.GfSpListBucketsByIDsResponse, err error) {
 	var (
 		buckets    []*model.Bucket
 		ids        []common.Hash
@@ -379,7 +379,7 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 	}
 
 	ctx = log.Context(ctx, req)
-	buckets, err = r.baseApp.GfBsDB().ListBucketsByBucketID(ids, req.IncludeRemoved)
+	buckets, err = r.baseApp.GfBsDB().ListBucketsByIDs(ids, req.IncludeRemoved)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list buckets by bucket ids", "error", err)
 		return nil, err
@@ -414,7 +414,7 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 			UpdateTime:   bucket.UpdateTime,
 		}
 	}
-	resp = &types.GfSpListBucketsByBucketIDResponse{Buckets: bucketsMap}
+	resp = &types.GfSpListBucketsByIDsResponse{Buckets: bucketsMap}
 	log.CtxInfow(ctx, "succeed to list buckets by bucket ids")
 	return resp, nil
 }
