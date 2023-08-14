@@ -41,7 +41,6 @@ const (
 )
 
 // CheckQuotaAndAddReadRecord check current quota, and add read record
-// TODO: Traffic statistics may be inaccurate in extreme cases, optimize it in the future
 func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) (err error) {
 	startTime := time.Now()
 	defer func() {
@@ -146,10 +145,6 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 			}).Error; err != nil {
 			return fmt.Errorf("failed to update bucket traffic table: %v", err)
 		}
-		// commit transaction
-		if err = tx.Commit().Error; err != nil {
-			return fmt.Errorf("failed to commit bucket traffic table: %v", err)
-		}
 
 		return nil
 	})
@@ -159,11 +154,17 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 
 // InitBucketTraffic init the bucket traffic table
 func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *corespdb.BucketQuota) error {
-	tx := s.db.Begin()
 	var bucketTraffic BucketTrafficTable
-
-	result := tx.First(&bucketTraffic, "bucket_id = ?", bucketID)
-	if result.Error != nil && result.Error == gorm.ErrRecordNotFound {
+	result := s.db.Where("bucket_id = ?", bucketID).First(&bucketTraffic)
+	if result.Error != nil {
+		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return result.Error
+		}
+	} else {
+		return nil
+	}
+	// if not created, init the bucket id in transaction
+	err := s.db.Transaction(func(tx *gorm.DB) error {
 		insertBucketTraffic := &BucketTrafficTable{
 			BucketID:              bucketID,
 			FreeQuotaSize:         quota.FreeQuotaSize,
@@ -176,21 +177,16 @@ func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *
 
 		result = tx.Create(insertBucketTraffic)
 		if result.Error != nil && MysqlErrCode(result.Error) != ErrDuplicateEntryCode {
-			tx.Rollback()
 			return fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
-
 		}
-	} else {
+
 		return nil
-	}
+	})
 
-	err := tx.Commit().Error
 	if err != nil {
-		return fmt.Errorf("failed to commit insert bucket traffic table: %s of bucket %s ", err, bucketName)
+		log.CtxErrorw(context.Background(), "init traffic table error ", "bucket name", bucketName, "error", err)
 	}
-
-	log.CtxInfow(context.Background(), "init traffic table finished", bucketName)
-	return nil
+	return err
 }
 
 // GetBucketTraffic return bucket traffic info
