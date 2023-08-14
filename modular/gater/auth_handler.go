@@ -27,14 +27,14 @@ const (
 )
 
 type RequestNonceResp struct {
-	CurrentNonce     int32  `xml:"currentNonce"`
-	NextNonce        int32  `xml:"nextNonce"`
-	CurrentPublicKey string `xml:"currentPublicKey"`
-	ExpiryDate       int64  `xml:"expiryDate"`
+	CurrentNonce     int32  `xml:"CurrentNonce"`
+	NextNonce        int32  `xml:"NextNonce"`
+	CurrentPublicKey string `xml:"CurrentPublicKey"`
+	ExpiryDate       int64  `xml:"ExpiryDate"`
 }
 
 type UpdateUserPublicKeyResp struct {
-	Result bool `xml:"result"`
+	Result bool `xml:"Result"`
 }
 
 // requestNonceHandler handle requestNonce request
