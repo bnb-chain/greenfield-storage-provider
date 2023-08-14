@@ -57,12 +57,10 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 
 	bucketTraffic, err := s.GetBucketTraffic(record.BucketID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		fmt.Println(1)
 		return err
 	}
 	// bucket traffic table should be initialized before checking meta
 	if bucketTraffic == nil {
-		fmt.Println(2)
 		err = fmt.Errorf("failed to get bucket traffic table")
 		return err
 	}
@@ -77,16 +75,13 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 				ModifiedTime:     time.Now(),
 			})
 		if result.Error != nil {
-			fmt.Println(3)
 			err = fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
 			return err
 		}
 		// TODO:: change the transaction way to update
 		if result.RowsAffected != 1 {
-			fmt.Println(4)
 			log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 		}
-		fmt.Println(5)
 		bucketTraffic.ChargedQuotaSize = quota.ChargedQuotaSize
 		log.Infow("updated charged quota", "db quota:", quota.ChargedQuotaSize)
 	}
@@ -96,7 +91,6 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	freeQuotaRemain := bucketTraffic.FreeQuotaSize - bucketTraffic.FreeQuotaConsumedSize
 	// if remain free quota more than 0, consume free quota first
 	if freeQuotaRemain > 0 && recordQuotaCost < freeQuotaRemain {
-		fmt.Println(6)
 		// if free quota is enough, no need to check charged quota
 		bucketTraffic.ReadConsumedSize += recordQuotaCost
 		bucketTraffic.FreeQuotaConsumedSize += recordQuotaCost
@@ -104,14 +98,11 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	}
 	// if free quota is not enough, check the charged quota
 	if needCheckChainQuota {
-		fmt.Println(7)
 		if bucketTraffic.ReadConsumedSize+recordQuotaCost > bucketTraffic.ChargedQuotaSize+bucketTraffic.FreeQuotaSize {
-			fmt.Println(8)
 			return ErrCheckQuotaEnough
 		}
 		bucketTraffic.ReadConsumedSize += recordQuotaCost
 		if freeQuotaRemain > 0 {
-			fmt.Println(9)
 			bucketTraffic.FreeQuotaConsumedSize += freeQuotaRemain
 		}
 	}
@@ -125,12 +116,10 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 			ModifiedTime:          time.Now(),
 		})
 	if result.Error != nil {
-		fmt.Println(10)
 		err = fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
 		return err
 	}
 	if result.RowsAffected != 1 {
-		fmt.Println(11)
 		log.Infow("update traffic", "RowsAffected", result.RowsAffected, "record", record, "quota", quota)
 	}
 
@@ -146,11 +135,9 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	}
 	result = s.db.Create(insertReadRecord)
 	if result.Error != nil || result.RowsAffected != 1 {
-		fmt.Println(12)
 		err = fmt.Errorf("failed to insert read record table: %s", result.Error)
 		return err
 	}
-	fmt.Println(13)
 	return nil
 }
 
