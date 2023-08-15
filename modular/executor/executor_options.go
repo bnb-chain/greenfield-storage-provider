@@ -108,5 +108,6 @@ func DefaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig
 	}
 	executor.maxListenSealRetry = cfg.Executor.MaxListenSealRetry
 	executor.statisticsOutputInterval = DefaultStatisticsOutputInterval
+	executor.enableSkipFailedToMigrateObject = cfg.Executor.EnableSkipFailedToMigrateObject
 	return nil
 }

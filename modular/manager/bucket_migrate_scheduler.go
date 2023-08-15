@@ -127,15 +127,15 @@ func (plan *BucketMigrateExecutePlan) storeToDB() error {
 	for _, migrateGVGUnit := range plan.gvgUnitMap {
 		if err = plan.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
 			MigrateGVGKey:            migrateGVGUnit.Key(),
-			GlobalVirtualGroupID:     migrateGVGUnit.srcGVG.GetId(),
-			DestGlobalVirtualGroupID: migrateGVGUnit.destGVGID,
-			VirtualGroupFamilyID:     migrateGVGUnit.srcGVG.GetFamilyId(),
+			GlobalVirtualGroupID:     migrateGVGUnit.SrcGVG.GetId(),
+			DestGlobalVirtualGroupID: migrateGVGUnit.DestGVGID,
+			VirtualGroupFamilyID:     migrateGVGUnit.SrcGVG.GetFamilyId(),
 			RedundancyIndex:          piecestore.PrimarySPRedundancyIndex,
-			BucketID:                 migrateGVGUnit.bucketID,
-			SrcSPID:                  migrateGVGUnit.srcSP.GetId(),
-			DestSPID:                 migrateGVGUnit.destSP.GetId(),
-			LastMigratedObjectID:     migrateGVGUnit.lastMigratedObjectID,
-			MigrateStatus:            int(migrateGVGUnit.migrateStatus),
+			BucketID:                 migrateGVGUnit.BucketID,
+			SrcSPID:                  migrateGVGUnit.SrcSP.GetId(),
+			DestSPID:                 migrateGVGUnit.DestSP.GetId(),
+			LastMigratedObjectID:     migrateGVGUnit.LastMigratedObjectID,
+			MigrateStatus:            int(migrateGVGUnit.MigrateStatus),
 		}); err != nil {
 			log.Errorw("failed to store to db", "error", err)
 			return err
@@ -180,9 +180,9 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 			log.Errorw("failed to get bls aggregate signature", "error", getBlsError)
 			return err
 		}
-		vgfID = migrateGVGUnit.destGVG.GetFamilyId()
-		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.srcGVG.GetId(),
-			DstGlobalVirtualGroupId: migrateGVGUnit.destGVGID, SecondarySpBlsSignature: aggBlsSig})
+		vgfID = migrateGVGUnit.DestGVG.GetFamilyId()
+		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.SrcGVG.GetId(),
+			DstGlobalVirtualGroupId: migrateGVGUnit.DestGVGID, SecondarySpBlsSignature: aggBlsSig})
 	}
 
 	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
@@ -195,7 +195,7 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, migrateExecuteUnit *BucketMigrateGVGExecuteUnit, migrateStatus MigrateStatus) error {
 
 	plan.finished++
-	migrateExecuteUnit.migrateStatus = migrateStatus
+	migrateExecuteUnit.MigrateStatus = migrateStatus
 
 	// update migrate gvg status
 	err := plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus))
@@ -211,9 +211,9 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 			log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
 			return err
 		}
-		err = plan.scheduler.doneMigrateBucket(migrateExecuteUnit.bucketID)
+		err = plan.scheduler.doneMigrateBucket(migrateExecuteUnit.BucketID)
 		if err != nil {
-			log.Errorw("failed to done migrate bucket", "error", err, "bucket_id", migrateExecuteUnit.bucketID)
+			log.Errorw("failed to done migrate bucket", "error", err, "bucket_id", migrateExecuteUnit.BucketID)
 			return err
 		}
 	}
@@ -223,9 +223,9 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 // getBlsAggregateSigForBucketMigration get bls sign from secondary sp which is used for bucket migration
 func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx context.Context, migrateExecuteUnit *BucketMigrateGVGExecuteUnit) ([]byte, error) {
 	signDoc := storagetypes.NewSecondarySpMigrationBucketSignDoc(plan.manager.baseApp.ChainID(),
-		sdkmath.NewUint(plan.bucketID), migrateExecuteUnit.destSP.GetId(), migrateExecuteUnit.srcGVG.GetId(), migrateExecuteUnit.destGVGID)
+		sdkmath.NewUint(plan.bucketID), migrateExecuteUnit.DestSP.GetId(), migrateExecuteUnit.SrcGVG.GetId(), migrateExecuteUnit.DestGVGID)
 	secondarySigs := make([][]byte, 0)
-	for _, spID := range migrateExecuteUnit.srcGVG.GetSecondarySpIds() {
+	for _, spID := range migrateExecuteUnit.SrcGVG.GetSecondarySpIds() {
 		spInfo, err := plan.manager.virtualGroupManager.QuerySPByID(spID)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to query sp by id", "error", err)
@@ -256,17 +256,17 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 			log.Debugw("start to push migrate gvg task to queue", "plan", plan, "gvg_unit_map", plan.gvgUnitMap)
 			for _, migrateGVGUnit := range plan.gvgUnitMap {
 				// Skipping units that have already been scheduled
-				if migrateGVGUnit.migrateStatus != WaitForMigrate {
+				if migrateGVGUnit.MigrateStatus != WaitForMigrate {
 					continue
 				}
 
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
-					plan.bucketID, migrateGVGUnit.srcGVG, piecestore.PrimarySPRedundancyIndex,
-					migrateGVGUnit.srcSP,
+					plan.bucketID, migrateGVGUnit.SrcGVG, piecestore.PrimarySPRedundancyIndex,
+					migrateGVGUnit.SrcSP,
 					plan.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					plan.manager.baseApp.TaskMaxRetry(migrateGVGTask))
-				migrateGVGTask.SetDestGvg(migrateGVGUnit.destGVG)
+				migrateGVGTask.SetDestGvg(migrateGVGUnit.DestGVG)
 				err := plan.manager.migrateGVGQueue.Push(migrateGVGTask)
 				if err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
@@ -275,10 +275,10 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 				log.Debugw("success to push migrate gvg task to queue", "migrateGVGUnit", migrateGVGUnit, "migrateGVGTask", migrateGVGTask)
 
 				// Update database: migrateStatus to migrating
-				migrateGVGUnit.migrateStatus = Migrating
+				migrateGVGUnit.MigrateStatus = Migrating
 
 				// update migrateStatus
-				err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateGVGUnit.Key(), int(migrateGVGUnit.migrateStatus))
+				err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateGVGUnit.Key(), int(migrateGVGUnit.MigrateStatus))
 				if err != nil {
 					log.Errorw("failed to update migrate gvg status", "gvg_unit", migrateGVGUnit, "error", err)
 					return
@@ -414,7 +414,7 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 	}
 
 	for _, unit := range executePlan.gvgUnitMap {
-		if unit.migrateStatus != Migrated {
+		if unit.MigrateStatus != Migrated {
 			log.Errorw("report task may error, unit should be migrated", "unit", unit)
 		}
 	}
@@ -675,7 +675,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	}
 
 	for _, migrateBucketUnit := range migrateBucketUnits {
-		plan.gvgUnitMap[migrateBucketUnit.srcGVG.GetId()] = migrateBucketUnit
+		plan.gvgUnitMap[migrateBucketUnit.SrcGVG.GetId()] = migrateBucketUnit
 	}
 
 	log.Debugw("produce bucket migrate execute plan list", "primarySPGVGList", primarySPGVGList, "bucket_gvg_list_len", len(primarySPGVGList), "EventMigrationBucket", event)
@@ -734,10 +734,10 @@ func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketM
 		plan.Finished = uint32(executePlan.finished)
 		for _, unit := range executePlan.gvgUnitMap {
 			plan.GvgTask = append(plan.GvgTask, &gfspserver.GfSpMigrateGVG{
-				SrcGvgId:             unit.srcGVG.GetId(),
-				DestGvgId:            unit.destGVG.GetId(),
-				LastMigratedObjectId: unit.lastMigratedObjectID,
-				Status:               int32(unit.migrateStatus),
+				SrcGvgId:             unit.SrcGVG.GetId(),
+				DestGvgId:            unit.DestGVG.GetId(),
+				LastMigratedObjectId: unit.LastMigratedObjectID,
+				Status:               int32(unit.MigrateStatus),
 			})
 		}
 		plans = append(plans, &plan)
@@ -759,17 +759,17 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 	if !ok {
 		return fmt.Errorf("gvg unit is not found")
 	}
-	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.bucketID, migrateExecuteUnit.srcGVG.GetId())
+	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.BucketID, migrateExecuteUnit.SrcGVG.GetId())
 
 	if task.GetFinished() {
-		migrateExecuteUnit.migrateStatus = Migrated
+		migrateExecuteUnit.MigrateStatus = Migrated
 		err = executePlan.updateMigrateGVGStatus(migrateKey, migrateExecuteUnit, Migrated)
 		if err != nil {
 			log.Errorw("failed to update migrate gvg status", "migrate_key", migrateKey, "error", err)
 			return err
 		}
 	} else {
-		migrateExecuteUnit.lastMigratedObjectID = task.GetLastMigratedObjectID()
+		migrateExecuteUnit.LastMigratedObjectID = task.GetLastMigratedObjectID()
 		err = executePlan.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
 		if err != nil {
 			log.Errorw("failed to update migrate gvg last migrate object id", "migrate_key", migrateKey, "error", err)
@@ -1095,7 +1095,8 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromMemory(primarySP
 		bucketMigrateUnits []*BucketMigrateGVGExecuteUnit
 	)
 	for _, srcGVG := range primarySPGVGList {
-		srcSecondarySPIDs := srcGVG.GetSecondarySpIds()
+		srcSecondarySPIDs := make([]uint32, len(srcGVG.GetSecondarySpIds()))
+		copy(srcSecondarySPIDs, srcGVG.GetSecondarySpIds())
 		// check sp exiting
 		secondarySPIDs, err := checker.replaceExitingSP(srcSecondarySPIDs)
 		if err != nil {
@@ -1129,7 +1130,7 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromMemory(primarySP
 
 		bucketUnit := newBucketMigrateGVGExecuteUnit(checker.bucketID, srcGVG, checker.srcSP, checker.selfSP, WaitForMigrate, destGVG.ID, 0, destGlobalVirtualGroup)
 		bucketMigrateUnits = append(bucketMigrateUnits, bucketUnit)
-		log.Infow("succeeded to generate a new bucket migrate uint", "migrate_execute_unit", bucketUnit, "bucket_id", checker.bucketID)
+		log.Infow("succeeded to generate a new bucket migrate unit", "migrate_execute_unit", bucketUnit, "bucket_id", checker.bucketID)
 	}
 
 	return bucketMigrateUnits, nil
@@ -1154,6 +1155,6 @@ func (checker *SPConflictChecker) GenerateMigrateBucketUnits(buildMetaByDB bool)
 		bucketMigrateUnits, err = checker.generateMigrateBucketUnitsFromMemory(primarySPGVGList)
 	}
 
-	log.Infow("succeeded to generate migrate bucket units", "bucket_id", checker.bucketID, "bucket_migrate_units", bucketMigrateUnits)
+	log.Infow("succeeded to generate migrate bucket units", "bucket_id", checker.bucketID, "bucket_migrate_units", bucketMigrateUnits, "error", err)
 	return bucketMigrateUnits, err
 }
