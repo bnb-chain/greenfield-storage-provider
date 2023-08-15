@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	cometbfttypes "github.com/cometbft/cometbft/abci/types"
@@ -45,6 +46,12 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
 	txMap = new(sync.Map)
+
+	RealTimeStart = &atomic.Bool{}
+	RealTimeStart.Store(false)
+	CatchEndBlock = &atomic.Int64{}
+	CatchEndBlock.Store(-1)
+
 	NeedBackup = junoCfg.EnableDualDB
 	if err := MainService.initClient(); err != nil {
 		return nil, err
@@ -256,13 +263,15 @@ func (b *BlockSyncerModular) quickFetchBlockData(ctx context.Context, startHeigh
 			latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
 			latestBlockHeight := latestBlockHeightAny.(int64)
 			if latestBlockHeight == int64(endBlock) {
-				continue
+				RealTimeStart.Store(true)
+				CatchEndBlock.Store(int64(endBlock))
+				return
 			}
 			if latestBlockHeight > int64(count*(cycle+1)+startHeight-1) {
 				startBlock = count*cycle + startHeight
 				endBlock = count*(cycle+1) + startHeight - 1
-				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 				flag = 1
+				processedHeight := Cast(b.parserCtx.Indexer).ProcessedHeight
 				if processedHeight != 0 && int64(startBlock)-int64(processedHeight) > int64(MaxHeightGapFactor*count) {
 					log.Infof("processedHeight: %d", processedHeight)
 					time.Sleep(time.Second)
