@@ -125,20 +125,9 @@ func (m *Module) handleDeleteGroup(ctx context.Context, block *tmctypes.ResultBl
 		Removed:    true,
 	}
 
-	//update group item
-	groupItem := &models.Group{
-		GroupID:   common.BigToHash(deleteGroup.GroupId.BigInt()),
-		AccountID: common.HexToAddress("0"),
-
-		UpdateAt:   block.Block.Height,
-		UpdateTime: block.Block.Time.UTC().Unix(),
-		Removed:    true,
-	}
 	res := make(map[string][]interface{})
-	k, v := m.db.UpdateGroupToSQL(ctx, groupItem)
-	res[k] = v
 
-	k, v = m.db.UpdateGroupToSQL(ctx, group)
+	k, v := m.db.DeleteGroupToSQL(ctx, group)
 	res[k] = v
 	return res
 }
@@ -241,6 +230,9 @@ func (m *Module) handleRenewGroupMember(ctx context.Context, block *tmctypes.Res
 			GroupID:        common.BigToHash(renewGroupMember.GroupId.BigInt()),
 			AccountID:      common.HexToAddress(e.Member),
 			ExpirationTime: e.ExpirationTime.Unix(),
+
+			UpdateAt:   block.Block.Height,
+			UpdateTime: block.Block.Time.UTC().Unix(),
 		})
 		res[k] = v
 	}
