@@ -22,9 +22,15 @@ var (
 	ErrRepeatedTask        = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80002, "request repeated")
 	ErrUnfinishedTask      = gfsperrors.Register(module.ReceiveModularName, http.StatusForbidden, 80003, "replicate piece unfinished")
 	ErrInvalidDataChecksum = gfsperrors.Register(module.ReceiveModularName, http.StatusNotAcceptable, 80004, "verify data checksum failed")
-	ErrPieceStore          = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, "server slipped away, try again later")
-	ErrGfSpDB              = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, "server slipped away, try again later")
 )
+
+func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, detail)
+}
+
+func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, detail)
+}
 
 func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error {
 	var (
@@ -74,7 +80,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 		task.GetSegmentIdx(), task.GetRedundancyIdx(), task.GetPieceChecksum()); err != nil {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_mysql_time").Observe(time.Since(setDBTime).Seconds())
 		log.CtxErrorw(ctx, "failed to set checksum to db", "error", err)
-		return ErrGfSpDB
+		return ErrGfSpDBWithDetail("failed to set checksum to db, error: " + err.Error())
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_mysql_time").Observe(time.Since(setDBTime).Seconds())
 
@@ -82,7 +88,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	if err = r.baseApp.PieceStore().PutPiece(ctx, pieceKey, data); err != nil {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_piece_time").Observe(time.Since(setPieceTime).Seconds())
 		log.CtxErrorw(ctx, "failed to put piece into piece store", "error", err)
-		return ErrPieceStore
+		return ErrPieceStoreWithDetail("failed to put piece into piece store, error: " + err.Error())
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_piece_time").Observe(time.Since(setPieceTime).Seconds())
 	log.CtxDebugw(ctx, "succeed to receive piece data")
@@ -124,7 +130,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_get_checksums_time").Observe(time.Since(getChecksumsTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get checksum from db", "error", err)
-		return nil, ErrGfSpDB
+		return nil, ErrGfSpDBWithDetail("failed to get checksum from db, error: " + err.Error())
 	}
 	if len(pieceChecksums) != int(segmentCount) {
 		log.CtxError(ctx, "replicate piece unfinished")
@@ -151,7 +157,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_set_integrity_time").Observe(time.Since(setIntegrityTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to write integrity meta to db", "error", err)
-		return nil, ErrGfSpDB
+		return nil, ErrGfSpDBWithDetail("failed to write integrity meta to db, error: " + err.Error())
 	}
 	deletePieceHashTime := time.Now()
 	if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksum(

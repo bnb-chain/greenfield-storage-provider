@@ -40,9 +40,11 @@ var (
 	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
 	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
 	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
-
-	ErrConsensus = gfsperrors.Register(module.AuthenticationModularName, http.StatusInternalServerError, 25002, "server slipped away, try again later")
 )
+
+func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.AuthenticationModularName, http.StatusInternalServerError, 25002, detail)
+}
 
 var _ module.Authenticator = &AuthenticationModular{}
 
@@ -214,16 +216,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			if strings.Contains(err.Error(), "No such object") {
 				return false, ErrNoSuchObject
 			}
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to get bucket and object info from consensus, error: " + err.Error())
 		}
 
 		spID, err := a.getSPID()
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("getSPID error: " + err.Error())
 		}
 		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 		}
 		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
@@ -255,15 +257,15 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			if strings.Contains(err.Error(), "No such object") {
 				return false, ErrNoSuchObject
 			}
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to get bucket and object info from consensus, error: " + err.Error())
 		}
 		spID, err := a.getSPID()
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("getSPID error: " + err.Error())
 		}
 		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 		}
 		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
@@ -295,15 +297,15 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			if strings.Contains(err.Error(), "No such object") {
 				return false, ErrNoSuchObject
 			}
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to get bucket and object info from consensus, error: " + err.Error())
 		}
 		spID, err := a.getSPID()
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("getSPID error: " + err.Error())
 		}
 		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 		}
 		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
@@ -348,16 +350,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			if strings.Contains(err.Error(), "No such object") {
 				return false, ErrNoSuchObject
 			}
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to get bucket and object info from consensus, error: " + err.Error())
 		}
 		spID, err := a.getSPID()
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("getSPID error: " + err.Error())
 		}
 		_, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, a.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to global virtual group info from metaData, error: " + err.Error())
 		}
 		if !isSecondarySp {
 			return false, ErrMismatchSp
@@ -388,15 +390,15 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			if strings.Contains(err.Error(), "No such bucket") {
 				return false, ErrNoSuchBucket
 			}
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 		}
 		spID, err := a.getSPID()
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("getSPID error: " + err.Error())
 		}
 		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 		}
 		if bucketSPID != spID {
 			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
@@ -416,7 +418,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_challenge_query_validator_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to list validator from consensus", "error", err)
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to list validator from consensus, error: " + err.Error())
 		}
 		for _, validator := range validators {
 			if strings.EqualFold(validator.ChallengerAddress, account) {
@@ -441,15 +443,15 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			if strings.Contains(err.Error(), "No such object") {
 				return false, ErrNoSuchObject
 			}
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		}
 		spID, err := a.getSPID()
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("getSPID error: " + err.Error())
 		}
 		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
 		if err != nil {
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 		}
 		if bucketSPID == spID {
 			return true, nil
@@ -457,7 +459,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		_, isSecondarySp, err := util.ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx, a.baseApp.GfSpClient(), spID, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to global virtual group info from metaData", "error", err)
-			return false, ErrConsensus
+			return false, ErrConsensusWithDetail("failed to global virtual group info from metaData, error: " + err.Error())
 		}
 		if !isSecondarySp {
 			return false, ErrMismatchSp

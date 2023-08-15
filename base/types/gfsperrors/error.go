@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"sort"
 	"sync"
-
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -125,8 +123,9 @@ type GfSpErrorManager struct {
 func (g *GfSpErrorManager) AddErr(err *GfSpError) {
 	g.mux.Lock()
 	defer g.mux.Unlock()
-	if old, ok := g.innerCode2Err[err.InnerCode]; ok {
-		log.Panicf("[%s] and [%s] error code conflict !!!", err.Error(), old.Error())
-	}
+	//todo: sort out the regulation for gfspError
+	//if old, ok := g.innerCode2Err[err.InnerCode]; ok {
+	//	log.Panicf("[%s] and [%s] error code conflict !!!", err.Error(), old.Error())
+	//}
 	g.innerCode2Err[err.InnerCode] = err
 }

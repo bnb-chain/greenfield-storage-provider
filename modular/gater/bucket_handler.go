@@ -64,7 +64,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 		return
 	}
 
@@ -74,7 +74,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
 		free, err = g.baseApp.Consensus().QuerySPFreeQuota(reqCtx.Context(), g.baseApp.OperatorAddress())
 		if err != nil {
-			err = ErrConsensus
+			err = ErrConsensusWithDetail("QuerySPFreeQuota error: " + err.Error())
 		}
 		charge = bucketInfo.GetChargedReadQuota()
 		log.CtxDebugw(reqCtx.Context(), "fail to get traffic info in db, return the chain meta", "free_quota", free, "charged_quota", charge)
@@ -107,13 +107,13 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		err = ErrEncodeResponse
+		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
 		return
 	}
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		err = ErrEncodeResponse
+		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
 		return
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to get bucket quota", "xml_info", xmlInfo)
@@ -167,7 +167,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 		return
 	}
 
@@ -231,14 +231,14 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		err = ErrEncodeResponse
+		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
 		return
 	}
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		err = ErrEncodeResponse
+		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
 		return
 	}
 	log.Debugw("succeed to list bucket read records", "xml_info", xmlInfo)

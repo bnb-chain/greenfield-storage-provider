@@ -35,21 +35,30 @@ var (
 	ErrInvalidIntegrity           = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40005, "secondary integrity hash verification failed")
 	ErrSecondaryMismatch          = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40006, "secondary sp mismatch")
 	ErrReplicateIdsOutOfBounds    = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
-	ErrGfSpDB                     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, "server slipped away, try again later")
 	ErrRecoveryRedundancyType     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
 	ErrRecoveryPieceNotEnough     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "failed to get enough piece data to recovery")
 	ErrRecoveryDecode             = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
-	ErrPieceStore                 = gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, "server slipped away, try again later")
 	ErrRecoveryPieceChecksum      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
 	ErrRecoveryPieceLength        = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45207, "get secondary piece data length error")
 	ErrPrimaryNotFound            = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recovering")
 	ErrRecoveryPieceIndex         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
 	ErrMigratedPieceChecksum      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
-	ErrConsensus                  = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 45211, "server slipped away, try again later")
 	ErrInvalidRedundancyIndex     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "invalid redundancy index")
 	ErrSetObjectIntegrity         = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45213, "failed to set object integrity into spdb")
 	ErrInvalidPieceChecksumLength = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45214, "invalid piece checksum length")
 )
+
+func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45201, detail)
+}
+
+func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 45205, detail)
+}
+
+func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 45211, detail)
+}
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
 	if task == nil || task.GetObjectInfo() == nil {
@@ -608,7 +617,7 @@ func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretas
 	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetEcIdx())
 	if err != nil {
 		log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
-		return ErrGfSpDB
+		return ErrGfSpDBWithDetail("search integrity hash in db error when recovery, objectName: " + task.GetObjectInfo().ObjectName + ",error: " + err.Error())
 	}
 
 	expectedHash := integrityMeta.PieceChecksumList[task.GetSegmentIdx()]

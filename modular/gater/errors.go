@@ -22,7 +22,6 @@ var (
 	ErrUnsupportedRequestType    = gfsperrors.Register(module.GateModularName, http.StatusNotFound, 50008, "unsupported request type")
 	ErrInvalidHeader             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50009, "invalid request header")
 	ErrInvalidQuery              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50010, "invalid request params for query")
-	ErrEncodeResponse            = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50011, "server slipped away, try again later")
 	ErrInvalidRange              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50012, "invalid range params")
 	ErrExceptionStream           = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50013, "stream exception")
 	ErrMismatchSp                = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50014, "mismatch sp")
@@ -50,13 +49,25 @@ var (
 	ErrRecoverySP             = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50030, "The SP is not the correct SP to recovery")
 	ErrRecoveryRedundancyType = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50031, "The redundancy type of the recovering piece is not EC")
 	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50032, "System busy, try to request later")
-	ErrMigrateApproval        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50033, "server slipped away, try again later")
-	ErrNotifySwapOut          = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50034, "server slipped away, try again later")
 	ErrInvalidRedundancyIndex = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50035, "invalid redundancy index")
 	ErrBucketUnavailable      = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50036, "bucket is not in service status")
-
-	ErrConsensus = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, "server slipped away, try again later")
 )
+
+func ErrEncodeResponseWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50011, detail)
+}
+
+func ErrMigrateApprovalWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50033, detail)
+}
+
+func ErrNotifySwapOutWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50034, detail)
+}
+
+func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, detail)
+}
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {
 	gfspErr := gfsperrors.MakeGfSpError(err)
