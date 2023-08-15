@@ -164,3 +164,21 @@ func (b *BsDBImpl) GetGroupMembers(groupID common.Hash, startAfter common.Addres
 		Find(&members).Error
 	return members, err
 }
+
+// GetUserOwnedGroups retrieve groups where the user is the owner
+func (b *BsDBImpl) GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error) {
+	var (
+		groups  []*Group
+		err     error
+		filters []func(*gorm.DB) *gorm.DB
+	)
+
+	filters = append(filters, GroupIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
+	err = b.db.Table((&Group{}).TableName()).
+		Select("*").
+		Where("owner = ? and account_id  = ?", accountID, common.HexToAddress("0")).
+		Scopes(filters...).
+		Order("group_id").
+		Find(&groups).Error
+	return groups, err
+}

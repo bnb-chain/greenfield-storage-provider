@@ -807,3 +807,23 @@ func (s *GfSpClient) GetGroupMembers(ctx context.Context, groupID uint64, startA
 	}
 	return resp.Groups, nil
 }
+
+func (s *GfSpClient) GetUserOwnedGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknown
+	}
+	defer conn.Close()
+	req := &types.GfSpGetUserOwnedGroupsRequest{
+		AccountId:  accountID,
+		Limit:      limit,
+		StartAfter: startAfter,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetUserOwnedGroups(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to retrieve groups where the user is the owner", "error", err)
+		return nil, ErrRPCUnknown
+	}
+	return resp.Groups, nil
+}

@@ -2036,7 +2036,7 @@ func (g *GateModular) getUserGroupsHandler(w http.ResponseWriter, r *http.Reques
 
 	if requestStartAfter != "" {
 		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "start-after", requestStartAfter, "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check start after", "start-after", requestStartAfter, "error", err)
 			err = ErrInvalidQuery
 			return
 		}
@@ -2132,6 +2132,75 @@ func (g *GateModular) getGroupMembersHandler(w http.ResponseWriter, r *http.Requ
 	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
 	if err = m.Marshal(&b, grpcResponse); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get group members by group id", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Write(b.Bytes())
+}
+
+// getUserOwnedGroupsHandler retrieve groups where the user is the owner
+func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		b                 bytes.Buffer
+		reqCtx            *RequestContext
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		groups            []*types.GroupMember
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if ok := common.IsHexAddress(r.Header.Get(GnfdUserAddressHeader)); !ok {
+		log.Errorw("failed to check X-Gnfd-User-Address", "X-Gnfd-User-Address", reqCtx.account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check start after", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	groups, err = g.baseApp.GfSpClient().GetUserOwnedGroups(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetUserOwnedGroupsResponse{Groups: groups}
+
+	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
+	if err = m.Marshal(&b, grpcResponse); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", "error", err)
 		return
 	}
 

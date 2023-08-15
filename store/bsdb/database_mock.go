@@ -469,6 +469,21 @@ func (mr *MockMetadataMockRecorder) GetUserGroups(accountID, startAfter, limit i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockMetadata)(nil).GetUserGroups), accountID, startAfter, limit)
 }
 
+// GetUserOwnedGroups mocks base method.
+func (m *MockMetadata) GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserOwnedGroups", accountID, startAfter, limit)
+	ret0, _ := ret[0].([]*Group)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
+func (mr *MockMetadataMockRecorder) GetUserOwnedGroups(accountID, startAfter, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockMetadata)(nil).GetUserOwnedGroups), accountID, startAfter, limit)
+}
+
 // GetVirtualGroupFamiliesByVgfID mocks base method.
 func (m *MockMetadata) GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*GlobalVirtualGroupFamily, error) {
 	m.ctrl.T.Helper()
@@ -1269,6 +1284,21 @@ func (m *MockBSDB) GetUserGroups(accountID common.Address, startAfter common.Has
 func (mr *MockBSDBMockRecorder) GetUserGroups(accountID, startAfter, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockBSDB)(nil).GetUserGroups), accountID, startAfter, limit)
+}
+
+// GetUserOwnedGroups mocks base method.
+func (m *MockBSDB) GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserOwnedGroups", accountID, startAfter, limit)
+	ret0, _ := ret[0].([]*Group)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
+func (mr *MockBSDBMockRecorder) GetUserOwnedGroups(accountID, startAfter, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockBSDB)(nil).GetUserOwnedGroups), accountID, startAfter, limit)
 }
 
 // GetVirtualGroupFamiliesByVgfID mocks base method.

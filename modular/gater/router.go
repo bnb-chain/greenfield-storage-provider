@@ -64,6 +64,7 @@ const (
 	getStatusRouterName                            = "GetStatus"
 	getUserGroupsRouterName                        = "GetUserGroups"
 	getGroupMembersRouterName                      = "GetGroupMembers"
+	getUserOwnedGroupsRouterName                   = "GetUserOwnedGroups"
 )
 
 const (
@@ -217,6 +218,11 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Methods(http.MethodGet).
 		Queries(GetGroupMembersQuery, "").
 		HandlerFunc(g.getGroupMembersHandler)
+	router.Path("/").
+		Name(getUserOwnedGroupsRouterName).
+		Methods(http.MethodGet).
+		Queries(GetUserOwnedGroupsQuery, "").
+		HandlerFunc(g.getUserOwnedGroupsHandler)
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID
 		router.Path("/").Name(getPaymentByBucketIDRouterName).Methods(http.MethodGet).Queries(GetPaymentByBucketIDQuery, "").HandlerFunc(g.getPaymentByBucketIDHandler)

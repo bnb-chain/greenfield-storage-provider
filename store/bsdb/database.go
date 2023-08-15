@@ -109,6 +109,8 @@ type Metadata interface {
 	GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
 	// GetGroupMembers get group members by group id
 	GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error)
+	// GetUserOwnedGroups retrieve groups where the user is the owner
+	GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
 }
 
 // BSDB contains all the methods required by block syncer database
