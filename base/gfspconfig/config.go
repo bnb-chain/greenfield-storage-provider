@@ -142,13 +142,14 @@ type GatewayConfig struct {
 }
 
 type ExecutorConfig struct {
-	MaxExecuteNumber             int64   `comment:"optional"`
-	AskTaskInterval              int     `comment:"optional"`
-	AskReplicateApprovalTimeout  int64   `comment:"optional"`
-	AskReplicateApprovalExFactor float64 `comment:"optional"`
-	ListenSealTimeoutHeight      int     `comment:"optional"`
-	ListenSealRetryTimeout       int     `comment:"optional"`
-	MaxListenSealRetry           int     `comment:"optional"`
+	MaxExecuteNumber                int64   `comment:"optional"`
+	AskTaskInterval                 int     `comment:"optional"`
+	AskReplicateApprovalTimeout     int64   `comment:"optional"`
+	AskReplicateApprovalExFactor    float64 `comment:"optional"`
+	ListenSealTimeoutHeight         int     `comment:"optional"`
+	ListenSealRetryTimeout          int     `comment:"optional"`
+	MaxListenSealRetry              int     `comment:"optional"`
+	EnableSkipFailedToMigrateObject bool    `comment:"optional"`
 }
 
 type P2PConfig struct {

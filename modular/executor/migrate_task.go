@@ -68,9 +68,10 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		}
 
 		for index, object := range objectList {
-			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil {
+			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil && !e.enableSkipFailedToMigrateObject {
 				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
-					"bucket_id", bucketID, "object_info", object, "error", err)
+					"bucket_id", bucketID, "object_info", object,
+					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "error", err)
 				return
 			}
 			if (index+1)%reportProgressPerN == 0 || index == len(objectList)-1 {
@@ -343,7 +344,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	migratedIntegrityHash := hash.GenerateIntegrityHash(pieceChecksums)
 
 	var chainIntegrityHash []byte
-	if redundancyIdx == -1 {
+	if redundancyIdx == piecestore.PrimarySPRedundancyIndex {
 		// primarySP
 		chainIntegrityHash = objectInfo.GetChecksums()[0]
 	} else {
