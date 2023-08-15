@@ -120,6 +120,8 @@ func init() {
 		command.RecoverPieceCmd,
 		// sp exit
 		command.SPExitCmd,
+		command.CompleteSPExitCmd,  // only for debugging
+		command.CompleteSwapOutCmd, // only for debugging
 		// update quota
 		command.SetQuotaCmd,
 	}

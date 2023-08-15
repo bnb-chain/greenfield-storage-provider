@@ -45,6 +45,8 @@ type ExecuteModular struct {
 	doingRecoveryPieceTaskCnt  int64
 	doingMigrationGVGTaskCnt   int64
 
+	enableSkipFailedToMigrateObject bool // only for debugging, and online config can only be false
+
 	spID uint32
 }
 
