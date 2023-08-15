@@ -7,6 +7,8 @@ import (
 
 // Service provides abstract methods to control the lifecycle of a service
 // Every service must implement Service interface.
+//
+//go:generate mockgen -source=./lifecycle.go -destination=./lifecycle_mock.go -package=lifecycle
 type Service interface {
 	// Name describe service name
 	Name() string

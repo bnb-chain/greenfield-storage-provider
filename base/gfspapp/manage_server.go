@@ -315,8 +315,8 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	return &gfspserver.GfSpReportTaskResponse{}, nil
 }
 
-func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context,
-	req *gfspserver.GfSpPickVirtualGroupFamilyRequest) (*gfspserver.GfSpPickVirtualGroupFamilyResponse, error) {
+func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context, req *gfspserver.GfSpPickVirtualGroupFamilyRequest) (
+	*gfspserver.GfSpPickVirtualGroupFamilyResponse, error) {
 	vgfID, err := g.manager.PickVirtualGroupFamily(ctx, req.GetCreateBucketApprovalTask())
 	if err != nil {
 		return nil, err
@@ -326,8 +326,8 @@ func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context,
 	}, nil
 }
 
-func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context,
-	req *gfspserver.GfSpNotifyMigrateSwapOutRequest) (*gfspserver.GfSpNotifyMigrateSwapOutResponse, error) {
+func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspserver.GfSpNotifyMigrateSwapOutRequest) (
+	*gfspserver.GfSpNotifyMigrateSwapOutResponse, error) {
 	if err := g.manager.NotifyMigrateSwapOut(ctx, req.GetSwapOut()); err != nil {
 		log.CtxErrorw(ctx, "failed to notify migrate swap out", "swap_out", req.GetSwapOut(), "error", err)
 		return nil, err

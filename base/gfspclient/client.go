@@ -55,17 +55,8 @@ type GfSpClient struct {
 	metrics      bool
 }
 
-func NewGfSpClient(
-	approverEndpoint string,
-	managerEndpoint string,
-	downloaderEndpoint string,
-	receiverEndpoint string,
-	metadataEndpoint string,
-	uploaderEndpoint string,
-	p2pEndpoint string,
-	signerEndpoint string,
-	authenticatorEndpoint string,
-	metrics bool) *GfSpClient {
+func NewGfSpClient(approverEndpoint, managerEndpoint, downloaderEndpoint, receiverEndpoint, metadataEndpoint,
+	uploaderEndpoint, p2pEndpoint, signerEndpoint, authenticatorEndpoint string, metrics bool) *GfSpClient {
 	return &GfSpClient{
 		approverEndpoint:      approverEndpoint,
 		managerEndpoint:       managerEndpoint,

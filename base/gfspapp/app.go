@@ -27,7 +27,7 @@ type GfSpBaseApp struct {
 	chainID         string
 
 	server *grpc.Server
-	client *gfspclient.GfSpClient
+	client gfspclient.GfSpClientAPI
 
 	gfSpDB       spdb.SPDB
 	gfBsDB       bsdb.BSDB
@@ -84,7 +84,7 @@ func (g *GfSpBaseApp) AppID() string {
 }
 
 // GfSpClient returns the sp client that includes inner grpc and outer http protocol.
-func (g *GfSpBaseApp) GfSpClient() *gfspclient.GfSpClient {
+func (g *GfSpBaseApp) GfSpClient() gfspclient.GfSpClientAPI {
 	return g.client
 }
 

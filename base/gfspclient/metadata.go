@@ -69,10 +69,10 @@ func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, include
 }
 
 // ListObjectsByBucketName list objects info by a bucket name
-func (s *GfSpClient) ListObjectsByBucketName(ctx context.Context, bucketName string, accountId string, maxKeys uint64,
+func (s *GfSpClient) ListObjectsByBucketName(ctx context.Context, bucketName string, accountID string, maxKeys uint64,
 	startAfter string, continuationToken string, delimiter string, prefix string, includeRemoved bool, opts ...grpc.DialOption) (
-	objects []*types.Object, KeyCount uint64, MaxKeys uint64, IsTruncated bool, NextContinuationToken string,
-	Name string, Prefix string, Delimiter string, CommonPrefixes []string, ContinuationToken string, err error) {
+	objects []*types.Object, keyCount, maxKeysRe uint64, isTruncated bool, nextContinuationToken, name, prefixRe, delimiterRe string,
+	commonPrefixes []string, continuationTokenRe string, err error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, 0, 0, false, "", "", "", "", nil, "", err
@@ -81,7 +81,7 @@ func (s *GfSpClient) ListObjectsByBucketName(ctx context.Context, bucketName str
 
 	req := &types.GfSpListObjectsByBucketNameRequest{
 		BucketName:        bucketName,
-		AccountId:         accountId,
+		AccountId:         accountID,
 		MaxKeys:           maxKeys,
 		StartAfter:        startAfter,
 		ContinuationToken: continuationToken,

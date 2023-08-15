@@ -9,6 +9,8 @@ const (
 )
 
 // PieceOp is a helper interface for piece key operator and piece size calculate.
+//
+//go:generate mockgen -source=./piecestore.go -destination=./piecestore_mock.go -package=piecestore
 type PieceOp interface {
 	// SegmentPieceKey returns the segment piece key used as the key of store piece store.
 	SegmentPieceKey(objectID uint64, segmentIdx uint32) string

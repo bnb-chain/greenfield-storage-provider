@@ -8,6 +8,8 @@ import (
 )
 
 // Task is an abstract interface to describe the smallest unit of SP service how to interact.
+//
+//go:generate mockgen -source=./task.go -destination=./task_mock.go -package=task
 type Task interface {
 	// Key returns the uniquely identify of the task. It is recommended that each task
 	// has its own prefix. In addition, it should also include the information of the

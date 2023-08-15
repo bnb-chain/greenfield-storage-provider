@@ -9,7 +9,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"google.golang.org/grpc"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -51,21 +53,50 @@ func TestGetSecondarySPIndexFromGVG(t *testing.T) {
 	}
 }
 
-// func TestValidateAndGetSPIndexWithinGVGSecondarySPs(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	m := gfspclient.NewMockMetadataAPI(ctrl)
-// 	m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-// 		func(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (
-// 			*virtualgrouptypes.GlobalVirtualGroup, error) {
-// 			return &virtualgrouptypes.GlobalVirtualGroup{
-// 				SecondarySpIds: []uint32{1, 2, 3, 4, 5},
-// 			}, nil
-// 		}).AnyTimes()
-// 	result1, result2, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), m, 3, 1, 2)
-// 	assert.Equal(t, 2, result1)
-// 	assert.Equal(t, true, result2)
-// 	assert.NotNil(t, err)
-// }
+func TestValidateAndGetSPIndexWithinGVGSecondarySPsSuccess1(t *testing.T) {
+	t.Log("Success case description: current sp is one of the object gvg's secondary sp")
+	ctrl := gomock.NewController(t)
+	m := gfspclient.NewMockGfSpClientAPI(ctrl)
+	m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (
+			*virtualgrouptypes.GlobalVirtualGroup, error) {
+			return &virtualgrouptypes.GlobalVirtualGroup{SecondarySpIds: []uint32{1, 2, 3, 4, 5}}, nil
+		}).AnyTimes()
+	result1, result2, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), m, 3, 1, 2)
+	assert.Equal(t, 2, result1)
+	assert.Equal(t, true, result2)
+	assert.Nil(t, err)
+}
+
+func TestValidateAndGetSPIndexWithinGVGSecondarySPsSuccess2(t *testing.T) {
+	t.Log("Success case description: current sp is not one of the object gvg's secondary sp")
+	ctrl := gomock.NewController(t)
+	m := gfspclient.NewMockGfSpClientAPI(ctrl)
+	m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (
+			*virtualgrouptypes.GlobalVirtualGroup, error) {
+			return &virtualgrouptypes.GlobalVirtualGroup{SecondarySpIds: []uint32{1, 2, 3, 4, 5}}, nil
+		}).AnyTimes()
+	result1, result2, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), m, 8, 1, 2)
+	assert.Equal(t, -1, result1)
+	assert.Equal(t, false, result2)
+	assert.Nil(t, err)
+}
+
+func TestValidateAndGetSPIndexWithinGVGSecondarySPsFailure(t *testing.T) {
+	t.Log("Failure case description: call GetGlobalVirtualGroup returns error")
+	ctrl := gomock.NewController(t)
+	m := gfspclient.NewMockGfSpClientAPI(ctrl)
+	m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (
+			*virtualgrouptypes.GlobalVirtualGroup, error) {
+			return nil, errors.New("mock error")
+		}).AnyTimes()
+	result1, result2, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), m, 8, 1, 2)
+	assert.Equal(t, -1, result1)
+	assert.Equal(t, false, result2)
+	assert.Equal(t, errors.New("mock error"), err)
+}
 
 func TestTotalStakingStoreSizeOfGVG(t *testing.T) {
 	cases := []struct {

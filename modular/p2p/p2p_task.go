@@ -16,11 +16,8 @@ var (
 	ErrInsufficientApproval = gfsperrors.Register(module.P2PModularName, http.StatusNotFound, 70002, "insufficient approvals as secondary sp")
 )
 
-func (p *P2PModular) HandleReplicatePieceApproval(
-	ctx context.Context,
-	task task.ApprovalReplicatePieceTask,
-	min, max int32, timeout int64) (
-	[]task.ApprovalReplicatePieceTask, error) {
+func (p *P2PModular) HandleReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask,
+	min, max int32, timeout int64) ([]task.ApprovalReplicatePieceTask, error) {
 	if p.replicateApprovalQueue.Has(task.Key()) {
 		log.CtxErrorw(ctx, "repeated task")
 		return nil, ErrRepeatedTask
