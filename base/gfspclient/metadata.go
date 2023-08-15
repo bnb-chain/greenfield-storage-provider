@@ -815,7 +815,7 @@ func (s *GfSpClient) GetUserOwnedGroups(ctx context.Context, accountID string, s
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return nil, ErrRPCUnknown
+		return nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
 	}
 	defer conn.Close()
 	req := &types.GfSpGetUserOwnedGroupsRequest{
@@ -826,7 +826,7 @@ func (s *GfSpClient) GetUserOwnedGroups(ctx context.Context, accountID string, s
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetUserOwnedGroups(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to retrieve groups where the user is the owner", "error", err)
-		return nil, ErrRPCUnknown
+		return nil, ErrRPCUnknownWithDetail("client failed to retrieve groups where the user is the owner, error: " + err.Error())
 	}
 	return resp.Groups, nil
 }
