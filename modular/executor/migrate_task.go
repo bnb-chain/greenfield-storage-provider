@@ -297,8 +297,9 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, uint32(i), redundancyIdx, pieceChecksum); err != nil {
 			log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", task.GetObjectInfo().Id.Uint64(),
 				"segment_index", i, "redundancy_index", redundancyIdx, "error", err)
-			return ErrGfSpDBWithDetail("failed to set replicate piece checksum, object_id: " + task.GetObjectInfo().Id.String() +
-				", segment_index: " + string(i) + ",redundancy_index: " + string(redundancyIdx) + ",error: " + err.Error())
+			detail := fmt.Sprintf("failed to set replicate piece checksum, object_id: %s, segment_index: %v, redundancy_index: %v, error: %s",
+				task.GetObjectInfo().Id.String(), i, redundancyIdx, err.Error())
+			return ErrGfSpDBWithDetail(detail)
 		}
 	}
 
