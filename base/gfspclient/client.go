@@ -29,7 +29,6 @@ const (
 )
 
 var (
-	ErrRPCUnknown       = gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, "server slipped away, try again later")
 	ErrExceptionsStream = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98002, "stream closed abnormally")
 	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98101, "response type mismatch")
 	ErrNoSuchObject     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98093, "no such object from metadata")
