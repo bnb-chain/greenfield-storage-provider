@@ -218,15 +218,17 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		err = ErrDecodeMsg
 		return
 	}
+
+	swapOutApproval.SuccessorSpApproval = &common.Approval{
+		ExpiredHeight: 100,
+	}
+
 	if err = swapOutApproval.ValidateBasic(); err != nil {
 		log.Errorw("failed to basic check approval msg", "swap_out_approval", swapOutApproval, "error", err)
 		err = ErrValidateMsg
 		return
 	}
 
-	swapOutApproval.SuccessorSpApproval = &common.Approval{
-		ExpiredHeight: 100,
-	}
 	log.Infow("get swap out approval", "msg", swapOutApproval)
 	signature, err := g.baseApp.GfSpClient().SignSwapOut(reqCtx.Context(), swapOutApproval)
 	if err != nil {
