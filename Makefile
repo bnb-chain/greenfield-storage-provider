@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: all build clean format install-tools generate lint test tidy vet buf-gen proto-clean
+.PHONY: all build clean format install-tools generate lint mock-gen test tidy vet buf-gen proto-clean
 .PHONY: install-go-test-coverage check-coverage
 
 help:
@@ -11,6 +11,7 @@ help:
 	@echo "  generate              to generate mock code"
 	@echo "  install-tools         to install mockgen, buf and protoc-gen-gocosmos tools"
 	@echo "  lint                  to run golangci lint"
+	@echo "  mock-gen              to generate mock files"
 	@echo "  test                  to run all sp unit tests"
 	@echo "  tidy                  to run go mod tidy and verify"
 	@echo "  vet                   to do static check"
@@ -46,12 +47,16 @@ install-tools:
 lint:
 	golangci-lint run --fix
 
-# only run unit test, exclude e2e tests
-test:
+mock-gen:
 	mockgen -source=core/spdb/spdb.go -destination=core/spdb/spdb_mock.go -package=spdb
 	mockgen -source=store/bsdb/database.go -destination=store/bsdb/database_mock.go -package=bsdb
-	go test `go list ./... | grep -v /test/` -coverpkg=./... -covermode=atomic -coverprofile=./coverage.out -timeout 99999s
+
+# only run unit tests, exclude e2e tests
+test:
+	go test -failfast $$(go list ./... | grep -v e2e) -covermode=atomic -coverprofile=./coverage.out -timeout 99999s
 	# go test -cover ./...
+	# go test -coverprofile=coverage.out ./...
+	# go tool cover -html=coverage.out
 
 tidy:
 	go mod tidy

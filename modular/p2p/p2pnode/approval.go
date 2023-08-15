@@ -44,8 +44,7 @@ func NewApprovalProtocol(host *Node) *ApprovalProtocol {
 
 // hangApprovalRequest records the approval request in memory for response to router
 // notice: the caller need to call cancelApprovalRequest to delete the record
-func (a *ApprovalProtocol) hangApprovalRequest(id uint64) (
-	chan coretask.ApprovalReplicatePieceTask, error) {
+func (a *ApprovalProtocol) hangApprovalRequest(id uint64) (chan coretask.ApprovalReplicatePieceTask, error) {
 	a.mux.Lock()
 	defer a.mux.Unlock()
 	if _, ok := a.response[id]; ok {

@@ -30,10 +30,11 @@ override:
 exclude:
   # Exclude files or packages matching their paths
   paths:
-    - \.pb\.go$    # excludes all protobuf generated files
-    - \.pb\.gw\.go$    # excludes all protobuf generated files
-    - .*_mocks.go$    # excludes all protobuf generated files
-    - e2e/.* 
+    - \.pb\.go$       # excludes all protobuf generated files
+    - \.pb\.gw\.go$   # excludes all protobuf generated files
+    - .*_mocks.go$    # excludes all mock generated files
+    - .*_mock.go$     # excludes all mock generated files
+    - e2e/.*          # excludes e2e directory files
  
 # NOTES:
 # - symbol `/` in all path regexps will be replaced by
