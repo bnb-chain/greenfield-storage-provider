@@ -564,6 +564,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: getGroupMembersRouterName,
 		},
+		{
+			name:             "Retrieve groups where the user is the owner",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + GetUserOwnedGroupsQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery,
+			shouldMatch:      true,
+			wantedRouterName: getUserOwnedGroupsRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

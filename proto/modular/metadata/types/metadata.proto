@@ -749,6 +749,22 @@ message GfSpGetGroupMembersResponse {
   repeated GroupMember groups = 1;
 }
 
+// GfSpGetUserOwnedGroupsRequest is request type for the GfSpGetUserOwnedGroups RPC method
+message GfSpGetUserOwnedGroupsRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 2;
+  // start_after is where you want to start listing from
+  uint64 start_after = 3;
+}
+
+// GfSpGetUserOwnedGroupsResponse is response type for the GfSpGetUserOwnedGroups RPC method
+message GfSpGetUserOwnedGroupsResponse {
+  // groups defines the response of group list
+  repeated GroupMember groups = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -787,4 +803,5 @@ service GfSpMetadataService {
   rpc GfSpGetStatus(GfSpGetStatusRequest) returns (GfSpGetStatusResponse) {}
   rpc GfSpGetUserGroups(GfSpGetUserGroupsRequest) returns (GfSpGetUserGroupsResponse) {}
   rpc GfSpGetGroupMembers(GfSpGetGroupMembersRequest) returns (GfSpGetGroupMembersResponse) {}
+  rpc GfSpGetUserOwnedGroups(GfSpGetUserOwnedGroupsRequest) returns (GfSpGetUserOwnedGroupsResponse) {}
 }

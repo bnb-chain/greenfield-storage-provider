@@ -131,6 +131,8 @@ const (
 	GetSPInfoQuery = "query-sp"
 	// GetUserGroupsQuery defines get groups info by a user address, which is used to route request
 	GetUserGroupsQuery = "user-groups"
+	// GetUserOwnedGroupsQuery defines retrieve groups where the user is the owner, which is used to route request
+	GetUserOwnedGroupsQuery = "owned-groups"
 	// GetGroupMembersQuery defines query sp info, which is used to route request
 	GetGroupMembersQuery = "group-members"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for

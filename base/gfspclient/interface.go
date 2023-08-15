@@ -126,6 +126,7 @@ type MetadataAPI interface {
 	GetStatus(ctx context.Context, opts ...grpc.DialOption) (*types.Status, error)
 	GetUserGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error)
 	GetGroupMembers(ctx context.Context, groupID uint64, startAfter string, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error)
+	GetUserOwnedGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error)
 }
 
 // P2PAPI for mock use

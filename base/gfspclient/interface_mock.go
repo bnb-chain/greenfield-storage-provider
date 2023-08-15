@@ -855,6 +855,26 @@ func (mr *MockGfSpClientAPIMockRecorder) GetUserGroups(ctx, accountID, startAfte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUserGroups), varargs...)
 }
 
+// GetUserOwnedGroups mocks base method.
+func (m *MockGfSpClientAPI) GetUserOwnedGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, accountID, startAfter, limit}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetUserOwnedGroups", varargs...)
+	ret0, _ := ret[0].([]*types.GroupMember)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
+func (mr *MockGfSpClientAPIMockRecorder) GetUserOwnedGroups(ctx, accountID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, accountID, startAfter, limit}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUserOwnedGroups), varargs...)
+}
+
 // GetVirtualGroupFamily mocks base method.
 func (m *MockGfSpClientAPI) GetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*types4.GlobalVirtualGroupFamily, error) {
 	m.ctrl.T.Helper()
@@ -2721,6 +2741,26 @@ func (mr *MockMetadataAPIMockRecorder) GetUserGroups(ctx, accountID, startAfter,
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, accountID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockMetadataAPI)(nil).GetUserGroups), varargs...)
+}
+
+// GetUserOwnedGroups mocks base method.
+func (m *MockMetadataAPI) GetUserOwnedGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, accountID, startAfter, limit}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetUserOwnedGroups", varargs...)
+	ret0, _ := ret[0].([]*types.GroupMember)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
+func (mr *MockMetadataAPIMockRecorder) GetUserOwnedGroups(ctx, accountID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, accountID, startAfter, limit}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockMetadataAPI)(nil).GetUserOwnedGroups), varargs...)
 }
 
 // GetVirtualGroupFamily mocks base method.
