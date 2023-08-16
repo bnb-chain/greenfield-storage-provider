@@ -6,11 +6,11 @@ export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="v0.2.4-alpha.1"
+GREENFIELD_REPO_TAG="develop"
 # greenfield cmd branch name: auth-refactoring
 GREENFIELD_CMD_TAG="v0.1.0-alpha.1"
 # greenfield go sdk branch name: feat/auth-refactor
-GREENFIELD_GO_SDK_TAG="v0.2.4-alpha.1"
+GREENFIELD_GO_SDK_TAG="8d6f0a9807791b06ace6585d1235a05acd9b6b28"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
