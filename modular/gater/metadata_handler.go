@@ -389,8 +389,8 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var buckets = []*types.Bucket{grpcResponse.Bucket}
-	respBytes = processBucketsXmlResponse(respBytes, buckets)
+	var bucketsWithPayment = []*types.GfSpGetBucketMetaResponse{grpcResponse}
+	respBytes = processBucketsWithPaymentsponse(respBytes, bucketsWithPayment)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2328,6 +2328,22 @@ func processBucketsXmlResponse(respBytes []byte, buckets []*types.Bucket) (respB
 	for _, bucket := range buckets {
 		if bucket != nil {
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+func processBucketsWithPaymentsponse(respBytes []byte, buckets []*types.GfSpGetBucketMetaResponse) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, bucket := range buckets {
+		if bucket != nil {
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.Bucket.BucketInfo.Id.String()+"</Id>", 1)
+			respString = strings.Replace(respString, "<NetflowRate></NetflowRate>", "<NetflowRate>"+bucket.StreamRecord.NetflowRate.String()+"</NetflowRate>", 1)
+			respString = strings.Replace(respString, "<StaticBalance></StaticBalance>", "<StaticBalance>"+bucket.StreamRecord.StaticBalance.String()+"</StaticBalance>", 1)
+			respString = strings.Replace(respString, "<BufferBalance></BufferBalance>", "<BufferBalance>"+bucket.StreamRecord.BufferBalance.String()+"</BufferBalance>", 1)
+			respString = strings.Replace(respString, "<LockBalance></LockBalance>", "<LockBalance>"+bucket.StreamRecord.LockBalance.String()+"</LockBalance>", 1)
+			respString = strings.Replace(respString, "<FrozenNetflowRate></FrozenNetflowRate>", "<FrozenNetflowRate>"+bucket.StreamRecord.FrozenNetflowRate.String()+"</FrozenNetflowRate>", 1)
 		}
 	}
 	respBytesProcessed = []byte(respString)
