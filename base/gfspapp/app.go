@@ -82,9 +82,19 @@ func (g *GfSpBaseApp) AppID() string {
 	return g.appID
 }
 
+// SetAppID sets appID
+func (g *GfSpBaseApp) SetAppID(appID string) {
+	g.appID = appID
+}
+
 // GfSpClient returns the sp client that includes inner grpc and outer http protocol.
 func (g *GfSpBaseApp) GfSpClient() gfspclient.GfSpClientAPI {
 	return g.client
+}
+
+// SetGfSpClient sets gfsp client
+func (g *GfSpBaseApp) SetGfSpClient(clientAPI gfspclient.GfSpClientAPI) {
+	g.client = clientAPI
 }
 
 // PieceStore returns the piece store client.
@@ -92,9 +102,19 @@ func (g *GfSpBaseApp) PieceStore() piecestore.PieceStore {
 	return g.pieceStore
 }
 
+// SetPieceStore sets piece store
+func (g *GfSpBaseApp) SetPieceStore(ps piecestore.PieceStore) {
+	g.pieceStore = ps
+}
+
 // PieceOp returns piece helper struct instance.
 func (g *GfSpBaseApp) PieceOp() piecestore.PieceOp {
 	return g.pieceOp
+}
+
+// SetPieceOp sets piece op
+func (g *GfSpBaseApp) SetPieceOp(pieceOp piecestore.PieceOp) {
+	g.pieceOp = pieceOp
 }
 
 // Consensus returns greenfield consensus query client.
@@ -102,19 +122,39 @@ func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 	return g.chain
 }
 
+// Consensus sets greenfield consensus query client.
+func (g *GfSpBaseApp) SetConsensus(chain consensus.Consensus) {
+	g.chain = chain
+}
+
 // OperatorAddress returns the sp operator address.
 func (g *GfSpBaseApp) OperatorAddress() string {
 	return g.operatorAddress
 }
 
-// ChainID returns the chain ID used by this sp instance
+// SetOperatorAddress sets operator address
+func (g *GfSpBaseApp) SetOperatorAddress(operatorAddress string) {
+	g.operatorAddress = operatorAddress
+}
+
+// ChainID returns the chainID used by this sp instance
 func (g *GfSpBaseApp) ChainID() string {
 	return g.chainID
+}
+
+// SetChainID sets chainID
+func (g *GfSpBaseApp) SetChainID(chainID string) {
+	g.chainID = chainID
 }
 
 // GfSpDB returns the sp db client.
 func (g *GfSpBaseApp) GfSpDB() spdb.SPDB {
 	return g.gfSpDB
+}
+
+// SetGfSpDB sets spdb
+func (g *GfSpBaseApp) SetGfSpDB(db spdb.SPDB) {
+	g.gfSpDB = db
 }
 
 // GfBsDB returns the block syncer db client.
@@ -145,6 +185,12 @@ func (g *GfSpBaseApp) ServerForRegister() *grpc.Server {
 
 // ResourceManager returns the resource manager for module to open own resource span.
 func (g *GfSpBaseApp) ResourceManager() corercmgr.ResourceManager {
+	return g.rcmgr
+}
+
+// SetResourceManager sets the resource manager for module to open own resource span.
+func (g *GfSpBaseApp) SetResourceManager(rcmgr corercmgr.ResourceManager) corercmgr.ResourceManager {
+	g.rcmgr = rcmgr
 	return g.rcmgr
 }
 
