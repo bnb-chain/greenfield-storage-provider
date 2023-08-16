@@ -25,7 +25,7 @@ func DefaultGrpcServerOptions() []grpc.ServerOption {
 	return options
 }
 
-func (g *GfSpBaseApp) newRpcServer(options ...grpc.ServerOption) {
+func (g *GfSpBaseApp) newRPCServer(options ...grpc.ServerOption) {
 	options = append(options, DefaultGrpcServerOptions()...)
 	if g.EnableMetrics() {
 		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
@@ -52,7 +52,7 @@ func (g *GfSpBaseApp) StartRPCServer(ctx context.Context) error {
 	}
 	go func() {
 		if err = g.server.Serve(lis); err != nil {
-			log.Errorw("failed to start gf-sp app grpc server", "error", err)
+			log.Errorw("failed to start gfsp app grpc server", "error", err)
 		}
 	}()
 	return nil
