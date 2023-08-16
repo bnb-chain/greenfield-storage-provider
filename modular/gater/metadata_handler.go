@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -114,6 +116,8 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
 	}
+
+	respBytes = processBucketsXmlResponse(respBytes, grpcResponse.Buckets)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -277,6 +281,8 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		return
 	}
 
+	respBytes = processObjectsXmlResponse(respBytes, grpcResponse.Objects)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
 }
@@ -331,6 +337,9 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	var objects = []*types.Object{grpcResponse.Object}
+	respBytes = processObjectsXmlResponse(respBytes, objects)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
 }
@@ -379,6 +388,9 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		log.Errorf("failed to get bucket metadata", "error", err)
 		return
 	}
+
+	var buckets = []*types.Bucket{grpcResponse.Bucket}
+	respBytes = processBucketsXmlResponse(respBytes, buckets)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -564,6 +576,8 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	respBytes = processGroupsXmlResponse(respBytes, grpcResponse.Groups)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
 }
@@ -668,8 +682,34 @@ func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	respBytes = processObjectsMapXmlResponse(respBytes, grpcResponse.Objects)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
+}
+
+type GfSpListBucketsByIDsResponse types.GfSpListBucketsByIDsResponse
+
+type BucketEntry struct {
+	Id    uint64
+	Value *types.Bucket
+}
+
+func (m GfSpListBucketsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if len(m.Buckets) == 0 {
+		return nil
+	}
+
+	err := e.EncodeToken(start)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range m.Buckets {
+		e.Encode(BucketEntry{Id: k, Value: v})
+	}
+
+	return e.EncodeToken(start.End())
 }
 
 // listBucketsByIDsHandler list buckets by bucket ids
@@ -748,32 +788,10 @@ func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	respBytes = processBucketsMapXmlResponse(respBytes, grpcResponse.Buckets)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
-}
-
-type GfSpListBucketsByIDsResponse types.GfSpListBucketsByIDsResponse
-
-type BucketEntry struct {
-	Id    uint64
-	Value *types.Bucket
-}
-
-func (m GfSpListBucketsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if len(m.Buckets) == 0 {
-		return nil
-	}
-
-	err := e.EncodeToken(start)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range m.Buckets {
-		e.Encode(BucketEntry{Id: k, Value: v})
-	}
-
-	return e.EncodeToken(start.End())
 }
 
 // getPaymentByBucketIDHandler get payment by bucket id
@@ -2113,6 +2131,8 @@ func (g *GateModular) getUserGroupsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
 }
@@ -2184,6 +2204,8 @@ func (g *GateModular) getGroupMembersHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
 }
@@ -2253,6 +2275,94 @@ func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
+
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
+}
+
+func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	var startIdx = 0
+	for _, object := range objects {
+		if object != nil {
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
+			for _, checkSum := range object.ObjectInfo.Checksums {
+				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
+				found := re.FindString(respString[startIdx:])
+				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
+				if found != "" {
+					respString = strings.Replace(respString, found, respCheckSum, 1)
+					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
+				}
+			}
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+func processObjectsMapXmlResponse(respBytes []byte, objects map[uint64]*types.Object) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	var startIdx = 0
+	for _, object := range objects {
+		if object != nil {
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
+			for _, checkSum := range object.ObjectInfo.Checksums {
+				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
+				found := re.FindString(respString[startIdx:])
+				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
+				if found != "" {
+					respString = strings.Replace(respString, found, respCheckSum, 1)
+					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
+				}
+			}
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+func processBucketsXmlResponse(respBytes []byte, buckets []*types.Bucket) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, bucket := range buckets {
+		if bucket != nil {
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+func processBucketsMapXmlResponse(respBytes []byte, buckets map[uint64]*types.Bucket) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, bucket := range buckets {
+		if bucket != nil {
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+func processGroupsXmlResponse(respBytes []byte, groups []*types.Group) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, group := range groups {
+		if group != nil {
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+func processGroupMembersXmlResponse(respBytes []byte, groupMembers []*types.GroupMember) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, group := range groupMembers {
+		if group != nil {
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
 }
