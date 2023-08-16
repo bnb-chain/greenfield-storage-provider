@@ -568,6 +568,30 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	w.Write(respBytes)
 }
 
+type GfSpListObjectsByIDsResponse types.GfSpListObjectsByIDsResponse
+
+type ObjectEntry struct {
+	Id    uint64
+	Value *types.Object
+}
+
+func (m GfSpListObjectsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if len(m.Objects) == 0 {
+		return nil
+	}
+
+	err := e.EncodeToken(start)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range m.Objects {
+		e.Encode(ObjectEntry{Id: k, Value: v})
+	}
+
+	return e.EncodeToken(start.End())
+}
+
 // listObjectsByIDsHandler list objects by object ids
 func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -638,7 +662,7 @@ func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Req
 	}
 	grpcResponse := &types.GfSpListObjectsByIDsResponse{Objects: objects}
 
-	respBytes, err = xml.Marshal(grpcResponse)
+	respBytes, err = xml.Marshal((*GfSpListObjectsByIDsResponse)(grpcResponse))
 	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
@@ -718,7 +742,7 @@ func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Req
 	}
 	grpcResponse := &types.GfSpListBucketsByIDsResponse{Buckets: buckets}
 
-	respBytes, err = xml.Marshal(grpcResponse)
+	respBytes, err = xml.Marshal((*GfSpListBucketsByIDsResponse)(grpcResponse))
 	if err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
@@ -726,6 +750,30 @@ func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
+}
+
+type GfSpListBucketsByIDsResponse types.GfSpListBucketsByIDsResponse
+
+type BucketEntry struct {
+	Id    uint64
+	Value *types.Bucket
+}
+
+func (m GfSpListBucketsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if len(m.Buckets) == 0 {
+		return nil
+	}
+
+	err := e.EncodeToken(start)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range m.Buckets {
+		e.Encode(BucketEntry{Id: k, Value: v})
+	}
+
+	return e.EncodeToken(start.End())
 }
 
 // getPaymentByBucketIDHandler get payment by bucket id
