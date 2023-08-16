@@ -95,21 +95,21 @@ func init() {
 		pprofFlags,
 	)
 	app.Commands = []*cli.Command{
+		VersionCmd,
 		// config category commands
 		command.ConfigDumpCmd,
 		// query category commands
-		command.ListModularCmd,
+		command.ListModulesCmd,
 		command.ListErrorsCmd,
 		command.QueryTaskCmd,
 		command.GetObjectCmd,
 		command.ChallengePieceCmd,
 		command.GetSegmentIntegrityCmd,
+		// query sp exit and bucket migrate status
 		command.QueryBucketMigrateCmd,
 		command.QuerySPExitCmd,
 		// p2p category commands
 		command.P2PCreateKeysCmd,
-		// miscellaneous category commands
-		VersionCmd,
 		// debug commands
 		command.DebugCreateBucketApprovalCmd,
 		command.DebugCreateObjectApprovalCmd,
@@ -137,8 +137,7 @@ func main() {
 
 // storageProvider is the main entry point into the system if no special subcommand
 // is run. It uses default config to  run storage provider services based  on the
-// command line arguments and runs it in blocking mode, waiting for it to be shut
-// down.
+// command line arguments and runs it in blocking mode, waiting for it to be shutdown.
 func storageProvider(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {

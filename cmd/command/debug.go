@@ -20,17 +20,20 @@ import (
 )
 
 const (
-	DebugCommandPrefix = "gfsp-cli-debug-"
+	DebugCommandPrefix             = "gfsp-cli-debug-"
+	DefaultMaxSegmentPieceSize     = 16 * 1024 * 1024
+	DefaultRedundantDataChunkNum   = 4
+	DefaultRedundantParityChunkNum = 2
 )
 
 var fileFlag = &cli.StringFlag{
-	Name:     "f",
+	Name:     "file",
 	Usage:    "The file of uploading",
 	Required: true,
 }
 
 var DebugCreateBucketApprovalCmd = &cli.Command{
-	Action: createBucketApproval,
+	Action: CW.createBucketApproval,
 	Name:   "debug.create.bucket.approval",
 	Usage:  "Create random CreateBucketApproval and send to approver for debugging and testing",
 	Flags: []cli.Flag{
@@ -43,7 +46,7 @@ the approver on Dev Env.`,
 }
 
 var DebugCreateObjectApprovalCmd = &cli.Command{
-	Action: createObjectApproval,
+	Action: CW.createObjectApproval,
 	Name:   "debug.create.object.approval",
 	Usage:  "Create random CreateObjectApproval and send to approver for debugging and testing",
 	Flags: []cli.Flag{
@@ -56,7 +59,7 @@ the approver on Dev Env.`,
 }
 
 var DebugReplicateApprovalCmd = &cli.Command{
-	Action: replicatePieceApprovalAction,
+	Action: CW.replicatePieceApprovalAction,
 	Name:   "debug.replicate.approval",
 	Usage:  "Create random ObjectInfo and send to p2p for debugging and testing p2p protocol network",
 	Flags: []cli.Flag{
@@ -70,7 +73,7 @@ network on Dev Env.`,
 }
 
 var DebugPutObjectCmd = &cli.Command{
-	Action: putObjectAction,
+	Action: CW.putObjectAction,
 	Name:   "debug.put.object",
 	Usage:  "Create random ObjectInfo and send to uploader for debugging and testing uploading primary sp",
 	Flags: []cli.Flag{
@@ -83,12 +86,11 @@ and send it to uploader for debugging and testing upload primary sp on Dev Env.`
 }
 
 // createBucketApproval is the debug.create.bucket.approval command action.
-func createBucketApproval(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) createBucketApproval(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
 
 	msg := &storagetypes.MsgCreateBucket{
 		BucketName:        DebugCommandPrefix + util.GetRandomBucketName(),
@@ -96,7 +98,7 @@ func createBucketApproval(ctx *cli.Context) error {
 	}
 	task := &gfsptask.GfSpCreateBucketApprovalTask{}
 	task.InitApprovalCreateBucketTask("cmd_debug", msg, coretask.UnSchedulingPriority)
-	allow, res, err := client.AskCreateBucketApproval(context.Background(), task)
+	allow, res, err := w.grpcAPI.AskCreateBucketApproval(context.Background(), task)
 	if err != nil {
 		return err
 	}
@@ -108,13 +110,12 @@ func createBucketApproval(ctx *cli.Context) error {
 	return nil
 }
 
-// createBucketApproval is the debug.create.bucket.approval command action.
-func createObjectApproval(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+// createObjectApproval is the debug.create.object.approval command action.
+func (w *CMDWrapper) createObjectApproval(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
 
 	msg := &storagetypes.MsgCreateObject{
 		BucketName:        DebugCommandPrefix + util.GetRandomBucketName(),
@@ -123,7 +124,7 @@ func createObjectApproval(ctx *cli.Context) error {
 	}
 	task := &gfsptask.GfSpCreateObjectApprovalTask{}
 	task.InitApprovalCreateObjectTask("cmd_debug", msg, coretask.UnSchedulingPriority)
-	allow, res, err := client.AskCreateObjectApproval(context.Background(), task)
+	allow, res, err := w.grpcAPI.AskCreateObjectApproval(context.Background(), task)
 	if err != nil {
 		return err
 	}
@@ -136,13 +137,12 @@ func createObjectApproval(ctx *cli.Context) error {
 	return nil
 }
 
-// createBucketApproval is the debug.create.bucket.approval command action.
-func replicatePieceApprovalAction(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+// replicatePieceApprovalAction is the debug.replicate.approval command action.
+func (w *CMDWrapper) replicatePieceApprovalAction(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
 
 	objectInfo := &storagetypes.ObjectInfo{
 		Id:         sdk.NewUint(uint64(util.RandInt64(0, 100000))),
@@ -154,19 +154,15 @@ func replicatePieceApprovalAction(ctx *cli.Context) error {
 		coretask.UnSchedulingPriority, GfSpCliUserName)
 
 	expectNumber := ctx.Int(numberFlag.Name)
-	approvals, err := client.AskSecondaryReplicatePieceApproval(
+	approvals, err := w.grpcAPI.AskSecondaryReplicatePieceApproval(
 		context.Background(), task, expectNumber, expectNumber, 10)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("receive %d accepted approvals\n", len(approvals))
 
-	db, err := utils.MakeSPDB(cfg)
-	if err != nil {
-		return err
-	}
 	for _, approval := range approvals {
-		spInfo, err := db.GetSpByAddress(approval.GetApprovedSpOperatorAddress(), spdb.OperatorAddressType)
+		spInfo, err := w.spDBAPI.GetSpByAddress(approval.GetApprovedSpOperatorAddress(), spdb.OperatorAddressType)
 		if err != nil {
 			return err
 		}
@@ -175,19 +171,21 @@ func replicatePieceApprovalAction(ctx *cli.Context) error {
 	return nil
 }
 
-func putObjectAction(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) putObjectAction(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
+
 	filePath := ctx.String(fileFlag.Name)
 	data, err := os.ReadFile(filePath)
 	if err != nil {
+		fmt.Printf("failed to upload %s due to %v\n", filePath, err)
 		return err
 	}
-	if len(data) > 16*1024*1024 {
-		return fmt.Errorf("debug upload data too big size [%d], limit[%d]", len(data), 16*1024*1024)
+	if len(data) > DefaultMaxSegmentPieceSize {
+		fmt.Printf("failed to upload %s due to too large, file_length=%v\n", filePath, len(data))
+		return fmt.Errorf("debug upload data too big size [%d], limit[%d]", len(data), DefaultMaxSegmentPieceSize)
 	}
 	checksum := hash.GenerateChecksum(data)
 	integrity := hash.GenerateIntegrityHash([][]byte{checksum})
@@ -200,16 +198,16 @@ func putObjectAction(ctx *cli.Context) error {
 	}
 	params := &storagetypes.Params{
 		VersionedParams: storagetypes.VersionedParams{
-			MaxSegmentSize:          16 * 1024 * 1024,
-			RedundantDataChunkNum:   4,
-			RedundantParityChunkNum: 2,
+			MaxSegmentSize:          DefaultMaxSegmentPieceSize,
+			RedundantDataChunkNum:   DefaultRedundantDataChunkNum,
+			RedundantParityChunkNum: DefaultRedundantParityChunkNum,
 		},
 	}
 	stream := bytes.NewReader(data)
+
 	task := &gfsptask.GfSpUploadObjectTask{}
-	// TODO: refine it
 	task.InitUploadObjectTask(0, objectInfo, params, 0)
-	err = client.UploadObject(context.Background(), task, stream)
+	err = w.grpcAPI.UploadObject(context.Background(), task, stream)
 	if err != nil {
 		return fmt.Errorf("failed to upload %s to uploader, error: %v", filePath, err)
 	}

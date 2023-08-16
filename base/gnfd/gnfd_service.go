@@ -88,7 +88,7 @@ const (
 	// ChainFailureVerifyGetObjectPermission defines the metrics label of unsuccessfully verify get object permission
 	ChainFailureVerifyGetObjectPermission = "verify_get_object_permission_failure"
 	// ChainSuccessVerifyPutObjectPermission defines the metrics label of successfully verify put object permission
-	ChainSuccessVerifyPutObjectPermission = "verify_putt_object_permission_success"
+	ChainSuccessVerifyPutObjectPermission = "verify_put_object_permission_success"
 	// ChainFailureVerifyPutObjectPermission defines the metrics label of unsuccessfully verify put object permission
 	ChainFailureVerifyPutObjectPermission = "verify_put_object_permission_failure"
 
