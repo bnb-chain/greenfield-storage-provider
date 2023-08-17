@@ -390,7 +390,7 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	var bucketsWithPayment = []*types.GfSpGetBucketMetaResponse{grpcResponse}
-	respBytes = processBucketsWithPaymentsponse(respBytes, bucketsWithPayment)
+	respBytes = processBucketsWithPaymentResponse(respBytes, bucketsWithPayment)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2281,17 +2281,23 @@ func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.R
 	w.Write(respBytes)
 }
 
+// processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
 func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)
+	// startIdx is to trace the index for next checkSum to be processed
 	var startIdx = 0
 	for _, object := range objects {
 		if object != nil {
+			// iterate through each object and assign id value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
+			// inside each object, there is an array of checksum that need to be unmarshalled correctly
 			for _, checkSum := range object.ObjectInfo.Checksums {
 				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
+				// first find the matching string of regex
 				found := re.FindString(respString[startIdx:])
 				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
 				if found != "" {
+					// replace the matching string of regex and move the startIdx after that to search next regex
 					respString = strings.Replace(respString, found, respCheckSum, 1)
 					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
 				}
@@ -2302,17 +2308,23 @@ func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respB
 	return
 }
 
+// processObjectsMapXmlResponse process the unhandled Uint id and checksum of object map xml unmarshal
 func processObjectsMapXmlResponse(respBytes []byte, objects map[uint64]*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)
+	// startIdx is to trace the index for next checkSum to be processed
 	var startIdx = 0
 	for _, object := range objects {
 		if object != nil {
+			// iterate through each object and assign id value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
+			// inside each object, there is an array of checksum that need to be unmarshalled correctly
 			for _, checkSum := range object.ObjectInfo.Checksums {
 				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
+				// first find the matching string of regex
 				found := re.FindString(respString[startIdx:])
 				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
 				if found != "" {
+					// replace the matching string of regex and move the startIdx after that to search next regex
 					respString = strings.Replace(respString, found, respCheckSum, 1)
 					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
 				}
@@ -2323,10 +2335,12 @@ func processObjectsMapXmlResponse(respBytes []byte, objects map[uint64]*types.Ob
 	return
 }
 
+// processBucketsXmlResponse process the unhandled Uint id of bucket xml unmarshal
 func processBucketsXmlResponse(respBytes []byte, buckets []*types.Bucket) (respBytesProcessed []byte) {
 	respString := string(respBytes)
 	for _, bucket := range buckets {
 		if bucket != nil {
+			// iterate through each bucket and assign id value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
 		}
 	}
@@ -2334,10 +2348,12 @@ func processBucketsXmlResponse(respBytes []byte, buckets []*types.Bucket) (respB
 	return
 }
 
-func processBucketsWithPaymentsponse(respBytes []byte, buckets []*types.GfSpGetBucketMetaResponse) (respBytesProcessed []byte) {
+// processBucketsWithPaymentResponse process the unhandled Uint id and several balance of bucket with payment xml unmarshal
+func processBucketsWithPaymentResponse(respBytes []byte, buckets []*types.GfSpGetBucketMetaResponse) (respBytesProcessed []byte) {
 	respString := string(respBytes)
 	for _, bucket := range buckets {
 		if bucket != nil {
+			// iterate through each bucket and assign id and payment Uint value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.Bucket.BucketInfo.Id.String()+"</Id>", 1)
 			respString = strings.Replace(respString, "<NetflowRate></NetflowRate>", "<NetflowRate>"+bucket.StreamRecord.NetflowRate.String()+"</NetflowRate>", 1)
 			respString = strings.Replace(respString, "<StaticBalance></StaticBalance>", "<StaticBalance>"+bucket.StreamRecord.StaticBalance.String()+"</StaticBalance>", 1)
@@ -2350,10 +2366,12 @@ func processBucketsWithPaymentsponse(respBytes []byte, buckets []*types.GfSpGetB
 	return
 }
 
+// processBucketsMapXmlResponse process the unhandled Uint id of bucket map xml unmarshal
 func processBucketsMapXmlResponse(respBytes []byte, buckets map[uint64]*types.Bucket) (respBytesProcessed []byte) {
 	respString := string(respBytes)
 	for _, bucket := range buckets {
 		if bucket != nil {
+			// iterate through each bucket and assign id value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
 		}
 	}
@@ -2361,10 +2379,12 @@ func processBucketsMapXmlResponse(respBytes []byte, buckets map[uint64]*types.Bu
 	return
 }
 
+// processGroupsXmlResponse process the unhandled Uint id of group xml unmarshal
 func processGroupsXmlResponse(respBytes []byte, groups []*types.Group) (respBytesProcessed []byte) {
 	respString := string(respBytes)
 	for _, group := range groups {
 		if group != nil {
+			// iterate through each group and assign id value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
 		}
 	}
@@ -2372,10 +2392,12 @@ func processGroupsXmlResponse(respBytes []byte, groups []*types.Group) (respByte
 	return
 }
 
+// processGroupMembersXmlResponse process the unhandled Uint id of group member xml unmarshal
 func processGroupMembersXmlResponse(respBytes []byte, groupMembers []*types.GroupMember) (respBytesProcessed []byte) {
 	respString := string(respBytes)
 	for _, group := range groupMembers {
 		if group != nil {
+			// iterate through each group and assign id value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
 		}
 	}
