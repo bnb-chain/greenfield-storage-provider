@@ -4,6 +4,8 @@ package storage
 const (
 	// S3Store defines storage type for s3
 	S3Store = "s3"
+	// OSSStore defines storage type for oss
+	OSSStore = "oss"
 	// B2Store defines storage type for s3
 	B2Store = "b2"
 	// MinioStore defines storage type for minio
@@ -39,18 +41,20 @@ const (
 	// AWSSessionToken defines env variable name for aws session token
 	AWSSessionToken = "AWS_SESSION_TOKEN"
 
-	// AliyunRoleARN defines env variable for aliyun role arn
-	AliyunRoleARN = "ALIBABA_CLOUD_ROLE_ARN"
-	// AliyunWebIdentityTokenFile defines env variable for aliyun identity token file
-	AliyunWebIdentityTokenFile = "ALIBABA_CLOUD_OIDC_TOKEN_FILE"
-	// AliyunAccessKey defines env variable name for aliyun access key
-	AliyunAccessKey = "ALIBABA_CLOUD_ACCESS_KEY"
-	// AliyunSecretKey defines env variable name for aliyun secret key
-	AliyunSecretKey = "ALIBABA_CLOUD_SECRET_KEY"
-	// AliyunSessionToken defines env variable name for aliyun session token
-	AliyunSessionToken = "ALIBABA_CLOUD_SESSION_TOKEN"
-	// AliyunRegion defines env variable name for aliyun oss region
-	AliyunRegion = "ALIBABA_CLOUD_OSS_REGION"
+	// OSSRoleARN defines env variable for OSS role arn
+	OSSRoleARN = "ALIBABA_CLOUD_ROLE_ARN"
+	// OSSWebIdentityTokenFile defines env variable for OSS identity token file
+	OSSWebIdentityTokenFile = "ALIBABA_CLOUD_OIDC_TOKEN_FILE"
+	// OSSOidcProviderArn defines env variable for OSS oidc provider arn
+	OSSOidcProviderArn = "ALIBABA_CLOUD_OIDC_PROVIDER_ARN"
+	// OSSAccessKey defines env variable name for OSS access key
+	OSSAccessKey = "ALIBABA_CLOUD_ACCESS_KEY"
+	// OSSSecretKey defines env variable name for OSS secret key
+	OSSSecretKey = "ALIBABA_CLOUD_SECRET_KEY"
+	// OSSSessionToken defines env variable name for OSS session token
+	OSSSessionToken = "ALIBABA_CLOUD_SESSION_TOKEN"
+	// OSSRegion defines env variable name for OSS oss region
+	OSSRegion = "ALIBABA_CLOUD_OSS_REGION"
 
 	// MinioRegion defines env variable name for minio region
 	MinioRegion = "MINIO_REGION"
@@ -74,6 +78,7 @@ const (
 
 // define piece store constants.
 const (
+	UserAgent = "Greenfield-SP"
 	// BufPoolSize define buffer pool size
 	BufPoolSize = 32 << 10
 	// ChecksumAlgo define validation algorithm name

@@ -98,6 +98,6 @@ func parseB2BucketURL(bucketURL string) (endpoint, region, bucketName string, er
 		isVirtualHostStyle = true
 	}
 
-	region = parseRegion(endpoint)
+	region = parseS3Region(endpoint)
 	return endpoint, region, bucketName, nil
 }

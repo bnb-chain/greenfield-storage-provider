@@ -111,6 +111,6 @@ func Test_getAliyunSecretKeyFromEnv(t *testing.T) {
 	defer os.Unsetenv(sk)
 	defer os.Unsetenv(st)
 
-	result := getAliyunSecretKeyFromEnv(region, ak, sk, st)
+	result := getOSSSecretKeyFromEnv(region, ak, sk, st)
 	assert.Equal(t, endpoints.UsEast1RegionID, result.region)
 }
