@@ -231,7 +231,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		sealObject.GetBucketName(), sealObject.GetObjectName(), sealObject.GetGlobalVirtualGroupId(),
 		sealObject.GetSecondarySpBlsAggSignatures())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -398,7 +398,7 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 
 	msgCreateGlobalVirtualGroup := virtualgrouptypes.NewMsgCreateGlobalVirtualGroup(km.GetAddr(),
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -460,7 +460,7 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 	msgCompleteMigrateBucket := storagetypes.NewMsgCompleteMigrateBucket(km.GetAddr(), migrateBucket.GetBucketName(),
 		migrateBucket.GetGlobalVirtualGroupFamilyId(), migrateBucket.GetGvgMappings())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -577,7 +577,7 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 		ExpiredHeight: swapOut.SuccessorSpApproval.GetExpiredHeight(),
 		Sig:           swapOut.SuccessorSpApproval.GetSig(),
 	}
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -637,7 +637,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 
 	msgCompleteSwapOut := virtualgrouptypes.NewMsgCompleteSwapOut(km.GetAddr(), completeSwapOut.GetGlobalVirtualGroupFamilyId(),
 		completeSwapOut.GetGlobalVirtualGroupIds())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -695,7 +695,7 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 
 	msgSPExit := virtualgrouptypes.NewMsgStorageProviderExit(km.GetAddr())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	var (
 		txHash   string
 		nonce    uint64
@@ -752,7 +752,7 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 
 	msgCompleteSPExit := virtualgrouptypes.NewMsgCompleteStorageProviderExit(km.GetAddr())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
