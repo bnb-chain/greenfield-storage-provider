@@ -35,8 +35,11 @@ var (
 	ErrCanceledTask         = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
 	ErrFutureSupport        = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "future support")
 	ErrNotifyMigrateSwapOut = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60006, "failed to notify swap out start")
-	ErrGfSpDB               = gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 65201, "server slipped away, try again later")
 )
+
+func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 65201, detail)
+}
 
 func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error) {
 	for {
@@ -78,7 +81,7 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 	}
 	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
 		log.CtxErrorw(ctx, "failed to create upload object progress", "task_info", task.Info(), "error", err)
-		return ErrGfSpDB
+		return ErrGfSpDBWithDetail("failed to create upload object progress, task_info: " + task.Info() + ", error: " + err.Error())
 	}
 	return nil
 }
@@ -180,7 +183,7 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 			return nil
 		} else {
 			log.CtxErrorw(ctx, "failed to create resumable upload object progress", "task_info", task.Info(), "error", err)
-			return ErrGfSpDB
+			return ErrGfSpDBWithDetail("failed to create resumable upload object progress, task_info: " + task.Info() + ", error: " + err.Error())
 		}
 	}
 	return nil
@@ -250,7 +253,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
-			return ErrGfSpDB
+			return ErrGfSpDBWithDetail("failed to update object task state, error: " + err.Error())
 		}
 		log.CtxDebugw(ctx, "succeed to done upload object and waiting for scheduling to replicate piece")
 		return nil

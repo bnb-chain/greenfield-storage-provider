@@ -87,3 +87,11 @@ func GetNewModularFunc(name string) NewModularFunc {
 	}
 	return modMgr.newModularFunc[name]
 }
+
+// ClearRegisterModules clear all map contents
+func ClearRegisterModules() {
+	modMgr.mux.RLock()
+	defer modMgr.mux.RUnlock()
+	modMgr.newModularFunc = map[string]NewModularFunc{}
+	modMgr.descriptions = map[string]string{}
+}

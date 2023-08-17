@@ -20,8 +20,8 @@ const (
 	SpDBPasswd = "SP_DB_PASSWORD"
 	// SpDBAddress defines env variable name for sp db address.
 	SpDBAddress = "SP_DB_ADDRESS"
-	// SpDBDataBase defines env variable name for sp db database.
-	SpDBDataBase = "SP_DB_DATABASE"
+	// SpDBDatabase defines env variable name for sp db database.
+	SpDBDatabase = "SP_DB_DATABASE"
 
 	// DefaultConnMaxLifetime defines the default max liveliness time of connection.
 	DefaultConnMaxLifetime = 2048
@@ -163,7 +163,7 @@ func LoadDBConfigFromEnv(config *config.SQLDBConfig) {
 	if val, ok := os.LookupEnv(SpDBAddress); ok {
 		config.Address = val
 	}
-	if val, ok := os.LookupEnv(SpDBDataBase); ok {
+	if val, ok := os.LookupEnv(SpDBDatabase); ok {
 		config.Database = val
 	}
 }

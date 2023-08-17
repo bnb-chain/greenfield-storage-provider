@@ -16,8 +16,11 @@ import (
 var (
 	ErrDanglingPointer    = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
 	ErrExceedBucketNumber = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
-	ErrSigner             = gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 11001, "server slipped away, try again later")
 )
+
+func ErrSignerWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ApprovalModularName, http.StatusInternalServerError, 11001, detail)
+}
 
 func (a *ApprovalModular) PreCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) error {
 	return nil
@@ -85,7 +88,7 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 	metrics.PerfApprovalTime.WithLabelValues("approval_bucket_sign_create_bucket_end").Observe(time.Since(startQueryQueue).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the create bucket approval", "error", err)
-		return false, ErrSigner
+		return false, ErrSignerWithDetail("failed to sign the create bucket approval, error: " + err.Error())
 	}
 	task.GetCreateBucketInfo().GetPrimarySpApproval().Sig = signature
 	go a.bucketQueue.Push(task)
@@ -130,7 +133,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	signature, err = a.baseApp.GfSpClient().SignMigrateBucketApproval(ctx, task.GetMigrateBucketInfo())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign the migrate bucket approval", "error", err)
-		return false, ErrSigner
+		return false, ErrSignerWithDetail("failed to sign the migrate bucket approval, error: " + err.Error())
 	}
 	task.GetMigrateBucketInfo().GetDstPrimarySpApproval().Sig = signature
 	_ = a.bucketQueue.Push(task)
