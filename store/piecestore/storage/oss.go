@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/aliyun/credentials-go/credentials"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -54,11 +56,13 @@ func (o *ossStore) GetObject(ctx context.Context, key string, off, limit int64) 
 }
 
 func (o *ossStore) PutObject(ctx context.Context, key string, in io.Reader) error {
-	var option []oss.Option
+	var (
+		option     []oss.Option
+		respHeader http.Header
+	)
 	if ins, ok := in.(io.ReadSeeker); ok {
 		option = append(option, oss.Meta(ChecksumAlgo, generateChecksum(ins)))
 	}
-	var respHeader http.Header
 	option = append(option, oss.GetResponseHeader(&respHeader))
 	err := o.bucket.PutObject(key, in, option...)
 	return err
@@ -66,8 +70,7 @@ func (o *ossStore) PutObject(ctx context.Context, key string, in io.Reader) erro
 
 func (o *ossStore) DeleteObject(ctx context.Context, key string) error {
 	var respHeader http.Header
-	err := o.bucket.DeleteObject(key, oss.GetResponseHeader(&respHeader))
-	return err
+	return o.bucket.DeleteObject(key, oss.GetResponseHeader(&respHeader))
 }
 
 func (o *ossStore) HeadBucket(ctx context.Context) error {
@@ -135,8 +138,9 @@ func (o *ossStore) ListAllObjects(ctx context.Context, prefix, marker string) (<
 
 func newOSSStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	var (
-		cli *oss.Client
-		err error
+		cli          *oss.Client
+		credProvider oss.CredentialsProvider
+		err          error
 	)
 	endpoint, bucketName, region, err := parseOSS(cfg.BucketURL)
 	if err != nil {
@@ -157,24 +161,25 @@ func newOSSStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
 		} else {
 			return nil, fmt.Errorf("cannot get access key and secret key in os env vars")
 		}
+		log.Debug("use aksk to access oss")
 	case SAIAMType:
-		provider, err := oss.NewEnvironmentVariableCredentialsProvider()
+		credProvider, err = newOIDCCredentialProvider()
 		if err != nil {
-			log.Errorw("failed to new oss env var credentials provider", "error", err)
-			return nil, err
+			log.Errorw("failed to new oidc credential provider", "error", err)
 		}
-		cli, err = oss.New(endpoint, "", "", oss.SetCredentialsProvider(&provider))
+		cli, err = oss.New(endpoint, "", "", oss.SetCredentialsProvider(credProvider))
 		if err != nil {
 			log.Errorw("failed to use sa iam type to new oss", "error", err)
 			return nil, err
 		}
+		log.Debug("use sa to access oss")
 	default:
 		log.Errorf("unknown IAM type: %s", cfg.IAMType)
 		return nil, fmt.Errorf("unknown IAM type: %s", cfg.IAMType)
 	}
 
 	cli.Config.Timeout = 10
-	cli.Config.RetryTimes = 1
+	cli.Config.RetryTimes = uint(cfg.MaxRetries)
 	cli.Config.HTTPTimeout.ConnectTimeout = time.Second * 30
 	cli.Config.HTTPTimeout.ReadWriteTimeout = time.Second * 60
 	cli.Config.HTTPTimeout.HeaderTimeout = time.Second * 60
@@ -189,63 +194,44 @@ func newOSSStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
 	return &ossStore{client: cli, bucket: bucket}, nil
 }
 
-// cred, err := credentials.NewCredential(nil)
-// if err != nil {
-// log.Errorw("failed to use SA to new aliyun credentials", "error", err)
-// return nil, err
-// }
-// ak, err := cred.GetAccessKeyId()
-// if err != nil {
-// log.Errorw("failed to get access key in sa iam type")
-// return nil, err
-// }
-// sk, err := cred.GetAccessKeySecret()
-// if err != nil {
-// log.Errorw("failed to get secret key in sa iam type")
-// return nil, err
-// }
-// cli, err = oss.New(endpoint, *ak, *sk)
-// if err != nil {
-// log.Errorw("failed to use sa iam type to new oss", "error", err)
-// return nil, err
-// }
+func newOIDCCredentialProvider() (oss.CredentialsProvider, error) {
+	ok, roleArn, oidcProviderArn, tokenPath := checkOIDCAvailable()
+	if !ok {
+		log.Error("failed to check oss oidc")
+		return nil, fmt.Errorf("no oidc env vars")
+	}
+	config := new(credentials.Config).
+		SetType("oidc_role_arn").
+		SetRoleArn(roleArn).
+		SetOIDCProviderArn(oidcProviderArn).
+		SetOIDCTokenFilePath(tokenPath).SetRoleSessionName("sp-oss")
+	oidcCredential, err := credentials.NewCredential(config)
+	if err != nil {
+		log.Errorw("failed to new oidc credentials", "error", err)
+	}
+	provider := newOSSCredentialsProvider(oidcCredential)
+	return &provider, nil
+}
 
-// func newOidcCredential() (credentials.Credential, error) {
-// 	ok, roleArn, oidcProviderArn, tokenPath := checkOSSOidcAvailable()
-// 	if !ok {
-// 		log.Error("failed to check oss oidc")
-// 		return nil, fmt.Errorf("no oidc env vars")
-// 	}
-// 	config := new(credentials.Config).
-// 		SetType("oidc_role_arn").
-// 		SetRoleArn(roleArn).
-// 		SetOIDCProviderArn(oidcProviderArn).
-// 		SetOIDCTokenFilePath(tokenPath).
-// 		SetRoleSessionName("test-rrsa-oidc-token")
-//
-// 	oidcCredential, err := credentials.NewCredential(config)
-// 	return oidcCredential, err
-// }
-
-// func checkOSSOidcAvailable() (bool, string, string, string) {
-// 	oidc := true
-// 	roleArn, exists := os.LookupEnv(OSSRoleARN)
-// 	if !exists {
-// 		oidc = false
-// 		log.Error("failed to read oss role arn")
-// 	}
-// 	oidcProviderArn, exists := os.LookupEnv(OSSOidcProviderArn)
-// 	if !exists {
-// 		oidc = false
-// 		log.Error("failed to read oss oidc provider arn")
-// 	}
-// 	tokenPath, exists := os.LookupEnv(OSSWebIdentityTokenFile)
-// 	if !exists {
-// 		oidc = false
-// 		log.Error("failed to read oss web identity token file")
-// 	}
-// 	return oidc, roleArn, oidcProviderArn, tokenPath
-// }
+func checkOIDCAvailable() (bool, string, string, string) {
+	oidc := true
+	roleArn, exists := os.LookupEnv(OSSRoleARN)
+	if !exists {
+		oidc = false
+		log.Error("failed to read oss role arn")
+	}
+	oidcProviderArn, exists := os.LookupEnv(OSSOidcProviderArn)
+	if !exists {
+		oidc = false
+		log.Error("failed to read oss oidc provider arn")
+	}
+	tokenPath, exists := os.LookupEnv(OSSWebIdentityTokenFile)
+	if !exists {
+		oidc = false
+		log.Error("failed to read oss web identity token file")
+	}
+	return oidc, roleArn, oidcProviderArn, tokenPath
+}
 
 func parseOSS(bucketURL string) (string, string, string, error) {
 	if !strings.Contains(bucketURL, "://") {
@@ -271,4 +257,41 @@ func parseOSS(bucketURL string) (string, string, string, error) {
 	bucketName := hostParts[0]
 
 	return endpoint, bucketName, region, nil
+}
+
+type ossCredentials struct {
+	AccessKeyID     string
+	AccessKeySecret string
+	SecurityToken   string
+}
+
+type defaultCredentialsProvider struct {
+	cred credentials.Credential
+}
+
+func (o *ossCredentials) GetAccessKeyID() string {
+	return o.AccessKeyID
+}
+
+func (o *ossCredentials) GetAccessKeySecret() string {
+	return o.AccessKeySecret
+}
+
+func (o *ossCredentials) GetSecurityToken() string {
+	return o.SecurityToken
+}
+
+func (d *defaultCredentialsProvider) GetCredentials() oss.Credentials {
+	accessKey, _ := d.cred.GetAccessKeyId()
+	secretKey, _ := d.cred.GetAccessKeySecret()
+	securityToken, _ := d.cred.GetSecurityToken()
+	return &ossCredentials{
+		AccessKeyID:     *accessKey,
+		AccessKeySecret: *secretKey,
+		SecurityToken:   *securityToken,
+	}
+}
+
+func newOSSCredentialsProvider(credential credentials.Credential) defaultCredentialsProvider {
+	return defaultCredentialsProvider{cred: credential}
 }
