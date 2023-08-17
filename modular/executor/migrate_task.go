@@ -79,6 +79,9 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 					"current_migrated_object_number", migratedObjectNumberInGVG,
 					"last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
 				task.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
+				if index == len(objectList)-1 {
+					task.SetFinished(true)
+				}
 				if err = e.ReportTask(ctx, task); err != nil {
 					log.CtxErrorw(ctx, "failed to report migrate gvg task progress", "task_info", task, "error", err)
 					return
