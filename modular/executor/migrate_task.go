@@ -90,11 +90,6 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 			lastMigratedObjectID = object.GetObject().GetObjectInfo().Id.Uint64()
 			migratedObjectNumberInGVG++
 		}
-		if len(objectList) < int(queryLimit) { // it indicates that gvg all objects have been migrated.
-			task.SetLastMigratedObjectID(lastMigratedObjectID)
-			task.SetFinished(true)
-			return
-		}
 	}
 }
 
