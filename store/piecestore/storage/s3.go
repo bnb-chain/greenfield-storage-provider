@@ -229,7 +229,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 	sc.Lock()
 	defer sc.Unlock()
 
-	endpoint, bucketName, region, err := parseEndpoint(cfg.BucketURL)
+	endpoint, bucketName, region, err := parseS3Endpoint(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse S3 endpoint", "error", err)
 		return &session.Session{}, "", err
@@ -266,7 +266,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 		log.Debugw("use aksk to access s3", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
 	case SAIAMType:
 		sess = session.Must(session.NewSession())
-		irsa, roleARN, tokenPath := checkIRSAAvailable()
+		irsa, roleARN, tokenPath := checkS3IRSAAvailable()
 		if irsa {
 			awsConfig.WithCredentialsChainVerboseErrors(true).WithCredentials(credentials.NewChainCredentials(
 				[]credentials.Provider{
@@ -290,7 +290,7 @@ func (sc *SessionCache) newSession(cfg ObjectStorageConfig) (*session.Session, s
 }
 
 // IRSA is IAM Roles for Service Account in Kubernetes
-func checkIRSAAvailable() (bool, string, string) {
+func checkS3IRSAAvailable() (bool, string, string) {
 	irsa := true
 	roleARN, exists := os.LookupEnv(AWSRoleARN)
 	if !exists {
@@ -311,7 +311,7 @@ func (sc *SessionCache) clear() {
 	sc.sessions = map[ObjectStorageConfig]*session.Session{}
 }
 
-func parseEndpoint(endpoint string) (string, string, string, error) {
+func parseS3Endpoint(endpoint string) (string, string, string, error) {
 	endpoint = strings.Trim(endpoint, "/")
 	uri, err := url.ParseRequestURI(endpoint)
 	if err != nil {
@@ -328,7 +328,7 @@ func parseEndpoint(endpoint string) (string, string, string, error) {
 		bucketName = pathParts[1]
 		if strings.Contains(uri.Host, ".amazonaws.com") {
 			endpoint = uri.Host
-			region = parseRegion(endpoint)
+			region = parseS3Region(endpoint)
 		}
 		isVirtualHostStyle = false
 	} else { // Virtual hosted style: https://<bucketName>.s3.<region>.amazonaws.com(.cn)
@@ -336,7 +336,7 @@ func parseEndpoint(endpoint string) (string, string, string, error) {
 			hostParts := strings.SplitN(uri.Host, ".s3", 2)
 			bucketName = hostParts[0]
 			endpoint = "s3" + hostParts[1]
-			region = parseRegion(endpoint)
+			region = parseS3Region(endpoint)
 			isVirtualHostStyle = true
 		}
 	}
@@ -353,7 +353,7 @@ func parseEndpoint(endpoint string) (string, string, string, error) {
 	return endpoint, bucketName, region, nil
 }
 
-func parseRegion(endpoint string) string {
+func parseS3Region(endpoint string) string {
 	if strings.HasPrefix(endpoint, "s3-") || strings.HasPrefix(endpoint, "s3.") {
 		endpoint = endpoint[3:]
 	}

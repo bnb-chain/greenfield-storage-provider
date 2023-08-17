@@ -15,3 +15,12 @@ func TestS3Store(t *testing.T) {
 
 	doOperations(t, handler)
 }
+
+func TestOSSStore(t *testing.T) {
+	ossBucketURL := "https://nodereal-devops.oss-ap-northeast-1.aliyuncs.com/"
+	// 1. init PieceStore
+	handler, err := setup(t, storage.OSSStore, ossBucketURL, 0)
+	assert.Equal(t, err, nil)
+
+	doOperations(t, handler)
+}
