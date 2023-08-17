@@ -19,7 +19,7 @@ func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *type
 			}, nil
 		}
 		return &types.GfSpQueryUploadProgressResponse{
-			Err: ErrGfSpDB,
+			Err: ErrGfSpDBWithDetail("GfSpQueryUploadProgress error:" + err.Error()),
 		}, nil
 	}
 	return &types.GfSpQueryUploadProgressResponse{
@@ -38,7 +38,7 @@ func (r *MetadataModular) GfSpQueryResumableUploadSegment(ctx context.Context, r
 			}, nil
 		}
 		return &types.GfSpQueryResumableUploadSegmentResponse{
-			Err: ErrGfSpDB,
+			Err: ErrGfSpDBWithDetail("GfSpQueryResumableUploadSegment error: " + err.Error()),
 		}, nil
 	}
 	return &types.GfSpQueryResumableUploadSegmentResponse{

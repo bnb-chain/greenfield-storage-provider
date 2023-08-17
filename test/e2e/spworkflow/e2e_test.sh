@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
+export CGO_CFLAGS="-O -D__BLST_PORTABLE__"
+export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
+
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="v0.2.4-alpha.1"
+GREENFIELD_REPO_TAG="v0.2.4-alpha.2"
 # greenfield cmd branch name: auth-refactoring
-GREENFIELD_CMD_TAG="db9fb7793837c2aa04d0ab31081ff368dfca2414"
+GREENFIELD_CMD_TAG="v0.1.0-alpha.1"
 # greenfield go sdk branch name: feat/auth-refactor
-GREENFIELD_GO_SDK_TAG="v0.2.4-alpha.1"
+GREENFIELD_GO_SDK_TAG="2937c4defa01b55916358c79e19ba62ef2aba141"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"

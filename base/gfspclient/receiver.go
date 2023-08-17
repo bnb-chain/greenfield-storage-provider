@@ -13,18 +13,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-// ReceiverAPI for mock use
-type ReceiverAPI interface {
-	ReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, data []byte, opts ...grpc.DialOption) error
-	DoneReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, opts ...grpc.DialOption) ([]byte, []byte, error)
-}
-
 func (s *GfSpClient) ReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, data []byte,
 	opts ...grpc.DialOption) error {
 	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect receiver", "error", connErr)
-		return ErrRPCUnknown
+		return ErrRPCUnknownWithDetail("client failed to connect receiver, error: " + connErr.Error())
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpReplicatePieceRequest{
@@ -36,7 +30,7 @@ func (s *GfSpClient) ReplicatePiece(ctx context.Context, task coretask.ReceivePi
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to replicate piece", "error", err)
-		return ErrRPCUnknown
+		return ErrRPCUnknownWithDetail("client failed to replicate piece, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -49,7 +43,7 @@ func (s *GfSpClient) DoneReplicatePiece(ctx context.Context, task coretask.Recei
 	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect receiver", "error", connErr)
-		return nil, nil, ErrRPCUnknown
+		return nil, nil, ErrRPCUnknownWithDetail("client failed to connect receiver, error: " + connErr.Error())
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDoneReplicatePieceRequest{
@@ -60,7 +54,7 @@ func (s *GfSpClient) DoneReplicatePiece(ctx context.Context, task coretask.Recei
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_done_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to done replicate piece", "error", err)
-		return nil, nil, ErrRPCUnknown
+		return nil, nil, ErrRPCUnknownWithDetail("client failed to done replicate piece, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		return nil, nil, resp.GetErr()

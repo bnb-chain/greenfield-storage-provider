@@ -68,9 +68,10 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, task coretask
 		}
 
 		for index, object := range objectList {
-			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil {
+			if err = e.doObjectMigration(ctx, task, bucketID, object); err != nil && !e.enableSkipFailedToMigrateObject {
 				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
-					"bucket_id", bucketID, "object_info", object, "error", err)
+					"bucket_id", bucketID, "object_info", object,
+					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "error", err)
 				return
 			}
 			if (index+1)%reportProgressPerN == 0 || index == len(objectList)-1 {
@@ -289,14 +290,16 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, task *gfspt
 		}
 		if err = e.baseApp.PieceStore().PutPiece(ctx, pieceKey, pieceData); err != nil {
 			log.CtxErrorw(ctx, "failed to put piece data into primary sp", "piece_key", pieceKey, "error", err)
-			return ErrPieceStore
+			return ErrPieceStoreWithDetail("failed to put piece data into primary sp, piece_key: " + pieceKey + ",error: " + err.Error())
 		}
 
 		pieceChecksum := hash.GenerateChecksum(pieceData)
 		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, uint32(i), redundancyIdx, pieceChecksum); err != nil {
 			log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", task.GetObjectInfo().Id.Uint64(),
 				"segment_index", i, "redundancy_index", redundancyIdx, "error", err)
-			return ErrGfSpDB
+			detail := fmt.Sprintf("failed to set replicate piece checksum, object_id: %s, segment_index: %v, redundancy_index: %v, error: %s",
+				task.GetObjectInfo().Id.String(), i, redundancyIdx, err.Error())
+			return ErrGfSpDBWithDetail(detail)
 		}
 	}
 
@@ -333,7 +336,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectID, redundancyIdx, segmentCount)
 	if err != nil {
 		log.Errorw("failed to get checksum from db", "object_info", objectInfo, "error", err)
-		return ErrGfSpDB
+		return ErrGfSpDBWithDetail("failed to get checksum from db, object_info: " + objectInfo.String() + ",error: " + err.Error())
 	}
 	if len(pieceChecksums) != int(segmentCount) {
 		log.Errorw("returned piece checksum length does not match segment count",
@@ -343,7 +346,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	migratedIntegrityHash := hash.GenerateIntegrityHash(pieceChecksums)
 
 	var chainIntegrityHash []byte
-	if redundancyIdx == -1 {
+	if redundancyIdx == piecestore.PrimarySPRedundancyIndex {
 		// primarySP
 		chainIntegrityHash = objectInfo.GetChecksums()[0]
 	} else {

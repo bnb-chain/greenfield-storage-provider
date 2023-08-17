@@ -32,8 +32,8 @@ const (
 	getObjectMetaRouterName                        = "GetObjectMeta"
 	getBucketMetaRouterName                        = "GetBucketMeta"
 	getGroupListRouterName                         = "GetGroupList"
-	listBucketsByBucketIDRouterName                = "ListBucketsByBucketID"
-	listObjectsByObjectIDRouterName                = "ListObjectsByObjectID"
+	listBucketsByIDsRouterName                     = "ListBucketsByIDs"
+	listObjectsByIDsRouterName                     = "ListObjectsByIDs"
 	recoveryPieceRouterName                        = "RecoveryObjectPiece"
 	getPieceFromSecondaryRouterName                = "GetPieceFromSecondary"
 	getPaymentByBucketIDRouterName                 = "GetPaymentByBucketID"
@@ -62,6 +62,9 @@ const (
 	verifyPermissionByIDRouterName                 = "VerifyPermissionByID"
 	getSPInfoRouterName                            = "GetSPInfo"
 	getStatusRouterName                            = "GetStatus"
+	getUserGroupsRouterName                        = "GetUserGroups"
+	getGroupMembersRouterName                      = "GetGroupMembers"
+	getUserOwnedGroupsRouterName                   = "GetUserOwnedGroups"
 )
 
 const (
@@ -191,20 +194,35 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		Queries(GetGroupListGroupQuery, "").
 		HandlerFunc(g.getGroupListHandler)
 	router.Path("/").
-		Name(listObjectsByObjectIDRouterName).
-		Methods(http.MethodPost).
-		Queries(ListObjectsByObjectIDQuery, "").
-		HandlerFunc(g.listObjectsByObjectIDHandler)
+		Name(listObjectsByIDsRouterName).
+		Methods(http.MethodGet).
+		Queries(ListObjectsByIDsQuery, "").
+		HandlerFunc(g.listObjectsByIDsHandler)
 	router.Path("/").
-		Name(listBucketsByBucketIDRouterName).
-		Methods(http.MethodPost).
-		Queries(ListBucketsByBucketIDQuery, "").
-		HandlerFunc(g.listBucketsByBucketIDHandler)
+		Name(listBucketsByIDsRouterName).
+		Methods(http.MethodGet).
+		Queries(ListBucketsByIDsQuery, "").
+		HandlerFunc(g.listBucketsByIDsHandler)
 	router.Path("/").
 		Name(verifyPermissionByIDRouterName).
 		Methods(http.MethodGet).
 		Queries(VerifyPermissionByIDQuery, "").
 		HandlerFunc(g.verifyPermissionByIDHandler)
+	router.Path("/").
+		Name(getUserGroupsRouterName).
+		Methods(http.MethodGet).
+		Queries(GetUserGroupsQuery, "").
+		HandlerFunc(g.getUserGroupsHandler)
+	router.Path("/").
+		Name(getGroupMembersRouterName).
+		Methods(http.MethodGet).
+		Queries(GetGroupMembersQuery, "").
+		HandlerFunc(g.getGroupMembersHandler)
+	router.Path("/").
+		Name(getUserOwnedGroupsRouterName).
+		Methods(http.MethodGet).
+		Queries(GetUserOwnedGroupsQuery, "").
+		HandlerFunc(g.getUserOwnedGroupsHandler)
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID
 		router.Path("/").Name(getPaymentByBucketIDRouterName).Methods(http.MethodGet).Queries(GetPaymentByBucketIDQuery, "").HandlerFunc(g.getPaymentByBucketIDHandler)

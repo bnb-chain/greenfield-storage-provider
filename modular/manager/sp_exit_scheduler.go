@@ -238,11 +238,11 @@ func (s *SPExitScheduler) ListSPExitPlan() (*gfspserver.GfSpQuerySpExitResponse,
 		// scan gvg
 		for _, gvgUnit := range s.taskRunner.gvgUnits {
 			gvg := &gfspserver.GfSpMigrateGVG{
-				LastMigratedObjectId: gvgUnit.lastMigratedObjectID,
-				Status:               int32(gvgUnit.migrateStatus),
-				SrcGvgId:             gvgUnit.srcGVG.GetId(),
+				LastMigratedObjectId: gvgUnit.LastMigratedObjectID,
+				Status:               int32(gvgUnit.MigrateStatus),
+				SrcGvgId:             gvgUnit.SrcGVG.GetId(),
 			}
-			swapOutKey := gvgUnit.swapOutKey
+			swapOutKey := gvgUnit.SwapOutKey
 			swapOutUnitMap[swapOutKey].GvgTask = append(swapOutUnitMap[swapOutKey].GvgTask, gvg)
 		}
 
@@ -306,12 +306,12 @@ func (s *SPExitScheduler) AddSwapOutToTaskRunner(swapOut *virtualgrouptypes.MsgS
 	for _, gvg := range gvgList {
 		redundancyIndex, _ := util.GetSecondarySPIndexFromGVG(gvg, srcSP.GetId())
 		gUnit := &SPExitGVGExecuteUnit{}
-		gUnit.srcGVG = gvg
-		gUnit.redundancyIndex = redundancyIndex
-		gUnit.swapOutKey = makeSwapOutKey(swapOut)
-		gUnit.srcSP = srcSP
-		gUnit.destSP = s.selfSP
-		gUnit.migrateStatus = WaitForMigrate
+		gUnit.SrcGVG = gvg
+		gUnit.RedundancyIndex = redundancyIndex
+		gUnit.SwapOutKey = makeSwapOutKey(swapOut)
+		gUnit.SrcSP = srcSP
+		gUnit.DestSP = s.selfSP
+		gUnit.MigrateStatus = WaitForMigrate
 		if err = s.taskRunner.AddNewMigrateGVGUnit(gUnit); err != nil {
 			log.Errorw("failed to add swap out to task runner", "gvg_unit", gUnit, "error", err)
 			return err
@@ -522,15 +522,15 @@ type SwapOutUnit struct {
 func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *SPExitGVGExecuteUnit, runner *DestSPTaskRunner) error {
 	s.completedGVGMutex.Lock()
 	defer s.completedGVGMutex.Unlock()
-	s.completedGVG[gUnit.srcGVG.GetId()] = gUnit
+	s.completedGVG[gUnit.SrcGVG.GetId()] = gUnit
 
 	hasCompletedGVGList := make([]uint32, 0)
 	for completedGVGID := range s.completedGVG {
 		hasCompletedGVGList = append(hasCompletedGVGList, completedGVGID)
 	}
 
-	if err := runner.manager.baseApp.GfSpDB().UpdateSwapOutUnitCompletedGVGList(gUnit.swapOutKey, hasCompletedGVGList); err != nil {
-		log.Errorw("failed to update swap out completed gvg list", "swap_out_key", gUnit.swapOutKey, "error", err)
+	if err := runner.manager.baseApp.GfSpDB().UpdateSwapOutUnitCompletedGVGList(gUnit.SwapOutKey, hasCompletedGVGList); err != nil {
+		log.Errorw("failed to update swap out completed gvg list", "swap_out_key", gUnit.SwapOutKey, "error", err)
 		return err
 	}
 
@@ -550,7 +550,7 @@ func (s *SwapOutUnit) CheckAndSendCompleteSwapOutTx(gUnit *SPExitGVGExecuteUnit,
 
 	for _, gvgID := range needCompleted {
 		if _, found := s.completedGVG[gvgID]; !found { // not completed
-			log.Infow("swap out gvgs are not all completed", "swap_out_key", gUnit.swapOutKey, "not_completed_gvg", gvgID)
+			log.Infow("swap out gvgs are not all completed", "swap_out_key", gUnit.SwapOutKey, "not_completed_gvg", gvgID)
 			return nil
 		}
 	}
@@ -850,10 +850,10 @@ func (runner *DestSPTaskRunner) LoadFromDB() error {
 						return queryErr
 					}
 					gUnit := &SPExitGVGExecuteUnit{}
-					gUnit.srcGVG = gvg
-					gUnit.redundancyIndex = gvgMeta.RedundancyIndex
-					gUnit.swapOutKey = gvgMeta.SwapOutKey
-					gUnit.lastMigratedObjectID = gvgMeta.LastMigratedObjectID
+					gUnit.SrcGVG = gvg
+					gUnit.RedundancyIndex = gvgMeta.RedundancyIndex
+					gUnit.SwapOutKey = gvgMeta.SwapOutKey
+					gUnit.LastMigratedObjectID = gvgMeta.LastMigratedObjectID
 					runner.gvgUnits = append(runner.gvgUnits, gUnit)
 					runner.keyIndexMap[gUnit.Key()] = len(runner.gvgUnits) - 1
 				}
@@ -883,10 +883,10 @@ func (runner *DestSPTaskRunner) LoadFromDB() error {
 					return queryErr
 				}
 				gUnit := &SPExitGVGExecuteUnit{}
-				gUnit.srcGVG = gvg
-				gUnit.redundancyIndex = gvgMeta.RedundancyIndex
-				gUnit.swapOutKey = gvgMeta.SwapOutKey
-				gUnit.lastMigratedObjectID = gvgMeta.LastMigratedObjectID
+				gUnit.SrcGVG = gvg
+				gUnit.RedundancyIndex = gvgMeta.RedundancyIndex
+				gUnit.SwapOutKey = gvgMeta.SwapOutKey
+				gUnit.LastMigratedObjectID = gvgMeta.LastMigratedObjectID
 				runner.gvgUnits = append(runner.gvgUnits, gUnit)
 				runner.keyIndexMap[gUnit.Key()] = len(runner.gvgUnits) - 1
 			}
@@ -916,7 +916,7 @@ func (runner *DestSPTaskRunner) UpdateMigrateGVGLastMigratedObjectID(migrateKey 
 		return fmt.Errorf("gvg unit index is invalid")
 	}
 	unit := runner.gvgUnits[index]
-	unit.lastMigratedObjectID = lastMigratedObjectID
+	unit.LastMigratedObjectID = lastMigratedObjectID
 	runner.mutex.Unlock()
 
 	return runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, lastMigratedObjectID)
@@ -935,12 +935,12 @@ func (runner *DestSPTaskRunner) UpdateMigrateGVGStatus(migrateKey string, st Mig
 		return fmt.Errorf("gvg unit index is invalid")
 	}
 	unit := runner.gvgUnits[index]
-	unit.migrateStatus = st
+	unit.MigrateStatus = st
 
-	if _, found := runner.swapOutUnitMap[unit.swapOutKey]; !found {
+	if _, found := runner.swapOutUnitMap[unit.SwapOutKey]; !found {
 		return nil
 	}
-	if err := runner.swapOutUnitMap[unit.swapOutKey].CheckAndSendCompleteSwapOutTx(unit, runner); err != nil {
+	if err := runner.swapOutUnitMap[unit.SwapOutKey].CheckAndSendCompleteSwapOutTx(unit, runner); err != nil {
 		log.Errorw("failed to check and send complete swap out", "error", err)
 		return err
 	}
@@ -962,15 +962,15 @@ func (runner *DestSPTaskRunner) AddNewMigrateGVGUnit(remotedGVGUnit *SPExitGVGEx
 	// add to db
 	if err := runner.manager.baseApp.GfSpDB().InsertMigrateGVGUnit(&spdb.MigrateGVGUnitMeta{
 		MigrateGVGKey:        remotedGVGUnit.Key(),
-		SwapOutKey:           remotedGVGUnit.swapOutKey,
-		GlobalVirtualGroupID: remotedGVGUnit.srcGVG.GetId(),
-		VirtualGroupFamilyID: remotedGVGUnit.srcGVG.GetFamilyId(),
-		RedundancyIndex:      remotedGVGUnit.redundancyIndex,
+		SwapOutKey:           remotedGVGUnit.SwapOutKey,
+		GlobalVirtualGroupID: remotedGVGUnit.SrcGVG.GetId(),
+		VirtualGroupFamilyID: remotedGVGUnit.SrcGVG.GetFamilyId(),
+		RedundancyIndex:      remotedGVGUnit.RedundancyIndex,
 		BucketID:             0,
-		SrcSPID:              remotedGVGUnit.srcSP.GetId(),
-		DestSPID:             remotedGVGUnit.destSP.GetId(),
+		SrcSPID:              remotedGVGUnit.SrcSP.GetId(),
+		DestSPID:             remotedGVGUnit.DestSP.GetId(),
 		LastMigratedObjectID: 0,
-		MigrateStatus:        int(remotedGVGUnit.migrateStatus),
+		MigrateStatus:        int(remotedGVGUnit.MigrateStatus),
 	}); err != nil {
 		log.Errorw("failed to add gvg unit to db", "gvg_unit", remotedGVGUnit, "error", err)
 		return err
@@ -1011,12 +1011,12 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 		time.Sleep(1 * time.Second)
 		runner.mutex.RLock()
 		for _, unit := range runner.gvgUnits {
-			if unit.migrateStatus == WaitForMigrate {
+			if unit.MigrateStatus == WaitForMigrate {
 				var err error
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(runner.manager.baseApp.TaskPriority(migrateGVGTask),
-					0, unit.srcGVG, unit.redundancyIndex,
-					unit.srcSP,
+					0, unit.SrcGVG, unit.RedundancyIndex,
+					unit.SrcSP,
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					runner.manager.baseApp.TaskMaxRetry(migrateGVGTask))
 				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
@@ -1027,7 +1027,7 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 					log.Errorw("failed to update task status", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
 				}
-				unit.migrateStatus = Migrating
+				unit.MigrateStatus = Migrating
 				log.Infow("succeed to push migrate gvg task into task dispatcher", "migrate_gvg_task", migrateGVGTask)
 				break
 			}

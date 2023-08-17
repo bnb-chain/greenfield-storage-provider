@@ -10,6 +10,8 @@ const (
 )
 
 // Limit is an interface that that specifies basic resource limits.
+//
+//go:generate mockgen -source=./limit.go -destination=./limit_mock.go -package=rcmgr
 type Limit interface {
 	// GetMemoryLimit returns the (current) memory limit.
 	GetMemoryLimit() int64

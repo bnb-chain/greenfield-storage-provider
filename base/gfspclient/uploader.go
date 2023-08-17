@@ -12,18 +12,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-// UploaderAPI for mock use
-type UploaderAPI interface {
-	UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error
-	ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader) error
-}
-
 func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error {
 	startTime := time.Now()
 	conn, connErr := s.Connection(ctx, s.uploaderEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect uploader", "error", connErr)
-		return ErrRPCUnknown
+		return ErrRPCUnknownWithDetail("client failed to connect uploader, error: " + connErr.Error())
 	}
 	var sendSize = 0
 	defer func() {
@@ -38,7 +32,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 	client, err := gfspserver.NewGfSpUploadServiceClient(conn).GfSpUploadObject(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to new uploader stream client", "error", err)
-		return ErrRPCUnknown
+		return ErrRPCUnknownWithDetail("failed to new uploader stream client, error: " + err.Error())
 	}
 	buf := make([]byte, DefaultStreamBufSize)
 	metrics.PerfPutObjectTime.WithLabelValues("client_put_object_prepare_cost").Observe(time.Since(startTime).Seconds())
@@ -61,7 +55,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 				metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_end").Observe(time.Since(startTime).Seconds())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to send the last upload stream data", "error", err)
-					return ErrRPCUnknown
+					return ErrRPCUnknownWithDetail("failed to send the last upload stream data, error: " + err.Error())
 				}
 			}
 			startCloseClient := time.Now()
@@ -70,7 +64,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 			metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_last_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 			if closeErr != nil {
 				log.CtxErrorw(ctx, "failed to close upload stream", "error", closeErr)
-				return ErrRPCUnknown
+				return ErrRPCUnknownWithDetail("failed to new uploader stream client, error: " + err.Error())
 			}
 			if resp.GetErr() != nil {
 				return resp.GetErr()
@@ -91,7 +85,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to send the upload stream data", "error", err)
-			return ErrRPCUnknown
+			return ErrRPCUnknownWithDetail("failed to send the upload stream data, error: " + err.Error())
 		}
 	}
 }
@@ -100,7 +94,7 @@ func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.Re
 	conn, connErr := s.Connection(ctx, s.uploaderEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect uploader", "error", connErr)
-		return ErrRPCUnknown
+		return ErrRPCUnknownWithDetail("client failed to connect uploader, error: " + connErr.Error())
 	}
 	var sendSize = 0
 	defer func() {
@@ -116,7 +110,7 @@ func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.Re
 
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to new uploader stream client", "error", err)
-		return ErrRPCUnknown
+		return ErrRPCUnknownWithDetail("failed to new uploader stream client, error: " + connErr.Error())
 	}
 	var (
 		buf = make([]byte, DefaultStreamBufSize)
@@ -133,13 +127,13 @@ func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.Re
 				err = client.Send(req)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to send the last upload stream data", "error", err)
-					return ErrRPCUnknown
+					return ErrRPCUnknownWithDetail("failed to send the last upload stream data, error: " + err.Error())
 				}
 			}
 			resp, closeErr := client.CloseAndRecv()
 			if closeErr != nil {
 				log.CtxErrorw(ctx, "failed to close upload stream", "error", closeErr)
-				return ErrRPCUnknown
+				return ErrRPCUnknownWithDetail("failed to close upload stream, error: " + err.Error())
 			}
 			if resp.GetErr() != nil {
 				return resp.GetErr()
@@ -157,7 +151,7 @@ func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.Re
 		err = client.Send(req)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to send the upload stream data", "error", err)
-			return ErrRPCUnknown
+			return ErrRPCUnknownWithDetail("failed to send the upload stream data, error: " + err.Error())
 		}
 	}
 }

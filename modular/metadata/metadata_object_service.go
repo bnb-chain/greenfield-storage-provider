@@ -221,8 +221,8 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 	return resp, nil
 }
 
-// GfSpListObjectsByObjectID list objects by object ids
-func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *types.GfSpListObjectsByObjectIDRequest) (resp *types.GfSpListObjectsByObjectIDResponse, err error) {
+// GfSpListObjectsByIDs list objects by object ids
+func (r *MetadataModular) GfSpListObjectsByIDs(ctx context.Context, req *types.GfSpListObjectsByIDsRequest) (resp *types.GfSpListObjectsByIDsResponse, err error) {
 	var (
 		objects    []*model.Object
 		ids        []common.Hash
@@ -234,7 +234,7 @@ func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *ty
 		ids[i] = common.BigToHash(math.NewUint(id).BigInt())
 	}
 
-	objects, err = r.baseApp.GfBsDB().ListObjectsByObjectID(ids, req.IncludeRemoved)
+	objects, err = r.baseApp.GfBsDB().ListObjectsByIDs(ids, req.IncludeRemoved)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by object ids", "error", err)
 		return nil, err
@@ -273,7 +273,7 @@ func (r *MetadataModular) GfSpListObjectsByObjectID(ctx context.Context, req *ty
 			SealTxHash:    object.SealTxHash.String(),
 		}
 	}
-	resp = &types.GfSpListObjectsByObjectIDResponse{Objects: objectsMap}
+	resp = &types.GfSpListObjectsByIDsResponse{Objects: objectsMap}
 	log.CtxInfo(ctx, "succeed to list objects by object ids")
 	return resp, nil
 }

@@ -31,14 +31,14 @@ const (
 	MinDownloadTime int64 = 2
 	// MaxDownloadTime defines the max timeout to download object.
 	MaxDownloadTime int64 = 300
-	// MinGcObjectTime defines the min timeout to gc object.
-	MinGcObjectTime int64 = 300
-	// MaxGcObjectTime defines the max timeout to gc object.
-	MaxGcObjectTime int64 = 600
-	// MinGcZombieTime defines the min timeout to gc zombie piece.
-	MinGcZombieTime int64 = 300
-	// MaxGcZombieTime defines the max timeout to gc zombie piece.
-	MaxGcZombieTime int64 = 600
+	// MinGCObjectTime defines the min timeout to gc object.
+	MinGCObjectTime int64 = 300
+	// MaxGCObjectTime defines the max timeout to gc object.
+	MaxGCObjectTime int64 = 600
+	// MinGCZombieTime defines the min timeout to gc zombie piece.
+	MinGCZombieTime int64 = 300
+	// MaxGCZombieTime defines the max timeout to gc zombie piece.
+	MaxGCZombieTime int64 = 600
 	// MinGCMetaTime defines the min timeout to gc meta.
 	MinGCMetaTime int64 = 300
 	// MaxGCMetaTime defines the max timeout to gc meta.
@@ -47,10 +47,6 @@ const (
 	MinRecoveryTime int64 = 10
 	// MaxRecoveryTime defines the max timeout to replicate object.
 	MaxRecoveryTime int64 = 50
-	// MinMigratePieceTime defines the min timeout to migrate piece.
-	MinMigratePieceTime int64 = 10
-	// MaxMigratePieceTime defines the max timeout to migrate piece.
-	MaxMigratePieceTime int64 = 50
 	// MinMigrateGVGTime defines the min timeout to migrate gvg.
 	MinMigrateGVGTime int64 = 1800 // 0.5 hour
 	// MaxMigrateGVGTime defines the max timeout to migrate gvg.
@@ -135,7 +131,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MinDownloadTime
 		}
 		if timeout > MaxDownloadTime {
-			return MinDownloadTime
+			return MaxDownloadTime
 		}
 		return timeout
 	case coretask.TypeTaskChallengePiece:
@@ -144,23 +140,23 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MinDownloadTime
 		}
 		if timeout > MaxDownloadTime {
-			return MinDownloadTime
+			return MaxDownloadTime
 		}
 		return timeout
 	case coretask.TypeTaskGCObject:
-		if g.gcObjectTimeout < MinGcObjectTime {
-			return MinGcObjectTime
+		if g.gcObjectTimeout < MinGCObjectTime {
+			return MinGCObjectTime
 		}
-		if g.gcObjectTimeout > MaxGcObjectTime {
-			return MaxGcObjectTime
+		if g.gcObjectTimeout > MaxGCObjectTime {
+			return MaxGCObjectTime
 		}
 		return g.gcObjectTimeout
 	case coretask.TypeTaskGCZombiePiece:
-		if g.gcZombieTimeout < MinGcZombieTime {
-			return MinGcZombieTime
+		if g.gcZombieTimeout < MinGCZombieTime {
+			return MinGCZombieTime
 		}
-		if g.gcZombieTimeout > MaxGcZombieTime {
-			return MaxGcZombieTime
+		if g.gcZombieTimeout > MaxGCZombieTime {
+			return MaxGCZombieTime
 		}
 		return g.gcZombieTimeout
 	case coretask.TypeTaskGCMeta:
@@ -172,7 +168,7 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		}
 		return g.gcMetaTimeout
 	case coretask.TypeTaskRecoverPiece:
-		timeout := int64(size)/(g.replicateSpeed+1)/(MinSpeed) + 100
+		timeout := int64(size)/(g.replicateSpeed+1)/(MinSpeed) + 1
 		if timeout < MinRecoveryTime {
 			return MinRecoveryTime
 		}
@@ -180,13 +176,6 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxRecoveryTime
 		}
 		return timeout
-	case coretask.TypeTaskMigratePiece:
-		if g.migratePieceTimeout < MinMigratePieceTime {
-			return MinMigratePieceTime
-		}
-		if g.migratePieceTimeout > MaxMigratePieceTime {
-			return MaxMigratePieceTime
-		}
 	case coretask.TypeTaskMigrateGVG:
 		if g.migrateGVGTimeout < MinMigrateGVGTime {
 			return MinMigrateGVGTime
@@ -270,8 +259,6 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxRecoveryRetry
 		}
 		return g.recoveryRetry
-	case coretask.TypeTaskMigratePiece:
-		return NotUseRetry
 	case coretask.TypeTaskMigrateGVG:
 		if g.migrateGVGRetry < MinMigrateGVGRetry {
 			return MinMigrateGVGRetry
@@ -280,8 +267,9 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxMigrateGVGRetry
 		}
 		return g.migrateGVGRetry
+	default:
+		return NotUseRetry
 	}
-	return 0
 }
 
 // TaskPriority returns the task priority by task type, it is the default options.
@@ -318,8 +306,9 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 		return coretask.DefaultSmallerPriority / 4
 	case coretask.TypeTaskMigrateGVG:
 		return coretask.DefaultSmallerPriority
+	default:
+		return coretask.UnKnownTaskPriority
 	}
-	return coretask.UnKnownTaskPriority
 }
 
 // TaskPriorityLevel returns the task priority level, it is computed by task priority.

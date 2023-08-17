@@ -3,9 +3,11 @@ package gater
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
+	"encoding/xml"
+	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +20,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/resource"
 	resource_types "github.com/bnb-chain/greenfield/types/resource"
@@ -34,6 +35,7 @@ const (
 	MaximumGetGroupListLimit         = 1000
 	MaximumGetGroupListOffset        = 100000
 	MaximumListObjectsAndBucketsSize = 1000
+	MaximumIDSize                    = 100
 	DefaultGetGroupListLimit         = 50
 	DefaultGetGroupListOffset        = 0
 	HandlerSuccess                   = "success"
@@ -62,7 +64,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		includedRemoved       bool
 		queryParams           url.Values
 		err                   error
-		b                     bytes.Buffer
+		respBytes             []byte
 		reqCtx                *RequestContext
 	)
 	startTime := time.Now()
@@ -109,21 +111,23 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		Buckets: resp,
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	respBytes = processBucketsXmlResponse(respBytes, grpcResponse.Buckets)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listObjectsByBucketNameHandler handle list objects by bucket name request
 func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                      error
-		b                        bytes.Buffer
+		respBytes                []byte
 		maxKeys                  uint64
 		reqCtx                   *RequestContext
 		ok                       bool
@@ -271,22 +275,24 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		ContinuationToken:     continuationToken,
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
-		log.Errorf("failed to list objects by bucket name", "error", err)
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	respBytes = processObjectsXmlResponse(respBytes, grpcResponse.Objects)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getObjectMetaHandler handle get object metadata request
 func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		b      bytes.Buffer
-		reqCtx *RequestContext
+		err       error
+		respBytes []byte
+		reqCtx    *RequestContext
 	)
 
 	startTime := time.Now()
@@ -325,22 +331,25 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		Object: resp,
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to get object meta", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	var objects = []*types.Object{grpcResponse.Object}
+	respBytes = processObjectsXmlResponse(respBytes, objects)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getBucketMetaHandler handle get bucket metadata request
 func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		b      bytes.Buffer
-		reqCtx *RequestContext
+		err       error
+		respBytes []byte
+		reqCtx    *RequestContext
 	)
 	startTime := time.Now()
 	defer func() {
@@ -374,14 +383,17 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		StreamRecord: streamRecord,
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to get bucket metadata", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	var bucketsWithPayment = []*types.GfSpGetBucketMetaResponse{grpcResponse}
+	respBytes = processBucketsWithPaymentResponse(respBytes, bucketsWithPayment)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // verifyPermissionHandler handle verify permission request
@@ -392,7 +404,7 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 		objectName  string
 		actionType  string
 		action      int
-		b           bytes.Buffer
+		respBytes   []byte
 		queryParams url.Values
 		effect      *permission_types.Effect
 		reqCtx      *RequestContext
@@ -454,21 +466,21 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 
 	grpcResponse := &storage_types.QueryVerifyPermissionResponse{Effect: *effect}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to verify permission", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getGroupListHandler handle get group list request
 func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
-		b           bytes.Buffer
+		respBytes   []byte
 		queryParams url.Values
 		limitStr    string
 		offsetStr   string
@@ -558,26 +570,56 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		Count:  count,
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to get group list", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	respBytes = processGroupsXmlResponse(respBytes, grpcResponse.Groups)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
-// listObjectsByObjectIDHandler list objects by object ids
-func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *http.Request) {
+type GfSpListObjectsByIDsResponse types.GfSpListObjectsByIDsResponse
+
+type ObjectEntry struct {
+	Id    uint64
+	Value *types.Object
+}
+
+func (m GfSpListObjectsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if len(m.Objects) == 0 {
+		return nil
+	}
+
+	err := e.EncodeToken(start)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range m.Objects {
+		e.Encode(ObjectEntry{Id: k, Value: v})
+	}
+
+	return e.EncodeToken(start.End())
+}
+
+// listObjectsByIDsHandler list objects by object ids
+func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err         error
-		buf         bytes.Buffer
-		objects     map[uint64]*types.Object
-		objectIDMap map[uint64]bool
-		ok          bool
-		objectIDs   bsdb.ObjectIDs
-		reqCtx      *RequestContext
+		err              error
+		respBytes        []byte
+		objects          map[uint64]*types.Object
+		objectIDMap      map[uint64]bool
+		ok               bool
+		requestObjectIDs string
+		objectID         uint64
+		idsStr           []string
+		objectIDs        []uint64
+		reqCtx           *RequestContext
+		queryParams      url.Values
 	)
 	startTime := time.Now()
 	defer func() {
@@ -594,22 +636,30 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
+	queryParams = reqCtx.request.URL.Query()
+	requestObjectIDs = queryParams.Get(IDsQuery)
 
-	err = json.NewDecoder(r.Body).Decode(&objectIDs)
-	if err != nil {
-		log.Errorf("failed to parse object ids", "error", err)
-		err = ErrInvalidQuery
-		return
+	// extract IDs from the input value, e.g., &id=1,2,3,4
+	idsStr = strings.Split(requestObjectIDs, ",")
+	for _, idStr := range idsStr {
+		objectID, err = util.StringToUint64(idStr)
+		if err != nil {
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		objectIDs = append(objectIDs, objectID)
 	}
 
-	if len(objectIDs.IDs) == 0 || len(objectIDs.IDs) > MaximumListObjectsAndBucketsSize {
+	if len(objectIDs) == 0 || len(objectIDs) > MaximumIDSize {
 		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
+	// check if the input IDs have duplicate values
 	objectIDMap = make(map[uint64]bool)
-	for _, id := range objectIDs.IDs {
+	for _, id := range objectIDs {
 		if _, ok = objectIDMap[id]; ok {
 			// repeat id keys in request
 			log.Errorf("failed to check ids", "error", err)
@@ -619,33 +669,63 @@ func (g *GateModular) listObjectsByObjectIDHandler(w http.ResponseWriter, r *htt
 		objectIDMap[id] = true
 	}
 
-	objects, err = g.baseApp.GfSpClient().ListObjectsByObjectID(reqCtx.Context(), objectIDs.IDs, false)
+	objects, err = g.baseApp.GfSpClient().ListObjectsByIDs(reqCtx.Context(), objectIDs, false)
 	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
 	}
-	grpcResponse := &types.GfSpListObjectsByObjectIDResponse{Objects: objects}
+	grpcResponse := &types.GfSpListObjectsByIDsResponse{Objects: objects}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&buf, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal((*GfSpListObjectsByIDsResponse)(grpcResponse))
+	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(buf.Bytes())
+	respBytes = processObjectsMapXmlResponse(respBytes, grpcResponse.Objects)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
-// listBucketsByBucketIDHandler list buckets by bucket ids
-func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
+type GfSpListBucketsByIDsResponse types.GfSpListBucketsByIDsResponse
+
+type BucketEntry struct {
+	Id    uint64
+	Value *types.Bucket
+}
+
+func (m GfSpListBucketsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if len(m.Buckets) == 0 {
+		return nil
+	}
+
+	err := e.EncodeToken(start)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range m.Buckets {
+		e.Encode(BucketEntry{Id: k, Value: v})
+	}
+
+	return e.EncodeToken(start.End())
+}
+
+// listBucketsByIDsHandler list buckets by bucket ids
+func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err         error
-		buf         bytes.Buffer
-		buckets     map[uint64]*types.Bucket
-		bucketIDMap map[uint64]bool
-		ok          bool
-		bucketIDs   bsdb.BucketIDs
-		reqCtx      *RequestContext
+		err              error
+		respBytes        []byte
+		buckets          map[uint64]*types.Bucket
+		bucketIDMap      map[uint64]bool
+		ok               bool
+		requestBucketIDs string
+		bucketID         uint64
+		idsStr           []string
+		bucketIDs        []uint64
+		reqCtx           *RequestContext
+		queryParams      url.Values
 	)
 	startTime := time.Now()
 	defer func() {
@@ -662,22 +742,30 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
+	queryParams = reqCtx.request.URL.Query()
+	requestBucketIDs = queryParams.Get(IDsQuery)
 
-	err = json.NewDecoder(r.Body).Decode(&bucketIDs)
-	if err != nil {
-		log.Errorf("failed to parse bucket ids", "error", err)
-		err = ErrInvalidQuery
-		return
+	// extract IDs from the input value, e.g., &id=1,2,3,4
+	idsStr = strings.Split(requestBucketIDs, ",")
+	for _, idStr := range idsStr {
+		bucketID, err = util.StringToUint64(idStr)
+		if err != nil {
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		bucketIDs = append(bucketIDs, bucketID)
 	}
 
-	if len(bucketIDs.IDs) == 0 || len(bucketIDs.IDs) > MaximumListObjectsAndBucketsSize {
+	if len(bucketIDs) == 0 || len(bucketIDs) > MaximumIDSize {
 		log.Errorf("failed to check ids", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
+	// check if the input IDs have duplicate values
 	bucketIDMap = make(map[uint64]bool)
-	for _, id := range bucketIDs.IDs {
+	for _, id := range bucketIDs {
 		if _, ok = bucketIDMap[id]; ok {
 			// repeat id keys in request
 			log.Errorf("failed to check ids", "error", err)
@@ -687,28 +775,30 @@ func (g *GateModular) listBucketsByBucketIDHandler(w http.ResponseWriter, r *htt
 		bucketIDMap[id] = true
 	}
 
-	buckets, err = g.baseApp.GfSpClient().ListBucketsByBucketID(reqCtx.Context(), bucketIDs.IDs, false)
+	buckets, err = g.baseApp.GfSpClient().ListBucketsByIDs(reqCtx.Context(), bucketIDs, false)
 	if err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
 	}
-	grpcResponse := &types.GfSpListBucketsByBucketIDResponse{Buckets: buckets}
+	grpcResponse := &types.GfSpListBucketsByIDsResponse{Buckets: buckets}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&buf, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal((*GfSpListBucketsByIDsResponse)(grpcResponse))
+	if err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(buf.Bytes())
+	respBytes = processBucketsMapXmlResponse(respBytes, grpcResponse.Buckets)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getPaymentByBucketIDHandler get payment by bucket id
 func (g *GateModular) getPaymentByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
-		buf         bytes.Buffer
+		respBytes   []byte
 		payment     *payment_types.StreamRecord
 		bucketIDStr string
 		bucketID    int64
@@ -744,21 +834,21 @@ func (g *GateModular) getPaymentByBucketIDHandler(w http.ResponseWriter, r *http
 
 	grpcResponse := &types.GfSpGetPaymentByBucketIDResponse{StreamRecord: payment}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&buf, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to get payment by bucket id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(buf.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getPaymentByBucketNameHandler handle get payment by bucket name request
 func (g *GateModular) getPaymentByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
-		b          bytes.Buffer
+		respBytes  []byte
 		reqCtx     *RequestContext
 		bucketName string
 		payment    *payment_types.StreamRecord
@@ -790,21 +880,21 @@ func (g *GateModular) getPaymentByBucketNameHandler(w http.ResponseWriter, r *ht
 
 	grpcResponse := &types.GfSpGetPaymentByBucketNameResponse{StreamRecord: payment}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to get payment by bucket name", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getBucketByBucketNameHandler handle get bucket by bucket name request
 func (g *GateModular) getBucketByBucketNameHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error
-		b          bytes.Buffer
+		respBytes  []byte
 		reqCtx     *RequestContext
 		bucketName string
 		bucket     *types.Bucket
@@ -836,21 +926,21 @@ func (g *GateModular) getBucketByBucketNameHandler(w http.ResponseWriter, r *htt
 
 	grpcResponse := &types.GfSpGetBucketByBucketNameResponse{Bucket: bucket}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to get bucket by bucket name", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getBucketByBucketIDHandler handle get bucket by bucket id
 func (g *GateModular) getBucketByBucketIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
-		buf         bytes.Buffer
+		respBytes   []byte
 		bucket      *types.Bucket
 		bucketIDStr string
 		bucketID    int64
@@ -886,21 +976,21 @@ func (g *GateModular) getBucketByBucketIDHandler(w http.ResponseWriter, r *http.
 
 	grpcResponse := &types.GfSpGetBucketByBucketIDResponse{Bucket: bucket}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&buf, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to get bucket by bucket id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(buf.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listDeletedObjectsByBlockNumberRangeHandler handle list deleted objects info by a block number range request
 func (g *GateModular) listDeletedObjectsByBlockNumberRangeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                        error
-		b                          bytes.Buffer
+		respBytes                  []byte
 		reqCtx                     *RequestContext
 		requestSpOperatorAddress   string
 		requestStartBlockNumberStr string
@@ -956,23 +1046,23 @@ func (g *GateModular) listDeletedObjectsByBlockNumberRangeHandler(w http.Respons
 		EndBlockNumber: int64(block),
 	}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to list deleted objects by block number range", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getUserBucketsCountHandler handle get user bucket count request
 func (g *GateModular) getUserBucketsCountHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err    error
-		b      bytes.Buffer
-		reqCtx *RequestContext
-		count  int64
+		err       error
+		respBytes []byte
+		reqCtx    *RequestContext
+		count     int64
 	)
 
 	defer func() {
@@ -1000,21 +1090,21 @@ func (g *GateModular) getUserBucketsCountHandler(w http.ResponseWriter, r *http.
 
 	grpcResponse := &types.GfSpGetUserBucketsCountResponse{Count: count}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets count", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listExpiredBucketsBySpHandler handle list buckets that are expired by specific sp
 func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                error
-		b                  bytes.Buffer
+		respBytes          []byte
 		reqCtx             *RequestContext
 		requestLimit       string
 		requestCreateAt    string
@@ -1072,14 +1162,14 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 
 	grpcResponse := &types.GfSpListExpiredBucketsBySpResponse{Buckets: buckets}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // verifyPermissionByIDHandler handle verify permission by id request
@@ -1094,7 +1184,7 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 		resourceType        uint32
 		actionType          uint32
 		ok                  bool
-		b                   bytes.Buffer
+		respBytes           []byte
 		queryParams         url.Values
 		effect              *permission_types.Effect
 		reqCtx              *RequestContext
@@ -1161,21 +1251,21 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 
 	grpcResponse := &storage_types.QueryVerifyPermissionResponse{Effect: *effect}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.Errorf("failed to verify permission by id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listVirtualGroupFamiliesBySpIDHandler list virtual group families by sp id
 func (g *GateModular) listVirtualGroupFamiliesBySpIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
-		b           bytes.Buffer
+		respBytes   []byte
 		reqCtx      *RequestContext
 		requestSpID string
 		spID        uint32
@@ -1211,21 +1301,21 @@ func (g *GateModular) listVirtualGroupFamiliesBySpIDHandler(w http.ResponseWrite
 
 	grpcResponse := &types.GfSpListVirtualGroupFamiliesBySpIDResponse{GlobalVirtualGroupFamilies: families}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list virtual group families by sp id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getVirtualGroupFamilyHandler get virtual group families by vgf id
 func (g *GateModular) getVirtualGroupFamilyHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
-		b            bytes.Buffer
+		respBytes    []byte
 		reqCtx       *RequestContext
 		requestVgfID string
 		vgfID        uint32
@@ -1261,21 +1351,21 @@ func (g *GateModular) getVirtualGroupFamilyHandler(w http.ResponseWriter, r *htt
 
 	grpcResponse := &types.GfSpGetVirtualGroupFamilyResponse{Vgf: family}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get virtual group families by vgf id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getGlobalVirtualGroupByGvgIDHandler get global virtual group by gvg id
 func (g *GateModular) getGlobalVirtualGroupByGvgIDHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
-		b            bytes.Buffer
+		respBytes    []byte
 		reqCtx       *RequestContext
 		requestGvgID string
 		gvgID        uint32
@@ -1311,21 +1401,21 @@ func (g *GateModular) getGlobalVirtualGroupByGvgIDHandler(w http.ResponseWriter,
 
 	grpcResponse := &types.GfSpGetGlobalVirtualGroupByGvgIDResponse{GlobalVirtualGroup: group}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by gvg id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getGlobalVirtualGroupHandler get global virtual group by lvg id and bucket id
 func (g *GateModular) getGlobalVirtualGroupHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
-		b            bytes.Buffer
+		respBytes    []byte
 		reqCtx       *RequestContext
 		requestLvgID string
 		bucketIDStr  string
@@ -1370,21 +1460,21 @@ func (g *GateModular) getGlobalVirtualGroupHandler(w http.ResponseWriter, r *htt
 
 	grpcResponse := &types.GfSpGetGlobalVirtualGroupResponse{Gvg: group}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by lvg id and bucket id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listGlobalVirtualGroupsBySecondarySPHandler list global virtual group by secondary sp id
 func (g *GateModular) listGlobalVirtualGroupsBySecondarySPHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
-		b           bytes.Buffer
+		respBytes   []byte
 		reqCtx      *RequestContext
 		requestSpID string
 		spID        uint32
@@ -1420,21 +1510,21 @@ func (g *GateModular) listGlobalVirtualGroupsBySecondarySPHandler(w http.Respons
 
 	grpcResponse := &types.GfSpListGlobalVirtualGroupsBySecondarySPResponse{Groups: groups}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by secondary sp id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listGlobalVirtualGroupsByBucketHandler list global virtual group by bucket id
 func (g *GateModular) listGlobalVirtualGroupsByBucketHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
-		b           bytes.Buffer
+		respBytes   []byte
 		reqCtx      *RequestContext
 		bucketIDStr string
 		bucketID    uint64
@@ -1470,21 +1560,21 @@ func (g *GateModular) listGlobalVirtualGroupsByBucketHandler(w http.ResponseWrit
 
 	grpcResponse := &types.GfSpListGlobalVirtualGroupsByBucketResponse{Groups: groups}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by bucket id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listObjectsInGVGAndBucketHandler list objects by gvg and bucket id
 func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err               error
-		b                 bytes.Buffer
+		respBytes         []byte
 		reqCtx            *RequestContext
 		requestGvgID      string
 		gvgID             uint32
@@ -1551,21 +1641,21 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 
 	grpcResponse := &types.GfSpListObjectsInGVGResponse{Objects: objects}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listObjectsByGVGAndBucketForGCHandler list objects by gvg and bucket for gc
 func (g *GateModular) listObjectsByGVGAndBucketForGCHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err               error
-		b                 bytes.Buffer
+		respBytes         []byte
 		reqCtx            *RequestContext
 		requestGvgID      string
 		gvgID             uint32
@@ -1632,21 +1722,21 @@ func (g *GateModular) listObjectsByGVGAndBucketForGCHandler(w http.ResponseWrite
 
 	grpcResponse := &types.GfSpListObjectsByGVGAndBucketForGCResponse{Objects: objects}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listObjectsInGVGHandler list objects by gvg id
 func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err               error
-		b                 bytes.Buffer
+		respBytes         []byte
 		reqCtx            *RequestContext
 		requestGvgID      string
 		gvgID             uint32
@@ -1704,21 +1794,21 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 
 	grpcResponse := &types.GfSpListObjectsInGVGResponse{Objects: objects}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listMigrateBucketEventsHandler list migrate bucket events
 func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
-		b              bytes.Buffer
+		respBytes      []byte
 		reqCtx         *RequestContext
 		requestSpID    string
 		requestBlockID string
@@ -1763,21 +1853,21 @@ func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *h
 
 	grpcResponse := &types.GfSpListMigrateBucketEventsResponse{Events: events}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listSwapOutEventsHandler list swap out events
 func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
-		b              bytes.Buffer
+		respBytes      []byte
 		reqCtx         *RequestContext
 		requestSpID    string
 		requestBlockID string
@@ -1821,21 +1911,21 @@ func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	grpcResponse := &types.GfSpListSwapOutEventsResponse{Events: events}
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list swap out events", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // listSpExitEventsHandler list sp exit events
 func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err            error
-		b              bytes.Buffer
+		respBytes      []byte
 		reqCtx         *RequestContext
 		requestSpID    string
 		requestBlockID string
@@ -1880,21 +1970,21 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 
 	grpcResponse := &types.GfSpListSpExitEventsResponse{Events: events}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list sp exit events", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getSPInfoHandler get sp info by operator address
 func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                    error
-		b                      bytes.Buffer
+		respBytes              []byte
 		reqCtx                 *RequestContext
 		requestOperatorAddress string
 		sp                     *sp_types.StorageProvider
@@ -1928,14 +2018,14 @@ func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	grpcResponse := &types.GfSpGetSPInfoResponse{StorageProvider: sp}
 
-	m := jsonpb.Marshaler{EmitDefaults: true, OrigName: true, EnumsAsInts: true}
-	if err = m.Marshal(&b, grpcResponse); err != nil {
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", "error", err)
 		return
 	}
 
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-	w.Write(b.Bytes())
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
 }
 
 // getStatusHandler get status info for the current SP
@@ -1974,4 +2064,343 @@ func (g *GateModular) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 	w.Write(b.Bytes())
+}
+
+// getUserGroupsHandler get groups info by a user address
+func (g *GateModular) getUserGroupsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		respBytes         []byte
+		reqCtx            *RequestContext
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		groups            []*types.GroupMember
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get groups info by a user address", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if ok := common.IsHexAddress(r.Header.Get(GnfdUserAddressHeader)); !ok {
+		log.Errorw("failed to check X-Gnfd-User-Address", "X-Gnfd-User-Address", reqCtx.account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check start after", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	groups, err = g.baseApp.GfSpClient().GetUserGroups(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get groups info by a user address", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetUserGroupsResponse{Groups: groups}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get groups info by a user address", "error", err)
+		return
+	}
+
+	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
+// getGroupMembersHandler get group members by group id
+func (g *GateModular) getGroupMembersHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		respBytes         []byte
+		groups            []*types.GroupMember
+		reqCtx            *RequestContext
+		limit             uint32
+		groupID           uint64
+		limitStr          string
+		requestGroupID    string
+		requestStartAfter string
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get group members by group id", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGroupID = queryParams.Get(GroupIDQuery)
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if requestStartAfter != "" {
+		if ok := common.IsHexAddress(requestStartAfter); !ok {
+			log.Errorw("failed to check start after", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidHeader
+			return
+		}
+	}
+
+	if groupID, err = util.StringToUint64(requestGroupID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check group id", "group-id", requestGroupID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	groups, err = g.baseApp.GfSpClient().GetGroupMembers(reqCtx.Context(), groupID, requestStartAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get group members by group id", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetGroupMembersResponse{Groups: groups}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get group members by group id", "error", err)
+		return
+	}
+
+	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
+// getUserOwnedGroupsHandler retrieve groups where the user is the owner
+func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		respBytes         []byte
+		reqCtx            *RequestContext
+		limit             uint32
+		limitStr          string
+		requestStartAfter string
+		startAfter        uint64
+		groups            []*types.GroupMember
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	limitStr = queryParams.Get(GetGroupListLimitQuery)
+
+	if ok := common.IsHexAddress(r.Header.Get(GnfdUserAddressHeader)); !ok {
+		log.Errorw("failed to check X-Gnfd-User-Address", "X-Gnfd-User-Address", reqCtx.account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check start after", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if limitStr != "" {
+		if limit, err = util.StringToUint32(limitStr); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", limitStr, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	groups, err = g.baseApp.GfSpClient().GetUserOwnedGroups(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader), startAfter, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetUserOwnedGroupsResponse{Groups: groups}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", "error", err)
+		return
+	}
+
+	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
+// processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
+func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	// startIdx is to trace the index for next checkSum to be processed
+	var startIdx = 0
+	for _, object := range objects {
+		if object != nil {
+			// iterate through each object and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
+			// inside each object, there is an array of checksum that need to be unmarshalled correctly
+			for _, checkSum := range object.ObjectInfo.Checksums {
+				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
+				// first find the matching string of regex
+				found := re.FindString(respString[startIdx:])
+				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
+				if found != "" {
+					// replace the matching string of regex and move the startIdx after that to search next regex
+					respString = strings.Replace(respString, found, respCheckSum, 1)
+					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
+				}
+			}
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processObjectsMapXmlResponse process the unhandled Uint id and checksum of object map xml unmarshal
+func processObjectsMapXmlResponse(respBytes []byte, objects map[uint64]*types.Object) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	// startIdx is to trace the index for next checkSum to be processed
+	var startIdx = 0
+	for _, object := range objects {
+		if object != nil {
+			// iterate through each object and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
+			// inside each object, there is an array of checksum that need to be unmarshalled correctly
+			for _, checkSum := range object.ObjectInfo.Checksums {
+				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
+				// first find the matching string of regex
+				found := re.FindString(respString[startIdx:])
+				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
+				if found != "" {
+					// replace the matching string of regex and move the startIdx after that to search next regex
+					respString = strings.Replace(respString, found, respCheckSum, 1)
+					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
+				}
+			}
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processBucketsXmlResponse process the unhandled Uint id of bucket xml unmarshal
+func processBucketsXmlResponse(respBytes []byte, buckets []*types.Bucket) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, bucket := range buckets {
+		if bucket != nil {
+			// iterate through each bucket and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processBucketsWithPaymentResponse process the unhandled Uint id and several balance of bucket with payment xml unmarshal
+func processBucketsWithPaymentResponse(respBytes []byte, buckets []*types.GfSpGetBucketMetaResponse) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, bucket := range buckets {
+		if bucket != nil {
+			// iterate through each bucket and assign id and payment Uint value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.Bucket.BucketInfo.Id.String()+"</Id>", 1)
+			respString = strings.Replace(respString, "<NetflowRate></NetflowRate>", "<NetflowRate>"+bucket.StreamRecord.NetflowRate.String()+"</NetflowRate>", 1)
+			respString = strings.Replace(respString, "<StaticBalance></StaticBalance>", "<StaticBalance>"+bucket.StreamRecord.StaticBalance.String()+"</StaticBalance>", 1)
+			respString = strings.Replace(respString, "<BufferBalance></BufferBalance>", "<BufferBalance>"+bucket.StreamRecord.BufferBalance.String()+"</BufferBalance>", 1)
+			respString = strings.Replace(respString, "<LockBalance></LockBalance>", "<LockBalance>"+bucket.StreamRecord.LockBalance.String()+"</LockBalance>", 1)
+			respString = strings.Replace(respString, "<FrozenNetflowRate></FrozenNetflowRate>", "<FrozenNetflowRate>"+bucket.StreamRecord.FrozenNetflowRate.String()+"</FrozenNetflowRate>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processBucketsMapXmlResponse process the unhandled Uint id of bucket map xml unmarshal
+func processBucketsMapXmlResponse(respBytes []byte, buckets map[uint64]*types.Bucket) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, bucket := range buckets {
+		if bucket != nil {
+			// iterate through each bucket and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processGroupsXmlResponse process the unhandled Uint id of group xml unmarshal
+func processGroupsXmlResponse(respBytes []byte, groups []*types.Group) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, group := range groups {
+		if group != nil {
+			// iterate through each group and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processGroupMembersXmlResponse process the unhandled Uint id of group member xml unmarshal
+func processGroupMembersXmlResponse(respBytes []byte, groupMembers []*types.GroupMember) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, group := range groupMembers {
+		if group != nil {
+			// iterate through each group and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
 }

@@ -29,12 +29,20 @@ var (
 	ErrExceedBucketQuota = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30004, "bucket quota overflow")
 	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30005, "request params invalid")
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
-	ErrPieceStore        = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35101, "server slipped away, try again later")
-	ErrGfSpDB            = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35201, "server slipped away, try again later")
 	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
-
-	ErrConsensus = gfsperrors.Register(module.DownloadModularName, http.StatusInternalServerError, 35002, "server slipped away, try again later")
 )
+
+func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, detail)
+}
+
+func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, detail)
+}
+
+func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, detail)
+}
 
 func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) error {
 	var (
@@ -62,7 +70,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 	if bucketTraffic == nil {
 		freeQuotaSize, err = d.baseApp.Consensus().QuerySPFreeQuota(ctx, d.baseApp.OperatorAddress())
 		if err != nil {
-			return ErrConsensus
+			return ErrConsensusWithDetail("QuerySPFreeQuota error: " + err.Error())
 		}
 		// only need to set the free quota when init the traffic table
 		err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{
@@ -71,7 +79,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
-			return ErrGfSpDB
+			return ErrGfSpDBWithDetail("failed to init bucket traffic, error: " + err.Error())
 		}
 	}
 
@@ -136,7 +144,7 @@ func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, download
 			int64(pInfo.Offset), int64(pInfo.Length))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err)
-			return nil, ErrPieceStore
+			return nil, ErrPieceStoreWithDetail("failed to get piece data from piece store, error: " + err.Error())
 		}
 		d.pieceCache.Add(key, piece)
 		data = append(data, piece...)
@@ -257,7 +265,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		if bucketTraffic == nil {
 			freeQuotaSize, err = d.baseApp.Consensus().QuerySPFreeQuota(ctx, d.baseApp.OperatorAddress())
 			if err != nil {
-				return ErrConsensus
+				return ErrConsensusWithDetail("QuerySPFreeQuota error: " + err.Error())
 			}
 			log.CtxDebugw(ctx, "finish init bucket traffic table", "charged_quota", downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
 				"free_quota", freeQuotaSize)
@@ -269,7 +277,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			})
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
-				return ErrGfSpDB
+				return ErrGfSpDBWithDetail("failed to init bucket traffic, error: " + err.Error())
 			}
 		}
 
@@ -334,7 +342,7 @@ func (d *DownloadModular) HandleDownloadPieceTask(ctx context.Context, downloadP
 		int64(downloadPieceTask.GetPieceOffset()), int64(downloadPieceTask.GetPieceLength())); err != nil {
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_put_piece_time").Observe(time.Since(putPieceTime).Seconds())
 		log.CtxErrorw(ctx, "failed to get piece data from piece store", "task_info", downloadPieceTask.Info(), "error", err)
-		return nil, ErrPieceStore
+		return nil, ErrPieceStoreWithDetail("failed to get piece data from piece store, task_info: " + downloadPieceTask.Info() + ", error: " + err.Error())
 	}
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_put_piece_time").Observe(time.Since(putPieceTime).Seconds())
 	return pieceData, nil
@@ -388,7 +396,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_integrity_time").Observe(time.Since(getIntegrityTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get integrity hash", "error", err)
-		return nil, nil, nil, ErrGfSpDB
+		return nil, nil, nil, ErrGfSpDBWithDetail("failed to get integrity hash, error: " + err.Error())
 	}
 	if int(downloadPieceTask.GetSegmentIdx()) >= len(integrity.PieceChecksumList) {
 		log.CtxErrorw(ctx, "failed to get challenge info due to segment index wrong")
@@ -406,7 +414,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
-		return nil, nil, nil, ErrPieceStore
+		return nil, nil, nil, ErrPieceStoreWithDetail("failed to get piece data, error: " + err.Error())
 	}
 
 	return integrity.IntegrityChecksum, integrity.PieceChecksumList, data, nil

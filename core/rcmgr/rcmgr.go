@@ -63,6 +63,8 @@ import (
 //     the service scope using the ResourceManager interface.
 //   - Applications that want to account for their resource usage can reserve memory, typically
 //     using a span, directly in the System or a Service scope.
+//
+//go:generate mockgen -source=./rcmgr.go -destination=./rcmgr_mock.go -package=rcmgr
 type ResourceManager interface {
 	ResourceScopeViewer
 	// OpenService creates a new Service scope associated with System/Transient Scope

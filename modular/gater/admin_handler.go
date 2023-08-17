@@ -295,7 +295,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		if strings.Contains(err.Error(), "No such object") {
 			err = ErrNoSuchObject
 		} else {
-			err = ErrConsensus
+			err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		}
 		return
 	}
@@ -319,7 +319,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_bucket_time").Observe(time.Since(getBucketTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 		return
 	}
 	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
@@ -440,17 +440,17 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	// check if the request account is the primary SP of the object of the receiving task
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
 	if err != nil {
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
 		return
 	}
 	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
 	if err != nil {
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 		return
 	}
 	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketSPID)
 	if err != nil {
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
 		return
 	}
 	if bucketPrimarySp.OperatorAddress != requestAccount.String() {
@@ -591,12 +591,12 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 
 	spID, err := g.getSPID()
 	if err != nil {
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("getSPID error: " + err.Error())
 		return
 	}
 	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
 	if err != nil {
-		err = ErrConsensus
+		err = ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 		return
 	}
 
@@ -693,7 +693,7 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to download piece", "error", err)
-		return nil, downloader.ErrPieceStore
+		return nil, downloader.ErrPieceStoreWithDetail("failed to download piece, error: " + err.Error())
 	}
 
 	return pieceData, nil
@@ -709,11 +709,11 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	// TODO get sp id from config
 	spID, err := g.getSPID()
 	if err != nil {
-		return nil, ErrConsensus
+		return nil, ErrConsensusWithDetail("getSPID error: " + err.Error())
 	}
 	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
 	if err != nil {
-		return nil, ErrConsensus
+		return nil, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
 	}
 
 	if bucketSPID != spID {
@@ -731,7 +731,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	for idx, sspId := range gvg.GetSecondarySpIds() {
 		ssp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspId)
 		if err != nil {
-			return nil, ErrConsensus
+			return nil, ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
 		}
 		if ssp.OperatorAddress == signatureAddr.String() {
 			isOneOfSecondary = true
@@ -762,7 +762,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 		pieceData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to download piece", "error", err)
-			return nil, downloader.ErrPieceStore
+			return nil, downloader.ErrPieceStoreWithDetail("failed to download piece, error: " + err.Error())
 		}
 		return pieceData, nil
 	}
@@ -776,7 +776,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	segmentData, err := g.baseApp.GfSpClient().GetPiece(ctx, pieceTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to download piece", "error", err)
-		return nil, executor.ErrPieceStore
+		return nil, executor.ErrPieceStoreWithDetail("failed to download piece, error: " + err.Error())
 	}
 
 	ecData, err := redundancy.EncodeRawSegment(segmentData,

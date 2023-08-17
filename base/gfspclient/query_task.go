@@ -9,18 +9,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
-// QueryAPI for mock use
-type QueryAPI interface {
-	QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error)
-	QueryBucketMigrate(ctx context.Context, endpoint string) (string, error)
-	QuerySPExit(ctx context.Context, endpoint string) (string, error)
-}
-
 func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error) {
 	conn, connErr := s.Connection(ctx, endpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
-		return nil, ErrRPCUnknown
+		return nil, ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpQueryTasksRequest{
@@ -29,7 +22,7 @@ func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey str
 	resp, err := gfspserver.NewGfSpQueryTaskServiceClient(conn).GfSpQueryTasks(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query tasks", "error", err)
-		return nil, ErrRPCUnknown
+		return nil, ErrRPCUnknownWithDetail("client failed to query tasks, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -41,14 +34,14 @@ func (s *GfSpClient) QueryBucketMigrate(ctx context.Context, endpoint string) (s
 	conn, connErr := s.Connection(ctx, endpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
-		return "", ErrRPCUnknown
+		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpQueryBucketMigrateRequest{}
 	resp, err := gfspserver.NewGfSpQueryTaskServiceClient(conn).GfSpQueryBucketMigrate(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query tasks", "error", err)
-		return "", ErrRPCUnknown
+		return "", ErrRPCUnknownWithDetail("client failed to query tasks, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()
@@ -64,14 +57,14 @@ func (s *GfSpClient) QuerySPExit(ctx context.Context, endpoint string) (string, 
 	conn, connErr := s.Connection(ctx, endpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
-		return "", ErrRPCUnknown
+		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpQuerySpExitRequest{}
 	resp, err := gfspserver.NewGfSpQueryTaskServiceClient(conn).GfSpQuerySpExit(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query tasks", "error", err)
-		return "", ErrRPCUnknown
+		return "", ErrRPCUnknownWithDetail("client failed to query tasks, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()

@@ -79,12 +79,14 @@ const (
 	GetGroupListLimitQuery = "limit"
 	// GetGroupListOffsetQuery defines get group list offset query, which is used to route request
 	GetGroupListOffsetQuery = "offset"
+	// IDsQuery defines ids of storage metadata value
+	IDsQuery = "ids"
 	// GetGroupListGroupQuery defines get group list group query, which is used to route request
 	GetGroupListGroupQuery = "group-query"
-	// ListBucketsByBucketIDQuery defines list buckets by bucket ids, which is used to route request
-	ListBucketsByBucketIDQuery = "buckets-query"
-	// ListObjectsByObjectIDQuery defines list objects by object ids, which is used to route request
-	ListObjectsByObjectIDQuery = "objects-query"
+	// ListBucketsByIDsQuery defines list buckets by bucket ids, which is used to route request
+	ListBucketsByIDsQuery = "buckets-query"
+	// ListObjectsByIDsQuery defines list objects by object ids, which is used to route request
+	ListObjectsByIDsQuery = "objects-query"
 	// GetPaymentByBucketIDQuery defines get payment by bucket id, which is used to route request
 	GetPaymentByBucketIDQuery = "payment-id"
 	// GetPaymentByBucketNameQuery defines get payment by bucket name, which is used to route request
@@ -127,8 +129,16 @@ const (
 	VerifyPermissionByIDQuery = "verify-id"
 	// GetSPInfoQuery defines query sp info, which is used to route request
 	GetSPInfoQuery = "query-sp"
+	// GetUserGroupsQuery defines get groups info by a user address, which is used to route request
+	GetUserGroupsQuery = "user-groups"
+	// GetUserOwnedGroupsQuery defines retrieve groups where the user is the owner, which is used to route request
+	GetUserOwnedGroupsQuery = "owned-groups"
+	// GetGroupMembersQuery defines query sp info, which is used to route request
+	GetGroupMembersQuery = "group-members"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for
 	ResourceIDQuery = "resource-id"
+	// GroupIDQuery defines the unique id of group
+	GroupIDQuery = "group-id"
 	// ResourceTypeQuery defines the type of resource that grants permission for
 	ResourceTypeQuery = "resource-type"
 	// GetGroupListNameQuery defines get group list name query, which is used to route request

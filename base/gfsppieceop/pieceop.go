@@ -10,8 +10,7 @@ import (
 
 var _ piecestore.PieceOp = &GfSpPieceOp{}
 
-type GfSpPieceOp struct {
-}
+type GfSpPieceOp struct{}
 
 func (p *GfSpPieceOp) SegmentPieceKey(objectID uint64, segmentIdx uint32) string {
 	return fmt.Sprintf("s%d_s%d", objectID, segmentIdx)

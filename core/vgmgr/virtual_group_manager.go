@@ -29,6 +29,8 @@ type VirtualGroupFamilyMeta struct {
 }
 
 // SPPickFilter is used to check sp pick condition.
+//
+//go:generate mockgen -source=./virtual_group_manager.go -destination=./virtual_group_manager_mock.go -package=vgmgr
 type SPPickFilter interface {
 	// Check returns true when match pick request condition.
 	Check(spID uint32) bool

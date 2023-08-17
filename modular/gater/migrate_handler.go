@@ -51,7 +51,7 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 	}
 	if err = g.baseApp.GfSpClient().NotifyMigrateSwapOut(reqCtx.Context(), &swapOut); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to notify migrate swap out", "swap_out", swapOut, "error", err)
-		err = ErrNotifySwapOut
+		err = ErrNotifySwapOutWithDetail("failed to notify migrate swap out, swap_out: " + swapOut.String() + ",error: " + err.Error())
 		return
 	}
 }
@@ -177,7 +177,7 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 	signature, err := g.baseApp.GfSpClient().SignSecondarySPMigrationBucket(reqCtx.Context(), signDoc)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to sign secondary sp migration bucket", "error", err)
-		err = ErrMigrateApproval
+		err = ErrMigrateApprovalWithDetail("failed to sign secondary sp migration bucket, error: " + err.Error())
 		return
 	}
 	w.Header().Set(GnfdSecondarySPMigrationBucketApprovalHeader, hex.EncodeToString(signature))
@@ -218,20 +218,22 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		err = ErrDecodeMsg
 		return
 	}
+
+	swapOutApproval.SuccessorSpApproval = &common.Approval{
+		ExpiredHeight: 100,
+	}
+
 	if err = swapOutApproval.ValidateBasic(); err != nil {
 		log.Errorw("failed to basic check approval msg", "swap_out_approval", swapOutApproval, "error", err)
 		err = ErrValidateMsg
 		return
 	}
 
-	swapOutApproval.SuccessorSpApproval = &common.Approval{
-		ExpiredHeight: 100,
-	}
 	log.Infow("get swap out approval", "msg", swapOutApproval)
 	signature, err := g.baseApp.GfSpClient().SignSwapOut(reqCtx.Context(), swapOutApproval)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to sign swap out", "error", err)
-		err = ErrMigrateApproval
+		err = ErrMigrateApprovalWithDetail("failed to sign swap out, error: " + err.Error())
 		return
 	}
 	swapOutApproval.SuccessorSpApproval.Sig = signature

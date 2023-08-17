@@ -25,12 +25,15 @@ var (
 	ErrDanglingPointer   = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90001, "OoooH... request lost, try again later")
 	ErrExceedRequest     = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotAcceptable, 90002, "request exceed")
 	ErrNoRecord          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
-	ErrGfSpDB            = gfsperrors.Register(coremodule.MetadataModularName, http.StatusInternalServerError, 95202, "server slipped away, try again later")
 	ErrNoSuchSP          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90004, "no such sp")
 	ErrExceedBlockHeight = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90005, "request block height exceed latest height")
 )
 
 var _ types.GfSpMetadataServiceServer = &MetadataModular{}
+
+func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(coremodule.MetadataModularName, http.StatusInternalServerError, 95202, detail)
+}
 
 func (r *MetadataModular) GfSpGetUserBuckets(
 	ctx context.Context,
@@ -304,7 +307,9 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		log.Errorw("failed to get bucket traffic",
 			"bucket_name", req.GetBucketInfo().GetBucketName(),
 			"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
-		return &types.GfSpGetBucketReadQuotaResponse{Err: ErrGfSpDB}, nil
+		return &types.GfSpGetBucketReadQuotaResponse{Err: ErrGfSpDBWithDetail("failed to get bucket traffic" +
+			", bucket_name: " + req.GetBucketInfo().GetBucketName() +
+			", bucket_id: " + req.GetBucketInfo().Id.String() + ", error: " + err.Error())}, nil
 	}
 
 	return &types.GfSpGetBucketReadQuotaResponse{
@@ -342,7 +347,9 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 		log.Errorw("failed to list bucket read record",
 			"bucket_name", req.GetBucketInfo().GetBucketName(),
 			"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
-		return &types.GfSpListBucketReadRecordResponse{Err: ErrGfSpDB}, nil
+		return &types.GfSpListBucketReadRecordResponse{Err: ErrGfSpDBWithDetail("failed to list bucket read record" +
+			", bucket_name: " + req.GetBucketInfo().GetBucketName() +
+			", bucket_id: " + req.GetBucketInfo().Id.String() + ",error: " + err.Error())}, nil
 	}
 	var nextStartTimestampUs int64
 	readRecords := make([]*types.ReadRecord, 0)
@@ -365,8 +372,8 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 	return resp, nil
 }
 
-// GfSpListBucketsByBucketID list buckets by bucket ids
-func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *types.GfSpListBucketsByBucketIDRequest) (resp *types.GfSpListBucketsByBucketIDResponse, err error) {
+// GfSpListBucketsByIDs list buckets by bucket ids
+func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.GfSpListBucketsByIDsRequest) (resp *types.GfSpListBucketsByIDsResponse, err error) {
 	var (
 		buckets    []*model.Bucket
 		ids        []common.Hash
@@ -379,7 +386,7 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 	}
 
 	ctx = log.Context(ctx, req)
-	buckets, err = r.baseApp.GfBsDB().ListBucketsByBucketID(ids, req.IncludeRemoved)
+	buckets, err = r.baseApp.GfBsDB().ListBucketsByIDs(ids, req.IncludeRemoved)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list buckets by bucket ids", "error", err)
 		return nil, err
@@ -414,7 +421,7 @@ func (r *MetadataModular) GfSpListBucketsByBucketID(ctx context.Context, req *ty
 			UpdateTime:   bucket.UpdateTime,
 		}
 	}
-	resp = &types.GfSpListBucketsByBucketIDResponse{Buckets: bucketsMap}
+	resp = &types.GfSpListBucketsByIDsResponse{Buckets: bucketsMap}
 	log.CtxInfow(ctx, "succeed to list buckets by bucket ids")
 	return resp, nil
 }

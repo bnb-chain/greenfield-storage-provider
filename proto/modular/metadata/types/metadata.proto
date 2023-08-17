@@ -269,14 +269,14 @@ message GfSpGetBucketMetaResponse {
   greenfield.payment.StreamRecord stream_record = 2;
 }
 
-// GfSpGetEndpointBySpIdRequest is request type for the GfSpGetEndpointBySpId RPC method
-message GfSpGetEndpointBySpIdRequest {
+// GfSpGetEndpointBySpIDRequest is request type for the GfSpGetEndpointBySpID RPC method
+message GfSpGetEndpointBySpIDRequest {
   // sp_id is the id of the sp
   uint32 sp_id = 1;
 }
 
-// GfSpGetEndpointBySpIdResponse is response type for the GfSpGetEndpointBySpId RPC method.
-message GfSpGetEndpointBySpIdResponse {
+// GfSpGetEndpointBySpIDResponse is response type for the GfSpGetEndpointBySpID RPC method.
+message GfSpGetEndpointBySpIDResponse {
   // endpoint defines endpoint of a sp
   string endpoint = 1;
 }
@@ -378,6 +378,27 @@ message Group {
   bool removed = 7;
 }
 
+// GroupMember is the structure for group-account information
+message GroupMember {
+  // group defines the basic group info
+  greenfield.storage.GroupInfo group = 1;
+  string account_id = 2;
+  // operator defines operator address of group
+  string operator = 3;
+  // create_at defines the block number when the group created
+  int64 create_at = 4;
+  // create_time defines the timestamp when the group created
+  int64 create_time = 5;
+  // update_at defines the block number when the group updated
+  int64 update_at = 6;
+  // update_time defines the timestamp when the group updated
+  int64 update_time = 7;
+  // removed defines the group is deleted or not
+  bool removed = 8;
+  // expiration_time is the user expiration time for this group
+  int64 expiration_time = 9;
+}
+
 // GfSpGetGroupListRequest is request type for the GetGroupList RPC method.
 message GfSpGetGroupListRequest {
   // name defines the query group name
@@ -402,30 +423,30 @@ message GfSpGetGroupListResponse {
   int64 count = 2;
 }
 
-// GfSpGetBucketByBucketIDRequest is request type for the GfSpListBucketsByBucketID RPC method
-message GfSpListBucketsByBucketIDRequest {
+// GfSpGetBucketByIDsRequest is request type for the GfSpListBucketsByIDs RPC method
+message GfSpListBucketsByIDsRequest {
   // bucket_id is the list of unique identifier for buckets
   repeated uint64 bucket_ids = 1;
   // include_removed indicates whether this request can get the removed buckets information
   bool include_removed = 2;
 }
 
-// GfSpGetBucketByBucketIDResponse is response type for the GfSpListBucketsByBucketID RPC method.
-message GfSpListBucketsByBucketIDResponse {
+// GfSpGetBucketByIDsResponse is response type for the GfSpListBucketsByIDs RPC method.
+message GfSpListBucketsByIDsResponse {
   // buckets defines the information of a bucket map
   map<uint64, Bucket> buckets = 1;
 }
 
-// GfSpListBucketsByBucketIDRequest is request type for the GfSpListObjectsByObjectID RPC method
-message GfSpListObjectsByObjectIDRequest {
+// GfSpListObjectsByIDsRequest is request type for the GfSpListObjectsByIDs RPC method
+message GfSpListObjectsByIDsRequest {
   // object_ids is the list of unique identifier for objects
   repeated uint64 object_ids = 1;
   // include_removed indicates whether this request can get the removed objects information
   bool include_removed = 2;
 }
 
-// GfSpListObjectsByBucketIDRequest is response type for the GfSpListObjectsByObjectID RPC method.
-message GfSpListObjectsByObjectIDResponse {
+// GfSpListObjectsByIDsRequest is response type for the GfSpListObjectsByIDs RPC method.
+message GfSpListObjectsByIDsResponse {
   // objects defines the information of a object map
   map<uint64, Object> objects = 1;
 }
@@ -696,6 +717,54 @@ message GfSpGetStatusResponse {
   Status status = 1;
 }
 
+// GfSpGetUserGroupsRequest is request type for the GfSpGetUserGroups RPC method
+message GfSpGetUserGroupsRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 2;
+  // start_after is where you want to start listing from
+  uint64 start_after = 3;
+}
+
+// GfSpGetUserGroupsResponse is response type for the GfSpGetUserGroups RPC method
+message GfSpGetUserGroupsResponse {
+  // groups defines the response of group list
+  repeated GroupMember groups = 1;
+}
+
+// GfSpGetGroupMembersRequest is request type for the GfSpGetGroupMembers RPC method
+message GfSpGetGroupMembersRequest {
+  // group_id is the id of group
+  uint64 group_id = 1;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 2;
+  // start_after is where you want to start listing from
+  string start_after = 3;
+}
+
+// GfSpGetGroupMembersResponse is response type for the GfSpGetGroupMembers RPC method
+message GfSpGetGroupMembersResponse {
+  // group defines the response of group members
+  repeated GroupMember groups = 1;
+}
+
+// GfSpGetUserOwnedGroupsRequest is request type for the GfSpGetUserOwnedGroups RPC method
+message GfSpGetUserOwnedGroupsRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 2;
+  // start_after is where you want to start listing from
+  uint64 start_after = 3;
+}
+
+// GfSpGetUserOwnedGroupsResponse is response type for the GfSpGetUserOwnedGroups RPC method
+message GfSpGetUserOwnedGroupsResponse {
+  // groups defines the response of group list
+  repeated GroupMember groups = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -709,14 +778,14 @@ service GfSpMetadataService {
   rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {}
   rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
-  rpc GfSpGetEndpointBySpId(GfSpGetEndpointBySpIdRequest) returns (GfSpGetEndpointBySpIdResponse) {}
+  rpc GfSpGetEndpointBySpID(GfSpGetEndpointBySpIDRequest) returns (GfSpGetEndpointBySpIDResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
   rpc GfSpQueryResumableUploadSegment(GfSpQueryResumableUploadSegmentRequest) returns (GfSpQueryResumableUploadSegmentResponse) {}
   rpc GfSpGetGroupList(GfSpGetGroupListRequest) returns (GfSpGetGroupListResponse) {}
-  rpc GfSpListBucketsByBucketID(GfSpListBucketsByBucketIDRequest) returns (GfSpListBucketsByBucketIDResponse) {}
-  rpc GfSpListObjectsByObjectID(GfSpListObjectsByObjectIDRequest) returns (GfSpListObjectsByObjectIDResponse) {}
+  rpc GfSpListBucketsByIDs(GfSpListBucketsByIDsRequest) returns (GfSpListBucketsByIDsResponse) {}
+  rpc GfSpListObjectsByIDs(GfSpListObjectsByIDsRequest) returns (GfSpListObjectsByIDsResponse) {}
   rpc GfSpVerifyPermissionByID(GfSpVerifyPermissionByIDRequest) returns (GfSpVerifyPermissionByIDResponse) {}
   rpc GfSpListVirtualGroupFamiliesBySpID(GfSpListVirtualGroupFamiliesBySpIDRequest) returns (GfSpListVirtualGroupFamiliesBySpIDResponse) {}
   rpc GfSpGetGlobalVirtualGroupByGvgID(GfSpGetGlobalVirtualGroupByGvgIDRequest) returns (GfSpGetGlobalVirtualGroupByGvgIDResponse) {}
@@ -732,4 +801,7 @@ service GfSpMetadataService {
   rpc GfSpListSpExitEvents(GfSpListSpExitEventsRequest) returns (GfSpListSpExitEventsResponse) {}
   rpc GfSpGetSPInfo(GfSpGetSPInfoRequest) returns (GfSpGetSPInfoResponse) {}
   rpc GfSpGetStatus(GfSpGetStatusRequest) returns (GfSpGetStatusResponse) {}
+  rpc GfSpGetUserGroups(GfSpGetUserGroupsRequest) returns (GfSpGetUserGroupsResponse) {}
+  rpc GfSpGetGroupMembers(GfSpGetGroupMembersRequest) returns (GfSpGetGroupMembersResponse) {}
+  rpc GfSpGetUserOwnedGroups(GfSpGetUserOwnedGroupsRequest) returns (GfSpGetUserOwnedGroupsResponse) {}
 }

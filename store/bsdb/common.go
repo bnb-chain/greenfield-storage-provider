@@ -42,16 +42,16 @@ const (
 	BsDBPasswd = "BS_DB_PASSWORD"
 	// BsDBAddress defines env variable name for block syncer db address.
 	BsDBAddress = "BS_DB_ADDRESS"
-	// BsDBDataBase defines env variable name for block syncer db database.
-	BsDBDataBase = "BS_DB_DATABASE"
+	// BsDBDatabase defines env variable name for block syncer db database.
+	BsDBDatabase = "BS_DB_DATABASE"
 	// BsDBSwitchedUser defines env variable name for switched block syncer db username.
 	BsDBSwitchedUser = "BS_DB_SWITCHED_USER"
 	// BsDBSwitchedPasswd defines env variable name for switched block syncer db user passwd.
 	BsDBSwitchedPasswd = "BS_DB_SWITCHED_PASSWORD"
 	// BsDBSwitchedAddress defines env variable name for switched block syncer db address.
 	BsDBSwitchedAddress = "BS_DB_SWITCHED_ADDRESS"
-	// BsDBSwitchedDataBase defines env variable name for switched block syncer db database.
-	BsDBSwitchedDataBase = "BS_DB_SWITCHED_DATABASE"
+	// BsDBSwitchedDatabase defines env variable name for switched block syncer db database.
+	BsDBSwitchedDatabase = "BS_DB_SWITCHED_DATABASE"
 )
 
 // ObjectIDs represents the request of list object by ids

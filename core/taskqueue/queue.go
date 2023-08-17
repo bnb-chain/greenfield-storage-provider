@@ -22,6 +22,8 @@ type NewTQueueOnStrategyWithLimit = func(name string, cap int) TQueueOnStrategyW
 // TQueue is the interface to task queue. The task queue is mainly used to maintain tasks are running.
 // In addition to supporting conventional FIFO operations, task queue also has some customized operations
 // for task. For example, Has, PopByKey.
+//
+//go:generate mockgen -source=./queue.go -destination=./queue_mock.go -package=taskqueue
 type TQueue interface {
 	// Top returns the top task in the queue, if the queue empty, returns nil.
 	Top() task.Task

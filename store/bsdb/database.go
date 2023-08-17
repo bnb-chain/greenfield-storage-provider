@@ -47,10 +47,10 @@ type Metadata interface {
 	GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error)
 	// ListGroupsByNameAndSourceType get groups list by specific parameters
 	ListGroupsByNameAndSourceType(name, prefix, sourceType string, limit, offset int, includeRemoved bool) ([]*Group, int64, error)
-	// ListObjectsByObjectID list objects by object ids
-	ListObjectsByObjectID(ids []common.Hash, includeRemoved bool) ([]*Object, error)
-	// ListBucketsByBucketID list buckets by bucket ids
-	ListBucketsByBucketID(ids []common.Hash, includeRemoved bool) ([]*Bucket, error)
+	// ListObjectsByIDs list objects by object ids
+	ListObjectsByIDs(ids []common.Hash, includeRemoved bool) ([]*Object, error)
+	// ListBucketsByIDs list buckets by bucket ids
+	ListBucketsByIDs(ids []common.Hash, includeRemoved bool) ([]*Bucket, error)
 	// GetGroupByID get group info by an object id
 	GetGroupByID(groupID int64, includeRemoved bool) (*Group, error)
 	// ListVirtualGroupFamiliesBySpID list virtual group families by sp id
@@ -105,6 +105,12 @@ type Metadata interface {
 	GetDefaultCharacterSet() (string, error)
 	// GetDefaultCollationName get the current mysql default collation name
 	GetDefaultCollationName() (string, error)
+	// GetUserGroups get groups info by a user address
+	GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
+	// GetGroupMembers get group members by group id
+	GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error)
+	// GetUserOwnedGroups retrieve groups where the user is the owner
+	GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
 }
 
 // BSDB contains all the methods required by block syncer database

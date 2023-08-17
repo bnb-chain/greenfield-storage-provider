@@ -9,6 +9,8 @@ package sqldb
 // An iterator must be released after use, but it is not necessary to read an
 // iterator until exhaustion. An iterator is not safe for concurrent use, but it
 // is safe to use multiple iterators concurrently.
+//
+//go:generate mockgen -source=./iterator.go -destination=./iterator_mock.go -package=sqldb
 type Iterator interface {
 	// IsValid return true if current element is valid.
 	IsValid() bool

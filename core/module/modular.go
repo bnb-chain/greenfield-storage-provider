@@ -19,6 +19,8 @@ import (
 // Modular is a common interface for submodules that are scheduled by the GfSp framework.
 // It inherits lifecycle.Service interface, which is used to manage lifecycle of services. Additionally, Modular is managed
 // by ResourceManager, which allows the GfSp framework to reserve and release resources from the Modular resource pool.
+//
+//go:generate mockgen -source=./modular.go -destination=./modular_mock.go -package=module
 type Modular interface {
 	lifecycle.Service
 	// ReserveResource reserves the resources from Modular resources pool.
@@ -227,7 +229,7 @@ type P2P interface {
 	// HandleReplicatePieceApproval handles the asking replicate piece approval, it will
 	// broadcast the approval to other SPs, waiting the responses. If up to min approved
 	// number or max approved number before timeout, it will return the approvals.
-	HandleReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask, min, max int32,
+	HandleReplicatePieceApproval(ctx context.Context, t task.ApprovalReplicatePieceTask, min, max int32,
 		timeout int64) ([]task.ApprovalReplicatePieceTask, error)
 	// HandleQueryBootstrap handles the query p2p node bootstrap node info.
 	HandleQueryBootstrap(ctx context.Context) ([]string, error)

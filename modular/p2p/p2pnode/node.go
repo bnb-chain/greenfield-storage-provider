@@ -47,9 +47,8 @@ type Node struct {
 }
 
 // NewNode return an instance of Node
-func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string,
-	bootstrap []string, pingPeriod int, secondaryApprovalExpiredHeight uint64,
-	p2pAntAddress string) (*Node, error) {
+func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string, bootstrap []string, pingPeriod int,
+	secondaryApprovalExpiredHeight uint64, p2pAntAddress string) (*Node, error) {
 	if pingPeriod < PingPeriodMin {
 		pingPeriod = PingPeriodMin
 	}
@@ -175,12 +174,8 @@ func (n *Node) PeersProvider() *PeerProvider {
 
 // GetSecondaryReplicatePieceApproval broadcast get approval request and blocking
 // goroutine until timeout or collect expect accept approval response number
-func (n *Node) GetSecondaryReplicatePieceApproval(
-	ctx context.Context,
-	task coretask.ApprovalReplicatePieceTask,
-	expectedAccept int, timeout int64) (
-	accept []coretask.ApprovalReplicatePieceTask,
-	err error) {
+func (n *Node) GetSecondaryReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask,
+	expectedAccept int, timeout int64) (accept []coretask.ApprovalReplicatePieceTask, err error) {
 	approvalCh, err := n.approval.hangApprovalRequest(task.GetObjectInfo().Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to hang replicate piece approval request")

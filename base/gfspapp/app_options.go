@@ -174,7 +174,7 @@ func DefaultStaticOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	app.signer = &coremodule.NilModular{}
 	app.metrics = &coremodule.NilModular{}
 	app.pprof = &coremodule.NilModular{}
-	app.newRpcServer()
+	app.newRPCServer()
 	return nil
 }
 
@@ -231,7 +231,7 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		return nil
 	}
 	for _, v := range cfg.Server {
-		if v == coremodule.BlockSyncerModularName || v == coremodule.MetadataModularName {
+		if v == coremodule.BlockSyncerModularName {
 			log.Infof("[%s] module doesn't need sp db", v)
 			continue
 		}
@@ -245,33 +245,10 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 			if val, ok := os.LookupEnv(sqldb.SpDBAddress); ok {
 				cfg.SpDB.Address = val
 			}
-			if val, ok := os.LookupEnv(sqldb.SpDBDataBase); ok {
+			if val, ok := os.LookupEnv(sqldb.SpDBDatabase); ok {
 				cfg.SpDB.Database = val
 			}
-			if cfg.SpDB.ConnMaxLifetime == 0 {
-				cfg.SpDB.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
-			}
-			if cfg.SpDB.ConnMaxIdleTime == 0 {
-				cfg.SpDB.ConnMaxIdleTime = sqldb.DefaultConnMaxIdleTime
-			}
-			if cfg.SpDB.MaxIdleConns == 0 {
-				cfg.SpDB.MaxIdleConns = sqldb.DefaultMaxIdleConns
-			}
-			if cfg.SpDB.MaxOpenConns == 0 {
-				cfg.SpDB.MaxOpenConns = sqldb.DefaultMaxOpenConns
-			}
-			if cfg.SpDB.User == "" {
-				cfg.SpDB.User = "root"
-			}
-			if cfg.SpDB.Passwd == "" {
-				cfg.SpDB.Passwd = "test"
-			}
-			if cfg.SpDB.Address == "" {
-				cfg.SpDB.Address = "127.0.0.1:3306"
-			}
-			if cfg.SpDB.Database == "" {
-				cfg.SpDB.Database = "storage_provider_db"
-			}
+			defaultGfSpDB(&cfg.SpDB)
 			dbCfg := &cfg.SpDB
 			db, err := sqldb.NewSpDB(dbCfg)
 			if err != nil {
@@ -281,8 +258,35 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 			app.gfSpDB = db
 		})
 	}
-
 	return nil
+}
+
+// defaultGfSpDB set default sp db config
+func defaultGfSpDB(cfg *config.SQLDBConfig) {
+	if cfg.ConnMaxLifetime == 0 {
+		cfg.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
+	}
+	if cfg.ConnMaxIdleTime == 0 {
+		cfg.ConnMaxIdleTime = sqldb.DefaultConnMaxIdleTime
+	}
+	if cfg.MaxIdleConns == 0 {
+		cfg.MaxIdleConns = sqldb.DefaultMaxIdleConns
+	}
+	if cfg.MaxOpenConns == 0 {
+		cfg.MaxOpenConns = sqldb.DefaultMaxOpenConns
+	}
+	if cfg.User == "" {
+		cfg.User = "root"
+	}
+	if cfg.Passwd == "" {
+		cfg.Passwd = "test"
+	}
+	if cfg.Address == "" {
+		cfg.Address = "127.0.0.1:3306"
+	}
+	if cfg.Database == "" {
+		cfg.Database = "storage_provider_db"
+	}
 }
 
 var bsdbOnce = sync.Once{}
@@ -304,7 +308,7 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 			if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
 				cfg.BsDB.Address = val
 			}
-			if val, ok := os.LookupEnv(bsdb.BsDBDataBase); ok {
+			if val, ok := os.LookupEnv(bsdb.BsDBDatabase); ok {
 				cfg.BsDB.Database = val
 			}
 			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
@@ -316,12 +320,12 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
 				cfg.BsDBBackup.Address = val
 			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDataBase); ok {
+			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDatabase); ok {
 				cfg.BsDBBackup.Database = val
 			}
 
-			DefaultGfBsDB(&cfg.BsDB)
-			DefaultGfBsDB(&cfg.BsDBBackup)
+			defaultGfBsDB(&cfg.BsDB)
+			defaultGfBsDB(&cfg.BsDBBackup)
 
 			bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
 			if err != nil {
@@ -339,12 +343,11 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 			app.gfBsDBBackup = bsDBBlockSyncerBackUp
 		})
 	}
-
 	return nil
 }
 
-// DefaultGfBsDB cast block syncer db connections, user and password if not loaded from env vars
-func DefaultGfBsDB(config *config.SQLDBConfig) {
+// defaultGfBsDB cast block syncer db connections, user and password if not loaded from env vars
+func defaultGfBsDB(config *config.SQLDBConfig) {
 	if config.ConnMaxLifetime == 0 {
 		config.ConnMaxLifetime = sqldb.DefaultConnMaxLifetime
 	}
@@ -361,10 +364,10 @@ func DefaultGfBsDB(config *config.SQLDBConfig) {
 		config.User = "root"
 	}
 	if config.Passwd == "" {
-		config.User = "test"
+		config.Passwd = "test"
 	}
 	if config.Address == "" {
-		config.User = "127.0.0.1:3306"
+		config.Address = "127.0.0.1:3306"
 	}
 	if config.Database == "" {
 		config.Database = "block_syncer_db"

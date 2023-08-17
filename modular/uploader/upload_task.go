@@ -27,9 +27,15 @@ var (
 	ErrRepeatedTask         = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110003, "put object request repeated")
 	ErrInvalidIntegrity     = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "invalid payload data integrity hash")
 	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
-	ErrPieceStore           = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115101, "server slipped away, try again later")
-	ErrGfSpDB               = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115001, "server slipped away, try again later")
 )
+
+func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115101, detail)
+}
+
+func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 115001, detail)
+}
 
 func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask coretask.UploadObjectTask) error {
 	if uploadObjectTask == nil || uploadObjectTask.GetObjectInfo() == nil || uploadObjectTask.GetStorageParams() == nil {
@@ -117,7 +123,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(startTime).Seconds())
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to put segment piece to piece store", "piece_key", pieceKey, "error", err)
-					return ErrPieceStore
+					return ErrPieceStoreWithDetail("failed to put segment piece to piece store, piece_key: " + pieceKey + ", error: " + err.Error())
 				}
 			}
 			integrity = hash.GenerateIntegrityHash(checksums)
@@ -139,7 +145,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_set_integrity_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
-				return ErrGfSpDB
+				return ErrGfSpDBWithDetail("failed to write integrity hash to db, error: " + err.Error())
 			}
 			log.CtxDebugw(ctx, "succeed to upload payload to piece store")
 			return nil
@@ -156,7 +162,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_put_piece_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
-			return ErrPieceStore
+			return ErrPieceStoreWithDetail("failed to put segment piece to piece store, error: " + err.Error())
 		}
 		segIdx++
 	}
@@ -263,12 +269,12 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
 					log.CtxErrorw(ctx, "put segment piece to piece store", "piece_key", pieceKey, "error", err)
-					return ErrPieceStore
+					return ErrPieceStoreWithDetail("put segment piece to piece store, piece_key: " + pieceKey + ", error: " + err.Error())
 				}
 				err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
-					return ErrGfSpDB
+					return ErrGfSpDBWithDetail("failed to append integrity checksum to db, error: " + err.Error())
 				}
 			}
 			if task.GetCompleted() {
@@ -287,7 +293,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				err = u.baseApp.GfSpDB().UpdateIntegrityChecksum(integrityMeta)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
-					return ErrGfSpDB
+					return ErrGfSpDBWithDetail("failed to write integrity hash to db, error: " + err.Error())
 				}
 			}
 
@@ -302,12 +308,12 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 		if err != nil {
 			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
-			return ErrPieceStore
+			return ErrPieceStoreWithDetail("put segment piece to piece store, error: " + err.Error())
 		}
 		err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), -1, hash.GenerateChecksum(data))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
-			return ErrGfSpDB
+			return ErrGfSpDBWithDetail("failed to append integrity checksum to db, error: " + err.Error())
 		}
 		segIdx++
 	}

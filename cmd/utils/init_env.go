@@ -164,7 +164,7 @@ func MakeSPDB(cfg *gfspconfig.GfSpConfig) (spdb.SPDB, error) {
 	if val, ok := os.LookupEnv(sqldb.SpDBAddress); ok {
 		cfg.SpDB.Address = val
 	}
-	if val, ok := os.LookupEnv(sqldb.SpDBDataBase); ok {
+	if val, ok := os.LookupEnv(sqldb.SpDBDatabase); ok {
 		cfg.SpDB.Database = val
 	}
 	if cfg.SpDB.User == "" {

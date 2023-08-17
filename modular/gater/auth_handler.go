@@ -2,7 +2,7 @@ package gater
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/xml"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -25,6 +25,17 @@ const (
 	ExpiryDateFormat          string = time.RFC3339
 	ExpectedEddsaPubKeyLength int    = 64
 )
+
+type RequestNonceResp struct {
+	CurrentNonce     int32  `xml:"CurrentNonce"`
+	NextNonce        int32  `xml:"NextNonce"`
+	CurrentPublicKey string `xml:"CurrentPublicKey"`
+	ExpiryDate       int64  `xml:"ExpiryDate"`
+}
+
+type UpdateUserPublicKeyResp struct {
+	Result bool `xml:"Result"`
+}
 
 // requestNonceHandler handle requestNonce request
 func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,19 +72,19 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var resp = map[string]interface{}{
-		"current_nonce":      currentNonce,
-		"next_nonce":         nextNonce,
-		"current_public_key": currentPublicKey,
-		"expiry_date":        expiryDate,
+	var resp = &RequestNonceResp{
+		CurrentNonce:     currentNonce,
+		NextNonce:        nextNonce,
+		CurrentPublicKey: currentPublicKey,
+		ExpiryDate:       expiryDate,
 	}
-	b, err = json.Marshal(resp)
+	b, err = xml.Marshal(resp)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal get auth nonce response")
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal get auth nonce response", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(b)
 }
 
@@ -185,17 +196,16 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		log.Errorw("failed to updateUserPublicKey when saving key")
 		return
 	}
-
-	var resp = map[string]interface{}{
-		"result": updateUserPublicKeyResp,
+	var resp = &UpdateUserPublicKeyResp{
+		Result: updateUserPublicKeyResp,
 	}
-	b, err = json.Marshal(resp)
+	b, err = xml.Marshal(resp)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal update user public key response")
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal update user public key response", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
-	w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(b)
 }
 

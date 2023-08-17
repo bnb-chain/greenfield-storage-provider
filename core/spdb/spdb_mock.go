@@ -14,6 +14,819 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
+// MockSPDB is a mock of SPDB interface.
+type MockSPDB struct {
+	ctrl     *gomock.Controller
+	recorder *MockSPDBMockRecorder
+}
+
+// MockSPDBMockRecorder is the mock recorder for MockSPDB.
+type MockSPDBMockRecorder struct {
+	mock *MockSPDB
+}
+
+// NewMockSPDB creates a new mock instance.
+func NewMockSPDB(ctrl *gomock.Controller) *MockSPDB {
+	mock := &MockSPDB{ctrl: ctrl}
+	mock.recorder = &MockSPDBMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSPDB) EXPECT() *MockSPDBMockRecorder {
+	return m.recorder
+}
+
+// CheckQuotaAndAddReadRecord mocks base method.
+func (m *MockSPDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckQuotaAndAddReadRecord", record, quota)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckQuotaAndAddReadRecord indicates an expected call of CheckQuotaAndAddReadRecord.
+func (mr *MockSPDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockSPDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
+}
+
+// DeleteAllReplicatePieceChecksum mocks base method.
+func (m *MockSPDB) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllReplicatePieceChecksum", objectID, redundancyIdx, pieceCount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllReplicatePieceChecksum indicates an expected call of DeleteAllReplicatePieceChecksum.
+func (mr *MockSPDBMockRecorder) DeleteAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
+}
+
+// DeleteGCObjectProgress mocks base method.
+func (m *MockSPDB) DeleteGCObjectProgress(taskKey string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGCObjectProgress", taskKey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteGCObjectProgress indicates an expected call of DeleteGCObjectProgress.
+func (mr *MockSPDBMockRecorder) DeleteGCObjectProgress(taskKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).DeleteGCObjectProgress), taskKey)
+}
+
+// DeleteMigrateGVGUnit mocks base method.
+func (m *MockSPDB) DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMigrateGVGUnit", meta)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteMigrateGVGUnit indicates an expected call of DeleteMigrateGVGUnit.
+func (mr *MockSPDBMockRecorder) DeleteMigrateGVGUnit(meta interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMigrateGVGUnit", reflect.TypeOf((*MockSPDB)(nil).DeleteMigrateGVGUnit), meta)
+}
+
+// DeleteMigrateGVGUnitsByBucketID mocks base method.
+func (m *MockSPDB) DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMigrateGVGUnitsByBucketID", bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteMigrateGVGUnitsByBucketID indicates an expected call of DeleteMigrateGVGUnitsByBucketID.
+func (mr *MockSPDBMockRecorder) DeleteMigrateGVGUnitsByBucketID(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMigrateGVGUnitsByBucketID", reflect.TypeOf((*MockSPDB)(nil).DeleteMigrateGVGUnitsByBucketID), bucketID)
+}
+
+// DeleteObjectIntegrity mocks base method.
+func (m *MockSPDB) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObjectIntegrity", objectID, redundancyIndex)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObjectIntegrity indicates an expected call of DeleteObjectIntegrity.
+func (mr *MockSPDBMockRecorder) DeleteObjectIntegrity(objectID, redundancyIndex interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).DeleteObjectIntegrity), objectID, redundancyIndex)
+}
+
+// DeleteUploadProgress mocks base method.
+func (m *MockSPDB) DeleteUploadProgress(objectID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUploadProgress", objectID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUploadProgress indicates an expected call of DeleteUploadProgress.
+func (mr *MockSPDBMockRecorder) DeleteUploadProgress(objectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUploadProgress", reflect.TypeOf((*MockSPDB)(nil).DeleteUploadProgress), objectID)
+}
+
+// FetchAllSp mocks base method.
+func (m *MockSPDB) FetchAllSp(status ...types0.Status) ([]*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{}
+	for _, a := range status {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FetchAllSp", varargs...)
+	ret0, _ := ret[0].([]*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchAllSp indicates an expected call of FetchAllSp.
+func (mr *MockSPDBMockRecorder) FetchAllSp(status ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAllSp", reflect.TypeOf((*MockSPDB)(nil).FetchAllSp), status...)
+}
+
+// FetchAllSpWithoutOwnSp mocks base method.
+func (m *MockSPDB) FetchAllSpWithoutOwnSp(status ...types0.Status) ([]*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{}
+	for _, a := range status {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FetchAllSpWithoutOwnSp", varargs...)
+	ret0, _ := ret[0].([]*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchAllSpWithoutOwnSp indicates an expected call of FetchAllSpWithoutOwnSp.
+func (mr *MockSPDBMockRecorder) FetchAllSpWithoutOwnSp(status ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAllSpWithoutOwnSp", reflect.TypeOf((*MockSPDB)(nil).FetchAllSpWithoutOwnSp), status...)
+}
+
+// GetAllReplicatePieceChecksum mocks base method.
+func (m *MockSPDB) GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllReplicatePieceChecksum", objectID, redundancyIdx, pieceCount)
+	ret0, _ := ret[0].([][]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllReplicatePieceChecksum indicates an expected call of GetAllReplicatePieceChecksum.
+func (mr *MockSPDBMockRecorder) GetAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).GetAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
+}
+
+// GetAuthKey mocks base method.
+func (m *MockSPDB) GetAuthKey(userAddress, domain string) (*OffChainAuthKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthKey", userAddress, domain)
+	ret0, _ := ret[0].(*OffChainAuthKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAuthKey indicates an expected call of GetAuthKey.
+func (mr *MockSPDBMockRecorder) GetAuthKey(userAddress, domain interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKey", reflect.TypeOf((*MockSPDB)(nil).GetAuthKey), userAddress, domain)
+}
+
+// GetBucketReadRecord mocks base method.
+func (m *MockSPDB) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketReadRecord", bucketID, timeRange)
+	ret0, _ := ret[0].([]*ReadRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketReadRecord indicates an expected call of GetBucketReadRecord.
+func (mr *MockSPDBMockRecorder) GetBucketReadRecord(bucketID, timeRange interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetBucketReadRecord), bucketID, timeRange)
+}
+
+// GetBucketTraffic mocks base method.
+func (m *MockSPDB) GetBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
+	ret0, _ := ret[0].(*BucketTraffic)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketTraffic indicates an expected call of GetBucketTraffic.
+func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID)
+}
+
+// GetGCMetasToGC mocks base method.
+func (m *MockSPDB) GetGCMetasToGC(limit int) ([]*GCObjectMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGCMetasToGC", limit)
+	ret0, _ := ret[0].([]*GCObjectMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGCMetasToGC indicates an expected call of GetGCMetasToGC.
+func (mr *MockSPDBMockRecorder) GetGCMetasToGC(limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCMetasToGC", reflect.TypeOf((*MockSPDB)(nil).GetGCMetasToGC), limit)
+}
+
+// GetObjectIntegrity mocks base method.
+func (m *MockSPDB) GetObjectIntegrity(objectID uint64, redundancyIndex int32) (*IntegrityMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetObjectIntegrity", objectID, redundancyIndex)
+	ret0, _ := ret[0].(*IntegrityMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetObjectIntegrity indicates an expected call of GetObjectIntegrity.
+func (mr *MockSPDBMockRecorder) GetObjectIntegrity(objectID, redundancyIndex interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).GetObjectIntegrity), objectID, redundancyIndex)
+}
+
+// GetObjectReadRecord mocks base method.
+func (m *MockSPDB) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetObjectReadRecord", objectID, timeRange)
+	ret0, _ := ret[0].([]*ReadRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetObjectReadRecord indicates an expected call of GetObjectReadRecord.
+func (mr *MockSPDBMockRecorder) GetObjectReadRecord(objectID, timeRange interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetObjectReadRecord), objectID, timeRange)
+}
+
+// GetOwnSpInfo mocks base method.
+func (m *MockSPDB) GetOwnSpInfo() (*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOwnSpInfo")
+	ret0, _ := ret[0].(*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOwnSpInfo indicates an expected call of GetOwnSpInfo.
+func (mr *MockSPDBMockRecorder) GetOwnSpInfo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnSpInfo", reflect.TypeOf((*MockSPDB)(nil).GetOwnSpInfo))
+}
+
+// GetReadRecord mocks base method.
+func (m *MockSPDB) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReadRecord", timeRange)
+	ret0, _ := ret[0].([]*ReadRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetReadRecord indicates an expected call of GetReadRecord.
+func (mr *MockSPDBMockRecorder) GetReadRecord(timeRange interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetReadRecord), timeRange)
+}
+
+// GetSpByAddress mocks base method.
+func (m *MockSPDB) GetSpByAddress(address string, addressType SpAddressType) (*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSpByAddress", address, addressType)
+	ret0, _ := ret[0].(*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSpByAddress indicates an expected call of GetSpByAddress.
+func (mr *MockSPDBMockRecorder) GetSpByAddress(address, addressType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByAddress", reflect.TypeOf((*MockSPDB)(nil).GetSpByAddress), address, addressType)
+}
+
+// GetSpByEndpoint mocks base method.
+func (m *MockSPDB) GetSpByEndpoint(endpoint string) (*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSpByEndpoint", endpoint)
+	ret0, _ := ret[0].(*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSpByEndpoint indicates an expected call of GetSpByEndpoint.
+func (mr *MockSPDBMockRecorder) GetSpByEndpoint(endpoint interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByEndpoint", reflect.TypeOf((*MockSPDB)(nil).GetSpByEndpoint), endpoint)
+}
+
+// GetSpByID mocks base method.
+func (m *MockSPDB) GetSpByID(id uint32) (*types0.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSpByID", id)
+	ret0, _ := ret[0].(*types0.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSpByID indicates an expected call of GetSpByID.
+func (mr *MockSPDBMockRecorder) GetSpByID(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByID", reflect.TypeOf((*MockSPDB)(nil).GetSpByID), id)
+}
+
+// GetUploadMetasToReplicate mocks base method.
+func (m *MockSPDB) GetUploadMetasToReplicate(limit int, timeout int64) ([]*UploadObjectMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUploadMetasToReplicate", limit, timeout)
+	ret0, _ := ret[0].([]*UploadObjectMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUploadMetasToReplicate indicates an expected call of GetUploadMetasToReplicate.
+func (mr *MockSPDBMockRecorder) GetUploadMetasToReplicate(limit, timeout interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToReplicate", reflect.TypeOf((*MockSPDB)(nil).GetUploadMetasToReplicate), limit, timeout)
+}
+
+// GetUploadMetasToSeal mocks base method.
+func (m *MockSPDB) GetUploadMetasToSeal(limit int, timeout int64) ([]*UploadObjectMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUploadMetasToSeal", limit, timeout)
+	ret0, _ := ret[0].([]*UploadObjectMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUploadMetasToSeal indicates an expected call of GetUploadMetasToSeal.
+func (mr *MockSPDBMockRecorder) GetUploadMetasToSeal(limit, timeout interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToSeal", reflect.TypeOf((*MockSPDB)(nil).GetUploadMetasToSeal), limit, timeout)
+}
+
+// GetUploadState mocks base method.
+func (m *MockSPDB) GetUploadState(objectID uint64) (types.TaskState, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUploadState", objectID)
+	ret0, _ := ret[0].(types.TaskState)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetUploadState indicates an expected call of GetUploadState.
+func (mr *MockSPDBMockRecorder) GetUploadState(objectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadState", reflect.TypeOf((*MockSPDB)(nil).GetUploadState), objectID)
+}
+
+// GetUserReadRecord mocks base method.
+func (m *MockSPDB) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserReadRecord", userAddress, timeRange)
+	ret0, _ := ret[0].([]*ReadRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserReadRecord indicates an expected call of GetUserReadRecord.
+func (mr *MockSPDBMockRecorder) GetUserReadRecord(userAddress, timeRange interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetUserReadRecord), userAddress, timeRange)
+}
+
+// InitBucketTraffic mocks base method.
+func (m *MockSPDB) InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitBucketTraffic", bucketID, bucketName, quota)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitBucketTraffic indicates an expected call of InitBucketTraffic.
+func (mr *MockSPDBMockRecorder) InitBucketTraffic(bucketID, bucketName, quota interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).InitBucketTraffic), bucketID, bucketName, quota)
+}
+
+// InsertAuthKey mocks base method.
+func (m *MockSPDB) InsertAuthKey(newRecord *OffChainAuthKey) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertAuthKey", newRecord)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertAuthKey indicates an expected call of InsertAuthKey.
+func (mr *MockSPDBMockRecorder) InsertAuthKey(newRecord interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKey", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKey), newRecord)
+}
+
+// InsertGCObjectProgress mocks base method.
+func (m *MockSPDB) InsertGCObjectProgress(gcMeta *GCObjectMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertGCObjectProgress", gcMeta)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertGCObjectProgress indicates an expected call of InsertGCObjectProgress.
+func (mr *MockSPDBMockRecorder) InsertGCObjectProgress(gcMeta interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).InsertGCObjectProgress), gcMeta)
+}
+
+// InsertMigrateGVGUnit mocks base method.
+func (m *MockSPDB) InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertMigrateGVGUnit", meta)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertMigrateGVGUnit indicates an expected call of InsertMigrateGVGUnit.
+func (mr *MockSPDBMockRecorder) InsertMigrateGVGUnit(meta interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMigrateGVGUnit", reflect.TypeOf((*MockSPDB)(nil).InsertMigrateGVGUnit), meta)
+}
+
+// InsertPutEvent mocks base method.
+func (m *MockSPDB) InsertPutEvent(task task.Task) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertPutEvent", task)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertPutEvent indicates an expected call of InsertPutEvent.
+func (mr *MockSPDBMockRecorder) InsertPutEvent(task interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPutEvent", reflect.TypeOf((*MockSPDB)(nil).InsertPutEvent), task)
+}
+
+// InsertSwapOutUnit mocks base method.
+func (m *MockSPDB) InsertSwapOutUnit(meta *SwapOutMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertSwapOutUnit", meta)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertSwapOutUnit indicates an expected call of InsertSwapOutUnit.
+func (mr *MockSPDBMockRecorder) InsertSwapOutUnit(meta interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSwapOutUnit", reflect.TypeOf((*MockSPDB)(nil).InsertSwapOutUnit), meta)
+}
+
+// InsertUploadProgress mocks base method.
+func (m *MockSPDB) InsertUploadProgress(objectID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertUploadProgress", objectID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertUploadProgress indicates an expected call of InsertUploadProgress.
+func (mr *MockSPDBMockRecorder) InsertUploadProgress(objectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUploadProgress", reflect.TypeOf((*MockSPDB)(nil).InsertUploadProgress), objectID)
+}
+
+// ListDestSPSwapOutUnits mocks base method.
+func (m *MockSPDB) ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDestSPSwapOutUnits")
+	ret0, _ := ret[0].([]*SwapOutMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDestSPSwapOutUnits indicates an expected call of ListDestSPSwapOutUnits.
+func (mr *MockSPDBMockRecorder) ListDestSPSwapOutUnits() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDestSPSwapOutUnits", reflect.TypeOf((*MockSPDB)(nil).ListDestSPSwapOutUnits))
+}
+
+// ListMigrateGVGUnitsByBucketID mocks base method.
+func (m *MockSPDB) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMigrateGVGUnitsByBucketID", bucketID)
+	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMigrateGVGUnitsByBucketID indicates an expected call of ListMigrateGVGUnitsByBucketID.
+func (mr *MockSPDBMockRecorder) ListMigrateGVGUnitsByBucketID(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsByBucketID", reflect.TypeOf((*MockSPDB)(nil).ListMigrateGVGUnitsByBucketID), bucketID)
+}
+
+// QueryBucketMigrateSubscribeProgress mocks base method.
+func (m *MockSPDB) QueryBucketMigrateSubscribeProgress() (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryBucketMigrateSubscribeProgress")
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryBucketMigrateSubscribeProgress indicates an expected call of QueryBucketMigrateSubscribeProgress.
+func (mr *MockSPDBMockRecorder) QueryBucketMigrateSubscribeProgress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrateSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).QueryBucketMigrateSubscribeProgress))
+}
+
+// QueryMigrateGVGUnit mocks base method.
+func (m *MockSPDB) QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryMigrateGVGUnit", migrateKey)
+	ret0, _ := ret[0].(*MigrateGVGUnitMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryMigrateGVGUnit indicates an expected call of QueryMigrateGVGUnit.
+func (mr *MockSPDBMockRecorder) QueryMigrateGVGUnit(migrateKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryMigrateGVGUnit", reflect.TypeOf((*MockSPDB)(nil).QueryMigrateGVGUnit), migrateKey)
+}
+
+// QuerySPExitSubscribeProgress mocks base method.
+func (m *MockSPDB) QuerySPExitSubscribeProgress() (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySPExitSubscribeProgress")
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySPExitSubscribeProgress indicates an expected call of QuerySPExitSubscribeProgress.
+func (mr *MockSPDBMockRecorder) QuerySPExitSubscribeProgress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExitSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).QuerySPExitSubscribeProgress))
+}
+
+// QuerySwapOutSubscribeProgress mocks base method.
+func (m *MockSPDB) QuerySwapOutSubscribeProgress() (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySwapOutSubscribeProgress")
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySwapOutSubscribeProgress indicates an expected call of QuerySwapOutSubscribeProgress.
+func (mr *MockSPDBMockRecorder) QuerySwapOutSubscribeProgress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySwapOutSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).QuerySwapOutSubscribeProgress))
+}
+
+// QuerySwapOutUnitInSrcSP mocks base method.
+func (m *MockSPDB) QuerySwapOutUnitInSrcSP(swapOutKey string) (*SwapOutMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySwapOutUnitInSrcSP", swapOutKey)
+	ret0, _ := ret[0].(*SwapOutMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySwapOutUnitInSrcSP indicates an expected call of QuerySwapOutUnitInSrcSP.
+func (mr *MockSPDBMockRecorder) QuerySwapOutUnitInSrcSP(swapOutKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySwapOutUnitInSrcSP", reflect.TypeOf((*MockSPDB)(nil).QuerySwapOutUnitInSrcSP), swapOutKey)
+}
+
+// SetObjectIntegrity mocks base method.
+func (m *MockSPDB) SetObjectIntegrity(integrity *IntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetObjectIntegrity", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetObjectIntegrity indicates an expected call of SetObjectIntegrity.
+func (mr *MockSPDBMockRecorder) SetObjectIntegrity(integrity interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).SetObjectIntegrity), integrity)
+}
+
+// SetOwnSpInfo mocks base method.
+func (m *MockSPDB) SetOwnSpInfo(sp *types0.StorageProvider) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetOwnSpInfo", sp)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetOwnSpInfo indicates an expected call of SetOwnSpInfo.
+func (mr *MockSPDBMockRecorder) SetOwnSpInfo(sp interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOwnSpInfo", reflect.TypeOf((*MockSPDB)(nil).SetOwnSpInfo), sp)
+}
+
+// SetReplicatePieceChecksum mocks base method.
+func (m *MockSPDB) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx, checksum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetReplicatePieceChecksum indicates an expected call of SetReplicatePieceChecksum.
+func (mr *MockSPDBMockRecorder) SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, checksum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum)
+}
+
+// UpdateAllSp mocks base method.
+func (m *MockSPDB) UpdateAllSp(spList []*types0.StorageProvider) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAllSp", spList)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAllSp indicates an expected call of UpdateAllSp.
+func (mr *MockSPDBMockRecorder) UpdateAllSp(spList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAllSp", reflect.TypeOf((*MockSPDB)(nil).UpdateAllSp), spList)
+}
+
+// UpdateAuthKey mocks base method.
+func (m *MockSPDB) UpdateAuthKey(userAddress, domain string, oldNonce, newNonce int32, newPublicKey string, newExpiryDate time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAuthKey", userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAuthKey indicates an expected call of UpdateAuthKey.
+func (mr *MockSPDBMockRecorder) UpdateAuthKey(userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthKey", reflect.TypeOf((*MockSPDB)(nil).UpdateAuthKey), userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
+}
+
+// UpdateBucketMigrateSubscribeProgress mocks base method.
+func (m *MockSPDB) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBucketMigrateSubscribeProgress", blockHeight)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateBucketMigrateSubscribeProgress indicates an expected call of UpdateBucketMigrateSubscribeProgress.
+func (mr *MockSPDBMockRecorder) UpdateBucketMigrateSubscribeProgress(blockHeight interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrateSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateBucketMigrateSubscribeProgress), blockHeight)
+}
+
+// UpdateGCObjectProgress mocks base method.
+func (m *MockSPDB) UpdateGCObjectProgress(gcMeta *GCObjectMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateGCObjectProgress", gcMeta)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateGCObjectProgress indicates an expected call of UpdateGCObjectProgress.
+func (mr *MockSPDBMockRecorder) UpdateGCObjectProgress(gcMeta interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateGCObjectProgress), gcMeta)
+}
+
+// UpdateIntegrityChecksum mocks base method.
+func (m *MockSPDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateIntegrityChecksum", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateIntegrityChecksum indicates an expected call of UpdateIntegrityChecksum.
+func (mr *MockSPDBMockRecorder) UpdateIntegrityChecksum(integrity interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateIntegrityChecksum), integrity)
+}
+
+// UpdateMigrateGVGUnitLastMigrateObjectID mocks base method.
+func (m *MockSPDB) UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMigrateGVGUnitLastMigrateObjectID", migrateKey, lastMigrateObjectID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMigrateGVGUnitLastMigrateObjectID indicates an expected call of UpdateMigrateGVGUnitLastMigrateObjectID.
+func (mr *MockSPDBMockRecorder) UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, lastMigrateObjectID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGUnitLastMigrateObjectID", reflect.TypeOf((*MockSPDB)(nil).UpdateMigrateGVGUnitLastMigrateObjectID), migrateKey, lastMigrateObjectID)
+}
+
+// UpdateMigrateGVGUnitStatus mocks base method.
+func (m *MockSPDB) UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMigrateGVGUnitStatus", migrateKey, migrateStatus)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMigrateGVGUnitStatus indicates an expected call of UpdateMigrateGVGUnitStatus.
+func (mr *MockSPDBMockRecorder) UpdateMigrateGVGUnitStatus(migrateKey, migrateStatus interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGUnitStatus", reflect.TypeOf((*MockSPDB)(nil).UpdateMigrateGVGUnitStatus), migrateKey, migrateStatus)
+}
+
+// UpdatePieceChecksum mocks base method.
+func (m *MockSPDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePieceChecksum", objectID, redundancyIndex, checksum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePieceChecksum indicates an expected call of UpdatePieceChecksum.
+func (mr *MockSPDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
+}
+
+// UpdateSPExitSubscribeProgress mocks base method.
+func (m *MockSPDB) UpdateSPExitSubscribeProgress(blockHeight uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSPExitSubscribeProgress", blockHeight)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSPExitSubscribeProgress indicates an expected call of UpdateSPExitSubscribeProgress.
+func (mr *MockSPDBMockRecorder) UpdateSPExitSubscribeProgress(blockHeight interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSPExitSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateSPExitSubscribeProgress), blockHeight)
+}
+
+// UpdateSwapOutSubscribeProgress mocks base method.
+func (m *MockSPDB) UpdateSwapOutSubscribeProgress(blockHeight uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSwapOutSubscribeProgress", blockHeight)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSwapOutSubscribeProgress indicates an expected call of UpdateSwapOutSubscribeProgress.
+func (mr *MockSPDBMockRecorder) UpdateSwapOutSubscribeProgress(blockHeight interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateSwapOutSubscribeProgress), blockHeight)
+}
+
+// UpdateSwapOutUnitCompletedGVGList mocks base method.
+func (m *MockSPDB) UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSwapOutUnitCompletedGVGList", swapOutKey, completedGVGList)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSwapOutUnitCompletedGVGList indicates an expected call of UpdateSwapOutUnitCompletedGVGList.
+func (mr *MockSPDBMockRecorder) UpdateSwapOutUnitCompletedGVGList(swapOutKey, completedGVGList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutUnitCompletedGVGList", reflect.TypeOf((*MockSPDB)(nil).UpdateSwapOutUnitCompletedGVGList), swapOutKey, completedGVGList)
+}
+
+// UpdateUploadProgress mocks base method.
+func (m *MockSPDB) UpdateUploadProgress(uploadMeta *UploadObjectMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUploadProgress", uploadMeta)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUploadProgress indicates an expected call of UpdateUploadProgress.
+func (mr *MockSPDBMockRecorder) UpdateUploadProgress(uploadMeta interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateUploadProgress), uploadMeta)
+}
+
 // MockUploadObjectProgressDB is a mock of UploadObjectProgressDB interface.
 type MockUploadObjectProgressDB struct {
 	ctrl     *gomock.Controller
@@ -192,17 +1005,17 @@ func (mr *MockGCObjectProgressDBMockRecorder) GetGCMetasToGC(limit interface{}) 
 }
 
 // InsertGCObjectProgress mocks base method.
-func (m *MockGCObjectProgressDB) InsertGCObjectProgress(taskKey string, gcMeta *GCObjectMeta) error {
+func (m *MockGCObjectProgressDB) InsertGCObjectProgress(gcMeta *GCObjectMeta) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertGCObjectProgress", taskKey, gcMeta)
+	ret := m.ctrl.Call(m, "InsertGCObjectProgress", gcMeta)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // InsertGCObjectProgress indicates an expected call of InsertGCObjectProgress.
-func (mr *MockGCObjectProgressDBMockRecorder) InsertGCObjectProgress(taskKey, gcMeta interface{}) *gomock.Call {
+func (mr *MockGCObjectProgressDBMockRecorder) InsertGCObjectProgress(gcMeta interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).InsertGCObjectProgress), taskKey, gcMeta)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertGCObjectProgress", reflect.TypeOf((*MockGCObjectProgressDB)(nil).InsertGCObjectProgress), gcMeta)
 }
 
 // UpdateGCObjectProgress mocks base method.
@@ -588,19 +1401,19 @@ func (mr *MockSPInfoDBMockRecorder) GetSpByEndpoint(endpoint interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByEndpoint", reflect.TypeOf((*MockSPInfoDB)(nil).GetSpByEndpoint), endpoint)
 }
 
-// GetSpById mocks base method.
-func (m *MockSPInfoDB) GetSpById(id uint32) (*types0.StorageProvider, error) {
+// GetSpByID mocks base method.
+func (m *MockSPInfoDB) GetSpByID(id uint32) (*types0.StorageProvider, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSpById", id)
+	ret := m.ctrl.Call(m, "GetSpByID", id)
 	ret0, _ := ret[0].(*types0.StorageProvider)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSpById indicates an expected call of GetSpById.
-func (mr *MockSPInfoDBMockRecorder) GetSpById(id interface{}) *gomock.Call {
+// GetSpByID indicates an expected call of GetSpByID.
+func (mr *MockSPInfoDBMockRecorder) GetSpByID(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpById", reflect.TypeOf((*MockSPInfoDB)(nil).GetSpById), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByID", reflect.TypeOf((*MockSPInfoDB)(nil).GetSpByID), id)
 }
 
 // SetOwnSpInfo mocks base method.
@@ -732,6 +1545,20 @@ func (m *MockMigrateDB) DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error {
 func (mr *MockMigrateDBMockRecorder) DeleteMigrateGVGUnit(meta interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMigrateGVGUnit", reflect.TypeOf((*MockMigrateDB)(nil).DeleteMigrateGVGUnit), meta)
+}
+
+// DeleteMigrateGVGUnitsByBucketID mocks base method.
+func (m *MockMigrateDB) DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMigrateGVGUnitsByBucketID", bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteMigrateGVGUnitsByBucketID indicates an expected call of DeleteMigrateGVGUnitsByBucketID.
+func (mr *MockMigrateDBMockRecorder) DeleteMigrateGVGUnitsByBucketID(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMigrateGVGUnitsByBucketID", reflect.TypeOf((*MockMigrateDB)(nil).DeleteMigrateGVGUnitsByBucketID), bucketID)
 }
 
 // InsertMigrateGVGUnit mocks base method.
@@ -949,803 +1776,4 @@ func (m *MockMigrateDB) UpdateSwapOutUnitCompletedGVGList(swapOutKey string, com
 func (mr *MockMigrateDBMockRecorder) UpdateSwapOutUnitCompletedGVGList(swapOutKey, completedGVGList interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutUnitCompletedGVGList", reflect.TypeOf((*MockMigrateDB)(nil).UpdateSwapOutUnitCompletedGVGList), swapOutKey, completedGVGList)
-}
-
-// MockSPDB is a mock of SPDB interface.
-type MockSPDB struct {
-	ctrl     *gomock.Controller
-	recorder *MockSPDBMockRecorder
-}
-
-// MockSPDBMockRecorder is the mock recorder for MockSPDB.
-type MockSPDBMockRecorder struct {
-	mock *MockSPDB
-}
-
-// NewMockSPDB creates a new mock instance.
-func NewMockSPDB(ctrl *gomock.Controller) *MockSPDB {
-	mock := &MockSPDB{ctrl: ctrl}
-	mock.recorder = &MockSPDBMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSPDB) EXPECT() *MockSPDBMockRecorder {
-	return m.recorder
-}
-
-// CheckQuotaAndAddReadRecord mocks base method.
-func (m *MockSPDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckQuotaAndAddReadRecord", record, quota)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CheckQuotaAndAddReadRecord indicates an expected call of CheckQuotaAndAddReadRecord.
-func (mr *MockSPDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockSPDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
-}
-
-// DeleteAllReplicatePieceChecksum mocks base method.
-func (m *MockSPDB) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllReplicatePieceChecksum", objectID, redundancyIdx, pieceCount)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteAllReplicatePieceChecksum indicates an expected call of DeleteAllReplicatePieceChecksum.
-func (mr *MockSPDBMockRecorder) DeleteAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
-}
-
-// DeleteGCObjectProgress mocks base method.
-func (m *MockSPDB) DeleteGCObjectProgress(taskKey string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteGCObjectProgress", taskKey)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteGCObjectProgress indicates an expected call of DeleteGCObjectProgress.
-func (mr *MockSPDBMockRecorder) DeleteGCObjectProgress(taskKey interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).DeleteGCObjectProgress), taskKey)
-}
-
-// DeleteMigrateGVGUnit mocks base method.
-func (m *MockSPDB) DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteMigrateGVGUnit", meta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteMigrateGVGUnit indicates an expected call of DeleteMigrateGVGUnit.
-func (mr *MockSPDBMockRecorder) DeleteMigrateGVGUnit(meta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMigrateGVGUnit", reflect.TypeOf((*MockSPDB)(nil).DeleteMigrateGVGUnit), meta)
-}
-
-// DeleteObjectIntegrity mocks base method.
-func (m *MockSPDB) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteObjectIntegrity", objectID, redundancyIndex)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteObjectIntegrity indicates an expected call of DeleteObjectIntegrity.
-func (mr *MockSPDBMockRecorder) DeleteObjectIntegrity(objectID, redundancyIndex interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).DeleteObjectIntegrity), objectID, redundancyIndex)
-}
-
-// DeleteUploadProgress mocks base method.
-func (m *MockSPDB) DeleteUploadProgress(objectID uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUploadProgress", objectID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteUploadProgress indicates an expected call of DeleteUploadProgress.
-func (mr *MockSPDBMockRecorder) DeleteUploadProgress(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUploadProgress", reflect.TypeOf((*MockSPDB)(nil).DeleteUploadProgress), objectID)
-}
-
-// FetchAllSp mocks base method.
-func (m *MockSPDB) FetchAllSp(status ...types0.Status) ([]*types0.StorageProvider, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{}
-	for _, a := range status {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "FetchAllSp", varargs...)
-	ret0, _ := ret[0].([]*types0.StorageProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FetchAllSp indicates an expected call of FetchAllSp.
-func (mr *MockSPDBMockRecorder) FetchAllSp(status ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAllSp", reflect.TypeOf((*MockSPDB)(nil).FetchAllSp), status...)
-}
-
-// FetchAllSpWithoutOwnSp mocks base method.
-func (m *MockSPDB) FetchAllSpWithoutOwnSp(status ...types0.Status) ([]*types0.StorageProvider, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{}
-	for _, a := range status {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "FetchAllSpWithoutOwnSp", varargs...)
-	ret0, _ := ret[0].([]*types0.StorageProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FetchAllSpWithoutOwnSp indicates an expected call of FetchAllSpWithoutOwnSp.
-func (mr *MockSPDBMockRecorder) FetchAllSpWithoutOwnSp(status ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAllSpWithoutOwnSp", reflect.TypeOf((*MockSPDB)(nil).FetchAllSpWithoutOwnSp), status...)
-}
-
-// GetAllReplicatePieceChecksum mocks base method.
-func (m *MockSPDB) GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllReplicatePieceChecksum", objectID, redundancyIdx, pieceCount)
-	ret0, _ := ret[0].([][]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllReplicatePieceChecksum indicates an expected call of GetAllReplicatePieceChecksum.
-func (mr *MockSPDBMockRecorder) GetAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).GetAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
-}
-
-// GetAuthKey mocks base method.
-func (m *MockSPDB) GetAuthKey(userAddress, domain string) (*OffChainAuthKey, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthKey", userAddress, domain)
-	ret0, _ := ret[0].(*OffChainAuthKey)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAuthKey indicates an expected call of GetAuthKey.
-func (mr *MockSPDBMockRecorder) GetAuthKey(userAddress, domain interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKey", reflect.TypeOf((*MockSPDB)(nil).GetAuthKey), userAddress, domain)
-}
-
-// GetBucketReadRecord mocks base method.
-func (m *MockSPDB) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketReadRecord", bucketID, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetBucketReadRecord indicates an expected call of GetBucketReadRecord.
-func (mr *MockSPDBMockRecorder) GetBucketReadRecord(bucketID, timeRange interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetBucketReadRecord), bucketID, timeRange)
-}
-
-// GetBucketTraffic mocks base method.
-func (m *MockSPDB) GetBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
-	ret0, _ := ret[0].(*BucketTraffic)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetBucketTraffic indicates an expected call of GetBucketTraffic.
-func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID)
-}
-
-// GetGCMetasToGC mocks base method.
-func (m *MockSPDB) GetGCMetasToGC(limit int) ([]*GCObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGCMetasToGC", limit)
-	ret0, _ := ret[0].([]*GCObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetGCMetasToGC indicates an expected call of GetGCMetasToGC.
-func (mr *MockSPDBMockRecorder) GetGCMetasToGC(limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCMetasToGC", reflect.TypeOf((*MockSPDB)(nil).GetGCMetasToGC), limit)
-}
-
-// GetObjectIntegrity mocks base method.
-func (m *MockSPDB) GetObjectIntegrity(objectID uint64, redundancyIndex int32) (*IntegrityMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectIntegrity", objectID, redundancyIndex)
-	ret0, _ := ret[0].(*IntegrityMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetObjectIntegrity indicates an expected call of GetObjectIntegrity.
-func (mr *MockSPDBMockRecorder) GetObjectIntegrity(objectID, redundancyIndex interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).GetObjectIntegrity), objectID, redundancyIndex)
-}
-
-// GetObjectReadRecord mocks base method.
-func (m *MockSPDB) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectReadRecord", objectID, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetObjectReadRecord indicates an expected call of GetObjectReadRecord.
-func (mr *MockSPDBMockRecorder) GetObjectReadRecord(objectID, timeRange interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetObjectReadRecord), objectID, timeRange)
-}
-
-// GetOwnSpInfo mocks base method.
-func (m *MockSPDB) GetOwnSpInfo() (*types0.StorageProvider, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOwnSpInfo")
-	ret0, _ := ret[0].(*types0.StorageProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetOwnSpInfo indicates an expected call of GetOwnSpInfo.
-func (mr *MockSPDBMockRecorder) GetOwnSpInfo() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnSpInfo", reflect.TypeOf((*MockSPDB)(nil).GetOwnSpInfo))
-}
-
-// GetReadRecord mocks base method.
-func (m *MockSPDB) GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetReadRecord", timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetReadRecord indicates an expected call of GetReadRecord.
-func (mr *MockSPDBMockRecorder) GetReadRecord(timeRange interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetReadRecord), timeRange)
-}
-
-// GetSpByAddress mocks base method.
-func (m *MockSPDB) GetSpByAddress(address string, addressType SpAddressType) (*types0.StorageProvider, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSpByAddress", address, addressType)
-	ret0, _ := ret[0].(*types0.StorageProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSpByAddress indicates an expected call of GetSpByAddress.
-func (mr *MockSPDBMockRecorder) GetSpByAddress(address, addressType interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByAddress", reflect.TypeOf((*MockSPDB)(nil).GetSpByAddress), address, addressType)
-}
-
-// GetSpByEndpoint mocks base method.
-func (m *MockSPDB) GetSpByEndpoint(endpoint string) (*types0.StorageProvider, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSpByEndpoint", endpoint)
-	ret0, _ := ret[0].(*types0.StorageProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSpByEndpoint indicates an expected call of GetSpByEndpoint.
-func (mr *MockSPDBMockRecorder) GetSpByEndpoint(endpoint interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpByEndpoint", reflect.TypeOf((*MockSPDB)(nil).GetSpByEndpoint), endpoint)
-}
-
-// GetSpById mocks base method.
-func (m *MockSPDB) GetSpById(id uint32) (*types0.StorageProvider, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSpById", id)
-	ret0, _ := ret[0].(*types0.StorageProvider)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSpById indicates an expected call of GetSpById.
-func (mr *MockSPDBMockRecorder) GetSpById(id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpById", reflect.TypeOf((*MockSPDB)(nil).GetSpById), id)
-}
-
-// GetUploadMetasToReplicate mocks base method.
-func (m *MockSPDB) GetUploadMetasToReplicate(limit int, timeout int64) ([]*UploadObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadMetasToReplicate", limit, timeout)
-	ret0, _ := ret[0].([]*UploadObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUploadMetasToReplicate indicates an expected call of GetUploadMetasToReplicate.
-func (mr *MockSPDBMockRecorder) GetUploadMetasToReplicate(limit, timeout interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToReplicate", reflect.TypeOf((*MockSPDB)(nil).GetUploadMetasToReplicate), limit, timeout)
-}
-
-// GetUploadMetasToSeal mocks base method.
-func (m *MockSPDB) GetUploadMetasToSeal(limit int, timeout int64) ([]*UploadObjectMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadMetasToSeal", limit, timeout)
-	ret0, _ := ret[0].([]*UploadObjectMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUploadMetasToSeal indicates an expected call of GetUploadMetasToSeal.
-func (mr *MockSPDBMockRecorder) GetUploadMetasToSeal(limit, timeout interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadMetasToSeal", reflect.TypeOf((*MockSPDB)(nil).GetUploadMetasToSeal), limit, timeout)
-}
-
-// GetUploadState mocks base method.
-func (m *MockSPDB) GetUploadState(objectID uint64) (types.TaskState, string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadState", objectID)
-	ret0, _ := ret[0].(types.TaskState)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetUploadState indicates an expected call of GetUploadState.
-func (mr *MockSPDBMockRecorder) GetUploadState(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadState", reflect.TypeOf((*MockSPDB)(nil).GetUploadState), objectID)
-}
-
-// GetUserReadRecord mocks base method.
-func (m *MockSPDB) GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserReadRecord", userAddress, timeRange)
-	ret0, _ := ret[0].([]*ReadRecord)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserReadRecord indicates an expected call of GetUserReadRecord.
-func (mr *MockSPDBMockRecorder) GetUserReadRecord(userAddress, timeRange interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserReadRecord", reflect.TypeOf((*MockSPDB)(nil).GetUserReadRecord), userAddress, timeRange)
-}
-
-// InitBucketTraffic mocks base method.
-func (m *MockSPDB) InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitBucketTraffic", bucketID, bucketName, quota)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InitBucketTraffic indicates an expected call of InitBucketTraffic.
-func (mr *MockSPDBMockRecorder) InitBucketTraffic(bucketID, bucketName, quota interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).InitBucketTraffic), bucketID, bucketName, quota)
-}
-
-// InsertAuthKey mocks base method.
-func (m *MockSPDB) InsertAuthKey(newRecord *OffChainAuthKey) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertAuthKey", newRecord)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertAuthKey indicates an expected call of InsertAuthKey.
-func (mr *MockSPDBMockRecorder) InsertAuthKey(newRecord interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKey", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKey), newRecord)
-}
-
-// InsertGCObjectProgress mocks base method.
-func (m *MockSPDB) InsertGCObjectProgress(taskKey string, gcMeta *GCObjectMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertGCObjectProgress", taskKey, gcMeta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertGCObjectProgress indicates an expected call of InsertGCObjectProgress.
-func (mr *MockSPDBMockRecorder) InsertGCObjectProgress(taskKey, gcMeta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).InsertGCObjectProgress), taskKey, gcMeta)
-}
-
-// InsertMigrateGVGUnit mocks base method.
-func (m *MockSPDB) InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertMigrateGVGUnit", meta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertMigrateGVGUnit indicates an expected call of InsertMigrateGVGUnit.
-func (mr *MockSPDBMockRecorder) InsertMigrateGVGUnit(meta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMigrateGVGUnit", reflect.TypeOf((*MockSPDB)(nil).InsertMigrateGVGUnit), meta)
-}
-
-// InsertPutEvent mocks base method.
-func (m *MockSPDB) InsertPutEvent(task task.Task) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertPutEvent", task)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertPutEvent indicates an expected call of InsertPutEvent.
-func (mr *MockSPDBMockRecorder) InsertPutEvent(task interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPutEvent", reflect.TypeOf((*MockSPDB)(nil).InsertPutEvent), task)
-}
-
-// InsertSwapOutUnit mocks base method.
-func (m *MockSPDB) InsertSwapOutUnit(meta *SwapOutMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertSwapOutUnit", meta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertSwapOutUnit indicates an expected call of InsertSwapOutUnit.
-func (mr *MockSPDBMockRecorder) InsertSwapOutUnit(meta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertSwapOutUnit", reflect.TypeOf((*MockSPDB)(nil).InsertSwapOutUnit), meta)
-}
-
-// InsertUploadProgress mocks base method.
-func (m *MockSPDB) InsertUploadProgress(objectID uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertUploadProgress", objectID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InsertUploadProgress indicates an expected call of InsertUploadProgress.
-func (mr *MockSPDBMockRecorder) InsertUploadProgress(objectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUploadProgress", reflect.TypeOf((*MockSPDB)(nil).InsertUploadProgress), objectID)
-}
-
-// ListDestSPSwapOutUnits mocks base method.
-func (m *MockSPDB) ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListDestSPSwapOutUnits")
-	ret0, _ := ret[0].([]*SwapOutMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListDestSPSwapOutUnits indicates an expected call of ListDestSPSwapOutUnits.
-func (mr *MockSPDBMockRecorder) ListDestSPSwapOutUnits() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDestSPSwapOutUnits", reflect.TypeOf((*MockSPDB)(nil).ListDestSPSwapOutUnits))
-}
-
-// ListMigrateGVGUnitsByBucketID mocks base method.
-func (m *MockSPDB) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListMigrateGVGUnitsByBucketID", bucketID)
-	ret0, _ := ret[0].([]*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListMigrateGVGUnitsByBucketID indicates an expected call of ListMigrateGVGUnitsByBucketID.
-func (mr *MockSPDBMockRecorder) ListMigrateGVGUnitsByBucketID(bucketID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsByBucketID", reflect.TypeOf((*MockSPDB)(nil).ListMigrateGVGUnitsByBucketID), bucketID)
-}
-
-// QueryBucketMigrateSubscribeProgress mocks base method.
-func (m *MockSPDB) QueryBucketMigrateSubscribeProgress() (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryBucketMigrateSubscribeProgress")
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QueryBucketMigrateSubscribeProgress indicates an expected call of QueryBucketMigrateSubscribeProgress.
-func (mr *MockSPDBMockRecorder) QueryBucketMigrateSubscribeProgress() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrateSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).QueryBucketMigrateSubscribeProgress))
-}
-
-// QueryMigrateGVGUnit mocks base method.
-func (m *MockSPDB) QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryMigrateGVGUnit", migrateKey)
-	ret0, _ := ret[0].(*MigrateGVGUnitMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QueryMigrateGVGUnit indicates an expected call of QueryMigrateGVGUnit.
-func (mr *MockSPDBMockRecorder) QueryMigrateGVGUnit(migrateKey interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryMigrateGVGUnit", reflect.TypeOf((*MockSPDB)(nil).QueryMigrateGVGUnit), migrateKey)
-}
-
-// QuerySPExitSubscribeProgress mocks base method.
-func (m *MockSPDB) QuerySPExitSubscribeProgress() (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySPExitSubscribeProgress")
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QuerySPExitSubscribeProgress indicates an expected call of QuerySPExitSubscribeProgress.
-func (mr *MockSPDBMockRecorder) QuerySPExitSubscribeProgress() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExitSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).QuerySPExitSubscribeProgress))
-}
-
-// QuerySwapOutSubscribeProgress mocks base method.
-func (m *MockSPDB) QuerySwapOutSubscribeProgress() (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySwapOutSubscribeProgress")
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QuerySwapOutSubscribeProgress indicates an expected call of QuerySwapOutSubscribeProgress.
-func (mr *MockSPDBMockRecorder) QuerySwapOutSubscribeProgress() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySwapOutSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).QuerySwapOutSubscribeProgress))
-}
-
-// QuerySwapOutUnitInSrcSP mocks base method.
-func (m *MockSPDB) QuerySwapOutUnitInSrcSP(swapOutKey string) (*SwapOutMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySwapOutUnitInSrcSP", swapOutKey)
-	ret0, _ := ret[0].(*SwapOutMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QuerySwapOutUnitInSrcSP indicates an expected call of QuerySwapOutUnitInSrcSP.
-func (mr *MockSPDBMockRecorder) QuerySwapOutUnitInSrcSP(swapOutKey interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySwapOutUnitInSrcSP", reflect.TypeOf((*MockSPDB)(nil).QuerySwapOutUnitInSrcSP), swapOutKey)
-}
-
-// SetObjectIntegrity mocks base method.
-func (m *MockSPDB) SetObjectIntegrity(integrity *IntegrityMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetObjectIntegrity", integrity)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetObjectIntegrity indicates an expected call of SetObjectIntegrity.
-func (mr *MockSPDBMockRecorder) SetObjectIntegrity(integrity interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).SetObjectIntegrity), integrity)
-}
-
-// SetOwnSpInfo mocks base method.
-func (m *MockSPDB) SetOwnSpInfo(sp *types0.StorageProvider) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetOwnSpInfo", sp)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetOwnSpInfo indicates an expected call of SetOwnSpInfo.
-func (mr *MockSPDBMockRecorder) SetOwnSpInfo(sp interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOwnSpInfo", reflect.TypeOf((*MockSPDB)(nil).SetOwnSpInfo), sp)
-}
-
-// SetReplicatePieceChecksum mocks base method.
-func (m *MockSPDB) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx, checksum)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetReplicatePieceChecksum indicates an expected call of SetReplicatePieceChecksum.
-func (mr *MockSPDBMockRecorder) SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, checksum interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum)
-}
-
-// UpdateAllSp mocks base method.
-func (m *MockSPDB) UpdateAllSp(spList []*types0.StorageProvider) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAllSp", spList)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateAllSp indicates an expected call of UpdateAllSp.
-func (mr *MockSPDBMockRecorder) UpdateAllSp(spList interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAllSp", reflect.TypeOf((*MockSPDB)(nil).UpdateAllSp), spList)
-}
-
-// UpdateAuthKey mocks base method.
-func (m *MockSPDB) UpdateAuthKey(userAddress, domain string, oldNonce, newNonce int32, newPublicKey string, newExpiryDate time.Time) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAuthKey", userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateAuthKey indicates an expected call of UpdateAuthKey.
-func (mr *MockSPDBMockRecorder) UpdateAuthKey(userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthKey", reflect.TypeOf((*MockSPDB)(nil).UpdateAuthKey), userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
-}
-
-// UpdateBucketMigrateSubscribeProgress mocks base method.
-func (m *MockSPDB) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBucketMigrateSubscribeProgress", blockHeight)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateBucketMigrateSubscribeProgress indicates an expected call of UpdateBucketMigrateSubscribeProgress.
-func (mr *MockSPDBMockRecorder) UpdateBucketMigrateSubscribeProgress(blockHeight interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrateSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateBucketMigrateSubscribeProgress), blockHeight)
-}
-
-// UpdateGCObjectProgress mocks base method.
-func (m *MockSPDB) UpdateGCObjectProgress(gcMeta *GCObjectMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateGCObjectProgress", gcMeta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateGCObjectProgress indicates an expected call of UpdateGCObjectProgress.
-func (mr *MockSPDBMockRecorder) UpdateGCObjectProgress(gcMeta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGCObjectProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateGCObjectProgress), gcMeta)
-}
-
-// UpdateIntegrityChecksum mocks base method.
-func (m *MockSPDB) UpdateIntegrityChecksum(integrity *IntegrityMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateIntegrityChecksum", integrity)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateIntegrityChecksum indicates an expected call of UpdateIntegrityChecksum.
-func (mr *MockSPDBMockRecorder) UpdateIntegrityChecksum(integrity interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateIntegrityChecksum), integrity)
-}
-
-// UpdateMigrateGVGUnitLastMigrateObjectID mocks base method.
-func (m *MockSPDB) UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateMigrateGVGUnitLastMigrateObjectID", migrateKey, lastMigrateObjectID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateMigrateGVGUnitLastMigrateObjectID indicates an expected call of UpdateMigrateGVGUnitLastMigrateObjectID.
-func (mr *MockSPDBMockRecorder) UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey, lastMigrateObjectID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGUnitLastMigrateObjectID", reflect.TypeOf((*MockSPDB)(nil).UpdateMigrateGVGUnitLastMigrateObjectID), migrateKey, lastMigrateObjectID)
-}
-
-// UpdateMigrateGVGUnitStatus mocks base method.
-func (m *MockSPDB) UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateMigrateGVGUnitStatus", migrateKey, migrateStatus)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateMigrateGVGUnitStatus indicates an expected call of UpdateMigrateGVGUnitStatus.
-func (mr *MockSPDBMockRecorder) UpdateMigrateGVGUnitStatus(migrateKey, migrateStatus interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGUnitStatus", reflect.TypeOf((*MockSPDB)(nil).UpdateMigrateGVGUnitStatus), migrateKey, migrateStatus)
-}
-
-// UpdatePieceChecksum mocks base method.
-func (m *MockSPDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdatePieceChecksum", objectID, redundancyIndex, checksum)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdatePieceChecksum indicates an expected call of UpdatePieceChecksum.
-func (mr *MockSPDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
-}
-
-// UpdateSPExitSubscribeProgress mocks base method.
-func (m *MockSPDB) UpdateSPExitSubscribeProgress(blockHeight uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSPExitSubscribeProgress", blockHeight)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateSPExitSubscribeProgress indicates an expected call of UpdateSPExitSubscribeProgress.
-func (mr *MockSPDBMockRecorder) UpdateSPExitSubscribeProgress(blockHeight interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSPExitSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateSPExitSubscribeProgress), blockHeight)
-}
-
-// UpdateSwapOutSubscribeProgress mocks base method.
-func (m *MockSPDB) UpdateSwapOutSubscribeProgress(blockHeight uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSwapOutSubscribeProgress", blockHeight)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateSwapOutSubscribeProgress indicates an expected call of UpdateSwapOutSubscribeProgress.
-func (mr *MockSPDBMockRecorder) UpdateSwapOutSubscribeProgress(blockHeight interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateSwapOutSubscribeProgress), blockHeight)
-}
-
-// UpdateSwapOutUnitCompletedGVGList mocks base method.
-func (m *MockSPDB) UpdateSwapOutUnitCompletedGVGList(swapOutKey string, completedGVGList []uint32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSwapOutUnitCompletedGVGList", swapOutKey, completedGVGList)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateSwapOutUnitCompletedGVGList indicates an expected call of UpdateSwapOutUnitCompletedGVGList.
-func (mr *MockSPDBMockRecorder) UpdateSwapOutUnitCompletedGVGList(swapOutKey, completedGVGList interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSwapOutUnitCompletedGVGList", reflect.TypeOf((*MockSPDB)(nil).UpdateSwapOutUnitCompletedGVGList), swapOutKey, completedGVGList)
-}
-
-// UpdateUploadProgress mocks base method.
-func (m *MockSPDB) UpdateUploadProgress(uploadMeta *UploadObjectMeta) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUploadProgress", uploadMeta)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateUploadProgress indicates an expected call of UpdateUploadProgress.
-func (mr *MockSPDBMockRecorder) UpdateUploadProgress(uploadMeta interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUploadProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateUploadProgress), uploadMeta)
 }
