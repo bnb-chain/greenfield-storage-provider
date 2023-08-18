@@ -655,6 +655,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 			log.CtxErrorw(ctx, "failed to push gvg task queue", "task", task, "error", pushErr)
 		}
 	}
+	log.CtxInfow(ctx, "success to handle migrate gvg task", "task", task)
 	return err
 }
 
