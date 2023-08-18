@@ -49,7 +49,6 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 		shadowTask := a.bucketQueue.PopByKey(task.Key())
 		task.SetCreateBucketInfo(shadowTask.(coretask.ApprovalCreateBucketTask).GetCreateBucketInfo())
 		_ = a.bucketQueue.Push(shadowTask)
-
 		log.CtxErrorw(ctx, "repeated create bucket approval task is returned")
 		return true, nil
 	}

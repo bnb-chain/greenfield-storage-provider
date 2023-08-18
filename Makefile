@@ -23,7 +23,7 @@ help:
 build:
 	bash +x ./build.sh
 
-check-coverage: install-go-test-coverage
+check-coverage:
 	@go-test-coverage --config=./.testcoverage.yml || true
 
 clean:

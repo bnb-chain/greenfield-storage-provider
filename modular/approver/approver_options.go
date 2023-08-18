@@ -26,13 +26,11 @@ const (
 
 func NewApprovalModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	approver := &ApprovalModular{baseApp: app}
-	if err := DefaultApprovalOptions(cfg, approver); err != nil {
-		return nil, err
-	}
+	defaultApprovalOptions(cfg, approver)
 	return approver, nil
 }
 
-func DefaultApprovalOptions(cfg *gfspconfig.GfSpConfig, approver *ApprovalModular) error {
+func defaultApprovalOptions(cfg *gfspconfig.GfSpConfig, approver *ApprovalModular) {
 	if cfg.Bucket.AccountBucketNumber == 0 {
 		cfg.Bucket.AccountBucketNumber = DefaultAccountBucketNumber
 	}
@@ -52,10 +50,7 @@ func DefaultApprovalOptions(cfg *gfspconfig.GfSpConfig, approver *ApprovalModula
 		cfg.Parallel.GlobalCreateObjectApprovalParallel = DefaultCreateObjectApprovalParallel
 	}
 	approver.bucketQueue = cfg.Customize.NewStrategyTQueueFunc(
-		approver.Name()+"-create-bucket-approval",
-		cfg.Parallel.GlobalCreateBucketApprovalParallel)
+		approver.Name()+"-create-bucket-approval", cfg.Parallel.GlobalCreateBucketApprovalParallel)
 	approver.objectQueue = cfg.Customize.NewStrategyTQueueFunc(
-		approver.Name()+"-create-object-approval",
-		cfg.Parallel.GlobalCreateObjectApprovalParallel)
-	return nil
+		approver.Name()+"-create-object-approval", cfg.Parallel.GlobalCreateObjectApprovalParallel)
 }

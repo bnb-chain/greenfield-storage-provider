@@ -306,7 +306,7 @@ func TestNewGfSpBaseAppFailure1(t *testing.T) {
 	t.Log("Failure case description: init would panic")
 	cfg := &gfspconfig.GfSpConfig{Customize: nil}
 	assert.Panics(t, func() {
-		NewGfSpBaseApp(cfg)
+		_, _ = NewGfSpBaseApp(cfg)
 	})
 }
 

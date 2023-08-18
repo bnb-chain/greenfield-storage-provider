@@ -17,6 +17,8 @@ const (
 	mockDatabase = "mockDatabase"
 )
 
+var mockErr = errors.New("mock error")
+
 type mockApprover struct {
 	t *testing.T
 }

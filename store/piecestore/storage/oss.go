@@ -14,6 +14,7 @@ import (
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/aliyun/credentials-go/credentials"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -55,11 +56,13 @@ func (o *ossStore) GetObject(ctx context.Context, key string, off, limit int64) 
 }
 
 func (o *ossStore) PutObject(ctx context.Context, key string, in io.Reader) error {
-	var option []oss.Option
-	if ins, ok := in.(io.ReadSeeker); ok {
-		option = append(option, oss.Meta(ChecksumAlgo, generateChecksum(ins)))
+	var (
+		option     []oss.Option
+		respHeader http.Header
+	)
+	if rs, ok := in.(io.ReadSeeker); ok {
+		option = append(option, oss.Meta(ChecksumAlgo, generateChecksum(rs)))
 	}
-	var respHeader http.Header
 	option = append(option, oss.GetResponseHeader(&respHeader))
 	err := o.bucket.PutObject(key, in, option...)
 	return err
@@ -67,8 +70,7 @@ func (o *ossStore) PutObject(ctx context.Context, key string, in io.Reader) erro
 
 func (o *ossStore) DeleteObject(ctx context.Context, key string) error {
 	var respHeader http.Header
-	err := o.bucket.DeleteObject(key, oss.GetResponseHeader(&respHeader))
-	return err
+	return o.bucket.DeleteObject(key, oss.GetResponseHeader(&respHeader))
 }
 
 func (o *ossStore) HeadBucket(ctx context.Context) error {

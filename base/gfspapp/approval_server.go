@@ -25,9 +25,9 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 		log.Error("failed to ask approval due to pointer dangling")
 		return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalTaskDangling}, nil
 	}
-	switch task := req.GetRequest().(type) {
+	switch taskType := req.GetRequest().(type) {
 	case *gfspserver.GfSpAskApprovalRequest_CreateBucketApprovalTask:
-		approvalTask := task.CreateBucketApprovalTask
+		approvalTask := taskType.CreateBucketApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
 		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
 		if err != nil {
@@ -43,7 +43,7 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 				CreateBucketApprovalTask: approvalTask,
 			}}, nil
 	case *gfspserver.GfSpAskApprovalRequest_MigrateBucketApprovalTask:
-		approvalTask := task.MigrateBucketApprovalTask
+		approvalTask := taskType.MigrateBucketApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
 		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
 		if err != nil {
@@ -59,7 +59,7 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 				MigrateBucketApprovalTask: approvalTask,
 			}}, nil
 	case *gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask:
-		approvalTask := task.CreateObjectApprovalTask
+		approvalTask := taskType.CreateObjectApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
 		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
 		if err != nil {
