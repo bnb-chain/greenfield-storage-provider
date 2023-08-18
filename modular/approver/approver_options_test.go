@@ -3,12 +3,12 @@ package approver
 import (
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
+	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 )
 
 func TestNewApprovalModular(t *testing.T) {
