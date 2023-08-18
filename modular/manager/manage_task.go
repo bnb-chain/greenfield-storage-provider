@@ -643,7 +643,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		return ErrDanglingTask
 	}
 	m.migrateGVGQueue.PopByKey(task.Key())
-	var err error
+	var err, pushErr error
 	task.SetUpdateTime(time.Now().Unix())
 	if task.GetBucketID() != 0 {
 		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
@@ -651,11 +651,11 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		err = m.spExitScheduler.UpdateMigrateProgress(task)
 	}
 	if !task.GetFinished() {
-		if pushErr := m.migrateGVGQueue.Push(task); pushErr != nil {
+		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
 			log.CtxErrorw(ctx, "failed to push gvg task queue", "task", task, "error", pushErr)
 		}
 	}
-	log.CtxInfow(ctx, "success to handle migrate gvg task", "task", task)
+	log.CtxInfow(ctx, "success to handle migrate gvg task", "task", task, "error", err, "error_push", pushErr)
 	return err
 }
 
