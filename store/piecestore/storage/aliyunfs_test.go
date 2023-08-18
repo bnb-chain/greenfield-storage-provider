@@ -87,12 +87,12 @@ func TestOssStore_newAliyunfsStore(t *testing.T) {
 }
 
 func TestOssStore_newAliyunfsSessionAKSKWithCache(t *testing.T) {
-	_ = os.Setenv(AliyunAccessKey, mockAccessKey)
-	_ = os.Setenv(AliyunSecretKey, mockSecretKey)
-	_ = os.Setenv(AliyunSessionToken, mockSessionToken)
-	defer os.Unsetenv(AliyunAccessKey)
-	defer os.Unsetenv(AliyunSecretKey)
-	defer os.Unsetenv(AliyunSessionToken)
+	_ = os.Setenv(OSSAccessKey, mockAccessKey)
+	_ = os.Setenv(OSSSecretKey, mockSecretKey)
+	_ = os.Setenv(OSSSessionToken, mockSessionToken)
+	defer os.Unsetenv(OSSAccessKey)
+	defer os.Unsetenv(OSSSecretKey)
+	defer os.Unsetenv(OSSSessionToken)
 	cfg := ObjectStorageConfig{
 		Storage:   AliyunfsStore,
 		BucketURL: "https://oss-cn-hangzhou.aliyuncs.com/ossBucket",
@@ -115,7 +115,7 @@ func TestOssStore_newAliyunfsSessionAKSKWithCache(t *testing.T) {
 }
 
 func TestOssStore_newSessionWithNoSignRequest(t *testing.T) {
-	_ = os.Setenv(AliyunAccessKey, "NoSignRequest")
+	_ = os.Setenv(OSSAccessKey, "NoSignRequest")
 	defer os.Unsetenv(AWSAccessKey)
 
 	sess, _, err := aliyunfsSessionCache.newAliyunfsSession(ObjectStorageConfig{
@@ -144,12 +144,12 @@ func TestOssStore_newSessionWithSATypeSuccess(t *testing.T) {
 	}
 	_ = os.Setenv(credentials_aliyun.EnvVarAccessKeyId, "accesskey")
 	_ = os.Setenv(credentials_aliyun.EnvVarAccessKeySecret, "accesssecret")
-	_ = os.Setenv(AliyunRoleARN, "mockOssRoleARN")
-	_ = os.Setenv(AliyunWebIdentityTokenFile, "mockOssWebIdentityTokenFile")
+	_ = os.Setenv(OSSRoleARN, "mockOssRoleARN")
+	_ = os.Setenv(OSSWebIdentityTokenFile, "mockOssWebIdentityTokenFile")
 	defer os.Unsetenv(credentials_aliyun.EnvVarAccessKeyId)
 	defer os.Unsetenv(credentials_aliyun.EnvVarAccessKeySecret)
-	defer os.Unsetenv(AliyunRoleARN)
-	defer os.Unsetenv(AliyunWebIdentityTokenFile)
+	defer os.Unsetenv(OSSRoleARN)
+	defer os.Unsetenv(OSSWebIdentityTokenFile)
 	_, bucketName, err := aliyunfsSessionCache.newAliyunfsSession(cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -175,10 +175,10 @@ func TestOssStore_newSessionWithSATypeFailure(t *testing.T) {
 		BucketURL: "https://oss-cn-hangzhou.aliyuncs.com/ossBucket",
 		IAMType:   SAIAMType,
 	}
-	_ = os.Setenv(AliyunRoleARN, "mockOssRoleARN")
-	_ = os.Setenv(AliyunWebIdentityTokenFile, "mockOssWebIdentityTokenFile")
-	defer os.Unsetenv(AliyunRoleARN)
-	defer os.Unsetenv(AliyunWebIdentityTokenFile)
+	_ = os.Setenv(OSSRoleARN, "mockOssRoleARN")
+	_ = os.Setenv(OSSWebIdentityTokenFile, "mockOssWebIdentityTokenFile")
+	defer os.Unsetenv(OSSRoleARN)
+	defer os.Unsetenv(OSSWebIdentityTokenFile)
 	_, bucketName, err := aliyunfsSessionCache.newAliyunfsSession(cfg)
 	assert.Equal(t, emptyString, bucketName)
 	assert.Equal(t, err, errors.New("No credential found"))
@@ -292,7 +292,7 @@ func TestOssStore_parseAliyunfsBucketURL(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			result1, result2, result3, err := parseAliyunfsBucketURL(tt.bucketURL)
+			result1, result2, result3, err := parseOSSBucketURL(tt.bucketURL)
 			if tt.wantedIsErr {
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 			} else {
@@ -306,18 +306,18 @@ func TestOssStore_parseAliyunfsBucketURL(t *testing.T) {
 }
 
 func Test_checkAliyunAvailableWithEnv(t *testing.T) {
-	_ = os.Setenv(AliyunRoleARN, "mockOssRoleARN")
-	_ = os.Setenv(AliyunWebIdentityTokenFile, "mockOssWebIdentityTokenFile")
-	defer os.Unsetenv(AliyunRoleARN)
-	defer os.Unsetenv(AliyunWebIdentityTokenFile)
-	result1, result2, result3 := checkAliyunAvailable()
+	_ = os.Setenv(OSSRoleARN, "mockOssRoleARN")
+	_ = os.Setenv(OSSWebIdentityTokenFile, "mockOssWebIdentityTokenFile")
+	defer os.Unsetenv(OSSRoleARN)
+	defer os.Unsetenv(OSSWebIdentityTokenFile)
+	result1, result2, result3 := checkOSSIRSAAvailable()
 	assert.Equal(t, true, result1)
 	assert.Equal(t, "mockOssRoleARN", result2)
 	assert.Equal(t, "mockOssWebIdentityTokenFile", result3)
 }
 
 func Test_checkAliyunAvailableWithoutEnv(t *testing.T) {
-	result1, result2, result3 := checkAliyunAvailable()
+	result1, result2, result3 := checkOSSIRSAAvailable()
 	assert.Equal(t, false, result1)
 	assert.Equal(t, "", result2)
 	assert.Equal(t, "", result3)

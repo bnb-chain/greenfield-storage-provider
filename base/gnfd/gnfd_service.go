@@ -216,7 +216,7 @@ func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (ui
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("query_sp_quota").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
-	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+	resp, err := client.QuerySpStoragePrice(ctx, &sptypes.QuerySpStoragePriceRequest{
 		SpAddr: operatorAddress,
 	})
 	if err != nil {
@@ -231,7 +231,7 @@ func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptype
 	startTime := time.Now()
 	defer metrics.GnfdChainTime.WithLabelValues("query_sp_price").Observe(time.Since(startTime).Seconds())
 	client := g.getCurrentClient().GnfdClient()
-	resp, err := client.QueryGetSpStoragePriceByTime(ctx, &sptypes.QueryGetSpStoragePriceByTimeRequest{
+	resp, err := client.QuerySpStoragePrice(ctx, &sptypes.QuerySpStoragePriceRequest{
 		SpAddr: operatorAddress,
 	})
 	if err != nil {
