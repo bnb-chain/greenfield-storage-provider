@@ -224,7 +224,7 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 			"redundancy_index", redundancyIdx, "error", err)
 		return err
 	}
-	if int(segmentIdx+1) >= len(objectInfo.GetChecksums()) {
+	if int(redundancyIdx+1) >= len(objectInfo.GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "segment_piece_index", segmentIdx)
 		return ErrReplicateIdsOutOfBounds
 	}
@@ -243,7 +243,7 @@ func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, 
 	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, 0 /* useless */, int32(redundancyIdx), 0)
 	taskSignature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign done receive task", "error", err)
+		log.CtxErrorw(ctx, "failed to sign done receive task", "error", err, "redundancy_index", redundancyIdx)
 		return err
 	}
 	receive.SetSignature(taskSignature)
@@ -251,11 +251,11 @@ func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, 
 	receive.SetFinished(true)
 	_, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, destSPEndpoint, receive)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to done replicate piece", "dest_sp_endpoint", destSPEndpoint, "error", err)
+		log.CtxErrorw(ctx, "failed to done replicate piece", "dest_sp_endpoint", destSPEndpoint, "redundancy_index", redundancyIdx, "error", err)
 		return err
 	}
 
-	log.CtxDebugw(ctx, "succeed to done replicate", "dest_sp_endpoint", destSPEndpoint)
+	log.CtxDebugw(ctx, "succeed to done replicate", "dest_sp_endpoint", destSPEndpoint, "redundancy_index", redundancyIdx)
 	return nil
 }
 
