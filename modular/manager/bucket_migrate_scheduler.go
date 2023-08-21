@@ -225,15 +225,15 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 	signDoc := storagetypes.NewSecondarySpMigrationBucketSignDoc(plan.manager.baseApp.ChainID(),
 		sdkmath.NewUint(plan.bucketID), migrateExecuteUnit.DestSP.GetId(), migrateExecuteUnit.SrcGVG.GetId(), migrateExecuteUnit.DestGVGID)
 	secondarySigs := make([][]byte, 0)
-	for _, spID := range migrateExecuteUnit.SrcGVG.GetSecondarySpIds() {
+	for _, spID := range migrateExecuteUnit.DestGVG.GetSecondarySpIds() {
 		spInfo, err := plan.manager.virtualGroupManager.QuerySPByID(spID)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to query sp by id", "error", err)
+			log.CtxErrorw(ctx, "failed to query sp by id", "error", err, "sp_id", spID)
 			return nil, err
 		}
 		sig, err := plan.manager.baseApp.GfSpClient().GetSecondarySPMigrationBucketApproval(ctx, spInfo.GetEndpoint(), signDoc)
 		if err != nil {
-			log.Errorw("failed to get secondary sp migration bucket approval", "error", err)
+			log.Errorw("failed to get secondary sp migration bucket approval", "error", err, "sp_info", spInfo)
 			return nil, err
 		}
 		secondarySigs = append(secondarySigs, sig)
@@ -295,7 +295,7 @@ func (plan *BucketMigrateExecutePlan) stopSPSchedule() {
 }
 
 func (plan *BucketMigrateExecutePlan) Start() error {
-	log.Debugf("succeed to start bucket migrate plan", "plan", plan)
+	log.Debugf("succeed to start bucket migrate plan", "plan", *plan)
 	go plan.startMigrateSchedule()
 	return nil
 }
