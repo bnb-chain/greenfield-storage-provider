@@ -124,7 +124,7 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 	if bucketID != 0 {
 		// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another secondary SP
 		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
-			log.Debugw("no gvg conflict", "error", err)
+			log.Debugw("no gvg conflict", "error", err, "task", task, "object", object.GetObjectInfo())
 		}
 		isBucketMigrate = true
 	}
@@ -182,19 +182,19 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 		}
 		pieceData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err)
+			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err, "piece_key", pieceKey)
 			return err
 		}
 		err = e.doBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), segIdx, uint32(index), pieceData)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to do bucket migration to replicate pieces", "error", err)
+			log.CtxErrorw(ctx, "failed to do bucket migration to replicate pieces", "error", err, "piece_key", pieceKey)
 			return err
 		}
 	}
 
 	err = e.doneBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), uint32(index))
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to done bucket migration replicate piece", "error", err)
+		log.CtxErrorw(ctx, "failed to done bucket migration replicate piece", "error", err, "piece_key", pieceKey)
 		return err
 	}
 
