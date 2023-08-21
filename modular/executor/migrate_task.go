@@ -175,6 +175,7 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 	spInfo, err := e.baseApp.Consensus().QuerySPByID(ctx, destSecondarySPID)
 	if err != nil {
 		log.Errorw("failed to query dest sp info", "dest_sp_id", destSecondarySPID, "error", err)
+		return err
 	}
 
 	var (
