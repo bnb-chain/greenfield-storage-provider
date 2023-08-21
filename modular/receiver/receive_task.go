@@ -65,6 +65,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	defer r.receiveQueue.PopByKey(task.Key())
 	checksum := hash.GenerateChecksum(data)
 	if !bytes.Equal(checksum, task.GetPieceChecksum()) {
+		log.CtxErrorw(ctx, "failed to compare checksum", "task", task)
 		return ErrInvalidDataChecksum
 	}
 

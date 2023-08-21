@@ -193,7 +193,7 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 		}
 	}
 
-	err = e.doneBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), uint32(index))
+	err = e.doneBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), -1, uint32(index))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done bucket migration replicate piece", "error", err, "piece_key", pieceKey)
 		return err
@@ -225,9 +225,9 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 }
 
 func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, gvgID uint32, objectInfo *storagetypes.ObjectInfo,
-	params *storagetypes.Params, destSPEndpoint string, segmentIdx uint32) error {
+	params *storagetypes.Params, destSPEndpoint string, segmentIdx, redundancyIdx uint32) error {
 	receive := &gfsptask.GfSpReceivePieceTask{}
-	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx, -1, 0)
+	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx, int32(redundancyIdx), 0)
 	taskSignature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign done receive task", "segment_piece_index", segmentIdx, "error", err)
