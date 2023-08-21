@@ -228,12 +228,12 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 	for _, spID := range migrateExecuteUnit.DestGVG.GetSecondarySpIds() {
 		spInfo, err := plan.manager.virtualGroupManager.QuerySPByID(spID)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to query sp by id", "error", err)
+			log.CtxErrorw(ctx, "failed to query sp by id", "error", err, "sp_id", spID)
 			return nil, err
 		}
 		sig, err := plan.manager.baseApp.GfSpClient().GetSecondarySPMigrationBucketApproval(ctx, spInfo.GetEndpoint(), signDoc)
 		if err != nil {
-			log.Errorw("failed to get secondary sp migration bucket approval", "error", err)
+			log.Errorw("failed to get secondary sp migration bucket approval", "error", err, "sp_info", spInfo)
 			return nil, err
 		}
 		secondarySigs = append(secondarySigs, sig)
