@@ -295,7 +295,7 @@ func (plan *BucketMigrateExecutePlan) stopSPSchedule() {
 }
 
 func (plan *BucketMigrateExecutePlan) Start() error {
-	log.Debugf("succeed to start bucket migrate plan", "plan", plan)
+	log.Debugf("succeed to start bucket migrate plan", "plan", *plan)
 	go plan.startMigrateSchedule()
 	return nil
 }
