@@ -293,6 +293,11 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		MigrateStatus:        meta.MigrateStatus,
 	}
 	result = s.db.Create(insertMigrateGVG)
+	// if exist, overwrite
+	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
+		result = s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", meta.MigrateGVGKey).
+			Updates(insertMigrateGVG)
+	}
 	if result.Error != nil || result.RowsAffected != 1 {
 		err = fmt.Errorf("failed to insert migrate gvg table: %s", result.Error)
 		return err
