@@ -193,7 +193,7 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 		}
 	}
 
-	err = e.doneBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), -1, uint32(index))
+	err = e.doneBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), 0, uint32(index))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done bucket migration replicate piece", "error", err, "piece_key", pieceKey)
 		return err
