@@ -32,7 +32,7 @@ func TestBsDBImpl_ListObjectsSuccess(t *testing.T) {
 				AddRow("testPath2/", "testPath2/obj2", "obj2", true, false, bucketName, common.HexToHash("2"), "obj2"))
 
 	// Expectations for GetObjectsTableNameByShardNumber
-	for i := 0; i < 64; i++ {
+	for i := 0; i < ObjectsNumberOfShards; i++ {
 		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id in (?,?)", GetObjectsTableNameByShardNumber(i))).
 			WithArgs(common.HexToHash("1"), common.HexToHash("2")).
 			WillReturnRows(
@@ -68,7 +68,7 @@ func TestBsDBImpl_ListObjectsWithContinuationToken(t *testing.T) {
 				AddRow("testPath2/", "testPath2/obj2", "obj2", true, false, bucketName, common.HexToHash("2"), "obj2"))
 
 	// Expectations for GetObjectsTableNameByShardNumber
-	for i := 0; i < 64; i++ {
+	for i := 0; i < ObjectsNumberOfShards; i++ {
 		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id in (?)", GetObjectsTableNameByShardNumber(i))).
 			WithArgs(common.HexToHash("2")).
 			WillReturnRows(
@@ -97,7 +97,7 @@ func TestBsDBImpl_ListObjectsWithEmptyResult(t *testing.T) {
 		WithArgs(bucketName, prefix).
 		WillReturnRows(sqlmock.NewRows([]string{"path_name", "full_name", "name", "is_object", "is_folder", "bucket_name", "object_id", "object_name"}))
 
-	for i := 0; i < 64; i++ {
+	for i := 0; i < ObjectsNumberOfShards; i++ {
 		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id in (?)", GetObjectsTableNameByShardNumber(i))).
 			WithArgs(sqlmock.AnyArg()).
 			WillReturnRows(
@@ -142,7 +142,7 @@ func TestBsDBImpl_ListObjectsWithPathName(t *testing.T) {
 			sqlmock.NewRows([]string{"path_name", "full_name", "name", "is_object", "is_folder", "bucket_name", "object_id", "object_name"}).
 				AddRow("testPath2/", "testPath2/obj2", "obj2", true, false, bucketName, common.HexToHash("2"), "obj2"))
 
-	for i := 0; i < 64; i++ {
+	for i := 0; i < ObjectsNumberOfShards; i++ {
 		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id in (?)", GetObjectsTableNameByShardNumber(i))).
 			WithArgs(common.HexToHash("2")).
 			WillReturnRows(
@@ -178,7 +178,7 @@ func TestBsDBImpl_ListObjectsWithPrefixQuery(t *testing.T) {
 				AddRow("testPath2", "testPath2/obj2", "obj2", true, false, bucketName, common.HexToHash("2"), "obj2"))
 
 	// Set expectation for the object details query on the respective objects_xx table
-	for i := 0; i < 64; i++ {
+	for i := 0; i < ObjectsNumberOfShards; i++ {
 		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id in (?)", GetObjectsTableNameByShardNumber(i))).
 			WithArgs(common.HexToHash("2")).
 			WillReturnRows(
@@ -213,7 +213,7 @@ func TestBsDBImpl_ListObjectsWithAllConditions(t *testing.T) {
 			sqlmock.NewRows([]string{"path_name", "full_name", "name", "is_object", "is_folder", "bucket_name", "object_id", "object_name"}).
 				AddRow("testPath2", "testPath2/obj2", "obj2", true, false, bucketName, common.HexToHash("2"), "obj2"))
 
-	for i := 0; i < 64; i++ {
+	for i := 0; i < ObjectsNumberOfShards; i++ {
 		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id in (?)", GetObjectsTableNameByShardNumber(i))).
 			WithArgs(common.HexToHash("2")).
 			WillReturnRows(
