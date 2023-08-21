@@ -159,9 +159,16 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 	objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params) error {
 	index := util.ContainOnlyOneDifferentElement(srcGvg.GetSecondarySpIds(), destGvg.GetSecondarySpIds())
 	if index == -1 {
-		return fmt.Errorf("invalid gvg secondary sp id list")
+		// no conflict
+		return nil
 	}
-	if e.spID != srcGvg.GetSecondarySpIds()[index] {
+
+	spID, err := e.getSPID()
+	if err != nil {
+		return err
+	}
+	if spID != srcGvg.GetSecondarySpIds()[index] {
+		log.Debugw("invalid secondary sp id in src gvg", "index", index, "sp_id", e.spID, "src_gvg", srcGvg, "dest_gvg", destGvg)
 		return fmt.Errorf("invalid secondary sp id in src gvg")
 	}
 	destSecondarySPID := destGvg.GetSecondarySpIds()[index]
@@ -220,6 +227,7 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 	if err = e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, destSPEndpoint, receive, data); err != nil {
 		log.CtxErrorw(ctx, "failed to replicate piece", "segment_piece_index", segmentIdx,
 			"redundancy_index", redundancyIdx, "error", err)
+		return err
 	}
 	return nil
 }
@@ -235,6 +243,7 @@ func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, 
 	}
 	receive.SetSignature(taskSignature)
 	receive.SetBucketMigration(true)
+	receive.SetFinished(true)
 	_, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, destSPEndpoint, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece", "dest_sp_endpoint", destSPEndpoint,
