@@ -125,6 +125,7 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 		// bucket migration, check secondary whether is conflict, if true replicate own secondary SP data to another secondary SP
 		if err = e.checkGVGConflict(ctx, task.GetSrcGvg(), task.GetDestGvg(), object.GetObjectInfo(), params); err != nil {
 			log.Debugw("no gvg conflict", "error", err, "task", task, "object", object.GetObjectInfo())
+			return err
 		}
 		isBucketMigrate = true
 	}
