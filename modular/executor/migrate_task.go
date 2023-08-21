@@ -225,7 +225,7 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 		return err
 	}
 	if int(redundancyIdx+1) >= len(objectInfo.GetChecksums()) {
-		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "segment_piece_index", segmentIdx)
+		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "redundancy_index", redundancyIdx)
 		return ErrReplicateIdsOutOfBounds
 	}
 	receive.SetSignature(signature)
