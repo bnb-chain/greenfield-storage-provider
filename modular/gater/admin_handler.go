@@ -378,14 +378,12 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 // signature to seal object on greenfield.
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err            error
-		reqCtx         *RequestContext
-		receiveMsg     []byte
-		data           []byte
-		integrity      []byte
-		signature      []byte
-		requestAccount sdktypes.AccAddress
-		bucketInfo     *storagetypes.BucketInfo
+		err        error
+		reqCtx     *RequestContext
+		receiveMsg []byte
+		data       []byte
+		integrity  []byte
+		signature  []byte
 	)
 	receivePieceStartTime := time.Now()
 	defer func() {
@@ -430,33 +428,17 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify receive task signature
-	requestAccount, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
+	_, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err, "task", receiveTask)
 		err = ErrSignature
 		return
 	}
 
 	// check if the request account is the primary SP of the object of the receiving task
-	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
+	_, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
 	if err != nil {
 		err = ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
-		return
-	}
-	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
-	if err != nil {
-		err = ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
-		return
-	}
-	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketSPID)
-	if err != nil {
-		err = ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
-		return
-	}
-	if bucketPrimarySp.OperatorAddress != requestAccount.String() {
-		log.CtxErrorw(reqCtx.Context(), "the request account of replicate object is not primary SP", "expected:", bucketPrimarySp.OperatorAddress,
-			"actual sp:", requestAccount.String())
-		err = ErrMismatchSp
 		return
 	}
 
