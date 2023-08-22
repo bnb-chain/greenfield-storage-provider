@@ -76,6 +76,9 @@ var MetricsItems = []prometheus.Collector{
 	// metadata metrics category
 	MetadataReqTime,
 
+	// general runtime metrics category
+	GoRoutineCount,
+
 	// sp exit and bucket migration category
 	MigrateGVGTimeHistogram,
 	MigrateGVGCounter,
@@ -302,6 +305,13 @@ var (
 		Help:    "Track the metadata request time.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"status", "level", "method_name", "code_or_msg"})
+)
+
+var (
+	GoRoutineCount = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "go_routine_count",
+		Help: "Track the current go routine count. ",
+	})
 )
 
 // SP exit and bucket migration metrics

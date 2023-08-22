@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -238,6 +239,7 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 					continue
 				}
 				metrics.ChainLatestHeight.Set(float64(latestBlockHeight))
+				metrics.GoRoutineCount.Set(float64(runtime.NumGoroutine()))
 				Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
 			}
 		}
