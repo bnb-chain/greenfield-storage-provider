@@ -26,8 +26,6 @@ const (
 
 	// SpOperatorPrivKey defines env variable name for sp operator private key
 	SpOperatorPrivKey = "SIGNER_OPERATOR_PRIV_KEY"
-	// SpFundingPrivKey defines env variable name for sp funding private key
-	SpFundingPrivKey = "SIGNER_FUNDING_PRIV_KEY"
 	// SpApprovalPrivKey defines env variable name for sp approval private key
 	SpApprovalPrivKey = "SIGNER_APPROVAL_PRIV_KEY"
 	// SpSealPrivKey defines env variable name for sp seal private key
@@ -82,9 +80,6 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 	}
 	if val, ok := os.LookupEnv(SpOperatorPrivKey); ok {
 		cfg.SpAccount.OperatorPrivateKey = val
-	}
-	if val, ok := os.LookupEnv(SpFundingPrivKey); ok {
-		cfg.SpAccount.FundingPrivateKey = val
 	}
 	if val, ok := os.LookupEnv(SpSealPrivKey); ok {
 		cfg.SpAccount.SealPrivateKey = val
