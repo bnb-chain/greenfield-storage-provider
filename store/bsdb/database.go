@@ -3,6 +3,7 @@ package bsdb
 import (
 	"github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/forbole/juno/v4/common"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
 
@@ -128,6 +129,8 @@ type Metadata interface {
 	GetEventMigrationBucketByBucketID(bucketID common.Hash) (*EventMigrationBucket, error)
 	//GetEventSwapOutByGvgID get swap out event by gvg id
 	GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error)
+	// GetBucketSizeByID get buckets size info by by a bucket id
+	GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error)
 }
 
 // BSDB contains all the methods required by block syncer database

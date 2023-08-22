@@ -74,6 +74,9 @@ type ManageModular struct {
 	migrateGVGQueue      taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueueMux   sync.Mutex
 
+	// src sp used TODO: these should be persisted
+	migratingBuckets map[uint64]bool
+
 	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
@@ -127,6 +130,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
+
+	m.migratingBuckets = make(map[uint64]bool)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -793,12 +798,13 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 
 	m.migrateGVGQueue.PopByKey(task.Key())
 	task.SetUpdateTime(time.Now().Unix())
-	if !task.GetFinished() || push {
+	if !task.GetFinished() && push {
 		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
 			log.Errorw("failed to push gvg task queue", "task", task, "error", pushErr)
 		}
+		log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
 	}
-	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
+	log.Debugw("succeed to pop gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
 
 	return pushErr
 }

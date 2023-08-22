@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield/x/storage/types"
@@ -109,6 +110,31 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, 
 		return nil, nil
 	}
 	return bucket, err
+}
+
+// GetBucketSizeByID get buckets size by a bucket id
+func (b *BsDBImpl) GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error) {
+	var (
+		size         decimal.Decimal
+		err          error
+		bucketIDHash common.Hash
+	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	bucketIDHash = common.BigToHash(math.NewUint(bucketID).BigInt())
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("storage_size").
+		Take(&size, "bucket_id = ? and removed = false", bucketIDHash).Error
+	return size, err
 }
 
 // GetUserBucketsCount get buckets count by a user address

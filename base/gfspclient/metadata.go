@@ -11,6 +11,7 @@ import (
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"google.golang.org/grpc"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -332,6 +333,37 @@ func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_typ
 		return uint64(0), uint64(0), uint64(0), uint64(0), resp.GetErr()
 	}
 	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), resp.FreeQuotaConsumeSize, nil
+}
+
+func (s *GfSpClient) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (
+	gfsptask.GfSpBucketQuotaInfo, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	quota := gfsptask.GfSpBucketQuotaInfo{}
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return quota, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
+	}
+	defer conn.Close()
+	req := &types.GfSpGetLatestBucketReadQuotaRequest{
+		BucketId: bucketID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetLatestBucketReadQuota(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get latest bucket read quota", "error", err)
+		return quota, ErrRPCUnknownWithDetail("client failed to get latest bucket read quota, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return quota, resp.GetErr()
+	}
+	quota.BucketName = resp.Quota.GetBucketName()
+	quota.BucketId = resp.Quota.GetBucketId()
+	quota.Month = resp.Quota.GetMonth()
+	quota.ReadConsumedSize = resp.Quota.GetReadConsumedSize()
+	quota.FreeQuotaConsumedSize = resp.Quota.GetFreeQuotaConsumedSize()
+	quota.FreeQuotaSize = resp.Quota.GetFreeQuotaSize()
+	quota.ChargedQuotaSize = resp.Quota.GetChargedQuotaSize()
+
+	return quota, nil
 }
 
 func (s *GfSpClient) ListBucketReadRecord(ctx context.Context, bucket *storage_types.BucketInfo, startTimestampUs,
@@ -939,4 +971,24 @@ func (s *GfSpClient) VerifyMigrateGVGPermission(ctx context.Context, bucketID ui
 		return nil, ErrRPCUnknownWithDetail("failed to send verify migrate GVG permission rpc, error: " + err.Error())
 	}
 	return &resp.Effect, nil
+}
+
+// GetBucketSize get bucket total object size
+func (s *GfSpClient) GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error) {
+	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if err != nil {
+		return "", ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
+	}
+	defer conn.Close()
+
+	req := &types.GfSpGetBucketSizeRequest{
+		BucketId: bucketID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketSize(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get bucket total object size rpc", "error", err)
+		return "", ErrRPCUnknownWithDetail("failed to send get bucket total object size rpc, error: " + err.Error())
+	}
+	return resp.BucketSize, nil
 }

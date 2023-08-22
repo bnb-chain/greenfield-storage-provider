@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // spilt server and client const definition avoids circular references
@@ -52,6 +53,16 @@ const (
 	GnfdSecondarySPMigrationBucketMsgHeader = "X-Gnfd-Secondary-Migration-Bucket-Msg"
 	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket bls approval header.
 	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
+	// MigrateQueryBucketQuotaPath defines query bucket quota from src sp
+	MigrateQueryBucketQuotaPath = "/greenfield/migrate/v1/migrate-query-bucket-quota"
+	// MigrateQueryBucketQuotaHasEnoughQuotaPath defines query bucket quota from src sp
+	MigrateQueryBucketQuotaHasEnoughQuotaPath = "/greenfield/migrate/v1/migrate-query-bucket-has-enough-quota"
+	// PreMigrateBucketPath defines pre migrate bucket, can lock quota for migrate bucket
+	PreMigrateBucketPath = "/greenfield/migrate/v1/pre-migrate-bucket"
+	// PostMigrateBucketPath defines notifying the source sp about the completion of migration bucket
+	PostMigrateBucketPath = "/greenfield/migrate/v1/post-migrate-bucket"
+	// GnfdMigrateBucketMsgHeader defines migrate bucket msg header
+	GnfdMigrateBucketMsgHeader = "X-Gnfd-Migrate-Bucket-Msg"
 	// GnfdUnsignedApprovalMsgHeader defines unsigned msg, which is used by get-approval
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
@@ -206,6 +217,154 @@ func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoin
 		return fmt.Errorf("failed to notify migrate swap out, status_code(%d), endpoint(%s)", resp.StatusCode, destEndpoint)
 	}
 	return nil
+}
+
+// QueryLatestBucketQuota is used to query src sp's bucket quota before send CompleteMigrateBucket Tx
+func (s *GfSpClient) QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+	req, err := http.NewRequest(http.MethodGet, endpoint+MigrateQueryBucketQuotaPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	msg, err := json.Marshal(queryMsg)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query latest bucket quota due to marshal error", "query_msg", queryMsg, "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	req.Header.Add(GnfdMigrateBucketMsgHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to query latest migrate bucket quota msg", "query_msg", queryMsg, "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("failed to query latest bucket quota, bucket(%s), status_code(%d), endpoint(%s)", queryMsg, resp.StatusCode, endpoint)
+	}
+
+	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	if err != nil {
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+
+	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
+	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+
+	return quotaResult, nil
+}
+
+// PreMigrateBucket is used to notify src sp and deduct bucket quota before send dest sp migrate gvg task
+func (s *GfSpClient) PreMigrateBucket(ctx context.Context, srcSPEndpoint string, preMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+	req, err := http.NewRequest(http.MethodGet, srcSPEndpoint+PreMigrateBucketPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", srcSPEndpoint, "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	msg, err := json.Marshal(preMsg)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pre migrate bucket due to marshal error", "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	req.Header.Add(GnfdMigrateBucketMsgHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to pre migrate bucket msg", "bucket_msg", preMsg, "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("failed to pre migrate bucket, bucket_msg(%s), status_code(%d), endpoint(%s)", preMsg, resp.StatusCode, srcSPEndpoint)
+	}
+
+	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	if err != nil {
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+
+	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
+	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+
+	return quotaResult, nil
+}
+
+// PostMigrateBucket is used to notify src sp the completion of bucket migrate before dest sp send CompleteMigrateBucket Tx
+func (s *GfSpClient) PostMigrateBucket(ctx context.Context, srcSPEndpoint string, postMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+	bucketID := postMsg.GetBucketId()
+	req, err := http.NewRequest(http.MethodGet, srcSPEndpoint+PostMigrateBucketPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", srcSPEndpoint, "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+
+	msg, err := json.Marshal(postMsg)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to post migrate bucket to src sp due to marshal error", "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	req.Header.Add(GnfdMigrateBucketMsgHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to post migrate bucket to src sp", "bucket_id", bucketID, "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("failed to post migrate bucket to src sp, bucket(%d), status_code(%d), endpoint(%s)", bucketID, resp.StatusCode, srcSPEndpoint)
+	}
+
+	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	if err != nil {
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+
+	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
+	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+
+	return quotaResult, nil
+}
+
+// QuerySPHasEnoughQuotaForMigrateBucket is used to query src sp's bucket quota at approval phase
+func (s *GfSpClient) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) error {
+	req, err := http.NewRequest(http.MethodGet, srcSPEndpoint+MigrateQueryBucketQuotaHasEnoughQuotaPath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", srcSPEndpoint, "error", err)
+		return err
+	}
+	bucketID := queryMsg.GetBucketId()
+	msg, err := json.Marshal(queryMsg)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to check sp has enough quota for migrate bucket due to marshal error", "error", err)
+		return err
+	}
+	req.Header.Add(GnfdMigrateBucketMsgHeader, hex.EncodeToString(msg))
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to check sp has enough quota for migrate bucket", "bucket_id", bucketID, "error", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to check sp has enough quota for migrate bucket, bucket(%d), status_code(%d), endpoint(%s)",
+			bucketID, resp.StatusCode, srcSPEndpoint)
+	}
+
+	signedMsg := resp.Header.Get(GnfdSignedApprovalMsgHeader)
+
+	if signedMsg == "true" {
+		return nil
+	} else {
+		return fmt.Errorf("failed to check src sp has enough bucket quota, bucket(%d), status_code(%d), endpoint(%s)", bucketID, resp.StatusCode, srcSPEndpoint)
+	}
 }
 
 func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string,

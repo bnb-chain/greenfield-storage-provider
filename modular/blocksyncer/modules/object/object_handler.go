@@ -140,10 +140,12 @@ func (m *Module) handleCreateObject(ctx context.Context, block *tmctypes.ResultB
 		Removed:      false,
 	}
 
+	res := make(map[string][]interface{})
+
 	k, v := m.db.SaveObjectToSQL(ctx, object)
-	return map[string][]interface{}{
-		k: v,
-	}
+	res[k] = v
+
+	return res
 }
 
 func (m *Module) handleSealObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, sealObject *storagetypes.EventSealObject) map[string][]interface{} {
@@ -162,10 +164,18 @@ func (m *Module) handleSealObject(ctx context.Context, block *tmctypes.ResultBlo
 		Removed:      false,
 	}
 
-	k, v := m.db.UpdateObjectToSQL(ctx, object)
-	return map[string][]interface{}{
-		k: v,
-	}
+	res := make(map[string][]interface{})
+
+	k, v := m.db.UpdateStorageSizeToSQL(ctx, common.BigToHash(sealObject.ObjectId.BigInt()), sealObject.BucketName, "+")
+	res[k] = v
+
+	k, v = m.db.UpdateChargeSizeToSQL(ctx, common.BigToHash(sealObject.ObjectId.BigInt()), sealObject.BucketName, "+")
+	res[k] = v
+
+	k, v = m.db.UpdateObjectToSQL(ctx, object)
+	res[k] = v
+
+	return res
 }
 
 func (m *Module) handleCancelCreateObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelCreateObject *storagetypes.EventCancelCreateObject) map[string][]interface{} {
@@ -180,10 +190,12 @@ func (m *Module) handleCancelCreateObject(ctx context.Context, block *tmctypes.R
 		Removed:      true,
 	}
 
+	res := make(map[string][]interface{})
+
 	k, v := m.db.UpdateObjectToSQL(ctx, object)
-	return map[string][]interface{}{
-		k: v,
-	}
+	res[k] = v
+
+	return res
 }
 
 func (m *Module) handleCopyObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, copyObject *storagetypes.EventCopyObject) (map[string][]interface{}, error) {
@@ -203,11 +215,23 @@ func (m *Module) handleCopyObject(ctx context.Context, block *tmctypes.ResultBlo
 	destObject.UpdateTxHash = txHash
 	destObject.UpdateTime = block.Block.Time.UTC().Unix()
 	destObject.Removed = false
+	if destObject.PayloadSize == 0 {
+		destObject.Status = storagetypes.OBJECT_STATUS_SEALED.String()
+	} else {
+		destObject.Status = storagetypes.OBJECT_STATUS_CREATED.String()
+	}
 
-	k, v := m.db.UpdateObjectToSQL(ctx, destObject)
-	return map[string][]interface{}{
-		k: v,
-	}, nil
+	res := make(map[string][]interface{})
+
+	k, v := m.db.SaveObjectToSQL(ctx, destObject)
+	res[k] = v
+
+	if destObject.PayloadSize == 0 {
+		k, v = m.db.UpdateChargeSizeToSQL(ctx, common.BigToHash(copyObject.DstObjectId.BigInt()), copyObject.DstBucketName, "+")
+		res[k] = v
+	}
+
+	return res, nil
 }
 
 func (m *Module) handleDeleteObject(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, deleteObject *storagetypes.EventDeleteObject) map[string][]interface{} {
@@ -223,10 +247,16 @@ func (m *Module) handleDeleteObject(ctx context.Context, block *tmctypes.ResultB
 		Removed:      true,
 	}
 
-	k, v := m.db.UpdateObjectToSQL(ctx, object)
-	return map[string][]interface{}{
-		k: v,
-	}
+	res := make(map[string][]interface{})
+	k, v := m.db.UpdateStorageSizeToSQL(ctx, common.BigToHash(deleteObject.ObjectId.BigInt()), deleteObject.BucketName, "-")
+	res[k] = v
+
+	k, v = m.db.UpdateChargeSizeToSQL(ctx, common.BigToHash(deleteObject.ObjectId.BigInt()), deleteObject.BucketName, "-")
+	res[k] = v
+
+	k, v = m.db.UpdateObjectToSQL(ctx, object)
+	res[k] = v
+	return res
 }
 
 // RejectSeal event won't emit a delete event, need to be deleted manually here in metadata service

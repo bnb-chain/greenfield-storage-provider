@@ -146,6 +146,8 @@ type ExecutorConfig struct {
 	ListenSealTimeoutHeight         int     `comment:"optional"`
 	ListenSealRetryTimeout          int     `comment:"optional"`
 	MaxListenSealRetry              int     `comment:"optional"`
+	MaxObjectMigrationRetry         int     `comment:"optional"`
+	ObjectMigrationRetryTimeout     int     `comment:"optional"`
 	EnableSkipFailedToMigrateObject bool    `comment:"optional"`
 }
 

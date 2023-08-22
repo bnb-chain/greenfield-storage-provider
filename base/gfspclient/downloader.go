@@ -82,6 +82,31 @@ func (s *GfSpClient) RecoupQuota(ctx context.Context, bucketID, extraQuota uint6
 	return nil
 }
 
+func (s *GfSpClient) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, deductQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
+	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
+		return ErrRPCUnknownWithDetail("client failed to connect downloader, error: " + connErr.Error())
+	}
+	defer conn.Close()
+	req := &gfspserver.GfSpDeductQuotaForBucketMigrateRequest{
+		BucketId:    bucketID,
+		DeductQuota: deductQuota,
+		YearMonth:   yearMonth,
+	}
+
+	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDeductQuotaForBucketMigrate(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to deduct the quota for bucket migrate", "req", req, "error", err)
+		return ErrRPCUnknownWithDetail("client failed to deduct the quota for bucket migrate, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+
+	return nil
+}
+
 func (s *GfSpClient) GetChallengeInfo(ctx context.Context, challengePieceTask coretask.ChallengePieceTask, opts ...grpc.DialOption) (
 	[]byte, [][]byte, []byte, error) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)

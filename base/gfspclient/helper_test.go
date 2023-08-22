@@ -229,6 +229,11 @@ func (mockDownloaderServer) GfSpReimburseQuota(ctx context.Context, req *gfspser
 	return &gfspserver.GfSpReimburseQuotaResponse{Err: ErrExceptionsStream}, nil
 }
 
+func (mockDownloaderServer) GfSpDeductQuotaForBucketMigrate(ctx context.Context, fixRequest *gfspserver.GfSpDeductQuotaForBucketMigrateRequest) (
+	*gfspserver.GfSpDeductQuotaForBucketMigrateResponse, error) {
+	return &gfspserver.GfSpDeductQuotaForBucketMigrateResponse{Err: ErrExceptionsStream}, nil
+}
+
 type mockManagerServer struct{}
 
 func (mockManagerServer) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeginTaskRequest) (
@@ -341,6 +346,20 @@ func (s mockManagerServer) GfSpQueryTasksStats(ctx context.Context, req *gfspser
 	return &gfspserver.GfSpQueryTasksStatsResponse{
 		Stats: &gfspserver.TasksStats{},
 	}, nil
+}
+
+func (s mockManagerServer) GfSpNotifyPreMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
+	if req == nil {
+		return nil, mockRPCErr
+	}
+	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{}, nil
+}
+
+func (s mockManagerServer) GfSpNotifyPostMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
+	if req == nil {
+		return nil, mockRPCErr
+	}
+	return &gfspserver.GfSpNotifyPostMigrateBucketResponse{}, nil
 }
 
 func (s mockManagerServer) GfSpResetRecoveryFailedList(ctx context.Context, req *gfspserver.GfSpResetRecoveryFailedListRequest) (*gfspserver.GfSpResetRecoveryFailedListResponse, error) {

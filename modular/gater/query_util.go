@@ -2,11 +2,13 @@ package gater
 
 import (
 	"context"
+
 	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -111,6 +113,22 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 	return nil
 }
 
+// getBucketTotalSize return the total size of the bucket
+func (g *GateModular) getBucketTotalSize(ctx context.Context, bucketID uint64) (uint64, error) {
+	bucketSize, err := g.baseApp.GfSpClient().GetBucketSize(
+		ctx, bucketID)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket size", "bucket_id", bucketID, "error", err)
+		return 0, err
+	}
+	quotaNeed, err := util.StringToUint64(bucketSize)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to convert bucket size to uint64", "bucket_id",
+			bucketID, "bucket_size", bucketSize, "error", err)
+		return 0, err
+	}
+	return quotaNeed, nil
+}
 func fromSpMaintenanceAcct(spStatus sptypes.Status, spMaintenanceAddr, creatorAddr string) bool {
 	return spStatus == sptypes.STATUS_IN_MAINTENANCE && spMaintenanceAddr == creatorAddr
 }

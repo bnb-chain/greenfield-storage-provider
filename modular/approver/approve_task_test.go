@@ -4,15 +4,19 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+
 	"github.com/bnb-chain/greenfield/types/common"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -43,6 +47,23 @@ func TestApprovalModular_HandleCreateBucketApprovalTaskSuccess1(t *testing.T) {
 			},
 		}
 	})
+	// mock consensus
+	mockedConsensus := consensus.NewMockConsensus(ctrl)
+	existBucket := &storagetypes.BucketInfo{
+		Id:         math.NewUint(10),
+		BucketName: "existbucket",
+	}
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(existBucket, nil).AnyTimes()
+	mockedConsensus.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
+		Id: 1,
+	}, nil).AnyTimes()
+	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	a.baseApp.SetConsensus(mockedConsensus)
+	// MockGfSpClientAPI
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	a.baseApp.SetGfSpClient(m1)
+
 	m.EXPECT().Push(gomock.Any()).DoAndReturn(func(coretask.Task) error { return nil }).AnyTimes()
 	approvalTask := &gfsptask.GfSpCreateBucketApprovalTask{
 		Task: &gfsptask.GfSpTask{
@@ -302,7 +323,22 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskSuccess2(t *testing.T) {
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	a.baseApp.SetGfSpClient(m1)
 	m1.EXPECT().SignMigrateBucketApproval(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
+	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	m1.EXPECT().SignMigrateBucket(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+
 	m.EXPECT().Push(gomock.Any()).Return(nil).AnyTimes()
+	// mock consensus
+	mockedConsensus := consensus.NewMockConsensus(ctrl)
+	existBucket := &storagetypes.BucketInfo{
+		Id:         math.NewUint(10),
+		BucketName: "existbucket",
+	}
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(existBucket, nil).AnyTimes()
+	mockedConsensus.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
+		Id: 1,
+	}, nil).AnyTimes()
+	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	a.baseApp.SetConsensus(mockedConsensus)
 	req := &gfsptask.GfSpMigrateBucketApprovalTask{
 		Task: &gfsptask.GfSpTask{},
 		MigrateBucketInfo: &storagetypes.MsgMigrateBucket{
@@ -333,7 +369,23 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskFailure2(t *testing.T) {
 	m.EXPECT().Has(gomock.Any()).Return(false).Times(1)
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	a.baseApp.SetGfSpClient(m1)
-	m1.EXPECT().SignMigrateBucketApproval(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+	m1.EXPECT().SignMigrateBucketApproval(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
+	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	m1.EXPECT().SignMigrateBucket(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
+
+	// mock consensus
+	mockedConsensus := consensus.NewMockConsensus(ctrl)
+	existBucket := &storagetypes.BucketInfo{
+		Id:         math.NewUint(10),
+		BucketName: "existbucket",
+	}
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(existBucket, nil).AnyTimes()
+	mockedConsensus.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
+		Id: 1,
+	}, nil).AnyTimes()
+	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	a.baseApp.SetConsensus(mockedConsensus)
+
 	req := &gfsptask.GfSpMigrateBucketApprovalTask{
 		Task: &gfsptask.GfSpTask{},
 		MigrateBucketInfo: &storagetypes.MsgMigrateBucket{

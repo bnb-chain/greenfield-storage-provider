@@ -2828,6 +2828,60 @@ func (g *GateModular) verifyMigrateGVGPermissionHandler(w http.ResponseWriter, r
 	w.Write(respBytes)
 }
 
+// getBucketSizeHandler handle get bucket total object size
+func (g *GateModular) getBucketSizeHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		respBytes   []byte
+		size        string
+		bucketIDStr string
+		bucketID    uint64
+		queryParams url.Values
+		reqCtx      *RequestContext
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get bucket total object size", reqCtx.String())
+			modelgateway.MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	bucketIDStr = queryParams.Get(BucketIDQuery)
+
+	if bucketID, err = util.StringToUint64(bucketIDStr); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", bucketIDStr, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	size, err = g.baseApp.GfSpClient().GetBucketSize(reqCtx.Context(), bucketID)
+	if err != nil {
+		log.Errorf("failed to get bucket total object size", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetBucketSizeResponse{BucketSize: size}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.Errorf("failed to get bucket total object size", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
 // processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
 func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)

@@ -40,6 +40,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		srcGvgID                  = gvgTask.GetSrcGvg().GetId()
 		bucketID                  = gvgTask.GetBucketID()
 		lastMigratedObjectID      = gvgTask.GetLastMigratedObjectID()
+		migratedBytesSize         = gvgTask.GetMigratedBytesSize()
 		objectList                []*metadatatypes.ObjectDetails
 		err                       error
 		migratedObjectNumberInGVG = 0
@@ -74,12 +75,12 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 				log.CtxErrorw(ctx, "failed to check and renew gvg task signature", "gvg_task", gvgTask, "error", err)
 				return
 			}
-			if err = e.doObjectMigration(ctx, gvgTask, bucketID, object); err != nil && !e.isSkipFailedToMigrateObject(ctx, object) {
-				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
-					"bucket_id", bucketID, "object_info", object,
-					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "error", err)
+
+			if err = e.doObjectMigrationRetry(ctx, gvgTask, bucketID, object); err != nil {
+				log.CtxErrorw(ctx, "failed to do object migration", "gvg_task", gvgTask, "object", object, "error", err)
 				return
 			}
+
 			if (index+1)%reportProgressPerN == 0 || index == len(objectList)-1 {
 				log.Infow("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID,
 					"current_migrated_object_number", migratedObjectNumberInGVG,
@@ -92,10 +93,12 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 			}
 			lastMigratedObjectID = object.GetObject().GetObjectInfo().Id.Uint64()
 			migratedObjectNumberInGVG++
+			gvgTask.SetMigratedBytesSize(gvgTask.GetMigratedBytesSize() + object.GetObject().GetObjectInfo().GetPayloadSize())
 		}
 		if len(objectList) < int(queryLimit) { // it indicates that gvg all objects have been migrated.
 			gvgTask.SetLastMigratedObjectID(lastMigratedObjectID)
 			gvgTask.SetFinished(true)
+			gvgTask.SetMigratedBytesSize(migratedBytesSize)
 			return
 		}
 	}
@@ -181,6 +184,37 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, gvgTask coretask
 		return err
 	}
 	return nil
+}
+
+func (e *ExecuteModular) doObjectMigrationRetry(ctx context.Context, gvgTask coretask.MigrateGVGTask, bucketID uint64, object *metadatatypes.ObjectDetails) error {
+	var (
+		srcGvgID = gvgTask.GetSrcGvg().GetId()
+		err      error
+	)
+	for retry := 0; retry < e.maxObjectMigrationRetry; retry++ {
+		// when cancel migrate bucket, the dest sp event may be slower than src sp, so we retry this migration
+		err = e.doObjectMigration(ctx, gvgTask, bucketID, object)
+		if err == nil {
+			// 1) no error case
+			return nil
+		} else {
+			// 2) error happens, but will skip error
+			if e.isSkipFailedToMigrateObject(ctx, object) {
+				log.CtxErrorw(ctx, "failed to do migration gvg task and the error will skip", "gvg_id", srcGvgID,
+					"bucket_id", bucketID, "object_info", object,
+					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "retry", retry, "error", err)
+				return nil
+			} else {
+				// 3) error happens, sleep and will retry
+				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
+					"bucket_id", bucketID, "object_info", object,
+					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "retry", retry, "error", err)
+				time.Sleep(time.Duration(e.objectMigrationRetryTimeout) * time.Second)
+				continue
+			}
+		}
+	}
+	return err
 }
 
 func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,

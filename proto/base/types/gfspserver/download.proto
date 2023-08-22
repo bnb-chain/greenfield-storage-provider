@@ -46,9 +46,21 @@ message GfSpReimburseQuotaResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
+message GfSpDeductQuotaForBucketMigrateRequest {
+  uint64 bucket_id = 1;
+  uint64 deduct_quota = 2;
+  // year_month is the query bucket quota's month, like "2023-03"
+  string year_month = 3;
+}
+
+message GfSpDeductQuotaForBucketMigrateResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
 service GfSpDownloadService {
   rpc GfSpDownloadObject(GfSpDownloadObjectRequest) returns (GfSpDownloadObjectResponse) {}
   rpc GfSpDownloadPiece(GfSpDownloadPieceRequest) returns (GfSpDownloadPieceResponse) {}
   rpc GfSpGetChallengeInfo(GfSpGetChallengeInfoRequest) returns (GfSpGetChallengeInfoResponse) {}
   rpc GfSpReimburseQuota(GfSpReimburseQuotaRequest) returns (GfSpReimburseQuotaResponse) {}
+  rpc GfSpDeductQuotaForBucketMigrate(GfSpDeductQuotaForBucketMigrateRequest) returns (GfSpDeductQuotaForBucketMigrateResponse) {}
 }
