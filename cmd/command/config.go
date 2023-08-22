@@ -9,6 +9,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 )
 
+const (
+	DefaultConfigFile = "./config.toml"
+)
+
+// ConfigDumpCmd is used to dump default config.toml template.
 var ConfigDumpCmd = &cli.Command{
 	Action:   dumpConfigAction,
 	Name:     "config.dump",
@@ -24,7 +29,7 @@ func dumpConfigAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if err = os.WriteFile("./config.toml", bz, os.ModePerm); err != nil {
+	if err = os.WriteFile(DefaultConfigFile, bz, os.ModePerm); err != nil {
 		return err
 	}
 	return nil

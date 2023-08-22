@@ -6,13 +6,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"strconv"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -26,37 +26,38 @@ const (
 )
 
 var endpointFlag = &cli.StringFlag{
-	Name:  "n",
+	Name:  "endpoint",
 	Usage: "The address of machine that to query tasks",
 	Value: "",
 }
 
 var keyFlag = &cli.StringFlag{
-	Name:  "k",
-	Usage: "The sub key of task",
-	Value: "",
+	Name:     "task.key",
+	Usage:    "The sub key of task",
+	Value:    "",
+	Required: true,
 }
 
 var objectIDFlag = &cli.StringFlag{
-	Name:     "i",
+	Name:     "object.id",
 	Usage:    "The ID key of Object",
 	Required: true,
 }
 
-var replicateIdxFlag = &cli.Int64Flag{
-	Name:     "r",
+var redundancyIdxFlag = &cli.Int64Flag{
+	Name:     "redundancy.index",
 	Usage:    "The object replicate index of SP",
 	Required: true,
 }
 
 var segmentIdxFlag = &cli.Uint64Flag{
-	Name:     "s",
+	Name:     "segment.index",
 	Usage:    "The segment index",
 	Required: true,
 }
 
-var ListModularCmd = &cli.Command{
-	Action:      listModularAction,
+var ListModulesCmd = &cli.Command{
+	Action:      listModulesAction,
 	Name:        "list.modules",
 	Usage:       "List the modules in greenfield storage provider",
 	Category:    "QUERY COMMANDS",
@@ -72,7 +73,7 @@ var ListErrorsCmd = &cli.Command{
 }
 
 var GetObjectCmd = &cli.Command{
-	Action: getObjectAction,
+	Action: CW.getObjectAction,
 	Name:   "get.object",
 	Usage:  "Get object payload data",
 	Flags: []cli.Flag{
@@ -85,7 +86,7 @@ server to get object payload data`,
 }
 
 var QueryTaskCmd = &cli.Command{
-	Action:   queryTasksAction,
+	Action:   CW.queryTasksAction,
 	Name:     "query.task",
 	Usage:    "Query running tasks in modules by task sub key",
 	Category: "QUERY COMMANDS",
@@ -99,13 +100,13 @@ show the tasks that task key contains the inout key detail info`,
 }
 
 var ChallengePieceCmd = &cli.Command{
-	Action: challengePieceAction,
+	Action: CW.challengePieceAction,
 	Name:   "challenge.piece",
 	Usage:  "Challenge piece integrity hash",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		objectIDFlag,
-		replicateIdxFlag,
+		redundancyIdxFlag,
 		segmentIdxFlag,
 	},
 	Category: "QUERY COMMANDS",
@@ -114,7 +115,7 @@ get integrity meta and check the piece checksums.`,
 }
 
 var GetSegmentIntegrityCmd = &cli.Command{
-	Action: getSegmentIntegrityAction,
+	Action: CW.getSegmentIntegrityAction,
 	Name:   "get.piece.integrity",
 	Usage:  "Get piece integrity hash and signature",
 	Flags: []cli.Flag{
@@ -127,11 +128,12 @@ get integrity hash and signature.`,
 }
 
 var QueryBucketMigrateCmd = &cli.Command{
-	Action: getBucketMigrateAction,
+	Action: CW.getBucketMigrateAction,
 	Name:   "query.bucket.migrate",
 	Usage:  "Query bucket migrate plan and status",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
+		endpointFlag,
 	},
 	Category: "QUERY COMMANDS",
 	Description: `The query.bucket.migrate command send rpc request to manager 
@@ -139,31 +141,33 @@ get plan and status.`,
 }
 
 var QuerySPExitCmd = &cli.Command{
-	Action: getSPExitAction,
+	Action: CW.getSPExitAction,
 	Name:   "query.sp.exit",
 	Usage:  "Query sp exit swap plan and migrate gvg task status",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
+		endpointFlag,
 	},
 	Category: "QUERY COMMANDS",
 	Description: `The query.sp.exit command send rpc request to manager 
 get sp exit swap plan and migrate gvg task status.`,
 }
 
-func listModularAction(ctx *cli.Context) error {
-	fmt.Print(gfspapp.GetRegisterModuleDescription())
+func listModulesAction(ctx *cli.Context) error {
+	fmt.Println(gfspapp.GetRegisterModuleDescription())
 	return nil
 }
 
 func listErrorsAction(ctx *cli.Context) error {
 	gfspErrors := gfsperrors.GfSpErrorList()
 	for _, gfspError := range gfspErrors {
-		fmt.Printf(gfspError.String() + "\n")
+		fmt.Println(gfspError.String())
 	}
 	return nil
 }
 
-func queryTasksAction(ctx *cli.Context) error {
+func (w *CMDWrapper) queryTasksAction(ctx *cli.Context) error {
+	w.initEmptyGRPCAPI()
 	endpoint := gfspapp.DefaultGRPCAddress
 	if ctx.IsSet(utils.ConfigFileFlag.Name) {
 		cfg := &gfspconfig.GfSpConfig{}
@@ -177,20 +181,14 @@ func queryTasksAction(ctx *cli.Context) error {
 	if ctx.IsSet(endpointFlag.Name) {
 		endpoint = ctx.String(endpointFlag.Name)
 	}
-	if !ctx.IsSet(keyFlag.Name) {
-		return fmt.Errorf("query key should be set")
-	}
 	key := ctx.String(keyFlag.Name)
-	if len(key) == 0 {
-		return fmt.Errorf("query key can not empty")
-	}
-	client := &gfspclient.GfSpClient{}
-	infos, err := client.QueryTasks(context.Background(), endpoint, key)
+	infos, err := w.grpcAPI.QueryTasks(context.Background(), endpoint, key)
 	if err != nil {
+		fmt.Printf("failed to query task, endpoint:%v, key:%v, error:%v\n", endpoint, key, err)
 		return err
 	}
 	if len(infos) == 0 {
-		return fmt.Errorf("no task match the query key")
+		fmt.Printf("failed to query task due to no task, endpoint:%v, key:%v\n", endpoint, key)
 	}
 	for _, info := range infos {
 		fmt.Printf(info + "\n")
@@ -198,34 +196,32 @@ func queryTasksAction(ctx *cli.Context) error {
 	return nil
 }
 
-func getObjectAction(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) getObjectAction(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
-	chain, err := utils.MakeGnfd(cfg)
-	if err != nil {
+	if err = w.initChainAPI(ctx); err != nil {
 		return err
 	}
 
 	objectID := ctx.String(objectIDFlag.Name)
-	objectInfo, err := chain.QueryObjectInfoByID(context.Background(), objectID)
+	objectInfo, err := w.chainAPI.QueryObjectInfoByID(context.Background(), objectID)
 	if err != nil {
 		return fmt.Errorf("failed to query object info, error: %v", err)
 	}
-	bucketInfo, err := chain.QueryBucketInfo(context.Background(), objectInfo.GetBucketName())
+	bucketInfo, err := w.chainAPI.QueryBucketInfo(context.Background(), objectInfo.GetBucketName())
 	if err != nil {
 		return fmt.Errorf("failed to query bucket info, error: %v", err)
 	}
-	params, err := chain.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+	params, err := w.chainAPI.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
 	if err != nil {
 		return fmt.Errorf("failed to query storage params, error: %v", err)
 	}
 	task := &gfsptask.GfSpDownloadObjectTask{}
 	task.InitDownloadObjectTask(objectInfo, bucketInfo, params, coretask.UnSchedulingPriority,
 		GfSpCliUserName, 0, int64(objectInfo.GetPayloadSize()-1), 0, 0)
-	data, err := client.GetObject(context.Background(), task)
+	data, err := w.grpcAPI.GetObject(context.Background(), task)
 	if err != nil {
 		return fmt.Errorf("failed to get object, error: %v", err)
 	}
@@ -240,40 +236,38 @@ func getObjectAction(ctx *cli.Context) error {
 	return nil
 }
 
-func challengePieceAction(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) challengePieceAction(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
-	chain, err := utils.MakeGnfd(cfg)
-	if err != nil {
+	if err = w.initChainAPI(ctx); err != nil {
 		return err
 	}
 
 	objectID := ctx.String(objectIDFlag.Name)
-	objectInfo, err := chain.QueryObjectInfoByID(context.Background(), objectID)
+	objectInfo, err := w.chainAPI.QueryObjectInfoByID(context.Background(), objectID)
 	if err != nil {
 		return fmt.Errorf("failed to query object info, error: %v", err)
 	}
-	bucketInfo, err := chain.QueryBucketInfo(context.Background(), objectInfo.GetBucketName())
+	bucketInfo, err := w.chainAPI.QueryBucketInfo(context.Background(), objectInfo.GetBucketName())
 	if err != nil {
 		return fmt.Errorf("failed to query bucket info, error: %v", err)
 	}
-	params, err := chain.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+	params, err := w.chainAPI.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
 	if err != nil {
 		return fmt.Errorf("failed to query storage params, error: %v", err)
 	}
 
-	replicateIdx := ctx.Int64(replicateIdxFlag.Name)
+	redundancyIdx := ctx.Int64(redundancyIdxFlag.Name)
 	segmentIdx := ctx.Uint64(segmentIdxFlag.Name)
 
 	task := &gfsptask.GfSpChallengePieceTask{}
 	task.InitChallengePieceTask(objectInfo, bucketInfo, params, coretask.UnSchedulingPriority,
-		GfSpCliUserName, int32(replicateIdx), uint32(segmentIdx), 0, 0)
-	integrityHash, checksums, data, err := client.GetChallengeInfo(context.Background(), task)
+		GfSpCliUserName, int32(redundancyIdx), uint32(segmentIdx), 0, 0)
+	integrityHash, checksums, data, err := w.grpcAPI.GetChallengeInfo(context.Background(), task)
 	if err != nil {
-		return fmt.Errorf("failed to get challeneg info, error: %v", err)
+		return fmt.Errorf("failed to get challenge info, error: %v", err)
 	}
 	fmt.Printf("integrity meta info: \n\n")
 	fmt.Printf("integrity hash[%s]\n\n", hex.EncodeToString(integrityHash))
@@ -281,8 +275,8 @@ func challengePieceAction(ctx *cli.Context) error {
 		fmt.Printf("piece[%d] checksum[%s]\n", i, hex.EncodeToString(checksum))
 	}
 	challengePieceChecksum := hash.GenerateChecksum(data)
-	fmt.Printf("\nchallenge piece info\n: replicate_idx[%d], segment_idx[%d], piece_checksum[%s]\n\n",
-		replicateIdx, segmentIdx, hex.EncodeToString(challengePieceChecksum))
+	fmt.Printf("\nchallenge piece info\n: redundancy_idx[%d], segment_idx[%d], piece_checksum[%s]\n\n",
+		redundancyIdx, segmentIdx, hex.EncodeToString(challengePieceChecksum))
 
 	if !bytes.Equal(challengePieceChecksum, checksums[segmentIdx]) {
 		return fmt.Errorf("piece data hash[%s] not equal to checksum list value[%s]",
@@ -298,74 +292,68 @@ func challengePieceAction(ctx *cli.Context) error {
 	return nil
 }
 
-func getSegmentIntegrityAction(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) getSegmentIntegrityAction(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	db, err := utils.MakeSPDB(cfg)
-	if err != nil {
-		return err
-	}
-	chain, err := utils.MakeGnfd(cfg)
-	if err != nil {
+	if err = w.initChainAPI(ctx); err != nil {
 		return err
 	}
 
-	objectIDStr := ctx.String(objectIDFlag.Name)
-	objectID, err := strconv.ParseUint(objectIDStr, 10, 64)
+	objectID, err := util.StringToUint64(ctx.String(objectIDFlag.Name))
 	if err != nil {
 		return fmt.Errorf("invalid object id, it should be an unsigned integer")
 	}
-	client := utils.MakeGfSpClient(cfg)
-	objectInfo, err := client.GetObjectByID(ctx.Context, objectID)
+	objectInfo, err := w.grpcAPI.GetObjectByID(ctx.Context, objectID)
 	if err != nil {
 		return fmt.Errorf("failed to query object info, error: %v", err)
 	}
-	bucket, err := client.GetBucketByBucketName(ctx.Context, objectInfo.GetBucketName(), true)
+	bucket, err := w.grpcAPI.GetBucketByBucketName(ctx.Context, objectInfo.GetBucketName(), true)
 	if err != nil {
 		return fmt.Errorf("failed to query bucket info by bucket name, error: %v", err)
 	}
-	gvg, err := client.GetGlobalVirtualGroup(ctx.Context, bucket.BucketInfo.Id.Uint64(), objectInfo.GetLocalVirtualGroupId())
+	gvg, err := w.grpcAPI.GetGlobalVirtualGroup(ctx.Context, bucket.BucketInfo.Id.Uint64(), objectInfo.GetLocalVirtualGroupId())
 	if err != nil {
 		return fmt.Errorf("failed to query global virtual group, error: %v\n", err)
 	}
 
-	spInfo, err := chain.QuerySP(ctx.Context, cfg.SpAccount.SpOperatorAddress)
+	spInfo, err := w.chainAPI.QuerySP(ctx.Context, w.config.SpAccount.SpOperatorAddress)
 	if err != nil {
 		return fmt.Errorf("failed to query sp info, error: %v\n", err)
 	}
 	selfSpID := spInfo.GetId()
-	var replicateIdx int
+	var redundancyIdx int
 	// -1 represents this is a primarySP; secondarySP should firstly query its order in secondary sp list
 	if selfSpID == gvg.GetPrimarySpId() {
 		fmt.Printf("%d belongs to primary sp\n", objectID)
-		replicateIdx = -1
+		redundancyIdx = piecestore.PrimarySPRedundancyIndex
 	} else {
 		for index, spID := range gvg.GetSecondarySpIds() {
 			if selfSpID == spID {
-				replicateIdx = index
+				redundancyIdx = index
 				break
 			}
-			if replicateIdx == 0 {
+			if redundancyIdx == 0 {
 				fmt.Printf("%d doesn't belong to this secondary sp list\n", objectID)
 			}
 		}
 	}
 
-	integrity, err := db.GetObjectIntegrity(objectID, int32(replicateIdx))
+	integrity, err := w.spDBAPI.GetObjectIntegrity(objectID, int32(redundancyIdx))
 	if err != nil {
 		return fmt.Errorf("failed to get object integrity by object id, error: %v", err)
 	}
-	fmt.Printf("succeed to get segment integrity:\n\nreplicateIdx[%d], integrity_hash[%s]\n\n",
-		replicateIdx, hex.EncodeToString(integrity.IntegrityChecksum))
+	fmt.Printf("succeed to get segment integrity:\n\nredundancyIdx[%d], integrity_hash[%s]\n\n",
+		redundancyIdx, hex.EncodeToString(integrity.IntegrityChecksum))
 	for i, checksum := range integrity.PieceChecksumList {
 		fmt.Printf("piece[%d], checksum[%s]\n", i, hex.EncodeToString(checksum))
 	}
 	return nil
 }
 
-func getBucketMigrateAction(ctx *cli.Context) error {
+func (w *CMDWrapper) getBucketMigrateAction(ctx *cli.Context) error {
+	w.initEmptyGRPCAPI()
 	endpoint := gfspapp.DefaultGRPCAddress
 	if ctx.IsSet(utils.ConfigFileFlag.Name) {
 		cfg := &gfspconfig.GfSpConfig{}
@@ -379,17 +367,16 @@ func getBucketMigrateAction(ctx *cli.Context) error {
 	if ctx.IsSet(endpointFlag.Name) {
 		endpoint = ctx.String(endpointFlag.Name)
 	}
-	client := &gfspclient.GfSpClient{}
-	info, err := client.QueryBucketMigrate(context.Background(), endpoint)
+	info, err := w.grpcAPI.QueryBucketMigrate(context.Background(), endpoint)
 	if err != nil {
 		return err
 	}
 	fmt.Println(info)
-
 	return nil
 }
 
-func getSPExitAction(ctx *cli.Context) error {
+func (w *CMDWrapper) getSPExitAction(ctx *cli.Context) error {
+	w.initEmptyGRPCAPI()
 	endpoint := gfspapp.DefaultGRPCAddress
 	if ctx.IsSet(utils.ConfigFileFlag.Name) {
 		cfg := &gfspconfig.GfSpConfig{}
@@ -403,12 +390,10 @@ func getSPExitAction(ctx *cli.Context) error {
 	if ctx.IsSet(endpointFlag.Name) {
 		endpoint = ctx.String(endpointFlag.Name)
 	}
-	client := &gfspclient.GfSpClient{}
-	info, err := client.QuerySPExit(context.Background(), endpoint)
+	info, err := w.grpcAPI.QuerySPExit(context.Background(), endpoint)
 	if err != nil {
 		return err
 	}
 	fmt.Println(info)
-
 	return nil
 }

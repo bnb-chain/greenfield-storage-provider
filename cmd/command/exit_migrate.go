@@ -6,13 +6,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var spOperatorAddressFlag = &cli.StringFlag{
-	Name:  "operatorAddress",
-	Usage: "The operator account address of the storage provider who want to exit from the greenfield storage network",
+	Name:     "operatorAddress",
+	Usage:    "The operator account address of the storage provider who want to exit from the greenfield storage network",
+	Required: true,
 }
 
 var SPExitCmd = &cli.Command{
@@ -21,28 +21,28 @@ var SPExitCmd = &cli.Command{
 	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
 		to exit from Greenfield storage network`,
 	Category: "MIGRATE COMMANDS",
-	Action:   spExit,
+	Action:   CW.spExit,
 	Flags: []cli.Flag{
 		spOperatorAddressFlag,
 	},
 }
 
-func spExit(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) spExit(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
 	operatorAddress := ctx.String(spOperatorAddressFlag.Name)
-	if operatorAddress != cfg.SpAccount.SpOperatorAddress {
+	if operatorAddress != w.config.SpAccount.SpOperatorAddress {
+		fmt.Printf("failed to check operator address, actual=%v, expected=%v\n", operatorAddress, w.config.SpAccount.SpOperatorAddress)
 		return fmt.Errorf("invalid operator address")
 	}
-	txHash, err := client.SPExit(ctx.Context, &virtualgrouptypes.MsgStorageProviderExit{StorageProvider: operatorAddress})
+	txHash, err := w.grpcAPI.SPExit(ctx.Context, &virtualgrouptypes.MsgStorageProviderExit{StorageProvider: operatorAddress})
 	if err != nil {
-		fmt.Printf("failed to send sp exit txn, operatorAddress: %s\n", operatorAddress)
+		fmt.Printf("failed to send sp exit tx, operatorAddress: %s, error:%s\n", operatorAddress, err)
 		return err
 	}
-	fmt.Printf("send sp exit txn successfully, txn hash: %s", txHash)
+	fmt.Printf("send sp exit txn successfully, txn hash: %s\n", txHash)
 	return nil
 }
 
@@ -65,28 +65,28 @@ var CompleteSPExitCmd = &cli.Command{
 	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
 		to complete exit from Greenfield storage network`,
 	Category: "MIGRATE COMMANDS",
-	Action:   completeSPExit,
+	Action:   CW.completeSPExit,
 	Flags: []cli.Flag{
 		spOperatorAddressFlag,
 	},
 }
 
-func completeSPExit(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) completeSPExit(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
 	operatorAddress := ctx.String(spOperatorAddressFlag.Name)
-	if operatorAddress != cfg.SpAccount.SpOperatorAddress {
+	if operatorAddress != w.config.SpAccount.SpOperatorAddress {
+		fmt.Printf("failed to check operator address, actual=%v, expected=%v\n", operatorAddress, w.config.SpAccount.SpOperatorAddress)
 		return fmt.Errorf("invalid operator address")
 	}
-	txHash, err := client.CompleteSPExit(ctx.Context, &virtualgrouptypes.MsgCompleteStorageProviderExit{StorageProvider: operatorAddress})
+	txHash, err := w.grpcAPI.CompleteSPExit(ctx.Context, &virtualgrouptypes.MsgCompleteStorageProviderExit{StorageProvider: operatorAddress})
 	if err != nil {
-		fmt.Printf("failed to send complete sp exit txn, operatorAddress: %s\n", operatorAddress)
+		fmt.Printf("failed to send complete sp exit tx, operatorAddress: %s, error:%s\n", operatorAddress, err)
 		return err
 	}
-	fmt.Printf("send complete sp exit txn successfully, txn hash: %s", txHash)
+	fmt.Printf("send complete sp exit txn successfully, txn hash: %s\n", txHash)
 	return nil
 }
 
@@ -96,7 +96,7 @@ var CompleteSwapOutCmd = &cli.Command{
 	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
 		to swap out from Greenfield storage network`,
 	Category: "MIGRATE COMMANDS",
-	Action:   completeSwapOut,
+	Action:   CW.completeSwapOut,
 	Flags: []cli.Flag{
 		spOperatorAddressFlag,
 		swapOutFamilyID,
@@ -104,23 +104,22 @@ var CompleteSwapOutCmd = &cli.Command{
 	},
 }
 
-func completeSwapOut(ctx *cli.Context) error {
-	cfg, err := utils.MakeConfig(ctx)
+func (w *CMDWrapper) completeSwapOut(ctx *cli.Context) error {
+	err := w.init(ctx)
 	if err != nil {
 		return err
 	}
-	client := utils.MakeGfSpClient(cfg)
 	operatorAddress := ctx.String(spOperatorAddressFlag.Name)
-	if operatorAddress != cfg.SpAccount.SpOperatorAddress {
+	if operatorAddress != w.config.SpAccount.SpOperatorAddress {
 		return fmt.Errorf("invalid operator address")
 	}
-	familyID := uint32(ctx.Uint64(swapOutFamilyID.Name))
-	gvgIDList, err := util.StringToUint32Slice(swapOutGVGIDList.Name)
+	familyID := uint32(ctx.Uint64(ctx.String(swapOutFamilyID.Name)))
+	gvgIDList, err := util.StringToUint32Slice(ctx.String(swapOutGVGIDList.Name))
 	if err != nil {
-		fmt.Printf("failed to send complete swap out tx, operatorAddress: %s, gvgIDList: %s\n", operatorAddress, swapOutGVGIDList.Name)
+		fmt.Printf("failed to send complete swap out tx, operatorAddress: %s, gvgIDList: %s\n", operatorAddress, ctx.String(swapOutGVGIDList.Name))
 		return err
 	}
-	txHash, err := client.CompleteSwapOut(ctx.Context, &virtualgrouptypes.MsgCompleteSwapOut{
+	txHash, err := w.grpcAPI.CompleteSwapOut(ctx.Context, &virtualgrouptypes.MsgCompleteSwapOut{
 		StorageProvider:            operatorAddress,
 		GlobalVirtualGroupFamilyId: familyID,
 		GlobalVirtualGroupIds:      gvgIDList})
@@ -128,6 +127,6 @@ func completeSwapOut(ctx *cli.Context) error {
 		fmt.Printf("failed to send complete swap out txn, operatorAddress: %s\n", operatorAddress)
 		return err
 	}
-	fmt.Printf("send complete swap out txn successfully, txn hash: %s", txHash)
+	fmt.Printf("send complete swap out txn successfully, txn hash: %s\n", txHash)
 	return nil
 }
