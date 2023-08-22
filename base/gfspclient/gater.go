@@ -132,7 +132,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to replicate piece, status_code(%d) endpoint(%s)", resp.StatusCode, endpoint)
+		return nil, fmt.Errorf("failed to done replicate piece, status_code(%d) endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	signature, err := hex.DecodeString(resp.Header.Get(GnfdIntegrityHashSignatureHeader))
 	if err != nil {
