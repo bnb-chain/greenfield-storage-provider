@@ -1,7 +1,6 @@
 package metadata
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"runtime"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
 const (
