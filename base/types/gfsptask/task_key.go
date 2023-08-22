@@ -26,6 +26,7 @@ const (
 	KeyPrefixGfSpGCObjectTask               = "GCObject"
 	KeyPrefixGfSpGCZombiePieceTask          = "GCZombiePiece"
 	KeyPrefixGfSpGfSpGCMetaTask             = "GCMeta"
+	KeyPrefixGfSpGCBucketMigrationTask      = "GCBucketMigration"
 	KeyPrefixGfSpMigrateBucketTask          = "MigrateBucket"
 	KeyPrefixGfSpMigrateGVGTask             = "MigrateGVG"
 	KeyPrefixGfSpMigratePieceTask           = "MigratePiece"
@@ -113,6 +114,10 @@ func GfSpGCZombiePieceTaskKey(time int64) task.TKey {
 
 func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGfSpGCMetaTask + CombineKey("time"+fmt.Sprint(time)))
+}
+
+func GfSpGCBucketMigrationTaskKey(bucketID uint64) task.TKey {
+	return task.TKey(KeyPrefixGfSpGCBucketMigrationTask + CombineKey("bucketID"+fmt.Sprint(bucketID)))
 }
 
 func GfSpMigrateGVGTaskKey(oldGvgID uint32, bucketID uint64, redundancyIndex int32) task.TKey {

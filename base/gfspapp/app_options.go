@@ -310,6 +310,7 @@ func defaultGfSpDB(cfg *config.SQLDBConfig) {
 	if cfg.MaxOpenConns == 0 {
 		cfg.MaxOpenConns = sqldb.DefaultMaxOpenConns
 	}
+	cfg.EnableTracePutEvent = sqldb.DefaultEnableTracePutEvent
 	if cfg.User == "" {
 		cfg.User = "root"
 	}

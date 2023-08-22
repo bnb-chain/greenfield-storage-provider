@@ -335,16 +335,6 @@ func TestGfSpGCZombiePieceTask_SetError(t *testing.T) {
 	m.SetError(nil)
 }
 
-func TestGfSpGCZombiePieceTask_GetGCZombiePieceStatus(t *testing.T) {
-	m := &GfSpGCZombiePieceTask{Task: &GfSpTask{}}
-	m.GetGCZombiePieceStatus()
-}
-
-func TestGfSpGCZombiePieceTask_setGCZombiePieceStatus(t *testing.T) {
-	m := &GfSpGCZombiePieceTask{Task: &GfSpTask{}}
-	m.SetGCZombiePieceStatus(1, 1)
-}
-
 // ===
 
 func TestGfSpGCMetaTask_Key(t *testing.T) {

@@ -51,6 +51,10 @@ const (
 	MinMigrateGVGTime int64 = 1800 // 0.5 hour
 	// MaxMigrateGVGTime defines the max timeout to migrate gvg.
 	MaxMigrateGVGTime int64 = 3600 // 1 hour
+	// MinGCBucketMigrationTime defines the min timeout to gc bucket migration.
+	MinGCBucketMigrationTime int64 = 300 // 0.5 hour
+	// MaxGCBucketMigrationTime defines the max timeout to gc bucket migration.
+	MaxGCBucketMigrationTime int64 = 600 // 1 hour
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0
@@ -78,6 +82,10 @@ const (
 	MinMigrateGVGRetry = 2
 	// MaxMigrateGVGRetry  defines the max retry number to migrate gvg.
 	MaxMigrateGVGRetry = 3
+	// MinGCBucketMigrationRetry defines the min retry number to gc bucket migration.
+	MinGCBucketMigrationRetry = 3
+	// MaxBucketMigrationRetry  defines the max retry number to gc bucket migration.
+	MaxBucketMigrationRetry = 5
 )
 
 // TaskTimeout returns the task timeout by task type and some task need payload size
@@ -184,6 +192,14 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 			return MaxMigrateGVGTime
 		}
 		return g.migrateGVGTimeout
+	case coretask.TypeTaskGCBucketMigration:
+		if g.gcBucketMigrationTimeout < MinGCBucketMigrationTime {
+			return MinGCBucketMigrationTime
+		}
+		if g.gcBucketMigrationTimeout > MaxGCBucketMigrationTime {
+			return MaxGCBucketMigrationTime
+		}
+		return g.gcBucketMigrationTimeout
 	}
 	return NotUseTimeout
 }
@@ -267,6 +283,14 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 			return MaxMigrateGVGRetry
 		}
 		return g.migrateGVGRetry
+	case coretask.TypeTaskGCBucketMigration:
+		if g.gcBucketMigrationRetry < MinGCBucketMigrationRetry {
+			return MinMigrateGVGRetry
+		}
+		if g.gcBucketMigrationRetry > MaxBucketMigrationRetry {
+			return MaxMigrateGVGRetry
+		}
+		return g.gcBucketMigrationRetry
 	default:
 		return NotUseRetry
 	}
@@ -299,12 +323,14 @@ func (g *GfSpBaseApp) TaskPriority(task coretask.Task) coretask.TPriority {
 	case coretask.TypeTaskGCObject:
 		return coretask.UnSchedulingPriority
 	case coretask.TypeTaskGCZombiePiece:
-		return coretask.UnSchedulingPriority
+		return coretask.DefaultSmallerPriority / 4
 	case coretask.TypeTaskGCMeta:
-		return coretask.UnSchedulingPriority
+		return coretask.DefaultSmallerPriority / 4
 	case coretask.TypeTaskRecoverPiece:
 		return coretask.DefaultSmallerPriority / 4
 	case coretask.TypeTaskMigrateGVG:
+		return coretask.DefaultSmallerPriority
+	case coretask.TypeTaskGCBucketMigration:
 		return coretask.DefaultSmallerPriority
 	default:
 		return coretask.UnKnownTaskPriority

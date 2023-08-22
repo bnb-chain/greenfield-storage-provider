@@ -171,6 +171,17 @@ func (m *GfSpGCObjectTask) SetLastDeletedObjectId(object uint64) {
 	m.LastDeletedObjectId = object
 }
 
+func (m *GfSpGCZombiePieceTask) InitGCZombiePieceTask(priority coretask.TPriority, start, end uint64, timeout int64) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.SetStartObjectID(start)
+	m.SetEndObjectID(end)
+	m.SetPriority(priority)
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
+	m.SetTimeout(timeout)
+}
+
 func (m *GfSpGCZombiePieceTask) Key() coretask.TKey {
 	return GfSpGCZombiePieceTaskKey(m.GetCreateTime())
 }
@@ -289,13 +300,48 @@ func (m *GfSpGCZombiePieceTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpGCZombiePieceTask) GetGCZombiePieceStatus() (uint64, uint64) {
-	return m.GetObjectId(), m.GetDeleteCount()
+func (m *GfSpGCZombiePieceTask) SetStartBlockNumber(block uint64) {
+	m.StartBlockNumber = block
 }
 
-func (m *GfSpGCZombiePieceTask) SetGCZombiePieceStatus(object uint64, delete uint64) {
-	m.ObjectId = object
-	m.DeleteCount = delete
+func (m *GfSpGCZombiePieceTask) SetEndBlockNumber(block uint64) {
+	m.EndBlockNumber = block
+}
+
+func (m *GfSpGCZombiePieceTask) GetGCObjectProgress() (uint64, uint64) {
+	return m.GetCurrentBlockNumber(), m.GetLastDeletedObjectId()
+}
+
+func (m *GfSpGCZombiePieceTask) SetGCObjectProgress(block uint64, object uint64) {
+	m.CurrentBlockNumber = block
+	m.LastDeletedObjectId = object
+}
+
+func (m *GfSpGCZombiePieceTask) SetCurrentBlockNumber(block uint64) {
+	m.CurrentBlockNumber = block
+}
+
+func (m *GfSpGCZombiePieceTask) SetLastDeletedObjectId(object uint64) {
+	m.LastDeletedObjectId = object
+}
+
+func (m *GfSpGCZombiePieceTask) SetStartObjectID(block uint64) {
+	m.StartObjectId = block
+}
+
+func (m *GfSpGCZombiePieceTask) SetEndObjectID(block uint64) {
+	m.EndObjectId = block
+}
+
+func (m *GfSpGCMetaTask) InitGCMetaTask(priority coretask.TPriority, timeout int64) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.SetPriority(priority)
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
+	m.SetTimeout(timeout)
+	//m.SetGCMetaTaskType(metaTaskType)
+	//m.SetDeletionTime(tx)
 }
 
 func (m *GfSpGCMetaTask) Key() coretask.TKey {
@@ -423,4 +469,16 @@ func (m *GfSpGCMetaTask) GetGCMetaStatus() (uint64, uint64) {
 func (m *GfSpGCMetaTask) SetGCMetaStatus(current uint64, delete uint64) {
 	m.CurrentIdx = current
 	m.DeleteCount = delete
+}
+
+func (m *GfSpGCMetaTask) SetGCMetaTaskType(metaTaskType GfSpGCMetaTaskType) {
+	m.MetaTaskType = metaTaskType
+}
+
+func (m *GfSpGCMetaTask) GetGCMetaTaskType() GfSpGCMetaTaskType {
+	return m.GetMetaTaskType()
+}
+
+func (m *GfSpGCMetaTask) SetDeletionTime(tx uint64) {
+	m.DeletionTime = int64(tx)
 }

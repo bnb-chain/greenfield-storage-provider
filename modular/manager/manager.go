@@ -60,19 +60,20 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue          taskqueue.TQueueOnStrategy
-	resumableUploadQueue taskqueue.TQueueOnStrategy
-	replicateQueue       taskqueue.TQueueOnStrategyWithLimit
-	sealQueue            taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue         taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue        taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue        taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue          taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue        taskqueue.TQueueOnStrategy
-	challengeQueue       taskqueue.TQueueOnStrategy
-	recoveryQueue        taskqueue.TQueueOnStrategyWithLimit
-	migrateGVGQueue      taskqueue.TQueueOnStrategyWithLimit
-	migrateGVGQueueMux   sync.Mutex
+	uploadQueue            taskqueue.TQueueOnStrategy
+	resumableUploadQueue   taskqueue.TQueueOnStrategy
+	replicateQueue         taskqueue.TQueueOnStrategyWithLimit
+	sealQueue              taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue           taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue            taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue          taskqueue.TQueueOnStrategy
+	challengeQueue         taskqueue.TQueueOnStrategy
+	recoveryQueue          taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
+	gcBucketMigrationQueue taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueueMux     sync.Mutex
 
 	// src sp used TODO: these should be persisted
 	migratingBuckets map[uint64]struct{}
@@ -83,6 +84,11 @@ type ManageModular struct {
 	gcBlockHeight         uint64
 	gcObjectBlockInterval uint64
 	gcSafeBlockDistance   uint64
+
+	gcZombiePieceTimeInterval      int
+	gcZombiePieceObjectID          uint64
+	gcZombiePieceObjectIDInterval  uint64
+	gcZombiePieceSafeBlockDistance uint64
 
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
@@ -133,6 +139,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
+	m.gcBucketMigrationQueue.SetRetireTaskStrategy(m.ResetGCBucketMigrationQueue)
+	m.gcBucketMigrationQueue.SetFilterTaskStrategy(m.FilterGCTask)
 
 	m.migratingBuckets = make(map[uint64]struct{})
 
@@ -141,7 +149,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		return err
 	}
 	m.scope = scope
-
 	if err = m.LoadTaskFromDB(); err != nil {
 		return err
 	}
@@ -191,6 +198,8 @@ func (m *ManageModular) delayStartMigrateScheduler() {
 func (m *ManageModular) eventLoop(ctx context.Context) {
 	m.syncConsensusInfo(ctx)
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
+	gcZombiePieceTicker := time.NewTicker(time.Duration(m.gcZombiePieceTimeInterval) * time.Second)
+	gcMetaTicker := time.NewTicker(time.Duration(m.gcZombiePieceTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
@@ -238,6 +247,42 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				}
 			}
 			log.CtxErrorw(ctx, "generate a gc object task", "task_info", task.Info(), "error", err)
+		case <-gcZombiePieceTicker.C:
+			start := m.gcZombiePieceObjectID
+			end := m.gcZombiePieceObjectID + m.gcZombiePieceObjectIDInterval
+			currentBlockHeight, err := m.baseApp.Consensus().CurrentHeight(ctx)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to get current block height for gc object and try again later", "error", err)
+				continue
+			}
+			// TODO max objectID ?
+			if end+m.gcZombiePieceSafeBlockDistance > currentBlockHeight {
+				log.CtxErrorw(ctx, "current block number less safe distance and try again later",
+					"start_gc_block_height", start,
+					"end_gc_block_height", end,
+					"safe_distance", m.gcSafeBlockDistance,
+					"current_block_height", currentBlockHeight)
+				// from 0 again later
+				m.gcZombiePieceObjectID = 0
+				continue
+			}
+			task := &gfsptask.GfSpGCZombiePieceTask{}
+			task.InitGCZombiePieceTask(m.baseApp.TaskPriority(task), start, end, m.baseApp.TaskTimeout(task, 0))
+			err = m.gcZombieQueue.Push(task)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
+				continue
+			}
+		case <-gcMetaTicker.C:
+			var err error
+			task := &gfsptask.GfSpGCMetaTask{}
+			task.InitGCMetaTask(m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task, 0))
+			err = m.gcMetaQueue.Push(task)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
+				continue
+			}
+
 		case <-discontinueBucketTicker.C:
 			if !m.discontinueBucketEnabled {
 				continue
@@ -247,6 +292,27 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 		}
 	}
 }
+
+// TODO record deletion bucket id ?
+//func (m *ManageModular) generateGCMetaTask(ctx context.Context) {
+//	var err error
+//	// bucket_traffic
+//	now := time.Now().Unix()
+//	task := &gfsptask.GfSpGCMetaTask{}
+//	task.InitGCMetaTask(m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task, 0), uint64(now), gfsptask.GfSpGCMetaTaskType_META_TASK_BUCKET_TRAFFIC)
+//	err = m.gcMetaQueue.Push(task)
+//	if err != nil {
+//		log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
+//	}
+//	// read_record
+//	// TODO config ?
+//	task = &gfsptask.GfSpGCMetaTask{}
+//	task.InitGCMetaTask(m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task, 0), uint64(now), gfsptask.GfSpGCMetaTaskType_META_TASK_BUCKET_TRAFFIC_READ_RECORD)
+//	err = m.gcMetaQueue.Push(task)
+//	if err != nil {
+//		log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
+//	}
+//}
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)
@@ -550,6 +616,16 @@ func (m *ManageModular) GCCacheQueue(qTask task.Task) bool {
 	return true
 }
 
+func (m *ManageModular) ResetGCBucketMigrationQueue(qTask task.Task) bool {
+	task := qTask.(task.GCBucketMigrationTask)
+	if task.Expired() {
+		log.Errorw("reset gc bucket migration task", "old_task_key", task.Key().String())
+		task.SetRetry(0)
+		log.Errorw("reset gc bucket migration task", "new_task_key", task.Key().String())
+	}
+	return false
+}
+
 func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
 	return qTask.GetRetry() == 0
 }
@@ -736,6 +812,12 @@ func (m *ManageModular) backUpTask() {
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", targetTask.Key().String())
 		backupTasks = append(backupTasks, targetTask)
 	}
+	targetTask = m.gcBucketMigrationQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add gc bucket migration task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
 	endPopTime := time.Now().String()
 
 	startPickUpTime := time.Now().String()
@@ -781,6 +863,9 @@ func (m *ManageModular) repushTask(reserved task.Task) {
 	case *gfsptask.GfSpMigrateGVGTask:
 		err := m.migrateGVGQueuePush(t)
 		log.Infow("retry push migration gvg task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpGCBucketMigrationTask:
+		err := m.gcBucketMigrationQueue.Push(t)
+		log.Infow("retry push gc bucket migration task to queue after dispatching", "error", err)
 	}
 }
 
@@ -788,9 +873,7 @@ func (m *ManageModular) migrateGVGQueuePush(task task.Task) error {
 	m.migrateGVGQueueMux.Lock()
 	defer m.migrateGVGQueueMux.Unlock()
 
-	err := m.migrateGVGQueue.Push(task)
-
-	return err
+	return m.migrateGVGQueue.Push(task)
 }
 
 func (m *ManageModular) migrateGVGQueuePopByLimit(limit rcmgr.Limit) task.Task {

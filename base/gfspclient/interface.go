@@ -89,13 +89,14 @@ type ManagerAPI interface {
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error)
 	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
-	NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error
+	NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error
 }
 
 // MetadataAPI for mock sue
 type MetadataAPI interface {
 	GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error)
 	ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error)
+	ListObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error)
 	GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error)
 	ListObjectsByBucketName(ctx context.Context, bucketName string, accountID string, maxKeys uint64, startAfter string, continuationToken string, delimiter string, prefix string, includeRemoved bool,
 		opts ...grpc.DialOption) (objects []*types.Object, keyCount, maxKeysRe uint64, isTruncated bool, nextContinuationToken, name, prefixRe, delimiterRe string, commonPrefixes []string, continuationTokenRe string, err error)

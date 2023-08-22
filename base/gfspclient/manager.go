@@ -90,6 +90,8 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 		return t.RecoverPieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_MigrateGvgTask:
 		return t.MigrateGvgTask, nil
+	case *gfspserver.GfSpAskTaskResponse_GcBucketMigrationTask:
+		return t.GcBucketMigrationTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}
@@ -127,6 +129,8 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{RecoverPieceTask: t}
 	case *gfsptask.GfSpMigrateGVGTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{MigrateGvgTask: t}
+	case *gfsptask.GfSpGCBucketMigrationTask:
+		req.Request = &gfspserver.GfSpReportTaskRequest_GcBucketMigrationTask{GcBucketMigrationTask: t}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type to report")
 		return ErrTypeMismatch
@@ -218,14 +222,14 @@ func (s *GfSpClient) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64
 	return nil
 }
 
-func (s *GfSpClient) NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error {
+func (s *GfSpClient) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
 		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
 	}
 	req := &gfspserver.GfSpNotifyPostMigrateBucketRequest{
-		BucketId: bucketID,
+		BucketMigrationInfo: bmInfo,
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPostMigrate(ctx, req)
 	if err != nil {

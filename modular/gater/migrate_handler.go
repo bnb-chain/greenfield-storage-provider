@@ -531,7 +531,7 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	bucketID = bucketMigrationInfo.GetBucketId()
-	err = g.baseApp.GfSpClient().NotifyPostMigrateBucket(reqCtx.Context(), bucketID)
+	err = g.baseApp.GfSpClient().NotifyPostMigrateBucket(reqCtx.Context(), bucketMigrationInfo)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "post migrate bucket error, the bucket may already notified", "bucket_id",
 			bucketID, "error", err)

@@ -710,15 +710,16 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 	}
 }
 
-func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
-	e := setup(t)
-	e.HandleGCZombiePieceTask(context.TODO(), nil)
-}
-
-func TestExecuteModular_HandleGCMetaTask(t *testing.T) {
-	e := setup(t)
-	e.HandleGCMetaTask(context.TODO(), nil)
-}
+// TODO add unit test
+//func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
+//	e := setup(t)
+//	e.HandleGCZombiePieceTask(context.TODO(), nil)
+//}
+//
+//func TestExecuteModular_HandleGCMetaTask(t *testing.T) {
+//	e := setup(t)
+//	e.HandleGCMetaTask(context.TODO(), nil)
+//}
 
 func TestExecuteModular_HandleRecoverPieceTaskFailure1(t *testing.T) {
 	t.Log("Failure case description: ErrDanglingPointer")

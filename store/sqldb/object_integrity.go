@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -197,6 +198,78 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32)
 		RedundancyIndex: redundancyIndex,
 	}).Error
 	return err
+}
+
+type ByRedundancyIndexAndObjectID []*corespdb.IntegrityMeta
+
+func (a ByRedundancyIndexAndObjectID) Len() int { return len(a) }
+
+// Less we want to sort as ascending here
+func (a ByRedundancyIndexAndObjectID) Less(i, j int) bool {
+	if a[i].ObjectID == a[j].ObjectID {
+		return a[i].RedundancyIndex < a[j].RedundancyIndex
+	}
+	return a[i].ObjectID < a[j].ObjectID
+}
+func (a ByRedundancyIndexAndObjectID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+// ListObjectsByBlockNumberRange list objects info by a block number range
+func (s *SpDBImpl) ListObjectsByBlockNumberRange(startObjectID int64, endObjectID int64, includePrivate bool) ([]*corespdb.IntegrityMeta, error) {
+	var (
+		totalObjects []*corespdb.IntegrityMeta
+		objects      []*corespdb.IntegrityMeta
+		err          error
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetObjectIntegrity).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureGetObjectIntegrity).Observe(
+				time.Since(startTime).Seconds())
+		} else {
+			metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetObjectIntegrity).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBSuccessGetObjectIntegrity).Observe(
+				time.Since(startTime).Seconds())
+		}
+	}()
+
+	if includePrivate {
+		for i := 0; i < IntegrityMetasNumberOfShards; i++ {
+			err = s.db.Table(GetIntegrityMetasTableNameByShardNumber(i)).
+				Select("*").
+				Where("object_id >= ? and object_id <= ?", startObjectID, endObjectID).
+				Limit(ListObjectsDefaultSize).
+				Order("update_at,object_id asc").
+				Find(&objects).Error
+			totalObjects = append(totalObjects, objects...)
+		}
+	} else {
+		for i := 0; i < IntegrityMetasNumberOfShards; i++ {
+			objectTableName := GetIntegrityMetasTableNameByShardNumber(i)
+			joins := fmt.Sprintf("right join buckets on buckets.bucket_id = %s.bucket_id", objectTableName)
+			order := fmt.Sprintf("%s.update_at, %s.object_id asc", objectTableName, objectTableName)
+			where := fmt.Sprintf("%s.update_at >= ? and %s.update_at <= ? and "+
+				"((%s.visibility='VISIBILITY_TYPE_PUBLIC_READ') or "+
+				"(%s.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
+				objectTableName, objectTableName, objectTableName, objectTableName)
+
+			err = s.db.Table(objectTableName).
+				Select(objectTableName+".*").
+				Joins(joins).
+				Where(where, startObjectID, endObjectID).
+				Limit(ListObjectsDefaultSize).
+				Order(order).
+				Find(&objects).Error
+			totalObjects = append(totalObjects, objects...)
+		}
+	}
+
+	sort.Sort(ByRedundancyIndexAndObjectID(totalObjects))
+
+	if len(totalObjects) > ListObjectsDefaultSize {
+		totalObjects = totalObjects[0:ListObjectsDefaultSize]
+	}
+	return totalObjects, err
 }
 
 // UpdatePieceChecksum 1) If the IntegrityMetaTable does not exist, it will be created.
@@ -456,4 +529,45 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 		RedundancyIndex: redundancyIdx,
 	}).Error
 	return err
+}
+
+// ListReplicatePieceChecksumByBlockNumberRange gets all replicate piece checksums for a given objectID and redundancyIdx.
+func (s *SpDBImpl) ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, objectID uint64, redundancyIdx int32, pieceCount uint32) ([]*corespdb.GCPieceMeta, error) {
+	var (
+		err          error
+		queryReturns []PieceHashTable
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetAllReplicatePieceChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureGetAllReplicatePieceChecksum).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetAllReplicatePieceChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessGetAllReplicatePieceChecksum).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	if err = s.db.Model(&PieceHashTable{}).
+		Where("object_id >= ? and object_id <= ?", startBlockNumber, endBlockNumber).
+		Limit(int(pieceCount)).
+		Find(&queryReturns).Error; err != nil {
+		return nil, err
+	}
+
+	var pieceMetas []*corespdb.GCPieceMeta
+
+	for _, queryReturn := range queryReturns {
+		pieceMeta := &corespdb.GCPieceMeta{
+			ObjectID:        queryReturn.ObjectID,
+			SegmentIndex:    queryReturn.SegmentIndex,
+			RedundancyIndex: queryReturn.RedundancyIndex,
+			PieceChecksum:   queryReturn.PieceChecksum,
+		}
+		pieceMetas = append(pieceMetas, pieceMeta)
+	}
+
+	return pieceMetas, nil
 }

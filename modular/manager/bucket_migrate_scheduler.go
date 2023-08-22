@@ -316,6 +316,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 			log.Errorw("failed to done migrate bucket", "error", err, "bucket_id", migrateExecuteUnit.BucketID)
 			return err
 		}
+		// notify src sp to gc
 		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
 		err = plan.manager.bucketMigrateScheduler.PostMigrateBucket(postMsg, plan.srcSP)
 		if err != nil {
@@ -666,6 +667,9 @@ func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketM
 		err       error
 	)
 
+	bucketID := postMsg.GetBucketId()
+	ctx := context.Background()
+
 	if srcSPInfo == nil {
 		srcSPInfo = s.getSPInfoByBucketID(postMsg.GetBucketId())
 	}
@@ -685,6 +689,24 @@ func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketM
 		return err
 	}
 	log.Debugw("succeed to post migrate bucket quota", "src_sp", srcSPInfo, "postMsg", postMsg, "error", err)
+	// TODO gc for dest sp
+	if !postMsg.GetFinished() {
+		// list objects and delete generate a task ?
+		go func() {
+			// src sp should wait meta data
+			<-time.After(10 * time.Second)
+
+			// success generate gc task, gc for bucket migration src sp
+			gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}
+			gcBucketMigrationTask.InitGCBucketMigrationTask(s.manager.baseApp.TaskPriority(gcBucketMigrationTask), bucketID,
+				s.manager.baseApp.TaskTimeout(gcBucketMigrationTask, postMsg.GetMigratedBytesSize()), s.manager.baseApp.TaskMaxRetry(gcBucketMigrationTask))
+			err = s.manager.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to begin gc bucket migration task", "info", gcBucketMigrationTask.Info(), "error", err)
+			}
+			log.Infow("succeed to generate gc bucket migration task", "task", gcBucketMigrationTask)
+		}()
+	}
 	return nil
 }
 

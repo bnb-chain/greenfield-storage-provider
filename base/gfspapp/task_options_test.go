@@ -801,12 +801,12 @@ func TestGfSpBaseApp_TaskPriority(t *testing.T) {
 		{
 			name:         "gc zombie piece task",
 			task:         &gfsptask.GfSpGCZombiePieceTask{},
-			wantedResult: coretask.UnSchedulingPriority,
+			wantedResult: coretask.DefaultSmallerPriority / 4,
 		},
 		{
 			name:         "gc meta task",
 			task:         &gfsptask.GfSpGCMetaTask{},
-			wantedResult: coretask.UnSchedulingPriority,
+			wantedResult: coretask.DefaultSmallerPriority / 4,
 		},
 		{
 			name:         "recover piece task",

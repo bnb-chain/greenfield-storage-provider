@@ -152,6 +152,62 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 	return totalObjects, err
 }
 
+// ListObjectsByBlockNumberRange list objects info by a block number range
+func (b *BsDBImpl) ListObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
+	var (
+		totalObjects []*Object
+		objects      []*Object
+		err          error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	if includePrivate {
+		for i := 0; i < ObjectsNumberOfShards; i++ {
+			err = b.db.Table(GetObjectsTableNameByShardNumber(i)).
+				Select("*").
+				Where("update_at >= ? and update_at <= ?", startBlockNumber, endBlockNumber).
+				Limit(DeletedObjectsDefaultSize).
+				Order("update_at,object_id asc").
+				Find(&objects).Error
+			totalObjects = append(totalObjects, objects...)
+		}
+	} else {
+		for i := 0; i < ObjectsNumberOfShards; i++ {
+			objectTableName := GetObjectsTableNameByShardNumber(i)
+			joins := fmt.Sprintf("right join buckets on buckets.bucket_id = %s.bucket_id", objectTableName)
+			order := fmt.Sprintf("%s.update_at, %s.object_id asc", objectTableName, objectTableName)
+			where := fmt.Sprintf("%s.update_at >= ? and %s.update_at <= ? and "+
+				"((%s.visibility='VISIBILITY_TYPE_PUBLIC_READ') or "+
+				"(%s.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
+				objectTableName, objectTableName, objectTableName, objectTableName)
+
+			err = b.db.Table(objectTableName).
+				Select(objectTableName+".*").
+				Joins(joins).
+				Where(where, startBlockNumber, endBlockNumber).
+				Limit(ListObjectsDefaultSize).
+				Order(order).
+				Find(&objects).Error
+			totalObjects = append(totalObjects, objects...)
+		}
+	}
+
+	sort.Sort(ByUpdateAtAndObjectID(totalObjects))
+
+	if len(totalObjects) > ListObjectsDefaultSize {
+		totalObjects = totalObjects[0:ListObjectsDefaultSize]
+	}
+	return totalObjects, err
+}
+
 // GetObjectByName get object info by an object name
 func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, includePrivate bool) (*Object, error) {
 	var (
@@ -322,9 +378,11 @@ func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 		gvgIDs        []uint32
 		lvgIDs        []uint32
 		completeEvent *EventCompleteMigrationBucket
+		cancelEvent   *EventCancelMigrationBucket
 		bucket        *Bucket
 		filters       []func(*gorm.DB) *gorm.DB
 		err           error
+		createAt      int64
 	)
 	startTime := time.Now()
 	methodName := currentFunction()
@@ -339,8 +397,13 @@ func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
-	if err != nil || len(localGroups) == 0 {
+	if err != nil {
 		return nil, nil, err
+	}
+
+	log.Debugw("ListObjectsByGVGAndBucketForGC", "localGroups", localGroups, "error", err)
+	if len(localGroups) == 0 {
+		return nil, nil, gorm.ErrRecordNotFound
 	}
 
 	lvgIDs = make([]uint32, len(localGroups))
@@ -349,12 +412,20 @@ func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 	}
 
 	completeEvent, err = b.GetMigrateBucketEventByBucketID(bucketID)
-	if err != nil {
+	if err == nil {
+		createAt = completeEvent.CreateAt
+	}
+	cancelEvent, err = b.GetMigrateBucketCancelEventByBucketID(bucketID)
+	if err == nil {
+		createAt = cancelEvent.CreateAt
+	}
+	log.Debugw("ListObjectsByGVGAndBucketForGC", "createAt", createAt, "error", err)
+
+	if createAt == 0 {
 		return nil, nil, err
 	}
-	if completeEvent != nil {
-		filters = append(filters, CreateAtFilter(completeEvent.CreateAt))
-	}
+
+	filters = append(filters, CreateAtFilter(createAt))
 
 	objects, bucket, err = b.ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit, filters...)
 	return objects, bucket, err

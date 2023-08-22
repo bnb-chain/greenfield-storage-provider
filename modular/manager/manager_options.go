@@ -36,6 +36,9 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
+	// DefaultGlobalGCBucketMigrationParallel defines the default max parallel gc meta db in SP
+	// system.
+	DefaultGlobalGCBucketMigrationParallel int = 1
 	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
 	// system.
 	DefaultGlobalRecoveryPieceParallel int = 7
@@ -50,6 +53,9 @@ const (
 	// DefaultGlobalBatchGcObjectTimeInterval defines the default interval for generating
 	// gc object task.
 	DefaultGlobalBatchGcObjectTimeInterval int = 1 * 60
+	// DefaultGlobalBatchGcZombiePieceTimeInterval defines the default interval for generating
+	// gc object task.
+	DefaultGlobalBatchGcZombiePieceTimeInterval int = 1 * 60
 	// DefaultGlobalGcObjectBlockInterval defines the default blocks number for getting
 	// deleted objects.
 	DefaultGlobalGcObjectBlockInterval uint64 = 1000
@@ -135,6 +141,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Parallel.GlobalGCMetaParallel == 0 {
 		cfg.Parallel.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
 	}
+	if cfg.Parallel.GlobalGCBucketMigrationParallel == 0 {
+		cfg.Parallel.GlobalGCBucketMigrationParallel = DefaultGlobalGCBucketMigrationParallel
+	}
 	if cfg.Parallel.GlobalRecoveryPieceParallel == 0 {
 		cfg.Parallel.GlobalRecoveryPieceParallel = DefaultGlobalRecoveryPieceParallel
 	}
@@ -154,6 +163,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 
 	if cfg.Parallel.GlobalBatchGcObjectTimeInterval == 0 {
 		cfg.Parallel.GlobalBatchGcObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
+	}
+	if cfg.Parallel.GlobalBatchGcZombiePieceTimeInterval == 0 {
+		cfg.Parallel.GlobalBatchGcZombiePieceTimeInterval = DefaultGlobalBatchGcZombiePieceTimeInterval
 	}
 	if cfg.Parallel.GlobalGcObjectBlockInterval == 0 {
 		cfg.Parallel.GlobalGcObjectBlockInterval = DefaultGlobalGcObjectBlockInterval
@@ -189,6 +201,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.Parallel.GlobalBatchGcObjectTimeInterval
+	manager.gcZombiePieceTimeInterval = cfg.Parallel.GlobalBatchGcZombiePieceTimeInterval
 	manager.gcObjectBlockInterval = cfg.Parallel.GlobalGcObjectBlockInterval
 	manager.gcSafeBlockDistance = cfg.Parallel.GlobalGcObjectSafeBlockDistance
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
@@ -222,6 +235,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.Name()+"-cache-download-object", cfg.Parallel.GlobalDownloadObjectTaskCacheSize)
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
+	manager.gcBucketMigrationQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-gc-bucket-migration", cfg.Parallel.GlobalGCBucketMigrationParallel)
 
 	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus(), manager.enableHealthyChecker); err != nil {
 		return err

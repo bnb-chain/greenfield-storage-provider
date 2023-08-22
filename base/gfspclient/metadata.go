@@ -54,6 +54,26 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, s
 	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
 }
 
+func (s *GfSpClient) ListObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64,
+	endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
+	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if err != nil {
+		return nil, uint64(0), ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
+	}
+	defer conn.Close()
+	req := &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
+		StartBlockNumber: int64(startBlockNumber),
+		EndBlockNumber:   int64(endBlockNumber),
+		IncludePrivate:   includePrivate,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListDeletedObjectsByBlockNumberRange(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
+		return nil, uint64(0), ErrRPCUnknownWithDetail("failed to list deleted objects by block number range, error: " + err.Error())
+	}
+	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
+}
+
 func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -568,7 +588,7 @@ func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAf
 	return resp.Objects, nil
 }
 
-func (s *GfSpClient) ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
+func (s *GfSpClient) ListObjectsByGVGAndBucketForGC(ctx context.Context, dstGvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -576,7 +596,7 @@ func (s *GfSpClient) ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID u
 	}
 	defer conn.Close()
 	req := &types.GfSpListObjectsByGVGAndBucketForGCRequest{
-		GvgId:      gvgID,
+		DstGvgId:   dstGvgID,
 		BucketId:   bucketID,
 		StartAfter: startAfter,
 		Limit:      limit,

@@ -165,22 +165,24 @@ type ParallelConfig struct {
 	// upload + replicate + seal
 	GlobalMaxUploadingParallel int `comment:"optional"`
 	// only upload
-	GlobalUploadObjectParallel        int    `comment:"optional"`
-	GlobalReplicatePieceParallel      int    `comment:"optional"`
-	GlobalSealObjectParallel          int    `comment:"optional"`
-	GlobalReceiveObjectParallel       int    `comment:"optional"`
-	GlobalGCObjectParallel            int    `comment:"optional"`
-	GlobalGCZombieParallel            int    `comment:"optional"`
-	GlobalGCMetaParallel              int    `comment:"optional"`
-	GlobalRecoveryPieceParallel       int    `comment:"optional"`
-	GlobalMigrateGVGParallel          int    `comment:"optional"`
-	GlobalBackupTaskParallel          int    `comment:"optional"`
-	GlobalDownloadObjectTaskCacheSize int    `comment:"optional"`
-	GlobalChallengePieceTaskCacheSize int    `comment:"optional"`
-	GlobalBatchGcObjectTimeInterval   int    `comment:"optional"`
-	GlobalGcObjectBlockInterval       uint64 `comment:"optional"`
-	GlobalGcObjectSafeBlockDistance   uint64 `comment:"optional"`
-	GlobalSyncConsensusInfoInterval   uint64 `comment:"optional"`
+	GlobalUploadObjectParallel           int    `comment:"optional"`
+	GlobalReplicatePieceParallel         int    `comment:"optional"`
+	GlobalSealObjectParallel             int    `comment:"optional"`
+	GlobalReceiveObjectParallel          int    `comment:"optional"`
+	GlobalGCObjectParallel               int    `comment:"optional"`
+	GlobalGCZombieParallel               int    `comment:"optional"`
+	GlobalGCMetaParallel                 int    `comment:"optional"`
+	GlobalGCBucketMigrationParallel      int    `comment:"optional"`
+	GlobalRecoveryPieceParallel          int    `comment:"optional"`
+	GlobalMigrateGVGParallel             int    `comment:"optional"`
+	GlobalBackupTaskParallel             int    `comment:"optional"`
+	GlobalDownloadObjectTaskCacheSize    int    `comment:"optional"`
+	GlobalChallengePieceTaskCacheSize    int    `comment:"optional"`
+	GlobalBatchGcObjectTimeInterval      int    `comment:"optional"`
+	GlobalBatchGcZombiePieceTimeInterval int    `comment:"optional"`
+	GlobalGcObjectBlockInterval          uint64 `comment:"optional"`
+	GlobalGcObjectSafeBlockDistance      uint64 `comment:"optional"`
+	GlobalSyncConsensusInfoInterval      uint64 `comment:"optional"`
 
 	UploadObjectParallelPerNode         int   `comment:"optional"`
 	ReceivePieceParallelPerNode         int   `comment:"optional"`

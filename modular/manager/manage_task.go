@@ -469,7 +469,8 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 			log.Errorw("failed to update object task state", "task_info", task.Info(), "error", err)
 			return
 		}
-		// TODO: delete this upload db record?
+		// delete this upload db record
+		_ = m.baseApp.GfSpDB().DeleteUploadProgress(task.GetObjectInfo().Id.Uint64())
 		log.Debugw("succeed to seal object on chain", "task_info", task.Info())
 	}()
 	return nil
@@ -605,12 +606,119 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 	return nil
 }
 
-func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask) error {
-	return ErrFutureSupport
+func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, gcZombiePieceTask task.GCZombiePieceTask) error {
+	if gcZombiePieceTask == nil {
+		log.CtxErrorw(ctx, "failed to handle gc object due to task pointer dangling")
+		return ErrDanglingTask
+	}
+	if !m.gcObjectQueue.Has(gcZombiePieceTask.Key()) {
+		log.CtxErrorw(ctx, "task is not in the gc queue", "task_info", gcZombiePieceTask.Info())
+		return ErrCanceledTask
+	}
+	if gcZombiePieceTask.Error() == nil {
+		log.CtxInfow(ctx, "succeed to finish the gc object task", "task_info", gcZombiePieceTask.Info())
+		m.gcObjectQueue.PopByKey(gcZombiePieceTask.Key())
+		m.baseApp.GfSpDB().DeleteGCObjectProgress(gcZombiePieceTask.Key().String())
+		return nil
+	}
+	gcZombiePieceTask.SetUpdateTime(time.Now().Unix())
+	oldTask := m.gcObjectQueue.PopByKey(gcZombiePieceTask.Key())
+	if oldTask != nil {
+		if oldTask.(task.GCObjectTask).GetCurrentBlockNumber() > gcZombiePieceTask.GetCurrentBlockNumber() ||
+			(oldTask.(task.GCObjectTask).GetCurrentBlockNumber() == gcZombiePieceTask.GetCurrentBlockNumber() &&
+				oldTask.(task.GCObjectTask).GetLastDeletedObjectId() > gcZombiePieceTask.GetLastDeletedObjectId()) {
+			log.CtxErrorw(ctx, "the reported gc object task is expired", "report_info", gcZombiePieceTask.Info(),
+				"current_info", oldTask.Info())
+			return ErrCanceledTask
+		}
+	} else {
+		log.CtxErrorw(ctx, "the reported gc object task is canceled", "report_info", gcZombiePieceTask.Info())
+		return ErrCanceledTask
+	}
+	err := m.gcObjectQueue.Push(gcZombiePieceTask)
+	log.CtxInfow(ctx, "push gc object task to queue again", "from", oldTask, "to", gcZombiePieceTask, "error", err)
+	// TODO GC Zombie piece progress
+	return nil
 }
 
-func (m *ManageModular) HandleGCMetaTask(ctx context.Context, task task.GCMetaTask) error {
-	return ErrFutureSupport
+func (m *ManageModular) HandleGCMetaTask(ctx context.Context, gcMetaTask task.GCMetaTask) error {
+	if gcMetaTask == nil {
+		log.CtxError(ctx, "failed to handle gc bucket migration due to gcMetaTask pointer dangling")
+		return ErrDanglingTask
+	}
+	if !m.gcMetaQueue.Has(gcMetaTask.Key()) {
+		log.CtxErrorw(ctx, "gcMetaTask is not in the gc bucket migration queue", "task_info", gcMetaTask.Info())
+		return ErrCanceledTask
+	}
+	if gcMetaTask.Error() == nil {
+		log.CtxInfow(ctx, "succeed to finish the gc object gcMetaTask", "task_info", gcMetaTask.Info())
+		m.gcMetaQueue.PopByKey(gcMetaTask.Key())
+		return nil
+	}
+	gcMetaTask.SetUpdateTime(time.Now().Unix())
+	gcMetaTask.SetError(nil)
+	oldTask := m.gcMetaQueue.PopByKey(gcMetaTask.Key())
+	if oldTask != nil {
+		if oldTask.ExceedRetry() {
+			log.CtxErrorw(ctx, "the reported gc object gcMetaTask is expired", "report_info", gcMetaTask.Info(),
+				"current_info", oldTask.Info())
+			return ErrCanceledTask
+		}
+	} else {
+		log.CtxErrorw(ctx, "the reported gc object gcMetaTask is canceled", "report_info", gcMetaTask.Info())
+		return ErrCanceledTask
+	}
+	err := m.gcMetaQueue.Push(gcMetaTask)
+	log.CtxInfow(ctx, "push gcMetaTask to queue again", "from", oldTask, "to", gcMetaTask, "error", err)
+	return nil
+}
+
+func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucketMigrationTask task.GCBucketMigrationTask) error {
+	if gcBucketMigrationTask == nil {
+		log.CtxError(ctx, "failed to handle gc bucket migration due to gcBucketMigrationTask pointer dangling")
+		return ErrDanglingTask
+	}
+	if !m.gcBucketMigrationQueue.Has(gcBucketMigrationTask.Key()) {
+		log.CtxErrorw(ctx, "gcBucketMigrationTask is not in the gc bucket migration queue", "task_info", gcBucketMigrationTask.Info())
+		return ErrCanceledTask
+	}
+	if gcBucketMigrationTask.Error() == nil {
+		log.CtxInfow(ctx, "succeed to finish the gc object gcBucketMigrationTask", "task_info", gcBucketMigrationTask.Info())
+		m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+		return nil
+	}
+	gcBucketMigrationTask.SetUpdateTime(time.Now().Unix())
+	gcBucketMigrationTask.SetError(nil)
+	oldTask := m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+	if oldTask != nil {
+		if oldTask.ExceedRetry() {
+			log.CtxErrorw(ctx, "the reported gc object gcBucketMigrationTask is expired", "report_info", gcBucketMigrationTask.Info(),
+				"current_info", oldTask.Info())
+			return ErrCanceledTask
+		}
+	} else {
+		log.CtxErrorw(ctx, "the reported gc object gcBucketMigrationTask is canceled", "report_info", gcBucketMigrationTask.Info())
+		return ErrCanceledTask
+	}
+	err := m.gcBucketMigrationQueue.Push(gcBucketMigrationTask)
+	log.CtxInfow(ctx, "push gcBucketMigrationTask to queue again", "from", oldTask, "to", gcBucketMigrationTask, "error", err)
+	return nil
+}
+
+func (m *ManageModular) HandleCreateGCBucketMigrationTask(ctx context.Context, task task.GCBucketMigrationTask) error {
+	if task == nil {
+		log.CtxErrorw(ctx, "failed to handle begin gc bucket migration due to task pointer dangling")
+		return ErrDanglingTask
+	}
+	if m.gcBucketMigrationQueue.Has(task.Key()) {
+		log.CtxErrorw(ctx, "uploading object repeated", "task_info", task.Info())
+		return ErrRepeatedTask
+	}
+	if err := m.gcBucketMigrationQueue.Push(task); err != nil {
+		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
+		return err
+	}
+	return nil
 }
 
 func (m *ManageModular) HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error {
@@ -733,6 +841,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
 	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
 	migrateGVGTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.migrateGVGQueue, subKey)
+	gcBucketMigrationTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcBucketMigrationQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -746,6 +855,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, challengeTasks...)
 	tasks = append(tasks, recoveryTasks...)
 	tasks = append(tasks, migrateGVGTasks...)
+	tasks = append(tasks, gcBucketMigrationTasks...)
 	return tasks, nil
 }
 

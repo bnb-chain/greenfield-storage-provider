@@ -55,6 +55,34 @@ func (mr *MockSPDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockSPDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
 }
 
+// DeleteAllBucketTrafficExpired mocks base method.
+func (m *MockSPDB) DeleteAllBucketTrafficExpired(yearMonth string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllBucketTrafficExpired", yearMonth)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllBucketTrafficExpired indicates an expected call of DeleteAllBucketTrafficExpired.
+func (mr *MockSPDBMockRecorder) DeleteAllBucketTrafficExpired(yearMonth interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllBucketTrafficExpired", reflect.TypeOf((*MockSPDB)(nil).DeleteAllBucketTrafficExpired), yearMonth)
+}
+
+// DeleteAllReadRecordExpired mocks base method.
+func (m *MockSPDB) DeleteAllReadRecordExpired(ts uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllReadRecordExpired", ts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllReadRecordExpired indicates an expected call of DeleteAllReadRecordExpired.
+func (mr *MockSPDBMockRecorder) DeleteAllReadRecordExpired(ts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReadRecordExpired", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReadRecordExpired), ts)
+}
+
 // DeleteAllReplicatePieceChecksum mocks base method.
 func (m *MockSPDB) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error {
 	m.ctrl.T.Helper()
@@ -137,6 +165,20 @@ func (m *MockSPDB) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32)
 func (mr *MockSPDBMockRecorder) DeleteObjectIntegrity(objectID, redundancyIndex any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).DeleteObjectIntegrity), objectID, redundancyIndex)
+}
+
+// DeleteReplicatePieceChecksum mocks base method.
+func (m *MockSPDB) DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteReplicatePieceChecksum indicates an expected call of DeleteReplicatePieceChecksum.
+func (mr *MockSPDBMockRecorder) DeleteReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).DeleteReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
 }
 
 // DeleteUploadProgress mocks base method.
@@ -588,6 +630,36 @@ func (m *MockSPDB) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVG
 func (mr *MockSPDBMockRecorder) ListMigrateGVGUnitsByBucketID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateGVGUnitsByBucketID", reflect.TypeOf((*MockSPDB)(nil).ListMigrateGVGUnitsByBucketID), bucketID)
+}
+
+// ListObjectsByBlockNumberRange mocks base method.
+func (m *MockSPDB) ListObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*IntegrityMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, includePrivate)
+	ret0, _ := ret[0].([]*IntegrityMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectsByBlockNumberRange indicates an expected call of ListObjectsByBlockNumberRange.
+func (mr *MockSPDBMockRecorder) ListObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBlockNumberRange", reflect.TypeOf((*MockSPDB)(nil).ListObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, includePrivate)
+}
+
+// ListReplicatePieceChecksumByBlockNumberRange mocks base method.
+func (m *MockSPDB) ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber, endBlockNumber int64, objectID uint64, redundancyIdx int32, pieceCount uint32) ([]*GCPieceMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListReplicatePieceChecksumByBlockNumberRange", startBlockNumber, endBlockNumber, objectID, redundancyIdx, pieceCount)
+	ret0, _ := ret[0].([]*GCPieceMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListReplicatePieceChecksumByBlockNumberRange indicates an expected call of ListReplicatePieceChecksumByBlockNumberRange.
+func (mr *MockSPDBMockRecorder) ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber, endBlockNumber, objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListReplicatePieceChecksumByBlockNumberRange", reflect.TypeOf((*MockSPDB)(nil).ListReplicatePieceChecksumByBlockNumberRange), startBlockNumber, endBlockNumber, objectID, redundancyIdx, pieceCount)
 }
 
 // QueryBucketMigrateSubscribeProgress mocks base method.
@@ -1187,6 +1259,20 @@ func (mr *MockSignatureDBMockRecorder) DeleteObjectIntegrity(objectID, redundanc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).DeleteObjectIntegrity), objectID, redundancyIndex)
 }
 
+// DeleteReplicatePieceChecksum mocks base method.
+func (m *MockSignatureDB) DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteReplicatePieceChecksum indicates an expected call of DeleteReplicatePieceChecksum.
+func (mr *MockSignatureDBMockRecorder) DeleteReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).DeleteReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
+}
+
 // GetAllReplicatePieceChecksum mocks base method.
 func (m *MockSignatureDB) GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
 	m.ctrl.T.Helper()
@@ -1230,6 +1316,36 @@ func (m *MockSignatureDB) GetObjectIntegrity(objectID uint64, redundancyIndex in
 func (mr *MockSignatureDBMockRecorder) GetObjectIntegrity(objectID, redundancyIndex any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).GetObjectIntegrity), objectID, redundancyIndex)
+}
+
+// ListObjectsByBlockNumberRange mocks base method.
+func (m *MockSignatureDB) ListObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*IntegrityMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, includePrivate)
+	ret0, _ := ret[0].([]*IntegrityMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectsByBlockNumberRange indicates an expected call of ListObjectsByBlockNumberRange.
+func (mr *MockSignatureDBMockRecorder) ListObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBlockNumberRange", reflect.TypeOf((*MockSignatureDB)(nil).ListObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, includePrivate)
+}
+
+// ListReplicatePieceChecksumByBlockNumberRange mocks base method.
+func (m *MockSignatureDB) ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber, endBlockNumber int64, objectID uint64, redundancyIdx int32, pieceCount uint32) ([]*GCPieceMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListReplicatePieceChecksumByBlockNumberRange", startBlockNumber, endBlockNumber, objectID, redundancyIdx, pieceCount)
+	ret0, _ := ret[0].([]*GCPieceMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListReplicatePieceChecksumByBlockNumberRange indicates an expected call of ListReplicatePieceChecksumByBlockNumberRange.
+func (mr *MockSignatureDBMockRecorder) ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber, endBlockNumber, objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListReplicatePieceChecksumByBlockNumberRange", reflect.TypeOf((*MockSignatureDB)(nil).ListReplicatePieceChecksumByBlockNumberRange), startBlockNumber, endBlockNumber, objectID, redundancyIdx, pieceCount)
 }
 
 // SetObjectIntegrity mocks base method.
@@ -1323,6 +1439,34 @@ func (m *MockTrafficDB) CheckQuotaAndAddReadRecord(record *ReadRecord, quota *Bu
 func (mr *MockTrafficDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockTrafficDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
+}
+
+// DeleteAllBucketTrafficExpired mocks base method.
+func (m *MockTrafficDB) DeleteAllBucketTrafficExpired(yearMonth string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllBucketTrafficExpired", yearMonth)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllBucketTrafficExpired indicates an expected call of DeleteAllBucketTrafficExpired.
+func (mr *MockTrafficDBMockRecorder) DeleteAllBucketTrafficExpired(yearMonth interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllBucketTrafficExpired", reflect.TypeOf((*MockTrafficDB)(nil).DeleteAllBucketTrafficExpired), yearMonth)
+}
+
+// DeleteAllReadRecordExpired mocks base method.
+func (m *MockTrafficDB) DeleteAllReadRecordExpired(ts uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllReadRecordExpired", ts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllReadRecordExpired indicates an expected call of DeleteAllReadRecordExpired.
+func (mr *MockTrafficDBMockRecorder) DeleteAllReadRecordExpired(ts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReadRecordExpired", reflect.TypeOf((*MockTrafficDB)(nil).DeleteAllReadRecordExpired), ts)
 }
 
 // GetBucketReadRecord mocks base method.

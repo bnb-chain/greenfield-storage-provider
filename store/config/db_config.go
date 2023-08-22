@@ -10,4 +10,6 @@ type SQLDBConfig struct {
 	ConnMaxIdleTime int    `comment:"optional"`
 	MaxIdleConns    int    `comment:"optional"`
 	MaxOpenConns    int    `comment:"optional"`
+	// whether enable trace PutEvent, use by spdb
+	EnableTracePutEvent bool `comment:"optional"`
 }

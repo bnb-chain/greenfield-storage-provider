@@ -69,6 +69,8 @@ type SignatureDB interface {
 	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
 	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
 	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
+	// ListObjectsByBlockNumberRange list object in range
+	ListObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*IntegrityMeta, error)
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
@@ -78,10 +80,14 @@ type SignatureDB interface {
 	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
 	// GetAllReplicatePieceChecksumOptimized gets all piece hashes.
 	GetAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
+	// DeleteReplicatePieceChecksum deletes piece hashes.
+	DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) (err error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
 	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
 	// DeleteAllReplicatePieceChecksumOptimized deletes all piece hashes.
 	DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error
+	// ListReplicatePieceChecksumByBlockNumberRange list object in range
+	ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, objectID uint64, redundancyIdx int32, pieceCount uint32) ([]*GCPieceMeta, error)
 }
 
 // TrafficDB defines a series of traffic interfaces.
@@ -109,6 +115,11 @@ type TrafficDB interface {
 	GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 	// GetUserReadRecord return user record list by time range.
 	GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
+
+	// DeleteAllReadRecordExpired delete all read record before ts
+	DeleteAllReadRecordExpired(ts uint64) (err error)
+	// DeleteAllBucketTrafficExpired delete all bucket traffic before yearMonth
+	DeleteAllBucketTrafficExpired(yearMonth string) (err error)
 }
 
 // SPInfoDB defines a series of sp interfaces.

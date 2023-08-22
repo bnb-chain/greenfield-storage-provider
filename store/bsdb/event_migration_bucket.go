@@ -75,11 +75,24 @@ func (b *BsDBImpl) GetMigrateBucketEventByBucketID(bucketID common.Hash) (*Event
 		Where("bucket_id = ?", bucketID).
 		Order("create_time desc").
 		Take(&completeEvents).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
 
 	return completeEvents, err
+}
+
+// GetMigrateBucketCancelEventByBucketID get migrate bucket event by bucket id
+func (b *BsDBImpl) GetMigrateBucketCancelEventByBucketID(bucketID common.Hash) (*EventCancelMigrationBucket, error) {
+	var (
+		cancelEvents *EventCancelMigrationBucket
+		err          error
+	)
+
+	err = b.db.Table((&EventCancelMigrationBucket{}).TableName()).
+		Select("*").
+		Where("bucket_id = ?", bucketID).
+		Order("create_time desc").
+		Take(&cancelEvents).Error
+
+	return cancelEvents, err
 }
 
 // GetEventMigrationBucketByBucketID get migration bucket event by bucket id

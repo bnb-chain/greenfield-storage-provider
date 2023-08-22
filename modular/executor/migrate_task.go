@@ -76,6 +76,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		}
 
 		for index, object := range objectList {
+			time.Sleep(1 * time.Second)
 			if err = e.checkAndTryRenewSig(gvgTask.(*gfsptask.GfSpMigrateGVGTask)); err != nil {
 				log.CtxErrorw(ctx, "failed to check and renew gvg task signature", "gvg_task", gvgTask, "error", err)
 				return

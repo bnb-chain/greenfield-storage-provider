@@ -3,8 +3,11 @@ package manager
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -55,12 +58,45 @@ func (m *ManageModular) NotifyPreMigrateBucket(ctx context.Context, bucketID uin
 }
 
 // NotifyPostMigrateBucket is used to notify src sp confirm that only one Post migrate bucket is allowed.
-func (m *ManageModular) NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error {
+func (m *ManageModular) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error {
+	bucketID := bmInfo.GetBucketId()
+
 	_, exists := m.migratingBuckets[bucketID]
 	if exists {
 		delete(m.migratingBuckets, bucketID)
 	} else {
 		return fmt.Errorf("bucket doesn't exit in migratingBuckets")
 	}
+
+	var err error
+	bucketSizeStr, err := m.baseApp.GfSpClient().GetBucketSize(ctx, bucketID)
+	if err != nil {
+		log.Errorf("failed to get bucket total object size", "error", err)
+		return err
+	}
+	bucketSize, err := util.StringToUint64(bucketSizeStr)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to convert bucket size to uint64", "bucket_id",
+			bucketID, "bucket_size", bucketSize, "error", err)
+		return err
+	}
+
+	if bmInfo.GetFinished() {
+		go func() {
+			// src sp should wait meta data
+			<-time.After(10 * time.Second)
+
+			// success generate gc task, gc for bucket migration src sp
+			gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}
+			gcBucketMigrationTask.InitGCBucketMigrationTask(m.baseApp.TaskPriority(gcBucketMigrationTask), bucketID,
+				m.baseApp.TaskTimeout(gcBucketMigrationTask, bucketSize), m.baseApp.TaskMaxRetry(gcBucketMigrationTask))
+			err = m.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to begin gc bucket migration task", "info", gcBucketMigrationTask.Info(), "error", err)
+			}
+			log.CtxInfow(ctx, "succeed to push bucket migration gc task to queue", "bucket_migration_info", bmInfo, "gcBucketMigrationTask", gcBucketMigrationTask)
+		}()
+	}
+
 	return nil
 }
