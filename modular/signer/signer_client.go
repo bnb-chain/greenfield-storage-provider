@@ -34,9 +34,6 @@ const (
 	// SignOperator is the type of signature signed by the operator account
 	SignOperator SignType = "operator"
 
-	// SignFunding is the type of signature signed by the funding account
-	SignFunding SignType = "funding"
-
 	// SignSeal is the type of signature signed by the seal account
 	SignSeal SignType = "seal"
 
@@ -103,16 +100,6 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		log.Errorw("failed to get operator nonce", "error", err)
 		return nil, err
 	}
-	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
-	if err != nil {
-		log.Errorw("failed to new funding private key manager", "error", err)
-		return nil, err
-	}
-	fundingClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(fundingKM))
-	if err != nil {
-		log.Errorw("failed to new funding greenfield client", "error", err)
-		return nil, err
-	}
 
 	blsKM, err := keys.NewBlsPrivateKeyManager(blsPrivKey)
 	if err != nil {
@@ -165,7 +152,6 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 
 	greenfieldClients := map[SignType]*client.GreenfieldClient{
 		SignOperator: operatorClient,
-		SignFunding:  fundingClient,
 		SignSeal:     sealClient,
 		SignApproval: approvalClient,
 		SignGc:       gcClient,
