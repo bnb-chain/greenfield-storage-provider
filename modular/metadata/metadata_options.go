@@ -19,12 +19,8 @@ const (
 )
 
 var (
-	BsBlockHeight  string
-	BsBlockHash    string
-	BsUpdateTime   string
-	BsModules      []string
-	BsEnableDualDB bool
-	BsWorkers      uint
+	BsModules []string
+	BsWorkers uint
 
 	ChainID      string
 	ChainAddress []string
@@ -51,27 +47,20 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 		cfg.Bucket.FreeQuotaPerBucket = downloader.DefaultBucketFreeQuota
 	}
 
-	if cfg.Metadata.BsDBSwitchCheckIntervalSec == 0 {
-		cfg.Metadata.BsDBSwitchCheckIntervalSec = DefaultBsDBSwitchCheckIntervalSec
-	}
 	metadata.freeQuotaPerBucket = cfg.Bucket.FreeQuotaPerBucket
 	metadata.maxMetadataRequest = cfg.Parallel.QuerySPParallelPerNode
 
-	if cfg.Metadata.IsMasterDB {
-		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBMaster())
-	} else {
-		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBBackup())
-	}
+	metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBMaster())
 
 	BsModules = cfg.BlockSyncer.Modules
-	BsEnableDualDB = cfg.BlockSyncer.EnableDualDB
+	//BsEnableDualDB = cfg.BlockSyncer.EnableDualDB
 	BsWorkers = cfg.BlockSyncer.Workers
 	ChainID = cfg.Chain.ChainID
 	ChainAddress = cfg.Chain.ChainAddress
 	SpOperatorAddress = cfg.SpAccount.SpOperatorAddress
 	GatewayDomainName = cfg.Gateway.DomainName
 
-	startDBSwitchListener(time.Second*time.Duration(cfg.Metadata.BsDBSwitchCheckIntervalSec), cfg, metadata)
+	//startDBSwitchListener(time.Second*time.Duration(cfg.Metadata.BsDBSwitchCheckIntervalSec), cfg, metadata)
 
 	return nil
 }
@@ -100,21 +89,21 @@ func checkSignal(cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
 		log.Errorw("failed to get switch db signal", "err", err)
 	}
 	// if a signal db is not equal to current metadata db, attempt to switch the database
-	if signal.IsMaster != cfg.Metadata.IsMasterDB {
-		switchDB(signal.IsMaster, cfg, metadata)
-	}
+	//if signal.IsMaster != cfg.Metadata.IsMasterDB {
+	//	switchDB(signal.IsMaster, cfg, metadata)
+	//}
 }
 
 // switchDB is responsible for switching between the primary and backup Block Syncer databases.
 // Depending on the current value of the IsMasterDB in the Metadata configuration, it switches
 // the active Block Syncer database to the backup or the primary database.
 // After switching, it toggles the value of the IsMasterDB to indicate the active database.
-func switchDB(flag bool, cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
-	if flag {
-		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBMaster())
-	} else {
-		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBBackup())
-	}
-	cfg.Metadata.IsMasterDB = flag
-	log.Info("db switched successfully")
-}
+//func switchDB(flag bool, cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
+//	if flag {
+//		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBMaster())
+//	} else {
+//		metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBBackup())
+//	}
+//	cfg.Metadata.IsMasterDB = flag
+//	log.Info("db switched successfully")
+//}

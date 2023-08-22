@@ -57,7 +57,6 @@ type GfSpConfig struct {
 	Monitor        MonitorConfig
 	Rcmgr          RcmgrConfig `comment:"optional"`
 	Log            LogConfig
-	Metadata       MetadataConfig
 	BlockSyncer    BlockSyncerConfig
 	APIRateLimiter localhttp.RateLimiterConfig
 	Manager        ManagerConfig
@@ -234,17 +233,16 @@ type LogConfig struct {
 
 type BlockSyncerConfig struct {
 	Modules      []string `comment:"required"`
-	Dsn          string   `comment:"required"`
-	DsnSwitched  string   `comment:"optional"`
+	DBAddress    string   `comment:"required"`
 	Workers      uint     `comment:"required"`
-	EnableDualDB bool     `comment:"optional"`
+	EnableDualDB bool     `comment:"abandon"`
 }
 
-type MetadataConfig struct {
-	// IsMasterDB is used to determine if the master database (BsDBConfig) is currently being used.
-	IsMasterDB                 bool  `comment:"required"`
-	BsDBSwitchCheckIntervalSec int64 `comment:"optional"`
-}
+//type MetadataConfig struct {
+//	// IsMasterDB is used to determine if the master database (BsDBConfig) is currently being used.
+//	IsMasterDB                 bool  `comment:"required"`
+//	BsDBSwitchCheckIntervalSec int64 `comment:"optional"`
+//}
 
 type ManagerConfig struct {
 	EnableLoadTask                                 bool     `comment:"optional"`
