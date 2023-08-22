@@ -1,6 +1,8 @@
 package metadata
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"runtime"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -89,6 +91,7 @@ func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpCon
 		// loop until the context is canceled (e.g., when the Metadata service is stopped)
 		for range dbSwitchTicker.C {
 			checkSignal(cfg, metadata)
+			metrics.GoRoutineCount.Set(float64(runtime.NumGoroutine()))
 		}
 	}()
 }
