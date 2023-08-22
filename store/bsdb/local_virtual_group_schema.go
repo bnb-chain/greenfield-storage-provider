@@ -22,5 +22,5 @@ type LocalVirtualGroup struct {
 
 // TableName is used to set VirtualGroupFamily table name in database
 func (g *LocalVirtualGroup) TableName() string {
-	return LocalVirtualGroupFamilyTableName
+	return LocalVirtualGroupTableName
 }
