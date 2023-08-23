@@ -415,9 +415,9 @@ func (mr *MockSPDBMockRecorder) GetUserReadRecord(userAddress, timeRange interfa
 }
 
 // InitBucketTraffic mocks base method.
-func (m *MockSPDB) InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error {
+func (m *MockSPDB) InitBucketTraffic(record *ReadRecord, quota *BucketQuota) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitBucketTraffic", bucketID, bucketName, quota)
+	ret := m.ctrl.Call(m, "InitBucketTraffic", record, quota)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -1282,9 +1282,9 @@ func (mr *MockTrafficDBMockRecorder) GetUserReadRecord(userAddress, timeRange in
 }
 
 // InitBucketTraffic mocks base method.
-func (m *MockTrafficDB) InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error {
+func (m *MockTrafficDB) InitBucketTraffic(record *ReadRecord, quota *BucketQuota) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitBucketTraffic", bucketID, bucketName, quota)
+	ret := m.ctrl.Call(m, "InitBucketTraffic", record, quota)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
