@@ -52,7 +52,7 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 		case dispatchTask := <-m.taskCh:
 			atomic.AddInt64(&m.backupTaskNum, -1)
 			if !limit.NotLess(dispatchTask.EstimateLimit()) {
-				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String())
+				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String(), "task_info", dispatchTask.Info())
 				go func() {
 					m.taskCh <- dispatchTask
 					atomic.AddInt64(&m.backupTaskNum, 1)

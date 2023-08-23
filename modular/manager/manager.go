@@ -708,9 +708,9 @@ func (m *ManageModular) backUpTask() {
 	startPickUpTime := time.Now().String()
 	targetTask, reservedTasks = m.PickUpTask(ctx, backupTasks)
 	if targetTask != nil {
-		targetTask.AppendLog("start-pop-task-from-queue: " + startPopTime)
-		targetTask.AppendLog("end-pop-task-from-queue: " + endPopTime)
-		targetTask.AppendLog("start-pickup-task-to-dispatch" + startPickUpTime)
+		targetTask.AppendLog("start-pop-task-from-queue:" + startPopTime)
+		targetTask.AppendLog("end-pop-task-from-queue:" + endPopTime)
+		targetTask.AppendLog("start-pickup-task-to-dispatch: " + startPickUpTime)
 		targetTask.AppendLog("end-pickup-task-to-dispatch")
 
 		atomic.AddInt64(&m.backupTaskNum, 1)
