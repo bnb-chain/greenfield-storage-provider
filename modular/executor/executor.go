@@ -273,7 +273,7 @@ func (e *ExecuteModular) ReleaseResource(ctx context.Context, span corercmgr.Res
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
 		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], migrateGVG[%d]",
-		&e.maxExecuteNum, atomic.LoadInt64(&e.executingNum),
+		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
 		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
 		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
 		atomic.LoadInt64(&e.doingReceivePieceTaskCnt),

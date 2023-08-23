@@ -185,7 +185,6 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		task.SetError(ErrReplicateIdsOutOfBounds)
 		return
 	}
-	// TODO get sp id from config
 	spID, err := e.getSPID()
 	if err != nil {
 		return
