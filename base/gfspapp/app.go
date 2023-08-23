@@ -88,6 +88,11 @@ func (g *GfSpBaseApp) GfSpClient() gfspclient.GfSpClientAPI {
 	return g.client
 }
 
+// SetGfSpClient setter for g.client
+func (g *GfSpBaseApp) SetGfSpClient(client gfspclient.GfSpClientAPI) {
+	g.client = client
+}
+
 // PieceStore returns the piece store client.
 func (g *GfSpBaseApp) PieceStore() piecestore.PieceStore {
 	return g.pieceStore
@@ -106,6 +111,11 @@ func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 // OperatorAddress returns the sp operator address.
 func (g *GfSpBaseApp) OperatorAddress() string {
 	return g.operatorAddress
+}
+
+// SetOperatorAddress setter for g.operatorAddress
+func (g *GfSpBaseApp) SetOperatorAddress(operatorAddress string) {
+	g.operatorAddress = operatorAddress
 }
 
 // ChainID returns the chain ID used by this sp instance
