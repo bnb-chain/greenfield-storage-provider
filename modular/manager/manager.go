@@ -713,11 +713,10 @@ func (m *ManageModular) backUpTask() {
 		targetTask.AppendLog("start-pickup-task-to-dispatch" + startPickUpTime)
 		targetTask.AppendLog("end-pickup-task-to-dispatch")
 
-	}
-	if targetTask != nil {
 		atomic.AddInt64(&m.backupTaskNum, 1)
 		m.taskCh <- targetTask
 	}
+
 	for _, reservedTask := range reservedTasks {
 		m.rePushTask(reservedTask)
 	}
