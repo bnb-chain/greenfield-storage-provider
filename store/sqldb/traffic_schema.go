@@ -7,6 +7,7 @@ import (
 // BucketTrafficTable table schema
 type BucketTrafficTable struct {
 	BucketID              uint64 `gorm:"primary_key"`
+	Month                 string `gorm:"primary_key"`
 	BucketName            string
 	ReadConsumedSize      uint64
 	FreeQuotaConsumedSize uint64 // indicates the consumed free quota size

@@ -219,7 +219,7 @@ func (mr *MockSPDBMockRecorder) GetBucketReadRecord(bucketID, timeRange interfac
 }
 
 // GetBucketTraffic mocks base method.
-func (m *MockSPDB) GetBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
+func (m *MockSPDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
 	ret0, _ := ret[0].(*BucketTraffic)

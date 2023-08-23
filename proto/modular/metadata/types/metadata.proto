@@ -285,6 +285,8 @@ message GfSpGetEndpointBySpIDResponse {
 message GfSpGetBucketReadQuotaRequest {
   // bucket info from the greenfield chain
   greenfield.storage.BucketInfo bucket_info = 1;
+  // year_month is the query bucket quota's month, like "2023-03"
+  string year_month = 2;
 }
 
 // GfSpGetBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuota RPC method.
