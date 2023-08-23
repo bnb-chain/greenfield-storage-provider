@@ -72,7 +72,6 @@ func MakeEnv(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 // initLog inits the log configuration from config file and command flags.
 func initLog(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Log.Level == "" {
-		// TODO:: change to info
 		cfg.Log.Level = "debug"
 	}
 	if cfg.Log.Path == "" {
@@ -164,17 +163,17 @@ func MakeSPDB(cfg *gfspconfig.GfSpConfig) (spdb.SPDB, error) {
 	if val, ok := os.LookupEnv(sqldb.SpDBAddress); ok {
 		cfg.SpDB.Address = val
 	}
-	if val, ok := os.LookupEnv(sqldb.SpDBDataBase); ok {
+	if val, ok := os.LookupEnv(sqldb.SpDBDatabase); ok {
 		cfg.SpDB.Database = val
 	}
 	if cfg.SpDB.User == "" {
 		cfg.SpDB.User = "root"
 	}
 	if cfg.SpDB.Passwd == "" {
-		cfg.SpDB.User = "test"
+		cfg.SpDB.Passwd = "test"
 	}
 	if cfg.SpDB.Address == "" {
-		cfg.SpDB.User = "127.0.0.1:3306"
+		cfg.SpDB.Address = "127.0.0.1:3306"
 	}
 	if cfg.SpDB.Database == "" {
 		cfg.SpDB.Database = "storage_provider_db"

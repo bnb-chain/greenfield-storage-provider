@@ -22,6 +22,7 @@ type StorageFn func(cfg ObjectStorageConfig) (ObjectStorage, error)
 
 var storageMap = map[string]StorageFn{
 	S3Store:       newS3Store,
+	OSSStore:      newOSSStore,
 	B2Store:       newB2Store,
 	MinioStore:    newMinioStore,
 	LdfsStore:     newLdfsStore,
@@ -84,15 +85,15 @@ func getSecretKeyFromEnv(accessKey, secretKey, sessionToken string) *objectStora
 	return key
 }
 
-type aliyunStorageSecretKey struct {
+type ossStorageSecretKey struct {
 	region       string
 	accessKey    string
 	secretKey    string
 	sessionToken string
 }
 
-func getAliyunSecretKeyFromEnv(region, accessKey, secretKey, sessionToken string) *aliyunStorageSecretKey {
-	key := &aliyunStorageSecretKey{}
+func getOSSSecretKeyFromEnv(region, accessKey, secretKey, sessionToken string) *ossStorageSecretKey {
+	key := &ossStorageSecretKey{}
 	if val, ok := os.LookupEnv(region); ok {
 		key.region = val
 	}

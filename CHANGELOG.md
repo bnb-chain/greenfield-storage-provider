@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.2.4-alpha.9
+
+FEATURES
+* [#989](https://github.com/bnb-chain/greenfield-storage-provider/pull/989) feat: impl group apis and fix verify permission bug
+* [#1008](https://github.com/bnb-chain/greenfield-storage-provider/pull/1008) feat: change auth api response from json to xml
+* [#1010](https://github.com/bnb-chain/greenfield-storage-provider/pull/1010) feat:blocksyncer add realtime mode
+* [#1015](https://github.com/bnb-chain/greenfield-storage-provider/pull/1015) feat: retrieve groups where the user is the owner
+* [#1012](https://github.com/bnb-chain/greenfield-storage-provider/pull/1012) feat: error handle updates to provide useful messages
+* [#1025](https://github.com/bnb-chain/greenfield-storage-provider/pull/1025) feat: change json response body to xml
+
+BUGFIX
+* [#999](https://github.com/bnb-chain/greenfield-storage-provider/pull/999) fix: fix bug for metadata crash
+* [#1000](https://github.com/bnb-chain/greenfield-storage-provider/pull/1000) fix: fix occasional compile error
+* [#1006](https://github.com/bnb-chain/greenfield-storage-provider/pull/1006) fix: rename api name and replace post to get
+* [#1014](https://github.com/bnb-chain/greenfield-storage-provider/pull/1014) fix: "failed to basic check approval msg"'s bug
+* [#1016](https://github.com/bnb-chain/greenfield-storage-provider/pull/1016) fix:blocksyncer delete group bug
+* [#996](https://github.com/bnb-chain/greenfield-storage-provider/pull/996) fix: db update bucket traffic by transaction
+* [#955](https://github.com/bnb-chain/greenfield-storage-provider/pull/955) fix: fix src gvg is overwritten
+* [#1018](https://github.com/bnb-chain/greenfield-storage-provider/pull/1018) fix: empty bucket when bucket migrate
+
+TEST
+* [#1001](https://github.com/bnb-chain/greenfield-storage-provider/pull/1001) test: sp db pkg adds unit test
+* [#912](https://github.com/bnb-chain/greenfield-storage-provider/pull/912) ci: add coverage report for tests
+* [#1007](https://github.com/bnb-chain/greenfield-storage-provider/pull/1007) test: sp db pkg adds unit test part II
+* [#1009](https://github.com/bnb-chain/greenfield-storage-provider/pull/1009) test: core pkg generates mock files
+* [#1019](https://github.com/bnb-chain/greenfield-storage-provider/pull/1019)test: gfspapp pkg adds UTs
+
 ## v0.2.4-alpha.1
 
 FEATURES

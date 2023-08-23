@@ -94,12 +94,12 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 // GCApprovalQueue defines the strategy of gc approval queue when the queue is full.
 // if the approval is expired, it can be deleted.
 func (a *ApprovalModular) GCApprovalQueue(qTask task.Task) bool {
-	task := qTask.(task.ApprovalTask)
-	if task.GetCreateTime()+DefaultApprovalExpiredTimeout < time.Now().Unix() {
-		log.Debugw("expire approval task", "info", task.Info())
+	approvalTask := qTask.(task.ApprovalTask)
+	if approvalTask.GetCreateTime()+DefaultApprovalExpiredTimeout < time.Now().Unix() {
+		log.Debugw("expire approval task", "info", approvalTask.Info())
 		return true
 	}
-	log.Debugw("approval task not expired", "expired_height", task.GetExpiredHeight(),
+	log.Debugw("approval task not expired", "expired_height", approvalTask.GetExpiredHeight(),
 		"current_height", a.GetCurrentBlockHeight())
 	return false
 }

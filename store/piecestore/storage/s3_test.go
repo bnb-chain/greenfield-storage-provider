@@ -825,14 +825,14 @@ func TestS3Store_checkIRSAAvailableWithAWSEnv(t *testing.T) {
 	_ = os.Setenv(AWSWebIdentityTokenFile, "mockAWSWebIdentityTokenFile")
 	defer os.Unsetenv(AWSRoleARN)
 	defer os.Unsetenv(AWSWebIdentityTokenFile)
-	result1, result2, result3 := checkIRSAAvailable()
+	result1, result2, result3 := checkS3IRSAAvailable()
 	assert.Equal(t, true, result1)
 	assert.Equal(t, "mockAWSRoleARN", result2)
 	assert.Equal(t, "mockAWSWebIdentityTokenFile", result3)
 }
 
 func TestS3Store_checkIRSAAvailableWithoutAWSEnv(t *testing.T) {
-	result1, result2, result3 := checkIRSAAvailable()
+	result1, result2, result3 := checkS3IRSAAvailable()
 	assert.Equal(t, false, result1)
 	assert.Equal(t, "", result2)
 	assert.Equal(t, "", result3)
@@ -887,7 +887,7 @@ func TestS3Store_parseEndpoint(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			result1, result2, result3, err := parseEndpoint(tt.endpoint)
+			result1, result2, result3, err := parseS3Endpoint(tt.endpoint)
 			if tt.wantedIsErr {
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 			} else {
@@ -929,7 +929,7 @@ func TestS3Store_parseRegion(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			result := parseRegion(tt.endpoint)
+			result := parseS3Region(tt.endpoint)
 			assert.Equal(t, tt.wantedResult, result)
 		})
 	}

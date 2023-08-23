@@ -76,11 +76,11 @@ func TestLoadDBConfigFromEnv(t *testing.T) {
 	_ = os.Setenv(SpDBUser, mockUser)
 	_ = os.Setenv(SpDBPasswd, mockPassword)
 	_ = os.Setenv(SpDBAddress, mockDBAddress)
-	_ = os.Setenv(SpDBDataBase, mockDatabase)
+	_ = os.Setenv(SpDBDatabase, mockDatabase)
 	defer os.Unsetenv(SpDBUser)
 	defer os.Unsetenv(SpDBPasswd)
 	defer os.Unsetenv(SpDBAddress)
-	defer os.Unsetenv(SpDBDataBase)
+	defer os.Unsetenv(SpDBDatabase)
 	cfg := &config.SQLDBConfig{}
 	LoadDBConfigFromEnv(cfg)
 	assert.Equal(t, mockUser, cfg.User)

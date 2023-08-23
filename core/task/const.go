@@ -50,8 +50,6 @@ const (
 	TypeTaskRecoverPiece
 	// TypeTaskMigrateGVG defines the type of migrating gvg task.
 	TypeTaskMigrateGVG
-	// TypeTaskMigratePiece defines the type of migrating piece task.
-	TypeTaskMigratePiece
 )
 
 var TypeTaskMap = map[TType]string{

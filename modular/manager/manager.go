@@ -704,6 +704,7 @@ func (m *ManageModular) backUpTask() {
 	if targetTask != nil {
 		m.taskCh <- targetTask
 	}
+	reservedTasks = append(reservedTasks, targetTask)
 	if len(reservedTasks) == 0 {
 		return
 	}

@@ -14,12 +14,14 @@ import (
 )
 
 const (
-	pieceKey    = "hello.txt"
-	s3BucketURL = "https://s3.us-east-1.amazonaws.com/test"
+	pieceKey     = "hello.txt"
+	s3BucketURL  = "https://s3.us-east-1.amazonaws.com/test"
+	ossBucketURL = "https://example.oss-ap-northeast-1.aliyuncs.com/"
+	b2BucketURL  = "https://s3.us-east-005.backblazeb2.com/greenfieldsp"
 	// virtualPath = "https://test.s3.us-east-1.amazonaws.com"
 )
 
-func setup(t *testing.T, storageType, bucketURL string, shards int) (*piece.PieceStore, error) {
+func setup(t *testing.T, storageType, bucketURL, iamType string, shards int) (*piece.PieceStore, error) {
 	t.Helper()
 	return piece.NewPieceStore(&storage.PieceStoreConfig{
 		Shards: shards,
@@ -27,7 +29,7 @@ func setup(t *testing.T, storageType, bucketURL string, shards int) (*piece.Piec
 			Storage:    storageType,
 			BucketURL:  bucketURL,
 			MaxRetries: 5,
-			IAMType:    storage.AKSKIAMType,
+			IAMType:    iamType,
 		},
 	})
 }

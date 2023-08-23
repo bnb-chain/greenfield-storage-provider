@@ -34,9 +34,6 @@ const (
 	// SignOperator is the type of signature signed by the operator account
 	SignOperator SignType = "operator"
 
-	// SignFunding is the type of signature signed by the funding account
-	SignFunding SignType = "funding"
-
 	// SignSeal is the type of signature signed by the seal account
 	SignSeal SignType = "seal"
 
@@ -103,16 +100,6 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		log.Errorw("failed to get operator nonce", "error", err)
 		return nil, err
 	}
-	fundingKM, err := keys.NewPrivateKeyManager(fundingPrivateKey)
-	if err != nil {
-		log.Errorw("failed to new funding private key manager", "error", err)
-		return nil, err
-	}
-	fundingClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(fundingKM))
-	if err != nil {
-		log.Errorw("failed to new funding greenfield client", "error", err)
-		return nil, err
-	}
 
 	blsKM, err := keys.NewBlsPrivateKeyManager(blsPrivKey)
 	if err != nil {
@@ -165,7 +152,6 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 
 	greenfieldClients := map[SignType]*client.GreenfieldClient{
 		SignOperator: operatorClient,
-		SignFunding:  fundingClient,
 		SignSeal:     sealClient,
 		SignApproval: approvalClient,
 		SignGc:       gcClient,
@@ -231,7 +217,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		sealObject.GetBucketName(), sealObject.GetObjectName(), sealObject.GetGlobalVirtualGroupId(),
 		sealObject.GetSecondarySpBlsAggSignatures())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -398,7 +384,7 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 
 	msgCreateGlobalVirtualGroup := virtualgrouptypes.NewMsgCreateGlobalVirtualGroup(km.GetAddr(),
 		gvg.FamilyId, gvg.GetSecondarySpIds(), gvg.GetDeposit())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -460,7 +446,7 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 	msgCompleteMigrateBucket := storagetypes.NewMsgCompleteMigrateBucket(km.GetAddr(), migrateBucket.GetBucketName(),
 		migrateBucket.GetGlobalVirtualGroupFamilyId(), migrateBucket.GetGvgMappings())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -577,7 +563,7 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 		ExpiredHeight: swapOut.SuccessorSpApproval.GetExpiredHeight(),
 		Sig:           swapOut.SuccessorSpApproval.GetSig(),
 	}
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -637,7 +623,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 
 	msgCompleteSwapOut := virtualgrouptypes.NewMsgCompleteSwapOut(km.GetAddr(), completeSwapOut.GetGlobalVirtualGroupFamilyId(),
 		completeSwapOut.GetGlobalVirtualGroupIds())
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
@@ -695,7 +681,7 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 
 	msgSPExit := virtualgrouptypes.NewMsgStorageProviderExit(km.GetAddr())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 	var (
 		txHash   string
 		nonce    uint64
@@ -752,7 +738,7 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 
 	msgCompleteSPExit := virtualgrouptypes.NewMsgCompleteStorageProviderExit(km.GetAddr())
 
-	mode := tx.BroadcastMode_BROADCAST_MODE_ASYNC
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
 		txHash   string
