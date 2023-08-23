@@ -142,7 +142,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		cfg.Parallel.GlobalMigrateGVGParallel = DefaultGlobalMigrateGVGParallel
 	}
 	if cfg.Parallel.GlobalBackupTaskParallel == 0 {
-		cfg.Parallel.GlobalMigrateGVGParallel = DefaultGlobalBackupTaskParallel
+		cfg.Parallel.GlobalBackupTaskParallel = DefaultGlobalBackupTaskParallel
 	}
 
 	if cfg.Parallel.GlobalDownloadObjectTaskCacheSize == 0 {
@@ -196,7 +196,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.discontinueBucketKeepAliveDays = cfg.Parallel.DiscontinueBucketKeepAliveDays
 	manager.loadReplicateTimeout = cfg.Parallel.LoadReplicateTimeout
 	manager.loadSealTimeout = cfg.Parallel.LoadSealTimeout
-	manager.taskCh = make(chan task.Task, cfg.Parallel.GlobalMigrateGVGParallel)
+	manager.taskCh = make(chan task.Task, cfg.Parallel.GlobalBackupTaskParallel)
 	manager.uploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-upload-object", cfg.Parallel.GlobalUploadObjectParallel)
 	manager.resumableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(

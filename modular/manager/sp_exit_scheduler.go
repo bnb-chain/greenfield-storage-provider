@@ -1022,6 +1022,7 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
+					continue
 				}
 				if err = runner.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(unit.Key(), int(Migrating)); err != nil {
 					log.Errorw("failed to update task status", "error", err)
