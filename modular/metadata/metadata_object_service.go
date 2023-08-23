@@ -533,6 +533,8 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		log.CtxErrorw(ctx, "failed to list objects by gvg id", "error", err)
 		return nil, err
 	}
+
+	log.Debugf("Len of objects: %d", len(objects))
 	for _, object := range objects {
 		log.Debugf("object: %v", object)
 	}
@@ -630,6 +632,7 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 			log.Debugf("object detail is nil , object: %v, detail:%v", object, detail)
 		}
 	}
+	log.Debugf("Len of res: %d", len(res))
 	for _, re := range res {
 		log.Debugf("re: %v", re)
 	}
