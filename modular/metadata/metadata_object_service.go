@@ -534,6 +534,9 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		log.CtxErrorw(ctx, "failed to list objects by gvg id", "error", err)
 		return nil, err
 	}
+	for _, object := range objects {
+		log.Debugf("object: %v", object)
+	}
 
 	bucketsIDMap = make(map[common.Hash]*model.Bucket)
 	for _, bucket := range buckets {
