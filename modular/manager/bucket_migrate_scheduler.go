@@ -271,6 +271,7 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 				if err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
+					continue
 				}
 				log.Debugw("success to push migrate gvg task to queue", "migrateGVGUnit", migrateGVGUnit, "migrateGVGTask", migrateGVGTask)
 
