@@ -33,6 +33,7 @@ var ActionTypeMap = map[permtypes.ActionType]int{
 	permtypes.ACTION_UPDATE_GROUP_MEMBER: 9,
 	permtypes.ACTION_DELETE_GROUP:        10,
 	permtypes.ACTION_UPDATE_OBJECT_INFO:  11,
+	permtypes.ACTION_UPDATE_GROUP_EXTRA:  12,
 }
 
 const (
@@ -120,4 +121,21 @@ func currentFunction() string {
 	fullName := runtime.FuncForPC(counter).Name()
 	splitNames := strings.Split(fullName, ".")
 	return splitNames[len(splitNames)-1]
+}
+
+func PossibleValuesForAction(targetAction permtypes.ActionType) []int {
+	maxVal := 0
+	for _, val := range ActionTypeMap {
+		maxVal |= 1 << val
+	}
+
+	targetBit := 1 << targetAction
+
+	var results []int
+	for i := 0; i <= maxVal; i++ {
+		if i&targetBit == targetBit {
+			results = append(results, i)
+		}
+	}
+	return results
 }

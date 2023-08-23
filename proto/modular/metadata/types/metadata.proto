@@ -374,8 +374,10 @@ message Group {
   int64 update_at = 5;
   // update_time defines the timestamp when the group updated
   int64 update_time = 6;
+  // number_of_members defines how many members in this group
+  int64 number_of_members = 7;
   // removed defines the group is deleted or not
-  bool removed = 7;
+  bool removed = 8;
 }
 
 // GroupMember is the structure for group-account information
@@ -765,6 +767,42 @@ message GfSpGetUserOwnedGroupsResponse {
   repeated GroupMember groups = 1;
 }
 
+message Policy {
+  // principal_type defines the type of principal
+  int32 principal_type = 1;
+  // principal_value defines the value of principal
+  string principal_value = 2;
+  // resource_type defines the type of resource that grants permission for
+  greenfield.resource.ResourceType resource_type = 3;
+  // resource_id defines the bucket/object/group id of the resource that grants permission for
+  string resource_id = 4;
+  // create_timestamp defines the create time of permission
+  int64 create_timestamp = 5;
+  // update_timestamp defines the update time of permission
+  int64 update_timestamp = 6;
+  // expiration_time defines the expiration time of permission
+  int64 expiration_time = 7;
+}
+
+// GfSpListObjectPoliciesRequest is request type for the GfSpListObjectPolicies RPC method
+message GfSpListObjectPoliciesRequest {
+  // object_name defines the name of object
+  string object_name = 1;
+  // bucket_name defines the name of bucket
+  string bucket_name = 2;
+  // action_type defines the requested action type of permission
+  greenfield.permission.ActionType action_type = 3;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 4;
+  // start_after is where you want to start listing from
+  uint64 start_after = 5;
+}
+
+// GfSpListObjectPoliciesResponse is response type for the GfSpListObjectPolicies RPC method
+message GfSpListObjectPoliciesResponse {
+  repeated Policy policies = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -804,4 +842,5 @@ service GfSpMetadataService {
   rpc GfSpGetUserGroups(GfSpGetUserGroupsRequest) returns (GfSpGetUserGroupsResponse) {}
   rpc GfSpGetGroupMembers(GfSpGetGroupMembersRequest) returns (GfSpGetGroupMembersResponse) {}
   rpc GfSpGetUserOwnedGroups(GfSpGetUserOwnedGroupsRequest) returns (GfSpGetUserOwnedGroupsResponse) {}
+  rpc GfSpListObjectPolicies(GfSpListObjectPoliciesRequest) returns (GfSpListObjectPoliciesResponse) {}
 }

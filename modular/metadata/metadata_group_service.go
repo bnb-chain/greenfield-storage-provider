@@ -4,20 +4,23 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GfSpGetGroupList get group list by queryName/prefix/sourceType
 func (r *MetadataModular) GfSpGetGroupList(ctx context.Context, req *types.GfSpGetGroupListRequest) (resp *types.GfSpGetGroupListResponse, err error) {
 	var (
-		groups []*model.Group
-		res    []*types.Group
-		count  int64
+		groups        []*model.Group
+		groupCounts   []*model.GroupCount
+		groupIDs      []common.Hash
+		groupCountMap map[common.Hash]int64
+		res           []*types.Group
+		count         int64
 	)
 
 	ctx = log.Context(ctx, req)
@@ -28,21 +31,41 @@ func (r *MetadataModular) GfSpGetGroupList(ctx context.Context, req *types.GfSpG
 	}
 
 	res = make([]*types.Group, len(groups))
-	for i, group := range groups {
-		res[i] = &types.Group{
-			Group: &storage_types.GroupInfo{
-				Owner:      group.Owner.String(),
-				GroupName:  group.GroupName,
-				SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
-				Id:         math.NewUintFromBigInt(group.GroupID.Big()),
-				Extra:      group.Extra,
-			},
-			Operator:   group.Operator.String(),
-			CreateAt:   group.CreateAt,
-			CreateTime: group.CreateTime,
-			UpdateAt:   group.UpdateAt,
-			UpdateTime: group.UpdateTime,
-			Removed:    group.Removed,
+	if len(groups) > 0 {
+		// generate group IDS
+		groupIDs = make([]common.Hash, len(groups))
+		for i, group := range groups {
+			groupIDs[i] = group.GroupID
+		}
+
+		// get group counts by ids
+		groupCounts, err = r.baseApp.GfBsDB().GetGroupMembersCount(groupIDs)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get group count", "error", err)
+			return nil, err
+		}
+		groupCountMap = make(map[common.Hash]int64)
+		for _, g := range groupCounts {
+			groupCountMap[g.GroupID] = g.Count
+		}
+
+		for i, group := range groups {
+			res[i] = &types.Group{
+				Group: &storage_types.GroupInfo{
+					Owner:      group.Owner.String(),
+					GroupName:  group.GroupName,
+					SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
+					Id:         math.NewUintFromBigInt(group.GroupID.Big()),
+					Extra:      group.Extra,
+				},
+				Operator:        group.Operator.String(),
+				CreateAt:        group.CreateAt,
+				CreateTime:      group.CreateTime,
+				UpdateAt:        group.UpdateAt,
+				UpdateTime:      group.UpdateTime,
+				NumberOfMembers: groupCountMap[group.GroupID],
+				Removed:         group.Removed,
+			}
 		}
 	}
 

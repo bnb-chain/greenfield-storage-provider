@@ -2281,6 +2281,94 @@ func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.R
 	w.Write(respBytes)
 }
 
+// listObjectPoliciesHandler list policies by object info
+func (g *GateModular) listObjectPoliciesHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		respBytes         []byte
+		reqCtx            *RequestContext
+		limit             uint32
+		requestLimit      string
+		policies          []*types.Policy
+		requestActionType string
+		actionType        uint32
+		requestStartAfter string
+		startAfter        uint64
+		ok                bool
+		queryParams       url.Values
+	)
+
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list policies by object info", reqCtx.String())
+			MakeErrorResponse(w, err)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	queryParams = reqCtx.request.URL.Query()
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	requestLimit = queryParams.Get(GetGroupListLimitQuery)
+	requestActionType = queryParams.Get(VerifyPermissionActionType)
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check start after", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if requestLimit != "" {
+		if limit, err = util.StringToUint32(requestLimit); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", requestLimit, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if actionType, err = util.StringToUint32(requestActionType); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse action type", "action-type", requestActionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if _, ok = permission_types.ActionType_name[int32(actionType)]; !ok {
+		log.CtxErrorw(reqCtx.Context(), "failed to check action type", "action-type", actionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	policies, err = g.baseApp.GfSpClient().ListObjectPolicies(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, startAfter, actionType, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list policies by object info", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectPoliciesResponse{Policies: policies}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list policies by object info", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
 // processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
 func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)

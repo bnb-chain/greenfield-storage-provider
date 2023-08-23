@@ -1051,6 +1051,26 @@ func (mr *MockGfSpClientAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, s
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListMigrateBucketEvents), varargs...)
 }
 
+// ListObjectPolicies mocks base method.
+func (m *MockGfSpClientAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListObjectPolicies", varargs...)
+	ret0, _ := ret[0].([]*types.Policy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectPolicies indicates an expected call of ListObjectPolicies.
+func (mr *MockGfSpClientAPIMockRecorder) ListObjectPolicies(ctx, objectName, bucketName, startAfter, actionType, limit interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectPolicies), varargs...)
+}
+
 // ListObjectsByBucketName mocks base method.
 func (m *MockGfSpClientAPI) ListObjectsByBucketName(ctx context.Context, bucketName, accountID string, maxKeys uint64, startAfter, continuationToken, delimiter, prefix string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Object, uint64, uint64, bool, string, string, string, string, []string, string, error) {
 	m.ctrl.T.Helper()
@@ -2923,6 +2943,26 @@ func (mr *MockMetadataAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, spI
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockMetadataAPI)(nil).ListMigrateBucketEvents), varargs...)
+}
+
+// ListObjectPolicies mocks base method.
+func (m *MockMetadataAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListObjectPolicies", varargs...)
+	ret0, _ := ret[0].([]*types.Policy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectPolicies indicates an expected call of ListObjectPolicies.
+func (mr *MockMetadataAPIMockRecorder) ListObjectPolicies(ctx, objectName, bucketName, startAfter, actionType, limit interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectPolicies), varargs...)
 }
 
 // ListObjectsByBucketName mocks base method.

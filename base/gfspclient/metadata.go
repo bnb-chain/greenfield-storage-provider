@@ -830,3 +830,25 @@ func (s *GfSpClient) GetUserOwnedGroups(ctx context.Context, accountID string, s
 	}
 	return resp.Groups, nil
 }
+
+func (s *GfSpClient) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
+	}
+	defer conn.Close()
+	req := &types.GfSpListObjectPoliciesRequest{
+		ObjectName: objectName,
+		BucketName: bucketName,
+		ActionType: permission_types.ActionType(actionType),
+		Limit:      limit,
+		StartAfter: startAfter,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectPolicies(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list policies by object info", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to list policies by object info, error: " + err.Error())
+	}
+	return resp.Policies, nil
+}

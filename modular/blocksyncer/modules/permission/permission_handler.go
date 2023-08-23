@@ -39,6 +39,7 @@ var actionTypeMap = map[permissiontypes.ActionType]int{
 	permissiontypes.ACTION_UPDATE_GROUP_MEMBER: 9,
 	permissiontypes.ACTION_DELETE_GROUP:        10,
 	permissiontypes.ACTION_UPDATE_OBJECT_INFO:  11,
+	permissiontypes.ACTION_UPDATE_GROUP_EXTRA:  12,
 }
 
 func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
