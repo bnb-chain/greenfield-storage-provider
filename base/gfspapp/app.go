@@ -32,11 +32,11 @@ type GfSpBaseApp struct {
 	gfSpDB       spdb.SPDB
 	gfBsDB       bsdb.BSDB
 	gfBsDBMaster bsdb.BSDB
-	gfBsDBBackup bsdb.BSDB
-	pieceStore   piecestore.PieceStore
-	pieceOp      piecestore.PieceOp
-	rcmgr        corercmgr.ResourceManager
-	chain        consensus.Consensus
+	//gfBsDBBackup bsdb.BSDB
+	pieceStore piecestore.PieceStore
+	pieceOp    piecestore.PieceOp
+	rcmgr      corercmgr.ResourceManager
+	chain      consensus.Consensus
 
 	approver      module.Approver
 	authenticator module.Authenticator
