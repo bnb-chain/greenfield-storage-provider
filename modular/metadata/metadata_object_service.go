@@ -315,7 +315,11 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
 				return
 			}
-			res[idx] = &types.ObjectDetails{}
+			res[idx] = &types.ObjectDetails{
+				Object: &types.Object{},
+				Bucket: &types.Bucket{},
+				Gvg:    &virtual_types.GlobalVirtualGroup{},
+			}
 			if object != nil {
 				res[idx].Object = &types.Object{
 					ObjectInfo: &storage_types.ObjectInfo{
@@ -426,7 +430,11 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
 				return
 			}
-			res[idx] = &types.ObjectDetails{}
+			res[idx] = &types.ObjectDetails{
+				Object: &types.Object{},
+				Bucket: &types.Bucket{},
+				Gvg:    &virtual_types.GlobalVirtualGroup{},
+			}
 			if object != nil {
 				res[idx].Object = &types.Object{
 					ObjectInfo: &storage_types.ObjectInfo{
@@ -549,7 +557,11 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
 				return
 			}
-			res[idx] = &types.ObjectDetails{}
+			res[idx] = &types.ObjectDetails{
+				Object: &types.Object{},
+				Bucket: &types.Bucket{},
+				Gvg:    &virtual_types.GlobalVirtualGroup{},
+			}
 			if object != nil {
 				res[idx].Object = &types.Object{
 					ObjectInfo: &storage_types.ObjectInfo{
