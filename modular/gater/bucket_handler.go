@@ -69,7 +69,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	}
 
 	bucketTraffic, err = g.baseApp.GfSpDB().GetBucketTraffic(
-		bucketInfo.Id.Uint64())
+		bucketInfo.Id.Uint64(), reqCtx.vars["year_month"])
 	// if the traffic table has not been created and initialized yet, return the chain info
 	if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
 		free, err = g.baseApp.Consensus().QuerySPFreeQuota(reqCtx.Context(), g.baseApp.OperatorAddress())
@@ -82,7 +82,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	} else {
 		// if the traffic table has been created, return the db info from meta service
 		charge, free, consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
-			reqCtx.Context(), bucketInfo)
+			reqCtx.Context(), bucketInfo, reqCtx.vars["year_month"])
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "error", err)
 			return
