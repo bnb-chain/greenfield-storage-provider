@@ -541,9 +541,10 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 	}
 
 	wg.Add(len(objects))
-	res = make([]*types.ObjectDetails, len(objects))
-	for i, obj := range objects {
-		go func(object *model.Object, idx int) {
+	var lock sync.Mutex
+	res = make([]*types.ObjectDetails, 0)
+	for _, obj := range objects {
+		go func(object *model.Object) {
 			defer wg.Done()
 			var (
 				gvg    *model.GlobalVirtualGroup
@@ -556,13 +557,13 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
 				return
 			}
-			res[idx] = &types.ObjectDetails{
+			detail := &types.ObjectDetails{
 				Object: &types.Object{},
 				Bucket: &types.Bucket{},
 				Gvg:    &virtual_types.GlobalVirtualGroup{},
 			}
 			if object != nil {
-				res[idx].Object = &types.Object{
+				detail.Object = &types.Object{
 					ObjectInfo: &storage_types.ObjectInfo{
 						Owner:               object.Owner.String(),
 						Creator:             object.Creator.String(),
@@ -591,7 +592,7 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 				}
 			}
 			if bucket != nil {
-				res[idx].Bucket = &types.Bucket{
+				detail.Bucket = &types.Bucket{
 					BucketInfo: &storage_types.BucketInfo{
 						Owner:                      bucket.Owner.String(),
 						BucketName:                 bucket.BucketName,
@@ -615,7 +616,7 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 				}
 			}
 			if gvg != nil {
-				res[idx].Gvg = &virtual_types.GlobalVirtualGroup{
+				detail.Gvg = &virtual_types.GlobalVirtualGroup{
 					Id:                    gvg.GlobalVirtualGroupId,
 					FamilyId:              gvg.FamilyId,
 					PrimarySpId:           gvg.PrimarySpId,
@@ -625,7 +626,12 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 					TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
 				}
 			}
-		}(obj, i)
+			if detail != nil {
+				lock.Lock()
+				res = append(res, detail)
+				lock.Unlock()
+			}
+		}(obj)
 	}
 	wg.Wait()
 	for _, re := range res {
