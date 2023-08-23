@@ -1787,7 +1787,6 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	objects, err = g.baseApp.GfSpClient().ListObjectsInGVG(reqCtx.Context(), gvgID, startAfter, limit)
-	log.Debugf("ListObjectsInGVG objects: %v", objects)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", "error", err)
 		return
@@ -1795,9 +1794,7 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 
 	grpcResponse := &types.GfSpListObjectsInGVGResponse{Objects: objects}
 
-	log.Debugf("ListObjectsInGVG grpcResponse: %v", grpcResponse)
 	respBytes, err = xml.Marshal(grpcResponse)
-	log.Debugf("ListObjectsInGVG respBytes: %v", respBytes)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", "error", err)
 		return

@@ -528,8 +528,6 @@ func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAf
 		Limit:      limit,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListObjectsInGVG(ctx, req)
-	log.Debugf("ListObjectsInGVG resp: %v", resp)
-	log.Debugf("ListObjectsInGVG resp objects: %v", resp.Objects)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to list objects by gvg id", "error", err)
 		return nil, ErrRPCUnknownWithDetail("client failed to list objects by gvg id, error: " + err.Error())
