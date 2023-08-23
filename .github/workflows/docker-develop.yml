@@ -5,7 +5,7 @@ on:
     branches: [ develop ]
 
 env:
-  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
+  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider-invisible
   IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
 
 jobs:
