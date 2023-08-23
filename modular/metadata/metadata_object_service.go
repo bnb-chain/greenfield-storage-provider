@@ -524,11 +524,6 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		return nil, err
 	}
 
-	log.Debugf("Len of objects: %d", len(objects))
-	for _, object := range objects {
-		log.Debugf("object: %v", object)
-	}
-
 	bucketsIDMap = make(map[common.Hash]*model.Bucket)
 	for _, bucket := range buckets {
 		bucketsIDMap[bucket.BucketID] = bucket
