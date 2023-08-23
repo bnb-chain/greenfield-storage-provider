@@ -189,10 +189,6 @@ func (g *GfSpBaseApp) OnAskTask(ctx context.Context, limit corercmgr.Limit) (cor
 		return nil, nil
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyTask, gfspTask.Key().String())
-	gfspTask.IncRetry()
-	gfspTask.SetError(nil)
-	gfspTask.SetUpdateTime(time.Now().Unix())
-	gfspTask.SetAddress(GetRPCRemoteAddress(ctx))
 	log.CtxDebugw(ctx, "succeed to dispatch task", "info", gfspTask.Info())
 	return gfspTask, nil
 }
