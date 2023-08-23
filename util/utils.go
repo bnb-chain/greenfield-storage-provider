@@ -25,3 +25,15 @@ func GetIPFromGRPCContext(ctx context.Context) net.IP {
 	addr := strings.Split(pr.Addr.String(), ":")
 	return net.ParseIP(addr[0])
 }
+
+func GetRPCRemoteAddress(ctx context.Context) string {
+	var addr string
+	if pr, ok := peer.FromContext(ctx); ok {
+		if tcpAddr, ok := pr.Addr.(*net.TCPAddr); ok {
+			addr = tcpAddr.IP.String()
+		} else {
+			addr = pr.Addr.String()
+		}
+	}
+	return addr
+}

@@ -13,6 +13,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 var (
@@ -215,7 +216,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		task := t.UploadObjectTask
 		task.AppendLog(fmt.Sprintf("manager-receive-upload-task-retry:%d", task.GetRetry()))
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		_ = g.GfSpDB().InsertPutEvent(task)
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleDoneUploadObjectTask(ctx, t.UploadObjectTask)
@@ -224,14 +225,14 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	case *gfspserver.GfSpReportTaskRequest_ResumableUploadObjectTask:
 		task := t.ResumableUploadObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleDoneResumableUploadObjectTask(ctx, t.ResumableUploadObjectTask)
 	case *gfspserver.GfSpReportTaskRequest_ReplicatePieceTask:
 		task := t.ReplicatePieceTask
 		task.AppendLog(fmt.Sprintf("manager-receive-replicate-task-retry:%d", task.GetRetry()))
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleReplicatePieceTask(ctx, t.ReplicatePieceTask)
 		metrics.ReqCounter.WithLabelValues(ManagerReportReplicateTask).Inc()
@@ -240,7 +241,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		task := t.SealObjectTask
 		task.AppendLog(fmt.Sprintf("manager-receive-seal-task-retry:%d", task.GetRetry()))
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleSealObjectTask(ctx, t.SealObjectTask)
 		metrics.ReqCounter.WithLabelValues(ManagerReportSealTask).Inc()
@@ -248,7 +249,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	case *gfspserver.GfSpReportTaskRequest_ReceivePieceTask:
 		task := t.ReceivePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleReceivePieceTask(ctx, t.ReceivePieceTask)
 		metrics.ReqCounter.WithLabelValues(ManagerReportReceiveTask).Inc()
@@ -256,7 +257,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	case *gfspserver.GfSpReportTaskRequest_GcObjectTask:
 		task := t.GcObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleGCObjectTask(ctx, t.GcObjectTask)
 		metrics.ReqCounter.WithLabelValues(ManagerReportGCObjectTask).Inc()
@@ -264,31 +265,31 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	case *gfspserver.GfSpReportTaskRequest_GcZombiePieceTask:
 		task := t.GcZombiePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleGCZombiePieceTask(ctx, t.GcZombiePieceTask)
 	case *gfspserver.GfSpReportTaskRequest_GcMetaTask:
 		task := t.GcMetaTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleGCMetaTask(ctx, t.GcMetaTask)
 	case *gfspserver.GfSpReportTaskRequest_DownloadObjectTask:
 		task := t.DownloadObjectTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleDownloadObjectTask(ctx, t.DownloadObjectTask)
 	case *gfspserver.GfSpReportTaskRequest_ChallengePieceTask:
 		task := t.ChallengePieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleChallengePieceTask(ctx, t.ChallengePieceTask)
 	case *gfspserver.GfSpReportTaskRequest_RecoverPieceTask:
 		task := t.RecoverPieceTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle recovery reported task", "task_info", task.Info())
 		err = g.manager.HandleRecoverPieceTask(ctx, t.RecoverPieceTask)
 		metrics.ReqCounter.WithLabelValues(ManagerReportRecoveryTask).Inc()
@@ -296,7 +297,7 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 	case *gfspserver.GfSpReportTaskRequest_MigrateGvgTask:
 		task := t.MigrateGvgTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
-		task.SetAddress(GetRPCRemoteAddress(ctx))
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported migrate gvg task", "task_info", task.Info())
 		err = g.manager.HandleMigrateGVGTask(ctx, t.MigrateGvgTask)
 	default:

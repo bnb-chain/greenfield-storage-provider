@@ -4,16 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 	"sync/atomic"
 	"time"
 
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"google.golang.org/grpc/peer"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"cosmossdk.io/math"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -56,14 +55,15 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String())
 				go func() {
 					m.taskCh <- dispatchTask
+					atomic.AddInt64(&m.backupTaskNum, 1)
 				}()
 				continue
 			}
 			dispatchTask.IncRetry()
 			dispatchTask.SetError(nil)
 			dispatchTask.SetUpdateTime(time.Now().Unix())
-			dispatchTask.SetAddress(GetRPCRemoteAddress(ctx))
-			m.rePushTask(dispatchTask)
+			dispatchTask.SetAddress(util.GetRPCRemoteAddress(ctx))
+			m.repushTask(dispatchTask)
 			log.CtxDebugw(ctx, "dispatch task to executor", "key_info", dispatchTask.Info())
 			return dispatchTask, nil
 		}
@@ -828,16 +828,4 @@ func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32
 	}
 	log.CtxDebugw(ctx, "succeed to pick gvg", "gvg", gvg)
 	return gvg, nil
-}
-
-func GetRPCRemoteAddress(ctx context.Context) string {
-	var addr string
-	if pr, ok := peer.FromContext(ctx); ok {
-		if tcpAddr, ok := pr.Addr.(*net.TCPAddr); ok {
-			addr = tcpAddr.IP.String()
-		} else {
-			addr = pr.Addr.String()
-		}
-	}
-	return addr
 }
