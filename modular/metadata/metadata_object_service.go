@@ -516,7 +516,6 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		limit        int
 		buckets      []*model.Bucket
 		bucketsIDMap map[common.Hash]*model.Bucket
-		wg           sync.WaitGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -543,102 +542,94 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		bucketsIDMap[bucket.BucketID] = bucket
 	}
 
-	wg.Add(len(objects))
-	var lock sync.Mutex
 	res = make([]*types.ObjectDetails, 0)
-	for _, obj := range objects {
-		go func(object *model.Object) {
-			defer wg.Done()
-			var (
-				gvg    *model.GlobalVirtualGroup
-				bucket *model.Bucket
-			)
+	for _, object := range objects {
+		var (
+			gvg    *model.GlobalVirtualGroup
+			bucket *model.Bucket
+		)
 
-			bucket = bucketsIDMap[object.BucketID]
-			gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
-				return
+		bucket = bucketsIDMap[object.BucketID]
+		gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
+			return
+		}
+		detail := &types.ObjectDetails{
+			Object: &types.Object{},
+			Bucket: &types.Bucket{},
+			Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if object != nil {
+			detail.Object = &types.Object{
+				ObjectInfo: &storage_types.ObjectInfo{
+					Owner:               object.Owner.String(),
+					Creator:             object.Creator.String(),
+					BucketName:          object.BucketName,
+					ObjectName:          object.ObjectName,
+					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
+					LocalVirtualGroupId: object.LocalVirtualGroupId,
+					PayloadSize:         object.PayloadSize,
+					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					ContentType:         object.ContentType,
+					CreateAt:            object.CreateTime,
+					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					Checksums:           object.Checksums,
+				},
+				LockedBalance: object.LockedBalance.String(),
+				Removed:       object.Removed,
+				UpdateAt:      object.UpdateAt,
+				DeleteAt:      object.DeleteAt,
+				DeleteReason:  object.DeleteReason,
+				Operator:      object.Operator.String(),
+				CreateTxHash:  object.CreateTxHash.String(),
+				UpdateTxHash:  object.UpdateTxHash.String(),
+				SealTxHash:    object.SealTxHash.String(),
 			}
-			detail := &types.ObjectDetails{
-				Object: &types.Object{},
-				Bucket: &types.Bucket{},
-				Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if bucket != nil {
+			detail.Bucket = &types.Bucket{
+				BucketInfo: &storage_types.BucketInfo{
+					Owner:                      bucket.Owner.String(),
+					BucketName:                 bucket.BucketName,
+					Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+					Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+					SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+					CreateAt:                   bucket.CreateTime,
+					PaymentAddress:             bucket.PaymentAddress.String(),
+					GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+					ChargedReadQuota:           bucket.ChargedReadQuota,
+					BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+				},
+				Removed:      bucket.Removed,
+				DeleteAt:     bucket.DeleteAt,
+				DeleteReason: bucket.DeleteReason,
+				Operator:     bucket.Operator.String(),
+				CreateTxHash: bucket.CreateTxHash.String(),
+				UpdateTxHash: bucket.UpdateTxHash.String(),
+				UpdateAt:     bucket.UpdateAt,
+				UpdateTime:   bucket.UpdateTime,
 			}
-			if object != nil {
-				detail.Object = &types.Object{
-					ObjectInfo: &storage_types.ObjectInfo{
-						Owner:               object.Owner.String(),
-						Creator:             object.Creator.String(),
-						BucketName:          object.BucketName,
-						ObjectName:          object.ObjectName,
-						Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
-						LocalVirtualGroupId: object.LocalVirtualGroupId,
-						PayloadSize:         object.PayloadSize,
-						Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
-						ContentType:         object.ContentType,
-						CreateAt:            object.CreateTime,
-						ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-						RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-						SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
-						Checksums:           object.Checksums,
-					},
-					LockedBalance: object.LockedBalance.String(),
-					Removed:       object.Removed,
-					UpdateAt:      object.UpdateAt,
-					DeleteAt:      object.DeleteAt,
-					DeleteReason:  object.DeleteReason,
-					Operator:      object.Operator.String(),
-					CreateTxHash:  object.CreateTxHash.String(),
-					UpdateTxHash:  object.UpdateTxHash.String(),
-					SealTxHash:    object.SealTxHash.String(),
-				}
+		}
+		if gvg != nil {
+			detail.Gvg = &virtual_types.GlobalVirtualGroup{
+				Id:                    gvg.GlobalVirtualGroupId,
+				FamilyId:              gvg.FamilyId,
+				PrimarySpId:           gvg.PrimarySpId,
+				SecondarySpIds:        gvg.SecondarySpIds,
+				StoredSize:            gvg.StoredSize,
+				VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+				TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
 			}
-			if bucket != nil {
-				detail.Bucket = &types.Bucket{
-					BucketInfo: &storage_types.BucketInfo{
-						Owner:                      bucket.Owner.String(),
-						BucketName:                 bucket.BucketName,
-						Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-						Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-						SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-						CreateAt:                   bucket.CreateTime,
-						PaymentAddress:             bucket.PaymentAddress.String(),
-						GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
-						ChargedReadQuota:           bucket.ChargedReadQuota,
-						BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
-					},
-					Removed:      bucket.Removed,
-					DeleteAt:     bucket.DeleteAt,
-					DeleteReason: bucket.DeleteReason,
-					Operator:     bucket.Operator.String(),
-					CreateTxHash: bucket.CreateTxHash.String(),
-					UpdateTxHash: bucket.UpdateTxHash.String(),
-					UpdateAt:     bucket.UpdateAt,
-					UpdateTime:   bucket.UpdateTime,
-				}
-			}
-			if gvg != nil {
-				detail.Gvg = &virtual_types.GlobalVirtualGroup{
-					Id:                    gvg.GlobalVirtualGroupId,
-					FamilyId:              gvg.FamilyId,
-					PrimarySpId:           gvg.PrimarySpId,
-					SecondarySpIds:        gvg.SecondarySpIds,
-					StoredSize:            gvg.StoredSize,
-					VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
-					TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
-				}
-			}
-			if detail != nil {
-				lock.Lock()
-				res = append(res, detail)
-				lock.Unlock()
-			} else {
-				log.Debugf("object detail is nil , object: %v, detail:%v", object, detail)
-			}
-		}(obj)
+		}
+		if detail != nil {
+			res = append(res, detail)
+		} else {
+			log.Debugf("object detail is nil , object: %v, detail:%v", object, detail)
+		}
 	}
-	wg.Wait()
 	for _, re := range res {
 		log.Debugf("re: %v", re)
 	}
