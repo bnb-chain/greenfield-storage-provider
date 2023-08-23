@@ -542,9 +542,8 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 
 	wg.Add(len(objects))
 	res = make([]*types.ObjectDetails, len(objects))
-	for i, object := range objects {
-		idx := i
-		go func(object *model.Object) {
+	for i, obj := range objects {
+		go func(object *model.Object, idx int) {
 			defer wg.Done()
 			var (
 				gvg    *model.GlobalVirtualGroup
@@ -626,10 +625,13 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 					TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
 				}
 			}
-		}(object)
+		}(obj, i)
 	}
 	wg.Wait()
-
+	for _, re := range res {
+		log.Debugf("re: %v", re)
+	}
+	log.Debugf("res: %v", res)
 	resp = &types.GfSpListObjectsInGVGResponse{Objects: res}
 	log.CtxInfow(ctx, "succeed to list objects by gvg id")
 	return resp, nil

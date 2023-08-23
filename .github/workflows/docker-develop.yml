@@ -2,10 +2,10 @@ name: Docker-CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ fix-objectnilpointer ]
 
 env:
-  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider-invisible
+  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
   IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
 
 jobs:
