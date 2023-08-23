@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"cosmossdk.io/math"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -48,13 +50,20 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			log.CtxErrorw(ctx, "dispatch task context is canceled")
 			return nil, nil
 		case dispatchTask := <-m.taskCh:
+			atomic.AddInt64(&m.backupTaskNum, -1)
 			if !limit.NotLess(dispatchTask.EstimateLimit()) {
-				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String())
+				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String(), "task_info", dispatchTask.Info())
 				go func() {
 					m.taskCh <- dispatchTask
+					atomic.AddInt64(&m.backupTaskNum, 1)
 				}()
 				continue
 			}
+			dispatchTask.IncRetry()
+			dispatchTask.SetError(nil)
+			dispatchTask.SetUpdateTime(time.Now().Unix())
+			dispatchTask.SetAddress(util.GetRPCRemoteAddress(ctx))
+			m.repushTask(dispatchTask)
 			log.CtxDebugw(ctx, "dispatch task to executor", "key_info", dispatchTask.Info())
 			return dispatchTask, nil
 		}
