@@ -630,6 +630,8 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 				lock.Lock()
 				res = append(res, detail)
 				lock.Unlock()
+			} else {
+				log.Debugf("object detail is nil , object: %v, detail:%v", object, detail)
 			}
 		}(obj)
 	}
