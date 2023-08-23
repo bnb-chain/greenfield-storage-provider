@@ -635,11 +635,11 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
-		m.gcBlockHeight, m.gcSafeBlockDistance)
+		m.gcBlockHeight, m.gcSafeBlockDistance, m.backupTaskNum)
 }
 
 func (m *ManageModular) backUpTask() {
@@ -718,11 +718,11 @@ func (m *ManageModular) backUpTask() {
 	}
 
 	for _, reservedTask := range reservedTasks {
-		m.rePushTask(reservedTask)
+		m.repushTask(reservedTask)
 	}
 }
 
-func (m *ManageModular) rePushTask(reserved task.Task) {
+func (m *ManageModular) repushTask(reserved task.Task) {
 	switch t := reserved.(type) {
 	case *gfsptask.GfSpReplicatePieceTask:
 		err := m.replicateQueue.Push(t)

@@ -5,7 +5,6 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -61,16 +60,4 @@ func (g *GfSpBaseApp) StartRPCServer(ctx context.Context) error {
 func (g *GfSpBaseApp) StopRPCServer(ctx context.Context) error {
 	g.server.GracefulStop()
 	return nil
-}
-
-func GetRPCRemoteAddress(ctx context.Context) string {
-	var addr string
-	if pr, ok := peer.FromContext(ctx); ok {
-		if tcpAddr, ok := pr.Addr.(*net.TCPAddr); ok {
-			addr = tcpAddr.IP.String()
-		} else {
-			addr = pr.Addr.String()
-		}
-	}
-	return addr
 }
