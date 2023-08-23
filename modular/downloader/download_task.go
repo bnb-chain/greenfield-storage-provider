@@ -64,6 +64,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 	bucketName := downloadObjectTask.GetBucketInfo().GetBucketName()
 	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(bucketID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.CtxErrorw(ctx, "failed to get bucket traffic", "bucket_id", bucketID, "error", err)
 		return err
 	}
 	// init the bucket traffic table when checking quota for the first time
@@ -124,7 +125,11 @@ func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, download
 		atomic.AddInt64(&d.downloading, -1)
 	}()
 	if atomic.AddInt64(&d.downloading, 1) >= atomic.LoadInt64(&d.downloadParallel) {
-		return nil, ErrExceedRequest
+		log.CtxErrorw(ctx, "failed to download object due to max download concurrent",
+			"current_download_concurrent", d.downloading, "max_download_concurrent", d.downloadParallel,
+			"task_info", downloadObjectTask.Info())
+		err = ErrExceedRequest
+		return nil, err
 	}
 
 	pieceInfos, err := SplitToSegmentPieceInfos(downloadObjectTask, d.baseApp.PieceOp())
@@ -140,11 +145,12 @@ func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, download
 			data = append(data, pieceData.([]byte)...)
 			continue
 		}
-		piece, err := d.baseApp.PieceStore().GetPiece(ctx, pInfo.SegmentPieceKey,
+		piece, getPieceErr := d.baseApp.PieceStore().GetPiece(ctx, pInfo.SegmentPieceKey,
 			int64(pInfo.Offset), int64(pInfo.Length))
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err)
-			return nil, ErrPieceStoreWithDetail("failed to get piece data from piece store, error: " + err.Error())
+		if getPieceErr != nil {
+			log.CtxErrorw(ctx, "failed to get piece data from piece store", "task_info", downloadObjectTask.Info(), "piece_info", pInfo, "error", getPieceErr)
+			err = ErrPieceStoreWithDetail("failed to get piece data from piece store, error: " + getPieceErr.Error())
+			return nil, err
 		}
 		d.pieceCache.Add(key, piece)
 		data = append(data, piece...)
@@ -213,7 +219,7 @@ func SplitToSegmentPieceInfos(downloadObjectTask task.DownloadObjectTask, op pie
 	return pieceInfos, nil
 }
 
-func (d *DownloadModular) PostDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) {
+func (d *DownloadModular) PostDownloadObject(context.Context, task.DownloadObjectTask) {
 }
 
 func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask) error {
@@ -259,6 +265,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		bucketName := downloadPieceTask.GetBucketInfo().GetBucketName()
 		bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(downloadPieceTask.GetBucketInfo().Id.Uint64())
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.CtxErrorw(ctx, "failed to get bucket traffic", "task_info", downloadPieceTask.Info(), "error", err)
 			return err
 		}
 		// init the bucket traffic table when checking quota for the first time
@@ -326,7 +333,11 @@ func (d *DownloadModular) HandleDownloadPieceTask(ctx context.Context, downloadP
 		atomic.AddInt64(&d.downloading, -1)
 	}()
 	if atomic.AddInt64(&d.downloading, 1) >= atomic.LoadInt64(&d.downloadParallel) {
-		return nil, ErrExceedRequest
+		log.CtxErrorw(ctx, "failed to download object due to max download concurrent",
+			"current_download_concurrent", d.downloading, "max_download_concurrent", d.downloadParallel,
+			"task_info", downloadPieceTask.Info())
+		err = ErrExceedRequest
+		return nil, err
 	}
 
 	key := cacheKey(downloadPieceTask.GetPieceKey(),
@@ -348,25 +359,25 @@ func (d *DownloadModular) HandleDownloadPieceTask(ctx context.Context, downloadP
 	return pieceData, nil
 }
 
-func (d *DownloadModular) PostDownloadPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask) {
+func (d *DownloadModular) PostDownloadPiece(context.Context, task.DownloadPieceTask) {
 }
 
-func (d *DownloadModular) PreChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask) error {
-	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil {
+func (d *DownloadModular) PreChallengePiece(ctx context.Context, challengePieceTask task.ChallengePieceTask) error {
+	if challengePieceTask == nil || challengePieceTask.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "failed to pre challenge piece due to pointer dangling")
 		return ErrDanglingPointer
 	}
-	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+	if challengePieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.CtxErrorw(ctx, "failed to pre challenge piece due to object unsealed")
 		return ErrObjectUnsealed
 	}
 	go func() {
-		_ = d.baseApp.GfSpClient().ReportTask(context.Background(), downloadPieceTask)
+		_ = d.baseApp.GfSpClient().ReportTask(context.Background(), challengePieceTask)
 	}()
 	return nil
 }
 
-func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask) (
+func (d *DownloadModular) HandleChallengePiece(ctx context.Context, challengePieceTask task.ChallengePieceTask) (
 	[]byte, [][]byte, []byte, error) {
 	var (
 		err       error
@@ -375,31 +386,35 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	)
 	defer func() {
 		if err != nil {
-			downloadPieceTask.SetError(err)
+			challengePieceTask.SetError(err)
 		}
-		log.CtxDebugw(ctx, downloadPieceTask.Info())
+		log.CtxDebugw(ctx, challengePieceTask.Info())
 	}()
 
 	defer func() {
 		atomic.AddInt64(&d.challenging, -1)
 	}()
 	if atomic.AddInt64(&d.challenging, 1) >= atomic.LoadInt64(&d.challengeParallel) {
-		return nil, nil, nil, ErrExceedRequest
+		log.CtxErrorw(ctx, "failed to get challenge piece info due to max challenge concurrent",
+			"current_challenge_concurrent", d.challenging, "max_challenge_concurrent", d.challengeParallel,
+			"task_info", challengePieceTask.Info())
+		err = ErrExceedRequest
+		return nil, nil, nil, err
 	}
 
 	pieceKey := d.baseApp.PieceOp().ChallengePieceKey(
-		downloadPieceTask.GetObjectInfo().Id.Uint64(),
-		downloadPieceTask.GetSegmentIdx(),
-		downloadPieceTask.GetRedundancyIdx())
+		challengePieceTask.GetObjectInfo().Id.Uint64(),
+		challengePieceTask.GetSegmentIdx(),
+		challengePieceTask.GetRedundancyIdx())
 	getIntegrityTime := time.Now()
-	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(downloadPieceTask.GetObjectInfo().Id.Uint64(), downloadPieceTask.GetRedundancyIdx())
+	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(challengePieceTask.GetObjectInfo().Id.Uint64(), challengePieceTask.GetRedundancyIdx())
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_integrity_time").Observe(time.Since(getIntegrityTime).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get integrity hash", "error", err)
+		log.CtxErrorw(ctx, "failed to get integrity hash", "task", challengePieceTask, "error", err)
 		return nil, nil, nil, ErrGfSpDBWithDetail("failed to get integrity hash, error: " + err.Error())
 	}
-	if int(downloadPieceTask.GetSegmentIdx()) >= len(integrity.PieceChecksumList) {
-		log.CtxErrorw(ctx, "failed to get challenge info due to segment index wrong")
+	if int(challengePieceTask.GetSegmentIdx()) >= len(integrity.PieceChecksumList) {
+		log.CtxErrorw(ctx, "failed to get challenge info due to segment index wrong", "task", challengePieceTask, "integrity_meta", integrity)
 		return nil, nil, nil, ErrNoSuchPiece
 	}
 
@@ -413,17 +428,16 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, downloadPiec
 	data, err = d.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get piece data", "error", err)
+		log.CtxErrorw(ctx, "failed to get piece data", "task", challengePieceTask, "error", err)
 		return nil, nil, nil, ErrPieceStoreWithDetail("failed to get piece data, error: " + err.Error())
 	}
 
 	return integrity.IntegrityChecksum, integrity.PieceChecksumList, data, nil
 }
 
-func (d *DownloadModular) PostChallengePiece(ctx context.Context, downloadPieceTask task.ChallengePieceTask) {
+func (d *DownloadModular) PostChallengePiece(context.Context, task.ChallengePieceTask) {
 }
 
-func (d *DownloadModular) QueryTasks(ctx context.Context, subKey task.TKey) (
-	[]task.Task, error) {
+func (d *DownloadModular) QueryTasks(context.Context, task.TKey) ([]task.Task, error) {
 	return nil, nil
 }
