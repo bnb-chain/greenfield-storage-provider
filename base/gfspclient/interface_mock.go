@@ -405,9 +405,9 @@ func (mr *MockGfSpClientAPIMockRecorder) GetBucketMeta(ctx, bucketName, includeP
 }
 
 // GetBucketReadQuota mocks base method.
-func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, opts ...grpc.DialOption) (uint64, uint64, uint64, error) {
+func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, bucket}
+	varargs := []interface{}{ctx, bucket, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -420,9 +420,9 @@ func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *type
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
-func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuota(ctx, bucket interface{}, opts ...interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, bucket}, opts...)
+	varargs := append([]interface{}{ctx, bucket,yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
@@ -2420,9 +2420,9 @@ func (mr *MockMetadataAPIMockRecorder) GetBucketMeta(ctx, bucketName, includePri
 }
 
 // GetBucketReadQuota mocks base method.
-func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, opts ...grpc.DialOption) (uint64, uint64, uint64, error) {
+func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, bucket}
+	varargs := []interface{}{ctx, bucket, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2435,9 +2435,9 @@ func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
-func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuota(ctx, bucket interface{}, opts ...interface{}) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, bucket}, opts...)
+	varargs := append([]interface{}{ctx, bucket,yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
