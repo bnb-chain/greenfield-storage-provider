@@ -3,17 +3,16 @@ package metadata
 import (
 	"context"
 	"encoding/base64"
-	"sync"
-
-	"cosmossdk.io/math"
-	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+
+	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/forbole/juno/v4/common"
 )
 
 // GfSpListObjectsByBucketName list objects info by a bucket name
@@ -283,9 +282,9 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 	var (
 		objects []*model.Object
 		res     []*types.ObjectDetails
+		detail  *types.ObjectDetails
 		limit   int
 		bucket  *model.Bucket
-		wg      sync.WaitGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -303,90 +302,85 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 		return nil, err
 	}
 
-	wg.Add(len(objects))
-	res = make([]*types.ObjectDetails, len(objects))
-	for i, object := range objects {
-		idx := i
-		go func(object *model.Object) {
-			defer wg.Done()
-			var gvg *model.GlobalVirtualGroup
-			gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
-				return
+	res = make([]*types.ObjectDetails, 0)
+	for _, object := range objects {
+		var gvg *model.GlobalVirtualGroup
+		gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
+			return
+		}
+		detail = &types.ObjectDetails{
+			Object: &types.Object{},
+			Bucket: &types.Bucket{},
+			Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if object != nil {
+			detail.Object = &types.Object{
+				ObjectInfo: &storage_types.ObjectInfo{
+					Owner:               object.Owner.String(),
+					Creator:             object.Creator.String(),
+					BucketName:          object.BucketName,
+					ObjectName:          object.ObjectName,
+					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
+					LocalVirtualGroupId: object.LocalVirtualGroupId,
+					PayloadSize:         object.PayloadSize,
+					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					ContentType:         object.ContentType,
+					CreateAt:            object.CreateTime,
+					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					Checksums:           object.Checksums,
+				},
+				LockedBalance: object.LockedBalance.String(),
+				Removed:       object.Removed,
+				UpdateAt:      object.UpdateAt,
+				DeleteAt:      object.DeleteAt,
+				DeleteReason:  object.DeleteReason,
+				Operator:      object.Operator.String(),
+				CreateTxHash:  object.CreateTxHash.String(),
+				UpdateTxHash:  object.UpdateTxHash.String(),
+				SealTxHash:    object.SealTxHash.String(),
 			}
-			res[idx] = &types.ObjectDetails{
-				Object: &types.Object{},
-				Bucket: &types.Bucket{},
-				Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if bucket != nil {
+			detail.Bucket = &types.Bucket{
+				BucketInfo: &storage_types.BucketInfo{
+					Owner:                      bucket.Owner.String(),
+					BucketName:                 bucket.BucketName,
+					Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+					Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+					SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+					CreateAt:                   bucket.CreateTime,
+					PaymentAddress:             bucket.PaymentAddress.String(),
+					GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+					ChargedReadQuota:           bucket.ChargedReadQuota,
+					BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+				},
+				Removed:      bucket.Removed,
+				DeleteAt:     bucket.DeleteAt,
+				DeleteReason: bucket.DeleteReason,
+				Operator:     bucket.Operator.String(),
+				CreateTxHash: bucket.CreateTxHash.String(),
+				UpdateTxHash: bucket.UpdateTxHash.String(),
+				UpdateAt:     bucket.UpdateAt,
+				UpdateTime:   bucket.UpdateTime,
 			}
-			if object != nil {
-				res[idx].Object = &types.Object{
-					ObjectInfo: &storage_types.ObjectInfo{
-						Owner:               object.Owner.String(),
-						Creator:             object.Creator.String(),
-						BucketName:          object.BucketName,
-						ObjectName:          object.ObjectName,
-						Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
-						LocalVirtualGroupId: object.LocalVirtualGroupId,
-						PayloadSize:         object.PayloadSize,
-						Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
-						ContentType:         object.ContentType,
-						CreateAt:            object.CreateTime,
-						ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-						RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-						SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
-						Checksums:           object.Checksums,
-					},
-					LockedBalance: object.LockedBalance.String(),
-					Removed:       object.Removed,
-					UpdateAt:      object.UpdateAt,
-					DeleteAt:      object.DeleteAt,
-					DeleteReason:  object.DeleteReason,
-					Operator:      object.Operator.String(),
-					CreateTxHash:  object.CreateTxHash.String(),
-					UpdateTxHash:  object.UpdateTxHash.String(),
-					SealTxHash:    object.SealTxHash.String(),
-				}
+		}
+		if gvg != nil {
+			detail.Gvg = &virtual_types.GlobalVirtualGroup{
+				Id:                    gvg.GlobalVirtualGroupId,
+				FamilyId:              gvg.FamilyId,
+				PrimarySpId:           gvg.PrimarySpId,
+				SecondarySpIds:        gvg.SecondarySpIds,
+				StoredSize:            gvg.StoredSize,
+				VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+				TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
 			}
-			if bucket != nil {
-				res[idx].Bucket = &types.Bucket{
-					BucketInfo: &storage_types.BucketInfo{
-						Owner:                      bucket.Owner.String(),
-						BucketName:                 bucket.BucketName,
-						Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-						Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-						SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-						CreateAt:                   bucket.CreateTime,
-						PaymentAddress:             bucket.PaymentAddress.String(),
-						GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
-						ChargedReadQuota:           bucket.ChargedReadQuota,
-						BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
-					},
-					Removed:      bucket.Removed,
-					DeleteAt:     bucket.DeleteAt,
-					DeleteReason: bucket.DeleteReason,
-					Operator:     bucket.Operator.String(),
-					CreateTxHash: bucket.CreateTxHash.String(),
-					UpdateTxHash: bucket.UpdateTxHash.String(),
-					UpdateAt:     bucket.UpdateAt,
-					UpdateTime:   bucket.UpdateTime,
-				}
-			}
-			if gvg != nil {
-				res[idx].Gvg = &virtual_types.GlobalVirtualGroup{
-					Id:                    gvg.GlobalVirtualGroupId,
-					FamilyId:              gvg.FamilyId,
-					PrimarySpId:           gvg.PrimarySpId,
-					SecondarySpIds:        gvg.SecondarySpIds,
-					StoredSize:            gvg.StoredSize,
-					VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
-					TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
-				}
-			}
-		}(object)
+		}
+		res = append(res, detail)
 	}
-	wg.Wait()
 
 	resp = &types.GfSpListObjectsInGVGAndBucketResponse{Objects: res}
 	log.CtxInfow(ctx, "succeed to list objects by gvg and bucket id")
@@ -398,9 +392,9 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 	var (
 		objects []*model.Object
 		res     []*types.ObjectDetails
+		detail  *types.ObjectDetails
 		limit   int
 		bucket  *model.Bucket
-		wg      sync.WaitGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -418,90 +412,85 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 		return nil, err
 	}
 
-	wg.Add(len(objects))
-	res = make([]*types.ObjectDetails, len(objects))
-	for i, object := range objects {
-		idx := i
-		go func(object *model.Object) {
-			defer wg.Done()
-			var gvg *model.GlobalVirtualGroup
-			gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
-				return
+	res = make([]*types.ObjectDetails, 0)
+	for _, object := range objects {
+		var gvg *model.GlobalVirtualGroup
+		gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
+			return
+		}
+		detail = &types.ObjectDetails{
+			Object: &types.Object{},
+			Bucket: &types.Bucket{},
+			Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if object != nil {
+			detail.Object = &types.Object{
+				ObjectInfo: &storage_types.ObjectInfo{
+					Owner:               object.Owner.String(),
+					Creator:             object.Creator.String(),
+					BucketName:          object.BucketName,
+					ObjectName:          object.ObjectName,
+					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
+					LocalVirtualGroupId: object.LocalVirtualGroupId,
+					PayloadSize:         object.PayloadSize,
+					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					ContentType:         object.ContentType,
+					CreateAt:            object.CreateTime,
+					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					Checksums:           object.Checksums,
+				},
+				LockedBalance: object.LockedBalance.String(),
+				Removed:       object.Removed,
+				UpdateAt:      object.UpdateAt,
+				DeleteAt:      object.DeleteAt,
+				DeleteReason:  object.DeleteReason,
+				Operator:      object.Operator.String(),
+				CreateTxHash:  object.CreateTxHash.String(),
+				UpdateTxHash:  object.UpdateTxHash.String(),
+				SealTxHash:    object.SealTxHash.String(),
 			}
-			res[idx] = &types.ObjectDetails{
-				Object: &types.Object{},
-				Bucket: &types.Bucket{},
-				Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if bucket != nil {
+			detail.Bucket = &types.Bucket{
+				BucketInfo: &storage_types.BucketInfo{
+					Owner:                      bucket.Owner.String(),
+					BucketName:                 bucket.BucketName,
+					Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+					Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+					SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+					CreateAt:                   bucket.CreateTime,
+					PaymentAddress:             bucket.PaymentAddress.String(),
+					GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+					ChargedReadQuota:           bucket.ChargedReadQuota,
+					BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+				},
+				Removed:      bucket.Removed,
+				DeleteAt:     bucket.DeleteAt,
+				DeleteReason: bucket.DeleteReason,
+				Operator:     bucket.Operator.String(),
+				CreateTxHash: bucket.CreateTxHash.String(),
+				UpdateTxHash: bucket.UpdateTxHash.String(),
+				UpdateAt:     bucket.UpdateAt,
+				UpdateTime:   bucket.UpdateTime,
 			}
-			if object != nil {
-				res[idx].Object = &types.Object{
-					ObjectInfo: &storage_types.ObjectInfo{
-						Owner:               object.Owner.String(),
-						Creator:             object.Creator.String(),
-						BucketName:          object.BucketName,
-						ObjectName:          object.ObjectName,
-						Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
-						LocalVirtualGroupId: object.LocalVirtualGroupId,
-						PayloadSize:         object.PayloadSize,
-						Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
-						ContentType:         object.ContentType,
-						CreateAt:            object.CreateTime,
-						ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-						RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-						SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
-						Checksums:           object.Checksums,
-					},
-					LockedBalance: object.LockedBalance.String(),
-					Removed:       object.Removed,
-					UpdateAt:      object.UpdateAt,
-					DeleteAt:      object.DeleteAt,
-					DeleteReason:  object.DeleteReason,
-					Operator:      object.Operator.String(),
-					CreateTxHash:  object.CreateTxHash.String(),
-					UpdateTxHash:  object.UpdateTxHash.String(),
-					SealTxHash:    object.SealTxHash.String(),
-				}
+		}
+		if gvg != nil {
+			detail.Gvg = &virtual_types.GlobalVirtualGroup{
+				Id:                    gvg.GlobalVirtualGroupId,
+				FamilyId:              gvg.FamilyId,
+				PrimarySpId:           gvg.PrimarySpId,
+				SecondarySpIds:        gvg.SecondarySpIds,
+				StoredSize:            gvg.StoredSize,
+				VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+				TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
 			}
-			if bucket != nil {
-				res[idx].Bucket = &types.Bucket{
-					BucketInfo: &storage_types.BucketInfo{
-						Owner:                      bucket.Owner.String(),
-						BucketName:                 bucket.BucketName,
-						Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-						Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-						SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-						CreateAt:                   bucket.CreateTime,
-						PaymentAddress:             bucket.PaymentAddress.String(),
-						GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
-						ChargedReadQuota:           bucket.ChargedReadQuota,
-						BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
-					},
-					Removed:      bucket.Removed,
-					DeleteAt:     bucket.DeleteAt,
-					DeleteReason: bucket.DeleteReason,
-					Operator:     bucket.Operator.String(),
-					CreateTxHash: bucket.CreateTxHash.String(),
-					UpdateTxHash: bucket.UpdateTxHash.String(),
-					UpdateAt:     bucket.UpdateAt,
-					UpdateTime:   bucket.UpdateTime,
-				}
-			}
-			if gvg != nil {
-				res[idx].Gvg = &virtual_types.GlobalVirtualGroup{
-					Id:                    gvg.GlobalVirtualGroupId,
-					FamilyId:              gvg.FamilyId,
-					PrimarySpId:           gvg.PrimarySpId,
-					SecondarySpIds:        gvg.SecondarySpIds,
-					StoredSize:            gvg.StoredSize,
-					VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
-					TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
-				}
-			}
-		}(object)
+		}
+		res = append(res, detail)
 	}
-	wg.Wait()
 
 	resp = &types.GfSpListObjectsByGVGAndBucketForGCResponse{Objects: res}
 	log.CtxInfow(ctx, "succeed to list objects by gvg and bucket id")
@@ -513,10 +502,10 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 	var (
 		objects      []*model.Object
 		res          []*types.ObjectDetails
+		detail       *types.ObjectDetails
 		limit        int
 		buckets      []*model.Bucket
 		bucketsIDMap map[common.Hash]*model.Bucket
-		wg           sync.WaitGroup
 	)
 
 	ctx = log.Context(ctx, req)
@@ -540,96 +529,90 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		bucketsIDMap[bucket.BucketID] = bucket
 	}
 
-	wg.Add(len(objects))
-	res = make([]*types.ObjectDetails, len(objects))
-	for i, object := range objects {
-		idx := i
-		go func(object *model.Object) {
-			defer wg.Done()
-			var (
-				gvg    *model.GlobalVirtualGroup
-				bucket *model.Bucket
-			)
+	res = make([]*types.ObjectDetails, 0)
+	for _, object := range objects {
+		var (
+			gvg    *model.GlobalVirtualGroup
+			bucket *model.Bucket
+		)
 
-			bucket = bucketsIDMap[object.BucketID]
-			gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
-				return
+		bucket = bucketsIDMap[object.BucketID]
+		gvg, err = r.baseApp.GfBsDB().GetGvgByBucketAndLvgID(object.BucketID, object.LocalVirtualGroupId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get gvg by bucket and lvg id", "error", err)
+			return
+		}
+		detail = &types.ObjectDetails{
+			Object: &types.Object{},
+			Bucket: &types.Bucket{},
+			Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if object != nil {
+			detail.Object = &types.Object{
+				ObjectInfo: &storage_types.ObjectInfo{
+					Owner:               object.Owner.String(),
+					Creator:             object.Creator.String(),
+					BucketName:          object.BucketName,
+					ObjectName:          object.ObjectName,
+					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
+					LocalVirtualGroupId: object.LocalVirtualGroupId,
+					PayloadSize:         object.PayloadSize,
+					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					ContentType:         object.ContentType,
+					CreateAt:            object.CreateTime,
+					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					Checksums:           object.Checksums,
+				},
+				LockedBalance: object.LockedBalance.String(),
+				Removed:       object.Removed,
+				UpdateAt:      object.UpdateAt,
+				DeleteAt:      object.DeleteAt,
+				DeleteReason:  object.DeleteReason,
+				Operator:      object.Operator.String(),
+				CreateTxHash:  object.CreateTxHash.String(),
+				UpdateTxHash:  object.UpdateTxHash.String(),
+				SealTxHash:    object.SealTxHash.String(),
 			}
-			res[idx] = &types.ObjectDetails{
-				Object: &types.Object{},
-				Bucket: &types.Bucket{},
-				Gvg:    &virtual_types.GlobalVirtualGroup{},
+		}
+		if bucket != nil {
+			detail.Bucket = &types.Bucket{
+				BucketInfo: &storage_types.BucketInfo{
+					Owner:                      bucket.Owner.String(),
+					BucketName:                 bucket.BucketName,
+					Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+					Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+					SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+					CreateAt:                   bucket.CreateTime,
+					PaymentAddress:             bucket.PaymentAddress.String(),
+					GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+					ChargedReadQuota:           bucket.ChargedReadQuota,
+					BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+				},
+				Removed:      bucket.Removed,
+				DeleteAt:     bucket.DeleteAt,
+				DeleteReason: bucket.DeleteReason,
+				Operator:     bucket.Operator.String(),
+				CreateTxHash: bucket.CreateTxHash.String(),
+				UpdateTxHash: bucket.UpdateTxHash.String(),
+				UpdateAt:     bucket.UpdateAt,
+				UpdateTime:   bucket.UpdateTime,
 			}
-			if object != nil {
-				res[idx].Object = &types.Object{
-					ObjectInfo: &storage_types.ObjectInfo{
-						Owner:               object.Owner.String(),
-						Creator:             object.Creator.String(),
-						BucketName:          object.BucketName,
-						ObjectName:          object.ObjectName,
-						Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
-						LocalVirtualGroupId: object.LocalVirtualGroupId,
-						PayloadSize:         object.PayloadSize,
-						Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
-						ContentType:         object.ContentType,
-						CreateAt:            object.CreateTime,
-						ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-						RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-						SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
-						Checksums:           object.Checksums,
-					},
-					LockedBalance: object.LockedBalance.String(),
-					Removed:       object.Removed,
-					UpdateAt:      object.UpdateAt,
-					DeleteAt:      object.DeleteAt,
-					DeleteReason:  object.DeleteReason,
-					Operator:      object.Operator.String(),
-					CreateTxHash:  object.CreateTxHash.String(),
-					UpdateTxHash:  object.UpdateTxHash.String(),
-					SealTxHash:    object.SealTxHash.String(),
-				}
+		}
+		if gvg != nil {
+			detail.Gvg = &virtual_types.GlobalVirtualGroup{
+				Id:                    gvg.GlobalVirtualGroupId,
+				FamilyId:              gvg.FamilyId,
+				PrimarySpId:           gvg.PrimarySpId,
+				SecondarySpIds:        gvg.SecondarySpIds,
+				StoredSize:            gvg.StoredSize,
+				VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
+				TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
 			}
-			if bucket != nil {
-				res[idx].Bucket = &types.Bucket{
-					BucketInfo: &storage_types.BucketInfo{
-						Owner:                      bucket.Owner.String(),
-						BucketName:                 bucket.BucketName,
-						Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
-						Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-						SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
-						CreateAt:                   bucket.CreateTime,
-						PaymentAddress:             bucket.PaymentAddress.String(),
-						GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
-						ChargedReadQuota:           bucket.ChargedReadQuota,
-						BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
-					},
-					Removed:      bucket.Removed,
-					DeleteAt:     bucket.DeleteAt,
-					DeleteReason: bucket.DeleteReason,
-					Operator:     bucket.Operator.String(),
-					CreateTxHash: bucket.CreateTxHash.String(),
-					UpdateTxHash: bucket.UpdateTxHash.String(),
-					UpdateAt:     bucket.UpdateAt,
-					UpdateTime:   bucket.UpdateTime,
-				}
-			}
-			if gvg != nil {
-				res[idx].Gvg = &virtual_types.GlobalVirtualGroup{
-					Id:                    gvg.GlobalVirtualGroupId,
-					FamilyId:              gvg.FamilyId,
-					PrimarySpId:           gvg.PrimarySpId,
-					SecondarySpIds:        gvg.SecondarySpIds,
-					StoredSize:            gvg.StoredSize,
-					VirtualPaymentAddress: gvg.VirtualPaymentAddress.String(),
-					TotalDeposit:          math.NewIntFromBigInt(gvg.TotalDeposit.Raw()),
-				}
-			}
-		}(object)
+		}
+		res = append(res, detail)
 	}
-	wg.Wait()
-
 	resp = &types.GfSpListObjectsInGVGResponse{Objects: res}
 	log.CtxInfow(ctx, "succeed to list objects by gvg id")
 	return resp, nil
