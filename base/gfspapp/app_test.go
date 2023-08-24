@@ -83,11 +83,11 @@ func TestGfSpBaseApp_GfBsDBMaster(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestGfSpBaseApp_GfBsDBBackup(t *testing.T) {
-	g := setup(t)
-	result := g.GfBsDBBackup()
-	assert.Nil(t, result)
-}
+//func TestGfSpBaseApp_GfBsDBBackup(t *testing.T) {
+//	g := setup(t)
+//	result := g.GfBsDBBackup()
+//	assert.Nil(t, result)
+//}
 
 func TestGfSpBaseApp_SetGfBsDB(t *testing.T) {
 	g := setup(t)

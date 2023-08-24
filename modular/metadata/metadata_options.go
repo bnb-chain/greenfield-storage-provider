@@ -1,14 +1,11 @@
 package metadata
 
 import (
-	"time"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
@@ -69,30 +66,30 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 // If a signal is detected, it triggers the switchDB() method to switch to the new database.
 // The ticker is stopped when the Metadata gRPC service is stopped, ensuring that
 // resources are properly managed and released.
-func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
-	// create a ticker to periodically check for a new database name
-	dbSwitchTicker := time.NewTicker(switchInterval)
-	checkSignal(cfg, metadata)
-	// launch a goroutine to handle the ticker events
-	go func() {
-		// loop until the context is canceled (e.g., when the Metadata service is stopped)
-		for range dbSwitchTicker.C {
-			checkSignal(cfg, metadata)
-		}
-	}()
-}
+//func startDBSwitchListener(switchInterval time.Duration, cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
+//	// create a ticker to periodically check for a new database name
+//	dbSwitchTicker := time.NewTicker(switchInterval)
+//	checkSignal(cfg, metadata)
+//	// launch a goroutine to handle the ticker events
+//	go func() {
+//		// loop until the context is canceled (e.g., when the Metadata service is stopped)
+//		for range dbSwitchTicker.C {
+//			checkSignal(cfg, metadata)
+//		}
+//	}()
+//}
 
-func checkSignal(cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
-	// check if there is a signal from block syncer database to switch the database
-	signal, err := metadata.baseApp.GfBsDBMaster().GetSwitchDBSignal()
-	if err != nil || signal == nil {
-		log.Errorw("failed to get switch db signal", "err", err)
-	}
-	// if a signal db is not equal to current metadata db, attempt to switch the database
-	//if signal.IsMaster != cfg.Metadata.IsMasterDB {
-	//	switchDB(signal.IsMaster, cfg, metadata)
-	//}
-}
+//func checkSignal(cfg *gfspconfig.GfSpConfig, metadata *MetadataModular) {
+//	// check if there is a signal from block syncer database to switch the database
+//	signal, err := metadata.baseApp.GfBsDBMaster().GetSwitchDBSignal()
+//	if err != nil || signal == nil {
+//		log.Errorw("failed to get switch db signal", "err", err)
+//	}
+//	// if a signal db is not equal to current metadata db, attempt to switch the database
+//	//if signal.IsMaster != cfg.Metadata.IsMasterDB {
+//	//	switchDB(signal.IsMaster, cfg, metadata)
+//	//}
+//}
 
 // switchDB is responsible for switching between the primary and backup Block Syncer databases.
 // Depending on the current value of the IsMasterDB in the Metadata configuration, it switches
