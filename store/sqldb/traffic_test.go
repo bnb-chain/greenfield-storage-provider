@@ -405,9 +405,12 @@ func TestSpDBImpl_InitBucketTrafficSuccess(t *testing.T) {
 	}
 
 	s, mock := setupDB(t)
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1").
-		WillReturnError(gorm.ErrRecordNotFound)
 	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1").
+		WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+			"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, b.BucketName, b.ReadConsumedSize,
+			b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
+
 	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY SUBSTRING_INDEX(month, '-', 1) DESC, SUBSTRING_INDEX(month, '-', -1) DESC LIMIT 1").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
@@ -435,23 +438,11 @@ func TestSpDBImpl_InitBucketTrafficFailure(t *testing.T) {
 		ReadSize:        1,
 		ReadTimestampUs: time.Now().Unix(),
 	}
-	b := BucketTrafficTable{
-		BucketID:              2,
-		BucketName:            "mockBucketName",
-		ReadConsumedSize:      10,
-		FreeQuotaConsumedSize: 100,
-		FreeQuotaSize:         25,
-		ChargedQuotaSize:      30,
-		ModifiedTime:          time.Now(),
-	}
 
 	s, mock := setupDB(t)
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1").
-		WillReturnError(gorm.ErrRecordNotFound)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY SUBSTRING_INDEX(month, '-', 1) DESC, SUBSTRING_INDEX(month, '-', -1) DESC LIMIT 1").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
-		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, b.BucketName, b.ReadConsumedSize,
-		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1").
+		WillReturnError(gorm.ErrRecordNotFound)
 
 	mock.ExpectExec("INSERT INTO `bucket_traffic` (`bucket_id`,`month`,`bucket_name`,`read_consumed_size`,`free_quota_consumed_size`,`free_quota_size`,`charged_quota_size`,`modified_time`) VALUES (?,?,?,?,?,?,?,?)").
 		WillReturnError(mockDBInternalError)
@@ -478,7 +469,8 @@ func TestSpDBImpl_InitBucketTrafficFailure2(t *testing.T) {
 	}
 
 	s, mock := setupDB(t)
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1").
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1").
 		WillReturnError(gorm.ErrNotImplemented)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
