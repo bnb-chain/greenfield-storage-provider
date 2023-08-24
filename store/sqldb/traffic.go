@@ -92,7 +92,8 @@ func getUpdatedConsumedQuota(record *corespdb.ReadRecord, freeQuota, freeConsume
 	}
 	// if free quota is not enough, check the charged quota
 	if needCheckChainQuota {
-		if totalConsumeQuota+recordQuotaCost > chargedQuota+freeQuota {
+		// the quota size of this month should be (chargedQuota + freeQuotaRemain)
+		if totalConsumeQuota+recordQuotaCost > chargedQuota+freeQuotaRemain {
 			return 0, 0, ErrCheckQuotaEnough
 		}
 		totalConsumeQuota += recordQuotaCost
