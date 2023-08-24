@@ -296,7 +296,7 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 
 	var found = false
 	for _, spInfoMatches := range spsMatch {
-		if len(patternMatches) < 4 {
+		if len(spInfoMatches) < 4 {
 			return ErrSignedMsgNotMatchTemplate
 		}
 		spAddress := spInfoMatches[1]

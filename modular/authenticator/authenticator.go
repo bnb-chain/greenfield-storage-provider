@@ -185,7 +185,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		if bucketInfo == nil {
 			log.CtxErrorw(ctx, "failed to verify authentication of asking migrate bucket "+
 				"approval, bucket not existed", "bucket", bucket)
-			return false, ErrRepeatedBucket
+			return false, ErrNoSuchBucket
 		}
 		return true, nil
 	case coremodule.AuthOpAskCreateObjectApproval:
