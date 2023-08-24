@@ -298,6 +298,8 @@ message GfSpGetBucketReadQuotaResponse {
   uint64 sp_free_quota_size = 3;
   // consumed_size is currently consumed size
   uint64 consumed_size = 4;
+  // free_quota_consume_siz is currently consumed size
+  uint64 free_quota_consume_size = 5;
 }
 
 // ListBucketReadRecordRequest is request type for the ListBucketReadRecord RPC method.

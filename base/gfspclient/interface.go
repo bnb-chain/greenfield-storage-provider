@@ -101,7 +101,7 @@ type MetadataAPI interface {
 	VerifyPermission(ctx context.Context, Operator string, bucketName string, objectName string, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)
 	GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, *payment_types.StreamRecord, error)
 	GetEndpointBySpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) (string, error)
-	GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, error)
+	GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error)
 	ListBucketReadRecord(ctx context.Context, bucket *storage_types.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error)
 	GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error)
 	GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error)

@@ -4,7 +4,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 )
 
@@ -40,11 +39,7 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	if cfg.Parallel.QuerySPParallelPerNode == 0 {
 		cfg.Parallel.QuerySPParallelPerNode = DefaultQuerySPParallelPerNode
 	}
-	if cfg.Bucket.FreeQuotaPerBucket == 0 {
-		cfg.Bucket.FreeQuotaPerBucket = downloader.DefaultBucketFreeQuota
-	}
 
-	metadata.freeQuotaPerBucket = cfg.Bucket.FreeQuotaPerBucket
 	metadata.maxMetadataRequest = cfg.Parallel.QuerySPParallelPerNode
 
 	metadata.baseApp.SetGfBsDB(metadata.baseApp.GfBsDBMaster())

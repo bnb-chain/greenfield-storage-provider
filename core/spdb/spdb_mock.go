@@ -423,9 +423,9 @@ func (m *MockSPDB) InitBucketTraffic(record *ReadRecord, quota *BucketQuota) err
 }
 
 // InitBucketTraffic indicates an expected call of InitBucketTraffic.
-func (mr *MockSPDBMockRecorder) InitBucketTraffic(bucketID, bucketName, quota interface{}) *gomock.Call {
+func (mr *MockSPDBMockRecorder) InitBucketTraffic(record, quota interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).InitBucketTraffic), bucketID, bucketName, quota)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).InitBucketTraffic), record, quota)
 }
 
 // InsertAuthKey mocks base method.
@@ -1290,9 +1290,9 @@ func (m *MockTrafficDB) InitBucketTraffic(record *ReadRecord, quota *BucketQuota
 }
 
 // InitBucketTraffic indicates an expected call of InitBucketTraffic.
-func (mr *MockTrafficDBMockRecorder) InitBucketTraffic(bucketID, bucketName, quota interface{}) *gomock.Call {
+func (mr *MockTrafficDBMockRecorder) InitBucketTraffic(record, quota interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).InitBucketTraffic), bucketID, bucketName, quota)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).InitBucketTraffic), record, quota)
 }
 
 // MockSPInfoDB is a mock of SPInfoDB interface.

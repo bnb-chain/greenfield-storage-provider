@@ -94,7 +94,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordSuccess2(t *testing.T) {
 	b := BucketTrafficTable{
 		BucketID:              2,
 		BucketName:            "mockBucketName",
-		ReadConsumedSize:      50,
+		ReadConsumedSize:      29,
 		FreeQuotaConsumedSize: 24,
 		FreeQuotaSize:         25,
 		ChargedQuotaSize:      30,
