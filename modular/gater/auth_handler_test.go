@@ -3,6 +3,12 @@ package gater
 import (
 	"encoding/xml"
 	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
@@ -10,11 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
