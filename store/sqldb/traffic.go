@@ -157,47 +157,41 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 
 // InitBucketTraffic init the bucket traffic table
 func (s *SpDBImpl) InitBucketTraffic(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
-	var bucketTraffic BucketTrafficTable
 	bucketID := record.BucketID
 	bucketName := record.BucketName
 
 	yearMonth := TimestampYearMonth(record.ReadTimestampUs)
-	result := s.db.Where("bucket_id = ? and month = ?", bucketID, yearMonth).First(&bucketTraffic)
-	if result.Error != nil {
-		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return result.Error
-		}
-	} else {
-		// return if the table already exists
-		return nil
-	}
 
 	// if not created, init the bucket id in transaction
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var insertBucketTraffic *BucketTrafficTable
-
-		var newestTraffic BucketTrafficTable
-		monthResult := s.db.Where("bucket_id = ?", bucketID).Order("SUBSTRING_INDEX(month, '-', 1) DESC, SUBSTRING_INDEX(month, '-', -1) DESC").
-			Limit(1).Find(&newestTraffic)
-		if monthResult.Error != nil {
-			return monthResult.Error
-		}
-
-		// If the record of this bucket id does not exist, then the free quota consumed is initialized to 0
-		if newestTraffic.FreeQuotaConsumedSize == 0 {
-			insertBucketTraffic = &BucketTrafficTable{
-				BucketID:              bucketID,
-				Month:                 yearMonth,
-				FreeQuotaSize:         quota.FreeQuotaSize,
-				FreeQuotaConsumedSize: 0,
-				BucketName:            bucketName,
-				ReadConsumedSize:      0,
-				ChargedQuotaSize:      quota.ChargedQuotaSize,
-				ModifiedTime:          time.Now(),
+		var bucketTraffic BucketTrafficTable
+		result := s.db.Where("bucket_id = ?", bucketID).First(&bucketTraffic)
+		if result.Error != nil {
+			if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				return result.Error
+			} else {
+				// If the record of this bucket id does not exist, then the free quota consumed is initialized to 0
+				insertBucketTraffic = &BucketTrafficTable{
+					BucketID:              bucketID,
+					Month:                 yearMonth,
+					FreeQuotaSize:         quota.FreeQuotaSize,
+					FreeQuotaConsumedSize: 0,
+					BucketName:            bucketName,
+					ReadConsumedSize:      0,
+					ChargedQuotaSize:      quota.ChargedQuotaSize,
+					ModifiedTime:          time.Now(),
+				}
 			}
 		} else {
 			// If the record of this bucket id already exist, then read the record of the newest month
 			// and use the free quota consumed of this record to init free quota item
+			var newestTraffic BucketTrafficTable
+			monthResult := s.db.Where("bucket_id = ?", bucketID).Order("SUBSTRING_INDEX(month, '-', 1) DESC, SUBSTRING_INDEX(month, '-', -1) DESC").
+				Limit(1).Find(&newestTraffic)
+			if monthResult.Error != nil {
+				return monthResult.Error
+			}
 			insertBucketTraffic = &BucketTrafficTable{
 				BucketID:              bucketID,
 				Month:                 yearMonth,
