@@ -21,10 +21,6 @@ type DownloadModular struct {
 	downloadParallel  int64
 	challenging       int64
 	challengeParallel int64
-
-	// bucketFreeQuota defines the free read quota per bucket, if exceed
-	// the quota, the account should buy traffic.
-	bucketFreeQuota uint64
 }
 
 func (d *DownloadModular) Name() string {

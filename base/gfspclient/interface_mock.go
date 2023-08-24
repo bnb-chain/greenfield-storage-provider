@@ -405,7 +405,7 @@ func (mr *MockGfSpClientAPIMockRecorder) GetBucketMeta(ctx, bucketName, includeP
 }
 
 // GetBucketReadQuota mocks base method.
-func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, error) {
+func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, bucket, yearMonth}
 	for _, a := range opts {
@@ -415,8 +415,9 @@ func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *type
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(uint64)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret3, _ := ret[3].(uint64)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3,ret4
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
@@ -2400,7 +2401,7 @@ func (mr *MockMetadataAPIMockRecorder) GetBucketMeta(ctx, bucketName, includePri
 }
 
 // GetBucketReadQuota mocks base method.
-func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, error) {
+func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, bucket, yearMonth}
 	for _, a := range opts {
@@ -2410,8 +2411,9 @@ func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(uint64)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret3, _ := ret[3].(uint64)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
