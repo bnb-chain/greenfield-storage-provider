@@ -70,6 +70,7 @@ type ManageModular struct {
 	challengeQueue       taskqueue.TQueueOnStrategy
 	recoveryQueue        taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueue      taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueueMux   sync.Mutex
 
 	maxUploadObjectNumber int
 
@@ -698,7 +699,7 @@ func (m *ManageModular) backUpTask() {
 			"task_limit", targetTask.EstimateLimit().String())
 		backupTasks = append(backupTasks, targetTask)
 	}
-	targetTask = m.migrateGVGQueue.PopByLimit(limit)
+	targetTask = m.migrateGVGQueuePopByLimit(limit)
 	if targetTask != nil {
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", targetTask.Key().String())
 		backupTasks = append(backupTasks, targetTask)
@@ -746,7 +747,41 @@ func (m *ManageModular) repushTask(reserved task.Task) {
 		err := m.recoveryQueue.Push(t)
 		log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpMigrateGVGTask:
-		err := m.migrateGVGQueue.Push(t)
+		err := m.migrateGVGQueuePush(t)
 		log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
 	}
+}
+
+func (m *ManageModular) migrateGVGQueuePush(task task.Task) error {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+
+	err := m.migrateGVGQueue.Push(task)
+
+	return err
+}
+
+func (m *ManageModular) migrateGVGQueuePopByLimit(limit rcmgr.Limit) task.Task {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+	task := m.migrateGVGQueue.PopByLimit(limit)
+
+	return task
+}
+
+func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateGVGTask) error {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+
+	var pushErr error
+
+	m.migrateGVGQueue.PopByKey(task.Key())
+	task.SetUpdateTime(time.Now().Unix())
+	if !task.GetFinished() {
+		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
+			log.Errorw("failed to push gvg task queue", "task", task, "error", pushErr)
+		}
+	}
+
+	return pushErr
 }
