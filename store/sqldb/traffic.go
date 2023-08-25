@@ -159,9 +159,7 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 func (s *SpDBImpl) InitBucketTraffic(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
 	bucketID := record.BucketID
 	bucketName := record.BucketName
-
 	yearMonth := TimestampYearMonth(record.ReadTimestampUs)
-
 	// if not created, init the bucket id in transaction
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var insertBucketTraffic *BucketTrafficTable
@@ -187,11 +185,11 @@ func (s *SpDBImpl) InitBucketTraffic(record *corespdb.ReadRecord, quota *corespd
 			// If the record of this bucket id already exist, then read the record of the newest month
 			// and use the free quota consumed of this record to init free quota item
 			var newestTraffic BucketTrafficTable
-			monthResult := s.db.Where("bucket_id = ?", bucketID).Order("SUBSTRING_INDEX(month, '-', 1) DESC, SUBSTRING_INDEX(month, '-', -1) DESC").
-				Limit(1).Find(&newestTraffic)
-			if monthResult.Error != nil {
-				return monthResult.Error
+			queryErr := s.db.Where("bucket_id = ?", bucketID).Order("month DESC").Limit(1).Find(&newestTraffic).Error
+			if queryErr != nil {
+				return queryErr
 			}
+
 			insertBucketTraffic = &BucketTrafficTable{
 				BucketID:              bucketID,
 				Month:                 yearMonth,
