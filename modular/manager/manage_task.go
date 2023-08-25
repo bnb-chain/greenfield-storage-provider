@@ -651,9 +651,18 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
 		return ErrDanglingTask
 	}
+
+	//ScanTQueueBySubKey
 	m.migrateGVGQueue.PopByKey(task.Key())
+	//m.migrateGVGQueue.ScanTask(task).PopByKey(task.Key())
 	var err, pushErr error
 	task.SetUpdateTime(time.Now().Unix())
+	if !task.GetFinished() {
+		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
+			log.CtxErrorw(ctx, "failed to push gvg task queue", "task", task, "error", pushErr)
+		}
+		//runner.gvgUnits
+	}
 	if task.GetBucketID() != 0 {
 		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
 	} else {
@@ -664,7 +673,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 			log.CtxErrorw(ctx, "failed to push gvg task queue", "task", task, "error", pushErr)
 		}
 	}
-	log.CtxInfow(ctx, "success to handle migrate gvg task", "task", task, "error", err, "error_push", pushErr)
+	log.CtxInfow(ctx, "succeed to handle migrate gvg task", "task", task, "error", err, "error_push", pushErr)
 	return err
 }
 
