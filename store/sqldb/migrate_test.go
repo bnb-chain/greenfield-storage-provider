@@ -23,6 +23,7 @@ const (
 	mockQuerySwapOutUnitInSrcSPQuerySQL   = "SELECT * FROM `swap_out_unit` WHERE is_dest_sp = false and swap_out_key = ? ORDER BY `swap_out_unit`.`swap_out_key` LIMIT 1"
 	mockListDestSPSwapOutUintsQuerySQL    = "SELECT * FROM `swap_out_unit` WHERE is_dest_sp = true"
 	mockMigrateGVGQuerySQL                = "SELECT * FROM `migrate_gvg` WHERE migrate_key = ? ORDER BY `migrate_gvg`.`migrate_key` LIMIT 1"
+	mockMigrateGVGDeleteSQL               = "DELETE FROM `migrate_gvg` WHERE `migrate_gvg`.`migrate_key` = ?"
 )
 
 func TestSpDBImpl_UpdateSPExitSubscribeProgressInsertSuccess(t *testing.T) {
@@ -581,8 +582,26 @@ func TestSpDBImpl_InsertMigrateGVGUnitFailure(t *testing.T) {
 }
 
 func TestSpDBImpl_DeleteMigrateGVGUnit(t *testing.T) {
-	s, _ := setupDB(t)
-	err := s.DeleteMigrateGVGUnit(nil)
+	s, mock := setupDB(t)
+	meta := &spdb.MigrateGVGUnitMeta{
+		MigrateGVGKey:            "mock_migrate_gvg_key",
+		SwapOutKey:               "mock_swap_out_key",
+		GlobalVirtualGroupID:     1,
+		DestGlobalVirtualGroupID: 2,
+		VirtualGroupFamilyID:     3,
+		RedundancyIndex:          4,
+		BucketID:                 5,
+		SrcSPID:                  6,
+		DestSPID:                 7,
+		LastMigratedObjectID:     8,
+		MigrateStatus:            9,
+	}
+
+	mock.ExpectBegin()
+	mock.ExpectExec(mockMigrateGVGDeleteSQL).WithArgs(meta.MigrateGVGKey).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	err := s.DeleteMigrateGVGUnit(meta)
 	assert.Nil(t, err)
 }
 
