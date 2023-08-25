@@ -572,6 +572,22 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: getUserOwnedGroupsRouterName,
 		},
+		{
+			name:             "List policies by object info router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + bucketName + "." + testDomain + "/" + objectName + "?" + ListObjectPoliciesQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery + "&" + VerifyPermissionActionType,
+			shouldMatch:      true,
+			wantedRouterName: listObjectPoliciesRouterName,
+		},
+		{
+			name:             "List policies by object info router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/" + bucketName + "/" + objectName + "?" + ListObjectPoliciesQuery + "&" + ListObjectsStartAfterQuery + "&" + GetGroupListLimitQuery + "&" + VerifyPermissionActionType,
+			shouldMatch:      true,
+			wantedRouterName: listObjectPoliciesRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

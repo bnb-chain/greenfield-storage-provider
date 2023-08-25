@@ -805,13 +805,17 @@ func (g *GateModular) getPaymentByBucketIDHandler(w http.ResponseWriter, r *http
 		queryParams url.Values
 		reqCtx      *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get payment by bucket id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -853,13 +857,17 @@ func (g *GateModular) getPaymentByBucketNameHandler(w http.ResponseWriter, r *ht
 		bucketName string
 		payment    *payment_types.StreamRecord
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get payment by bucket name", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -899,13 +907,17 @@ func (g *GateModular) getBucketByBucketNameHandler(w http.ResponseWriter, r *htt
 		bucketName string
 		bucket     *types.Bucket
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get bucket by bucket name", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -947,13 +959,17 @@ func (g *GateModular) getBucketByBucketIDHandler(w http.ResponseWriter, r *http.
 		queryParams url.Values
 		reqCtx      *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get bucket by bucket id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1001,13 +1017,17 @@ func (g *GateModular) listDeletedObjectsByBlockNumberRangeHandler(w http.Respons
 		objects                    []*types.Object
 		queryParams                url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list deleted objects by block number range", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1064,13 +1084,17 @@ func (g *GateModular) getUserBucketsCountHandler(w http.ResponseWriter, r *http.
 		reqCtx    *RequestContext
 		count     int64
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get user buckets count", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1115,13 +1139,17 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 		buckets            []*types.Bucket
 		queryParams        url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1189,13 +1217,17 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 		effect              *permission_types.Effect
 		reqCtx              *RequestContext
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to verify permission by id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1272,13 +1304,17 @@ func (g *GateModular) listVirtualGroupFamiliesBySpIDHandler(w http.ResponseWrite
 		families    []*virtual_types.GlobalVirtualGroupFamily
 		queryParams url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list virtual group families by sp id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1322,13 +1358,17 @@ func (g *GateModular) getVirtualGroupFamilyHandler(w http.ResponseWriter, r *htt
 		family       *virtual_types.GlobalVirtualGroupFamily
 		queryParams  url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get virtual group families by vgf id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1372,13 +1412,17 @@ func (g *GateModular) getGlobalVirtualGroupByGvgIDHandler(w http.ResponseWriter,
 		group        *virtual_types.GlobalVirtualGroup
 		queryParams  url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by gvg id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1424,13 +1468,17 @@ func (g *GateModular) getGlobalVirtualGroupHandler(w http.ResponseWriter, r *htt
 		group        *virtual_types.GlobalVirtualGroup
 		queryParams  url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by lvg id and bucket id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1481,13 +1529,17 @@ func (g *GateModular) listGlobalVirtualGroupsBySecondarySPHandler(w http.Respons
 		groups      []*virtual_types.GlobalVirtualGroup
 		queryParams url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by secondary sp id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1531,13 +1583,17 @@ func (g *GateModular) listGlobalVirtualGroupsByBucketHandler(w http.ResponseWrit
 		groups      []*virtual_types.GlobalVirtualGroup
 		queryParams url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by bucket id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1587,13 +1643,17 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 		objects           []*types.ObjectDetails
 		queryParams       url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1668,13 +1728,17 @@ func (g *GateModular) listObjectsByGVGAndBucketForGCHandler(w http.ResponseWrite
 		objects           []*types.ObjectDetails
 		queryParams       url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1747,13 +1811,17 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 		objects           []*types.ObjectDetails
 		queryParams       url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1817,13 +1885,17 @@ func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *h
 		events         []*types.ListMigrateBucketEvents
 		queryParams    url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1876,13 +1948,17 @@ func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Re
 		events         []*types.ListSwapOutEvents
 		queryParams    url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list swap out events", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1934,13 +2010,17 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 		events         *types.ListSpExitEvents
 		queryParams    url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -1990,13 +2070,17 @@ func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
 		sp                     *sp_types.StorageProvider
 		queryParams            url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get sp info by operator address", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -2036,13 +2120,17 @@ func (g *GateModular) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtx *RequestContext
 		status *types.Status
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get status", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -2079,13 +2167,17 @@ func (g *GateModular) getUserGroupsHandler(w http.ResponseWriter, r *http.Reques
 		groups            []*types.GroupMember
 		queryParams       url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get groups info by a user address", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -2151,13 +2243,17 @@ func (g *GateModular) getGroupMembersHandler(w http.ResponseWriter, r *http.Requ
 		requestStartAfter string
 		queryParams       url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to get group members by group id", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -2223,13 +2319,17 @@ func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.R
 		groups            []*types.GroupMember
 		queryParams       url.Values
 	)
-
+	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", reqCtx.String())
 			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
 	}()
 
@@ -2276,6 +2376,98 @@ func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.R
 	}
 
 	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
+// listObjectPoliciesHandler list policies by object info
+func (g *GateModular) listObjectPoliciesHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err               error
+		respBytes         []byte
+		reqCtx            *RequestContext
+		limit             uint32
+		requestLimit      string
+		policies          []*types.Policy
+		requestActionType string
+		actionType        uint32
+		requestStartAfter string
+		startAfter        uint64
+		ok                bool
+		queryParams       url.Values
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list policies by object info", reqCtx.String())
+			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	queryParams = reqCtx.request.URL.Query()
+	requestStartAfter = queryParams.Get(ListObjectsStartAfterQuery)
+	requestLimit = queryParams.Get(GetGroupListLimitQuery)
+	requestActionType = queryParams.Get(VerifyPermissionActionType)
+
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		return
+	}
+
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		return
+	}
+
+	if requestStartAfter != "" {
+		if startAfter, err = util.StringToUint64(requestStartAfter); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check start after", "start-after", requestStartAfter, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if requestLimit != "" {
+		if limit, err = util.StringToUint32(requestLimit); err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse or check limit", "limit", requestLimit, "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+	}
+
+	if actionType, err = util.StringToUint32(requestActionType); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse action type", "action-type", requestActionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if _, ok = permission_types.ActionType_name[int32(actionType)]; !ok {
+		log.CtxErrorw(reqCtx.Context(), "failed to check action type", "action-type", actionType, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	policies, err = g.baseApp.GfSpClient().ListObjectPolicies(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, startAfter, actionType, limit)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list policies by object info", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListObjectPoliciesResponse{Policies: policies}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list policies by object info", "error", err)
+		return
+	}
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)

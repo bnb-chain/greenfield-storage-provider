@@ -16,6 +16,10 @@ const (
 	ListObjectsLimitSize = 1000
 	// ListGroupsLimitSize defines the default limit of GetUserGroups response
 	ListGroupsLimitSize = 1000
+	// 	LisPoliciesDefaultLimit defines the default size of policies response
+	LisPoliciesDefaultLimit = 50
+	// LisPoliciesLimitSize defines the max limit of policies response
+	LisPoliciesLimitSize = 1000
 )
 
 // define table name constant of block syncer db

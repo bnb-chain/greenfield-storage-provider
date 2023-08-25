@@ -1,6 +1,7 @@
 package bsdb
 
 import (
+	"github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 )
@@ -111,6 +112,10 @@ type Metadata interface {
 	GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error)
 	// GetUserOwnedGroups retrieve groups where the user is the owner
 	GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
+	// ListObjectPolicies list policies by object info
+	ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error)
+	// GetGroupMembersCount get the count of group members
+	GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, error)
 }
 
 // BSDB contains all the methods required by block syncer database

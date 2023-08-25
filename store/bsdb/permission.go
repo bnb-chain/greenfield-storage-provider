@@ -4,10 +4,10 @@ import (
 	"errors"
 	"time"
 
+	gnfdresource "github.com/bnb-chain/greenfield/types/resource"
+	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
-
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
 )
 
 // GetPermissionByResourceAndPrincipal get permission by resource type & ID, principal type & value
@@ -126,4 +126,55 @@ func (p Permission) Eval(action permtypes.ActionType, blockTime time.Time, opts 
 		return permtypes.EFFECT_ALLOW
 	}
 	return permtypes.EFFECT_UNSPECIFIED
+}
+
+// ListObjectPolicies list policies by object info
+func (b *BsDBImpl) ListObjectPolicies(objectID common.Hash, actionType permtypes.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+	var (
+		permissions  []*Permission
+		actionValues []int
+		now          int64
+		err          error
+	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	now = time.Now().Unix()
+	actionValues = PossibleValuesForAction(actionType)
+	if len(actionValues) == 0 {
+		return nil, nil
+	}
+
+	err = b.db.Table((&Permission{}).TableName()).
+		Select("*").
+		Joins("INNER JOIN statements ON statements.policy_id = permission.policy_id").
+		Where(`
+			permission.resource_type = ? AND 
+			permission.resource_id = ? AND 
+			permission.policy_id > ? AND 
+			permission.expiration_time > ? AND 
+			permission.removed = false AND 
+			statements.expiration_time > ? AND 
+			statements.action_value in (?) AND 
+			statements.removed = false`,
+			gnfdresource.RESOURCE_TYPE_OBJECT.String(),
+			objectID,
+			startAfter,
+			now,
+			now,
+			actionValues).
+		Order("permission.policy_id").
+		Limit(limit).
+		Find(&permissions).Error
+
+	return permissions, err
 }

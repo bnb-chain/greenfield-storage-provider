@@ -133,6 +133,8 @@ const (
 	GetUserGroupsQuery = "user-groups"
 	// GetUserOwnedGroupsQuery defines retrieve groups where the user is the owner, which is used to route request
 	GetUserOwnedGroupsQuery = "owned-groups"
+	// ListObjectPoliciesQuery defines list policies by object info, which is used to route request
+	ListObjectPoliciesQuery = "object-policies"
 	// GetGroupMembersQuery defines query sp info, which is used to route request
 	GetGroupMembersQuery = "group-members"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for
