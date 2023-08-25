@@ -399,10 +399,10 @@ func (s *SpDBImpl) ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*spdb.Migra
 }
 
 func (s *SpDBImpl) DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error {
-	//var results []MigrateGVGTable
-	//result := s.db.Where("bucket_id = ?", bucketID).Find(&results).Delete(&results)
-	//if result.Error != nil {
-	//	return fmt.Errorf("failed to delete migrate gvg table: %s", result.Error)
-	//}
+	var results []MigrateGVGTable
+	result := s.db.Where("bucket_id = ?", bucketID).Find(&results).Delete(&results)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete migrate gvg table: %s", result.Error)
+	}
 	return nil
 }
