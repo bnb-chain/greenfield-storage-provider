@@ -53,7 +53,8 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	CatchEndBlock.Store(-1)
 
 	NeedBackup = junoCfg.EnableDualDB
-	if err := MainService.initClient(); err != nil {
+
+	if err := MainService.initClient(cfg); err != nil {
 		return nil, err
 	}
 
@@ -82,7 +83,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 }
 
 // initClient initialize a juno client using given configs
-func (b *BlockSyncerModular) initClient() error {
+func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 	// JunoConfig the runner
 	junoConfig := cmd.NewConfig("juno").
 		WithParseConfig(parsecmdtypes.NewConfig().
@@ -99,23 +100,17 @@ func (b *BlockSyncerModular) initClient() error {
 		return readErr
 	}
 
-	// get DSN from env first
-	var dbEnv string
-	if b.Name() == coremodule.BlockSyncerModularName {
-		dbEnv = DsnBlockSyncer
-	} else {
-		dbEnv = DsnBlockSyncerSwitched
-	}
-
-	dsn, envErr := getDBConfigFromEnv(dbEnv)
+	username, password, envErr := getDBConfigFromEnv(bsdb.BsDBUser, bsdb.BsDBPasswd)
 	if envErr != nil {
-		log.Info("failed to get db config from env, use db config from config file")
-		config.Cfg.Database.DSN = b.config.Database.DSN
+		log.Infof("failed to get username and password err:%v", envErr)
+		username = cfg.BsDB.User
+		password = cfg.BsDB.Passwd
 	}
-	if dsn != "" {
-		log.Info("use db config from env")
-		config.Cfg.Database.DSN = dsn
+	dbAddress := cfg.BsDB.Address
+	if cfg.BlockSyncer.BsDBWriteAddress != "" {
+		dbAddress = cfg.BlockSyncer.BsDBWriteAddress
 	}
+	config.Cfg.Database.DSN = fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&multiStatements=true&loc=Local&interpolateParams=true", username, password, dbAddress, cfg.BsDB.Database)
 
 	var ctx *parser.Context
 	ctx, err := parsecmdtypes.GetParserContext(config.Cfg, cmdCfg)
@@ -381,7 +376,6 @@ func makeBlockSyncerConfig(cfg *gfspconfig.GfSpConfig) *config.TomlConfig {
 		},
 		Database: databaseconfig.Config{
 			Type:               "mysql",
-			DSN:                cfg.BlockSyncer.Dsn,
 			PartitionBatchSize: 10_000,
 			MaxIdleConnections: 10,
 			MaxOpenConnections: 30,
@@ -389,8 +383,6 @@ func makeBlockSyncerConfig(cfg *gfspconfig.GfSpConfig) *config.TomlConfig {
 		Logging: loggingconfig.Config{
 			Level: "debug",
 		},
-		EnableDualDB: cfg.BlockSyncer.EnableDualDB,
-		DsnSwitched:  cfg.BlockSyncer.DsnSwitched,
 	}
 }
 
@@ -405,7 +397,7 @@ func newBackupBlockSyncerService(cfg *config.TomlConfig, mainDBIsMaster bool) (*
 		name:   BlockSyncerModularBackupName,
 	}
 
-	if err = BackupService.initClient(); err != nil {
+	if err = BackupService.initClient(nil); err != nil {
 		return nil, err
 	}
 
@@ -435,12 +427,17 @@ func DeepCopyByGob(src, dst interface{}) error {
 	return gob.NewDecoder(&buffer).Decode(dst)
 }
 
-func getDBConfigFromEnv(dsn string) (string, error) {
-	dsnVal, ok := os.LookupEnv(dsn)
+func getDBConfigFromEnv(usernameKey, passwordKey string) (username, password string, err error) {
+	var ok bool
+	username, ok = os.LookupEnv(usernameKey)
 	if !ok {
-		return "", ErrDSNNotSet
+		return "", "", ErrDSNNotSet
 	}
-	return dsnVal, nil
+	password, ok = os.LookupEnv(passwordKey)
+	if !ok {
+		return "", "", ErrDSNNotSet
+	}
+	return
 }
 
 func Cast(indexer parser.Indexer) *Impl {

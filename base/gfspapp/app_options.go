@@ -305,42 +305,16 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 			if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
 				cfg.BsDB.Passwd = val
 			}
-			if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
-				cfg.BsDB.Address = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBDatabase); ok {
-				cfg.BsDB.Database = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
-				cfg.BsDBBackup.User = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
-				cfg.BsDBBackup.Passwd = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
-				cfg.BsDBBackup.Address = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDatabase); ok {
-				cfg.BsDBBackup.Database = val
-			}
 
 			defaultGfBsDB(&cfg.BsDB)
-			defaultGfBsDB(&cfg.BsDBBackup)
 
-			bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+			bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg)
 			if err != nil {
 				log.Panicw("failed to new bsdb", "error", err)
 				return
 			}
 
-			bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
-			if err != nil {
-				log.Panicw("failed to new backup bsdb", "error", err)
-				return
-			}
-
 			app.gfBsDBMaster = bsDBBlockSyncerMaster
-			app.gfBsDBBackup = bsDBBlockSyncerBackUp
 		})
 	}
 	return nil

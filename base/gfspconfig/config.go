@@ -42,7 +42,6 @@ type GfSpConfig struct {
 	Customize      *Customize `comment:"optional"`
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig
-	BsDBBackup     storeconfig.SQLDBConfig
 	PieceStore     storage.PieceStoreConfig
 	Chain          ChainConfig
 	SpAccount      SpAccountConfig
@@ -57,7 +56,6 @@ type GfSpConfig struct {
 	Monitor        MonitorConfig
 	Rcmgr          RcmgrConfig `comment:"optional"`
 	Log            LogConfig
-	Metadata       MetadataConfig
 	BlockSyncer    BlockSyncerConfig
 	APIRateLimiter localhttp.RateLimiterConfig
 	Manager        ManagerConfig
@@ -233,11 +231,9 @@ type LogConfig struct {
 }
 
 type BlockSyncerConfig struct {
-	Modules      []string `comment:"required"`
-	Dsn          string   `comment:"required"`
-	DsnSwitched  string   `comment:"optional"`
-	Workers      uint     `comment:"required"`
-	EnableDualDB bool     `comment:"optional"`
+	Modules          []string `comment:"required"`
+	Workers          uint     `comment:"required"`
+	BsDBWriteAddress string   `comment:"optional"`
 }
 
 type MetadataConfig struct {

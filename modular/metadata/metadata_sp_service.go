@@ -127,7 +127,6 @@ func (r *MetadataModular) GfSpGetStatus(ctx context.Context, req *types.GfSpGetS
 		BsDefaultCharacterSetName: defaultCharacterSetName,
 		BsDefaultCollationName:    defaultCollationName,
 		BsModules:                 BsModules,
-		BsEnableDualDb:            BsEnableDualDB,
 		BsWorkers:                 uint32(BsWorkers),
 	}
 
