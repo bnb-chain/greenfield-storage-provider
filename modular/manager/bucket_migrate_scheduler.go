@@ -422,10 +422,7 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 	s.deleteExecutePlanByBucketID(bucketID)
 	executePlan.stopSPSchedule()
 	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
@@ -444,10 +441,7 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
 	s.deleteExecutePlanByBucketID(bucketID)
 	executePlan.stopSPSchedule()
 	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
@@ -771,12 +765,11 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 
 	migrateExecuteUnit, ok := executePlan.gvgUnitMap[gvgID]
 	if !ok {
-		// maybe canceled
+		// maybe bucket migrate canceled
 		return fmt.Errorf("gvg unit is not found")
 	}
 	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.BucketID, migrateExecuteUnit.SrcGVG.GetId())
 
-	// if cancel bucket migration
 	if task.GetFinished() {
 		migrateExecuteUnit.MigrateStatus = Migrated
 		err = executePlan.updateMigrateGVGStatus(migrateKey, migrateExecuteUnit, Migrated)
