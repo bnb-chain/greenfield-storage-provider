@@ -120,7 +120,7 @@ type ApprovalCreateBucketTask interface {
 	// InitApprovalCreateBucketTask inits the ApprovalCreateBucketTask by
 	// MsgCreateBucket and task priority. SP only fill the MsgCreateBucket's
 	// PrimarySpApproval field, can not change other fields.
-	InitApprovalCreateBucketTask(string, *storagetypes.MsgCreateBucket, TPriority)
+	InitApprovalCreateBucketTask(string, *storagetypes.MsgCreateBucket, []byte, TPriority)
 	// GetCreateBucketInfo returns the user's MsgCreateBucket.
 	GetCreateBucketInfo() *storagetypes.MsgCreateBucket
 	// SetCreateBucketInfo sets the MsgCreateBucket. Should try to avoid calling
@@ -154,7 +154,7 @@ type ApprovalCreateObjectTask interface {
 	// InitApprovalCreateObjectTask inits the ApprovalCreateObjectTask by
 	// MsgCreateObject and task priority. SP only fill the MsgCreateObject's
 	// PrimarySpApproval field, can not change other fields.
-	InitApprovalCreateObjectTask(string, *storagetypes.MsgCreateObject, TPriority)
+	InitApprovalCreateObjectTask(string, *storagetypes.MsgCreateObject, []byte, TPriority)
 	// GetCreateObjectInfo returns the user's MsgCreateObject.
 	GetCreateObjectInfo() *storagetypes.MsgCreateObject
 	// SetCreateObjectInfo sets the MsgCreateObject. Should try to avoid calling

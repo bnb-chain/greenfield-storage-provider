@@ -97,7 +97,7 @@ func (w *CMDWrapper) createBucketApproval(ctx *cli.Context) error {
 		PrimarySpApproval: &common.Approval{},
 	}
 	task := &gfsptask.GfSpCreateBucketApprovalTask{}
-	task.InitApprovalCreateBucketTask("cmd_debug", msg, coretask.UnSchedulingPriority)
+	task.InitApprovalCreateBucketTask("cmd_debug", msg, []byte{}, coretask.UnSchedulingPriority)
 	allow, res, err := w.grpcAPI.AskCreateBucketApproval(context.Background(), task)
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func (w *CMDWrapper) createObjectApproval(ctx *cli.Context) error {
 		PrimarySpApproval: &common.Approval{},
 	}
 	task := &gfsptask.GfSpCreateObjectApprovalTask{}
-	task.InitApprovalCreateObjectTask("cmd_debug", msg, coretask.UnSchedulingPriority)
+	task.InitApprovalCreateObjectTask("cmd_debug", msg, []byte{}, coretask.UnSchedulingPriority)
 	allow, res, err := w.grpcAPI.AskCreateObjectApproval(context.Background(), task)
 	if err != nil {
 		return err
