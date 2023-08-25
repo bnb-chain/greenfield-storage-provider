@@ -69,6 +69,7 @@ type BucketFreeQuota struct {
 // BucketTraffic is record traffic by year and month.
 type BucketTraffic struct {
 	BucketID              uint64
+	YearMonth             string
 	BucketName            string
 	ReadConsumedSize      uint64
 	FreeQuotaSize         uint64 // the total free quota size of SP price meta

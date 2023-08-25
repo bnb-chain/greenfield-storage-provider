@@ -129,7 +129,6 @@ type ApprovalConfig struct {
 
 type BucketConfig struct {
 	AccountBucketNumber    int64  `comment:"optional"`
-	FreeQuotaPerBucket     uint64 `comment:"optional"`
 	MaxListReadQuotaNumber int64  `comment:"optional"`
 	MaxPayloadSize         uint64 `comment:"optional"`
 }

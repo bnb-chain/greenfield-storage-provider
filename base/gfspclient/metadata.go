@@ -311,26 +311,27 @@ func (s *GfSpClient) GetEndpointBySpID(ctx context.Context, spId uint32, opts ..
 	return resp.GetEndpoint(), nil
 }
 
-func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, opts ...grpc.DialOption) (
-	uint64, uint64, uint64, error) {
+func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (
+	uint64, uint64, uint64, uint64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
+		return uint64(0), uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
 	}
 	defer conn.Close()
 	req := &types.GfSpGetBucketReadQuotaRequest{
 		BucketInfo: bucket,
+		YearMonth:  yearMonth,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketReadQuota(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to get bucket read quota", "error", err)
-		return uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to get bucket read quota, error: " + err.Error())
+		return uint64(0), uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to get bucket read quota, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
-		return uint64(0), uint64(0), uint64(0), resp.GetErr()
+		return uint64(0), uint64(0), uint64(0), uint64(0), resp.GetErr()
 	}
-	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), nil
+	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), resp.FreeQuotaConsumeSize, nil
 }
 
 func (s *GfSpClient) ListBucketReadRecord(ctx context.Context, bucket *storage_types.BucketInfo, startTimestampUs,

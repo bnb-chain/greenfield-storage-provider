@@ -295,27 +295,40 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		return nil, ErrExceedRequest
 	}
 	bucketTraffic, err := r.baseApp.GfSpDB().GetBucketTraffic(
-		req.GetBucketInfo().Id.Uint64())
-	if systemerrors.Is(err, gorm.ErrRecordNotFound) {
-		return &types.GfSpGetBucketReadQuotaResponse{
-			ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
-			SpFreeQuotaSize:  r.freeQuotaPerBucket,
-			ConsumedSize:     0,
-		}, nil
-	}
+		req.GetBucketInfo().Id.Uint64(), req.YearMonth)
 	if err != nil {
-		log.Errorw("failed to get bucket traffic",
-			"bucket_name", req.GetBucketInfo().GetBucketName(),
-			"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
-		return &types.GfSpGetBucketReadQuotaResponse{Err: ErrGfSpDBWithDetail("failed to get bucket traffic" +
-			", bucket_name: " + req.GetBucketInfo().GetBucketName() +
-			", bucket_id: " + req.GetBucketInfo().Id.String() + ", error: " + err.Error())}, nil
-	}
+		// if the traffic table has not been created and initialized yet, return the chain info
+		if systemerrors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
+			var freeQuotaSize uint64
+			freeQuotaSize, err = r.baseApp.Consensus().QuerySPFreeQuota(ctx, r.baseApp.OperatorAddress())
+			if err != nil {
+				log.Errorw("failed to get free quota on chain",
+					"bucket_name", req.GetBucketInfo().GetBucketName(),
+					"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
+				freeQuotaSize = 0
+			}
 
+			return &types.GfSpGetBucketReadQuotaResponse{
+				ChargedQuotaSize:     req.GetBucketInfo().GetChargedReadQuota(),
+				SpFreeQuotaSize:      freeQuotaSize,
+				ConsumedSize:         0,
+				FreeQuotaConsumeSize: 0,
+			}, nil
+		} else {
+			log.Errorw("failed to get bucket traffic",
+				"bucket_name", req.GetBucketInfo().GetBucketName(),
+				"bucket_id", req.GetBucketInfo().Id.String(), "error", err)
+			return &types.GfSpGetBucketReadQuotaResponse{Err: ErrGfSpDBWithDetail("failed to get bucket traffic" +
+				", bucket_name: " + req.GetBucketInfo().GetBucketName() +
+				", bucket_id: " + req.GetBucketInfo().Id.String() + ", error: " + err.Error())}, nil
+		}
+	}
+	// if the traffic table has been created, return the db info from meta service
 	return &types.GfSpGetBucketReadQuotaResponse{
-		ChargedQuotaSize: req.GetBucketInfo().GetChargedReadQuota(),
-		SpFreeQuotaSize:  bucketTraffic.FreeQuotaSize,
-		ConsumedSize:     bucketTraffic.ReadConsumedSize,
+		ChargedQuotaSize:     req.GetBucketInfo().GetChargedReadQuota(),
+		SpFreeQuotaSize:      bucketTraffic.FreeQuotaSize,
+		ConsumedSize:         bucketTraffic.ReadConsumedSize,
+		FreeQuotaConsumeSize: bucketTraffic.FreeQuotaConsumedSize,
 	}, nil
 }
 

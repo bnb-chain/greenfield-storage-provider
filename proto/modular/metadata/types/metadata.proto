@@ -285,6 +285,8 @@ message GfSpGetEndpointBySpIDResponse {
 message GfSpGetBucketReadQuotaRequest {
   // bucket info from the greenfield chain
   greenfield.storage.BucketInfo bucket_info = 1;
+  // year_month is the query bucket quota's month, like "2023-03"
+  string year_month = 2;
 }
 
 // GfSpGetBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuota RPC method.
@@ -296,6 +298,8 @@ message GfSpGetBucketReadQuotaResponse {
   uint64 sp_free_quota_size = 3;
   // consumed_size is currently consumed size
   uint64 consumed_size = 4;
+  // free_quota_consume_siz is currently consumed size
+  uint64 free_quota_consume_size = 5;
 }
 
 // ListBucketReadRecordRequest is request type for the ListBucketReadRecord RPC method.
