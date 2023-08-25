@@ -7,19 +7,20 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"google.golang.org/grpc"
 )
 
 func TestSplitToSegmentPieceInfos(t *testing.T) {
@@ -166,6 +167,7 @@ func TestPreUploadObject(t *testing.T) {
 		StorageParams: &storagetypes.Params{},
 	}
 	err = d.PreDownloadObject(context.TODO(), mockTask1)
+
 	assert.NotNil(t, err)
 
 	// failed due to query spdb traffic failed
@@ -173,6 +175,15 @@ func TestPreUploadObject(t *testing.T) {
 	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	d.baseApp.SetGfSpDB(mockSPDB)
+	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
+	d.baseApp.SetGfSpClient(mockGRPCAPI)
+	mockGRPCAPI.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	mockGRPCAPI.EXPECT().GetPaymentByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
+			return &payment_types.StreamRecord{}, nil
+		}).AnyTimes()
+
 	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, fmt.Errorf("failed to get bucket traffic")).Times(1)
 
 	mockTask2 := &gfsptask.GfSpDownloadObjectTask{
@@ -190,9 +201,10 @@ func TestPreUploadObject(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// succeed
-	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
-	d.baseApp.SetGfSpClient(mockGRPCAPI)
-	mockGRPCAPI.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockGRPCAPI.EXPECT().GetPaymentByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
+			return &payment_types.StreamRecord{}, nil
+		}).AnyTimes()
 	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, nil)
 	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
 	d.baseApp.SetConsensus(mockConsensusAPI)
@@ -284,6 +296,11 @@ func TestPreDownloadPiece(t *testing.T) {
 	// failed due to query spdb traffic failed
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	d.baseApp.SetGfSpDB(mockSPDB)
+
+	mockGRPCAPI.EXPECT().GetPaymentByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
+			return &payment_types.StreamRecord{}, nil
+		}).AnyTimes()
 	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, fmt.Errorf("failed to get bucket traffic")).Times(1)
 
 	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
@@ -309,7 +326,13 @@ func TestPreDownloadPiece(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// succeed
+	mockGRPCAPI.EXPECT().GetPaymentByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
+			return &payment_types.StreamRecord{}, nil
+		}).AnyTimes()
+
 	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, nil)
+
 	mockConsensusAPI.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(100), nil)
 	mockConsensusAPI.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{}, nil)
 	mockConsensusAPI.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil)
