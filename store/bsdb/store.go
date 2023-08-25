@@ -23,12 +23,9 @@ type BsDBImpl struct {
 }
 
 // NewBsDB return a block syncer db instance or a block syncer db backup instance based on the isBackup flag
-func NewBsDB(cfg *gfspconfig.GfSpConfig, isBackup bool) (*BsDBImpl, error) {
+func NewBsDB(cfg *gfspconfig.GfSpConfig) (*BsDBImpl, error) {
 	//LoadDBConfigFromEnv(config)
 	dbConfig := cfg.BsDB
-	if isBackup {
-		dbConfig = cfg.BsDBBackup
-	}
 
 	db, err := InitDB(&dbConfig)
 	if err != nil {
