@@ -1263,12 +1263,12 @@ func SendAndConfirmTx(chainClient consensus.Consensus, sendTxFunc SendTxFunc) er
 		time.Sleep(time.Duration(i*backoffSecondInterval) * time.Second)
 		txHash, err = sendTxFunc()
 		if err != nil {
-			log.Errorw("failed to send tx", "error", err)
+			log.Errorw("failed to send tx", "txHash", txHash, "error", err)
 			continue
 		}
 		_, err = chainClient.ConfirmTransaction(ctx, txHash)
 		if err != nil {
-			log.Errorw("failed to confirm tx", "error", err)
+			log.Errorw("failed to confirm tx", "txHash", txHash, "error", err)
 			continue
 		}
 		return nil // succeed
