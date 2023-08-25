@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
