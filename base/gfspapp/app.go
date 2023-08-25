@@ -32,11 +32,11 @@ type GfSpBaseApp struct {
 	gfSpDB       spdb.SPDB
 	gfBsDB       bsdb.BSDB
 	gfBsDBMaster bsdb.BSDB
-	gfBsDBBackup bsdb.BSDB
-	pieceStore   piecestore.PieceStore
-	pieceOp      piecestore.PieceOp
-	rcmgr        corercmgr.ResourceManager
-	chain        consensus.Consensus
+
+	pieceStore piecestore.PieceStore
+	pieceOp    piecestore.PieceOp
+	rcmgr      corercmgr.ResourceManager
+	chain      consensus.Consensus
 
 	approver      module.Approver
 	authenticator module.Authenticator
@@ -165,11 +165,6 @@ func (g *GfSpBaseApp) GfBsDB() bsdb.BSDB {
 // GfBsDBMaster returns the master block syncer db client.
 func (g *GfSpBaseApp) GfBsDBMaster() bsdb.BSDB {
 	return g.gfBsDBMaster
-}
-
-// GfBsDBBackup returns the backup block syncer db client.
-func (g *GfSpBaseApp) GfBsDBBackup() bsdb.BSDB {
-	return g.gfBsDBBackup
 }
 
 // SetGfBsDB sets the block syncer db client.
