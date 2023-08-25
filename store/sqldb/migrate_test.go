@@ -570,6 +570,7 @@ func TestSpDBImpl_InsertMigrateGVGUnitFailure(t *testing.T) {
 		LastMigratedObjectID:     8,
 		MigrateStatus:            9,
 	}
+	mock.ExpectQuery(mockMigrateGVGQuerySQL).WithArgs(meta.MigrateGVGKey).WillReturnError(gorm.ErrRecordNotFound)
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO `migrate_gvg` (`migrate_key`,`swap_out_key`,`global_virtual_group_id`,`dest_global_virtual_group_id`,`virtual_group_family_id`,`bucket_id`,`redundancy_index`,`src_sp_id`,`dest_sp_id`,`last_migrated_object_id`,`migrate_status`) VALUES (?,?,?,?,?,?,?,?,?,?,?)").
 		WillReturnError(mockDBInternalError)
