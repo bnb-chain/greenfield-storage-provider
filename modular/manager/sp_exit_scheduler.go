@@ -1019,7 +1019,7 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 					unit.SrcSP,
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					runner.manager.baseApp.TaskMaxRetry(migrateGVGTask))
-				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
+				if err = runner.manager.migrateGVGQueuePush(migrateGVGTask); err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
 					continue

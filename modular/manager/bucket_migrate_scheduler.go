@@ -267,7 +267,7 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 					plan.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					plan.manager.baseApp.TaskMaxRetry(migrateGVGTask))
 				migrateGVGTask.SetDestGvg(migrateGVGUnit.DestGVG)
-				err := plan.manager.migrateGVGQueue.Push(migrateGVGTask)
+				err := plan.manager.migrateGVGQueuePush(migrateGVGTask)
 				if err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
