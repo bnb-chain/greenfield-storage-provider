@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -30,6 +31,7 @@ var (
 	ErrInvalidParam      = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30005, "request params invalid")
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
 	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
+	ErrAccountFrozen     = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30008, "stream account has been frozen")
 )
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
@@ -60,20 +62,42 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		return ErrObjectUnsealed
 	}
 
-	bucketID := downloadObjectTask.GetBucketInfo().Id.Uint64()
 	bucketName := downloadObjectTask.GetBucketInfo().GetBucketName()
-	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(bucketID)
+	// if stream account has been frozen, it is not allowed to download
+	streamRecord, checkErr := d.baseApp.GfSpClient().GetPaymentByBucketName(ctx, bucketName, true)
+	if checkErr == nil {
+		if streamRecord.Status != payment_types.STREAM_ACCOUNT_STATUS_ACTIVE {
+			return ErrAccountFrozen
+		}
+	} else {
+		// the meta service happen error will not be return
+		log.CtxDebugw(ctx, "failed to get stream record info", "error", checkErr)
+	}
+
+	readRecord := &spdb.ReadRecord{
+		BucketID:        downloadObjectTask.GetBucketInfo().Id.Uint64(),
+		ObjectID:        downloadObjectTask.GetObjectInfo().Id.Uint64(),
+		UserAddress:     downloadObjectTask.GetUserAddress(),
+		BucketName:      bucketName,
+		ObjectName:      downloadObjectTask.GetObjectInfo().GetObjectName(),
+		ReadSize:        uint64(downloadObjectTask.GetSize()),
+		ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+	}
+	yearMonth := sqldb.TimestampYearMonth(readRecord.ReadTimestampUs)
+	bucketID := downloadObjectTask.GetBucketInfo().Id.Uint64()
+	bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(bucketID, yearMonth)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
+
 	// init the bucket traffic table when checking quota for the first time
 	if bucketTraffic == nil {
 		freeQuotaSize, err = d.baseApp.Consensus().QuerySPFreeQuota(ctx, d.baseApp.OperatorAddress())
 		if err != nil {
 			return ErrConsensusWithDetail("QuerySPFreeQuota error: " + err.Error())
 		}
-		// only need to set the free quota when init the traffic table
-		err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{
+		// only need to set the free quota when init the traffic table for every month
+		err = d.baseApp.GfSpDB().InitBucketTraffic(readRecord, &spdb.BucketQuota{
 			ChargedQuotaSize: downloadObjectTask.GetBucketInfo().GetChargedReadQuota(),
 			FreeQuotaSize:    freeQuotaSize,
 		})
@@ -85,15 +109,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 
 	// TODO:: spilt check and add record steps, check in pre download, add record in post download
 	if err = d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
-		&spdb.ReadRecord{
-			BucketID:        downloadObjectTask.GetBucketInfo().Id.Uint64(),
-			ObjectID:        downloadObjectTask.GetObjectInfo().Id.Uint64(),
-			UserAddress:     downloadObjectTask.GetUserAddress(),
-			BucketName:      downloadObjectTask.GetBucketInfo().GetBucketName(),
-			ObjectName:      downloadObjectTask.GetObjectInfo().GetObjectName(),
-			ReadSize:        uint64(downloadObjectTask.GetSize()),
-			ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
-		},
+		readRecord,
 		&spdb.BucketQuota{
 			ChargedQuotaSize: downloadObjectTask.GetBucketInfo().GetChargedReadQuota(),
 			FreeQuotaSize:    freeQuotaSize,
@@ -254,13 +270,36 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 	}
 	if downloadPieceTask.GetEnableCheck() {
 		checkQuotaTime := time.Now()
-
 		bucketID := downloadPieceTask.GetBucketInfo().Id.Uint64()
 		bucketName := downloadPieceTask.GetBucketInfo().GetBucketName()
-		bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(downloadPieceTask.GetBucketInfo().Id.Uint64())
+
+		// if stream account has been frozen, it is not allowed to download
+		streamRecord, checkErr := d.baseApp.GfSpClient().GetPaymentByBucketName(ctx, bucketName, true)
+		if checkErr == nil {
+			if streamRecord.Status != payment_types.STREAM_ACCOUNT_STATUS_ACTIVE {
+				return ErrAccountFrozen
+			}
+		} else {
+			// the meta service happen error will not be return
+			log.CtxDebugw(ctx, "failed to get stream record info", "error", checkErr)
+		}
+
+		readRecord := &spdb.ReadRecord{
+			BucketID:        bucketID,
+			ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
+			UserAddress:     downloadPieceTask.GetUserAddress(),
+			BucketName:      bucketName,
+			ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
+			ReadSize:        downloadPieceTask.GetTotalSize(),
+			ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+		}
+
+		yearMonth := sqldb.TimestampYearMonth(readRecord.ReadTimestampUs)
+		bucketTraffic, err = d.baseApp.GfSpDB().GetBucketTraffic(bucketID, yearMonth)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
+
 		// init the bucket traffic table when checking quota for the first time
 		if bucketTraffic == nil {
 			freeQuotaSize, err = d.baseApp.Consensus().QuerySPFreeQuota(ctx, d.baseApp.OperatorAddress())
@@ -270,8 +309,8 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 			log.CtxDebugw(ctx, "finish init bucket traffic table", "charged_quota", downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
 				"free_quota", freeQuotaSize)
 
-			// only need to set the free quota when init the traffic table
-			err = d.baseApp.GfSpDB().InitBucketTraffic(bucketID, bucketName, &spdb.BucketQuota{
+			// only need to set the free quota when init the traffic table for every month
+			err = d.baseApp.GfSpDB().InitBucketTraffic(readRecord, &spdb.BucketQuota{
 				ChargedQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
 				FreeQuotaSize:    freeQuotaSize,
 			})
@@ -282,15 +321,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		}
 
 		if dbErr := d.baseApp.GfSpDB().CheckQuotaAndAddReadRecord(
-			&spdb.ReadRecord{
-				BucketID:        bucketID,
-				ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
-				UserAddress:     downloadPieceTask.GetUserAddress(),
-				BucketName:      bucketName,
-				ObjectName:      downloadPieceTask.GetObjectInfo().GetObjectName(),
-				ReadSize:        downloadPieceTask.GetTotalSize(),
-				ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
-			},
+			readRecord,
 			&spdb.BucketQuota{
 				ChargedQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
 			},

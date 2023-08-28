@@ -18,8 +18,6 @@ type MetadataModular struct {
 	baseApp *gfspapp.GfSpBaseApp
 	scope   rcmgr.ResourceScope
 
-	// freeQuotaPerBucket defines the free read quota per bucket
-	freeQuotaPerBucket uint64
 	// maxMetadataRequest defines the max handling metadata request number
 	maxMetadataRequest int64
 	// retrievingRequest defines the handling retrieve request number

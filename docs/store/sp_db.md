@@ -157,7 +157,7 @@ type TrafficDB interface {
     // it will return error, Otherwise, add a record and return nil.
     CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error
     // InitBucketTraffic init the traffic info
-    InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error
+    InitBucketTraffic(record *ReadRecord, quota *BucketQuota) error
     // GetBucketTraffic return bucket traffic info,
     // notice maybe return (nil, nil) while there is no bucket traffic.
     GetBucketTraffic(bucketID uint64) (*BucketTraffic, error)
