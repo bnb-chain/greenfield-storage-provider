@@ -230,5 +230,6 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	return &gfspserver.GfSpSignResponse{
 		Err:       gfsperrors.MakeGfSpError(err),
 		Signature: signature,
-		TxHash:    txHash}, nil
+		TxHash:    txHash,
+	}, nil
 }

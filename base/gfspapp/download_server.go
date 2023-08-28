@@ -37,11 +37,11 @@ func (g *GfSpBaseApp) GfSpDownloadObject(ctx context.Context, req *gfspserver.Gf
 	log.CtxDebugw(ctx, "finished to download object", "len", len(data), "error", err)
 	return &gfspserver.GfSpDownloadObjectResponse{
 		Err:  gfsperrors.MakeGfSpError(err),
-		Data: data}, nil
+		Data: data,
+	}, nil
 }
 
-func (g *GfSpBaseApp) OnDownloadObjectTask(ctx context.Context, downloadObjectTask task.DownloadObjectTask) (
-	[]byte, error) {
+func (g *GfSpBaseApp) OnDownloadObjectTask(ctx context.Context, downloadObjectTask task.DownloadObjectTask) ([]byte, error) {
 	if downloadObjectTask == nil || downloadObjectTask.GetObjectInfo() == nil {
 		log.CtxError(ctx, "failed to download object due to task pointer dangling")
 		return nil, ErrDownloadTaskDangling
@@ -81,7 +81,8 @@ func (g *GfSpBaseApp) GfSpDownloadPiece(ctx context.Context, req *gfspserver.GfS
 	log.CtxDebugw(ctx, "finished to download piece", "len", len(data), "error", err)
 	return &gfspserver.GfSpDownloadPieceResponse{
 		Err:  gfsperrors.MakeGfSpError(err),
-		Data: data}, nil
+		Data: data,
+	}, nil
 }
 
 func (g *GfSpBaseApp) OnDownloadPieceTask(ctx context.Context, downloadPieceTask task.DownloadPieceTask) (
@@ -138,7 +139,8 @@ func (g *GfSpBaseApp) GfSpGetChallengeInfo(ctx context.Context, req *gfspserver.
 		Err:           gfsperrors.MakeGfSpError(err),
 		IntegrityHash: integrity,
 		Checksums:     checksums,
-		Data:          data}, nil
+		Data:          data,
+	}, nil
 }
 
 func (g *GfSpBaseApp) OnChallengePieceTask(ctx context.Context, challengePieceTask task.ChallengePieceTask) (

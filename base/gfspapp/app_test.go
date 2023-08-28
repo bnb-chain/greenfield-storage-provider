@@ -11,7 +11,9 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 )
 
 func setup(t *testing.T) *GfSpBaseApp {
@@ -29,10 +31,21 @@ func TestGfSpBaseApp_AppID(t *testing.T) {
 	assert.Equal(t, "mockAppID", result)
 }
 
+func TestGfSpBaseApp_SetAppID(t *testing.T) {
+	g := setup(t)
+	g.SetAppID("mockAppID")
+}
+
 func TestGfSpBaseApp_GfSpClient(t *testing.T) {
 	g := setup(t)
 	result := g.GfSpClient()
 	assert.Nil(t, result)
+}
+
+func TestGfSpBaseApp_SetGfSpClient(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	g.SetGfSpClient(gfspclient.NewMockGfSpClientAPI(ctrl))
 }
 
 func TestGfSpBaseApp_PieceStore(t *testing.T) {
@@ -41,10 +54,22 @@ func TestGfSpBaseApp_PieceStore(t *testing.T) {
 	assert.Nil(t, result)
 }
 
+func TestGfSpBaseApp_SetPieceStore(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	g.SetPieceStore(piecestore.NewMockPieceStore(ctrl))
+}
+
 func TestGfSpBaseApp_PieceOp(t *testing.T) {
 	g := setup(t)
 	result := g.PieceOp()
 	assert.Nil(t, result)
+}
+
+func TestGfSpBaseApp_SetPieceOp(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	g.SetPieceOp(piecestore.NewMockPieceOp(ctrl))
 }
 
 func TestGfSpBaseApp_Consensus(t *testing.T) {
@@ -53,10 +78,21 @@ func TestGfSpBaseApp_Consensus(t *testing.T) {
 	assert.Nil(t, result)
 }
 
+func TestGfSpBaseApp_SetConsensus(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	g.SetConsensus(consensus.NewMockConsensus(ctrl))
+}
+
 func TestGfSpBaseApp_OperatorAddress(t *testing.T) {
 	g := setup(t)
 	result := g.OperatorAddress()
 	assert.Equal(t, "mockOperatorAddress", result)
+}
+
+func TestGfSpBaseApp_SetOperatorAddress(t *testing.T) {
+	g := setup(t)
+	g.SetOperatorAddress("mockOperatorAddress")
 }
 
 func TestGfSpBaseApp_ChainID(t *testing.T) {
@@ -65,10 +101,21 @@ func TestGfSpBaseApp_ChainID(t *testing.T) {
 	assert.Equal(t, "mockChainID", result)
 }
 
+func TestGfSpBaseApp_SetChainID(t *testing.T) {
+	g := setup(t)
+	g.SetChainID("mockChainID")
+}
+
 func TestGfSpBaseApp_GfSpDB(t *testing.T) {
 	g := setup(t)
 	result := g.GfSpDB()
 	assert.Nil(t, result)
+}
+
+func TestGfSpBaseApp_SetGfSpDB(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	g.SetGfSpDB(corespdb.NewMockSPDB(ctrl))
 }
 
 func TestGfSpBaseApp_GfBsDB(t *testing.T) {
@@ -85,8 +132,7 @@ func TestGfSpBaseApp_GfBsDBMaster(t *testing.T) {
 
 func TestGfSpBaseApp_SetGfBsDB(t *testing.T) {
 	g := setup(t)
-	result := g.SetGfBsDB(nil)
-	assert.Nil(t, result)
+	g.SetGfBsDB(nil)
 }
 
 func TestGfSpBaseApp_ServerForRegister(t *testing.T) {
@@ -99,6 +145,12 @@ func TestGfSpBaseApp_ResourceManager(t *testing.T) {
 	g := setup(t)
 	result := g.ResourceManager()
 	assert.Nil(t, result)
+}
+
+func TestGfSpBaseApp_SetResourceManager(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	g.SetResourceManager(rcmgr.NewMockResourceManager(ctrl))
 }
 
 func TestGfSpBaseApp_StartAndCloseSuccess(t *testing.T) {

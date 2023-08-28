@@ -93,7 +93,7 @@ func TestGfSpBaseApp_GfSpAskApprovalSuccess3(t *testing.T) {
 	m.EXPECT().ReserveResource(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
 			return m1, nil
-		}).AnyTimes()
+		}).Times(1)
 	m.EXPECT().PreCreateObjectApproval(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, task task.ApprovalCreateObjectTask) error { return nil }).AnyTimes()
 	m.EXPECT().HandleCreateObjectApprovalTask(gomock.Any(), gomock.Any()).DoAndReturn(
