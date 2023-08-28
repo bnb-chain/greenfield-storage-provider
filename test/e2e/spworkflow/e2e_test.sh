@@ -10,7 +10,7 @@ GREENFIELD_REPO_TAG="v0.2.4-alpha.2"
 # greenfield cmd branch name: auth-refactoring
 GREENFIELD_CMD_TAG="v0.1.0-alpha.1"
 # greenfield go sdk branch name: develop
-GREENFIELD_GO_SDK_TAG="9a511bf864c922d689a51f1fcbe23274a246cf9d"
+GREENFIELD_GO_SDK_TAG="1b48a48cce714e4dec8d29e2439148d8b3621f3c"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
