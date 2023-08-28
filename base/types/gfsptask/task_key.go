@@ -1,6 +1,7 @@
 package gfsptask
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
 
@@ -29,15 +30,15 @@ const (
 	KeyPrefixGfSpMigratePieceTask           = "MigratePiece"
 )
 
-func GfSpCreateBucketApprovalTaskKey(bucket string, account string, visibility int32) task.TKey {
+func GfSpCreateBucketApprovalTaskKey(bucket string, account string, fingerprint []byte) task.TKey {
 	return task.TKey(KeyPrefixGfSpCreateBucketApprovalTask + CombineKey("bucket:"+bucket, "account:"+account,
-		"visibility:"+fmt.Sprint(visibility)))
+		"fingerprint:"+hex.EncodeToString(fingerprint)))
 }
 
-func GfSpCreateObjectApprovalTaskKey(bucket, object string, account string, visibility int32) task.TKey {
+func GfSpCreateObjectApprovalTaskKey(bucket, object string, account string, fingerprint []byte) task.TKey {
 	return task.TKey(KeyPrefixGfSpCreateObjectApprovalTask +
 		CombineKey("bucket:"+bucket, "object:"+object, "account:"+account,
-			"visibility:"+fmt.Sprint(visibility)))
+			"fingerprint:"+hex.EncodeToString(fingerprint)))
 }
 
 func GfSpMigrateBucketApprovalTaskKey(bucket string, migrateBucketHash string) task.TKey {

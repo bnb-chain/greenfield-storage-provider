@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-common/go/hash"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -40,6 +41,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		createBucketApproval  = storagetypes.MsgCreateBucket{}
 		migrateBucketApproval = storagetypes.MsgMigrateBucket{}
 		createObjectApproval  = storagetypes.MsgCreateObject{}
+		fingerprint           []byte
 		spInfo                *sptypes.StorageProvider
 		authenticated         bool
 	)
@@ -77,6 +79,8 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		err = ErrDecodeMsg
 		return
 	}
+
+	fingerprint = hash.GenerateChecksum(approvalMsg)
 
 	switch approvalType {
 	case createBucketApprovalAction:
@@ -123,7 +127,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
-		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, fingerprint, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
 		startAskCreateBucketApproval := time.Now()
 		authenticated, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
@@ -215,7 +219,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
-		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, fingerprint, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
 		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)

@@ -129,6 +129,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			integrity = hash.GenerateIntegrityHash(checksums)
 			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
+					"object_info", uploadObjectTask.GetObjectInfo(),
 					"actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
 				return ErrInvalidIntegrity
@@ -236,7 +237,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		err           error
 		segIdx        = uint32(int64(offset) / segmentSize)
 		pieceKey      string
-		integrity     []byte
 		readN         int
 		readSize      int
 		data          = make([]byte, segmentSize)
@@ -285,8 +285,9 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				}
 				integrityHash := hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList)
 				if !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
-					log.CtxErrorw(ctx, "invalid integrity hash", "integrity", hex.EncodeToString(integrity),
-						"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
+					log.CtxErrorw(ctx, "invalid integrity hash", "object_info", task.GetObjectInfo(),
+						"actual", hex.EncodeToString(integrityHash),
+						"expected", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
 					return ErrInvalidIntegrity
 				}
 				integrityMeta.IntegrityChecksum = integrityHash
