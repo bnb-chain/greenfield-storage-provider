@@ -40,7 +40,7 @@ const (
 	// system.
 	DefaultGlobalRecoveryPieceParallel int = 7
 	// DefaultGlobalMigrateGVGParallel defines the default max parallel migrating gvg in SP system.
-	DefaultGlobalMigrateGVGParallel int = 10
+	DefaultGlobalMigrateGVGParallel int = 200
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
 	// object tasks in manager.
 	DefaultGlobalDownloadObjectTaskCacheSize int = 4096

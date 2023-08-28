@@ -1019,7 +1019,7 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 					unit.SrcSP,
 					runner.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					runner.manager.baseApp.TaskMaxRetry(migrateGVGTask))
-				if err = runner.manager.migrateGVGQueue.Push(migrateGVGTask); err != nil {
+				if err = runner.manager.migrateGVGQueuePush(migrateGVGTask); err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
 					continue
@@ -1263,12 +1263,12 @@ func SendAndConfirmTx(chainClient consensus.Consensus, sendTxFunc SendTxFunc) er
 		time.Sleep(time.Duration(i*backoffSecondInterval) * time.Second)
 		txHash, err = sendTxFunc()
 		if err != nil {
-			log.Errorw("failed to send tx", "error", err)
+			log.Errorw("failed to send tx", "txHash", txHash, "error", err)
 			continue
 		}
 		_, err = chainClient.ConfirmTransaction(ctx, txHash)
 		if err != nil {
-			log.Errorw("failed to confirm tx", "error", err)
+			log.Errorw("failed to confirm tx", "txHash", txHash, "error", err)
 			continue
 		}
 		return nil // succeed
