@@ -655,6 +655,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 
 	pushErr = m.migrateGVGQueuePopByLimitAndPushAgain(task)
 	if pushErr != nil {
+		log.CtxErrorw(ctx, "failed to push task to migrate gvg queue", "task", task, "error", pushErr)
 		return pushErr
 	}
 
@@ -664,7 +665,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		err = m.spExitScheduler.UpdateMigrateProgress(task)
 	}
 
-	log.CtxInfow(ctx, "succeed to handle migrate gvg task", "task", task, "error", err, "error_push", pushErr)
+	log.CtxInfow(ctx, "succeed to handle migrate gvg task", "task", task, "error", err)
 	return err
 }
 
