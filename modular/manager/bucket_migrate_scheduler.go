@@ -431,7 +431,12 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
 		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "bucket_id", bucketID, "error", err)
 		return err
 	}
+	for _, migrateGVGUnit := range executePlan.gvgUnitMap {
+		key := gfsptask.GfSpMigrateGVGTaskKey(migrateGVGUnit.SrcGVG.GetId(), migrateGVGUnit.BucketID, piecestore.PrimarySPRedundancyIndex)
+		s.manager.migrateGVGQueuePopByKey(key)
+	}
 	s.deleteExecutePlanByBucketID(bucketID)
+
 	executePlan.stopSPSchedule()
 	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
 	return err
