@@ -788,7 +788,7 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 			log.Errorw("failed to push gvg task queue", "task", task, "error", pushErr)
 		}
 	}
-	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "error", pushErr)
+	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
 
 	return pushErr
 }
