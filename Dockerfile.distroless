@@ -1,0 +1,27 @@
+FROM golang:1.20-alpine as builder
+
+RUN apk add --no-cache make git bash protoc
+
+ADD . /greenfield-storage-provider
+
+ENV CGO_ENABLED=1
+ENV GO111MODULE=on
+ENV EXT_LD_FLAGS=-static
+
+# For Private REPO
+ARG GH_TOKEN=""
+RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
+RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://github.com"
+
+RUN apk add --no-cache gcc libstdc++-dev libc-dev
+
+RUN cd /greenfield-storage-provider \
+    && make build
+
+# https://github.com/GoogleContainerTools/distroless/blob/main/base/README.md
+FROM gcr.io/distroless/base-debian11
+
+USER nonroot:nonroot
+WORKDIR /home/nonroot
+COPY --from=builder --chown=nonroot:nonroot /greenfield-storage-provider/build/gnfd-sp $WORKDIR
+ENTRYPOINT ["./gnfd-sp"]

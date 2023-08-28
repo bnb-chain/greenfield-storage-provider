@@ -14,6 +14,7 @@ fi
 buf generate
 
 go build -ldflags "\
+  -extldflags=${EXT_LD_FLAGS}
   -X 'main.Version=${Version}' \
   -X 'main.CommitID=${CommitID}' \
   -X 'main.BranchName=${BranchName}' \
