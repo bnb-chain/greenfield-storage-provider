@@ -173,9 +173,8 @@ func (g *GfSpBaseApp) GfBsDBBackup() bsdb.BSDB {
 }
 
 // SetGfBsDB sets the block syncer db client.
-func (g *GfSpBaseApp) SetGfBsDB(setDB bsdb.BSDB) bsdb.BSDB {
+func (g *GfSpBaseApp) SetGfBsDB(setDB bsdb.BSDB) {
 	g.gfBsDB = setDB
-	return g.gfBsDB
 }
 
 // ServerForRegister returns the Grpc server for module register own service.
@@ -189,9 +188,8 @@ func (g *GfSpBaseApp) ResourceManager() corercmgr.ResourceManager {
 }
 
 // SetResourceManager sets the resource manager for module to open own resource span.
-func (g *GfSpBaseApp) SetResourceManager(rcmgr corercmgr.ResourceManager) corercmgr.ResourceManager {
+func (g *GfSpBaseApp) SetResourceManager(rcmgr corercmgr.ResourceManager) {
 	g.rcmgr = rcmgr
-	return g.rcmgr
 }
 
 // Start the GfSpBaseApp and blocks the progress until signal.

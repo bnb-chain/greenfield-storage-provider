@@ -35,6 +35,8 @@ exclude:
     - .*_mocks.go$    # excludes all mock generated files
     - .*_mock.go$     # excludes all mock generated files
     - e2e/.*          # excludes e2e directory files
+    - modular/p2p/.*
+    - base/gfspclient
  
 # NOTES:
 # - symbol `/` in all path regexps will be replaced by

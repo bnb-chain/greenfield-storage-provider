@@ -131,8 +131,8 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
 	signature, err = a.baseApp.GfSpClient().SignMigrateBucketApproval(ctx, task.GetMigrateBucketInfo())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign the migrate bucket approval", "error", err)
-		return false, ErrSignerWithDetail("failed to sign the migrate bucket approval, error: " + err.Error())
+		log.CtxErrorw(ctx, "failed to sign migrate bucket approval", "error", err)
+		return false, ErrSignerWithDetail("failed to sign migrate bucket approval, error: " + err.Error())
 	}
 	task.GetMigrateBucketInfo().GetDstPrimarySpApproval().Sig = signature
 	_ = a.bucketQueue.Push(task)
@@ -185,7 +185,7 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_bucket_cost").Observe(time.Since(startSignApproval).Seconds())
 	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_bucket_end").Observe(time.Since(startQueryQueue).Seconds())
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign the create object approval", "error", err)
+		log.CtxErrorw(ctx, "failed to sign create object approval", "error", err)
 		return false, err
 	}
 	task.GetCreateObjectInfo().GetPrimarySpApproval().Sig = signature
