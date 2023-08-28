@@ -435,7 +435,7 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
 	}
 	executePlan, err := s.getExecutePlanByBucketID(bucketID)
 	if err != nil {
-		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "bucket_id", bucketID)
+		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "bucket_id", bucketID, "error", err)
 		return err
 	}
 	s.deleteExecutePlanByBucketID(bucketID)
@@ -672,7 +672,6 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 		} else {
 			migrateBucketUnits, err = conflictChecker.GenerateMigrateBucketUnits(true)
 		}
-
 	} else {
 		migrateBucketUnits, err = conflictChecker.GenerateMigrateBucketUnits(false)
 	}
@@ -766,6 +765,7 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 	migrateExecuteUnit, ok := executePlan.gvgUnitMap[gvgID]
 	if !ok {
 		// maybe bucket migrate canceled
+		log.Debugw("failed to update migrate progress", "task", task)
 		return fmt.Errorf("gvg unit is not found")
 	}
 	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.BucketID, migrateExecuteUnit.SrcGVG.GetId())
