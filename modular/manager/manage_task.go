@@ -652,8 +652,16 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		return ErrDanglingTask
 	}
 	var err, pushErr error
+	cancelTask := false
 
-	pushErr = m.migrateGVGQueuePopByLimitAndPushAgain(task)
+	if task.GetBucketID() != 0 {
+		// if there is no execute plan, we should cancel this task
+		if _, err = m.bucketMigrateScheduler.getExecutePlanByBucketID(task.GetBucketID()); err != nil {
+			cancelTask = true
+		}
+	}
+
+	pushErr = m.migrateGVGQueuePopByLimitAndPushAgain(task, !cancelTask)
 	if pushErr != nil {
 		log.CtxErrorw(ctx, "failed to push task to migrate gvg queue", "task", task, "error", pushErr)
 		return pushErr
