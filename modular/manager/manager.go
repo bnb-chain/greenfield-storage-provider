@@ -769,7 +769,13 @@ func (m *ManageModular) migrateGVGQueuePopByLimit(limit rcmgr.Limit) task.Task {
 	return task
 }
 
-func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateGVGTask) error {
+func (m *ManageModular) migrateGVGQueuePopByKey(key task.TKey) {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+	m.migrateGVGQueue.PopByKey(key)
+}
+
+func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateGVGTask, push bool) error {
 	m.migrateGVGQueueMux.Lock()
 	defer m.migrateGVGQueueMux.Unlock()
 
@@ -777,12 +783,12 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 
 	m.migrateGVGQueue.PopByKey(task.Key())
 	task.SetUpdateTime(time.Now().Unix())
-	if !task.GetFinished() {
+	if !task.GetFinished() || push {
 		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
 			log.Errorw("failed to push gvg task queue", "task", task, "error", pushErr)
 		}
 	}
-	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "error", pushErr)
+	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
 
 	return pushErr
 }

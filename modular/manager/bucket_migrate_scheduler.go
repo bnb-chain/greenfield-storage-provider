@@ -426,19 +426,17 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 }
 
 func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
-	expected, err := s.checkBucketFromChain(bucketID, storagetypes.BUCKET_STATUS_CREATED)
-	if err != nil {
-		return err
-	}
-	if !expected {
-		return nil
-	}
 	executePlan, err := s.getExecutePlanByBucketID(bucketID)
 	if err != nil {
 		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "bucket_id", bucketID, "error", err)
 		return err
 	}
+	for _, migrateGVGUnit := range executePlan.gvgUnitMap {
+		key := gfsptask.GfSpMigrateGVGTaskKey(migrateGVGUnit.SrcGVG.GetId(), migrateGVGUnit.BucketID, piecestore.PrimarySPRedundancyIndex)
+		s.manager.migrateGVGQueuePopByKey(key)
+	}
 	s.deleteExecutePlanByBucketID(bucketID)
+
 	executePlan.stopSPSchedule()
 	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
 	return err
