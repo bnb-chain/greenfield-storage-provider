@@ -132,7 +132,7 @@ func CustomizeStrategyTQueueWithLimit(newFunc coretaskqueue.NewTQueueOnStrategyW
 		if cfg.Customize == nil {
 			cfg.Customize = &Customize{}
 		}
-		if cfg.Customize.NewStrategyTQueueFunc != nil {
+		if cfg.Customize.NewStrategyTQueueWithLimitFunc != nil {
 			return errors.New("repeated set strategy task queue with limit")
 		}
 		cfg.Customize.NewStrategyTQueueWithLimitFunc = newFunc
