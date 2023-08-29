@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.2.4
+
+FEATURES
+* [#1029](https://github.com/bnb-chain/greenfield-storage-provider/pull/1029) feat: use aliyun oss sdk to visit oss
+* [#1042](https://github.com/bnb-chain/greenfield-storage-provider/pull/1042) feat: add go routine metrics
+* [#1057](https://github.com/bnb-chain/greenfield-storage-provider/pull/1057) feat: list object policies and add number of group members
+* [#1067](https://github.com/bnb-chain/greenfield-storage-provider/pull/1067) feat: Docker image distroless update
+
+BUGFIX
+* [#1039](https://github.com/bnb-chain/greenfield-storage-provider/pull/1039) fix: remove funding key in singer module
+* [#1053](https://github.com/bnb-chain/greenfield-storage-provider/pull/1053) fix: add more metrics log for PickUpTask
+* [#1054](https://github.com/bnb-chain/greenfield-storage-provider/pull/1054) fix: fix quota db to support get quota by month
+* [#1062](https://github.com/bnb-chain/greenfield-storage-provider/pull/1062) fix: add fingerprint to approval key
+* [#1071](https://github.com/bnb-chain/greenfield-storage-provider/pull/1071) fix: cancel migrate bucket bug
+* [#1074](https://github.com/bnb-chain/greenfield-storage-provider/pull/1074) fix: set correct Content-Disposition when downloading an object
+
+TEST
+* [#1032](https://github.com/bnb-chain/greenfield-storage-provider/pull/1032) test: modular/approver pkg adds UTs
+* [#1035](https://github.com/bnb-chain/greenfield-storage-provider/pull/1035) test: metadata bsdb UT
+* [#1040](https://github.com/bnb-chain/greenfield-storage-provider/pull/1040) test: add cmd ut
+* [#1046](https://github.com/bnb-chain/greenfield-storage-provider/pull/1046) test: add downloader ut
+* [#1068](https://github.com/bnb-chain/greenfield-storage-provider/pull/1068) test: gfspapp pkg adds UTs part II
+* [#1073](https://github.com/bnb-chain/greenfield-storage-provider/pull/1073) test: gfspconfig and gfsppieceop pkg add UTs
+
 ## v0.2.4-alpha.9
 
 FEATURES
