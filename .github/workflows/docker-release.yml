@@ -45,6 +45,14 @@ jobs:
           --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
           -f ./Dockerfile -t "${IMAGE_NAME}"
 
+          docker build . \
+          --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
+          --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
+          --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+          --label "org.opencontainers.image.version=$(git describe --tags --abbrev=0)" \
+          --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
+          -f ./Dockerfile.distroless -t "${IMAGE_NAME}:distroless"
+
       - name: Log into registry
         run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
@@ -60,5 +68,7 @@ jobs:
           echo VERSION=$VERSION
           docker tag $IMAGE_NAME $IMAGE_NAME:$VERSION
           docker tag $IMAGE_NAME $IMAGE_NAME:latest
+          docker tag ${IMAGE_NAME}:distroless $IMAGE_NAME:$VERSION-distroless
           docker push $IMAGE_NAME:$VERSION
           docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:$VERSION-distroless
