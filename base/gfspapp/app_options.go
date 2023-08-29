@@ -432,6 +432,7 @@ func DefaultGfSpResourceManagerOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConf
 	}
 	if cfg.Customize.Rcmgr == nil {
 		cfg.Customize.Rcmgr = gfsprcmgr.NewResourceManager(cfg.Customize.RcLimiter)
+		log.Infow("succeed to init resource manager", "limit", cfg.Customize.RcLimiter.String())
 	}
 	if !cfg.Rcmgr.DisableRcmgr {
 		app.rcmgr = cfg.Customize.Rcmgr

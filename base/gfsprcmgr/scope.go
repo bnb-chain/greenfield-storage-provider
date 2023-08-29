@@ -71,6 +71,12 @@ func (s *resourceScope) BeginSpan() (corercmgr.ResourceScopeSpan, error) {
 func (s *resourceScope) Done() {
 	s.Lock()
 	defer s.Unlock()
+	log.Debugw("begin to release resources",
+		"span_id", s.spanID, "reserved_stat", s.owner.rc.stat().String(), "release_stat", s.rc.stat().String())
+	defer func() {
+		log.Debugw("end to release resources",
+			"span_id", s.spanID, "reserved_stat", s.owner.rc.stat().String(), "release_stat", s.rc.stat().String())
+	}()
 	if s.done {
 		return
 	}
@@ -448,6 +454,12 @@ func (s *resourceScope) ReleaseForChild(st corercmgr.ScopeStat) {
 func (s *resourceScope) ReserveResources(st *corercmgr.ScopeStat) error {
 	s.Lock()
 	defer s.Unlock()
+	log.Debugw("begin to reserve resources",
+		"span_id", s.spanID, "reserved_stat", s.rc.stat().String(), "alloc_stat", st.String())
+	defer func() {
+		log.Debugw("end to reserve resources",
+			"span_id", s.spanID, "reserved_stat", s.rc.stat().String(), "alloced_stat", st.String())
+	}()
 	if s.done {
 		return s.wrapError(ErrResourceScopeClosed)
 	}
