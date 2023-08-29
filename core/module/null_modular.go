@@ -41,7 +41,6 @@ func (*NullModular) QueryTasks(ctx context.Context, keyPrefix task.TKey) ([]task
 func (m *NullModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
 	return nil, ErrNilModular
 }
-
 func (m *NullModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
 	return nil, ErrNilModular
 }
@@ -52,7 +51,6 @@ func (*NullModular) HandleCreateBucketApprovalTask(context.Context, task.Approva
 	return false, ErrNilModular
 }
 func (*NullModular) PostCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) {}
-
 func (*NullModular) PreMigrateBucketApproval(context.Context, task.ApprovalMigrateBucketTask) error {
 	return ErrNilModular
 }
@@ -60,14 +58,12 @@ func (*NullModular) HandleMigrateBucketApprovalTask(context.Context, task.Approv
 	return false, ErrNilModular
 }
 func (*NullModular) PostMigrateBucketApproval(context.Context, task.ApprovalMigrateBucketTask) {}
-
 func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateBucketTask) (uint32, error) {
 	return 0, ErrNilModular
 }
 func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.MsgSwapOut) error {
 	return ErrNilModular
 }
-
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
 }
@@ -96,7 +92,6 @@ func (*NullModular) HandleResumableUploadObjectTask(ctx context.Context, task ta
 }
 func (*NullModular) PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) {
 }
-
 func (*NullModular) HandleUploadObjectTask(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
 	return nil
 }
@@ -144,23 +139,18 @@ func (*NullModular) HandleDownloadObjectTask(context.Context, task.DownloadObjec
 func (*NullModular) HandleChallengePieceTask(context.Context, task.ChallengePieceTask) error {
 	return ErrNilModular
 }
-
 func (*NullModular) VerifyAuthentication(context.Context, AuthOpType, string, string, string) (bool, error) {
 	return false, ErrNilModular
 }
-
 func (*NullModular) GetAuthNonce(ctx context.Context, account string, domain string) (*corespdb.OffChainAuthKey, error) {
 	return nil, ErrNilModular
 }
-
 func (*NullModular) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64) (bool, error) {
 	return false, ErrNilModular
 }
-
 func (*NullModular) VerifyOffChainSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign string) (bool, error) {
 	return false, ErrNilModular
 }
-
 func (*NullModular) VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error) {
 	return false, ErrNilModular
 }

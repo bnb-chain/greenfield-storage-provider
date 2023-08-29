@@ -88,51 +88,39 @@ func (*NullConsensus) HasAccount(context.Context, string) (bool, error) {
 func (*NullConsensus) ListSPs(context.Context) ([]*sptypes.StorageProvider, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) QuerySP(context.Context, string) (*sptypes.StorageProvider, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) QuerySPFreeQuota(context.Context, string) (uint64, error) {
 	return 0, nil
 }
-
 func (*NullConsensus) QuerySPPrice(context.Context, string) (sptypes.SpStoragePrice, error) {
 	return sptypes.SpStoragePrice{}, nil
 }
-
 func (*NullConsensus) QuerySPByID(context.Context, uint32) (*sptypes.StorageProvider, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) ListBondedValidators(context.Context) ([]stakingtypes.Validator, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) ListVirtualGroupFamilies(context.Context, uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) ListGlobalVirtualGroupsByFamilyID(context.Context, uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) AvailableGlobalVirtualGroupFamilies(context.Context, []uint32) ([]uint32, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) QueryVirtualGroupFamily(context.Context, uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) QueryGlobalVirtualGroup(context.Context, uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) QueryVirtualGroupParams(context.Context) (*virtualgrouptypes.Params, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) QueryStorageParams(context.Context) (*storagetypes.Params, error) {
 	return nil, nil
 }
@@ -172,9 +160,7 @@ func (*NullConsensus) ListenRejectUnSealObject(context.Context, uint64, int) (bo
 func (*NullConsensus) ConfirmTransaction(context.Context, string) (*sdk.TxResponse, error) {
 	return nil, nil
 }
-
 func (*NullConsensus) WaitForNextBlock(context.Context) error {
 	return nil
 }
-
 func (*NullConsensus) Close() error { return nil }

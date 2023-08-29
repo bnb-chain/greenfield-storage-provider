@@ -4,22 +4,23 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/stretchr/testify/assert"
+
+	corevgmgr "github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 )
 
 func Test_addVirtualGroupFamily(t *testing.T) {
 	cases := []struct {
 		name string
-		vgf  *vgmgr.VirtualGroupFamilyMeta
+		vgf  *corevgmgr.VirtualGroupFamilyMeta
 	}{
 		{
 			name: "1",
-			vgf:  &vgmgr.VirtualGroupFamilyMeta{FamilyStakingStorageSize: 0},
+			vgf:  &corevgmgr.VirtualGroupFamilyMeta{FamilyStakingStorageSize: 0},
 		},
 		{
 			name: "2",
-			vgf: &vgmgr.VirtualGroupFamilyMeta{
+			vgf: &corevgmgr.VirtualGroupFamilyMeta{
 				FamilyUsedStorageSize:    1,
 				FamilyStakingStorageSize: 100,
 			},
@@ -36,15 +37,15 @@ func Test_addVirtualGroupFamily(t *testing.T) {
 func Test_addGlobalVirtualGroup(t *testing.T) {
 	cases := []struct {
 		name string
-		vgf  *vgmgr.GlobalVirtualGroupMeta
+		vgf  *corevgmgr.GlobalVirtualGroupMeta
 	}{
 		{
 			name: "1",
-			vgf:  &vgmgr.GlobalVirtualGroupMeta{},
+			vgf:  &corevgmgr.GlobalVirtualGroupMeta{},
 		},
 		{
 			name: "2",
-			vgf: &vgmgr.GlobalVirtualGroupMeta{
+			vgf: &corevgmgr.GlobalVirtualGroupMeta{
 				UsedStorageSize:    1,
 				StakingStorageSize: 100,
 			},
@@ -93,6 +94,19 @@ func Test_pickIndex(t *testing.T) {
 	}
 }
 
-func Test_pickVirtualGroupFamily1(t *testing.T) {
+func Test_pickVirtualGroupFamilySuccess(t *testing.T) {
+	vgfm := &virtualGroupFamilyManager{vgfIDToVgf: map[uint32]*corevgmgr.VirtualGroupFamilyMeta{
+		1: {FamilyUsedStorageSize: 1, FamilyStakingStorageSize: 100}}}
+	filter := corevgmgr.NewPickVGFFilter([]uint32{1, 2})
+	result, err := vgfm.pickVirtualGroupFamily(filter)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+}
 
+func Test_pickVirtualGroupFamilyFailure(t *testing.T) {
+	vgfm := &virtualGroupFamilyManager{vgfIDToVgf: map[uint32]*corevgmgr.VirtualGroupFamilyMeta{}}
+	filter := &corevgmgr.PickVGFFilter{AvailableVgfIDSet: map[uint32]struct{}{}}
+	result, err := vgfm.pickVirtualGroupFamily(filter)
+	assert.Equal(t, ErrFailedPickVGF, err)
+	assert.Nil(t, result)
 }
