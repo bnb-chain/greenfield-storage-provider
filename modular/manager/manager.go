@@ -711,7 +711,7 @@ func (m *ManageModular) backUpTask() {
 	if targetTask != nil {
 		targetTask.AppendLog("start-pop-task-from-queue:" + startPopTime)
 		targetTask.AppendLog("end-pop-task-from-queue:" + endPopTime)
-		targetTask.AppendLog("start-pickup-task-to-dispatch: " + startPickUpTime)
+		targetTask.AppendLog("start-pickup-task-to-dispatch:" + startPickUpTime)
 		targetTask.AppendLog("end-pickup-task-to-dispatch")
 
 		atomic.AddInt64(&m.backupTaskNum, 1)
@@ -727,28 +727,28 @@ func (m *ManageModular) repushTask(reserved task.Task) {
 	switch t := reserved.(type) {
 	case *gfsptask.GfSpReplicatePieceTask:
 		err := m.replicateQueue.Push(t)
-		log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
+		log.Infow("retry push replicate task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpSealObjectTask:
 		err := m.sealQueue.Push(t)
-		log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
+		log.Infow("retry push seal task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpReceivePieceTask:
 		err := m.receiveQueue.Push(t)
-		log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
+		log.Infow("retry push receive task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpGCObjectTask:
 		err := m.gcObjectQueue.Push(t)
-		log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
+		log.Infow("retry push gc object task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpGCZombiePieceTask:
 		err := m.gcZombieQueue.Push(t)
-		log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
+		log.Infow("retry push gc zombie task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpGCMetaTask:
 		err := m.gcMetaQueue.Push(t)
-		log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
+		log.Infow("retry push gc meta task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpRecoverPieceTask:
 		err := m.recoveryQueue.Push(t)
-		log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
+		log.Infow("retry push recovery task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpMigrateGVGTask:
 		err := m.migrateGVGQueuePush(t)
-		log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
+		log.Infow("retry push migration gvg task to queue after dispatching", "error", err)
 	}
 }
 
