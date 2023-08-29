@@ -3,6 +3,7 @@ package gfsptask
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -445,24 +446,19 @@ func (m *GfSpReplicatePieceTask) EstimateLimit() corercmgr.Limit {
 		}
 	} else {
 		if m.GetObjectInfo().GetPayloadSize() < m.GetStorageParams().GetMaxPayloadSize() {
-			l.Memory = int64(m.GetObjectInfo().GetPayloadSize())
+			size := float64(m.GetStorageParams().VersionedParams.GetMaxSegmentSize()) *
+				(float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) +
+					float64(m.GetStorageParams().VersionedParams.GetRedundantParityChunkNum())) /
+				float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum())
+			l.Memory = int64(math.Ceil(size))
 		} else {
-			l.Memory = int64(m.GetStorageParams().VersionedParams.GetMaxSegmentSize())
+			// it is an estimation method, within a few bytes of error
+			size := float64(m.GetStorageParams().VersionedParams.GetMaxSegmentSize()) *
+				(float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) +
+					float64(m.GetStorageParams().VersionedParams.GetRedundantParityChunkNum())) /
+				float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum())
+			l.Memory = int64(math.Ceil(size))
 		}
-		//if m.GetObjectInfo().GetPayloadSize() < m.GetStorageParams().GetMaxPayloadSize() {
-		//	size := float64(m.GetStorageParams().VersionedParams.GetMaxSegmentSize()) *
-		//		(float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) +
-		//			float64(m.GetStorageParams().VersionedParams.GetRedundantParityChunkNum())) /
-		//		float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum())
-		//	l.Memory = int64(math.Ceil(size))
-		//} else {
-		//	// it is an estimation method, within a few bytes of error
-		//	size := float64(m.GetObjectInfo().GetPayloadSize()) *
-		//		(float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) +
-		//			float64(m.GetStorageParams().VersionedParams.GetRedundantParityChunkNum())) /
-		//		float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum())
-		//	l.Memory = int64(math.Ceil(size))
-		//}
 	}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
