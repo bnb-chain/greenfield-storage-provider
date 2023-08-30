@@ -25,7 +25,9 @@ func createTempFile(t *testing.T) *os.File {
 	fmt.Println(tmpdir)
 	f, _ := os.CreateTemp(tmpdir, "test_disk_file.txt")
 	f.Write([]byte("Hello"))
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	return f
 }
 
