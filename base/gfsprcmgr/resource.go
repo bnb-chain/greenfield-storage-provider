@@ -86,7 +86,7 @@ func (rc *resources) checkMemory(rsvp int64, prio uint8) error {
 		// Special case where we've set max limits.
 		return nil
 	}
-	newmem, addOk := addInt64WithOverflow(rc.memory, rsvp)
+	newMem, addOk := addInt64WithOverflow(rc.memory, rsvp)
 	threshold, mulOk := mulInt64WithOverflow(1+int64(prio), limit)
 	if !mulOk {
 		thresholdBig := big.NewInt(limit)
@@ -102,7 +102,7 @@ func (rc *resources) checkMemory(rsvp int64, prio uint8) error {
 		threshold = threshold / 256
 	}
 finish:
-	if !addOk || newmem > threshold {
+	if !addOk || newMem > threshold {
 		return &ErrMemoryLimitExceeded{
 			current:   rc.memory,
 			attempted: rsvp,

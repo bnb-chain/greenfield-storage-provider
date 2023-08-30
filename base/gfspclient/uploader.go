@@ -5,6 +5,8 @@ import (
 	"io"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -12,9 +14,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error {
+func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader,
+	opts ...grpc.DialOption) error {
 	startTime := time.Now()
-	conn, connErr := s.Connection(ctx, s.uploaderEndpoint)
+	conn, connErr := s.Connection(ctx, s.uploaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect uploader", "error", connErr)
 		return ErrRPCUnknownWithDetail("client failed to connect uploader, error: " + connErr.Error())
@@ -44,7 +47,9 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_read_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		sendSize += n
 		if streamErr == io.EOF {
+			log.Info("weijfweneni")
 			if n != 0 {
+				log.Info("12312203")
 				req := &gfspserver.GfSpUploadObjectRequest{
 					UploadObjectTask: task.(*gfsptask.GfSpUploadObjectTask),
 					Payload:          buf[0:n],
@@ -64,7 +69,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 			metrics.PerfPutObjectTime.WithLabelValues("client_put_object_send_last_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 			if closeErr != nil {
 				log.CtxErrorw(ctx, "failed to close upload stream", "error", closeErr)
-				return ErrRPCUnknownWithDetail("failed to new uploader stream client, error: " + err.Error())
+				return ErrRPCUnknownWithDetail("failed to new uploader stream client, error: " + closeErr.Error())
 			}
 			if resp.GetErr() != nil {
 				return resp.GetErr()
@@ -90,8 +95,9 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 	}
 }
 
-func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader) error {
-	conn, connErr := s.Connection(ctx, s.uploaderEndpoint)
+func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader,
+	opts ...grpc.DialOption) error {
+	conn, connErr := s.Connection(ctx, s.uploaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect uploader", "error", connErr)
 		return ErrRPCUnknownWithDetail("client failed to connect uploader, error: " + connErr.Error())
@@ -133,7 +139,7 @@ func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.Re
 			resp, closeErr := client.CloseAndRecv()
 			if closeErr != nil {
 				log.CtxErrorw(ctx, "failed to close upload stream", "error", closeErr)
-				return ErrRPCUnknownWithDetail("failed to close upload stream, error: " + err.Error())
+				return ErrRPCUnknownWithDetail("failed to close upload stream, error: " + closeErr.Error())
 			}
 			if resp.GetErr() != nil {
 				return resp.GetErr()

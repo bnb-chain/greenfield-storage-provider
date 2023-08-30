@@ -104,53 +104,29 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	req := &gfspserver.GfSpReportTaskRequest{}
 	switch t := report.(type) {
 	case *gfsptask.GfSpUploadObjectTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_UploadObjectTask{
-			UploadObjectTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_UploadObjectTask{UploadObjectTask: t}
 	case *gfsptask.GfSpResumableUploadObjectTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_ResumableUploadObjectTask{
-			ResumableUploadObjectTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_ResumableUploadObjectTask{ResumableUploadObjectTask: t}
 	case *gfsptask.GfSpReplicatePieceTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_ReplicatePieceTask{
-			ReplicatePieceTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_ReplicatePieceTask{ReplicatePieceTask: t}
 	case *gfsptask.GfSpReceivePieceTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_ReceivePieceTask{
-			ReceivePieceTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_ReceivePieceTask{ReceivePieceTask: t}
 	case *gfsptask.GfSpSealObjectTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_SealObjectTask{
-			SealObjectTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_SealObjectTask{SealObjectTask: t}
 	case *gfsptask.GfSpGCObjectTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_GcObjectTask{
-			GcObjectTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_GcObjectTask{GcObjectTask: t}
 	case *gfsptask.GfSpGCZombiePieceTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_GcZombiePieceTask{
-			GcZombiePieceTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_GcZombiePieceTask{GcZombiePieceTask: t}
 	case *gfsptask.GfSpGCMetaTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_GcMetaTask{
-			GcMetaTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_GcMetaTask{GcMetaTask: t}
 	case *gfsptask.GfSpDownloadObjectTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_DownloadObjectTask{
-			DownloadObjectTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_DownloadObjectTask{DownloadObjectTask: t}
 	case *gfsptask.GfSpChallengePieceTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_ChallengePieceTask{
-			ChallengePieceTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_ChallengePieceTask{ChallengePieceTask: t}
 	case *gfsptask.GfSpRecoverPieceTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{
-			RecoverPieceTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{RecoverPieceTask: t}
 	case *gfsptask.GfSpMigrateGVGTask:
-		req.Request = &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{
-			MigrateGvgTask: t,
-		}
+		req.Request = &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{MigrateGvgTask: t}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type to report")
 		return ErrTypeMismatch
@@ -177,7 +153,11 @@ func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpPickVirtualGroupFamily(ctx, req)
 	if err != nil {
-		return 0, err
+		log.CtxErrorw(ctx, "client failed to pick virtual group family id", "error", err)
+		return 0, ErrRPCUnknownWithDetail("client failed to pick virtual group family id, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return 0, resp.GetErr()
 	}
 	return resp.VgfId, nil
 }
@@ -193,8 +173,8 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyMigrateSwapOut(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to notify migrate swap out", "request", req, "error", err)
-		return err
+		log.CtxErrorw(ctx, "client failed to notify migrate swap out", "request", req, "error", err)
+		return ErrRPCUnknownWithDetail("client failed to notify migrate swap out, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		log.CtxErrorw(ctx, "failed to notify migrate swap out", "request", req, "error", resp.GetErr())

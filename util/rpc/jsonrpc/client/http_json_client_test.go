@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"net"
 	"testing"
 	"time"
@@ -151,6 +152,7 @@ func Test_makeDialContext(t *testing.T) {
 			} else {
 				assert.Nil(t, err)
 				assert.NotNil(t, result)
+				_, _ = result(context.TODO(), "tcp", "localhost:0")
 			}
 		})
 	}

@@ -9,17 +9,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+	"gorm.io/gorm"
+
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
-
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
-	"gorm.io/gorm"
 )
 
 // Now used for test
@@ -694,7 +694,7 @@ func TestUpdateUserPublicKeyHandler(t *testing.T) {
 	}
 }
 
-// msgToString an util method to convert msg from getAuthNonce API to string
+// msgToString a util method to convert msg from getAuthNonce API to string
 func msgToString(currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64) string {
 	var resp = &RequestNonceResp{
 		CurrentNonce:     currentNonce,
