@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.2.4
+
+FEATURES
+* [#1058](https://github.com/bnb-chain/greenfield-storage-provider/pull/1058) feat:delete bs cfg
+* [#1072](https://github.com/bnb-chain/greenfield-storage-provider/pull/1072) feat: use aliyun oss sdk to visit oss
+
+BUGFIX
+* [#1031](https://github.com/bnb-chain/greenfield-storage-provider/pull/1031) fix: modify signer BroadcastMode to sync mode
+* [#1036](https://github.com/bnb-chain/greenfield-storage-provider/pull/1036) fix: bls signature bug (v0.2.4)
+* [#1038](https://github.com/bnb-chain/greenfield-storage-provider/pull/1038) fix: when bucket migrate conflict, migrate ec piece 's bug (v0.2.4)
+* [#1043](https://github.com/bnb-chain/greenfield-storage-provider/pull/1043) fix: remove funding key in singer module
+* [#1050](https://github.com/bnb-chain/greenfield-storage-provider/pull/1050) fix nil pointer err caused by ObjectDetails
+* [#1052](https://github.com/bnb-chain/greenfield-storage-provider/pull/1052) fix: add more metrics log for PickUpTask (v0.2.4)
+* [#1059](https://github.com/bnb-chain/greenfield-storage-provider/pull/1059) fix: fix quota db to support get quota by month
+* [#1063](https://github.com/bnb-chain/greenfield-storage-provider/pull/1063) fix: add fingerprint to approval key
+* [#1064](https://github.com/bnb-chain/greenfield-storage-provider/pull/1064) fix: cancel migrate bucket v0.2.4
+* [#1070](https://github.com/bnb-chain/greenfield-storage-provider/pull/1070) fix: signer module does not need spdb
+* [#1075](https://github.com/bnb-chain/greenfield-storage-provider/pull/1075) fix: set correct Content-Disposition when downloading an object
+
+
 ## v0.2.4-alpha.9
 
 FEATURES

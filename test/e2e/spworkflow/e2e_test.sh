@@ -6,7 +6,7 @@ export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="v0.2.4-alpha.2"
+GREENFIELD_REPO_TAG="v0.2.4"
 # greenfield cmd branch name: auth-refactoring
 GREENFIELD_CMD_TAG="v0.1.0-alpha.1"
 # greenfield go sdk branch name: develop
