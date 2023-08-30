@@ -18,8 +18,8 @@ var _ coretask.ApprovalMigrateBucketTask = &GfSpMigrateBucketApprovalTask{}
 var _ coretask.ApprovalCreateObjectTask = &GfSpCreateObjectApprovalTask{}
 var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
 
-func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(
-	account string, bucket *storagetypes.MsgCreateBucket, fingerprint []byte, priority coretask.TPriority) {
+func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(account string, bucket *storagetypes.MsgCreateBucket,
+	fingerprint []byte, priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.Fingerprint = fingerprint
@@ -31,10 +31,7 @@ func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(
 }
 
 func (m *GfSpCreateBucketApprovalTask) Key() coretask.TKey {
-	return GfSpCreateBucketApprovalTaskKey(
-		m.GetCreateBucketInfo().GetBucketName(),
-		m.GetUserAddress(),
-		m.Fingerprint)
+	return GfSpCreateBucketApprovalTaskKey(m.GetCreateBucketInfo().GetBucketName(), m.GetUserAddress(), m.GetFingerprint())
 }
 
 func (m *GfSpCreateBucketApprovalTask) Type() coretask.TType {
