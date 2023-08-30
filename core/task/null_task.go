@@ -88,12 +88,8 @@ func (*NullTask) GetApprovedSpApprovalAddress() string { return "" }
 func (*NullTask) SetApprovedSpApprovalAddress(string)  {}
 func (*NullTask) InitUploadObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, int64) {
 }
-func (*NullTask) GetVirtualGroupFamilyId() uint32 {
-	return 0
-}
-func (*NullTask) GetGlobalVirtualGroupId() uint32 {
-	return 0
-}
+func (*NullTask) GetVirtualGroupFamilyId() uint32   { return 0 }
+func (*NullTask) GetGlobalVirtualGroupId() uint32   { return 0 }
 func (*NullTask) SetGlobalVirtualGroupID(uint32)    {}
 func (*NullTask) GetBucketMigration() bool          { return false }
 func (*NullTask) SetBucketMigration(migration bool) {}
@@ -164,6 +160,5 @@ func (*NullTask) GetLastMigratedObjectID() uint64                   { return 0 }
 func (*NullTask) SetLastMigratedObjectID(uint64)                    {}
 func (*NullTask) GetFinished() bool                                 { return false }
 func (*NullTask) SetFinished(bool)                                  {}
-
-func (t *NullTask) GetNotAvailableSpIdx() int32  { return 0 }
-func (t *NullTask) SetNotAvailableSpIdx(i int32) {}
+func (*NullTask) GetNotAvailableSpIdx() int32                       { return 0 }
+func (*NullTask) SetNotAvailableSpIdx(i int32)                      {}

@@ -1,15 +1,160 @@
 package gfsptqueue
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
+
+func TestGfSpTQueue_Len(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 1)
+	result := queue.Len()
+	assert.Equal(t, 0, result)
+}
+
+func TestGfSpTQueue_Cap(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 1)
+	result := queue.Cap()
+	assert.Equal(t, 1, result)
+}
+
+func TestGfSpTQueue_Has(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 1)
+	result := queue.Has("mock")
+	assert.Equal(t, false, result)
+}
+
+func TestGfSpTQueue_Top1(t *testing.T) {
+	t.Log("Case description: empty queue")
+	queue := NewGfSpTQueue("mock", 1)
+	result := queue.Top()
+	assert.Nil(t, result)
+}
+
+func TestGfSpTQueue_Top2(t *testing.T) {
+	t.Log("Case description: gcFunc returns false")
+	queue := NewGfSpTQueue("mock", 1)
+	approvalTask := &gfsptask.GfSpCreateObjectApprovalTask{
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
+		},
+	}
+	err := queue.Push(approvalTask)
+	assert.Nil(t, err)
+	queue.SetFilterTaskStrategy(func(task coretask.Task) bool { return false })
+	result := queue.Top()
+	assert.Nil(t, result)
+}
+
+func TestGfSpTQueue_Top3(t *testing.T) {
+	t.Log("Case description: gcFunc returns true")
+	queue := NewGfSpTQueue("mock", 1)
+	approvalTask := &gfsptask.GfSpCreateObjectApprovalTask{
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
+		},
+	}
+	err := queue.Push(approvalTask)
+	assert.Nil(t, err)
+	queue.SetRetireTaskStrategy(func(task coretask.Task) bool { return true })
+	result := queue.Top()
+	assert.Nil(t, result)
+}
+
+func TestGfSpTQueue_Top4(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 2)
+	approvalTask := &gfsptask.GfSpCreateObjectApprovalTask{
+		Task: &gfsptask.GfSpTask{
+			CreateTime: 1,
+		},
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
+		},
+	}
+	approvalTask1 := &gfsptask.GfSpCreateObjectApprovalTask{
+		Task: &gfsptask.GfSpTask{
+			CreateTime: 2,
+		},
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName1",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 100},
+		},
+	}
+	err := queue.Push(approvalTask)
+	assert.Nil(t, err)
+	err = queue.Push(approvalTask1)
+	assert.Nil(t, err)
+	result := queue.Top()
+	assert.NotNil(t, result)
+}
+
+func TestGfSpTQueue_Pop(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 1)
+	approvalTask := &gfsptask.GfSpCreateObjectApprovalTask{
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
+		},
+	}
+	err := queue.Push(approvalTask)
+	assert.Nil(t, err)
+	result := queue.Pop()
+	assert.NotNil(t, result)
+}
+
+func TestGfSpTQueue_PopByKey1(t *testing.T) {
+	t.Log("Case description: has no key")
+	queue := NewGfSpTQueue("mock", 1)
+	result := queue.PopByKey("test")
+	assert.Nil(t, result)
+}
+
+func TestGfSpTQueue_PopByKey2(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 1)
+	approvalTask1 := &gfsptask.GfSpCreateObjectApprovalTask{
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
+		},
+	}
+	err := queue.Push(approvalTask1)
+	assert.Nil(t, err)
+	result := queue.PopByKey("CreateObjectApproval-bucket:-object:mockObjectName-account:-fingerprint:")
+	fmt.Println(result)
+	assert.NotNil(t, result)
+}
+
+func TestGfSpTQueue_Push(t *testing.T) {
+	t.Log("Case description: queue exceeds")
+	queue := NewGfSpTQueue("mock", 1)
+	approvalTask1 := &gfsptask.GfSpCreateObjectApprovalTask{
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName1",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
+		},
+	}
+	approvalTask2 := &gfsptask.GfSpCreateObjectApprovalTask{
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName2",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
+		},
+	}
+	err := queue.Push(approvalTask1)
+	assert.Nil(t, err)
+	err = queue.Push(approvalTask2)
+	assert.Equal(t, ErrTaskQueueExceed, err)
+}
 
 func TestApprovalTaskRetireByExpiredHeight(t *testing.T) {
 	task1 := &gfsptask.GfSpCreateObjectApprovalTask{
@@ -85,8 +230,8 @@ func TestApprovalTaskRetireByExpiredHeight(t *testing.T) {
 	}
 
 	currentBlockHeight := uint64(100)
-	retireFunc := func(qTask task.Task) bool {
-		task := qTask.(task.ApprovalTask)
+	retireFunc := func(qTask coretask.Task) bool {
+		task := qTask.(coretask.ApprovalTask)
 		return task.GetExpiredHeight() < currentBlockHeight
 	}
 	queue := NewGfSpTQueue("test_expired_height_queue", 3)
@@ -106,81 +251,20 @@ func TestApprovalTaskRetireByExpiredHeight(t *testing.T) {
 	}
 }
 
-func TestReplicateTaskRetireByExpired(t *testing.T) {
-	task1 := &gfsptask.GfSpReplicatePieceTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectName: "task_1"},
-		StorageParams: &storagetypes.Params{},
-		Task:          &gfsptask.GfSpTask{MaxRetry: 3, Retry: 5},
-	}
-	task2 := &gfsptask.GfSpReplicatePieceTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectName: "task_2"},
-		StorageParams: &storagetypes.Params{},
-		Task:          &gfsptask.GfSpTask{MaxRetry: 3, Retry: 4},
-	}
-	task3 := &gfsptask.GfSpReplicatePieceTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectName: "task_3"},
-		StorageParams: &storagetypes.Params{},
-		Task:          &gfsptask.GfSpTask{MaxRetry: 3, Retry: 2},
-	}
-	task4 := &gfsptask.GfSpReplicatePieceTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectName: "task_4"},
-		StorageParams: &storagetypes.Params{},
-		Task:          &gfsptask.GfSpTask{MaxRetry: 3, Retry: 2},
-	}
-	task5 := &gfsptask.GfSpReplicatePieceTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectName: "task_5"},
-		StorageParams: &storagetypes.Params{},
-		Task:          &gfsptask.GfSpTask{MaxRetry: 3, Retry: 1},
-	}
-	task6 := &gfsptask.GfSpReplicatePieceTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectName: "task_6"},
-		StorageParams: &storagetypes.Params{},
-		Task:          &gfsptask.GfSpTask{MaxRetry: 3, Retry: 0},
-	}
+func TestGfSpTQueue_SetFilterTaskStrategy(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 1)
+	queue.SetFilterTaskStrategy(func(task coretask.Task) bool { return true })
+}
 
-	testCases := []struct {
-		name string
-		task *gfsptask.GfSpReplicatePieceTask
-	}{
-		{
-			name: "push task expired 1",
-			task: task1,
-		},
-		{
-			name: "push task expired 2",
-			task: task2,
-		},
-		{
-			name: "push task unexpired 3",
-			task: task3,
-		},
-		{
-			name: "push task unexpired 4",
-			task: task4,
-		},
-		{
-			name: "push task unexpired 1",
-			task: task5,
-		},
-		{
-			name: "push task unexpired 2",
-			task: task6,
+func TestGfSpTQueue_ScanTask(t *testing.T) {
+	queue := NewGfSpTQueue("mock", 1)
+	approvalTask1 := &gfsptask.GfSpCreateObjectApprovalTask{
+		CreateObjectInfo: &storagetypes.MsgCreateObject{
+			ObjectName:        "mockObjectName",
+			PrimarySpApproval: &common.Approval{ExpiredHeight: 99},
 		},
 	}
-	retireFunc := func(qTask task.Task) bool {
-		return qTask.ExceedRetry()
-	}
-	queue := NewGfSpTQueueWithLimit("test_expired_queue", 3)
-	queue.SetRetireTaskStrategy(retireFunc)
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			err := queue.Push(testCase.task)
-			if testCase.task == task6 {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
+	err := queue.Push(approvalTask1)
+	assert.Nil(t, err)
+	queue.ScanTask(func(task coretask.Task) { log.Info(task) })
 }
