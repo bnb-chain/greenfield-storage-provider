@@ -131,6 +131,14 @@ func (m *GfSpMigrateGVGTask) AppendLog(log string) {
 	m.GetTask().AppendLog(log)
 }
 
+func (m *GfSpMigrateGVGTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpMigrateGVGTask) SetUserAddress(s string) {
+	m.GetTask().SetUserAddress(s)
+}
+
 func (m *GfSpMigrateGVGTask) Error() error {
 	return m.GetTask().Error()
 }
