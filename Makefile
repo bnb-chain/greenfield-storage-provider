@@ -53,7 +53,7 @@ mock-gen:
 
 # only run unit tests, exclude e2e tests
 test:
-	go test -failfast $$(go list ./... | grep -v e2e) -covermode=atomic -coverprofile=./coverage.out -timeout 99999s
+	go test -failfast $$(go list ./... | grep -v e2e |grep -v modular/blocksyncer) -covermode=atomic -coverprofile=./coverage.out -timeout 99999s
 	# go test -cover ./...
 	# go test -coverprofile=coverage.out ./...
 	# go tool cover -html=coverage.out

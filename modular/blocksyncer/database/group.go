@@ -18,14 +18,14 @@ func (db *DB) UpdateGroup(ctx context.Context, group *models.Group) error {
 
 func (db *DB) CreateGroupToSQL(ctx context.Context, groupMembers []*models.Group) (string, []interface{}) {
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Group{}).TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "group_id"}, {Name: "account_id"}},
+		Columns:   []clause.Column{{Name: "account_id"}, {Name: "group_id"}},
 		UpdateAll: true,
 	}).Create(groupMembers).Statement
 	return stat.SQL.String(), stat.Vars
 }
 
 func (db *DB) UpdateGroupToSQL(ctx context.Context, group *models.Group) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Group{}).TableName()).Where("group_id = ? AND account_id = ?", group.GroupID, group.AccountID).Updates(group).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Group{}).TableName()).Where("account_id = ? AND group_id = ? ", group.AccountID, group.GroupID).Updates(group).Statement
 	return stat.SQL.String(), stat.Vars
 }
 
