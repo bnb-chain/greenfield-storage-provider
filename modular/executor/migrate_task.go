@@ -344,7 +344,7 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	var (
 		objectID = objectInfo.Id.Uint64()
 	)
-	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectID, redundancyIdx, segmentCount)
+	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(objectID, redundancyIdx, segmentCount)
 	if err != nil {
 		log.Errorw("failed to get checksum from db", "object_info", objectInfo, "error", err)
 		return ErrGfSpDBWithDetail("failed to get checksum from db, object_info: " + objectInfo.String() + ",error: " + err.Error())

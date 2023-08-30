@@ -453,7 +453,7 @@ func (m *GfSpReplicatePieceTask) EstimateLimit() corercmgr.Limit {
 			l.Memory = int64(math.Ceil(size))
 		} else {
 			// it is an estimation method, within a few bytes of error
-			size := float64(m.GetObjectInfo().GetPayloadSize()) *
+			size := float64(m.GetStorageParams().VersionedParams.GetMaxSegmentSize()) *
 				(float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum()) +
 					float64(m.GetStorageParams().VersionedParams.GetRedundantParityChunkNum())) /
 				float64(m.GetStorageParams().VersionedParams.GetRedundantDataChunkNum())

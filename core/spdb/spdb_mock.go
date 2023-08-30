@@ -65,6 +65,20 @@ func (mr *MockSPDBMockRecorder) DeleteAllReplicatePieceChecksum(objectID, redund
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
 }
 
+// DeleteAllReplicatePieceChecksumOptimized mocks base method.
+func (m *MockSPDB) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllReplicatePieceChecksumOptimized", objectID, redundancyIdx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllReplicatePieceChecksumOptimized indicates an expected call of DeleteAllReplicatePieceChecksumOptimized.
+func (mr *MockSPDBMockRecorder) DeleteAllReplicatePieceChecksumOptimized(objectID, redundancyIdx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksumOptimized", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReplicatePieceChecksumOptimized), objectID, redundancyIdx)
+}
+
 // DeleteGCObjectProgress mocks base method.
 func (m *MockSPDB) DeleteGCObjectProgress(taskKey string) error {
 	m.ctrl.T.Helper()
@@ -188,6 +202,21 @@ func (mr *MockSPDBMockRecorder) GetAllReplicatePieceChecksum(objectID, redundanc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).GetAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
 }
 
+// GetAllReplicatePieceChecksumOptimized mocks base method.
+func (m *MockSPDB) GetAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllReplicatePieceChecksumOptimized", objectID, redundancyIdx, pieceCount)
+	ret0, _ := ret[0].([][]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllReplicatePieceChecksumOptimized indicates an expected call of GetAllReplicatePieceChecksumOptimized.
+func (mr *MockSPDBMockRecorder) GetAllReplicatePieceChecksumOptimized(objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksumOptimized", reflect.TypeOf((*MockSPDB)(nil).GetAllReplicatePieceChecksumOptimized), objectID, redundancyIdx, pieceCount)
+}
+
 // GetAuthKey mocks base method.
 func (m *MockSPDB) GetAuthKey(userAddress, domain string) (*OffChainAuthKey, error) {
 	m.ctrl.T.Helper()
@@ -221,16 +250,16 @@ func (mr *MockSPDBMockRecorder) GetBucketReadRecord(bucketID, timeRange interfac
 // GetBucketTraffic mocks base method.
 func (m *MockSPDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
+	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
 	ret0, _ := ret[0].(*BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketTraffic indicates an expected call of GetBucketTraffic.
-func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
+func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
 // GetGCMetasToGC mocks base method.
@@ -1069,6 +1098,20 @@ func (mr *MockSignatureDBMockRecorder) DeleteAllReplicatePieceChecksum(objectID,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).DeleteAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
 }
 
+// DeleteAllReplicatePieceChecksumOptimized mocks base method.
+func (m *MockSignatureDB) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllReplicatePieceChecksumOptimized", objectID, redundancyIdx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllReplicatePieceChecksumOptimized indicates an expected call of DeleteAllReplicatePieceChecksumOptimized.
+func (mr *MockSignatureDBMockRecorder) DeleteAllReplicatePieceChecksumOptimized(objectID, redundancyIdx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksumOptimized", reflect.TypeOf((*MockSignatureDB)(nil).DeleteAllReplicatePieceChecksumOptimized), objectID, redundancyIdx)
+}
+
 // DeleteObjectIntegrity mocks base method.
 func (m *MockSignatureDB) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) error {
 	m.ctrl.T.Helper()
@@ -1096,6 +1139,21 @@ func (m *MockSignatureDB) GetAllReplicatePieceChecksum(objectID uint64, redundan
 func (mr *MockSignatureDBMockRecorder) GetAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).GetAllReplicatePieceChecksum), objectID, redundancyIdx, pieceCount)
+}
+
+// GetAllReplicatePieceChecksumOptimized mocks base method.
+func (m *MockSignatureDB) GetAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllReplicatePieceChecksumOptimized", objectID, redundancyIdx, pieceCount)
+	ret0, _ := ret[0].([][]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllReplicatePieceChecksumOptimized indicates an expected call of GetAllReplicatePieceChecksumOptimized.
+func (mr *MockSignatureDBMockRecorder) GetAllReplicatePieceChecksumOptimized(objectID, redundancyIdx, pieceCount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllReplicatePieceChecksumOptimized", reflect.TypeOf((*MockSignatureDB)(nil).GetAllReplicatePieceChecksumOptimized), objectID, redundancyIdx, pieceCount)
 }
 
 // GetObjectIntegrity mocks base method.
@@ -1222,18 +1280,18 @@ func (mr *MockTrafficDBMockRecorder) GetBucketReadRecord(bucketID, timeRange int
 }
 
 // GetBucketTraffic mocks base method.
-func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
+func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
+	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
 	ret0, _ := ret[0].(*BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketTraffic indicates an expected call of GetBucketTraffic.
-func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
+func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
 // GetObjectReadRecord mocks base method.

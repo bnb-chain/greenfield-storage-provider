@@ -368,6 +368,45 @@ func (s *SpDBImpl) GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx i
 	return pieceChecksumList, nil
 }
 
+// GetAllReplicatePieceChecksumOptimized gets all replicate piece checksums for a given objectID and redundancyIdx.
+func (s *SpDBImpl) GetAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
+	var (
+		err            error
+		queryReturns   []PieceHashTable
+		pieceChecksums [][]byte
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetAllReplicatePieceChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureGetAllReplicatePieceChecksum).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetAllReplicatePieceChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessGetAllReplicatePieceChecksum).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	if err = s.db.Model(&PieceHashTable{}).
+		Where("object_id = ? and redundancy_index = ?", objectID, redundancyIdx).
+		Limit(int(pieceCount)).
+		Find(&queryReturns).Error; err != nil {
+		return nil, err
+	}
+
+	pieceChecksums = make([][]byte, 0, len(queryReturns))
+	for _, queryReturn := range queryReturns {
+		pieceChecksum, err := hex.DecodeString(queryReturn.PieceChecksum)
+		if err != nil {
+			return nil, err
+		}
+		pieceChecksums = append(pieceChecksums, pieceChecksum)
+	}
+
+	return pieceChecksums, nil
+}
+
 // DeleteAllReplicatePieceChecksum deletes all the piece checksum.
 func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error {
 	var (
@@ -395,4 +434,26 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyId
 		segmentIdx++
 	}
 	return nil
+}
+
+// DeleteAllReplicatePieceChecksumOptimized deletes all piece checksums for a given objectID.
+func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) (err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureDelAllReplicatePieceChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureDelAllReplicatePieceChecksum).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	err = s.db.Delete(&PieceHashTable{
+		ObjectID:        objectID,
+		RedundancyIndex: redundancyIdx,
+	}).Error
+	return err
 }

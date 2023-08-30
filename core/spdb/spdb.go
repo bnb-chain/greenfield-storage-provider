@@ -76,8 +76,12 @@ type SignatureDB interface {
 	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
 	// GetAllReplicatePieceChecksum gets all piece hashes.
 	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
+	// GetAllReplicatePieceChecksumOptimized gets all piece hashes.
+	GetAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
 	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
+	// DeleteAllReplicatePieceChecksumOptimized deletes all piece hashes.
+	DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error
 }
 
 // TrafficDB defines a series of traffic interfaces.

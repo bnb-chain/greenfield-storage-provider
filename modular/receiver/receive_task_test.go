@@ -209,7 +209,7 @@ func TestHandleDoneReceivePieceTask_GetAllPieceChecksumFailed(t *testing.T) {
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to get all piece checksum")).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to get all piece checksum")).Times(1)
 	_, err := r.HandleDoneReceivePieceTask(context.TODO(), mockTask)
 	assert.NotNil(t, err)
 }
@@ -235,7 +235,7 @@ func TestHandleDoneReceivePieceTask_PieceCountMismatch(t *testing.T) {
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
 	_, err := r.HandleDoneReceivePieceTask(context.TODO(), mockTask)
 	assert.NotNil(t, err)
 }
@@ -261,7 +261,7 @@ func TestHandleDoneReceivePieceTask_SignSecondarySealBlsFailed(t *testing.T) {
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
 	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
 	r.baseApp.SetGfSpClient(mockGRPCAPI)
 	mockGRPCAPI.EXPECT().SignSecondarySealBls(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to sign bls")).Times(1)
@@ -290,7 +290,7 @@ func TestHandleDoneReceivePieceTask_SetObjectIntegrityFailed(t *testing.T) {
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
 	mockSPDB.EXPECT().SetObjectIntegrity(gomock.Any()).Return(fmt.Errorf("failed to set integrity")).Times(1)
 	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
 	r.baseApp.SetGfSpClient(mockGRPCAPI)
@@ -320,9 +320,9 @@ func TestHandleDoneReceivePieceTask_HandleDoneReceivePieceTaskSucceed(t *testing
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
 	mockSPDB.EXPECT().SetObjectIntegrity(gomock.Any()).Return(nil).Times(1)
-	mockSPDB.EXPECT().DeleteAllReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("failed to delete all piece checksum")).Times(1)
+	mockSPDB.EXPECT().DeleteAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any()).Return(fmt.Errorf("failed to delete all piece checksum")).Times(1)
 	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
 	r.baseApp.SetGfSpClient(mockGRPCAPI)
 	mockGRPCAPI.EXPECT().SignSecondarySealBls(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
