@@ -3,11 +3,11 @@ package command
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"time"
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
