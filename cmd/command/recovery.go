@@ -22,20 +22,23 @@ const (
 )
 
 var bucketFlag = &cli.StringFlag{
-	Name:     "b",
+	Name:     "bucket",
 	Usage:    "The bucket name",
+	Aliases:  []string{"b"},
 	Required: true,
 }
 
 var objectFlag = &cli.StringFlag{
-	Name:     "o",
+	Name:     "object",
 	Usage:    "The object name",
-	Required: true,
+	Aliases:  []string{"o"},
+	Required: false,
 }
 
 var objectListFlag = &cli.BoolFlag{
 	Name:     "objectList",
 	Usage:    "if it is an single object or list",
+	Aliases:  []string{"l"},
 	Required: false,
 }
 
@@ -81,6 +84,10 @@ func recoverObjectAction(ctx *cli.Context) error {
 	}
 	client := utils.MakeGfSpClient(cfg)
 	bucketName := ctx.String(bucketFlag.Name)
+
+	if !ctx.IsSet(objectFlag.Name) && !ctx.IsSet(objectListFlag.Name) {
+		return fmt.Errorf("either object flag or objectList flag has to be set for object(s) recovery cmd")
+	}
 
 	if ctx.IsSet(objectListFlag.Name) {
 		if ctx.NArg() < 1 {
