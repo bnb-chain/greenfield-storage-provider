@@ -117,7 +117,7 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	respBytes = processBucketsXmlResponse(respBytes, grpcResponse.Buckets)
+	respBytes = processVGFInfoBucketXmlResponse(respBytes, grpcResponse.Buckets)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2473,6 +2473,111 @@ func (g *GateModular) listObjectPoliciesHandler(w http.ResponseWriter, r *http.R
 	w.Write(respBytes)
 }
 
+// listPaymentAccountStreamsHandler list payment account streams
+func (g *GateModular) listPaymentAccountStreamsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err            error
+		respBytes      []byte
+		reqCtx         *RequestContext
+		paymentAccount string
+		buckets        []*types.Bucket
+		queryParams    url.Values
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list payment account streams", reqCtx.String())
+			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	paymentAccount = queryParams.Get(PaymentAccountQuery)
+
+	if ok := common.IsHexAddress(paymentAccount); !ok {
+		log.Errorw("failed to check payment account", "payment-account", paymentAccount, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	buckets, err = g.baseApp.GfSpClient().ListPaymentAccountStreams(reqCtx.Context(), paymentAccount)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list payment account streams", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListPaymentAccountStreamsResponse{Buckets: buckets}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list payment account streams", "error", err)
+		return
+	}
+
+	respBytes = processBucketsXmlResponse(respBytes, grpcResponse.Buckets)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
+// listUserPaymentAccountsHandler list payment accounts by owner address
+func (g *GateModular) listUserPaymentAccountsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		respBytes     []byte
+		reqCtx        *RequestContext
+		streamRecords []*types.StreamRecordMeta
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list payment accounts by owner address", reqCtx.String())
+			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	if ok := common.IsHexAddress(r.Header.Get(GnfdUserAddressHeader)); !ok {
+		log.Errorw("failed to check X-Gnfd-User-Address", "X-Gnfd-User-Address", reqCtx.account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	streamRecords, err = g.baseApp.GfSpClient().ListUserPaymentAccounts(reqCtx.Context(), r.Header.Get(GnfdUserAddressHeader))
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list payment accounts by owner address", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpListUserPaymentAccountsResponse{StreamRecords: streamRecords}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to list payment accounts by owner address", "error", err)
+		return
+	}
+
+	respBytes = processPaymentResponse(respBytes, grpcResponse)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
 // processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
 func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)
@@ -2558,6 +2663,23 @@ func processBucketsWithPaymentResponse(respBytes []byte, buckets []*types.GfSpGe
 	return
 }
 
+// processPaymentResponse process the unhandled Uint id and several balance of payment xml unmarshal
+func processPaymentResponse(respBytes []byte, payments *types.GfSpListUserPaymentAccountsResponse) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, payment := range payments.StreamRecords {
+		if payment != nil {
+			// iterate through each payment Uint value
+			respString = strings.Replace(respString, "<NetflowRate></NetflowRate>", "<NetflowRate>"+payment.StreamRecord.NetflowRate.String()+"</NetflowRate>", 1)
+			respString = strings.Replace(respString, "<StaticBalance></StaticBalance>", "<StaticBalance>"+payment.StreamRecord.StaticBalance.String()+"</StaticBalance>", 1)
+			respString = strings.Replace(respString, "<BufferBalance></BufferBalance>", "<BufferBalance>"+payment.StreamRecord.BufferBalance.String()+"</BufferBalance>", 1)
+			respString = strings.Replace(respString, "<LockBalance></LockBalance>", "<LockBalance>"+payment.StreamRecord.LockBalance.String()+"</LockBalance>", 1)
+			respString = strings.Replace(respString, "<FrozenNetflowRate></FrozenNetflowRate>", "<FrozenNetflowRate>"+payment.StreamRecord.FrozenNetflowRate.String()+"</FrozenNetflowRate>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
 // processBucketsMapXmlResponse process the unhandled Uint id of bucket map xml unmarshal
 func processBucketsMapXmlResponse(respBytes []byte, buckets map[uint64]*types.Bucket) (respBytesProcessed []byte) {
 	respString := string(respBytes)
@@ -2591,6 +2713,19 @@ func processGroupMembersXmlResponse(respBytes []byte, groupMembers []*types.Grou
 		if group != nil {
 			// iterate through each group and assign id value
 			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processVGFInfoBucketXmlResponse process the unhandled Uint id of bucket with vgf xml unmarshal
+func processVGFInfoBucketXmlResponse(respBytes []byte, buckets []*types.VGFInfoBucket) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, bucket := range buckets {
+		if bucket != nil {
+			// iterate through each bucket and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
 		}
 	}
 	respBytesProcessed = []byte(respString)

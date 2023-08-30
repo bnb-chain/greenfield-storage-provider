@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield/types/s3util"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
@@ -46,9 +47,26 @@ func (r *MetadataModular) GfSpGetUserBuckets(
 		return
 	}
 
-	res := make([]*types.Bucket, 0)
+	vgfIDs := make([]uint32, len(buckets))
+	for i, bucket := range buckets {
+		vgfIDs[i] = bucket.GlobalVirtualGroupFamilyID
+	}
+
+	families, err := r.baseApp.GfBsDB().ListVirtualGroupFamiliesByVgfIDs(vgfIDs)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list vgf by vgf ids", "error", err)
+		return
+	}
+
+	vgfMap := make(map[uint32]*model.GlobalVirtualGroupFamily)
+	for _, family := range families {
+		vgfMap[family.GlobalVirtualGroupFamilyId] = family
+	}
+
+	res := make([]*types.VGFInfoBucket, 0)
 	for _, bucket := range buckets {
-		res = append(res, &types.Bucket{
+		vgf := vgfMap[bucket.GlobalVirtualGroupFamilyID]
+		res = append(res, &types.VGFInfoBucket{
 			BucketInfo: &storage_types.BucketInfo{
 				Owner:                      bucket.Owner.String(),
 				BucketName:                 bucket.BucketName,
@@ -69,6 +87,12 @@ func (r *MetadataModular) GfSpGetUserBuckets(
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			Vgf: &virtual_types.GlobalVirtualGroupFamily{
+				Id:                    vgf.GlobalVirtualGroupFamilyId,
+				PrimarySpId:           vgf.PrimarySpId,
+				GlobalVirtualGroupIds: vgf.GlobalVirtualGroupIds,
+				VirtualPaymentAddress: vgf.VirtualPaymentAddress.String(),
+			},
 		})
 	}
 	resp = &types.GfSpGetUserBucketsResponse{Buckets: res}

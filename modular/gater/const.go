@@ -77,6 +77,8 @@ const (
 	GetGroupListSourceTypeQuery = "source-type"
 	// GetGroupListLimitQuery defines get group list limit query, which is used to route request
 	GetGroupListLimitQuery = "limit"
+	// PaymentAccountQuery defines payment account query
+	PaymentAccountQuery = "payment-account"
 	// GetGroupListOffsetQuery defines get group list offset query, which is used to route request
 	GetGroupListOffsetQuery = "offset"
 	// IDsQuery defines ids of storage metadata value
@@ -135,6 +137,10 @@ const (
 	GetUserOwnedGroupsQuery = "owned-groups"
 	// ListObjectPoliciesQuery defines list policies by object info, which is used to route request
 	ListObjectPoliciesQuery = "object-policies"
+	// ListPaymentAccountStreamsQuery defines list payment account streams, which is used to route request
+	ListPaymentAccountStreamsQuery = "payment-buckets"
+	// ListUserPaymentAccountsQuery defines list payment accounts by owner address, which is used to route request
+	ListUserPaymentAccountsQuery = "user-payments"
 	// GetGroupMembersQuery defines query sp info, which is used to route request
 	GetGroupMembersQuery = "group-members"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for

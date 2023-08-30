@@ -344,7 +344,7 @@ func defaultGfBsDB(config *config.SQLDBConfig) {
 		config.Address = "127.0.0.1:3306"
 	}
 	if config.Database == "" {
-		config.Database = "block_syncer_db"
+		config.Database = "block_syncer"
 	}
 }
 

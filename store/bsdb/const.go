@@ -68,6 +68,8 @@ const (
 	StorageProviderTableName = "storage_providers"
 	// StreamRecordTableName stream records of payment info
 	StreamRecordTableName = "stream_records"
+	// PaymentAccountTableName defines payment account info
+	PaymentAccountTableName = "payment_accounts"
 )
 
 // define the list objects const

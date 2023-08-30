@@ -417,13 +417,13 @@ func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *type
 	ret2, _ := ret[2].(uint64)
 	ret3, _ := ret[3].(uint64)
 	ret4, _ := ret[4].(error)
-	return ret0, ret1, ret2, ret3,ret4
+	return ret0, ret1, ret2, ret3, ret4
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
 func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, bucket,yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucket, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
@@ -797,14 +797,14 @@ func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectState(ctx, objectID inte
 }
 
 // GetUserBuckets mocks base method.
-func (m *MockGfSpClientAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error) {
+func (m *MockGfSpClientAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetUserBuckets", varargs...)
-	ret0, _ := ret[0].([]*types.Bucket)
+	ret0, _ := ret[0].([]*types.VGFInfoBucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1181,6 +1181,26 @@ func (mr *MockGfSpClientAPIMockRecorder) ListObjectsInGVGAndBucket(ctx, gvgID, b
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVGAndBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectsInGVGAndBucket), varargs...)
 }
 
+// ListPaymentAccountStreams mocks base method.
+func (m *MockGfSpClientAPI) ListPaymentAccountStreams(ctx context.Context, paymentAccount string, opts ...grpc.DialOption) ([]*types.Bucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, paymentAccount}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListPaymentAccountStreams", varargs...)
+	ret0, _ := ret[0].([]*types.Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListPaymentAccountStreams indicates an expected call of ListPaymentAccountStreams.
+func (mr *MockGfSpClientAPIMockRecorder) ListPaymentAccountStreams(ctx, paymentAccount interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, paymentAccount}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAccountStreams", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListPaymentAccountStreams), varargs...)
+}
+
 // ListSpExitEvents mocks base method.
 func (m *MockGfSpClientAPI) ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error) {
 	m.ctrl.T.Helper()
@@ -1219,6 +1239,26 @@ func (mr *MockGfSpClientAPIMockRecorder) ListSwapOutEvents(ctx, blockID, spID in
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSwapOutEvents", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListSwapOutEvents), varargs...)
+}
+
+// ListUserPaymentAccounts mocks base method.
+func (m *MockGfSpClientAPI) ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.StreamRecordMeta, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, accountID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListUserPaymentAccounts", varargs...)
+	ret0, _ := ret[0].([]*types.StreamRecordMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListUserPaymentAccounts indicates an expected call of ListUserPaymentAccounts.
+func (mr *MockGfSpClientAPIMockRecorder) ListUserPaymentAccounts(ctx, accountID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, accountID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserPaymentAccounts", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListUserPaymentAccounts), varargs...)
 }
 
 // ListVirtualGroupFamiliesSpID mocks base method.
@@ -2439,7 +2479,7 @@ func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
 func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, bucket,yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucket, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
@@ -2706,14 +2746,14 @@ func (mr *MockMetadataAPIMockRecorder) GetUploadObjectState(ctx, objectID interf
 }
 
 // GetUserBuckets mocks base method.
-func (m *MockMetadataAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error) {
+func (m *MockMetadataAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetUserBuckets", varargs...)
-	ret0, _ := ret[0].([]*types.Bucket)
+	ret0, _ := ret[0].([]*types.VGFInfoBucket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3076,6 +3116,26 @@ func (mr *MockMetadataAPIMockRecorder) ListObjectsInGVGAndBucket(ctx, gvgID, buc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVGAndBucket", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectsInGVGAndBucket), varargs...)
 }
 
+// ListPaymentAccountStreams mocks base method.
+func (m *MockMetadataAPI) ListPaymentAccountStreams(ctx context.Context, paymentAccount string, opts ...grpc.DialOption) ([]*types.Bucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, paymentAccount}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListPaymentAccountStreams", varargs...)
+	ret0, _ := ret[0].([]*types.Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListPaymentAccountStreams indicates an expected call of ListPaymentAccountStreams.
+func (mr *MockMetadataAPIMockRecorder) ListPaymentAccountStreams(ctx, paymentAccount interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, paymentAccount}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAccountStreams", reflect.TypeOf((*MockMetadataAPI)(nil).ListPaymentAccountStreams), varargs...)
+}
+
 // ListSpExitEvents mocks base method.
 func (m *MockMetadataAPI) ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error) {
 	m.ctrl.T.Helper()
@@ -3114,6 +3174,26 @@ func (mr *MockMetadataAPIMockRecorder) ListSwapOutEvents(ctx, blockID, spID inte
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSwapOutEvents", reflect.TypeOf((*MockMetadataAPI)(nil).ListSwapOutEvents), varargs...)
+}
+
+// ListUserPaymentAccounts mocks base method.
+func (m *MockMetadataAPI) ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.StreamRecordMeta, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, accountID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListUserPaymentAccounts", varargs...)
+	ret0, _ := ret[0].([]*types.StreamRecordMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListUserPaymentAccounts indicates an expected call of ListUserPaymentAccounts.
+func (mr *MockMetadataAPIMockRecorder) ListUserPaymentAccounts(ctx, accountID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, accountID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserPaymentAccounts", reflect.TypeOf((*MockMetadataAPI)(nil).ListUserPaymentAccounts), varargs...)
 }
 
 // ListVirtualGroupFamiliesSpID mocks base method.

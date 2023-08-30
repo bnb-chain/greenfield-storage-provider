@@ -119,7 +119,7 @@ func Test_defaultGfBsDB(t *testing.T) {
 		MaxOpenConns:    0,
 	}
 	defaultGfBsDB(cfg)
-	assert.Equal(t, "block_syncer_db", cfg.Database)
+	assert.Equal(t, "block_syncer", cfg.Database)
 }
 
 func TestDefaultGfSpPieceStoreOptionSuccess1(t *testing.T) {
