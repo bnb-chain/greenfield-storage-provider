@@ -7,6 +7,7 @@ package bsdb
 import (
 	reflect "reflect"
 
+	types "github.com/bnb-chain/greenfield/x/permission/types"
 	common "github.com/forbole/juno/v4/common"
 	gomock "go.uber.org/mock/gomock"
 	gorm "gorm.io/gorm"
@@ -168,6 +169,21 @@ func (m *MockMetadata) GetGroupMembers(groupID common.Hash, startAfter common.Ad
 func (mr *MockMetadataMockRecorder) GetGroupMembers(groupID, startAfter, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembers", reflect.TypeOf((*MockMetadata)(nil).GetGroupMembers), groupID, startAfter, limit)
+}
+
+// GetGroupMembersCount mocks base method.
+func (m *MockMetadata) GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGroupMembersCount", groupIDs)
+	ret0, _ := ret[0].([]*GroupCount)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGroupMembersCount indicates an expected call of GetGroupMembersCount.
+func (mr *MockMetadataMockRecorder) GetGroupMembersCount(groupIDs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembersCount", reflect.TypeOf((*MockMetadata)(nil).GetGroupMembersCount), groupIDs)
 }
 
 // GetGroupsByGroupIDAndAccount mocks base method.
@@ -667,6 +683,21 @@ func (mr *MockMetadataMockRecorder) ListMigrateBucketEvents(blockID, spID interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockMetadata)(nil).ListMigrateBucketEvents), blockID, spID)
 }
 
+// ListObjectPolicies mocks base method.
+func (m *MockMetadata) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectPolicies", objectID, actionType, startAfter, limit)
+	ret0, _ := ret[0].([]*Permission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectPolicies indicates an expected call of ListObjectPolicies.
+func (mr *MockMetadataMockRecorder) ListObjectPolicies(objectID, actionType, startAfter, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockMetadata)(nil).ListObjectPolicies), objectID, actionType, startAfter, limit)
+}
+
 // ListObjectsByBucketName mocks base method.
 func (m *MockMetadata) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error) {
 	m.ctrl.T.Helper()
@@ -985,6 +1016,21 @@ func (m *MockBSDB) GetGroupMembers(groupID common.Hash, startAfter common.Addres
 func (mr *MockBSDBMockRecorder) GetGroupMembers(groupID, startAfter, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembers", reflect.TypeOf((*MockBSDB)(nil).GetGroupMembers), groupID, startAfter, limit)
+}
+
+// GetGroupMembersCount mocks base method.
+func (m *MockBSDB) GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGroupMembersCount", groupIDs)
+	ret0, _ := ret[0].([]*GroupCount)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGroupMembersCount indicates an expected call of GetGroupMembersCount.
+func (mr *MockBSDBMockRecorder) GetGroupMembersCount(groupIDs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembersCount", reflect.TypeOf((*MockBSDB)(nil).GetGroupMembersCount), groupIDs)
 }
 
 // GetGroupsByGroupIDAndAccount mocks base method.
@@ -1482,6 +1528,21 @@ func (m *MockBSDB) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 func (mr *MockBSDBMockRecorder) ListMigrateBucketEvents(blockID, spID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockBSDB)(nil).ListMigrateBucketEvents), blockID, spID)
+}
+
+// ListObjectPolicies mocks base method.
+func (m *MockBSDB) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListObjectPolicies", objectID, actionType, startAfter, limit)
+	ret0, _ := ret[0].([]*Permission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListObjectPolicies indicates an expected call of ListObjectPolicies.
+func (mr *MockBSDBMockRecorder) ListObjectPolicies(objectID, actionType, startAfter, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockBSDB)(nil).ListObjectPolicies), objectID, actionType, startAfter, limit)
 }
 
 // ListObjectsByBucketName mocks base method.

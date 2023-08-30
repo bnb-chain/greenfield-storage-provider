@@ -250,16 +250,16 @@ func (mr *MockSPDBMockRecorder) GetBucketReadRecord(bucketID, timeRange interfac
 // GetBucketTraffic mocks base method.
 func (m *MockSPDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
+	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
 	ret0, _ := ret[0].(*BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketTraffic indicates an expected call of GetBucketTraffic.
-func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
+func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
 // GetGCMetasToGC mocks base method.
@@ -1280,18 +1280,18 @@ func (mr *MockTrafficDBMockRecorder) GetBucketReadRecord(bucketID, timeRange int
 }
 
 // GetBucketTraffic mocks base method.
-func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
+func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID)
+	ret := m.ctrl.Call(m, "GetBucketTraffic", bucketID, yearMonth)
 	ret0, _ := ret[0].(*BucketTraffic)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBucketTraffic indicates an expected call of GetBucketTraffic.
-func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID interface{}) *gomock.Call {
+func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
 // GetObjectReadRecord mocks base method.

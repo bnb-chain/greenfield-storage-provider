@@ -184,7 +184,7 @@ func TestPreUploadObject(t *testing.T) {
 			return &payment_types.StreamRecord{}, nil
 		}).AnyTimes()
 
-	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, fmt.Errorf("failed to get bucket traffic")).Times(1)
+	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to get bucket traffic")).Times(1)
 
 	mockTask2 := &gfsptask.GfSpDownloadObjectTask{
 		BucketInfo: &storagetypes.BucketInfo{
@@ -205,7 +205,7 @@ func TestPreUploadObject(t *testing.T) {
 		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
 			return &payment_types.StreamRecord{}, nil
 		}).AnyTimes()
-	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, nil)
+	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any(), gomock.Any()).Return(nil, nil)
 	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
 	d.baseApp.SetConsensus(mockConsensusAPI)
 	mockConsensusAPI.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(100), nil)
@@ -301,7 +301,7 @@ func TestPreDownloadPiece(t *testing.T) {
 		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
 			return &payment_types.StreamRecord{}, nil
 		}).AnyTimes()
-	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, fmt.Errorf("failed to get bucket traffic")).Times(1)
+	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to get bucket traffic")).Times(1)
 
 	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
 	d.baseApp.SetConsensus(mockConsensusAPI)
@@ -331,7 +331,7 @@ func TestPreDownloadPiece(t *testing.T) {
 			return &payment_types.StreamRecord{}, nil
 		}).AnyTimes()
 
-	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any()).Return(nil, nil)
+	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any(), gomock.Any()).Return(nil, nil)
 
 	mockConsensusAPI.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(100), nil)
 	mockConsensusAPI.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{}, nil)
