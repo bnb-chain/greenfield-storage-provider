@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 )
 
 // GfSpGetPaymentByBucketName get bucket payment info by a bucket name
@@ -78,5 +80,90 @@ func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *typ
 
 	resp = &types.GfSpGetPaymentByBucketIDResponse{StreamRecord: res}
 	log.CtxInfow(ctx, "succeed to get payment by bucket id")
+	return resp, nil
+}
+
+// GfSpListPaymentAccountStreams list payment account streams
+func (r *MetadataModular) GfSpListPaymentAccountStreams(ctx context.Context, req *types.GfSpListPaymentAccountStreamsRequest) (resp *types.GfSpListPaymentAccountStreamsResponse, err error) {
+	var (
+		buckets []*model.Bucket
+		res     []*types.Bucket
+	)
+
+	ctx = log.Context(ctx, req)
+
+	buckets, err = r.baseApp.GfBsDB().ListPaymentAccountStreams(common.HexToAddress(req.PaymentAccount))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list payment account streams", "error", err)
+		return
+	}
+
+	res = make([]*types.Bucket, len(buckets))
+	for i, bucket := range buckets {
+		res[i] = &types.Bucket{
+			BucketInfo: &storage_types.BucketInfo{
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
+				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+			},
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
+		}
+	}
+
+	resp = &types.GfSpListPaymentAccountStreamsResponse{Buckets: res}
+	log.CtxInfow(ctx, "succeed to list payment account streams")
+	return resp, nil
+}
+
+// GfSpListUserPaymentAccounts list payment accounts by owner address
+func (r *MetadataModular) GfSpListUserPaymentAccounts(ctx context.Context, req *types.GfSpListUserPaymentAccountsRequest) (resp *types.GfSpListUserPaymentAccountsResponse, err error) {
+	var (
+		streamRecords []*model.StreamRecordPaymentAccount
+		res           []*types.StreamRecordMeta
+	)
+
+	ctx = log.Context(ctx, req)
+
+	streamRecords, err = r.baseApp.GfBsDB().ListUserPaymentAccounts(common.HexToAddress(req.AccountId))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list payment accounts by owner address", "error", err)
+		return
+	}
+
+	res = make([]*types.StreamRecordMeta, len(streamRecords))
+	for i, streamRecord := range streamRecords {
+		res[i] = &types.StreamRecordMeta{
+			StreamRecord: &payment_types.StreamRecord{
+				Account:           streamRecord.Account.String(),
+				CrudTimestamp:     streamRecord.CrudTimestamp,
+				NetflowRate:       math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
+				StaticBalance:     math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
+				BufferBalance:     math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
+				LockBalance:       math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
+				Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
+				SettleTimestamp:   streamRecord.SettleTimestamp,
+				OutFlowCount:      streamRecord.OutFlowCount,
+				FrozenNetflowRate: math.NewIntFromBigInt(streamRecord.FrozenNetflowRate.Raw()),
+			},
+			Refundable: streamRecord.Refundable,
+		}
+	}
+
+	resp = &types.GfSpListUserPaymentAccountsResponse{StreamRecords: res}
+	log.CtxInfow(ctx, "succeed to list payment accounts by owner address")
 	return resp, nil
 }

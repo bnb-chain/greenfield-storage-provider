@@ -116,6 +116,12 @@ type Metadata interface {
 	ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error)
 	// GetGroupMembersCount get the count of group members
 	GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, error)
+	// ListVirtualGroupFamiliesByVgfIDs list virtual group families by vgf ids
+	ListVirtualGroupFamiliesByVgfIDs(vgfIDs []uint32) ([]*GlobalVirtualGroupFamily, error)
+	// ListUserPaymentAccounts list payment accounts by owner address
+	ListUserPaymentAccounts(accountID common.Address) ([]*StreamRecordPaymentAccount, error)
+	// ListPaymentAccountStreams list payment account streams
+	ListPaymentAccountStreams(paymentAccount common.Address) ([]*Bucket, error)
 }
 
 // BSDB contains all the methods required by block syncer database

@@ -588,6 +588,22 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: listObjectPoliciesRouterName,
 		},
+		{
+			name:             "List payment accounts by owner address",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListUserPaymentAccountsQuery,
+			shouldMatch:      true,
+			wantedRouterName: listUserPaymentAccountsRouterName,
+		},
+		{
+			name:             "List payment account streams",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListPaymentAccountStreamsQuery + "&" + PaymentAccountQuery,
+			shouldMatch:      true,
+			wantedRouterName: listPaymentAccountStreamsRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
