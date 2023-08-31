@@ -80,6 +80,7 @@ func Test_checksumReaderRead(t *testing.T) {
 }
 
 func Test_verifyChecksum(t *testing.T) {
+	//int32Upper := 4294967296
 	cases := []struct {
 		name         string
 		rc           io.ReadCloser
@@ -107,6 +108,12 @@ func Test_verifyChecksum(t *testing.T) {
 				expected:   10,
 				checksum:   0,
 			},
+		},
+		{
+			name:         "4",
+			rc:           io.NopCloser(strings.NewReader("hello world")),
+			checksum:     "4294967296", // if checksum is out of uint32 range, error will be handled
+			wantedResult: io.NopCloser(strings.NewReader("hello world")),
 		},
 	}
 	for _, tt := range cases {
