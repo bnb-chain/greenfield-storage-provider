@@ -403,7 +403,7 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 		operator    string
 		objectName  string
 		actionType  string
-		action      int
+		action      int32
 		respBytes   []byte
 		queryParams url.Values
 		effect      *permission_types.Effect
@@ -452,7 +452,7 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	action, err = strconv.Atoi(actionType)
+	action, err = util.StringToInt32(actionType)
 	if err != nil {
 		log.Errorw("failed to check action type", "action_type", actionType, "error", err)
 		return
@@ -1210,7 +1210,7 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 		requestActionType   string
 		resourceID          uint64
 		resourceType        uint32
-		actionType          uint32
+		actionType          int32
 		ok                  bool
 		respBytes           []byte
 		queryParams         url.Values
@@ -1263,13 +1263,13 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	if actionType, err = util.StringToUint32(requestActionType); err != nil {
+	if actionType, err = util.StringToInt32(requestActionType); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse action type", "action-type", requestActionType, "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
-	if _, ok = permission_types.ActionType_name[int32(actionType)]; !ok {
+	if _, ok = permission_types.ActionType_name[actionType]; !ok {
 		log.CtxErrorw(reqCtx.Context(), "failed to check action type", "action-type", actionType, "error", err)
 		err = ErrInvalidQuery
 		return
@@ -2391,7 +2391,7 @@ func (g *GateModular) listObjectPoliciesHandler(w http.ResponseWriter, r *http.R
 		requestLimit      string
 		policies          []*types.Policy
 		requestActionType string
-		actionType        uint32
+		actionType        int32
 		requestStartAfter string
 		startAfter        uint64
 		ok                bool
@@ -2443,13 +2443,13 @@ func (g *GateModular) listObjectPoliciesHandler(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	if actionType, err = util.StringToUint32(requestActionType); err != nil {
+	if actionType, err = util.StringToInt32(requestActionType); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse action type", "action-type", requestActionType, "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
-	if _, ok = permission_types.ActionType_name[int32(actionType)]; !ok {
+	if _, ok = permission_types.ActionType_name[actionType]; !ok {
 		log.CtxErrorw(reqCtx.Context(), "failed to check action type", "action-type", actionType, "error", err)
 		err = ErrInvalidQuery
 		return
