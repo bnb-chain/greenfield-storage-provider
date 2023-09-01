@@ -411,7 +411,7 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 			var filteredGroups []*bsdb.Group
 			// filter the group member if they are expired
 			for _, group := range groups {
-				if time.Unix(group.ExpirationTime, 0).After(time.Now()) {
+				if group.ExpirationTime == 0 || time.Unix(group.ExpirationTime, 0).After(time.Now()) {
 					filteredGroups = append(filteredGroups, group)
 				}
 			}
