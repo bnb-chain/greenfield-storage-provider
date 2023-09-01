@@ -62,6 +62,7 @@ type DownloaderAPI interface {
 	GetObject(ctx context.Context, downloadObjectTask coretask.DownloadObjectTask, opts ...grpc.DialOption) ([]byte, error)
 	GetPiece(ctx context.Context, downloadPieceTask coretask.DownloadPieceTask, opts ...grpc.DialOption) ([]byte, error)
 	GetChallengeInfo(ctx context.Context, challengePieceTask coretask.ChallengePieceTask, opts ...grpc.DialOption) ([]byte, [][]byte, []byte, error)
+	RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, opts ...grpc.DialOption) error
 }
 
 // GaterAPI for mock use

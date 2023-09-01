@@ -262,6 +262,20 @@ func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
+// FixExtraQuota  mocks base method.
+func (m *MockSPDB) UpdateExtraQuota(bucketID, extraQuota uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateExtraQuota", bucketID, extraQuota)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+//  FixExtraQuota indicates an expected call of FixExtraQuota.
+func (mr *MockSPDBMockRecorder) FixExtraQuota(bucketID, extraQuota interface{})  *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateExtraQuota", reflect.TypeOf((*MockSPDB)(nil).UpdateExtraQuota), bucketID, extraQuota)
+}
+
 // GetGCMetasToGC mocks base method.
 func (m *MockSPDB) GetGCMetasToGC(limit int) ([]*GCObjectMeta, error) {
 	m.ctrl.T.Helper()
@@ -1292,6 +1306,18 @@ func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*Bu
 func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID, yearMonth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID, yearMonth)
+}
+
+func (m *MockTrafficDB) UpdateExtraQuota(bucketID, extraQuota uint64) error  {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateExtraQuota", bucketID, extraQuota)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockTrafficDBMockRecorder) FixExtraQuota(bucketID, extraQuota interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateExtraQuota", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID, extraQuota)
 }
 
 // GetObjectReadRecord mocks base method.

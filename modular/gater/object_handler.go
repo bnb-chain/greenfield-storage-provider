@@ -374,22 +374,32 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 // getObjectHandler handles the download object request.
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err           error
-		reqCtxErr     error
-		reqCtx        *RequestContext
-		authenticated bool
-		objectInfo    *storagetypes.ObjectInfo
-		bucketInfo    *storagetypes.BucketInfo
-		params        *storagetypes.Params
-		lowOffset     int64
-		highOffset    int64
-		pieceInfos    []*downloader.SegmentPieceInfo
-		pieceData     []byte
+		err                       error
+		reqCtxErr                 error
+		reqCtx                    *RequestContext
+		authenticated             bool
+		objectInfo                *storagetypes.ObjectInfo
+		bucketInfo                *storagetypes.BucketInfo
+		params                    *storagetypes.Params
+		lowOffset                 int64
+		highOffset                int64
+		pieceInfos                []*downloader.SegmentPieceInfo
+		pieceData                 []byte
+		extraQuota, consumedQuota uint64
+		replyDataSize             int
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
-		reqCtx.Cancel()
 		if err != nil {
+			// if the bucket exists extra quota when download object, recoup the quota to user
+			if extraQuota > 0 {
+				quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), bucketInfo.Id.Uint64(), extraQuota)
+				// no need to return the db error to user
+				if quotaUpdateErr != nil {
+					log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
+				}
+				log.CtxDebugw(reqCtx.Context(), "sucess to recoup extra quota to user", "extra quota:", extraQuota)
+			}
 			log.CtxDebugw(reqCtx.Context(), "get object error")
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
@@ -406,6 +416,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			metrics.ReqTime.WithLabelValues(GatewaySuccessGetObject).Observe(time.Since(getObjectStartTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		reqCtx.Cancel()
 	}()
 
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
@@ -542,6 +553,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getDataTime := time.Now()
+	consumedQuota = 0
+	extraQuota = 0
+	downloadSize := uint64(highOffset - lowOffset + 1)
 	for idx, pInfo := range pieceInfos {
 		enableCheck := false
 		if idx == 0 { // only check in first piece
@@ -549,7 +563,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task),
-			enableCheck, reqCtx.Account(), uint64(highOffset-lowOffset+1), pInfo.SegmentPieceKey, pInfo.Offset,
+			enableCheck, reqCtx.Account(), downloadSize, pInfo.SegmentPieceKey, pInfo.Offset,
 			pInfo.Length, g.baseApp.TaskTimeout(task, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(task))
 		getSegmentTime := time.Now()
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
@@ -560,9 +574,25 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		writeTime := time.Now()
-		_, _ = w.Write(pieceData)
+		replyDataSize, err = w.Write(pieceData)
+		// if the connection of client has been disconnected, the response will fail
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to write the data to connection", "objectName", objectInfo.ObjectName, "error", err)
+			extraQuota = downloadSize - consumedQuota
+			err = ErrReplyDownloadData
+			return
+		}
+		// the quota value should be computed by the reply content length
+		consumedQuota += uint64(replyDataSize)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_write_time").Observe(time.Since(writeTime).Seconds())
 	}
+	// consumedQuota should be equal to download total size after all the data has been downloaded
+	if consumedQuota != downloadSize {
+		log.CtxErrorw(reqCtx.Context(), "consumed quota not equal to download size:", "consumed quota", consumedQuota, "downloadSize", downloadSize)
+	} else {
+		log.CtxDebugw(reqCtx.Context(), "consumed quota  equal to download size")
+	}
+
 	metrics.ReqPieceSize.WithLabelValues(GatewayGetObjectSize).Observe(float64(highOffset - lowOffset + 1))
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
 }

@@ -95,6 +95,8 @@ type TrafficDB interface {
 	// GetBucketTraffic return bucket traffic info,
 	// notice maybe return (nil, nil) while there is no bucket traffic.
 	GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error)
+	// UpdateExtraQuota update the read consumed quota and free consumed quota in traffic db with the extra quota
+	UpdateExtraQuota(bucketID, extraQuota uint64) error
 	// GetReadRecord return record list by time range.
 	GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 	// GetBucketReadRecord return bucket record list by time range.
