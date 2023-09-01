@@ -321,7 +321,7 @@ func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endp
 }
 
 // GetAuthNonce mocks base method.
-func (m *MockGfSpClientAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.CallOption) (int32, int32, string, int64, error) {
+func (m *MockGfSpClientAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, domain}
 	for _, a := range opts {
@@ -1380,18 +1380,23 @@ func (mr *MockGfSpClientAPIMockRecorder) PickVirtualGroupFamilyID(ctx, task inte
 }
 
 // QueryBucketMigrate mocks base method.
-func (m *MockGfSpClientAPI) QueryBucketMigrate(ctx context.Context, endpoint string) (string, error) {
+func (m *MockGfSpClientAPI) QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryBucketMigrate", ctx, endpoint)
+	varargs := []interface{}{ctx, endpoint}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QueryBucketMigrate", varargs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // QueryBucketMigrate indicates an expected call of QueryBucketMigrate.
-func (mr *MockGfSpClientAPIMockRecorder) QueryBucketMigrate(ctx, endpoint interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QueryBucketMigrate(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryBucketMigrate), ctx, endpoint)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryBucketMigrate), varargs...)
 }
 
 // QueryP2PBootstrap mocks base method.
@@ -1410,33 +1415,43 @@ func (mr *MockGfSpClientAPIMockRecorder) QueryP2PBootstrap(ctx interface{}) *gom
 }
 
 // QuerySPExit mocks base method.
-func (m *MockGfSpClientAPI) QuerySPExit(ctx context.Context, endpoint string) (string, error) {
+func (m *MockGfSpClientAPI) QuerySPExit(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySPExit", ctx, endpoint)
+	varargs := []interface{}{ctx, endpoint}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QuerySPExit", varargs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // QuerySPExit indicates an expected call of QuerySPExit.
-func (mr *MockGfSpClientAPIMockRecorder) QuerySPExit(ctx, endpoint interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QuerySPExit(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExit", reflect.TypeOf((*MockGfSpClientAPI)(nil).QuerySPExit), ctx, endpoint)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExit", reflect.TypeOf((*MockGfSpClientAPI)(nil).QuerySPExit), varargs...)
 }
 
 // QueryTasks mocks base method.
-func (m *MockGfSpClientAPI) QueryTasks(ctx context.Context, endpoint, subKey string) ([]string, error) {
+func (m *MockGfSpClientAPI) QueryTasks(ctx context.Context, endpoint, subKey string, opts ...grpc.DialOption) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryTasks", ctx, endpoint, subKey)
+	varargs := []interface{}{ctx, endpoint, subKey}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QueryTasks", varargs...)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // QueryTasks indicates an expected call of QueryTasks.
-func (mr *MockGfSpClientAPIMockRecorder) QueryTasks(ctx, endpoint, subKey interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QueryTasks(ctx, endpoint, subKey interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryTasks), ctx, endpoint, subKey)
+	varargs := append([]interface{}{ctx, endpoint, subKey}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryTasks), varargs...)
 }
 
 // RejectUnSealObject mocks base method.
@@ -1502,17 +1517,22 @@ func (mr *MockGfSpClientAPIMockRecorder) ReportTask(ctx, report interface{}) *go
 }
 
 // ResumableUploadObject mocks base method.
-func (m *MockGfSpClientAPI) ResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error {
+func (m *MockGfSpClientAPI) ResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ResumableUploadObject", ctx, task, stream)
+	varargs := []interface{}{ctx, task, stream}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ResumableUploadObject", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ResumableUploadObject indicates an expected call of ResumableUploadObject.
-func (mr *MockGfSpClientAPIMockRecorder) ResumableUploadObject(ctx, task, stream interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ResumableUploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumableUploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).ResumableUploadObject), ctx, task, stream)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumableUploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).ResumableUploadObject), varargs...)
 }
 
 // SPExit mocks base method.
@@ -1776,7 +1796,7 @@ func (mr *MockGfSpClientAPIMockRecorder) UpdateSPPrice(ctx, price interface{}) *
 }
 
 // UpdateUserPublicKey mocks base method.
-func (m *MockGfSpClientAPI) UpdateUserPublicKey(ctx context.Context, account, domain string, currentNonce, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error) {
+func (m *MockGfSpClientAPI) UpdateUserPublicKey(ctx context.Context, account, domain string, currentNonce, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}
 	for _, a := range opts {
@@ -1796,36 +1816,46 @@ func (mr *MockGfSpClientAPIMockRecorder) UpdateUserPublicKey(ctx, account, domai
 }
 
 // UploadObject mocks base method.
-func (m *MockGfSpClientAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
+func (m *MockGfSpClientAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadObject", ctx, task, stream)
+	varargs := []interface{}{ctx, task, stream}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UploadObject", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UploadObject indicates an expected call of UploadObject.
-func (mr *MockGfSpClientAPIMockRecorder) UploadObject(ctx, task, stream interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) UploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).UploadObject), ctx, task, stream)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).UploadObject), varargs...)
 }
 
 // VerifyAuthentication mocks base method.
-func (m *MockGfSpClientAPI) VerifyAuthentication(ctx context.Context, auth module.AuthOpType, account, bucket, object string) (bool, error) {
+func (m *MockGfSpClientAPI) VerifyAuthentication(ctx context.Context, auth module.AuthOpType, account, bucket, object string, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyAuthentication", ctx, auth, account, bucket, object)
+	varargs := []interface{}{ctx, auth, account, bucket, object}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyAuthentication", varargs...)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // VerifyAuthentication indicates an expected call of VerifyAuthentication.
-func (mr *MockGfSpClientAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAuthentication", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyAuthentication), ctx, auth, account, bucket, object)
+	varargs := append([]interface{}{ctx, auth, account, bucket, object}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAuthentication", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyAuthentication), varargs...)
 }
 
 // VerifyGNFD1EddsaSignature mocks base method.
-func (m *MockGfSpClientAPI) VerifyGNFD1EddsaSignature(ctx context.Context, account, domain, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error) {
+func (m *MockGfSpClientAPI) VerifyGNFD1EddsaSignature(ctx context.Context, account, domain, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, domain, offChainSig, realMsgToSign}
 	for _, a := range opts {
@@ -1979,7 +2009,7 @@ func (m *MockAuthenticatorAPI) EXPECT() *MockAuthenticatorAPIMockRecorder {
 }
 
 // GetAuthNonce mocks base method.
-func (m *MockAuthenticatorAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.CallOption) (int32, int32, string, int64, error) {
+func (m *MockAuthenticatorAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, domain}
 	for _, a := range opts {
@@ -2002,7 +2032,7 @@ func (mr *MockAuthenticatorAPIMockRecorder) GetAuthNonce(ctx, account, domain in
 }
 
 // UpdateUserPublicKey mocks base method.
-func (m *MockAuthenticatorAPI) UpdateUserPublicKey(ctx context.Context, account, domain string, currentNonce, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error) {
+func (m *MockAuthenticatorAPI) UpdateUserPublicKey(ctx context.Context, account, domain string, currentNonce, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}
 	for _, a := range opts {
@@ -2022,22 +2052,27 @@ func (mr *MockAuthenticatorAPIMockRecorder) UpdateUserPublicKey(ctx, account, do
 }
 
 // VerifyAuthentication mocks base method.
-func (m *MockAuthenticatorAPI) VerifyAuthentication(ctx context.Context, auth module.AuthOpType, account, bucket, object string) (bool, error) {
+func (m *MockAuthenticatorAPI) VerifyAuthentication(ctx context.Context, auth module.AuthOpType, account, bucket, object string, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyAuthentication", ctx, auth, account, bucket, object)
+	varargs := []interface{}{ctx, auth, account, bucket, object}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyAuthentication", varargs...)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // VerifyAuthentication indicates an expected call of VerifyAuthentication.
-func (mr *MockAuthenticatorAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object interface{}) *gomock.Call {
+func (mr *MockAuthenticatorAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAuthentication", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyAuthentication), ctx, auth, account, bucket, object)
+	varargs := append([]interface{}{ctx, auth, account, bucket, object}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAuthentication", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyAuthentication), varargs...)
 }
 
 // VerifyGNFD1EddsaSignature mocks base method.
-func (m *MockAuthenticatorAPI) VerifyGNFD1EddsaSignature(ctx context.Context, account, domain, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error) {
+func (m *MockAuthenticatorAPI) VerifyGNFD1EddsaSignature(ctx context.Context, account, domain, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, account, domain, offChainSig, realMsgToSign}
 	for _, a := range opts {
@@ -3333,48 +3368,63 @@ func (m *MockQueryAPI) EXPECT() *MockQueryAPIMockRecorder {
 }
 
 // QueryBucketMigrate mocks base method.
-func (m *MockQueryAPI) QueryBucketMigrate(ctx context.Context, endpoint string) (string, error) {
+func (m *MockQueryAPI) QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryBucketMigrate", ctx, endpoint)
+	varargs := []interface{}{ctx, endpoint}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QueryBucketMigrate", varargs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // QueryBucketMigrate indicates an expected call of QueryBucketMigrate.
-func (mr *MockQueryAPIMockRecorder) QueryBucketMigrate(ctx, endpoint interface{}) *gomock.Call {
+func (mr *MockQueryAPIMockRecorder) QueryBucketMigrate(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockQueryAPI)(nil).QueryBucketMigrate), ctx, endpoint)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockQueryAPI)(nil).QueryBucketMigrate), varargs...)
 }
 
 // QuerySPExit mocks base method.
-func (m *MockQueryAPI) QuerySPExit(ctx context.Context, endpoint string) (string, error) {
+func (m *MockQueryAPI) QuerySPExit(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QuerySPExit", ctx, endpoint)
+	varargs := []interface{}{ctx, endpoint}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QuerySPExit", varargs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // QuerySPExit indicates an expected call of QuerySPExit.
-func (mr *MockQueryAPIMockRecorder) QuerySPExit(ctx, endpoint interface{}) *gomock.Call {
+func (mr *MockQueryAPIMockRecorder) QuerySPExit(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExit", reflect.TypeOf((*MockQueryAPI)(nil).QuerySPExit), ctx, endpoint)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExit", reflect.TypeOf((*MockQueryAPI)(nil).QuerySPExit), varargs...)
 }
 
 // QueryTasks mocks base method.
-func (m *MockQueryAPI) QueryTasks(ctx context.Context, endpoint, subKey string) ([]string, error) {
+func (m *MockQueryAPI) QueryTasks(ctx context.Context, endpoint, subKey string, opts ...grpc.DialOption) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryTasks", ctx, endpoint, subKey)
+	varargs := []interface{}{ctx, endpoint, subKey}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QueryTasks", varargs...)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // QueryTasks indicates an expected call of QueryTasks.
-func (mr *MockQueryAPIMockRecorder) QueryTasks(ctx, endpoint, subKey interface{}) *gomock.Call {
+func (mr *MockQueryAPIMockRecorder) QueryTasks(ctx, endpoint, subKey interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockQueryAPI)(nil).QueryTasks), ctx, endpoint, subKey)
+	varargs := append([]interface{}{ctx, endpoint, subKey}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockQueryAPI)(nil).QueryTasks), varargs...)
 }
 
 // MockReceiverAPI is a mock of ReceiverAPI interface.
@@ -3816,31 +3866,41 @@ func (m *MockUploaderAPI) EXPECT() *MockUploaderAPIMockRecorder {
 }
 
 // ResumableUploadObject mocks base method.
-func (m *MockUploaderAPI) ResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error {
+func (m *MockUploaderAPI) ResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ResumableUploadObject", ctx, task, stream)
+	varargs := []interface{}{ctx, task, stream}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ResumableUploadObject", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ResumableUploadObject indicates an expected call of ResumableUploadObject.
-func (mr *MockUploaderAPIMockRecorder) ResumableUploadObject(ctx, task, stream interface{}) *gomock.Call {
+func (mr *MockUploaderAPIMockRecorder) ResumableUploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumableUploadObject", reflect.TypeOf((*MockUploaderAPI)(nil).ResumableUploadObject), ctx, task, stream)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumableUploadObject", reflect.TypeOf((*MockUploaderAPI)(nil).ResumableUploadObject), varargs...)
 }
 
 // UploadObject mocks base method.
-func (m *MockUploaderAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error {
+func (m *MockUploaderAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadObject", ctx, task, stream)
+	varargs := []interface{}{ctx, task, stream}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UploadObject", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UploadObject indicates an expected call of UploadObject.
-func (mr *MockUploaderAPIMockRecorder) UploadObject(ctx, task, stream interface{}) *gomock.Call {
+func (mr *MockUploaderAPIMockRecorder) UploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadObject", reflect.TypeOf((*MockUploaderAPI)(nil).UploadObject), ctx, task, stream)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadObject", reflect.TypeOf((*MockUploaderAPI)(nil).UploadObject), varargs...)
 }
 
 // MockGfSpConnAPI is a mock of GfSpConnAPI interface.

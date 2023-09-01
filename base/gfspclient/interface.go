@@ -51,10 +51,10 @@ type ApproverAPI interface {
 
 // AuthenticatorAPI for mock use
 type AuthenticatorAPI interface {
-	VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error)
-	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.CallOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
-	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error)
-	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error)
+	VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string, opts ...grpc.DialOption) (bool, error)
+	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.DialOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
+	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error)
+	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error)
 }
 
 // DownloaderAPI for mock use
@@ -140,9 +140,9 @@ type P2PAPI interface {
 
 // QueryAPI for mock use
 type QueryAPI interface {
-	QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error)
-	QueryBucketMigrate(ctx context.Context, endpoint string) (string, error)
-	QuerySPExit(ctx context.Context, endpoint string) (string, error)
+	QueryTasks(ctx context.Context, endpoint string, subKey string, opts ...grpc.DialOption) ([]string, error)
+	QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error)
+	QuerySPExit(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error)
 }
 
 // ReceiverAPI for mock use
@@ -179,8 +179,8 @@ type SignerAPI interface {
 
 // UploaderAPI for mock use
 type UploaderAPI interface {
-	UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error
-	ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader) error
+	UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error
+	ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error
 }
 
 // GfSpConnAPI for mock use

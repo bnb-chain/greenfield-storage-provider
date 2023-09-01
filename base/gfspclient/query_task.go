@@ -7,10 +7,11 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"google.golang.org/grpc"
 )
 
-func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error) {
-	conn, connErr := s.Connection(ctx, endpoint)
+func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey string, opts ...grpc.DialOption) ([]string, error) {
+	conn, connErr := s.Connection(ctx, endpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
 		return nil, ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
@@ -30,8 +31,8 @@ func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey str
 	return resp.GetTaskInfo(), nil
 }
 
-func (s *GfSpClient) QueryBucketMigrate(ctx context.Context, endpoint string) (string, error) {
-	conn, connErr := s.Connection(ctx, endpoint)
+func (s *GfSpClient) QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
+	conn, connErr := s.Connection(ctx, endpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
 		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
@@ -53,8 +54,8 @@ func (s *GfSpClient) QueryBucketMigrate(ctx context.Context, endpoint string) (s
 	return string(jsonData), nil
 }
 
-func (s *GfSpClient) QuerySPExit(ctx context.Context, endpoint string) (string, error) {
-	conn, connErr := s.Connection(ctx, endpoint)
+func (s *GfSpClient) QuerySPExit(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
+	conn, connErr := s.Connection(ctx, endpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
 		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())

@@ -56,7 +56,8 @@ const (
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 )
 
-func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
+func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask,
+	data []byte) error {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, bytes.NewReader(data))
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)

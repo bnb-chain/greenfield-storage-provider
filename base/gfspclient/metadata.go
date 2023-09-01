@@ -869,6 +869,7 @@ func (s *GfSpClient) ListPaymentAccountStreams(ctx context.Context, paymentAccou
 	}
 	return resp.Buckets, nil
 }
+
 func (s *GfSpClient) ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.StreamRecordMeta, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
