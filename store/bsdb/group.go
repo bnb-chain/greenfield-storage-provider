@@ -247,3 +247,27 @@ func (b *BsDBImpl) GetUserOwnedGroups(accountID common.Address, startAfter commo
 		Find(&groups).Error
 	return groups, err
 }
+
+// ListGroupsByIDs list groups by ids
+func (b *BsDBImpl) ListGroupsByIDs(ids []common.Hash) ([]*Group, error) {
+	var (
+		groups []*Group
+		err    error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	err = b.db.Table((&Group{}).TableName()).
+		Select("*").
+		Where("group_id in (?) and account_id  = ? and removed = false", ids, common.HexToAddress("0")).
+		Order("group_id").
+		Find(&groups).Error
+	return groups, err
+}

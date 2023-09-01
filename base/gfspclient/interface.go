@@ -130,6 +130,7 @@ type MetadataAPI interface {
 	ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error)
 	ListPaymentAccountStreams(ctx context.Context, paymentAccount string, opts ...grpc.DialOption) ([]*types.Bucket, error)
 	ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.StreamRecordMeta, error)
+	ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error)
 }
 
 // P2PAPI for mock use

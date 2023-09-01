@@ -2578,6 +2578,112 @@ func (g *GateModular) listUserPaymentAccountsHandler(w http.ResponseWriter, r *h
 	w.Write(respBytes)
 }
 
+type GfSpListGroupsByIDsResponse types.GfSpListGroupsByIDsResponse
+
+type GroupEntry struct {
+	Id    uint64
+	Value *types.Group
+}
+
+func (m GfSpListGroupsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if len(m.Groups) == 0 {
+		return nil
+	}
+
+	err := e.EncodeToken(start)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range m.Groups {
+		e.Encode(GroupEntry{Id: k, Value: v})
+	}
+
+	return e.EncodeToken(start.End())
+}
+
+// listGroupsByIDsHandler list groups by ids
+func (g *GateModular) listGroupsByIDsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err             error
+		respBytes       []byte
+		groups          map[uint64]*types.Group
+		groupIDMap      map[uint64]bool
+		ok              bool
+		requestGroupIDs string
+		groupID         uint64
+		idsStr          []string
+		groupIDs        []uint64
+		reqCtx          *RequestContext
+		queryParams     url.Values
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to list groups by ids", reqCtx.String())
+			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	queryParams = reqCtx.request.URL.Query()
+	requestGroupIDs = queryParams.Get(IDsQuery)
+
+	// extract IDs from the input value, e.g., &id=1,2,3,4
+	idsStr = strings.Split(requestGroupIDs, ",")
+	for _, idStr := range idsStr {
+		groupID, err = util.StringToUint64(idStr)
+		if err != nil {
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		groupIDs = append(groupIDs, groupID)
+	}
+
+	if len(groupIDs) == 0 || len(groupIDs) > MaximumIDSize {
+		log.Errorf("failed to check ids", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	// check if the input IDs have duplicate values
+	groupIDMap = make(map[uint64]bool)
+	for _, id := range groupIDs {
+		if _, ok = groupIDMap[id]; ok {
+			// repeat id keys in request
+			log.Errorf("failed to check ids", "error", err)
+			err = ErrInvalidQuery
+			return
+		}
+		groupIDMap[id] = true
+	}
+
+	groups, err = g.baseApp.GfSpClient().ListGroupsByIDs(reqCtx.Context(), groupIDs)
+	if err != nil {
+		log.Errorf("failed to list groups by ids", "error", err)
+		return
+	}
+	grpcResponse := &types.GfSpListGroupsByIDsResponse{Groups: groups}
+
+	respBytes, err = xml.Marshal((*GfSpListGroupsByIDsResponse)(grpcResponse))
+	if err != nil {
+		log.Errorf("failed to list groups by ids", "error", err)
+		return
+	}
+
+	respBytes = processGroupsMapXmlResponse(respBytes, grpcResponse.Groups)
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
 // processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
 func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)
@@ -2626,6 +2732,19 @@ func processObjectsMapXmlResponse(respBytes []byte, objects map[uint64]*types.Ob
 					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
 				}
 			}
+		}
+	}
+	respBytesProcessed = []byte(respString)
+	return
+}
+
+// processGroupsMapXmlResponse process the unhandled Uint id of group map xml unmarshal
+func processGroupsMapXmlResponse(respBytes []byte, groups map[uint64]*types.Group) (respBytesProcessed []byte) {
+	respString := string(respBytes)
+	for _, group := range groups {
+		if group != nil {
+			// iterate through each group and assign id value
+			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
 		}
 	}
 	respBytesProcessed = []byte(respString)

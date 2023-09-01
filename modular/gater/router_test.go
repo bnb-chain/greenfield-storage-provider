@@ -604,6 +604,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: listPaymentAccountStreamsRouterName,
 		},
+		{
+			name:             "List groups by group ids router",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              scheme + testDomain + "/?" + ListGroupsByIDsQuery + "&" + IDsQuery,
+			shouldMatch:      true,
+			wantedRouterName: listGroupsByIDsRouterName,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

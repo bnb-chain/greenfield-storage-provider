@@ -884,3 +884,19 @@ func (s *GfSpClient) ListUserPaymentAccounts(ctx context.Context, accountID stri
 	}
 	return resp.StreamRecords, nil
 }
+
+func (s *GfSpClient) ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
+	}
+	defer conn.Close()
+	req := &types.GfSpListGroupsByIDsRequest{GroupIds: groupIDs}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListGroupsByIDs(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list groups by ids", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to list groups by ids, error: " + err.Error())
+	}
+	return resp.Groups, nil
+}
