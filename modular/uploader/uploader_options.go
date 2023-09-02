@@ -14,13 +14,11 @@ const (
 
 func NewUploadModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	uploader := &UploadModular{baseApp: app}
-	if err := DefaultUploaderOptions(uploader, cfg); err != nil {
-		return nil, err
-	}
+	defaultUploaderOptions(uploader, cfg)
 	return uploader, nil
 }
 
-func DefaultUploaderOptions(uploader *UploadModular, cfg *gfspconfig.GfSpConfig) error {
+func defaultUploaderOptions(uploader *UploadModular, cfg *gfspconfig.GfSpConfig) {
 	if cfg.Parallel.UploadObjectParallelPerNode == 0 {
 		cfg.Parallel.UploadObjectParallelPerNode = DefaultUploadObjectParallelPerNode
 	}
@@ -28,5 +26,4 @@ func DefaultUploaderOptions(uploader *UploadModular, cfg *gfspconfig.GfSpConfig)
 		uploader.Name()+"-upload-object", cfg.Parallel.UploadObjectParallelPerNode)
 	uploader.resumeableUploadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		uploader.Name()+"-upload-resumable-object", cfg.Parallel.UploadObjectParallelPerNode)
-	return nil
 }
