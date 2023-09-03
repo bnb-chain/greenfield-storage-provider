@@ -37,7 +37,6 @@ exclude:
     - e2e/.*          # excludes e2e directory files
     - modular/p2p/.*
     - base/gfspclient/metadata.go
-    - base/gfsprcmgr
     - base/gfspvgmgr
 
 # NOTES:
