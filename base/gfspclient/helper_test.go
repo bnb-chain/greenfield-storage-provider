@@ -421,6 +421,11 @@ func (mockQueryServer) GfSpQuerySpExit(ctx context.Context, req *gfspserver.GfSp
 	return nil, nil
 }
 
+func (mockManagerServer) GfSpQuerySPByOperatorAddress(ctx context.Context, req *gfspserver.GfSpQuerySPByOperatorAddressRequest) (
+	*gfspserver.GfSpQuerySPByOperatorAddressResponse, error) {
+	return nil, nil
+}
+
 type mockReceiverServer struct{}
 
 func (mockReceiverServer) GfSpReplicatePiece(ctx context.Context, req *gfspserver.GfSpReplicatePieceRequest) (

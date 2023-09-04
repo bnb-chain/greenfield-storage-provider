@@ -183,6 +183,19 @@ func (m *GfSpMigrateGVGTask) SetFinished(finished bool) {
 	m.Finished = finished
 }
 
+func (m *GfSpMigrateGVGTask) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpMigrateGVGTask{
+		BucketId:      m.GetBucketID(),
+		SrcGvg:        m.GetSrcGvg(),
+		RedundancyIdx: m.GetRedundancyIdx(),
+		ExpireTime:    m.GetExpireTime(),
+	}))
+}
+
+func (m *GfSpMigrateGVGTask) SetSignature(signature []byte) {
+	m.Signature = signature
+}
+
 // ======================= MigratePieceTask =====================================
 
 func (g *GfSpMigratePieceTask) Key() coretask.TKey {

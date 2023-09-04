@@ -69,7 +69,7 @@ type GaterAPI interface {
 	ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error
 	GetPieceFromECChunks(ctx context.Context, endpoint string, task coretask.RecoveryPieceTask) (io.ReadCloser, error)
 	DoneReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask) ([]byte, error)
-	MigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
+	MigratePiece(ctx context.Context, gvgTask *gfsptask.GfSpMigrateGVGTask, pieceTask *gfsptask.GfSpMigratePieceTask) ([]byte, error)
 	NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
 	GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (*virtualgrouptypes.MsgSwapOut, error)
@@ -83,6 +83,7 @@ type ManagerAPI interface {
 	ReportTask(ctx context.Context, report coretask.Task) error
 	PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
+	QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error)
 }
 
 // MetadataAPI for mock sue
@@ -178,6 +179,7 @@ type SignerAPI interface {
 	CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
 	SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
 	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
+	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
 }
 
 // UploaderAPI for mock use

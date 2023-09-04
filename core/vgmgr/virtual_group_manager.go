@@ -115,6 +115,8 @@ type VirtualGroupManager interface {
 	PickSPByFilter(filter SPPickFilter) (*sptypes.StorageProvider, error)
 	// QuerySPByID returns sp proto.
 	QuerySPByID(spID uint32) (*sptypes.StorageProvider, error)
+	// QuerySPByAddress returns sp proto.
+	QuerySPByAddress(spAddr string) (*sptypes.StorageProvider, error)
 	// FreezeSPAndGVGs puts the secondary SP and its joining Global virtual groups into the freeze pool for a specific period,
 	// For those SPs which are in the pool will be skipped when creating a GVG, GVGs in the pool will not be chosen to seal Object
 	// until released

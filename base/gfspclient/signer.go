@@ -501,3 +501,25 @@ func (s *GfSpClient) CompleteSPExit(ctx context.Context, completeSPExit *virtual
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("client failed to connect to signer", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect to signer, error: " + err.Error())
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_GfspMigrateGvgTask{
+			GfspMigrateGvgTask: task,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign migrate gvg", "migrate_gvg", task, "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to sign migrate gvg, migrate_gvg: " + task.Info() + ", error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}
