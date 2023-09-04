@@ -80,7 +80,6 @@ func Test_checksumReaderRead(t *testing.T) {
 }
 
 func Test_verifyChecksum(t *testing.T) {
-	//int32Upper := 4294967296
 	cases := []struct {
 		name         string
 		rc           io.ReadCloser
