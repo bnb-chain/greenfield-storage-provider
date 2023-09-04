@@ -363,8 +363,13 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			return err
 		}
 		shouldFreezeGVGs := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+		selfSPID, err := m.getSPID()
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get self sp id", "error", err)
+			return err
+		}
 		for _, g := range sspJoinGVGs {
-			if g.GetPrimarySpId() == m.spID {
+			if g.GetPrimarySpId() == selfSPID {
 				shouldFreezeGVGs = append(shouldFreezeGVGs, g)
 			}
 		}
