@@ -133,7 +133,7 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 		}
 
 		// compute the new consumed quota size to be updated
-		updatedReadConsumedSize, updatedFreeConsumedSize, err := getUpdatedConsumedQuota(record,
+		updatedFreeConsumedSize, updatedReadConsumedSize, err := getUpdatedConsumedQuota(record,
 			bucketTraffic.FreeQuotaSize, bucketTraffic.FreeQuotaConsumedSize,
 			bucketTraffic.ReadConsumedSize, bucketTraffic.ChargedQuotaSize)
 		if err != nil {
