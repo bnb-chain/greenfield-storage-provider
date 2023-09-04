@@ -71,12 +71,14 @@ func (s *resourceScope) BeginSpan() (corercmgr.ResourceScopeSpan, error) {
 func (s *resourceScope) Done() {
 	s.Lock()
 	defer s.Unlock()
-	log.Debugw("begin to release resources",
-		"span_id", s.spanID, "reserved_stat", s.owner.rc.stat().String(), "release_stat", s.rc.stat().String())
-	defer func() {
-		log.Debugw("end to release resources",
-			"span_id", s.spanID, "reserved_stat", s.owner.rc.stat().String(), "release_stat", s.rc.stat().String())
-	}()
+	if s.owner != nil {
+		log.Debugw("begin to release resources", "span_id", s.spanID, "reserved_stat",
+			s.owner.rc.stat().String(), "release_stat", s.rc.stat().String())
+		defer func() {
+			log.Debugw("end to release resources", "span_id", s.spanID, "reserved_stat",
+				s.owner.rc.stat().String(), "release_stat", s.rc.stat().String())
+		}()
+	}
 	if s.done {
 		return
 	}
@@ -141,8 +143,7 @@ func (s *resourceScope) reserveMemoryForEdges(size int64, prio uint8) error {
 }
 
 // ReserveMemoryForChild reserves memory/buffer space in the child scope.
-func (s *resourceScope) ReserveMemoryForChild(
-	size int64, prio uint8) (corercmgr.ScopeStat, error) {
+func (s *resourceScope) ReserveMemoryForChild(size int64, prio uint8) (corercmgr.ScopeStat, error) {
 	s.Lock()
 	defer s.Unlock()
 	if s.done {
@@ -203,8 +204,7 @@ func (s *resourceScope) AddTask(num int, prio corercmgr.ReserveTaskPriority) err
 	return nil
 }
 
-func (s *resourceScope) addTaskForEdges(num int,
-	prio corercmgr.ReserveTaskPriority) error {
+func (s *resourceScope) addTaskForEdges(num int, prio corercmgr.ReserveTaskPriority) error {
 	if s.owner != nil {
 		return s.owner.AddTask(num, prio)
 	}
@@ -228,8 +228,7 @@ func (s *resourceScope) addTaskForEdges(num int,
 }
 
 // AddTaskForChild reserves task in the child scope.
-func (s *resourceScope) AddTaskForChild(num int,
-	prio corercmgr.ReserveTaskPriority) (corercmgr.ScopeStat, error) {
+func (s *resourceScope) AddTaskForChild(num int, prio corercmgr.ReserveTaskPriority) (corercmgr.ScopeStat, error) {
 	s.Lock()
 	defer s.Unlock()
 	if s.done {
@@ -242,8 +241,7 @@ func (s *resourceScope) AddTaskForChild(num int,
 }
 
 // RemoveTask explicitly releases task in the scope.
-func (s *resourceScope) RemoveTask(num int,
-	prio corercmgr.ReserveTaskPriority) {
+func (s *resourceScope) RemoveTask(num int, prio corercmgr.ReserveTaskPriority) {
 	s.Lock()
 	defer s.Unlock()
 	if s.done {
@@ -253,8 +251,7 @@ func (s *resourceScope) RemoveTask(num int,
 	s.removeTaskForEdges(num, prio)
 }
 
-func (s *resourceScope) removeTaskForEdges(num int,
-	prio corercmgr.ReserveTaskPriority) {
+func (s *resourceScope) removeTaskForEdges(num int, prio corercmgr.ReserveTaskPriority) {
 	if s.owner != nil {
 		s.owner.RemoveTask(num, prio)
 	}
@@ -264,8 +261,7 @@ func (s *resourceScope) removeTaskForEdges(num int,
 }
 
 // RemoveTaskForChild explicitly releases task in child the scope.
-func (s *resourceScope) RemoveTaskForChild(num int,
-	prio corercmgr.ReserveTaskPriority) {
+func (s *resourceScope) RemoveTaskForChild(num int, prio corercmgr.ReserveTaskPriority) {
 	s.Lock()
 	defer s.Unlock()
 	if s.done {
@@ -316,8 +312,7 @@ func (s *resourceScope) addConnForEdges(dir corercmgr.Direction) error {
 }
 
 // AddConnForChild reserves connection in the child scope.
-func (s *resourceScope) AddConnForChild(dir corercmgr.Direction) (
-	corercmgr.ScopeStat, error) {
+func (s *resourceScope) AddConnForChild(dir corercmgr.Direction) (corercmgr.ScopeStat, error) {
 	s.Lock()
 	defer s.Unlock()
 	if s.done {
@@ -378,13 +373,13 @@ func (s *resourceScope) ReserveForChild(st corercmgr.ScopeStat) error {
 		s.rc.removeConns(int(st.NumConnsInbound), int(st.NumConnsOutbound), int(st.NumFD))
 		return s.wrapError(err)
 	}
-	if err := s.rc.addTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityMedium); err != nil {
+	if err := s.rc.addTask(int(st.NumTasksMedium), corercmgr.ReserveTaskPriorityMedium); err != nil {
 		s.rc.releaseMemory(st.Memory)
 		s.rc.removeConns(int(st.NumConnsInbound), int(st.NumConnsOutbound), int(st.NumFD))
 		s.rc.removeTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityHigh)
 		return s.wrapError(err)
 	}
-	if err := s.rc.addTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityLow); err != nil {
+	if err := s.rc.addTask(int(st.NumTasksLow), corercmgr.ReserveTaskPriorityLow); err != nil {
 		s.rc.releaseMemory(st.Memory)
 		s.rc.removeConns(int(st.NumConnsInbound), int(st.NumConnsOutbound), int(st.NumFD))
 		s.rc.removeTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityHigh)
@@ -475,13 +470,13 @@ func (s *resourceScope) ReserveResources(st *corercmgr.ScopeStat) error {
 		s.rc.removeConns(int(st.NumConnsInbound), int(st.NumConnsOutbound), int(st.NumFD))
 		return s.wrapError(err)
 	}
-	if err := s.rc.addTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityMedium); err != nil {
+	if err := s.rc.addTask(int(st.NumTasksMedium), corercmgr.ReserveTaskPriorityMedium); err != nil {
 		s.rc.releaseMemory(st.Memory)
 		s.rc.removeConns(int(st.NumConnsInbound), int(st.NumConnsOutbound), int(st.NumFD))
 		s.rc.removeTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityHigh)
 		return s.wrapError(err)
 	}
-	if err := s.rc.addTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityLow); err != nil {
+	if err := s.rc.addTask(int(st.NumTasksLow), corercmgr.ReserveTaskPriorityLow); err != nil {
 		s.rc.releaseMemory(st.Memory)
 		s.rc.removeConns(int(st.NumConnsInbound), int(st.NumConnsOutbound), int(st.NumFD))
 		s.rc.removeTask(int(st.NumTasksHigh), corercmgr.ReserveTaskPriorityHigh)

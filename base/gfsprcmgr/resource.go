@@ -29,25 +29,20 @@ func (rc *resources) remaining() corercmgr.Limit {
 	} else {
 		l.Memory = 0
 	}
-	if rc.limit.GetTaskTotalLimit() > rc.ntasksHigh+rc.ntasksHigh+rc.ntasksHigh {
-		l.Tasks = int32(rc.limit.GetTaskTotalLimit() - (rc.ntasksHigh + rc.ntasksHigh + rc.ntasksHigh))
+	if rc.limit.GetTaskTotalLimit() > rc.ntasksHigh+rc.ntasksMedium+rc.ntasksLow {
+		l.Tasks = int32(rc.limit.GetTaskTotalLimit() - (rc.ntasksHigh + rc.ntasksMedium + rc.ntasksLow))
 	} else {
 		l.Tasks = 0
 	}
-	if rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh) > rc.ntasksLow {
-		l.TasksHighPriority = int32(rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh) - rc.ntasksLow)
+	if rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh) > rc.ntasksHigh {
+		l.TasksHighPriority = int32(rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityHigh) - rc.ntasksHigh)
 	} else {
 		l.TasksHighPriority = 0
 	}
-	if rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium) > rc.ntasksLow {
-		l.TasksMediumPriority = int32(rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium) - rc.ntasksLow)
+	if rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium) > rc.ntasksMedium {
+		l.TasksMediumPriority = int32(rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityMedium) - rc.ntasksMedium)
 	} else {
 		l.TasksMediumPriority = 0
-	}
-	if rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow) > rc.ntasksLow {
-		l.TasksLowPriority = int32(rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow) - rc.ntasksLow)
-	} else {
-		l.TasksLowPriority = 0
 	}
 	if rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow) > rc.ntasksLow {
 		l.TasksLowPriority = int32(rc.limit.GetTaskLimit(corercmgr.ReserveTaskPriorityLow) - rc.ntasksLow)
@@ -65,13 +60,11 @@ func addInt64WithOverflow(a int64, b int64) (c int64, ok bool) {
 // mulInt64WithOverflow checks for overflow in multiplying two int64s. See
 // https://groups.google.com/g/golang-nuts/c/h5oSN5t3Au4/m/KaNQREhZh0QJ
 func mulInt64WithOverflow(a, b int64) (c int64, ok bool) {
-	const mostPositive = 1<<63 - 1
-	const mostNegative = -(mostPositive + 1)
 	c = a * b
 	if a == 0 || b == 0 || a == 1 || b == 1 {
 		return c, true
 	}
-	if a == mostNegative || b == mostNegative {
+	if a == math.MaxInt64 || b == math.MinInt64 {
 		return c, false
 	}
 	return c, c/b == a
@@ -79,11 +72,11 @@ func mulInt64WithOverflow(a, b int64) (c int64, ok bool) {
 
 func (rc *resources) checkMemory(rsvp int64, prio uint8) error {
 	if rsvp < 0 {
-		return fmt.Errorf("can't reserve negative memory. rsvp=%v", rsvp)
+		return fmt.Errorf("cannot reserve negative memory, rsvp=%d", rsvp)
 	}
 	limit := rc.limit.GetMemoryLimit()
 	if limit == math.MaxInt64 {
-		// Special case where we've set max limits.
+		// special case where we've set max limits.
 		return nil
 	}
 	newMem, addOk := addInt64WithOverflow(rc.memory, rsvp)
@@ -216,52 +209,52 @@ func (rc *resources) addConn(dir corercmgr.Direction) error {
 	return rc.addConns(0, 1, 1)
 }
 
-func (rc *resources) addConns(incount, outcount, fdcount int) error {
-	if incount > 0 {
+func (rc *resources) addConns(inCount, outCount, fdCount int) error {
+	if inCount > 0 {
 		limit := rc.limit.GetConnLimit(corercmgr.DirInbound)
-		if rc.nconnsIn+incount > limit {
+		if rc.nconnsIn+inCount > limit {
 			return &ErrConnLimitExceeded{
 				current:   rc.nconnsIn,
-				attempted: incount,
+				attempted: inCount,
 				limit:     limit,
 				err:       fmt.Errorf("cannot reserve inbound connection: %w", ErrResourceLimitExceeded),
 			}
 		}
 	}
-	if outcount > 0 {
+	if outCount > 0 {
 		limit := rc.limit.GetConnLimit(corercmgr.DirOutbound)
-		if rc.nconnsOut+outcount > limit {
+		if rc.nconnsOut+outCount > limit {
 			return &ErrConnLimitExceeded{
 				current:   rc.nconnsOut,
-				attempted: outcount,
+				attempted: outCount,
 				limit:     limit,
 				err:       fmt.Errorf("cannot reserve outbound connection: %w", ErrResourceLimitExceeded),
 			}
 		}
 	}
-	if connLimit := rc.limit.GetConnTotalLimit(); rc.nconnsIn+incount+rc.nconnsOut+outcount > connLimit {
+	if connLimit := rc.limit.GetConnTotalLimit(); rc.nconnsIn+inCount+rc.nconnsOut+outCount > connLimit {
 		return &ErrConnLimitExceeded{
 			current:   rc.nconnsIn + rc.nconnsOut,
-			attempted: incount + outcount,
+			attempted: inCount + outCount,
 			limit:     connLimit,
 			err:       fmt.Errorf("cannot reserve connection: %w", ErrResourceLimitExceeded),
 		}
 	}
-	if fdcount > 0 {
+	if fdCount > 0 {
 		limit := rc.limit.GetFDLimit()
-		if rc.nfd+fdcount > limit {
+		if rc.nfd+fdCount > limit {
 			return &ErrConnLimitExceeded{
 				current:   rc.nfd,
-				attempted: fdcount,
+				attempted: fdCount,
 				limit:     limit,
 				err:       fmt.Errorf("cannot reserve file descriptor: %w", ErrResourceLimitExceeded),
 			}
 		}
 	}
 
-	rc.nconnsIn += incount
-	rc.nconnsOut += outcount
-	rc.nfd += fdcount
+	rc.nconnsIn += inCount
+	rc.nconnsOut += outCount
+	rc.nfd += fdCount
 	return nil
 }
 
@@ -272,10 +265,10 @@ func (rc *resources) removeConn(dir corercmgr.Direction) {
 	rc.removeConns(0, 1, 1)
 }
 
-func (rc *resources) removeConns(incount, outcount, fdcount int) {
-	rc.nconnsIn -= incount
-	rc.nconnsOut -= outcount
-	rc.nfd -= fdcount
+func (rc *resources) removeConns(inCount, outCount, fdCount int) {
+	rc.nconnsIn -= inCount
+	rc.nconnsOut -= outCount
+	rc.nfd -= fdCount
 
 	if rc.nconnsIn < 0 {
 		log.Error("BUG: too many inbound connections released")
