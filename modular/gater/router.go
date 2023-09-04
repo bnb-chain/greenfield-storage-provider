@@ -8,7 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	mwhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
 
 const (
@@ -87,22 +87,17 @@ func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 // RegisterHandler registers the handlers to the gateway router.
 func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// off-chain-auth router
-	router.Path(AuthRequestNoncePath).
-		Name(requestNonceRouterName).
-		Methods(http.MethodGet).
-		HandlerFunc(g.requestNonceHandler)
-	router.Path(AuthUpdateKeyPath).
-		Name(updateUserPublicKeyRouterName).
-		Methods(http.MethodPost).
-		HandlerFunc(g.updateUserPublicKeyHandler)
+	router.Path(AuthRequestNoncePath).Name(requestNonceRouterName).Methods(http.MethodGet).HandlerFunc(g.requestNonceHandler)
+	router.Path(AuthUpdateKeyPath).Name(updateUserPublicKeyRouterName).Methods(http.MethodPost).HandlerFunc(g.updateUserPublicKeyHandler)
 
 	// verify permission router
-	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).Methods(http.MethodGet).HandlerFunc(g.verifyPermissionHandler)
+	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).
+		Methods(http.MethodGet).HandlerFunc(g.verifyPermissionHandler)
 
 	// admin router, path style
 	// Get Approval
-	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).Queries(
-		ActionQuery, "{action}")
+	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).
+		Queries(ActionQuery, "{action}")
 
 	// get challenge info
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
@@ -140,8 +135,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	for _, r := range routers {
 		// Put Object By Offset
 		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).Queries(
-			"offset", "{offset}",
-			"complete", "{complete}")
+			"offset", "{offset}", "complete", "{complete}")
 		// Put Object
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 
@@ -181,10 +175,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// List Bucket Read Record
 		r.NewRoute().Name(listBucketReadRecordRouterName).Methods(http.MethodGet).HandlerFunc(g.listBucketReadRecordHandler).Queries(
-			ListBucketReadRecordQuery, "",
-			ListBucketReadRecordMaxRecordsQuery, "{max_records}",
-			StartTimestampUs, "{start_ts}",
-			EndTimestampUs, "{end_ts}")
+			ListBucketReadRecordQuery, "", ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			StartTimestampUs, "{start_ts}", EndTimestampUs, "{end_ts}")
 
 		// List Objects by bucket
 		r.NewRoute().Name(listObjectsByBucketRouterName).Methods(http.MethodGet).Path("/").HandlerFunc(g.listObjectsByBucketNameHandler)
@@ -285,5 +277,5 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	http.Handle("/", router)
 
 	router.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-	router.Use(localhttp.Limit)
+	router.Use(mwhttp.Limit)
 }

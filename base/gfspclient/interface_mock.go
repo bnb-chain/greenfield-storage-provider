@@ -4053,3 +4053,41 @@ func (mr *MockGfSpConnAPIMockRecorder) SignerConn(ctx interface{}, opts ...inter
 	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignerConn", reflect.TypeOf((*MockGfSpConnAPI)(nil).SignerConn), varargs...)
 }
+
+// MockstdLib is a mock of stdLib interface.
+type MockstdLib struct {
+	ctrl     *gomock.Controller
+	recorder *MockstdLibMockRecorder
+}
+
+// MockstdLibMockRecorder is the mock recorder for MockstdLib.
+type MockstdLibMockRecorder struct {
+	mock *MockstdLib
+}
+
+// NewMockstdLib creates a new mock instance.
+func NewMockstdLib(ctrl *gomock.Controller) *MockstdLib {
+	mock := &MockstdLib{ctrl: ctrl}
+	mock.recorder = &MockstdLibMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockstdLib) EXPECT() *MockstdLibMockRecorder {
+	return m.recorder
+}
+
+// Read mocks base method.
+func (m *MockstdLib) Read(p []byte) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Read", p)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Read indicates an expected call of Read.
+func (mr *MockstdLibMockRecorder) Read(p interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockstdLib)(nil).Read), p)
+}

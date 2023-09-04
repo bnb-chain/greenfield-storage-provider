@@ -122,7 +122,7 @@ func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 	return g.chain
 }
 
-// Consensus sets greenfield consensus query client.
+// SetConsensus sets greenfield consensus query client.
 func (g *GfSpBaseApp) SetConsensus(chain consensus.Consensus) {
 	g.chain = chain
 }
@@ -194,16 +194,16 @@ func (g *GfSpBaseApp) Start(ctx context.Context) error {
 		return err
 	}
 	g.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).StartServices(ctx).Wait(ctx)
-	g.close(ctx)
+	_ = g.close(ctx)
 	return nil
 }
 
 // close recycles the GfSpBaseApp resource on the stop time.
 func (g *GfSpBaseApp) close(ctx context.Context) error {
-	g.StopRPCServer(ctx)
-	g.GfSpClient().Close()
-	g.rcmgr.Close()
-	g.chain.Close()
+	_ = g.StopRPCServer(ctx)
+	_ = g.GfSpClient().Close()
+	_ = g.rcmgr.Close()
+	_ = g.chain.Close()
 	return nil
 }
 

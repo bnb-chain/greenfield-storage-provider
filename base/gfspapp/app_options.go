@@ -30,8 +30,8 @@ const (
 	EnvLocal = "local"
 	// EnvDevnet defines the devnet environment.
 	EnvDevnet = "devnet"
-	// EvnQanet defines the qanet environment.
-	EvnQanet = "qanet"
+	// EvnQAnet defines the qanet environment.
+	EvnQAnet = "qanet"
 	// EvnTestnet defines the testnet environment.
 	EvnTestnet = "testnet"
 	// EnvMainnet defines the mainnet environment. And as default environment.

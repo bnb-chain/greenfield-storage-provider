@@ -259,7 +259,8 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 	return nil
 }
 
-// gRPCStream for mock use
+// gRPCUploadStream for mock use
+// Note: gRPCUploadStream interface is forbidden to be used in non-UT code
 //
 // nolint:unused
 //
@@ -269,6 +270,7 @@ type gRPCUploadStream interface {
 }
 
 // gRPCResumableUploadStream for mock use
+// Note: gRPCResumableUploadStream interface is forbidden to be used in non-UT code
 //
 // nolint:unused
 type gRPCResumableUploadStream interface {
