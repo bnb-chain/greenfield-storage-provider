@@ -3,11 +3,12 @@ package gater
 import (
 	"context"
 	"encoding/xml"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts"
@@ -191,7 +192,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, account, domain, currentNonce, int32(nonceInt), userPublicKey, expiryDate.UnixMilli())
+	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, account, domain, currentNonce, nonceInt, userPublicKey, expiryDate.UnixMilli())
 	if err != nil {
 		log.Errorw("failed to updateUserPublicKey when saving key")
 		return
