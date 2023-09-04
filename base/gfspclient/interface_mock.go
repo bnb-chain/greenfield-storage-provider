@@ -1053,7 +1053,7 @@ func (mr *MockGfSpClientAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, s
 }
 
 // ListObjectPolicies mocks base method.
-func (m *MockGfSpClientAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
+func (m *MockGfSpClientAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType int32, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}
 	for _, a := range opts {
@@ -3023,7 +3023,7 @@ func (mr *MockMetadataAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, spI
 }
 
 // ListObjectPolicies mocks base method.
-func (m *MockMetadataAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
+func (m *MockMetadataAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType int32, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}
 	for _, a := range opts {

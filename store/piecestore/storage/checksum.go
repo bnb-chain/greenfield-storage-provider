@@ -56,7 +56,8 @@ func verifyChecksum(rc io.ReadCloser, checksum string) io.ReadCloser {
 	if checksum == "" {
 		return rc
 	}
-	expected, err := strconv.Atoi(checksum)
+	expected, err := strconv.ParseInt(checksum, 10, 32)
+
 	if err != nil {
 		log.Errorf("invalid crc32c: %s", checksum)
 		return rc

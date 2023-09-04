@@ -832,7 +832,7 @@ func (s *GfSpClient) GetUserOwnedGroups(ctx context.Context, accountID string, s
 	return resp.Groups, nil
 }
 
-func (s *GfSpClient) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
+func (s *GfSpClient) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType int32, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)

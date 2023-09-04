@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 const (
@@ -165,8 +165,8 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	nonceInt, err := strconv.Atoi(nonce)
-	if err != nil || int(nextNonce) != nonceInt { // nonce must be the same as NextNonce
+	nonceInt, err := util.StringToInt32(nonce)
+	if err != nil || nextNonce != nonceInt { // nonce must be the same as NextNonce
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey due to bad nonce")
 		err = ErrInvalidRegNonceHeader
 		return
@@ -191,7 +191,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, account, domain, currentNonce, int32(nonceInt), userPublicKey, expiryDate.UnixMilli())
+	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, account, domain, currentNonce, nonceInt, userPublicKey, expiryDate.UnixMilli())
 	if err != nil {
 		log.Errorw("failed to updateUserPublicKey when saving key")
 		return
