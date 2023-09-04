@@ -155,7 +155,7 @@ func TestErrConsensusWithDetail(t *testing.T) {
 	assert.Equal(t, mock, result.Description)
 }
 
-func TestPreUploadObject(t *testing.T) {
+func TestPreDownloadObject(t *testing.T) {
 	d := setup(t)
 	// failed due to pointer dangling
 	err := d.PreDownloadObject(context.TODO(), nil)

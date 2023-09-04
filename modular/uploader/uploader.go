@@ -36,10 +36,7 @@ func (u *UploadModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (u *UploadModular) ReserveResource(
-	ctx context.Context,
-	state *rcmgr.ScopeStat) (
-	rcmgr.ResourceScopeSpan, error) {
+func (u *UploadModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
 	span, err := u.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -51,8 +48,6 @@ func (u *UploadModular) ReserveResource(
 	return span, nil
 }
 
-func (u *UploadModular) ReleaseResource(
-	ctx context.Context,
-	span rcmgr.ResourceScopeSpan) {
+func (u *UploadModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
 	span.Done()
 }
