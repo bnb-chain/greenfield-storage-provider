@@ -173,18 +173,20 @@ func (m *Module) handleUpdateGroupMember(ctx context.Context, block *tmctypes.Re
 	if len(membersToAdd) > 0 {
 		for _, memberToAdd := range membersToAdd {
 			groupItem := &models.Group{
-				Owner:          common.HexToAddress(updateGroupMember.Owner),
-				GroupID:        common.BigToHash(updateGroupMember.GroupId.BigInt()),
-				GroupName:      updateGroupMember.GroupName,
-				AccountID:      common.HexToAddress(memberToAdd.Member),
-				Operator:       common.HexToAddress(updateGroupMember.Operator),
-				ExpirationTime: memberToAdd.ExpirationTime.Unix(),
+				Owner:     common.HexToAddress(updateGroupMember.Owner),
+				GroupID:   common.BigToHash(updateGroupMember.GroupId.BigInt()),
+				GroupName: updateGroupMember.GroupName,
+				AccountID: common.HexToAddress(memberToAdd.Member),
+				Operator:  common.HexToAddress(updateGroupMember.Operator),
 
 				CreateAt:   block.Block.Height,
 				CreateTime: block.Block.Time.UTC().Unix(),
 				UpdateAt:   block.Block.Height,
 				UpdateTime: block.Block.Time.UTC().Unix(),
 				Removed:    false,
+			}
+			if memberToAdd.ExpirationTime != nil {
+				groupItem.ExpirationTime = memberToAdd.ExpirationTime.Unix()
 			}
 			membersToAddList = append(membersToAddList, groupItem)
 		}
@@ -226,14 +228,17 @@ func (m *Module) handleUpdateGroupMember(ctx context.Context, block *tmctypes.Re
 func (m *Module) handleRenewGroupMember(ctx context.Context, block *tmctypes.ResultBlock, renewGroupMember *storagetypes.EventRenewGroupMember) map[string][]interface{} {
 	res := map[string][]interface{}{}
 	for _, e := range renewGroupMember.Members {
-		k, v := m.db.UpdateGroupToSQL(ctx, &models.Group{
-			GroupID:        common.BigToHash(renewGroupMember.GroupId.BigInt()),
-			AccountID:      common.HexToAddress(e.Member),
-			ExpirationTime: e.ExpirationTime.Unix(),
+		item := &models.Group{
+			GroupID:   common.BigToHash(renewGroupMember.GroupId.BigInt()),
+			AccountID: common.HexToAddress(e.Member),
 
 			UpdateAt:   block.Block.Height,
 			UpdateTime: block.Block.Time.UTC().Unix(),
-		})
+		}
+		if e.ExpirationTime != nil {
+			item.ExpirationTime = e.ExpirationTime.Unix()
+		}
+		k, v := m.db.UpdateGroupToSQL(ctx, item)
 		res[k] = v
 	}
 	return res
