@@ -79,30 +79,55 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	return nil
 }
 
-func getUpdatedConsumedQuota(record *corespdb.ReadRecord, freeQuota, freeConsumedQuota, totalConsumeQuota, chargedQuota uint64) (uint64, uint64, error) {
+func getUpdatedConsumedQuota(tx *gorm.DB, record *corespdb.ReadRecord, freeQuota, freeConsumedQuota, readConsumeQuota, chargedQuota uint64) (uint64, uint64, error) {
 	recordQuotaCost := record.ReadSize
 	needCheckChainQuota := true
 	freeQuotaRemain := freeQuota - freeConsumedQuota
 	// if remain free quota more than 0, consume free quota first
 	if freeQuotaRemain > 0 && recordQuotaCost < freeQuotaRemain {
 		// if free quota is enough, no need to check charged quota
-		totalConsumeQuota += recordQuotaCost
+		readConsumeQuota += recordQuotaCost
 		freeConsumedQuota += recordQuotaCost
 		needCheckChainQuota = false
 	}
 	// if free quota is not enough, check the charged quota
 	if needCheckChainQuota {
-		// the quota size of this month should be (chargedQuota + freeQuotaRemain)
-		if totalConsumeQuota+recordQuotaCost > chargedQuota+freeQuotaRemain {
-			return 0, 0, ErrCheckQuotaEnough
+		if freeQuotaRemain > 0 {
+			if freeQuotaRemain+chargedQuota < recordQuotaCost {
+				return 0, 0, ErrCheckQuotaEnough
+			}
+		} else {
+			// if consumed_free_quota(the free quota cost this month) + charged_quota < read_quota + record_cost_quota , the quota is not enough
+			// the free quota remained at the beginning of this month should compute by the record of last month if it exists.
+			// if not exists, the free quota remained at the beginning is free quota total size
+			var secondaryNewestTraffic BucketTrafficTable
+			// the quota at the beginning of this month
+			var freeQuotaRemainedOfLastMonth uint64
+			queryErr := tx.Where("bucket_id = ?", record.BucketID).Order("Month DESC").Offset(1).Limit(1).Find(&secondaryNewestTraffic).Error
+			if queryErr != nil {
+				if !errors.Is(queryErr, gorm.ErrRecordNotFound) {
+					return 0, 0, queryErr
+				} else {
+					freeQuotaRemainedOfLastMonth = freeQuota
+				}
+			} else {
+				freeQuotaRemainedOfLastMonth = secondaryNewestTraffic.FreeQuotaSize - secondaryNewestTraffic.FreeQuotaConsumedSize
+			}
+
+			freeQuotaCostOfCurrentMonth := freeQuotaRemain - freeQuotaRemainedOfLastMonth
+			log.CtxDebugw(context.Background(), "free quota cost this month is ", "quota:", freeQuotaRemainedOfLastMonth)
+			if freeQuotaCostOfCurrentMonth+chargedQuota < readConsumeQuota+recordQuotaCost {
+				return 0, 0, ErrCheckQuotaEnough
+			}
 		}
-		totalConsumeQuota += recordQuotaCost
+
+		readConsumeQuota += recordQuotaCost
 		if freeQuotaRemain > 0 {
 			freeConsumedQuota += freeQuotaRemain
 		}
 	}
 
-	return freeConsumedQuota, totalConsumeQuota, nil
+	return freeConsumedQuota, readConsumeQuota, nil
 }
 
 // updateConsumedQuota update the consumed quota of BucketTraffic table in the transaction way
@@ -133,9 +158,9 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 		}
 
 		// compute the new consumed quota size to be updated
-		updatedFreeConsumedSize, updatedReadConsumedSize, err := getUpdatedConsumedQuota(record,
+		updatedFreeConsumedSize, updatedReadConsumedSize, err := getUpdatedConsumedQuota(tx, record,
 			bucketTraffic.FreeQuotaSize, bucketTraffic.FreeQuotaConsumedSize,
-			bucketTraffic.ReadConsumedSize, bucketTraffic.ChargedQuotaSize)
+			bucketTraffic.ReadConsumedSize, quota.ChargedQuotaSize)
 		if err != nil {
 			return err
 		}
