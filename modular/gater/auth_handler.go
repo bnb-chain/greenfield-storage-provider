@@ -3,9 +3,9 @@ package gater
 import (
 	"context"
 	"encoding/xml"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -165,8 +165,8 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	nonceInt, err := strconv.Atoi(nonce)
-	if err != nil || int(nextNonce) != nonceInt { // nonce must be the same as NextNonce
+	nonceInt, err := util.StringToInt32(nonce)
+	if err != nil || nextNonce != nonceInt { // nonce must be the same as NextNonce
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey due to bad nonce")
 		err = ErrInvalidRegNonceHeader
 		return
