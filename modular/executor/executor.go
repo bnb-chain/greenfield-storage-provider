@@ -212,7 +212,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		e.HandleGCMetaTask(ctx, t)
 	case *gfsptask.GfSpRecoverPieceTask:
 		atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
-		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, -1)
 		e.HandleRecoverPieceTask(ctx, t)
 		if t.Error() != nil {
 			metrics.ReqCounter.WithLabelValues(ExecutorFailureRecoveryTask).Inc()

@@ -1223,6 +1223,21 @@ func (mr *MockManagerMockRecorder) QueryBucketMigrate(ctx interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockManager)(nil).QueryBucketMigrate), ctx)
 }
 
+// QuerySPByOperatorAddress mocks base method.
+func (m *MockManager) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*types.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySPByOperatorAddress", ctx, operatorAddress)
+	ret0, _ := ret[0].(*types.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySPByOperatorAddress indicates an expected call of QuerySPByOperatorAddress.
+func (mr *MockManagerMockRecorder) QuerySPByOperatorAddress(ctx, operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPByOperatorAddress", reflect.TypeOf((*MockManager)(nil).QuerySPByOperatorAddress), ctx, operatorAddress)
+}
+
 // QuerySpExit mocks base method.
 func (m *MockManager) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
 	m.ctrl.T.Helper()
@@ -1808,6 +1823,21 @@ func (m *MockSigner) SignMigrateBucketApproval(ctx context.Context, bucket *type
 func (mr *MockSignerMockRecorder) SignMigrateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateBucketApproval", reflect.TypeOf((*MockSigner)(nil).SignMigrateBucketApproval), ctx, bucket)
+}
+
+// SignMigrateGVG mocks base method.
+func (m *MockSigner) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignMigrateGVG", ctx, task)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignMigrateGVG indicates an expected call of SignMigrateGVG.
+func (mr *MockSignerMockRecorder) SignMigrateGVG(ctx, task interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateGVG", reflect.TypeOf((*MockSigner)(nil).SignMigrateGVG), ctx, task)
 }
 
 // SignMigratePiece mocks base method.

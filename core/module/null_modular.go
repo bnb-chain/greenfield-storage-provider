@@ -45,6 +45,11 @@ func (m *NullModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQ
 func (m *NullModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
 	return nil, ErrNilModular
 }
+
+func (m *NullModular) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error) {
+	return nil, ErrNilModular
+}
+
 func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) error {
 	return ErrNilModular
 }
@@ -284,6 +289,9 @@ func (*NilModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgr
 
 func (*NilModular) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
 	return "", ErrNilModular
+}
+func (*NilModular) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	return nil, ErrNilModular
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

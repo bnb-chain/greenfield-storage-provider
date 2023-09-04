@@ -220,6 +220,12 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update sp price", "error", err)
 		}
+	case *gfspserver.GfSpSignRequest_GfspMigrateGvgTask:
+		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigrateGvgTask.Key().String())
+		signature, err = g.signer.SignMigrateGVG(ctx, t.GfspMigrateGvgTask)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign migrate gvg task", "error", err)
+		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")
 		return &gfspserver.GfSpSignResponse{

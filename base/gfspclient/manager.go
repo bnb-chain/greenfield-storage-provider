@@ -9,6 +9,7 @@ import (
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -201,4 +202,20 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 		return resp.GetErr()
 	}
 	return nil
+}
+
+func (s *GfSpClient) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+	}
+	req := &gfspserver.GfSpQuerySPByOperatorAddressRequest{
+		OperatorAddress: operatorAddress,
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQuerySPByOperatorAddress(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetStorageProvider(), nil
 }

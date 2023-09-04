@@ -4,6 +4,7 @@ package base.types.gfspserver;
 import "base/types/gfsperrors/error.proto";
 import "base/types/gfsplimit/limit.proto";
 import "base/types/gfsptask/task.proto";
+import "greenfield/sp/types.proto";
 import "greenfield/virtualgroup/tx.proto";
 
 option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
@@ -75,10 +76,19 @@ message GfSpNotifyMigrateSwapOutResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
+message GfSpQuerySPByOperatorAddressRequest {
+  string operator_address = 1;
+}
+message GfSpQuerySPByOperatorAddressResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  greenfield.sp.StorageProvider storage_provider = 2;
+}
+
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
   rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
+  rpc GfSpQuerySPByOperatorAddress(GfSpQuerySPByOperatorAddressRequest) returns (GfSpQuerySPByOperatorAddressResponse) {}
 }

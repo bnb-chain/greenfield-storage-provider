@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -41,4 +42,8 @@ func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtu
 	}
 
 	return m.spExitScheduler.AddSwapOutToTaskRunner(swapOut)
+}
+
+func (m *ManageModular) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error) {
+	return m.virtualGroupManager.QuerySPByAddress(operatorAddress)
 }

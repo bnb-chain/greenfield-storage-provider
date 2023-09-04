@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -56,15 +57,47 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 	}
 }
 
+func (g *GateModular) checkMigratePieceAuth(reqCtx *RequestContext, migrateGVGHeader string) (bool, error) {
+	var (
+		err           error
+		migrateGVGMsg []byte
+	)
+	migrateGVGMsg, err = hex.DecodeString(migrateGVGHeader)
+	if err != nil {
+		log.Errorw("failed to parse migrate gvg header", "migrate_gvg_header", migrateGVGHeader, "error", err)
+		return false, ErrDecodeMsg
+	}
+
+	migrateGVG := gfsptask.GfSpMigrateGVGTask{}
+	err = json.Unmarshal(migrateGVGMsg, &migrateGVG)
+	if err != nil {
+		log.Errorw("failed to unmarshal migrate gvg msg", "error", err)
+		return false, ErrDecodeMsg
+	}
+	if migrateGVG.GetExpireTime() < time.Now().Unix() {
+		log.Errorw("failed to check migrate gvg expire time", "gvg_task", migrateGVG)
+		return false, ErrNoPermission
+	}
+	destSPAddr, err := reqCtx.verifyTaskSignature(migrateGVG.GetSignBytes(), migrateGVG.GetSignature())
+	if err != nil {
+		log.Errorw("failed to verify task signature", "gvg_task", migrateGVG, "error", err)
+		return false, err
+	}
+	_, _ = g.baseApp.GfSpClient().QuerySPByOperatorAddress(reqCtx.Context(), destSPAddr.String())
+	// TODO: query metadata
+	return true, nil
+}
+
 // migratePieceHandler handles migrate piece request between SPs which is used in SP exiting case.
 func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		migrateMsg []byte
-		pieceKey   string
-		pieceSize  int64
-		pieceData  []byte
+		err             error
+		allowMigrate    bool
+		reqCtx          *RequestContext
+		migratePieceMsg []byte
+		pieceKey        string
+		pieceSize       int64
+		pieceData       []byte
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -79,8 +112,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	migrateHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
-	migrateMsg, err = hex.DecodeString(migrateHeader)
+	migratePieceHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
+	migratePieceMsg, err = hex.DecodeString(migratePieceHeader)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate piece header", "error", err)
 		err = ErrDecodeMsg
@@ -88,12 +121,23 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	migratePiece := gfsptask.GfSpMigratePieceTask{}
-	err = json.Unmarshal(migrateMsg, &migratePiece)
+	err = json.Unmarshal(migratePieceMsg, &migratePiece)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece msg", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
+
+	if allowMigrate, err = g.checkMigratePieceAuth(reqCtx, r.Header.Get(GnfdMigrateGVGMsgHeader)); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check migrate piece auth", "migrate_piece", migratePiece, "error", err)
+		return
+	}
+	if !allowMigrate {
+		log.CtxErrorw(reqCtx.Context(), "has no permission to migrate piece", "migrate_piece", migratePiece)
+		err = ErrNoPermission
+		return
+	}
+
 	objectInfo := migratePiece.GetObjectInfo()
 	if objectInfo == nil {
 		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info due to has no object info")

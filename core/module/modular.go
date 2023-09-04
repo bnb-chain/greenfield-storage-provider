@@ -190,7 +190,6 @@ type Manager interface {
 	// send CreateUploadObject request to Manager ask if it's ok. Through this
 	// interface that SP implements the global upload object strategy.
 	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
-
 	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,
 	// Manager should generate ReplicatePieceTask for TaskExecutor to run.
 	HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
@@ -221,6 +220,8 @@ type Manager interface {
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
+	// QuerySPByOperatorAddress is used to query sp info by operator address.
+	QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error)
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -297,6 +298,8 @@ type Signer interface {
 	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
 	// UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to greenfield.
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
+	// SignMigrateGVG signs the GfSpMigrateGVGTask for migrating piece auth.
+	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store
