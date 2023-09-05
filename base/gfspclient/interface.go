@@ -193,3 +193,10 @@ type GfSpConnAPI interface {
 	HTTPClient(ctx context.Context) *http.Client
 	Close() error
 }
+
+// stdLib for mock use
+// Note: stdLib interface is forbidden to be used in non-UT code
+// nolint:unused
+type stdLib interface {
+	io.Reader
+}

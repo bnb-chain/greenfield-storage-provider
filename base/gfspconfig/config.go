@@ -10,7 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	mwhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
@@ -57,7 +57,7 @@ type GfSpConfig struct {
 	Rcmgr          RcmgrConfig `comment:"optional"`
 	Log            LogConfig
 	BlockSyncer    BlockSyncerConfig
-	APIRateLimiter localhttp.RateLimiterConfig
+	APIRateLimiter mwhttp.RateLimiterConfig
 	Manager        ManagerConfig
 }
 

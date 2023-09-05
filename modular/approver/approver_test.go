@@ -41,7 +41,7 @@ func TestApprovalModular_StartSuccess(t *testing.T) {
 	m2 := rcmgr.NewMockResourceScope(ctrl)
 	m1.EXPECT().OpenService(gomock.Any()).DoAndReturn(func(svc string) (rcmgr.ResourceScope, error) {
 		return m2, nil
-	})
+	}).Times(1)
 	err := a.Start(context.TODO())
 	assert.Nil(t, err)
 }
@@ -57,7 +57,7 @@ func TestApprovalModular_StartFailure(t *testing.T) {
 	a.baseApp.SetResourceManager(m1)
 	m1.EXPECT().OpenService(gomock.Any()).DoAndReturn(func(svc string) (rcmgr.ResourceScope, error) {
 		return nil, mockErr
-	})
+	}).Times(1)
 	err := a.Start(context.TODO())
 	assert.Equal(t, mockErr, err)
 }
@@ -80,7 +80,7 @@ func TestApprovalModular_ReserveResourceSuccess(t *testing.T) {
 	m1 := rcmgr.NewMockResourceScopeSpan(ctrl)
 	m.EXPECT().BeginSpan().DoAndReturn(func() (rcmgr.ResourceScopeSpan, error) {
 		return m1, nil
-	})
+	}).Times(1)
 	m1.EXPECT().ReserveResources(gomock.Any()).DoAndReturn(func(st *rcmgr.ScopeStat) error { return nil }).AnyTimes()
 	result, err := a.ReserveResource(context.TODO(), &rcmgr.ScopeStat{Memory: 1})
 	assert.Nil(t, err)
@@ -95,7 +95,7 @@ func TestApprovalModular_ReserveResourceFailure1(t *testing.T) {
 	a.scope = m
 	m.EXPECT().BeginSpan().DoAndReturn(func() (rcmgr.ResourceScopeSpan, error) {
 		return nil, mockErr
-	})
+	}).Times(1)
 	result, err := a.ReserveResource(context.TODO(), &rcmgr.ScopeStat{Memory: 1})
 	assert.Equal(t, mockErr, err)
 	assert.Nil(t, result)
@@ -110,7 +110,7 @@ func TestApprovalModular_ReserveResourceFailure2(t *testing.T) {
 	m1 := rcmgr.NewMockResourceScopeSpan(ctrl)
 	m.EXPECT().BeginSpan().DoAndReturn(func() (rcmgr.ResourceScopeSpan, error) {
 		return m1, nil
-	})
+	}).Times(1)
 	m1.EXPECT().ReserveResources(gomock.Any()).DoAndReturn(func(st *rcmgr.ScopeStat) error { return mockErr }).AnyTimes()
 	result, err := a.ReserveResource(context.TODO(), &rcmgr.ScopeStat{Memory: 1})
 	assert.Equal(t, mockErr, err)

@@ -167,7 +167,7 @@ const (
 	BucketIDQuery = "bucket-id"
 	// LimitQuery defines limit of results
 	LimitQuery = "limit"
-	// CreateAtQuery defines the create timestamp
+	// CreateAtQuery defines the created timestamp
 	CreateAtQuery = "create-at"
 	// PrimarySpIDQuery defines the primary sp id
 	PrimarySpIDQuery = "primary-sp-id"

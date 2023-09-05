@@ -109,8 +109,8 @@ func (r *RequestContext) Cancel() {
 	r.cancel()
 }
 
-// SetHttpCode sets the http status code for logging and debugging.
-func (r *RequestContext) SetHttpCode(code int) {
+// SetHTTPCode sets the http status code for logging and debugging.
+func (r *RequestContext) SetHTTPCode(code int) {
 	r.httpCode = code
 }
 

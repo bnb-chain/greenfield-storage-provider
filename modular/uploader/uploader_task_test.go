@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -113,7 +112,7 @@ func TestUploadModular_HandleUploadObjectTaskSuccess1(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -165,7 +164,7 @@ func TestUploadModular_HandleUploadObjectTaskFailure2(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(1, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -200,7 +199,7 @@ func TestUploadModular_HandleUploadObjectTaskFailure3(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -230,7 +229,7 @@ func TestUploadModular_HandleUploadObjectTaskFailure4(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -268,7 +267,7 @@ func TestUploadModular_HandleUploadObjectTaskFailure5(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, mockErr).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -301,7 +300,7 @@ func TestUploadModular_HandleUploadObjectTaskFailure6(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(1, nil).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -424,7 +423,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskSuccess(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -470,7 +469,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure2(t *testing.T) {
 	u := setup(t)
 	ctrl := gomock.NewController(t)
 
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(1, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -506,7 +505,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure3(t *testing.T) {
 	t.Log("Failure case description: failed to append integrity checksum to db")
 	u := setup(t)
 	ctrl := gomock.NewController(t)
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(1, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -546,7 +545,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure4(t *testing.T) {
 	t.Log("Failure case description: failed to get object integrity hash")
 	u := setup(t)
 	ctrl := gomock.NewController(t)
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -582,7 +581,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure5(t *testing.T) {
 	t.Log("Failure case description: invalid integrity hash")
 	u := setup(t)
 	ctrl := gomock.NewController(t)
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -620,7 +619,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure6(t *testing.T) {
 	t.Log("Failure case description: failed to write integrity hash to db")
 	u := setup(t)
 	ctrl := gomock.NewController(t)
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -660,7 +659,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure7(t *testing.T) {
 	t.Log("Failure case description: stream closed abnormally")
 	u := setup(t)
 	ctrl := gomock.NewController(t)
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(0, mockErr).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -687,7 +686,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure8(t *testing.T) {
 	t.Log("Failure case description: failed to put segment piece to piece store")
 	u := setup(t)
 	ctrl := gomock.NewController(t)
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(1, nil).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -723,7 +722,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure9(t *testing.T) {
 	t.Log("Failure case description: failed to append integrity checksum to db")
 	u := setup(t)
 	ctrl := gomock.NewController(t)
-	m := NewMockIOReader(ctrl)
+	m := gfspclient.NewMockstdLib(ctrl)
 	m.EXPECT().Read(gomock.Any()).Return(1, nil).AnyTimes()
 
 	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
@@ -812,41 +811,4 @@ func TestStreamReadAt(t *testing.T) {
 			assert.Equal(t, tt.wantedErr, err)
 		})
 	}
-}
-
-type MockIOReader struct {
-	ctrl     *gomock.Controller
-	recorder *MockIOReaderMockRecorder
-}
-
-// MockIOReaderMockRecorder is the mock recorder for MockIOReader.
-type MockIOReaderMockRecorder struct {
-	mock *MockIOReader
-}
-
-// NewMockGfSpClientAPI creates a new mock instance.
-func NewMockIOReader(ctrl *gomock.Controller) *MockIOReader {
-	mock := &MockIOReader{ctrl: ctrl}
-	mock.recorder = &MockIOReaderMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIOReader) EXPECT() *MockIOReaderMockRecorder {
-	return m.recorder
-}
-
-// Read mocks base method.
-func (m *MockIOReader) Read(p []byte) (n int, err error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Read", p)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Read indicates an expected call of Read.
-func (mr *MockIOReaderMockRecorder) Read(p interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockIOReader)(nil).Read), p)
 }
