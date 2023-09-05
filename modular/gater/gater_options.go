@@ -50,14 +50,18 @@ func defaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 
 func makeAPIRateLimitCfg(cfg mwhttp.RateLimiterConfig) *mwhttp.APILimiterConfig {
 	defaultMap := make(map[string]mwhttp.MemoryLimiterConfig)
-	for _, c := range cfg.PathPattern {
+	pathSequence := make([]string, len(cfg.PathPattern))
+	for i, c := range cfg.PathPattern {
+		pathSequence[i] = c.Key
 		defaultMap[c.Key] = mwhttp.MemoryLimiterConfig{
 			RateLimit:  c.RateLimit,
 			RatePeriod: c.RatePeriod,
 		}
 	}
 	patternMap := make(map[string]mwhttp.MemoryLimiterConfig)
-	for _, c := range cfg.HostPattern {
+	hostSequence := make([]string, len(cfg.HostPattern))
+	for i, c := range cfg.HostPattern {
+		hostSequence[i] = c.Key
 		patternMap[c.Key] = mwhttp.MemoryLimiterConfig{
 			RateLimit:  c.RateLimit,
 			RatePeriod: c.RatePeriod,
@@ -71,9 +75,11 @@ func makeAPIRateLimitCfg(cfg mwhttp.RateLimiterConfig) *mwhttp.APILimiterConfig 
 		}
 	}
 	return &mwhttp.APILimiterConfig{
-		PathPattern: defaultMap,
-		HostPattern: patternMap,
-		APILimits:   apiLimitsMap,
-		IPLimitCfg:  cfg.IPLimitCfg,
+		PathPattern:  defaultMap,
+		PathSequence: pathSequence,
+		HostPattern:  patternMap,
+		HostSequence: hostSequence,
+		APILimits:    apiLimitsMap,
+		IPLimitCfg:   cfg.IPLimitCfg,
 	}
 }
