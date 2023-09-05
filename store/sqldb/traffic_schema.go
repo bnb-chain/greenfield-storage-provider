@@ -9,10 +9,10 @@ type BucketTrafficTable struct {
 	BucketID              uint64 `gorm:"primary_key"`
 	Month                 string `gorm:"primary_key"`
 	BucketName            string
-	ReadConsumedSize      uint64
-	FreeQuotaConsumedSize uint64 // indicates the consumed free quota size
-	FreeQuotaSize         uint64 // the greenfield chain free quota
-	ChargedQuotaSize      uint64 //the greenfield chain bucket charged quota
+	ReadConsumedSize      uint64 // indicates the consumed chargedQuota of this month
+	FreeQuotaConsumedSize uint64 // indicates the consumed free quota size of this month
+	FreeQuotaSize         uint64 // indicate the remained free quota
+	ChargedQuotaSize      uint64 // indicate the greenfield chain bucket charged quota
 	ModifiedTime          time.Time
 }
 

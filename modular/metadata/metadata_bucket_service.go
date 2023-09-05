@@ -347,6 +347,7 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 				", bucket_id: " + req.GetBucketInfo().Id.String() + ", error: " + err.Error())}, nil
 		}
 	}
+
 	// if the traffic table has been created, return the db info from meta service
 	return &types.GfSpGetBucketReadQuotaResponse{
 		ChargedQuotaSize:     req.GetBucketInfo().GetChargedReadQuota(),
