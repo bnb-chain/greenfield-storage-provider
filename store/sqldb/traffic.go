@@ -82,16 +82,15 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 // getUpdatedConsumedQuota compute the updated quota of traffic table by the incoming read cost and the newest record.
 // it returns the updated consumed free quota,consumed charged quota and remained free quota
 func getUpdatedConsumedQuota(recordQuotaCost, freeQuotaRemain, consumeFreeQuota, consumeChargedQuota, chargedQuota uint64) (uint64, uint64, uint64, bool, error) {
-	// if remain free quota more than 0 and enough, just consume free quota
+	// if remain free quota enough, just consume free quota
 	needUpdateFreeQuota := false
-	if freeQuotaRemain > 0 && recordQuotaCost < freeQuotaRemain {
+	if recordQuotaCost < freeQuotaRemain {
 		needUpdateFreeQuota = true
 		consumeFreeQuota += recordQuotaCost
 		freeQuotaRemain -= recordQuotaCost
 	} else {
 		// if free remain quota exist, consume all the free remain quota first
 		if freeQuotaRemain > 0 {
-			log.CtxDebugw(context.Background(), "remained free quota:", "quota", freeQuotaRemain)
 			if freeQuotaRemain+chargedQuota < recordQuotaCost {
 				return 0, 0, 0, false, ErrCheckQuotaEnough
 			}
