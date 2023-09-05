@@ -863,6 +863,18 @@ message GfSpListUserPaymentAccountsResponse {
   repeated StreamRecordMeta stream_records = 1;
 }
 
+// GfSpListGroupsByIDsRequest is request type for the GfSpListGroupsByIDs RPC method
+message GfSpListGroupsByIDsRequest {
+  // group_ids is the list of unique identifier for groups
+  repeated uint64 group_ids = 1;
+}
+
+// GfSpListGroupsByIDsResponse is response type for the GfSpListGroupsByIDs RPC method.
+message GfSpListGroupsByIDsResponse {
+  // groups defines the information of a group map
+  map<uint64, Group> groups = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -905,4 +917,5 @@ service GfSpMetadataService {
   rpc GfSpListObjectPolicies(GfSpListObjectPoliciesRequest) returns (GfSpListObjectPoliciesResponse) {}
   rpc GfSpListPaymentAccountStreams(GfSpListPaymentAccountStreamsRequest) returns (GfSpListPaymentAccountStreamsResponse) {}
   rpc GfSpListUserPaymentAccounts(GfSpListUserPaymentAccountsRequest) returns (GfSpListUserPaymentAccountsResponse) {}
+  rpc GfSpListGroupsByIDs(GfSpListGroupsByIDsRequest) returns (GfSpListGroupsByIDsResponse) {}
 }

@@ -89,6 +89,8 @@ const (
 	ListBucketsByIDsQuery = "buckets-query"
 	// ListObjectsByIDsQuery defines list objects by object ids, which is used to route request
 	ListObjectsByIDsQuery = "objects-query"
+	// ListGroupsByIDsQuery defines list groups by group ids, which is used to route request
+	ListGroupsByIDsQuery = "groups-query"
 	// GetPaymentByBucketIDQuery defines get payment by bucket id, which is used to route request
 	GetPaymentByBucketIDQuery = "payment-id"
 	// GetPaymentByBucketNameQuery defines get payment by bucket name, which is used to route request
