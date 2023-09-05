@@ -1209,7 +1209,7 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 		requestResourceType string
 		requestActionType   string
 		resourceID          uint64
-		resourceType        uint32
+		resourceType        int32
 		actionType          int32
 		ok                  bool
 		respBytes           []byte
@@ -1251,13 +1251,13 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 	}
 
 	// 0: "RESOURCE_TYPE_UNSPECIFIED", RESOURCE_TYPE_UNSPECIFIED is not considered in this request
-	if resourceType, err = util.StringToUint32(requestResourceType); err != nil || resourceType == 0 {
+	if resourceType, err = util.StringToInt32(requestResourceType); err != nil || resourceType == 0 {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse or check source type", "resource-type", requestResourceType, "error", err)
 		err = ErrInvalidQuery
 		return
 	}
 
-	if _, ok = resource_types.ResourceType_name[int32(resourceType)]; !ok {
+	if _, ok = resource_types.ResourceType_name[resourceType]; !ok {
 		log.CtxErrorw(reqCtx.Context(), "failed to check source type", "resource-type", resourceType, "error", err)
 		err = ErrInvalidQuery
 		return
