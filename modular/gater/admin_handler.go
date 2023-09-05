@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-common/go/hash"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
+	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -79,8 +79,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		err = ErrDecodeMsg
 		return
 	}
-
-	fingerprint = hash.GenerateChecksum(approvalMsg)
+	fingerprint = commonhash.GenerateChecksum(approvalMsg)
 
 	switch approvalType {
 	case createBucketApprovalAction:
@@ -98,7 +97,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrSPUnavailable
 			return
 		}
-
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createBucketApproval); err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
 				r.Header.Get(GnfdUnsignedApprovalMsgHeader), "error", err)
@@ -112,8 +110,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		startVerifyAuthentication := time.Now()
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-			reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
 			reqCtx.Account(), createBucketApproval.GetBucketName(), "")
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
@@ -122,7 +119,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			log.CtxError(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
@@ -372,7 +369,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
 	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
-	w.Write(data)
+	_, _ = w.Write(data)
 	metrics.ReqPieceSize.WithLabelValues(GatewayChallengePieceSize).Observe(float64(len(data)))
 	log.CtxDebugw(reqCtx.Context(), "succeed to get challenge info")
 }
@@ -533,7 +530,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 
 	// check signature consistent
 	taskSignature := recoveryTask.GetSignature()
-	signatureAddr, pk, err := RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
+	signatureAddr, pk, err := commonhash.RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
 		err = ErrSignature
@@ -560,7 +557,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.ObjectName, objectInfo.BucketName)
+	chainObjectInfo, bucketInfo, params, err := g.getObjectChainMeta(reqCtx.Context(), objectInfo.ObjectName, objectInfo.BucketName)
 	if err != nil {
 		err = ErrInvalidHeader
 		return
@@ -600,7 +597,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	w.Write(pieceData)
+	_, _ = w.Write(pieceData)
 	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
 

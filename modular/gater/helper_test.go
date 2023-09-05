@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	testDomain = "www.route-test.com"
-	scheme     = "https://"
-	bucketName = "test-bucketName"
-	objectName = "test-objectName"
+	testDomain     = "www.route-test.com"
+	scheme         = "https://"
+	mockBucketName = "mock-bucket-name"
+	mockObjectName = "mock-object-name"
 )
 
 var mockErr = errors.New("mock error")

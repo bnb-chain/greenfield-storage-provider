@@ -272,7 +272,6 @@ func TestUpdateUserPublicKeyHandler(t *testing.T) {
 				}
 			},
 		},
-
 		{
 			name: "case wrongAuthString",
 			f: func(t *testing.T, c *gomock.Controller) *Body {

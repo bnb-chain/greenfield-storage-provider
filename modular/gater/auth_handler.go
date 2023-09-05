@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -262,7 +263,7 @@ func VerifyPersonalSignature(signedMsg string, sigString string) (sdk.AccAddress
 	}
 
 	// check signature consistent
-	addr, _, err := RecoverAddr(realMsgToSign, signature)
+	addr, _, err := commonhash.RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
 		return nil, ErrSignature

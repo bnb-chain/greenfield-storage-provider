@@ -8,14 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 	"github.com/gorilla/mux"
 	"golang.org/x/exp/slices"
 
+	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -124,7 +123,8 @@ func (r *RequestContext) String() string {
 	var headerToString = func(header http.Header) string {
 		var sb = strings.Builder{}
 		for k := range header {
-			if k == GnfdUnsignedApprovalMsgHeader || k == GnfdReplicatePieceApprovalHeader || k == GnfdReceiveMsgHeader || k == GnfdRecoveryMsgHeader || k == GnfdMigratePieceMsgHeader {
+			if k == GnfdUnsignedApprovalMsgHeader || k == GnfdReplicatePieceApprovalHeader || k == GnfdReceiveMsgHeader ||
+				k == GnfdRecoveryMsgHeader || k == GnfdMigratePieceMsgHeader {
 				continue
 			}
 			if sb.Len() != 0 {
@@ -214,7 +214,7 @@ func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
 
 	// check signature consistent
-	addr, _, err := RecoverAddr(realMsgToSign, signature)
+	addr, _, err := commonhash.RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.CtxErrorw(r.ctx, "failed to recover address")
 		return nil, ErrRequestConsistent
@@ -222,28 +222,13 @@ func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (
 	return addr, nil
 }
 
-// RecoverAddr recovers the sender address from msg and signature
-// TODO: move it to greenfield-common
-func RecoverAddr(msg []byte, sig []byte) (sdk.AccAddress, ethsecp256k1.PubKey, error) {
-	pubKeyByte, err := secp256k1.RecoverPubkey(msg, sig)
-	if err != nil {
-		return nil, ethsecp256k1.PubKey{}, err
-	}
-	pubKey, _ := ethcrypto.UnmarshalPubkey(pubKeyByte)
-	pk := ethsecp256k1.PubKey{
-		Key: ethcrypto.CompressPubkey(pubKey),
-	}
-	recoverAcc := sdk.AccAddress(pk.Address().Bytes())
-	return recoverAcc, pk, nil
-}
-
-// VerifyTaskSignature verify the task signature and return the sender address
+// verifyTaskSignature verify the task signature and return the sender address
 func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature []byte) (sdk.AccAddress, error) {
 	if len(taskMsgBytes) != 32 {
 		taskMsgBytes = crypto.Keccak256(taskMsgBytes)
 	}
 
-	addr, pk, err := RecoverAddr(taskMsgBytes, taskSignature)
+	addr, pk, err := commonhash.RecoverAddr(taskMsgBytes, taskSignature)
 	if err != nil {
 		log.CtxErrorw(r.Context(), "failed to recover address", "error", err)
 		return nil, err
@@ -257,9 +242,7 @@ func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature 
 
 // verifySignatureForGNFD1Eddsa used to verify off-chain-auth signature, return (address, nil) if check succeed
 func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (sdk.AccAddress, error) {
-	var (
-		err error
-	)
+	var err error
 	offChainSig, err := parseSignatureFromRequest(requestSignature)
 	if err != nil {
 		return nil, err
@@ -267,7 +250,6 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
-
 	account := r.request.Header.Get(GnfdUserAddressHeader)
 	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
 
@@ -281,11 +263,9 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 	}
 }
 
-// verifyOffChainSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed.  The auth information will be parsed from URL.
+// verifyOffChainSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed. The auth information will be parsed from URL.
 func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticationStr string, account string, domain string) (sdk.AccAddress, error) {
-	var (
-		err error
-	)
+	var err error
 	offChainSig, err := parseSignatureFromRequest(authenticationStr)
 	if err != nil {
 		return nil, err
@@ -293,7 +273,6 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1AuthForPreSignedURL(r.request)
-
 	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
 		log.Errorf("failed to verify off chain signature", "error", err)
@@ -306,9 +285,7 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 
 // parseSignatureFromRequest get sig for both ECDSA and EDDSA auth, it expects the auth string should look like "Signature=xxxxx".
 func parseSignatureFromRequest(requestSignature string) (string, error) {
-	var (
-		signature string
-	)
+	var signature string
 	requestSignature = strings.ReplaceAll(requestSignature, " ", "")
 	pair := strings.Split(requestSignature, "=")
 	if len(pair) != 2 {
