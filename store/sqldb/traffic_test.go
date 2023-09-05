@@ -43,7 +43,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordSuccess1(t *testing.T) {
 		BucketID:              2,
 		BucketName:            "mockBucketName",
 		ReadConsumedSize:      10,
-		FreeQuotaConsumedSize: 100,
+		FreeQuotaConsumedSize: 10,
 		FreeQuotaSize:         25,
 		ChargedQuotaSize:      30,
 		ModifiedTime:          time.Now(),
@@ -52,7 +52,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordSuccess1(t *testing.T) {
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
@@ -60,8 +60,8 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordSuccess1(t *testing.T) {
 		WithArgs(20, sqlmock.AnyArg(), record.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
-		WithArgs(sqlmock.AnyArg(), 12, sqlmock.AnyArg(), record.BucketID).
+	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`free_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
+		WithArgs(sqlmock.AnyArg(), 12, 23, sqlmock.AnyArg(), record.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectCommit()
@@ -72,7 +72,6 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordSuccess1(t *testing.T) {
 	mock.ExpectCommit()
 
 	err := s.CheckQuotaAndAddReadRecord(newRecord, quota)
-
 	assert.Nil(t, err)
 }
 
@@ -104,11 +103,12 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordSuccess2(t *testing.T) {
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
-	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`modified_time`=? WHERE `bucket_id` = ?").
+	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`free_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
+		WithArgs(sqlmock.AnyArg(), 25, 24, sqlmock.AnyArg(), record.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
@@ -136,7 +136,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure1(t *testing.T) {
 		FreeQuotaSize:    10,
 	}
 	s, mock := setupDB(t)
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1").
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").
 		WillReturnError(mockDBInternalError)
 	err := s.CheckQuotaAndAddReadRecord(record, quota)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
@@ -159,7 +159,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnError(gorm.ErrRecordNotFound)
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnError(gorm.ErrRecordNotFound)
 
 	err := s.CheckQuotaAndAddReadRecord(record, quota)
 	assert.Contains(t, err.Error(), noRecordInTrafficErr)
@@ -193,7 +193,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure3(t *testing.T) {
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
@@ -232,7 +232,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure4(t *testing.T) {
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
@@ -240,8 +240,8 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure4(t *testing.T) {
 		WithArgs(20, sqlmock.AnyArg(), record.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`modified_time`=? WHERE `bucket_id` = ?").
-		WithArgs(sqlmock.AnyArg(), 11, sqlmock.AnyArg(), record.BucketID).
+	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`free_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
+		WithArgs(sqlmock.AnyArg(), 101, 24, sqlmock.AnyArg(), record.BucketID).
 		WillReturnError(mockDBInternalError)
 
 	mock.ExpectRollback()
@@ -277,7 +277,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure5(t *testing.T) {
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
@@ -285,9 +285,9 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure5(t *testing.T) {
 		WithArgs(20, sqlmock.AnyArg(), record.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`modified_time`=? WHERE `bucket_id` = ?").
-		WithArgs(sqlmock.AnyArg(), 11, sqlmock.AnyArg(), record.BucketID).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`free_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
+		WithArgs(sqlmock.AnyArg(), 101, 24, sqlmock.AnyArg(), record.BucketID).
+		WillReturnError(mockDBInternalError)
 
 	mock.ExpectCommit()
 	mock.ExpectBegin()
@@ -307,7 +307,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure6(t *testing.T) {
 		UserAddress:     "mockUserAddress",
 		BucketName:      "mockBucketName",
 		ObjectName:      "mockObjectName",
-		ReadSize:        1,
+		ReadSize:        25,
 		ReadTimestampUs: 1,
 	}
 	quota := &corespdb.BucketQuota{
@@ -319,19 +319,23 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure6(t *testing.T) {
 		BucketName:            "mockBucketName",
 		ReadConsumedSize:      60,
 		FreeQuotaConsumedSize: 25,
-		FreeQuotaSize:         25,
+		FreeQuotaSize:         3,
 		ChargedQuotaSize:      30,
 		ModifiedTime:          time.Now(),
 	}
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
 	mock.ExpectExec("UPDATE `bucket_traffic` SET `charged_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ?").
 		WithArgs(20, sqlmock.AnyArg(), record.BucketID).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`free_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
+		WithArgs(sqlmock.AnyArg(), 101, 24, sqlmock.AnyArg(), record.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectCommit()
@@ -366,7 +370,7 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordFailure7(t *testing.T) {
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
