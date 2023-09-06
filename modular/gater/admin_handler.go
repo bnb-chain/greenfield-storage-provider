@@ -338,8 +338,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	getParamTime := time.Now()
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
@@ -371,7 +370,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
 	_, _ = w.Write(data)
 	metrics.ReqPieceSize.WithLabelValues(GatewayChallengePieceSize).Observe(float64(len(data)))
-	log.CtxDebugw(reqCtx.Context(), "succeed to get challenge info")
+	log.CtxDebug(reqCtx.Context(), "succeed to get challenge info")
 }
 
 // replicateHandler handles the replicate piece from primary SP request. The Primary
@@ -411,6 +410,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	reqCtx, _ = NewRequestContext(r, g)
 	decodeTime := time.Now()
 	receiveMsg, err = hex.DecodeString(r.Header.Get(GnfdReceiveMsgHeader))
+
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_decode_task_time").Observe(time.Since(decodeTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse receive header",
@@ -431,7 +431,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	// verify receive task signature
 	_, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err, "task", receiveTask)
+		log.CtxErrorw(reqCtx.Context(), "failed to verify receive task", "error", err, "task", receiveTask)
 		err = ErrSignature
 		return
 	}
@@ -476,7 +476,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 		w.Header().Set(GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
-	log.CtxDebugw(reqCtx.Context(), "succeed to replicate piece")
+	log.CtxDebug(reqCtx.Context(), "succeed to replicate piece")
 }
 
 // getRecoverDataHandler handles the query for recovery request from secondary SP or primary SP.
@@ -523,7 +523,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 	err = json.Unmarshal(recoveryMsg, &recoveryTask)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal recovery msg header",
-			"header", r.Header.Get(GnfdReceiveMsgHeader))
+			"header", r.Header.Get(GnfdRecoveryMsgHeader))
 		err = ErrDecodeMsg
 		return
 	}
@@ -532,7 +532,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 	taskSignature := recoveryTask.GetSignature()
 	signatureAddr, pk, err := commonhash.RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to get recover task address", "error", err)
 		err = ErrSignature
 		return
 	}
@@ -602,8 +602,8 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 }
 
 // getRecoverPiece get EC piece data from handler and return
-func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
-	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo, bucketInfo *storagetypes.BucketInfo,
+	recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	var err error
 
 	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
@@ -616,12 +616,12 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	}
 	// the primary sp of the object should be consistent with task signature
 
-	sspAddress := make([]string, 0)
-
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 	if err != nil {
 		return nil, err
 	}
+
+	sspAddress := make([]string, 0)
 	for _, sspID := range gvg.SecondarySpIds {
 		sp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspID)
 		if err != nil {
@@ -631,7 +631,7 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	}
 
 	if primarySp.OperatorAddress != signatureAddr.String() {
-		log.CtxDebugw(ctx, "recovery request not come from primary sp")
+		log.CtxDebug(ctx, "recovery request not come from primary sp")
 		// judge if the sender is not one of the secondary SP
 		isRequestFromSecondary := false
 		var taskECIndex int32
@@ -683,8 +683,8 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 }
 
 // getRecoverSegment get segment piece data from handler and return the EC piece data based on recovery task info
-func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storagetypes.ObjectInfo,
-	bucketInfo *storagetypes.BucketInfo, recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storagetypes.ObjectInfo, bucketInfo *storagetypes.BucketInfo,
+	recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 
@@ -762,8 +762,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 		return nil, executor.ErrPieceStoreWithDetail("failed to download piece, error: " + err.Error())
 	}
 
-	ecData, err := redundancy.EncodeRawSegment(segmentData,
-		int(params.GetRedundantDataChunkNum()),
+	ecData, err := redundancy.EncodeRawSegment(segmentData, int(params.GetRedundantDataChunkNum()),
 		int(params.GetRedundantParityChunkNum()))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to ec encode data when recovering secondary SP", "error", err)

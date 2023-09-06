@@ -135,7 +135,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.Write(pieceData)
+	_, _ = w.Write(pieceData)
 	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "object_id", objectID, "segment_piece_index",
 		segmentIdx, "redundancy_index", redundancyIdx)
 }
@@ -218,10 +218,7 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		err = ErrDecodeMsg
 		return
 	}
-
-	swapOutApproval.SuccessorSpApproval = &common.Approval{
-		ExpiredHeight: 100,
-	}
+	swapOutApproval.SuccessorSpApproval = &common.Approval{ExpiredHeight: 100}
 
 	if err = swapOutApproval.ValidateBasic(); err != nil {
 		log.Errorw("failed to basic check approval msg", "swap_out_approval", swapOutApproval, "error", err)

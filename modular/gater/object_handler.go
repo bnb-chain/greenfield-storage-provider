@@ -118,6 +118,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
+		return
 	}
 	log.CtxDebug(ctx, "succeed to upload payload data")
 }
@@ -254,7 +255,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if requestOffset != "" {
 		offset, err = util.StringToUint64(requestOffset)
 		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to parse complete from url", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to parse offset from url", "error", err)
 			err = ErrInvalidOffset
 			return
 		}
@@ -273,11 +274,11 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	err = g.baseApp.GfSpClient().ResumableUploadObject(ctx, task, r.Body)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
-
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
+		log.CtxErrorw(ctx, "failed to resumable upload payload data", "error", err)
+		return
 	}
-	log.CtxDebug(ctx, "succeed to upload payload data")
+	log.CtxDebug(ctx, "succeed to resumable upload payload data")
 }
 
 // queryResumeOffsetHandler handles the resumable put object
@@ -315,7 +316,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
 		coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 		return
 	}
 	if !authenticated {
@@ -331,8 +332,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
@@ -342,7 +342,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	segmentCount, err = g.baseApp.GfSpClient().GetUploadObjectSegment(reqCtx.Context(), objectInfo.Id.Uint64())
 	if err != nil && err.Error() != metadata.ErrNoRecord.String() {
 		// ignore metadata.ErrNoRecord error
-		log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to get uploading object segment", "error", err)
 		return
 	}
 
@@ -414,11 +414,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
-	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(),
-		sdk.AccAddress{}.String(),
-		reqCtx.bucketName,
-		reqCtx.objectName,
-		permissiontypes.ACTION_GET_OBJECT); err != nil {
+	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
+		reqCtx.bucketName, reqCtx.objectName, permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
 		err = ErrConsensusWithDetail("failed to verify authentication for getting public object, error: " + err.Error())
 		return
@@ -446,7 +443,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
 			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
-
 				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
@@ -564,7 +560,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		writeTime := time.Now()
-		w.Write(pieceData)
+		_, _ = w.Write(pieceData)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_write_time").Observe(time.Since(writeTime).Seconds())
 	}
 	metrics.ReqPieceSize.WithLabelValues(GatewayGetObjectSize).Observe(float64(highOffset - lowOffset + 1))
@@ -696,7 +692,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 				}
 				html := strings.Replace(GnfdBuiltInUniversalEndpointDappErrorPage, "<% errorCode %>", errorCodeForPage, 1)
 
-				fmt.Fprintf(w, "%s", html)
+				_, _ = fmt.Fprintf(w, "%s", html)
 				metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 				metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 				return
@@ -749,14 +745,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		return
 	}
 	if spID != bucketSPID {
-		log.Debugw("primary sp id not matched ",
-			"bucket_sp_id", bucketSPID, "self_sp_id", spID,
-		)
+		log.Debugw("primary sp id not matched ", "bucket_sp_id", bucketSPID, "self_sp_id", spID)
 
 		// get the endpoint where the bucket actually is in
 		spEndpoint, getEndpointErr = g.baseApp.GfSpClient().GetEndpointBySpID(reqCtx.Context(), bucketSPID)
 		if getEndpointErr != nil || spEndpoint == "" {
-			log.Errorw("failed to get endpoint by id ", "sp_id", bucketSPID, "error", getEndpointErr)
+			log.Errorw("failed to get endpoint by id", "sp_id", bucketSPID, "error", getEndpointErr)
 			err = getEndpointErr
 			return
 		}
@@ -775,8 +769,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	}
 
 	if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.Errorw("object is not sealed",
-			"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
+		log.Errorw("object is not sealed", "status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
 		err = ErrNoSuchObject
 		return
 	}
@@ -864,14 +857,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			hc, _ := json.Marshal(htmlConfig)
 			html := strings.Replace(GnfdBuiltInUniversalEndpointDappHtml, "<% env %>", string(hc), 1)
 
-			fmt.Fprintf(w, "%s", html)
+			_, _ = fmt.Fprintf(w, "%s", html)
 			return
 		}
 
 	}
 
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		reqCtx.Context(), getObjectInfoRes.GetObjectInfo().GetCreateAt())
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(),
+		getObjectInfoRes.GetObjectInfo().GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
@@ -910,7 +903,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	} else {
 		w.Header().Set(ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
 	}
-	w.Write(data)
+	_, _ = w.Write(data)
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
 }
 
