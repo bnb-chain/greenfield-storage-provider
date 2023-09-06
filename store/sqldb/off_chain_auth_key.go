@@ -34,12 +34,31 @@ func (s *SpDBImpl) UpdateAuthKey(userAddress string, domain string, oldNonce int
 	queryKeyReturn := &OffChainAuthKeyTable{}
 	result := s.db.First(queryKeyReturn, "user_address = ? and domain =? and current_nonce=?", userAddress, domain, oldNonce)
 	if result.Error != nil {
-		return fmt.Errorf("failed to query OffChainAuthKey table: %s", result.Error)
+		if errIsNotFound(result.Error) {
+			// this is a new initial record, not containing any public key but just generate the first nonce as 1
+			newRecord := &corespdb.OffChainAuthKey{
+				UserAddress:      userAddress,
+				Domain:           domain,
+				CurrentNonce:     0,
+				CurrentPublicKey: "",
+				NextNonce:        1,
+				ExpiryDate:       time.Now(),
+				CreatedTime:      time.Now(),
+				ModifiedTime:     time.Now(),
+			}
+			insertError := s.InsertAuthKey(newRecord)
+			if insertError != nil {
+				return fmt.Errorf("failed to InsertAuthKey: %s", insertError)
+			}
+		} else {
+			return fmt.Errorf("failed to query OffChainAuthKey table: %s", result.Error)
+		}
+
 	}
 	queryCondition := &OffChainAuthKeyTable{
-		UserAddress:  queryKeyReturn.UserAddress,
-		Domain:       queryKeyReturn.Domain,
-		CurrentNonce: queryKeyReturn.CurrentNonce,
+		UserAddress:  userAddress,
+		Domain:       domain,
+		CurrentNonce: oldNonce,
 	}
 	updateFields := &OffChainAuthKeyTable{
 		CurrentPublicKey: newPublicKey,
@@ -80,10 +99,6 @@ func (s *SpDBImpl) GetAuthKey(userAddress string, domain string) (*corespdb.OffC
 				ExpiryDate:       time.Now(),
 				CreatedTime:      time.Now(),
 				ModifiedTime:     time.Now(),
-			}
-			insertError := s.InsertAuthKey(newRecord)
-			if insertError != nil {
-				return nil, fmt.Errorf("failed to InsertAuthKey: %s", insertError)
 			}
 			return newRecord, nil
 		}
