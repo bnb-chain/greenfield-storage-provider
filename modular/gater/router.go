@@ -68,6 +68,7 @@ const (
 	listObjectPoliciesRouterName                   = "ListObjectPolicies"
 	listUserPaymentAccountsRouterName              = "ListUserPaymentAccounts"
 	listPaymentAccountStreamsRouterName            = "ListPaymentAccountStreams"
+	listGroupsByIDsRouterName                      = "ListGroupsByIDs"
 )
 
 const (
@@ -211,6 +212,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// List User Payment Accounts
 	router.Path("/").Name(listUserPaymentAccountsRouterName).Methods(http.MethodGet).Queries(ListUserPaymentAccountsQuery, "").HandlerFunc(g.listUserPaymentAccountsHandler)
+
+	// List Groups By IDs
+	router.Path("/").Name(listGroupsByIDsRouterName).Methods(http.MethodGet).Queries(ListGroupsByIDsQuery, "").HandlerFunc(g.listGroupsByIDsHandler)
 
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID

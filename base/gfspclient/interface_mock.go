@@ -1032,6 +1032,26 @@ func (mr *MockGfSpClientAPIMockRecorder) ListGlobalVirtualGroupsBySecondarySP(ct
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGlobalVirtualGroupsBySecondarySP", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListGlobalVirtualGroupsBySecondarySP), varargs...)
 }
 
+// ListGroupsByIDs mocks base method.
+func (m *MockGfSpClientAPI) ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, groupIDs}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListGroupsByIDs", varargs...)
+	ret0, _ := ret[0].(map[uint64]*types.Group)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListGroupsByIDs indicates an expected call of ListGroupsByIDs.
+func (mr *MockGfSpClientAPIMockRecorder) ListGroupsByIDs(ctx, groupIDs interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, groupIDs}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByIDs", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListGroupsByIDs), varargs...)
+}
+
 // ListMigrateBucketEvents mocks base method.
 func (m *MockGfSpClientAPI) ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListMigrateBucketEvents, error) {
 	m.ctrl.T.Helper()
@@ -3000,6 +3020,26 @@ func (mr *MockMetadataAPIMockRecorder) ListGlobalVirtualGroupsBySecondarySP(ctx,
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGlobalVirtualGroupsBySecondarySP", reflect.TypeOf((*MockMetadataAPI)(nil).ListGlobalVirtualGroupsBySecondarySP), varargs...)
+}
+
+// ListGroupsByIDs mocks base method.
+func (m *MockMetadataAPI) ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, groupIDs}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListGroupsByIDs", varargs...)
+	ret0, _ := ret[0].(map[uint64]*types.Group)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListGroupsByIDs indicates an expected call of ListGroupsByIDs.
+func (mr *MockMetadataAPIMockRecorder) ListGroupsByIDs(ctx, groupIDs interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, groupIDs}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByIDs", reflect.TypeOf((*MockMetadataAPI)(nil).ListGroupsByIDs), varargs...)
 }
 
 // ListMigrateBucketEvents mocks base method.

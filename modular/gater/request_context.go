@@ -124,7 +124,7 @@ func (r *RequestContext) String() string {
 		var sb = strings.Builder{}
 		for k := range header {
 			if k == GnfdUnsignedApprovalMsgHeader || k == GnfdReplicatePieceApprovalHeader || k == GnfdReceiveMsgHeader ||
-				k == GnfdRecoveryMsgHeader || k == GnfdMigratePieceMsgHeader {
+				k == GnfdRecoveryMsgHeader || k == GnfdMigratePieceMsgHeader || k == commonhttp.HTTPHeaderAuthorization {
 				continue
 			}
 			if sb.Len() != 0 {

@@ -237,3 +237,49 @@ func (r *MetadataModular) GfSpGetUserOwnedGroups(ctx context.Context, req *types
 	log.CtxInfo(ctx, "succeed to get user groups")
 	return resp, nil
 }
+
+// GfSpListGroupsByIDs list groups by group ids
+func (r *MetadataModular) GfSpListGroupsByIDs(ctx context.Context, req *types.GfSpListGroupsByIDsRequest) (resp *types.GfSpListGroupsByIDsResponse, err error) {
+	var (
+		groups    []*model.Group
+		ids       []common.Hash
+		groupsMap map[uint64]*types.Group
+	)
+
+	ids = make([]common.Hash, len(req.GroupIds))
+	for i, id := range req.GroupIds {
+		ids[i] = common.BigToHash(math.NewUint(id).BigInt())
+	}
+
+	groups, err = r.baseApp.GfBsDB().ListGroupsByIDs(ids)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list groups by group ids", "error", err)
+		return nil, err
+	}
+
+	groupsMap = make(map[uint64]*types.Group)
+	for _, id := range req.GroupIds {
+		groupsMap[id] = nil
+	}
+
+	for _, group := range groups {
+		groupsMap[group.GroupID.Big().Uint64()] = &types.Group{
+			Group: &storage_types.GroupInfo{
+				Owner:      group.Owner.String(),
+				GroupName:  group.GroupName,
+				SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
+				Id:         math.NewUintFromBigInt(group.GroupID.Big()),
+				Extra:      group.Extra,
+			},
+			Operator:   group.Operator.String(),
+			CreateAt:   group.CreateAt,
+			CreateTime: group.CreateTime,
+			UpdateAt:   group.UpdateAt,
+			UpdateTime: group.UpdateTime,
+			Removed:    group.Removed,
+		}
+	}
+	resp = &types.GfSpListGroupsByIDsResponse{Groups: groupsMap}
+	log.CtxInfo(ctx, "succeed to list groups by group ids")
+	return resp, nil
+}

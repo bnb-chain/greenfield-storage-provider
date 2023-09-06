@@ -122,6 +122,8 @@ type Metadata interface {
 	ListUserPaymentAccounts(accountID common.Address) ([]*StreamRecordPaymentAccount, error)
 	// ListPaymentAccountStreams list payment account streams
 	ListPaymentAccountStreams(paymentAccount common.Address) ([]*Bucket, error)
+	// ListGroupsByIDs list groups by ids
+	ListGroupsByIDs(ids []common.Hash) ([]*Group, error)
 }
 
 // BSDB contains all the methods required by block syncer database
