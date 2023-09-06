@@ -3,29 +3,28 @@ package gater
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-func getObjectChainMeta(reqCtx *RequestContext, baseApp *gfspapp.GfSpBaseApp, objectName, bucketName string) (*storagetypes.ObjectInfo, *storagetypes.BucketInfo, *storagetypes.Params, error) {
-	objectInfo, err := baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), bucketName, objectName)
+func (g *GateModular) getObjectChainMeta(ctx context.Context, objectName, bucketName string) (*storagetypes.ObjectInfo,
+	*storagetypes.BucketInfo, *storagetypes.Params, error) {
+	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(ctx, bucketName, objectName)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
 		return nil, nil, nil, ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 	}
 
-	bucketInfo, err := baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, objectInfo.GetBucketName())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
+		log.CtxErrorw(ctx, "failed to get bucket info from consensus", "error", err)
 		return nil, nil, nil, ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 	}
 
-	params, err := baseApp.Consensus().QueryStorageParamsByTimestamp(
-		reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, objectInfo.GetCreateAt())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
+		log.CtxErrorw(ctx, "failed to get storage params", "error", err)
 		return nil, nil, nil, ErrConsensusWithDetail("failed to get storage params, error: " + err.Error())
 	}
 
