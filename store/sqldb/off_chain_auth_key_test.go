@@ -86,6 +86,43 @@ func TestSpDBImpl_UpdateAuthKeySuccess(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestSpDBImpl_UpdateAuthKeySuccess2(t *testing.T) {
+	var (
+		userAddress   = "mockUserAddress"
+		domain        = "mockDomain"
+		oldNonce      = int32(0)
+		newNonce      = int32(1)
+		newPublicKey  = "mockCurrentPublicKey"
+		newExpiryDate = time.Now()
+	)
+	o := &corespdb.OffChainAuthKey{
+		UserAddress:      userAddress,
+		Domain:           domain,
+		CurrentNonce:     oldNonce,
+		CurrentPublicKey: newPublicKey,
+		NextNonce:        newNonce,
+		ExpiryDate:       newExpiryDate,
+		CreatedTime:      time.Now(),
+		ModifiedTime:     time.Now(),
+	}
+	s, mock := setupDB(t)
+	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? and current_nonce=? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
+		WithArgs(userAddress, domain, oldNonce).WillReturnError(gorm.ErrRecordNotFound)
+
+	mock.ExpectBegin()
+	mock.ExpectExec("INSERT INTO `off_chain_auth_key` (`user_address`,`domain`,`current_nonce`,`current_public_key`,`next_nonce`,`expiry_date`,`created_time`,`modified_time`) VALUES (?,?,?,?,?,?,?,?)").
+		WithArgs(o.UserAddress, o.Domain, 0, "", 1, AnyTime{}, AnyTime{}, AnyTime{}).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	mock.ExpectBegin()
+	mock.ExpectExec("UPDATE `off_chain_auth_key` SET `current_nonce`=?,`current_public_key`=?,`next_nonce`=?,`expiry_date`=?,`modified_time`=? WHERE `user_address` = ? AND `domain` = ?").
+		WithArgs(newNonce, newPublicKey, newNonce+1, newExpiryDate, AnyTime{}, userAddress, domain).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+	err := s.UpdateAuthKey(userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
+	assert.Nil(t, err)
+}
+
 func TestSpDBImpl_UpdateAuthKeyFailure1(t *testing.T) {
 	t.Log("Failure case description: mock query db returns error")
 	var (
@@ -137,6 +174,30 @@ func TestSpDBImpl_UpdateAuthKeyFailure2(t *testing.T) {
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 }
 
+func TestSpDBImpl_UpdateAuthKeyFailure3(t *testing.T) {
+	t.Log("Failure case description: mock query db returns error")
+	var (
+		userAddress   = "mockUserAddress"
+		domain        = "mockDomain"
+		oldNonce      = int32(1)
+		newNonce      = int32(3)
+		newPublicKey  = "mockCurrentPublicKey"
+		newExpiryDate = time.Now()
+	)
+	s, mock := setupDB(t)
+	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? and current_nonce=? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
+		WillReturnError(gorm.ErrRecordNotFound)
+	mock.ExpectBegin()
+
+	mock.ExpectExec("INSERT INTO `off_chain_auth_key` (`user_address`,`domain`,`current_nonce`,`current_public_key`,`next_nonce`,`expiry_date`,`created_time`,`modified_time`) VALUES (?,?,?,?,?,?,?,?)").
+		WillReturnError(mockDBInternalError)
+	mock.ExpectRollback()
+	mock.ExpectCommit()
+
+	err := s.UpdateAuthKey(userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
+	assert.Contains(t, err.Error(), mockDBInternalError.Error())
+}
+
 func Test_errIsNotFound(t *testing.T) {
 	ok := errIsNotFound(mockDBInternalError)
 	assert.Equal(t, false, ok)
@@ -175,19 +236,11 @@ func TestSpDBImpl_GetAuthKeySuccess2(t *testing.T) {
 		userAddress = "mockUserAddress"
 		domain      = "mockDomain"
 	)
-	o := &corespdb.OffChainAuthKey{
-		UserAddress: "mockUserAddress",
-		Domain:      "mockDomain",
-		NextNonce:   1,
-	}
+
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
 		WillReturnError(gorm.ErrRecordNotFound)
-	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `off_chain_auth_key` (`user_address`,`domain`,`current_nonce`,`current_public_key`,`next_nonce`,`expiry_date`,`created_time`,`modified_time`) VALUES (?,?,?,?,?,?,?,?)").
-		WithArgs(o.UserAddress, o.Domain, o.CurrentNonce, o.CurrentPublicKey, o.NextNonce, AnyTime{}, AnyTime{}, AnyTime{}).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectCommit()
+
 	result, err := s.GetAuthKey(userAddress, domain)
 	assert.Nil(t, err)
 	assert.Equal(t, int32(1), result.NextNonce)
@@ -211,31 +264,6 @@ func TestSpDBImpl_GetAuthKeyFailure2(t *testing.T) {
 	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
 		WillReturnError(mockDBInternalError)
 	result, err := s.GetAuthKey(userAddress, domain)
-	assert.Contains(t, err.Error(), mockDBInternalError.Error())
-	assert.Nil(t, result)
-}
-
-func TestSpDBImpl_GetAuthKeyFailure3(t *testing.T) {
-	t.Log("Failure case description: query db returns error")
-	o := &corespdb.OffChainAuthKey{
-		UserAddress:      "mockUserAddress",
-		Domain:           "mockDomain",
-		CurrentNonce:     1,
-		CurrentPublicKey: "mockCurrentPublicKey",
-		NextNonce:        2,
-		ExpiryDate:       time.Now(),
-		CreatedTime:      time.Now(),
-		ModifiedTime:     time.Now(),
-	}
-	s, mock := setupDB(t)
-	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
-		WillReturnError(gorm.ErrRecordNotFound)
-	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `off_chain_auth_key` (`user_address`,`domain`,`current_nonce`,`current_public_key`,`next_nonce`,`expiry_date`,`created_time`,`modified_time`) VALUES (?,?,?,?,?,?,?,?)").
-		WillReturnError(mockDBInternalError)
-	mock.ExpectRollback()
-	mock.ExpectCommit()
-	result, err := s.GetAuthKey(o.UserAddress, o.Domain)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 	assert.Nil(t, result)
 }
