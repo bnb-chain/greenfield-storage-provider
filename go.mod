@@ -11,7 +11,7 @@ require (
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v0.2.5-alpha.1
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20230830120314-a54ffd6da39f
+	github.com/bnb-chain/greenfield-common/go v0.0.0-20230906132736-eb2f0efea228
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.2
 	github.com/consensys/gnark-crypto v0.7.0
@@ -49,6 +49,11 @@ require (
 	google.golang.org/grpc v1.56.1
 	gorm.io/driver/mysql v1.4.6
 	gorm.io/gorm v1.24.5
+)
+
+require (
+	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
+	golang.org/x/arch v0.5.0 // indirect
 )
 
 require (
@@ -298,7 +303,7 @@ replace (
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.3-alpha.1
 	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.4-alpha.2
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.5-alpha.1
 	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1
 	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230817021347-97a4e23268fa
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1

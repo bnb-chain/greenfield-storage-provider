@@ -10,7 +10,7 @@ GREENFIELD_REPO_TAG="v0.2.5-alpha.1"
 # greenfield cmd tag name: v0.1.0
 GREENFIELD_CMD_TAG="v0.1.0"
 # greenfield go sdk tag name: v0.2.4
-GREENFIELD_GO_SDK_TAG="v0.2.4"
+GREENFIELD_GO_SDK_TAG="v0.2.5-alpha.1"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
