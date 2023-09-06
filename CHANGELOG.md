@@ -1,5 +1,52 @@
 # Changelog
 
+## v0.2.5-alpha.1
+
+FEATURES
+* [#1029](https://github.com/bnb-chain/greenfield-storage-provider/pull/1029) feat: use aliyun oss sdk to visit oss
+* [#1042](https://github.com/bnb-chain/greenfield-storage-provider/pull/1042) feat: add go routine metrics
+* [#1057](https://github.com/bnb-chain/greenfield-storage-provider/pull/1057) feat: list object policies and add number of group members
+* [#1067](https://github.com/bnb-chain/greenfield-storage-provider/pull/1067) feat: Docker image distroless update
+* [#1111](https://github.com/bnb-chain/greenfield-storage-provider/pull/1111) feat: only persist the init off-chain-auth record when first updating
+* [#1103](https://github.com/bnb-chain/greenfield-storage-provider/pull/1103) feat: list groups by ids
+* [#1088](https://github.com/bnb-chain/greenfield-storage-provider/pull/1088) feat: recover object list
+* [#1077](https://github.com/bnb-chain/greenfield-storage-provider/pull/1077) feat: support ListUserPaymentAccounts & ListPaymentAccountStreams
+
+BUGFIX
+* [#1039](https://github.com/bnb-chain/greenfield-storage-provider/pull/1039) fix: remove funding key in singer module
+* [#1053](https://github.com/bnb-chain/greenfield-storage-provider/pull/1053) fix: add more metrics log for PickUpTask
+* [#1054](https://github.com/bnb-chain/greenfield-storage-provider/pull/1054) fix: fix quota db to support get quota by month
+* [#1062](https://github.com/bnb-chain/greenfield-storage-provider/pull/1062) fix: add fingerprint to approval key
+* [#1071](https://github.com/bnb-chain/greenfield-storage-provider/pull/1071) fix: cancel migrate bucket bug
+* [#1074](https://github.com/bnb-chain/greenfield-storage-provider/pull/1074) fix: set correct Content-Disposition when downloading an object
+* [#1104](https://github.com/bnb-chain/greenfield-storage-provider/pull/1104) fix: refactor quota  table
+* [#1107](https://github.com/bnb-chain/greenfield-storage-provider/pull/1107) fix: api rate limiter path sequence
+* [#1106](https://github.com/bnb-chain/greenfield-storage-provider/pull/1106) fix: sec issue about conversion alerts
+* [#1089](https://github.com/bnb-chain/greenfield-storage-provider/pull/1089) fix: sec issue about conversion alerts
+* [#1098](https://github.com/bnb-chain/greenfield-storage-provider/pull/1098) fix: self sp id retrieval
+* [#1097](https://github.com/bnb-chain/greenfield-storage-provider/pull/1097) fix: fix group ExpirationTime bug
+* [#1093](https://github.com/bnb-chain/greenfield-storage-provider/pull/1093) fix: verify permission if expiration time = 0 bug
+* [#1087](https://github.com/bnb-chain/greenfield-storage-provider/pull/1087) fix: upgrade libp2p and cosmos-sdk version to solve security issues
+* [#1084](https://github.com/bnb-chain/greenfield-storage-provider/pull/1084) fix: resumable upload support 64g file
+* [#776](https://github.com/bnb-chain/greenfield-storage-provider/pull/776) fix: code security check
+* [#1078](https://github.com/bnb-chain/greenfield-storage-provider/pull/1078) fix: add more resource manager log
+
+TEST
+* [#1032](https://github.com/bnb-chain/greenfield-storage-provider/pull/1032) test: modular/approver pkg adds UTs
+* [#1035](https://github.com/bnb-chain/greenfield-storage-provider/pull/1035) test: metadata bsdb UT
+* [#1040](https://github.com/bnb-chain/greenfield-storage-provider/pull/1040) test: add cmd ut
+* [#1046](https://github.com/bnb-chain/greenfield-storage-provider/pull/1046) test: add downloader ut
+* [#1068](https://github.com/bnb-chain/greenfield-storage-provider/pull/1068) test: gfspapp pkg adds UTs part II
+* [#1073](https://github.com/bnb-chain/greenfield-storage-provider/pull/1073) test: gfspconfig and gfsppieceop pkg add UTs
+* [#1108](https://github.com/bnb-chain/greenfield-storage-provider/pull/1108) test: modular/gater pkg adds UTs
+* [#1095](https://github.com/bnb-chain/greenfield-storage-provider/pull/1095) test: modular/uploader pkg adds UTs
+* [#1096](https://github.com/bnb-chain/greenfield-storage-provider/pull/1096) test: base/gfsprcmgr pkg adds UTs
+* [#1090](https://github.com/bnb-chain/greenfield-storage-provider/pull/1090) test: base/gfspclient pkg adds UTs
+* [#1082](https://github.com/bnb-chain/greenfield-storage-provider/pull/1082) test: base/types directory adds UTs
+* [#1076](https://github.com/bnb-chain/greenfield-storage-provider/pull/1076) test: gfsptqueue and gfspvgmgr pkg add UTs
+* [#1060](https://github.com/bnb-chain/greenfield-storage-provider/pull/1060) test: add receiver ut
+* [#1086](https://github.com/bnb-chain/greenfield-storage-provider/pull/1086) test: add blocksyncer e2e test
+ 
 ## v0.2.4-alpha.9
 
 FEATURES
