@@ -1,0 +1,44 @@
+name: BlockSyncer E2E Test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - fix-release*
+
+  pull_request:
+    branches:
+
+jobs:
+  e2e-test:
+    strategy:
+      matrix:
+        go-version: [ 1.20.x ]
+        os: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      # Checkout Greenfield-SP
+      - name: Checkout Greenfield-SP
+        uses: actions/checkout@v3
+      # Run MySQL
+      - name: Run MySQL
+        run: |
+          sudo /etc/init.d/mysql start
+      # Build SP and Make Config.toml
+      - name: Build and Make Config
+        run: |
+          bash ./modular/blocksyncer/test/bs_test.sh --makecfg
+      # Reset env
+      - name: Reset env
+        run: |
+          bash ./modular/blocksyncer/test/bs_test.sh --reset
+      # Run Test
+      - name: Run Test
+        run: |
+          bash ./modular/blocksyncer/test/bs_test.sh --start_test
