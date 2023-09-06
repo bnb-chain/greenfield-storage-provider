@@ -875,6 +875,18 @@ message GfSpListGroupsByIDsResponse {
   map<uint64, Group> groups = 1;
 }
 
+// GfSpGetSPMigratingBucketNumberRequest is request type for the GfSpGetSPMigratingBucketNumber RPC method
+message GfSpGetSPMigratingBucketNumberRequest {
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 1;
+}
+
+// GfSpGetSPMigratingBucketNumberResponse is response type for the GfSpGetSPMigratingBucketNumber RPC method
+message GfSpGetSPMigratingBucketNumberResponse {
+  // count defines the active migration bucket count
+  uint64 count = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -918,4 +930,5 @@ service GfSpMetadataService {
   rpc GfSpListPaymentAccountStreams(GfSpListPaymentAccountStreamsRequest) returns (GfSpListPaymentAccountStreamsResponse) {}
   rpc GfSpListUserPaymentAccounts(GfSpListUserPaymentAccountsRequest) returns (GfSpListUserPaymentAccountsResponse) {}
   rpc GfSpListGroupsByIDs(GfSpListGroupsByIDsRequest) returns (GfSpListGroupsByIDsResponse) {}
+  rpc GfSpGetSPMigratingBucketNumber(GfSpGetSPMigratingBucketNumberRequest) returns (GfSpGetSPMigratingBucketNumberResponse) {}
 }

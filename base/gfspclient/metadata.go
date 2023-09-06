@@ -901,3 +901,20 @@ func (s *GfSpClient) ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opt
 	}
 	return resp.Groups, nil
 }
+
+func (s *GfSpClient) GetSPMigratingBucketNumber(ctx context.Context, spID uint32, opts ...grpc.DialOption) (uint64, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return 0, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
+	}
+	defer conn.Close()
+	req := &types.GfSpGetSPMigratingBucketNumberRequest{
+		SpId: spID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetSPMigratingBucketNumber(ctx, req)
+	if err != nil {
+		return 0, ErrRPCUnknownWithDetail("client failed to get the latest active migrating bucket by specific sp, error: " + err.Error())
+	}
+	return resp.Count, nil
+}

@@ -705,6 +705,26 @@ func (mr *MockGfSpClientAPIMockRecorder) GetSPInfo(ctx, operatorAddress interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPInfo", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetSPInfo), varargs...)
 }
 
+// GetSPMigratingBucketNumber mocks base method.
+func (m *MockGfSpClientAPI) GetSPMigratingBucketNumber(ctx context.Context, spID uint32, opts ...grpc.DialOption) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, spID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetSPMigratingBucketNumber", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSPMigratingBucketNumber indicates an expected call of GetSPMigratingBucketNumber.
+func (mr *MockGfSpClientAPIMockRecorder) GetSPMigratingBucketNumber(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, spID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPMigratingBucketNumber", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetSPMigratingBucketNumber), varargs...)
+}
+
 // GetSecondarySPMigrationBucketApproval mocks base method.
 func (m *MockGfSpClientAPI) GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string, signDoc *types3.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -2737,6 +2757,26 @@ func (mr *MockMetadataAPIMockRecorder) GetSPInfo(ctx, operatorAddress interface{
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, operatorAddress}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPInfo", reflect.TypeOf((*MockMetadataAPI)(nil).GetSPInfo), varargs...)
+}
+
+// GetSPMigratingBucketNumber mocks base method.
+func (m *MockMetadataAPI) GetSPMigratingBucketNumber(ctx context.Context, spID uint32, opts ...grpc.DialOption) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, spID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetSPMigratingBucketNumber", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSPMigratingBucketNumber indicates an expected call of GetSPMigratingBucketNumber.
+func (mr *MockMetadataAPIMockRecorder) GetSPMigratingBucketNumber(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, spID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPMigratingBucketNumber", reflect.TypeOf((*MockMetadataAPI)(nil).GetSPMigratingBucketNumber), varargs...)
 }
 
 // GetStatus mocks base method.

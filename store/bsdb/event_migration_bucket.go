@@ -9,7 +9,7 @@ import (
 )
 
 // ListMigrateBucketEvents list migrate bucket events
-func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error) {
+func (b *BsDBImpl) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error) {
 	var (
 		events         []*EventMigrationBucket
 		completeEvents []*EventCompleteMigrationBucket
@@ -28,7 +28,8 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 
 	err = b.db.Table((&EventMigrationBucket{}).TableName()).
 		Select("*").
-		Where("dst_primary_sp_id = ? and create_at <= ?", spID, blockID).
+		Where("dst_primary_sp_id = ?", spID).
+		Scopes(filters...).
 		Find(&events).Error
 	if err != nil {
 		return nil, nil, nil, err
@@ -36,7 +37,7 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 
 	err = b.db.Table((&EventCompleteMigrationBucket{}).TableName()).
 		Select("*").
-		Where("create_at <= ?", blockID).
+		Scopes(filters...).
 		Find(&completeEvents).Error
 	if err != nil {
 		return events, nil, nil, err
@@ -44,7 +45,7 @@ func (b *BsDBImpl) ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*Even
 
 	err = b.db.Table((&EventCancelMigrationBucket{}).TableName()).
 		Select("*").
-		Where("create_at <= ?", blockID).
+		Scopes(filters...).
 		Find(&cancelEvents).Error
 	if err != nil {
 		return events, nil, nil, err
