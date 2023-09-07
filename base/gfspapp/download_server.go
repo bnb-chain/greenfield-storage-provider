@@ -176,8 +176,8 @@ func (g *GfSpBaseApp) OnChallengePieceTask(ctx context.Context, challengePieceTa
 	return integrity, checksums, data, nil
 }
 
-func (g *GfSpBaseApp) GfSPReimburseQuota(ctx context.Context, fixRequest *gfspserver.GfSpReimburseQuotaRequest) (*gfspserver.GfSpReimburseQuotaResponse, error) {
-	err := g.GfSpDB().UpdateExtraQuota(fixRequest.GetBucketId(), fixRequest.GetExtraQuota())
+func (g *GfSpBaseApp) GfSpReimburseQuota(ctx context.Context, fixRequest *gfspserver.GfSpReimburseQuotaRequest) (*gfspserver.GfSpReimburseQuotaResponse, error) {
+	err := g.GfSpDB().UpdateExtraQuota(fixRequest.GetBucketId(), fixRequest.GetExtraQuota(), fixRequest.YearMonth)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reimburse extra quota", "error", err, "bucketID:", fixRequest.GetBucketId())
 	}

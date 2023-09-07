@@ -670,9 +670,9 @@ func (mr *MockGfSpClientAPIMockRecorder) GetPiece(ctx, downloadPieceTask interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetPiece), varargs...)
 }
 
-func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, opts ...grpc.DialOption) error {
+func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, bucketID,extraQuota}
+	varargs := []interface{}{ctx, bucketID, extraQuota, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -681,9 +681,9 @@ func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuot
 	return ret0
 }
 
-func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx context.Context, bucketID, extraQuota interface{}, opts ...interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx context.Context, bucketID, extraQuota,yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, bucketID, extraQuota}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).RecoupQuota), varargs...)
 }
 
@@ -2233,9 +2233,9 @@ func (mr *MockDownloaderAPIMockRecorder) GetPiece(ctx, downloadPieceTask interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockDownloaderAPI)(nil).GetPiece), varargs...)
 }
 
-func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, opts ...grpc.DialOption)  error {
+func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption)  error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, bucketID,extraQuota}
+	varargs := []interface{}{ctx, bucketID,extraQuota,yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2244,10 +2244,10 @@ func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuot
 	return ret0
 }
 
-func (mr *MockDownloaderAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota interface{}, opts ...interface{}) *gomock.Call {
+func (mr *MockDownloaderAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, bucketID, extraQuota}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockDownloaderAPI)(nil).RecoupQuota), varargs...)
+	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockDownloaderAPI)(nil).RecoupQuota), varargs...)
 }
 
 // MockGaterAPI is a mock of GaterAPI interface.

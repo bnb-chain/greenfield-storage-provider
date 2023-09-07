@@ -224,6 +224,11 @@ func (mockDownloaderServer) GfSpGetChallengeInfo(ctx context.Context, req *gfsps
 	}
 }
 
+func (mockDownloaderServer) GfSpReimburseQuota(ctx context.Context, req *gfspserver.GfSpReimburseQuotaRequest) (
+	*gfspserver.GfSpReimburseQuotaResponse, error) {
+	return &gfspserver.GfSpReimburseQuotaResponse{Err: ErrExceptionsStream}, nil
+}
+
 type mockManagerServer struct{}
 
 func (mockManagerServer) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeginTaskRequest) (

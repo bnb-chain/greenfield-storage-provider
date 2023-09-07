@@ -57,7 +57,7 @@ func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.Do
 	return resp.GetData(), nil
 }
 
-func (s *GfSpClient) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, opts ...grpc.DialOption) error {
+func (s *GfSpClient) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
@@ -67,9 +67,10 @@ func (s *GfSpClient) RecoupQuota(ctx context.Context, bucketID, extraQuota uint6
 	req := &gfspserver.GfSpReimburseQuotaRequest{
 		BucketId:   bucketID,
 		ExtraQuota: extraQuota,
+		YearMonth:  yearMonth,
 	}
 
-	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSPReimburseQuota(ctx, req)
+	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpReimburseQuota(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to recoup the extra quota", "error", err)
 		return ErrRPCUnknownWithDetail("client failed to recoup extra quota, error: " + err.Error())

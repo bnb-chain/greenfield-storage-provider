@@ -278,7 +278,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		checkQuotaTime := time.Now()
 		bucketID := downloadPieceTask.GetBucketInfo().Id.Uint64()
 		bucketName := downloadPieceTask.GetBucketInfo().GetBucketName()
-		
+
 		readRecord := &spdb.ReadRecord{
 			BucketID:        bucketID,
 			ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),
