@@ -135,6 +135,8 @@ const (
 	VerifyPermissionByIDQuery = "verify-id"
 	// GetSPInfoQuery defines query sp info, which is used to route request
 	GetSPInfoQuery = "query-sp"
+	// VerifyMigrateGVGPermissionQuery defines verify the destination sp id of bucket migration & swap out, which is used to route request
+	VerifyMigrateGVGPermissionQuery = "gvg-permission"
 	// GetUserGroupsQuery defines get groups info by a user address, which is used to route request
 	GetUserGroupsQuery = "user-groups"
 	// GetUserOwnedGroupsQuery defines retrieve groups where the user is the owner, which is used to route request

@@ -625,7 +625,7 @@ func TestRouters(t *testing.T) {
 			name:             "List groups by group ids router",
 			router:           gwRouter,
 			method:           http.MethodGet,
-			url:              scheme + testDomain + "/?" + ListGroupsByIDsQuery + "&" + IDsQuery,
+			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, ListGroupsByIDsQuery, IDsQuery),
 			shouldMatch:      true,
 			wantedRouterName: listGroupsByIDsRouterName,
 		},
@@ -636,6 +636,14 @@ func TestRouters(t *testing.T) {
 			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, GetSPMigratingBucketNumberQuery, SpIDQuery),
 			shouldMatch:      true,
 			wantedRouterName: getSPMigratingBucketNumberRouterName,
+		},
+		{
+			name:             "Verify the destination sp id of bucket migration & swap out",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/?%s&%s&%s&%s", scheme, testDomain, VerifyMigrateGVGPermissionQuery, BucketIDQuery, GvgIDQuery, SpIDQuery),
+			shouldMatch:      true,
+			wantedRouterName: verifyMigrateGVGPermissionRouterName,
 		},
 	}
 	for _, tt := range cases {

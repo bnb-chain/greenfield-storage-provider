@@ -506,3 +506,69 @@ func (r *MetadataModular) GfSpListObjectPolicies(ctx context.Context, req *types
 	log.CtxInfo(ctx, "succeed to list objects by object ids")
 	return resp, nil
 }
+
+// GfSpVerifyMigrateGVGPermission verify the destination sp id of bucket migration & swap out
+// When bucketID is not 0, it means bucket migration; otherwise, it means SP exit
+func (r *MetadataModular) GfSpVerifyMigrateGVGPermission(ctx context.Context, req *types.GfSpVerifyMigrateGVGPermissionRequest) (resp *types.GfSpVerifyMigrateGVGPermissionResponse, err error) {
+	var effect permtypes.Effect
+
+	ctx = log.Context(ctx, req)
+
+	if req.BucketId != 0 {
+		effect, err = r.verifyBucketMigration(ctx, req.BucketId, req.DstSpId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to verify the destination sp id of bucket migration", "error", err)
+			return nil, err
+		}
+	} else {
+		effect, err = r.verifySwapOut(ctx, req.GvgId, req.DstSpId)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to verify the destination sp id of swap out", "error", err)
+			return nil, err
+		}
+	}
+
+	resp = &types.GfSpVerifyMigrateGVGPermissionResponse{Effect: effect}
+	log.CtxInfow(ctx, "succeed to verify the destination sp id of bucket migration & swap out")
+	return resp, nil
+}
+
+// verifyBucketMigration verify bucket migration sp id
+func (r *MetadataModular) verifyBucketMigration(ctx context.Context, bucketID uint64, dstSpID uint32) (permtypes.Effect, error) {
+	var (
+		err   error
+		event *bsdb.EventMigrationBucket
+	)
+
+	event, err = r.baseApp.GfBsDB().GetEventMigrationBucketByBucketID(common.BigToHash(math.NewUint(bucketID).BigInt()))
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get migration bucket event by bucket id", "error", err)
+		return permtypes.EFFECT_DENY, err
+	}
+
+	if event == nil || event.DstPrimarySpId != dstSpID {
+		return permtypes.EFFECT_DENY, nil
+	}
+
+	return permtypes.EFFECT_ALLOW, nil
+}
+
+// verifySwapOut verify swap out sp id
+func (r *MetadataModular) verifySwapOut(ctx context.Context, gvgID uint32, dstSpID uint32) (permtypes.Effect, error) {
+	var (
+		err   error
+		event *bsdb.EventSwapOut
+	)
+
+	event, err = r.baseApp.GfBsDB().GetEventSwapOutByGvgID(gvgID)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get migration bucket event by bucket id", "error", err)
+		return permtypes.EFFECT_DENY, err
+	}
+
+	if event.SuccessorSpId != dstSpID {
+		return permtypes.EFFECT_DENY, nil
+	}
+
+	return permtypes.EFFECT_ALLOW, nil
+}

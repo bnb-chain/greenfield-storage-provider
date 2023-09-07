@@ -1914,6 +1914,26 @@ func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
 }
 
+// VerifyMigrateGVGPermission mocks base method.
+func (m *MockGfSpClientAPI) VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*types1.Effect, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, bucketID, gvgID, dstSpID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyMigrateGVGPermission", varargs...)
+	ret0, _ := ret[0].(*types1.Effect)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyMigrateGVGPermission indicates an expected call of VerifyMigrateGVGPermission.
+func (mr *MockGfSpClientAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, bucketID, gvgID, dstSpID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyMigrateGVGPermission", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyMigrateGVGPermission), varargs...)
+}
+
 // VerifyPermission mocks base method.
 func (m *MockGfSpClientAPI) VerifyPermission(ctx context.Context, Operator, bucketName, objectName string, actionType types1.ActionType, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
@@ -3329,6 +3349,26 @@ func (mr *MockMetadataAPIMockRecorder) ListVirtualGroupFamiliesSpID(ctx, spID in
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesSpID", reflect.TypeOf((*MockMetadataAPI)(nil).ListVirtualGroupFamiliesSpID), varargs...)
+}
+
+// VerifyMigrateGVGPermission mocks base method.
+func (m *MockMetadataAPI) VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*types1.Effect, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, bucketID, gvgID, dstSpID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyMigrateGVGPermission", varargs...)
+	ret0, _ := ret[0].(*types1.Effect)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyMigrateGVGPermission indicates an expected call of VerifyMigrateGVGPermission.
+func (mr *MockMetadataAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, bucketID, gvgID, dstSpID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyMigrateGVGPermission", reflect.TypeOf((*MockMetadataAPI)(nil).VerifyMigrateGVGPermission), varargs...)
 }
 
 // VerifyPermission mocks base method.

@@ -1,8 +1,11 @@
 package bsdb
 
 import (
+	"errors"
 	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // ListSwapOutEvents list swap out events
@@ -70,4 +73,51 @@ func CreateSwapOutIdx(vgfID uint32, spID uint32, gvgIDS []uint32) string {
 		idx = fmt.Sprintf("%d+%d", spID, vgfID)
 	}
 	return idx
+}
+
+// GetEventSwapOutByGvgID get swap out event by gvg id
+func (b *BsDBImpl) GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error) {
+	var (
+		event       *EventSwapOut
+		cancelEvent *EventCancelSwapOut
+		query       string
+		vgf         *GlobalVirtualGroupFamily
+		err         error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	vgf, err = b.GetVgfByGvgID(gvgID)
+	if err != nil {
+		return nil, err
+	}
+
+	query = fmt.Sprintf("select * from event_swap_out where FIND_IN_SET('%d', global_virtual_group_ids) > 0 or global_virtual_group_family_id = %d order by create_at desc;", gvgID, vgf.GlobalVirtualGroupFamilyId)
+	err = b.db.Raw(query).Take(&event).Error
+	if err != nil {
+		return nil, err
+	}
+
+	query = fmt.Sprintf("select * from event_cancel_swap_out where FIND_IN_SET('%d', global_virtual_group_ids) > 0 or global_virtual_group_family_id = %d order by create_at desc;", gvgID, vgf.GlobalVirtualGroupFamilyId)
+	err = b.db.Raw(query).Take(&cancelEvent).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return event, nil
+		}
+		return nil, err
+	}
+
+	// check if the latest cancel event create at is larger than swap out
+	// it means the gvg is not in swap out status
+	if cancelEvent.CreateAt > event.CreateAt {
+		return nil, errors.New("the gvg is not in swap out status")
+	}
+	return event, nil
 }
