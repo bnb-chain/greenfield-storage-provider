@@ -3,7 +3,7 @@
 ## v0.2.5-alpha.2
 
 FEATURES
-* [#1112)](https://github.com/bnb-chain/greenfield-storage-provider/pull/1112)) feat: support GfSpGetSPMigrateBucketNumber
+* [#1112](https://github.com/bnb-chain/greenfield-storage-provider/pull/1112)) feat: support GfSpGetSPMigrateBucketNumber
 
 BUGFIX
 * [#1121](https://github.com/bnb-chain/greenfield-storage-provider/pull/1121) fix: fix tls MinVersion to 1.2
