@@ -332,29 +332,30 @@ func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth strin
 			// the consumed free quota should be updated
 			consumedChargeQuota := bucketTraffic.ReadConsumedSize
 			if bucketTraffic.FreeQuotaSize > 0 || (bucketTraffic.FreeQuotaSize == 0 && consumedChargeQuota == 0) {
-				err = tx.Model(&bucketTraffic).
+				err = tx.Model(&bucketTraffic).Select("free_quota_consumed_size", "free_quota_size", "modified_time").
 					Updates(BucketTrafficTable{
-						FreeQuotaSize:         remainedFreeQuota + extraQuota,
 						FreeQuotaConsumedSize: consumedFreeQuota - extraQuota,
+						FreeQuotaSize:         remainedFreeQuota + extraQuota,
 						ModifiedTime:          time.Now(),
 					}).Error
 			} else {
 				// if consumed charge quota is more than extra quota, excess quota needs to be deducted from the consumed charge quota
 				if consumedChargeQuota > extraQuota {
-					err = tx.Model(&bucketTraffic).
+					err = tx.Model(&bucketTraffic).Select("read_consumed_size", "modified_time").
 						Updates(BucketTrafficTable{
 							ReadConsumedSize: consumedChargeQuota - extraQuota,
 							ModifiedTime:     time.Now(),
 						}).Error
 				} else {
 					extraFreeQuota := extraQuota - consumedChargeQuota
-					err = tx.Model(&bucketTraffic).Select("read_consumed_size", "free_quota_consumed_size", "free_quota_size", "modified_time").
-						Updates(BucketTrafficTable{
-							ReadConsumedSize:      0,
-							FreeQuotaConsumedSize: consumedFreeQuota - extraFreeQuota,
-							FreeQuotaSize:         remainedFreeQuota + extraFreeQuota,
-							ModifiedTime:          time.Now(),
-						}).Error
+					// it is needed to add select items if you need to update a value to zero in gorm db
+					err = tx.Model(&bucketTraffic).
+						Select("read_consumed_size", "free_quota_consumed_size", "free_quota_size", "modified_time").Updates(BucketTrafficTable{
+						ReadConsumedSize:      uint64(0),
+						FreeQuotaConsumedSize: consumedFreeQuota - extraFreeQuota,
+						FreeQuotaSize:         remainedFreeQuota + extraFreeQuota,
+						ModifiedTime:          time.Now(),
+					}).Error
 				}
 			}
 		}

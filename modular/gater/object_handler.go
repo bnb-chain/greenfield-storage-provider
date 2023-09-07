@@ -571,10 +571,15 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			pInfo.Length, g.baseApp.TaskTimeout(task, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(task))
 		getSegmentTime := time.Now()
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_segment_data_time").Observe(time.Since(getSegmentTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
-			extraQuota = downloadSize - consumedQuota
+			downloaderErr := gfsperrors.MakeGfSpError(err)
+			// if it is the first piece and the quota db is not updated, no extra data need to updated
+			if idx >= 1 || (idx == 0 && downloaderErr.GetInnerCode() == 85101) {
+				extraQuota = downloadSize - consumedQuota
+			}
 			return
 		}
 
@@ -590,12 +595,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		// the quota value should be computed by the reply content length
 		consumedQuota += uint64(replyDataSize)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_write_time").Observe(time.Since(writeTime).Seconds())
-	}
-	// consumedQuota should be equal to download total size after all the data has been downloaded
-	if consumedQuota != downloadSize {
-		log.CtxErrorw(reqCtx.Context(), "consumed quota not equal to download size:", "consumed quota", consumedQuota, "downloadSize", downloadSize)
-	} else {
-		log.CtxDebugw(reqCtx.Context(), "consumed quota  equal to download size")
 	}
 
 	metrics.ReqPieceSize.WithLabelValues(GatewayGetObjectSize).Observe(float64(highOffset - lowOffset + 1))
@@ -912,7 +911,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	}
 
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), bucketInfo.GetCreateAt())
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
@@ -937,7 +936,11 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	data, getObjectErr := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
 	if getObjectErr != nil {
 		err = getObjectErr
-		extraQuota = downloadSize
+		downloaderErr := gfsperrors.MakeGfSpError(err)
+		// if the error is  split piece error or piece store error, the traffic should have already consumed extra data
+		if downloaderErr.GetInnerCode() == 85101 || downloaderErr.GetInnerCode() == downloader.ErrInvalidParam.InnerCode {
+			extraQuota = downloadSize
+		}
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
 		return
 	}
