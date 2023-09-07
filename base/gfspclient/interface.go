@@ -51,10 +51,10 @@ type ApproverAPI interface {
 
 // AuthenticatorAPI for mock use
 type AuthenticatorAPI interface {
-	VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string) (bool, error)
-	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.CallOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
-	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.CallOption) (bool, error)
-	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.CallOption) (bool, error)
+	VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string, opts ...grpc.DialOption) (bool, error)
+	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.DialOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
+	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error)
+	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error)
 }
 
 // DownloaderAPI for mock use
@@ -89,7 +89,7 @@ type ManagerAPI interface {
 type MetadataAPI interface {
 	GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error)
 	ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error)
-	GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Bucket, error)
+	GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error)
 	ListObjectsByBucketName(ctx context.Context, bucketName string, accountID string, maxKeys uint64, startAfter string, continuationToken string, delimiter string, prefix string, includeRemoved bool,
 		opts ...grpc.DialOption) (objects []*types.Object, keyCount, maxKeysRe uint64, isTruncated bool, nextContinuationToken, name, prefixRe, delimiterRe string, commonPrefixes []string, continuationTokenRe string, err error)
 	GetBucketByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error)
@@ -101,7 +101,7 @@ type MetadataAPI interface {
 	VerifyPermission(ctx context.Context, Operator string, bucketName string, objectName string, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)
 	GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, *payment_types.StreamRecord, error)
 	GetEndpointBySpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) (string, error)
-	GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, opts ...grpc.DialOption) (uint64, uint64, uint64, error)
+	GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error)
 	ListBucketReadRecord(ctx context.Context, bucket *storage_types.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error)
 	GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error)
 	GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error)
@@ -127,6 +127,10 @@ type MetadataAPI interface {
 	GetUserGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error)
 	GetGroupMembers(ctx context.Context, groupID uint64, startAfter string, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error)
 	GetUserOwnedGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error)
+	ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType int32, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error)
+	ListPaymentAccountStreams(ctx context.Context, paymentAccount string, opts ...grpc.DialOption) ([]*types.Bucket, error)
+	ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.StreamRecordMeta, error)
+	ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error)
 }
 
 // P2PAPI for mock use
@@ -137,9 +141,9 @@ type P2PAPI interface {
 
 // QueryAPI for mock use
 type QueryAPI interface {
-	QueryTasks(ctx context.Context, endpoint string, subKey string) ([]string, error)
-	QueryBucketMigrate(ctx context.Context, endpoint string) (string, error)
-	QuerySPExit(ctx context.Context, endpoint string) (string, error)
+	QueryTasks(ctx context.Context, endpoint string, subKey string, opts ...grpc.DialOption) ([]string, error)
+	QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error)
+	QuerySPExit(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error)
 }
 
 // ReceiverAPI for mock use
@@ -176,8 +180,8 @@ type SignerAPI interface {
 
 // UploaderAPI for mock use
 type UploaderAPI interface {
-	UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error
-	ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader) error
+	UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error
+	ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error
 }
 
 // GfSpConnAPI for mock use
@@ -189,4 +193,11 @@ type GfSpConnAPI interface {
 	SignerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error)
 	HTTPClient(ctx context.Context) *http.Client
 	Close() error
+}
+
+// stdLib for mock use
+// Note: stdLib interface is forbidden to be used in non-UT code
+// nolint:unused
+type stdLib interface {
+	io.Reader
 }

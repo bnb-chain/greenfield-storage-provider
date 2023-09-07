@@ -274,10 +274,12 @@ func (s *SpDBImpl) ListDestSPSwapOutUnits() ([]*spdb.SwapOutMeta, error) {
 
 func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 	var (
-		err              error
 		result           *gorm.DB
 		insertMigrateGVG *MigrateGVGTable
+		queryReturn      *MigrateGVGTable
+		needInsert       bool
 	)
+	queryReturn = &MigrateGVGTable{}
 	insertMigrateGVG = &MigrateGVGTable{
 		MigrateKey:               meta.MigrateGVGKey,
 		SwapOutKey:               meta.SwapOutKey,
@@ -292,16 +294,44 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		LastMigratedObjectID: meta.LastMigratedObjectID,
 		MigrateStatus:        meta.MigrateStatus,
 	}
-	result = s.db.Create(insertMigrateGVG)
-	if result.Error != nil || result.RowsAffected != 1 {
-		err = fmt.Errorf("failed to insert migrate gvg table: %s", result.Error)
-		return err
+	result = s.db.First(queryReturn, "migrate_key = ?", meta.MigrateGVGKey)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
 	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if needInsert {
+		result = s.db.Create(insertMigrateGVG)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in migrate gvg table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&MigrateGVGTable{}).
+			Where("migrate_key = ?", meta.MigrateGVGKey).Updates(insertMigrateGVG)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in subscribe progress table: %s", result.Error)
+		}
+	}
+
 	return nil
 }
 
 func (s *SpDBImpl) DeleteMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
-	// TODO:
+	var (
+		err              error
+		result           *gorm.DB
+		deleteMigrateGVG *MigrateGVGTable
+	)
+	deleteMigrateGVG = &MigrateGVGTable{
+		MigrateKey: meta.MigrateGVGKey,
+	}
+	result = s.db.Delete(deleteMigrateGVG)
+	if result.Error != nil || result.RowsAffected != 1 {
+		err = fmt.Errorf("failed to insert migrate gvg table: %s", result.Error)
+		return err
+	}
 	return nil
 }
 

@@ -77,6 +77,8 @@ const (
 	GetGroupListSourceTypeQuery = "source-type"
 	// GetGroupListLimitQuery defines get group list limit query, which is used to route request
 	GetGroupListLimitQuery = "limit"
+	// PaymentAccountQuery defines payment account query
+	PaymentAccountQuery = "payment-account"
 	// GetGroupListOffsetQuery defines get group list offset query, which is used to route request
 	GetGroupListOffsetQuery = "offset"
 	// IDsQuery defines ids of storage metadata value
@@ -87,6 +89,8 @@ const (
 	ListBucketsByIDsQuery = "buckets-query"
 	// ListObjectsByIDsQuery defines list objects by object ids, which is used to route request
 	ListObjectsByIDsQuery = "objects-query"
+	// ListGroupsByIDsQuery defines list groups by group ids, which is used to route request
+	ListGroupsByIDsQuery = "groups-query"
 	// GetPaymentByBucketIDQuery defines get payment by bucket id, which is used to route request
 	GetPaymentByBucketIDQuery = "payment-id"
 	// GetPaymentByBucketNameQuery defines get payment by bucket name, which is used to route request
@@ -133,6 +137,12 @@ const (
 	GetUserGroupsQuery = "user-groups"
 	// GetUserOwnedGroupsQuery defines retrieve groups where the user is the owner, which is used to route request
 	GetUserOwnedGroupsQuery = "owned-groups"
+	// ListObjectPoliciesQuery defines list policies by object info, which is used to route request
+	ListObjectPoliciesQuery = "object-policies"
+	// ListPaymentAccountStreamsQuery defines list payment account streams, which is used to route request
+	ListPaymentAccountStreamsQuery = "payment-buckets"
+	// ListUserPaymentAccountsQuery defines list payment accounts by owner address, which is used to route request
+	ListUserPaymentAccountsQuery = "user-payments"
 	// GetGroupMembersQuery defines query sp info, which is used to route request
 	GetGroupMembersQuery = "group-members"
 	// ResourceIDQuery defines the bucket/object/group id of the resource that grants permission for
@@ -159,7 +169,7 @@ const (
 	BucketIDQuery = "bucket-id"
 	// LimitQuery defines limit of results
 	LimitQuery = "limit"
-	// CreateAtQuery defines the create timestamp
+	// CreateAtQuery defines the created timestamp
 	CreateAtQuery = "create-at"
 	// PrimarySpIDQuery defines the primary sp id
 	PrimarySpIDQuery = "primary-sp-id"

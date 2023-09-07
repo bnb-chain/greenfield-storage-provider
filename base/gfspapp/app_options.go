@@ -30,8 +30,8 @@ const (
 	EnvLocal = "local"
 	// EnvDevnet defines the devnet environment.
 	EnvDevnet = "devnet"
-	// EvnQanet defines the qanet environment.
-	EvnQanet = "qanet"
+	// EvnQAnet defines the qanet environment.
+	EvnQAnet = "qanet"
 	// EvnTestnet defines the testnet environment.
 	EvnTestnet = "testnet"
 	// EnvMainnet defines the mainnet environment. And as default environment.
@@ -231,7 +231,7 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		return nil
 	}
 	for _, v := range cfg.Server {
-		if v == coremodule.BlockSyncerModularName {
+		if v == coremodule.BlockSyncerModularName || v == coremodule.SignModularName {
 			log.Infof("[%s] module doesn't need sp db", v)
 			continue
 		}
@@ -305,42 +305,16 @@ func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 			if val, ok := os.LookupEnv(bsdb.BsDBPasswd); ok {
 				cfg.BsDB.Passwd = val
 			}
-			if val, ok := os.LookupEnv(bsdb.BsDBAddress); ok {
-				cfg.BsDB.Address = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBDatabase); ok {
-				cfg.BsDB.Database = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedUser); ok {
-				cfg.BsDBBackup.User = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedPasswd); ok {
-				cfg.BsDBBackup.Passwd = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedAddress); ok {
-				cfg.BsDBBackup.Address = val
-			}
-			if val, ok := os.LookupEnv(bsdb.BsDBSwitchedDatabase); ok {
-				cfg.BsDBBackup.Database = val
-			}
 
 			defaultGfBsDB(&cfg.BsDB)
-			defaultGfBsDB(&cfg.BsDBBackup)
 
-			bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg, false)
+			bsDBBlockSyncerMaster, err := bsdb.NewBsDB(cfg)
 			if err != nil {
 				log.Panicw("failed to new bsdb", "error", err)
 				return
 			}
 
-			bsDBBlockSyncerBackUp, err := bsdb.NewBsDB(cfg, true)
-			if err != nil {
-				log.Panicw("failed to new backup bsdb", "error", err)
-				return
-			}
-
 			app.gfBsDBMaster = bsDBBlockSyncerMaster
-			app.gfBsDBBackup = bsDBBlockSyncerBackUp
 		})
 	}
 	return nil
@@ -370,7 +344,7 @@ func defaultGfBsDB(config *config.SQLDBConfig) {
 		config.Address = "127.0.0.1:3306"
 	}
 	if config.Database == "" {
-		config.Database = "block_syncer_db"
+		config.Database = "block_syncer"
 	}
 }
 
@@ -458,6 +432,7 @@ func DefaultGfSpResourceManagerOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConf
 	}
 	if cfg.Customize.Rcmgr == nil {
 		cfg.Customize.Rcmgr = gfsprcmgr.NewResourceManager(cfg.Customize.RcLimiter)
+		log.Infow("succeed to init resource manager", "limit", cfg.Customize.RcLimiter.String())
 	}
 	if !cfg.Rcmgr.DisableRcmgr {
 		app.rcmgr = cfg.Customize.Rcmgr

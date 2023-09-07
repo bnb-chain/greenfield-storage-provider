@@ -7,6 +7,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
@@ -21,26 +22,37 @@ const (
 )
 
 var bucketFlag = &cli.StringFlag{
-	Name:     "b",
+	Name:     "bucket",
 	Usage:    "The bucket name",
+	Aliases:  []string{"b"},
 	Required: true,
 }
 
 var objectFlag = &cli.StringFlag{
-	Name:     "o",
+	Name:     "object",
 	Usage:    "The object name",
-	Required: true,
+	Aliases:  []string{"o"},
+	Required: false,
+}
+
+var objectListFlag = &cli.BoolFlag{
+	Name:     "objectList",
+	Usage:    "if it is an single object or list",
+	Aliases:  []string{"l"},
+	Required: false,
 }
 
 var RecoverObjectCmd = &cli.Command{
-	Action: recoverObjectAction,
-	Name:   "recover.object",
-	Usage:  "Generate recover piece data tasks to recover the object data",
+	Action:    recoverObjectAction,
+	Name:      "recover.object",
+	Usage:     "Generate recover piece data tasks to recover the object data",
+	ArgsUsage: "[filePath]...  OBJECT-URL",
 
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		bucketFlag,
 		objectFlag,
+		objectListFlag,
 	},
 
 	Category: "RECOVERY COMMANDS",
@@ -66,16 +78,34 @@ var RecoverPieceCmd = &cli.Command{
 }
 
 func recoverObjectAction(ctx *cli.Context) error {
-	var replicateIdx int
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
 		return err
 	}
 	client := utils.MakeGfSpClient(cfg)
-
-	objectName := ctx.String(objectFlag.Name)
 	bucketName := ctx.String(bucketFlag.Name)
 
+	if !ctx.IsSet(objectFlag.Name) && !ctx.IsSet(objectListFlag.Name) {
+		return fmt.Errorf("either object flag or objectList flag has to be set for object(s) recovery cmd")
+	}
+
+	if ctx.IsSet(objectListFlag.Name) {
+		if ctx.NArg() < 1 {
+			return fmt.Errorf("args number error")
+		}
+		argNum := ctx.NArg()
+		for i := 0; i < argNum-1; i++ {
+			recoverObject(bucketName, ctx.Args().Get(i), cfg, client)
+		}
+	} else {
+		objectName := ctx.String(objectFlag.Name)
+		recoverObject(bucketName, objectName, cfg, client)
+	}
+	return nil
+}
+
+func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpConfig, client *gfspclient.GfSpClient) error {
+	var replicateIdx int
 	bucketInfo, objectInfo, storageParams, err := getChainInfo(bucketName, objectName, cfg)
 	if err != nil {
 		return err

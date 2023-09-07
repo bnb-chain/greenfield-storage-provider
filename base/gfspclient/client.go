@@ -2,6 +2,7 @@ package gfspclient
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"sync"
 	"time"
@@ -79,24 +80,6 @@ func (s *GfSpClient) Connection(ctx context.Context, address string, opts ...grp
 	return grpc.DialContext(ctx, address, options...)
 }
 
-func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	options := append(DefaultClientOptions(), opts...)
-	if s.metrics {
-		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
-	}
-	if s.managerConn == nil {
-		conn, err := s.Connection(ctx, s.managerEndpoint, options...)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
-		}
-		s.managerConn = conn
-	}
-	return s.managerConn, nil
-}
-
 func (s *GfSpClient) ApproverConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -113,6 +96,24 @@ func (s *GfSpClient) ApproverConn(ctx context.Context, opts ...grpc.DialOption) 
 		s.approverConn = conn
 	}
 	return s.approverConn, nil
+}
+
+func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
+	if s.managerConn == nil {
+		conn, err := s.Connection(ctx, s.managerEndpoint, options...)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to create connection", "error", err)
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
+		}
+		s.managerConn = conn
+	}
+	return s.managerConn, nil
 }
 
 func (s *GfSpClient) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
@@ -159,6 +160,7 @@ func (s *GfSpClient) HTTPClient(ctx context.Context) *http.Client {
 			Transport: &http.Transport{
 				MaxIdleConns:    HTTPMaxIdleConns,
 				IdleConnTimeout: HTTPIdleConnTimout,
+				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS13},
 			}}
 	}
 	return s.httpClient

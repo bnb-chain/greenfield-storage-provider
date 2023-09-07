@@ -40,10 +40,12 @@ type MemoryLimiterConfig struct {
 }
 
 type APILimiterConfig struct {
-	IPLimitCfg  IPLimitConfig
-	PathPattern map[string]MemoryLimiterConfig
-	APILimits   map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
-	HostPattern map[string]MemoryLimiterConfig
+	IPLimitCfg   IPLimitConfig
+	PathPattern  map[string]MemoryLimiterConfig
+	PathSequence []string
+	APILimits    map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
+	HostPattern  map[string]MemoryLimiterConfig
+	HostSequence []string
 }
 
 type apiLimiter struct {
@@ -62,10 +64,12 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	limiter = &apiLimiter{
 		store: localStore,
 		cfg: APILimiterConfig{
-			APILimits:   make(map[string]MemoryLimiterConfig),
-			PathPattern: make(map[string]MemoryLimiterConfig),
-			HostPattern: make(map[string]MemoryLimiterConfig),
-			IPLimitCfg:  cfg.IPLimitCfg,
+			APILimits:    make(map[string]MemoryLimiterConfig),
+			PathPattern:  make(map[string]MemoryLimiterConfig),
+			PathSequence: cfg.PathSequence,
+			HostPattern:  make(map[string]MemoryLimiterConfig),
+			HostSequence: cfg.HostSequence,
+			IPLimitCfg:   cfg.IPLimitCfg,
 		},
 	}
 
@@ -98,8 +102,10 @@ func (a *apiLimiter) findLimiter(host, path, key string) *slimiter.Limiter {
 		return newLimiter.(*slimiter.Limiter)
 	}
 
-	for p, l := range a.cfg.HostPattern {
-		if regexp.MustCompile(p).MatchString(host) {
+	for i := 0; i < len(a.cfg.HostSequence); i++ {
+		hostPatternInSequence := a.cfg.HostSequence[i]
+		l := a.cfg.PathPattern[hostPatternInSequence]
+		if regexp.MustCompile(hostPatternInSequence).MatchString(host) {
 			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
 			if err != nil {
 				log.Errorw("failed to new rate from formatted", "err", err)
@@ -110,8 +116,10 @@ func (a *apiLimiter) findLimiter(host, path, key string) *slimiter.Limiter {
 		}
 	}
 
-	for p, l := range a.cfg.PathPattern {
-		if regexp.MustCompile(p).MatchString(path) {
+	for i := 0; i < len(a.cfg.PathPattern); i++ {
+		pathPatternInSequence := a.cfg.PathSequence[i]
+		l := a.cfg.PathPattern[pathPatternInSequence]
+		if regexp.MustCompile(pathPatternInSequence).MatchString(path) {
 			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
 			if err != nil {
 				log.Errorw("failed to new rate from formatted", "err", err)

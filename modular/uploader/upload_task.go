@@ -22,11 +22,11 @@ import (
 )
 
 var (
-	ErrDanglingDownloadTask = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110001, "OoooH... request lost, try again later")
-	ErrNotCreatedState      = gfsperrors.Register(module.UploadModularName, http.StatusForbidden, 110002, "object not created state")
-	ErrRepeatedTask         = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110003, "put object request repeated")
-	ErrInvalidIntegrity     = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "invalid payload data integrity hash")
-	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
+	ErrDanglingUploadTask = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110001, "OoooH... request lost, try again later")
+	ErrNotCreatedState    = gfsperrors.Register(module.UploadModularName, http.StatusForbidden, 110002, "object not created state")
+	ErrRepeatedTask       = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110003, "put object request repeated")
+	ErrInvalidIntegrity   = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "invalid payload data integrity hash")
+	ErrClosedStream       = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
 )
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
@@ -40,7 +40,7 @@ func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
 func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask coretask.UploadObjectTask) error {
 	if uploadObjectTask == nil || uploadObjectTask.GetObjectInfo() == nil || uploadObjectTask.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to pre upload object, task pointer dangling")
-		return ErrDanglingDownloadTask
+		return ErrDanglingUploadTask
 	}
 	if uploadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.CtxErrorw(ctx, "failed to pre upload object, object not create")
@@ -71,8 +71,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 	}
 	defer u.uploadQueue.PopByKey(uploadObjectTask.Key())
 
-	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(
-		uploadObjectTask.GetObjectInfo().GetPayloadSize(),
+	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(uploadObjectTask.GetObjectInfo().GetPayloadSize(),
 		uploadObjectTask.GetStorageParams().GetMaxSegmentSize())
 	var (
 		err       error
@@ -89,7 +88,8 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		if err != nil {
 			uploadObjectTask.SetError(err)
 		}
-		log.CtxDebugw(ctx, "finish to read data from stream", "info", uploadObjectTask.Info(),
+
+		log.CtxDebugw(ctx, "finished to read data from stream", "info", uploadObjectTask.Info(),
 			"read_size", readSize, "error", err)
 		uploadObjectTask.AppendLog("uploader-report-upload-task")
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_end_from_task_create").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
@@ -129,13 +129,13 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			integrity = hash.GenerateIntegrityHash(checksums)
 			if !bytes.Equal(integrity, uploadObjectTask.GetObjectInfo().GetChecksums()[0]) {
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
-					"actual_integrity", hex.EncodeToString(integrity),
+					"object_info", uploadObjectTask.GetObjectInfo(), "actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
 				return ErrInvalidIntegrity
 			}
 			integrityMeta := &corespdb.IntegrityMeta{
 				ObjectID:          uploadObjectTask.GetObjectInfo().Id.Uint64(),
-				RedundancyIndex:   -1,
+				RedundancyIndex:   piecestore.PrimarySPRedundancyIndex,
 				PieceChecksumList: checksums,
 				IntegrityChecksum: integrity,
 			}
@@ -168,48 +168,25 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 	}
 }
 
-func StreamReadAt(stream io.Reader, b []byte) (int, error) {
-	if len(b) == 0 {
-		return 0, fmt.Errorf("failed to read due to invalid args")
-	}
-
-	var (
-		totalReadLen int
-		curReadLen   int
-		err          error
-	)
-
-	for {
-		curReadLen, err = stream.Read(b[totalReadLen:])
-		totalReadLen += curReadLen
-		if err != nil || totalReadLen == len(b) {
-			return totalReadLen, err
-		}
-	}
-}
-
 func (u *UploadModular) PostUploadObject(ctx context.Context, uploadObjectTask coretask.UploadObjectTask) {
 }
 
-func (u *UploadModular) QueryTasks(ctx context.Context, subKey coretask.TKey) (
-	[]coretask.Task, error) {
+func (u *UploadModular) QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(u.uploadQueue, subKey)
 	return uploadTasks, nil
 }
 
-func (u *UploadModular) PreResumableUploadObject(
-	ctx context.Context,
-	task coretask.ResumableUploadObjectTask) error {
+func (u *UploadModular) PreResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to pre upload object, task pointer dangling")
-		return ErrDanglingDownloadTask
+		return ErrDanglingUploadTask
 	}
 	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.CtxErrorw(ctx, "failed to pre upload object, object not create")
 		return ErrNotCreatedState
 	}
 	if u.resumeableUploadQueue.Has(task.Key()) {
-		log.CtxErrorw(ctx, "failed to pre download object, task repeated")
+		log.CtxErrorw(ctx, "failed to pre upload object, task repeated")
 		return ErrRepeatedTask
 	}
 	if err := u.baseApp.GfSpClient().CreateResumableUploadObject(ctx, task); err != nil {
@@ -219,9 +196,7 @@ func (u *UploadModular) PreResumableUploadObject(
 	return nil
 }
 
-func (u *UploadModular) HandleResumableUploadObjectTask(
-	ctx context.Context,
-	task coretask.ResumableUploadObjectTask,
+func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask,
 	stream io.Reader) error {
 	if err := u.resumeableUploadQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push upload queue", "error", err)
@@ -229,14 +204,12 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 	}
 	defer u.resumeableUploadQueue.PopByKey(task.Key())
 
-	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(
-		task.GetObjectInfo().GetPayloadSize(), task.GetStorageParams().GetMaxSegmentSize())
+	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(task.GetObjectInfo().GetPayloadSize(), task.GetStorageParams().GetMaxSegmentSize())
 	offset := task.GetResumeOffset()
 	var (
 		err           error
 		segIdx        = uint32(int64(offset) / segmentSize)
 		pieceKey      string
-		integrity     []byte
 		readN         int
 		readSize      int
 		data          = make([]byte, segmentSize)
@@ -246,7 +219,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		if err != nil {
 			task.SetError(err)
 		}
-		log.CtxDebugw(ctx, "finish to read data from stream", "info", task.Info(),
+		log.CtxDebugw(ctx, "finished to read data from stream", "info", task.Info(),
 			"read_size", readSize, "error", err)
 		if task.GetCompleted() {
 			err = u.baseApp.GfSpClient().ReportTask(ctx, task)
@@ -268,8 +241,9 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 				err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 				if err != nil {
-					log.CtxErrorw(ctx, "put segment piece to piece store", "piece_key", pieceKey, "error", err)
-					return ErrPieceStoreWithDetail("put segment piece to piece store, piece_key: " + pieceKey + ", error: " + err.Error())
+					log.CtxErrorw(ctx, "failed to put segment piece to piece store", "piece_key", pieceKey, "error", err)
+					return ErrPieceStoreWithDetail(fmt.Sprintf("failed to put segment piece to piece store, piece_key: %s, error: %s",
+						pieceKey, err.Error()))
 				}
 				err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data))
 				if err != nil {
@@ -285,8 +259,8 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 				}
 				integrityHash := hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList)
 				if !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
-					log.CtxErrorw(ctx, "invalid integrity hash", "integrity", hex.EncodeToString(integrity),
-						"expect", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
+					log.CtxErrorw(ctx, "invalid integrity hash", "object_info", task.GetObjectInfo(),
+						"actual", hex.EncodeToString(integrityHash), "expected", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
 					return ErrInvalidIntegrity
 				}
 				integrityMeta.IntegrityChecksum = integrityHash
@@ -307,8 +281,8 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 		pieceKey = u.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), segIdx)
 		err = u.baseApp.PieceStore().PutPiece(ctx, pieceKey, data)
 		if err != nil {
-			log.CtxErrorw(ctx, "put segment piece to piece store", "error", err)
-			return ErrPieceStoreWithDetail("put segment piece to piece store, error: " + err.Error())
+			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
+			return ErrPieceStoreWithDetail("failed to put segment piece to piece store, error: " + err.Error())
 		}
 		err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), -1, hash.GenerateChecksum(data))
 		if err != nil {
@@ -320,4 +294,24 @@ func (u *UploadModular) HandleResumableUploadObjectTask(
 }
 
 func (*UploadModular) PostResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask) {
+}
+
+func StreamReadAt(stream io.Reader, b []byte) (int, error) {
+	if len(b) == 0 {
+		return 0, fmt.Errorf("failed to read due to invalid args")
+	}
+
+	var (
+		totalReadLen int
+		curReadLen   int
+		err          error
+	)
+
+	for {
+		curReadLen, err = stream.Read(b[totalReadLen:])
+		totalReadLen += curReadLen
+		if err != nil || totalReadLen == len(b) {
+			return totalReadLen, err
+		}
+	}
 }

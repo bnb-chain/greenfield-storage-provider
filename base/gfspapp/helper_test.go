@@ -4,10 +4,12 @@ import (
 	"errors"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"go.uber.org/mock/gomock"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 const (
@@ -15,6 +17,29 @@ const (
 	mockPassword = "mockPassword"
 	mockAddress  = "mockAddress"
 	mockDatabase = "mockDatabase"
+)
+
+var mockErr = errors.New("mock error")
+
+var (
+	mockCreateBucketInfo = &storagetypes.MsgCreateBucket{
+		Creator:    "mockCreator",
+		BucketName: "mockBucketName",
+	}
+	mockObjectInfo = &storagetypes.ObjectInfo{
+		BucketName: "mockBucketName",
+		ObjectName: "mockObjectName",
+		Id:         sdkmath.NewUint(1),
+	}
+	mockStorageParams = &storagetypes.Params{
+		VersionedParams: storagetypes.VersionedParams{
+			MaxSegmentSize:          1000,
+			RedundantDataChunkNum:   10,
+			RedundantParityChunkNum: 10,
+			MinChargeSize:           10,
+		},
+		MaxPayloadSize: 100,
+	}
 )
 
 type mockApprover struct {

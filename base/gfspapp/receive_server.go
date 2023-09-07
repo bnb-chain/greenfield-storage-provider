@@ -32,7 +32,7 @@ func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.Gf
 	}()
 
 	task := req.GetReceivePieceTask()
-	if task == nil {
+	if task == nil || task.GetObjectInfo() == nil {
 		log.Error("failed to receive piece due to task pointer dangling")
 		return &gfspserver.GfSpReplicatePieceResponse{Err: ErrReceiveTaskDangling}, nil
 	}
@@ -66,7 +66,7 @@ func (g *GfSpBaseApp) GfSpDoneReplicatePiece(ctx context.Context, req *gfspserve
 	}()
 
 	task := req.GetReceivePieceTask()
-	if task == nil {
+	if task == nil || task.GetObjectInfo() == nil {
 		log.Error("failed to done receive piece due to task pointer dangling")
 		return &gfspserver.GfSpDoneReplicatePieceResponse{Err: ErrReceiveTaskDangling}, nil
 	}

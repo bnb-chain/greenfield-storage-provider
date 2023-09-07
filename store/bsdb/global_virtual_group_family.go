@@ -97,3 +97,30 @@ func (b *BsDBImpl) ListVgfByGvgID(gvgIDs []uint32) ([]*GlobalVirtualGroupFamily,
 
 	return families, err
 }
+
+// ListVirtualGroupFamiliesByVgfIDs list virtual group families by vgf id
+func (b *BsDBImpl) ListVirtualGroupFamiliesByVgfIDs(vgfIDs []uint32) ([]*GlobalVirtualGroupFamily, error) {
+	var (
+		families []*GlobalVirtualGroupFamily
+		filters  []func(*gorm.DB) *gorm.DB
+		err      error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	filters = append(filters, RemovedFilter(false))
+	err = b.db.Table((&GlobalVirtualGroupFamily{}).TableName()).
+		Select("*").
+		Where("global_virtual_group_family_id in (?)", vgfIDs).
+		Scopes(filters...).
+		Find(&families).Error
+
+	return families, err
+}

@@ -82,3 +82,52 @@ func (b *BsDBImpl) GetPaymentByPaymentAddress(paymentAddress common.Address) (*S
 
 	return streamRecord, err
 }
+
+// ListUserPaymentAccounts list payment accounts by owner address
+func (b *BsDBImpl) ListUserPaymentAccounts(accountID common.Address) ([]*StreamRecordPaymentAccount, error) {
+	var (
+		payments []*StreamRecordPaymentAccount
+		err      error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+	err = b.db.Table((&PaymentAccount{}).TableName()).
+		Select("*").
+		Joins("INNER JOIN stream_records ON stream_records.account = payment_accounts.addr").
+		Where(`payment_accounts.owner = ?`, accountID).
+		Order("stream_records.account").
+		Find(&payments).Error
+
+	return payments, err
+}
+
+// ListPaymentAccountStreams list payment account streams
+func (b *BsDBImpl) ListPaymentAccountStreams(paymentAccount common.Address) ([]*Bucket, error) {
+	var (
+		buckets []*Bucket
+		err     error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+	err = b.db.Table((&Bucket{}).TableName()).
+		Select("*").
+		Where(`payment_address = ? and removed = false`, paymentAccount).
+		Order("bucket_id").
+		Find(&buckets).Error
+
+	return buckets, err
+}

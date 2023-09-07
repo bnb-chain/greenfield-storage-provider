@@ -82,10 +82,10 @@ func (p *GfSpPieceOp) ParseSegmentIdx(segmentKey string) (uint32, error) {
 	return uint32(segmentIdx), nil
 }
 
-func (p *GfSpPieceOp) ParseECPieceKeyIdx(ECPieceKey string) (uint32, int32, error) {
-	keyParts := strings.Split(ECPieceKey, "_")
+func (p *GfSpPieceOp) ParseECPieceKeyIdx(ecPieceKey string) (uint32, int32, error) {
+	keyParts := strings.Split(ecPieceKey, "_")
 	if len(keyParts) != 3 {
-		return 0, 0, fmt.Errorf("invalid EC piece key: %s", ECPieceKey)
+		return 0, 0, fmt.Errorf("invalid EC piece key: %s", ecPieceKey)
 	}
 	segPrefix := "s"
 	redundancyPrefix := "p"

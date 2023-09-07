@@ -119,7 +119,7 @@ func Test_defaultGfBsDB(t *testing.T) {
 		MaxOpenConns:    0,
 	}
 	defaultGfBsDB(cfg)
-	assert.Equal(t, "block_syncer_db", cfg.Database)
+	assert.Equal(t, "block_syncer", cfg.Database)
 }
 
 func TestDefaultGfSpPieceStoreOptionSuccess1(t *testing.T) {
@@ -306,7 +306,7 @@ func TestNewGfSpBaseAppFailure1(t *testing.T) {
 	t.Log("Failure case description: init would panic")
 	cfg := &gfspconfig.GfSpConfig{Customize: nil}
 	assert.Panics(t, func() {
-		NewGfSpBaseApp(cfg)
+		_, _ = NewGfSpBaseApp(cfg)
 	})
 }
 

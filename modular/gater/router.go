@@ -8,7 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	mwhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 )
 
 const (
@@ -65,6 +65,10 @@ const (
 	getUserGroupsRouterName                        = "GetUserGroups"
 	getGroupMembersRouterName                      = "GetGroupMembers"
 	getUserOwnedGroupsRouterName                   = "GetUserOwnedGroups"
+	listObjectPoliciesRouterName                   = "ListObjectPolicies"
+	listUserPaymentAccountsRouterName              = "ListUserPaymentAccounts"
+	listPaymentAccountStreamsRouterName            = "ListPaymentAccountStreams"
+	listGroupsByIDsRouterName                      = "ListGroupsByIDs"
 )
 
 const (
@@ -75,7 +79,7 @@ const (
 
 // notFoundHandler log not found request info.
 func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	log.Errorw("failed to find the corresponding handler", "header", r.Header, "host", r.Host, "url", r.URL)
+	log.Errorw("failed to find the corresponding handler", "method", r.Method, "host", r.Host, "url", r.URL)
 	if _, err := io.ReadAll(r.Body); err != nil {
 		log.Errorw("failed to read the unknown request", "error", err)
 	}
@@ -84,22 +88,17 @@ func (g *GateModular) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 // RegisterHandler registers the handlers to the gateway router.
 func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// off-chain-auth router
-	router.Path(AuthRequestNoncePath).
-		Name(requestNonceRouterName).
-		Methods(http.MethodGet).
-		HandlerFunc(g.requestNonceHandler)
-	router.Path(AuthUpdateKeyPath).
-		Name(updateUserPublicKeyRouterName).
-		Methods(http.MethodPost).
-		HandlerFunc(g.updateUserPublicKeyHandler)
+	router.Path(AuthRequestNoncePath).Name(requestNonceRouterName).Methods(http.MethodGet).HandlerFunc(g.requestNonceHandler)
+	router.Path(AuthUpdateKeyPath).Name(updateUserPublicKeyRouterName).Methods(http.MethodPost).HandlerFunc(g.updateUserPublicKeyHandler)
 
 	// verify permission router
-	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).Methods(http.MethodGet).HandlerFunc(g.verifyPermissionHandler)
+	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).
+		Methods(http.MethodGet).HandlerFunc(g.verifyPermissionHandler)
 
 	// admin router, path style
 	// Get Approval
-	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).Queries(
-		ActionQuery, "{action}")
+	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).
+		Queries(ActionQuery, "{action}")
 
 	// get challenge info
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
@@ -137,8 +136,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	for _, r := range routers {
 		// Put Object By Offset
 		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).Queries(
-			"offset", "{offset}",
-			"complete", "{complete}")
+			"offset", "{offset}", "complete", "{complete}")
 		// Put Object
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 
@@ -156,6 +154,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		// Get Object Meta
 		r.NewRoute().Name(getObjectMetaRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectMetaHandler).Queries(
 			GetObjectMetaQuery, "")
+
+		// List Object Policies
+		r.NewRoute().Name(listObjectPoliciesRouterName).Methods(http.MethodGet).Path("/{object:.+}").Queries(ListObjectPoliciesQuery, "").HandlerFunc(g.listObjectPoliciesHandler)
 
 		// Get Object
 		r.NewRoute().Name(getObjectRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectHandler)
@@ -175,10 +176,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// List Bucket Read Record
 		r.NewRoute().Name(listBucketReadRecordRouterName).Methods(http.MethodGet).HandlerFunc(g.listBucketReadRecordHandler).Queries(
-			ListBucketReadRecordQuery, "",
-			ListBucketReadRecordMaxRecordsQuery, "{max_records}",
-			StartTimestampUs, "{start_ts}",
-			EndTimestampUs, "{end_ts}")
+			ListBucketReadRecordQuery, "", ListBucketReadRecordMaxRecordsQuery, "{max_records}",
+			StartTimestampUs, "{start_ts}", EndTimestampUs, "{end_ts}")
 
 		// List Objects by bucket
 		r.NewRoute().Name(listObjectsByBucketRouterName).Methods(http.MethodGet).Path("/").HandlerFunc(g.listObjectsByBucketNameHandler)
@@ -187,42 +186,36 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
 	}
 
-	// group router
-	router.Path("/").
-		Name(getGroupListRouterName).
-		Methods(http.MethodGet).
-		Queries(GetGroupListGroupQuery, "").
-		HandlerFunc(g.getGroupListHandler)
-	router.Path("/").
-		Name(listObjectsByIDsRouterName).
-		Methods(http.MethodGet).
-		Queries(ListObjectsByIDsQuery, "").
-		HandlerFunc(g.listObjectsByIDsHandler)
-	router.Path("/").
-		Name(listBucketsByIDsRouterName).
-		Methods(http.MethodGet).
-		Queries(ListBucketsByIDsQuery, "").
-		HandlerFunc(g.listBucketsByIDsHandler)
-	router.Path("/").
-		Name(verifyPermissionByIDRouterName).
-		Methods(http.MethodGet).
-		Queries(VerifyPermissionByIDQuery, "").
-		HandlerFunc(g.verifyPermissionByIDHandler)
-	router.Path("/").
-		Name(getUserGroupsRouterName).
-		Methods(http.MethodGet).
-		Queries(GetUserGroupsQuery, "").
-		HandlerFunc(g.getUserGroupsHandler)
-	router.Path("/").
-		Name(getGroupMembersRouterName).
-		Methods(http.MethodGet).
-		Queries(GetGroupMembersQuery, "").
-		HandlerFunc(g.getGroupMembersHandler)
-	router.Path("/").
-		Name(getUserOwnedGroupsRouterName).
-		Methods(http.MethodGet).
-		Queries(GetUserOwnedGroupsQuery, "").
-		HandlerFunc(g.getUserOwnedGroupsHandler)
+	// Get Group List
+	router.Path("/").Name(getGroupListRouterName).Methods(http.MethodGet).Queries(GetGroupListGroupQuery, "").HandlerFunc(g.getGroupListHandler)
+
+	// List Objects By IDs
+	router.Path("/").Name(listObjectsByIDsRouterName).Methods(http.MethodGet).Queries(ListObjectsByIDsQuery, "").HandlerFunc(g.listObjectsByIDsHandler)
+
+	// List Buckets By IDs
+	router.Path("/").Name(listBucketsByIDsRouterName).Methods(http.MethodGet).Queries(ListBucketsByIDsQuery, "").HandlerFunc(g.listBucketsByIDsHandler)
+
+	// Verify Permission By ID
+	router.Path("/").Name(verifyPermissionByIDRouterName).Methods(http.MethodGet).Queries(VerifyPermissionByIDQuery, "").HandlerFunc(g.verifyPermissionByIDHandler)
+
+	// Get User Groups
+	router.Path("/").Name(getUserGroupsRouterName).Methods(http.MethodGet).Queries(GetUserGroupsQuery, "").HandlerFunc(g.getUserGroupsHandler)
+
+	// Get Group Members
+	router.Path("/").Name(getGroupMembersRouterName).Methods(http.MethodGet).Queries(GetGroupMembersQuery, "").HandlerFunc(g.getGroupMembersHandler)
+
+	// Get User Owned Groups
+	router.Path("/").Name(getUserOwnedGroupsRouterName).Methods(http.MethodGet).Queries(GetUserOwnedGroupsQuery, "").HandlerFunc(g.getUserOwnedGroupsHandler)
+
+	// List Payment Account Streams
+	router.Path("/").Name(listPaymentAccountStreamsRouterName).Methods(http.MethodGet).Queries(ListPaymentAccountStreamsQuery, "").HandlerFunc(g.listPaymentAccountStreamsHandler)
+
+	// List User Payment Accounts
+	router.Path("/").Name(listUserPaymentAccountsRouterName).Methods(http.MethodGet).Queries(ListUserPaymentAccountsQuery, "").HandlerFunc(g.listUserPaymentAccountsHandler)
+
+	// List Groups By IDs
+	router.Path("/").Name(listGroupsByIDsRouterName).Methods(http.MethodGet).Queries(ListGroupsByIDsQuery, "").HandlerFunc(g.listGroupsByIDsHandler)
+
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID
 		router.Path("/").Name(getPaymentByBucketIDRouterName).Methods(http.MethodGet).Queries(GetPaymentByBucketIDQuery, "").HandlerFunc(g.getPaymentByBucketIDHandler)
@@ -279,10 +272,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		router.Path("/").Name(getSPInfoRouterName).Methods(http.MethodGet).Queries(GetSPInfoQuery, "").HandlerFunc(g.getSPInfoHandler)
 	}
 
-	router.Path("/").
-		Name(getUserBucketsRouterName).
-		Methods(http.MethodGet).
-		HandlerFunc(g.getUserBucketsHandler)
+	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
 
 	// bucket list router, path style
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
@@ -291,5 +281,5 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	http.Handle("/", router)
 
 	router.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-	router.Use(localhttp.Limit)
+	router.Use(mwhttp.Limit)
 }

@@ -98,7 +98,7 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 	sc.Lock()
 	defer sc.Unlock()
 
-	endpoint, bucketName, disableSSL, err := parseAliyunfsBucketURL(cfg.BucketURL)
+	endpoint, bucketName, disableSSL, err := parseOSSBucketURL(cfg.BucketURL)
 	if err != nil {
 		log.Errorw("failed to parse aliyunfs bucket url", "error", err)
 		return &session.Session{}, "", err
@@ -107,7 +107,7 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		return sess, bucketName, nil
 	}
 
-	key := getAliyunSecretKeyFromEnv(AliyunRegion, AliyunAccessKey, AliyunSecretKey, AliyunSessionToken)
+	key := getOSSSecretKeyFromEnv(OSSRegion, OSSAccessKey, OSSSecretKey, OSSSessionToken)
 	creds := credentials.NewStaticCredentials(key.accessKey, key.secretKey, key.sessionToken)
 	awsConfig := &aws.Config{
 		Region:           aws.String(key.region),
@@ -123,7 +123,7 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 	var sess *session.Session
 	switch cfg.IAMType {
 	case AKSKIAMType:
-		key = getAliyunSecretKeyFromEnv(AliyunRegion, AliyunAccessKey, AliyunSecretKey, AliyunSessionToken)
+		key = getOSSSecretKeyFromEnv(OSSRegion, OSSAccessKey, OSSSecretKey, OSSSessionToken)
 		if key.accessKey == "NoSignRequest" {
 			awsConfig.Credentials = credentials.AnonymousCredentials
 		} else if key.accessKey != "" && key.secretKey != "" {
@@ -133,7 +133,7 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		log.Debugw("use aksk to access aliyunfs", "region", *sess.Config.Region, "endpoint", *sess.Config.Endpoint)
 
 	case SAIAMType:
-		irsa, roleARN, tokenPath := checkAliyunAvailable()
+		irsa, roleARN, tokenPath := checkOSSIRSAAvailable()
 		log.Debugw("aliyun env", "irsa", irsa, "roleARN", roleARN, "tokenPath", tokenPath)
 		if irsa {
 			cred, err := credentials_aliyun.NewCredential(nil)
@@ -159,7 +159,7 @@ func (m *aliyunfsStore) String() string {
 	return fmt.Sprintf("aliyunfs://%s/", m.s3Store.bucketName)
 }
 
-func parseAliyunfsBucketURL(bucketURL string) (string, string, bool, error) {
+func parseOSSBucketURL(bucketURL string) (string, string, bool, error) {
 	// 1. parse bucket url
 	if !strings.Contains(bucketURL, "://") {
 		bucketURL = fmt.Sprintf("http://%s", bucketURL)
@@ -169,7 +169,7 @@ func parseAliyunfsBucketURL(bucketURL string) (string, string, bool, error) {
 		return "", "", false, fmt.Errorf("invalid endpoint %s: %s", bucketURL, err)
 	}
 
-	// 2. check if aliyunfs uses https
+	// 2. check if oss uses https
 	ssl := strings.ToLower(uri.Scheme) == "https"
 
 	// 3. get bucket name
@@ -180,14 +180,14 @@ func parseAliyunfsBucketURL(bucketURL string) (string, string, bool, error) {
 	return uri.Host, bucketName, ssl, nil
 }
 
-func checkAliyunAvailable() (bool, string, string) {
+func checkOSSIRSAAvailable() (bool, string, string) {
 	irsa := true
-	roleARN, exists := os.LookupEnv(AliyunRoleARN)
+	roleARN, exists := os.LookupEnv(OSSRoleARN)
 	if !exists {
 		irsa = false
 		log.Error("failed to read oss role arn")
 	}
-	tokenPath, exists := os.LookupEnv(AliyunWebIdentityTokenFile)
+	tokenPath, exists := os.LookupEnv(OSSWebIdentityTokenFile)
 	if !exists {
 		irsa = false
 		log.Error("failed to read oss web identity token file")

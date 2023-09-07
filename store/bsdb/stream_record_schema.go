@@ -31,5 +31,5 @@ type StreamRecord struct {
 
 // TableName is used to set StreamRecord table name in database
 func (s *StreamRecord) TableName() string {
-	return "stream_records"
+	return StreamRecordTableName
 }

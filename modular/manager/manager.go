@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -48,6 +49,7 @@ type ManageModular struct {
 	scope   rcmgr.ResourceScope
 
 	taskCh        chan task.Task
+	backupTaskNum int64
 	backupTaskMux sync.Mutex
 
 	// loading task at startup.
@@ -68,6 +70,7 @@ type ManageModular struct {
 	challengeQueue       taskqueue.TQueueOnStrategy
 	recoveryQueue        taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueue      taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueueMux   sync.Mutex
 
 	maxUploadObjectNumber int
 
@@ -575,6 +578,7 @@ func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) (task
 	for i, t := range tasks {
 		totalPriority += int(t.GetPriority())
 		if totalPriority >= randPriority {
+			t.AppendLog("pickup-to-backup-task-pool")
 			return t, append(tasks[:i], tasks[i+1:]...)
 		}
 	}
@@ -632,17 +636,18 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d]",
+		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
 		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
-		m.gcBlockHeight, m.gcSafeBlockDistance)
+		m.gcBlockHeight, m.gcSafeBlockDistance, m.backupTaskNum)
 }
 
 func (m *ManageModular) backUpTask() {
 	m.backupTaskMux.Lock()
 	defer m.backupTaskMux.Unlock()
 
+	startPopTime := time.Now().String()
 	var (
 		backupTasks   []task.Task
 		reservedTasks []task.Task
@@ -694,45 +699,96 @@ func (m *ManageModular) backUpTask() {
 			"task_limit", targetTask.EstimateLimit().String())
 		backupTasks = append(backupTasks, targetTask)
 	}
-	targetTask = m.migrateGVGQueue.PopByLimit(limit)
+	targetTask = m.migrateGVGQueuePopByLimit(limit)
 	if targetTask != nil {
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", targetTask.Key().String())
 		backupTasks = append(backupTasks, targetTask)
 	}
+	endPopTime := time.Now().String()
 
+	startPickUpTime := time.Now().String()
 	targetTask, reservedTasks = m.PickUpTask(ctx, backupTasks)
 	if targetTask != nil {
+		targetTask.AppendLog("start-pop-task-from-queue:" + startPopTime)
+		targetTask.AppendLog("end-pop-task-from-queue:" + endPopTime)
+		targetTask.AppendLog("start-pickup-task-to-dispatch:" + startPickUpTime)
+		targetTask.AppendLog("end-pickup-task-to-dispatch")
+
+		atomic.AddInt64(&m.backupTaskNum, 1)
 		m.taskCh <- targetTask
 	}
-	if len(reservedTasks) == 0 {
-		return
-	}
+
 	for _, reservedTask := range reservedTasks {
-		switch t := reservedTask.(type) {
-		case *gfsptask.GfSpReplicatePieceTask:
-			err := m.replicateQueue.Push(t)
-			log.Errorw("failed to retry push replicate task to queue after dispatching", "error", err)
-		case *gfsptask.GfSpSealObjectTask:
-			err := m.sealQueue.Push(t)
-			log.Errorw("failed to retry push seal task to queue after dispatching", "error", err)
-		case *gfsptask.GfSpReceivePieceTask:
-			err := m.receiveQueue.Push(t)
-			log.Errorw("failed to retry push receive task to queue after dispatching", "error", err)
-		case *gfsptask.GfSpGCObjectTask:
-			err := m.gcObjectQueue.Push(t)
-			log.Errorw("failed to retry push gc object task to queue after dispatching", "error", err)
-		case *gfsptask.GfSpGCZombiePieceTask:
-			err := m.gcZombieQueue.Push(t)
-			log.Errorw("failed to retry push gc zombie task to queue after dispatching", "error", err)
-		case *gfsptask.GfSpGCMetaTask:
-			err := m.gcMetaQueue.Push(t)
-			log.Errorw("failed to retry push gc meta task to queue after dispatching", "error", err)
-		case *gfsptask.GfSpRecoverPieceTask:
-			err := m.recoveryQueue.Push(t)
-			log.Errorw("failed to retry push recovery task to queue after dispatching", "error", err)
-		case *gfsptask.GfSpMigrateGVGTask:
-			err := m.migrateGVGQueue.Push(t)
-			log.Errorw("failed to retry push migration gvg task to queue after dispatching", "error", err)
+		m.repushTask(reservedTask)
+	}
+}
+
+func (m *ManageModular) repushTask(reserved task.Task) {
+	switch t := reserved.(type) {
+	case *gfsptask.GfSpReplicatePieceTask:
+		err := m.replicateQueue.Push(t)
+		log.Infow("retry push replicate task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpSealObjectTask:
+		err := m.sealQueue.Push(t)
+		log.Infow("retry push seal task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpReceivePieceTask:
+		err := m.receiveQueue.Push(t)
+		log.Infow("retry push receive task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpGCObjectTask:
+		err := m.gcObjectQueue.Push(t)
+		log.Infow("retry push gc object task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpGCZombiePieceTask:
+		err := m.gcZombieQueue.Push(t)
+		log.Infow("retry push gc zombie task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpGCMetaTask:
+		err := m.gcMetaQueue.Push(t)
+		log.Infow("retry push gc meta task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpRecoverPieceTask:
+		err := m.recoveryQueue.Push(t)
+		log.Infow("retry push recovery task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpMigrateGVGTask:
+		err := m.migrateGVGQueuePush(t)
+		log.Infow("retry push migration gvg task to queue after dispatching", "error", err)
+	}
+}
+
+func (m *ManageModular) migrateGVGQueuePush(task task.Task) error {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+
+	err := m.migrateGVGQueue.Push(task)
+
+	return err
+}
+
+func (m *ManageModular) migrateGVGQueuePopByLimit(limit rcmgr.Limit) task.Task {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+	task := m.migrateGVGQueue.PopByLimit(limit)
+
+	return task
+}
+
+func (m *ManageModular) migrateGVGQueuePopByKey(key task.TKey) {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+	m.migrateGVGQueue.PopByKey(key)
+}
+
+func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateGVGTask, push bool) error {
+	m.migrateGVGQueueMux.Lock()
+	defer m.migrateGVGQueueMux.Unlock()
+
+	var pushErr error
+
+	m.migrateGVGQueue.PopByKey(task.Key())
+	task.SetUpdateTime(time.Now().Unix())
+	if !task.GetFinished() || push {
+		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
+			log.Errorw("failed to push gvg task queue", "task", task, "error", pushErr)
 		}
 	}
+	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
+
+	return pushErr
 }

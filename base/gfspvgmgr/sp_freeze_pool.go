@@ -17,6 +17,11 @@ type FreezeSPPool struct {
 	sync.Map
 }
 
+type SPStats struct {
+	JoinedGVGs  []*virtual_types.GlobalVirtualGroup
+	FreezeUntil int64
+}
+
 func NewFreezeSPPool() *FreezeSPPool {
 	return &FreezeSPPool{sync.Map{}}
 }
@@ -60,9 +65,4 @@ func (s *FreezeSPPool) ReleaseSP() {
 		}
 		return true
 	})
-}
-
-type SPStats struct {
-	JoinedGVGs  []*virtual_types.GlobalVirtualGroup
-	FreezeUntil int64
 }

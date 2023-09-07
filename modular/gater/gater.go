@@ -3,6 +3,7 @@ package gater
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
+
+const ReadHeaderTimeout = 20 * time.Minute
 
 var _ module.Modular = &GateModular{}
 
@@ -49,12 +52,12 @@ func (g *GateModular) server(ctx context.Context) {
 		router.Use(metrics.DefaultHTTPServerMetrics.InstrumentationHandler)
 	}
 	g.RegisterHandler(router)
-	server := &http.Server{
-		Addr:    g.httpAddress,
-		Handler: router,
+	g.httpServer = &http.Server{
+		Addr:              g.httpAddress,
+		Handler:           router,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 	}
-	g.httpServer = server
-	if err := server.ListenAndServe(); err != nil {
+	if err := g.httpServer.ListenAndServe(); err != nil {
 		log.Errorw("failed to listen", "error", err)
 		return
 	}
@@ -62,14 +65,11 @@ func (g *GateModular) server(ctx context.Context) {
 
 func (g *GateModular) Stop(ctx context.Context) error {
 	g.scope.Release()
-	g.httpServer.Shutdown(ctx)
+	_ = g.httpServer.Shutdown(ctx)
 	return nil
 }
 
-func (g *GateModular) ReserveResource(
-	ctx context.Context,
-	state *rcmgr.ScopeStat) (
-	rcmgr.ResourceScopeSpan, error) {
+func (g *GateModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
 	span, err := g.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -81,20 +81,18 @@ func (g *GateModular) ReserveResource(
 	return span, nil
 }
 
-func (g *GateModular) ReleaseResource(
-	ctx context.Context,
-	span rcmgr.ResourceScopeSpan) {
+func (g *GateModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
 	span.Done()
 }
 
-func (a *GateModular) getSPID() (uint32, error) {
-	if a.spID != 0 {
-		return a.spID, nil
+func (g *GateModular) getSPID() (uint32, error) {
+	if g.spID != 0 {
+		return g.spID, nil
 	}
-	spInfo, err := a.baseApp.Consensus().QuerySP(context.Background(), a.baseApp.OperatorAddress())
+	spInfo, err := g.baseApp.Consensus().QuerySP(context.Background(), g.baseApp.OperatorAddress())
 	if err != nil {
 		return 0, err
 	}
-	a.spID = spInfo.GetId()
-	return a.spID, nil
+	g.spID = spInfo.GetId()
+	return g.spID, nil
 }

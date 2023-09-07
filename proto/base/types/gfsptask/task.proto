@@ -26,6 +26,7 @@ message GfSpTask {
 message GfSpCreateBucketApprovalTask {
   GfSpTask task = 1;
   greenfield.storage.MsgCreateBucket create_bucket_info = 2;
+  bytes fingerprint = 3;
 }
 
 message GfSpMigrateBucketApprovalTask {
@@ -36,6 +37,7 @@ message GfSpMigrateBucketApprovalTask {
 message GfSpCreateObjectApprovalTask {
   GfSpTask task = 1;
   greenfield.storage.MsgCreateObject create_object_info = 2;
+  bytes fingerprint = 3;
 }
 
 message GfSpReplicatePieceApprovalTask {

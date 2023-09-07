@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield/types/common"
@@ -28,10 +28,10 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(err)
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -70,10 +70,10 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(err)
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -100,7 +100,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		err = ErrInvalidHeader
 		return
 	}
-	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.GetObjectName(), objectInfo.GetBucketName())
+	chainObjectInfo, bucketInfo, params, err := g.getObjectChainMeta(reqCtx.Context(), objectInfo.GetObjectName(), objectInfo.GetBucketName())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object on chain meta", "error", err)
 		err = ErrInvalidHeader
@@ -151,10 +151,10 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(err)
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
@@ -195,10 +195,10 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(err)
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()

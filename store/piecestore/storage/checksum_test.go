@@ -108,6 +108,12 @@ func Test_verifyChecksum(t *testing.T) {
 				checksum:   0,
 			},
 		},
+		{
+			name:         "4",
+			rc:           io.NopCloser(strings.NewReader("hello world")),
+			checksum:     "4294967296", // if checksum is out of uint32 range, error will be handled
+			wantedResult: io.NopCloser(strings.NewReader("hello world")),
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

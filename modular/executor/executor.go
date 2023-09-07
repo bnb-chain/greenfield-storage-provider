@@ -212,7 +212,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		e.HandleGCMetaTask(ctx, t)
 	case *gfsptask.GfSpRecoverPieceTask:
 		atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
-		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingRecoveryPieceTaskCnt, -1)
 		e.HandleRecoverPieceTask(ctx, t)
 		if t.Error() != nil {
 			metrics.ReqCounter.WithLabelValues(ExecutorFailureRecoveryTask).Inc()
@@ -273,7 +273,7 @@ func (e *ExecuteModular) ReleaseResource(ctx context.Context, span corercmgr.Res
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
 		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], migrateGVG[%d]",
-		&e.maxExecuteNum, atomic.LoadInt64(&e.executingNum),
+		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
 		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
 		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
 		atomic.LoadInt64(&e.doingReceivePieceTaskCnt),

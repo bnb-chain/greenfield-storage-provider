@@ -107,6 +107,35 @@ func (b *BsDBImpl) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 	return groups, count, err
 }
 
+// GetGroupMembersCount get the count of group members
+func (b *BsDBImpl) GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, error) {
+	var (
+		results []*GroupCount
+		err     error
+	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	if len(groupIDs) == 0 {
+		return nil, nil
+	}
+
+	err = b.db.Table((&Group{}).TableName()).
+		Select("group_id, count(*) as count").
+		Where("group_id in (?) and account_id != ? and removed = false", groupIDs, common.HexToAddress(GroupAddress)).
+		Group("group_id").
+		Find(&results).Error
+	return results, err
+}
+
 // GetGroupByID get group info by object id
 func (b *BsDBImpl) GetGroupByID(groupID int64, includeRemoved bool) (*Group, error) {
 	var (
@@ -115,6 +144,15 @@ func (b *BsDBImpl) GetGroupByID(groupID int64, includeRemoved bool) (*Group, err
 		err         error
 		filters     []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	groupIDHash = common.BigToHash(math.NewInt(groupID).BigInt())
 	if !includeRemoved {
@@ -136,6 +174,15 @@ func (b *BsDBImpl) GetUserGroups(accountID common.Address, startAfter common.Has
 		err     error
 		filters []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, GroupIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
 	err = b.db.Table((&Group{}).TableName()).
@@ -154,6 +201,15 @@ func (b *BsDBImpl) GetGroupMembers(groupID common.Hash, startAfter common.Addres
 		err     error
 		filters []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, GroupAccountIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
 	err = b.db.Table((&Group{}).TableName()).
@@ -172,12 +228,45 @@ func (b *BsDBImpl) GetUserOwnedGroups(accountID common.Address, startAfter commo
 		err     error
 		filters []func(*gorm.DB) *gorm.DB
 	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
 
 	filters = append(filters, GroupIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
 	err = b.db.Table((&Group{}).TableName()).
 		Select("*").
 		Where("owner = ? and account_id  = ?", accountID, common.HexToAddress("0")).
 		Scopes(filters...).
+		Order("group_id").
+		Find(&groups).Error
+	return groups, err
+}
+
+// ListGroupsByIDs list groups by ids
+func (b *BsDBImpl) ListGroupsByIDs(ids []common.Hash) ([]*Group, error) {
+	var (
+		groups []*Group
+		err    error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	err = b.db.Table((&Group{}).TableName()).
+		Select("*").
+		Where("group_id in (?) and account_id  = ? and removed = false", ids, common.HexToAddress("0")).
 		Order("group_id").
 		Find(&groups).Error
 	return groups, err

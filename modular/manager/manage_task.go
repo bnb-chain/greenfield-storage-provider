@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 
 	"cosmossdk.io/math"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -48,13 +50,20 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 			log.CtxErrorw(ctx, "dispatch task context is canceled")
 			return nil, nil
 		case dispatchTask := <-m.taskCh:
+			atomic.AddInt64(&m.backupTaskNum, -1)
 			if !limit.NotLess(dispatchTask.EstimateLimit()) {
-				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String())
+				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String(), "task_info", dispatchTask.Info())
 				go func() {
 					m.taskCh <- dispatchTask
+					atomic.AddInt64(&m.backupTaskNum, 1)
 				}()
 				continue
 			}
+			dispatchTask.IncRetry()
+			dispatchTask.SetError(nil)
+			dispatchTask.SetUpdateTime(time.Now().Unix())
+			dispatchTask.SetAddress(util.GetRPCRemoteAddress(ctx))
+			m.repushTask(dispatchTask)
 			log.CtxDebugw(ctx, "dispatch task to executor", "key_info", dispatchTask.Info())
 			return dispatchTask, nil
 		}
@@ -354,8 +363,13 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			return err
 		}
 		shouldFreezeGVGs := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+		selfSPID, err := m.getSPID()
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get self sp id", "error", err)
+			return err
+		}
 		for _, g := range sspJoinGVGs {
-			if g.GetPrimarySpId() == m.spID {
+			if g.GetPrimarySpId() == selfSPID {
 				shouldFreezeGVGs = append(shouldFreezeGVGs, g)
 			}
 		}
@@ -642,13 +656,29 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
 		return ErrDanglingTask
 	}
-	var err error
-	task.SetUpdateTime(time.Now().Unix())
+	var err, pushErr error
+	cancelTask := false
+
+	if task.GetBucketID() != 0 {
+		// if there is no execute plan, we should cancel this task
+		if _, err = m.bucketMigrateScheduler.getExecutePlanByBucketID(task.GetBucketID()); err != nil {
+			cancelTask = true
+		}
+	}
+
+	pushErr = m.migrateGVGQueuePopByLimitAndPushAgain(task, !cancelTask)
+	if pushErr != nil {
+		log.CtxErrorw(ctx, "failed to push task to migrate gvg queue", "task", task, "error", pushErr)
+		return pushErr
+	}
+
 	if task.GetBucketID() != 0 {
 		err = m.bucketMigrateScheduler.UpdateMigrateProgress(task)
 	} else {
 		err = m.spExitScheduler.UpdateMigrateProgress(task)
 	}
+
+	log.CtxInfow(ctx, "succeed to handle migrate gvg task", "task", task, "error", err)
 	return err
 }
 

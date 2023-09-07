@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
 
+	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -40,6 +41,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		createBucketApproval  = storagetypes.MsgCreateBucket{}
 		migrateBucketApproval = storagetypes.MsgMigrateBucket{}
 		createObjectApproval  = storagetypes.MsgCreateObject{}
+		fingerprint           []byte
 		spInfo                *sptypes.StorageProvider
 		authenticated         bool
 	)
@@ -48,14 +50,14 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetApproval).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayFailureGetApproval).Observe(time.Since(startTime).Seconds())
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewaySuccessGetApproval).Inc()
@@ -77,6 +79,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		err = ErrDecodeMsg
 		return
 	}
+	fingerprint = commonhash.GenerateChecksum(approvalMsg)
 
 	switch approvalType {
 	case createBucketApprovalAction:
@@ -94,7 +97,6 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrSPUnavailable
 			return
 		}
-
 		if err = storagetypes.ModuleCdc.UnmarshalJSON(approvalMsg, &createBucketApproval); err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to unmarshal approval", "approval",
 				r.Header.Get(GnfdUnsignedApprovalMsgHeader), "error", err)
@@ -108,8 +110,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		startVerifyAuthentication := time.Now()
-		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(
-			reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpAskCreateBucketApproval,
 			reqCtx.Account(), createBucketApproval.GetBucketName(), "")
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_cost").Observe(time.Since(startVerifyAuthentication).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_bucket_auth_end").Observe(time.Since(startTime).Seconds())
@@ -118,12 +119,12 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if !authenticated {
-			log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+			log.CtxError(reqCtx.Context(), "no permission to operate")
 			err = ErrNoPermission
 			return
 		}
 		task := &gfsptask.GfSpCreateBucketApprovalTask{}
-		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateBucketTask(reqCtx.Account(), &createBucketApproval, fingerprint, g.baseApp.TaskPriority(task))
 		var approvalTask coretask.ApprovalCreateBucketTask
 		startAskCreateBucketApproval := time.Now()
 		authenticated, approvalTask, err = g.baseApp.GfSpClient().AskCreateBucketApproval(reqCtx.Context(), task)
@@ -215,7 +216,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		task := &gfsptask.GfSpCreateObjectApprovalTask{}
-		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, g.baseApp.TaskPriority(task))
+		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, fingerprint, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
 		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
@@ -257,14 +258,14 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetChallengeInfo).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayFailureGetChallengeInfo).Observe(time.Since(startTime).Seconds())
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewaySuccessGetChallengeInfo).Inc()
@@ -368,7 +369,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
 	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
-	w.Write(data)
+	_, _ = w.Write(data)
 	metrics.ReqPieceSize.WithLabelValues(GatewayChallengePieceSize).Observe(float64(len(data)))
 	log.CtxDebugw(reqCtx.Context(), "succeed to get challenge info")
 }
@@ -378,28 +379,26 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 // signature to seal object on greenfield.
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err            error
-		reqCtx         *RequestContext
-		receiveMsg     []byte
-		data           []byte
-		integrity      []byte
-		signature      []byte
-		requestAccount sdktypes.AccAddress
-		bucketInfo     *storagetypes.BucketInfo
+		err        error
+		reqCtx     *RequestContext
+		receiveMsg []byte
+		data       []byte
+		integrity  []byte
+		signature  []byte
 	)
 	receivePieceStartTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(receivePieceStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureReplicatePiece).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayFailureReplicatePiece).Observe(time.Since(receivePieceStartTime).Seconds())
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(receivePieceStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewaySuccessReplicatePiece).Inc()
@@ -430,33 +429,17 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify receive task signature
-	requestAccount, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
+	_, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "fail to verify receive task", "error", err, "task", receiveTask)
 		err = ErrSignature
 		return
 	}
 
 	// check if the request account is the primary SP of the object of the receiving task
-	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
+	_, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
 	if err != nil {
 		err = ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
-		return
-	}
-	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
-	if err != nil {
-		err = ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
-		return
-	}
-	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(reqCtx.Context(), bucketSPID)
-	if err != nil {
-		err = ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
-		return
-	}
-	if bucketPrimarySp.OperatorAddress != requestAccount.String() {
-		log.CtxErrorw(reqCtx.Context(), "the request account of replicate object is not primary SP", "expected:", bucketPrimarySp.OperatorAddress,
-			"actual sp:", requestAccount.String())
-		err = ErrMismatchSp
 		return
 	}
 
@@ -512,12 +495,12 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
@@ -547,7 +530,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 
 	// check signature consistent
 	taskSignature := recoveryTask.GetSignature()
-	signatureAddr, pk, err := RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
+	signatureAddr, pk, err := commonhash.RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to  get recover task address", "error:", err)
 		err = ErrSignature
@@ -574,7 +557,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	chainObjectInfo, bucketInfo, params, err := getObjectChainMeta(reqCtx, g.baseApp, objectInfo.ObjectName, objectInfo.BucketName)
+	chainObjectInfo, bucketInfo, params, err := g.getObjectChainMeta(reqCtx.Context(), objectInfo.ObjectName, objectInfo.BucketName)
 	if err != nil {
 		err = ErrInvalidHeader
 		return
@@ -614,7 +597,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	w.Write(pieceData)
+	_, _ = w.Write(pieceData)
 	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
 

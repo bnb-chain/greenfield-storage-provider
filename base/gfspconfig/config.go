@@ -10,7 +10,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	localhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	mwhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
 	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
 )
@@ -42,7 +42,6 @@ type GfSpConfig struct {
 	Customize      *Customize `comment:"optional"`
 	SpDB           storeconfig.SQLDBConfig
 	BsDB           storeconfig.SQLDBConfig
-	BsDBBackup     storeconfig.SQLDBConfig
 	PieceStore     storage.PieceStoreConfig
 	Chain          ChainConfig
 	SpAccount      SpAccountConfig
@@ -57,9 +56,8 @@ type GfSpConfig struct {
 	Monitor        MonitorConfig
 	Rcmgr          RcmgrConfig `comment:"optional"`
 	Log            LogConfig
-	Metadata       MetadataConfig
 	BlockSyncer    BlockSyncerConfig
-	APIRateLimiter localhttp.RateLimiterConfig
+	APIRateLimiter mwhttp.RateLimiterConfig
 	Manager        ManagerConfig
 }
 
@@ -131,7 +129,6 @@ type ApprovalConfig struct {
 
 type BucketConfig struct {
 	AccountBucketNumber    int64  `comment:"optional"`
-	FreeQuotaPerBucket     uint64 `comment:"optional"`
 	MaxListReadQuotaNumber int64  `comment:"optional"`
 	MaxPayloadSize         uint64 `comment:"optional"`
 }
@@ -233,11 +230,9 @@ type LogConfig struct {
 }
 
 type BlockSyncerConfig struct {
-	Modules      []string `comment:"required"`
-	Dsn          string   `comment:"required"`
-	DsnSwitched  string   `comment:"optional"`
-	Workers      uint     `comment:"required"`
-	EnableDualDB bool     `comment:"optional"`
+	Modules          []string `comment:"required"`
+	Workers          uint     `comment:"required"`
+	BsDBWriteAddress string   `comment:"optional"`
 }
 
 type MetadataConfig struct {

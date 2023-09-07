@@ -56,7 +56,8 @@ const (
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 )
 
-func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask, data []byte) error {
+func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask,
+	data []byte) error {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, bytes.NewReader(data))
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
@@ -132,7 +133,7 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to replicate piece, status_code(%d) endpoint(%s)", resp.StatusCode, endpoint)
+		return nil, fmt.Errorf("failed to done replicate piece, status_code(%d) endpoint(%s)", resp.StatusCode, endpoint)
 	}
 	signature, err := hex.DecodeString(resp.Header.Get(GnfdIntegrityHashSignatureHeader))
 	if err != nil {

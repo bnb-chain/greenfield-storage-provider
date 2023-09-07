@@ -31,6 +31,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		resp          = &gfspserver.GfSpUploadObjectResponse{}
 		pRead, pWrite = io.Pipe()
 		initCh        = make(chan struct{})
+		errChan       = make(chan error)
 		ctx, cancel   = context.WithCancel(context.Background())
 		err           error
 		receiveSize   int
@@ -43,11 +44,11 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		}
 		if task != nil {
 			g.uploader.PostUploadObject(ctx, task)
-			log.CtxDebugw(ctx, "finish to receive object stream data", "info", task.Info(),
+			log.CtxDebugw(ctx, "finished to receive object stream data", "info", task.Info(),
 				"receive_size", receiveSize, "error", err)
 		} else {
-			log.CtxDebugw(ctx, "finish to receive object stream data",
-				"receive_size", receiveSize, "error", err)
+			log.CtxDebugw(ctx, "finished to receive object stream data", "receive_size", receiveSize,
+				"error", err)
 		}
 		if err != nil {
 			resp.Err = gfsperrors.MakeGfSpError(err)
@@ -62,6 +63,8 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
 		}
+		close(errChan)
+		close(initCh)
 	}()
 
 	go func() {
@@ -75,26 +78,28 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 			req, err = stream.Recv()
 			if err == io.EOF {
 				if len(req.GetPayload()) != 0 {
-					pWrite.Write(req.GetPayload())
+					_, _ = pWrite.Write(req.GetPayload())
 				}
-				log.CtxDebugw(ctx, "received last upload stream data")
+				log.CtxDebug(ctx, "received last upload stream data")
 				err = nil
-				pWrite.Close()
+				_ = pWrite.Close()
 				return
 			}
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to receive object ", "error", err)
 				err = ErrExceptionsStream
-				pWrite.CloseWithError(err)
+				_ = pWrite.CloseWithError(err)
+				errChan <- err
 				return
 			}
 			if !init {
 				init = true
 				task = req.GetUploadObjectTask()
 				if task == nil {
-					log.CtxErrorw(ctx, "[BUG] failed to receive object, upload object task pointer dangling !!!")
+					log.CtxError(ctx, "[BUG] failed to receive object, upload object task pointer dangling!!!")
 					err = ErrUploadObjectDangling
-					pWrite.CloseWithError(err)
+					_ = pWrite.CloseWithError(err)
+					errChan <- err
 					return
 				}
 				ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
@@ -102,20 +107,22 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to reserve resource", "error", err)
 					err = ErrUploadExhaustResource
-					pWrite.CloseWithError(err)
+					_ = pWrite.CloseWithError(err)
+					errChan <- err
 					return
 				}
 				err = g.uploader.PreUploadObject(ctx, task)
 				task.AppendLog(fmt.Sprintf("uploader-prepare-upload-task-cost:%d", time.Now().UnixMilli()-startTime.UnixMilli()))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to pre upload object", "error", err)
-					pWrite.CloseWithError(err)
+					_ = pWrite.CloseWithError(err)
+					errChan <- err
 					return
 				}
 				initCh <- struct{}{}
 			}
 			receiveSize += len(req.GetPayload())
-			pWrite.Write(req.GetPayload())
+			_, _ = pWrite.Write(req.GetPayload())
 		}
 	}()
 
@@ -123,15 +130,17 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 	case <-ctx.Done():
 		return nil
 	case <-initCh:
-		log.CtxDebugw(ctx, "received first upload stream data")
+		log.CtxDebug(ctx, "received first upload stream data")
+	case <-errChan:
+		return err
 	}
 	err = g.uploader.HandleUploadObjectTask(ctx, task, pRead)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload object data", "error", err)
-		pWrite.CloseWithError(err)
-		return nil
+		_ = pWrite.CloseWithError(err)
+		return err
 	}
-	log.CtxDebugw(ctx, "succeed to upload object")
+	log.CtxDebug(ctx, "succeed to upload object")
 	return nil
 }
 
@@ -143,6 +152,7 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 		resp          = &gfspserver.GfSpResumableUploadObjectResponse{}
 		pRead, pWrite = io.Pipe()
 		initCh        = make(chan struct{})
+		errChan       = make(chan error)
 		ctx, cancel   = context.WithCancel(context.Background())
 		err           error
 		receiveSize   int
@@ -154,11 +164,11 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 		}
 		if task != nil {
 			g.uploader.PostResumableUploadObject(ctx, task)
-			log.CtxDebugw(ctx, "finish to receive object stream data", "info", task.Info(),
+			log.CtxDebugw(ctx, "finished to receive object stream data", "info", task.Info(),
 				"receive_size", receiveSize, "error", err)
 		} else {
-			log.CtxDebugw(ctx, "finish to receive object stream data",
-				"receive_size", receiveSize, "error", err)
+			log.CtxDebugw(ctx, "finished to receive object stream data", "receive_size", receiveSize,
+				"error", err)
 		}
 		if err != nil {
 			resp.Err = gfsperrors.MakeGfSpError(err)
@@ -168,6 +178,9 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to close upload object stream", "error", err)
 		}
+
+		close(errChan)
+		close(initCh)
 	}()
 
 	go func() {
@@ -181,26 +194,28 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 			req, err = stream.Recv()
 			if err == io.EOF {
 				if len(req.GetPayload()) != 0 {
-					pWrite.Write(req.GetPayload())
+					_, _ = pWrite.Write(req.GetPayload())
 				}
-				log.CtxDebugw(ctx, "received last upload stream data")
+				log.CtxDebug(ctx, "received last resumable upload stream data")
 				err = nil
-				pWrite.Close()
+				_ = pWrite.Close()
 				return
 			}
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to receive object ", "error", err)
 				err = ErrExceptionsStream
-				pWrite.CloseWithError(err)
+				_ = pWrite.CloseWithError(err)
+				errChan <- err
 				return
 			}
 			if !init {
 				init = true
 				task = req.GetResumableUploadObjectTask()
 				if task == nil {
-					log.CtxErrorw(ctx, "[BUG] failed to receive object, upload object task pointer dangling !!!")
+					log.CtxError(ctx, "[BUG] failed to receive resumable object, resumable upload object task pointer dangling!!!")
 					err = ErrUploadObjectDangling
-					pWrite.CloseWithError(err)
+					_ = pWrite.CloseWithError(err)
+					errChan <- err
 					return
 				}
 				ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
@@ -208,19 +223,21 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to reserve resource", "error", err)
 					err = ErrUploadExhaustResource
-					pWrite.CloseWithError(err)
+					_ = pWrite.CloseWithError(err)
+					errChan <- err
 					return
 				}
 				err = g.uploader.PreResumableUploadObject(ctx, task)
 				if err != nil {
-					log.CtxErrorw(ctx, "failed to pre upload object", "error", err)
-					pWrite.CloseWithError(err)
+					log.CtxErrorw(ctx, "failed to pre resumable upload object", "error", err)
+					_ = pWrite.CloseWithError(err)
+					errChan <- err
 					return
 				}
 				initCh <- struct{}{}
 			}
 			receiveSize += len(req.GetPayload())
-			pWrite.Write(req.GetPayload())
+			_, _ = pWrite.Write(req.GetPayload())
 		}
 	}()
 
@@ -228,14 +245,34 @@ func (g *GfSpBaseApp) GfSpResumableUploadObject(stream gfspserver.GfSpUploadServ
 	case <-ctx.Done():
 		return nil
 	case <-initCh:
-		log.CtxDebugw(ctx, "received first upload stream data")
+		log.CtxDebug(ctx, "received first resumable upload stream data")
+	case <-errChan:
+		return err
 	}
 	err = g.uploader.HandleResumableUploadObjectTask(ctx, task, pRead)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to upload object data", "error", err)
-		pWrite.CloseWithError(err)
-		return nil
+		log.CtxErrorw(ctx, "failed to resumable upload object data", "error", err)
+		_ = pWrite.CloseWithError(err)
+		return err
 	}
-	log.CtxDebugw(ctx, "succeed to upload object")
+	log.CtxDebug(ctx, "succeed to resumable upload object")
 	return nil
+}
+
+// gRPCUploadStream for mock use
+// Note: gRPCUploadStream interface is forbidden to be used in non-UT code
+//
+// nolint:unused
+//
+//go:generate mockgen -source=./upload_server.go -destination=./upload_server_mock.go -package=gfspapp
+type gRPCUploadStream interface {
+	gfspserver.GfSpUploadService_GfSpUploadObjectServer
+}
+
+// gRPCResumableUploadStream for mock use
+// Note: gRPCResumableUploadStream interface is forbidden to be used in non-UT code
+//
+// nolint:unused
+type gRPCResumableUploadStream interface {
+	gfspserver.GfSpUploadService_GfSpResumableUploadObjectServer
 }

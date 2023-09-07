@@ -76,8 +76,12 @@ type SignatureDB interface {
 	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
 	// GetAllReplicatePieceChecksum gets all piece hashes.
 	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
+	// GetAllReplicatePieceChecksumOptimized gets all piece hashes.
+	GetAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
 	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
+	// DeleteAllReplicatePieceChecksumOptimized deletes all piece hashes.
+	DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error
 }
 
 // TrafficDB defines a series of traffic interfaces.
@@ -87,10 +91,10 @@ type TrafficDB interface {
 	// it will return error, Otherwise, add a record and return nil.
 	CheckQuotaAndAddReadRecord(record *ReadRecord, quota *BucketQuota) error
 	// InitBucketTraffic init the traffic info
-	InitBucketTraffic(bucketID uint64, bucketName string, quota *BucketQuota) error
+	InitBucketTraffic(record *ReadRecord, quota *BucketQuota) error
 	// GetBucketTraffic return bucket traffic info,
 	// notice maybe return (nil, nil) while there is no bucket traffic.
-	GetBucketTraffic(bucketID uint64) (*BucketTraffic, error)
+	GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error)
 	// GetReadRecord return record list by time range.
 	GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 	// GetBucketReadRecord return bucket record list by time range.

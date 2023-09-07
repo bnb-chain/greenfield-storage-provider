@@ -411,7 +411,7 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 			var filteredGroups []*bsdb.Group
 			// filter the group member if they are expired
 			for _, group := range groups {
-				if time.Unix(group.ExpirationTime, 0).After(time.Now()) {
+				if group.ExpirationTime == 0 || time.Unix(group.ExpirationTime, 0).After(time.Now()) {
 					filteredGroups = append(filteredGroups, group)
 				}
 			}
@@ -451,4 +451,58 @@ func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint
 		}
 	}
 	return permtypes.EFFECT_UNSPECIFIED, nil
+}
+
+// GfSpListObjectPolicies list policies by object info
+func (r *MetadataModular) GfSpListObjectPolicies(ctx context.Context, req *types.GfSpListObjectPoliciesRequest) (resp *types.GfSpListObjectPoliciesResponse, err error) {
+	var (
+		object      *bsdb.Object
+		limit       int
+		policies    []*types.Policy
+		permissions []*bsdb.Permission
+	)
+
+	ctx = log.Context(ctx, req)
+	limit = int(req.Limit)
+	//if the user doesn't specify a limit, the default value is LisPoliciesDefaultLimit
+	if req.Limit == 0 {
+		limit = bsdb.LisPoliciesDefaultLimit
+	}
+
+	// If the user specifies a value exceeding LisPoliciesLimitSize, the response will only return up to LisPoliciesLimitSize policies
+	if req.Limit > bsdb.LisPoliciesLimitSize {
+		limit = bsdb.LisPoliciesLimitSize
+	}
+
+	object, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, true)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get object info", "error", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchObject
+		}
+		return nil, err
+	}
+
+	permissions, err = r.baseApp.GfBsDB().ListObjectPolicies(object.ObjectID, req.ActionType, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list policies by object info", "error", err)
+		return nil, err
+	}
+
+	policies = make([]*types.Policy, len(permissions))
+	for i, perm := range permissions {
+		policies[i] = &types.Policy{
+			PrincipalType:   perm.PrincipalType,
+			PrincipalValue:  perm.PrincipalValue,
+			ResourceType:    gnfdresource.ResourceType(gnfdresource.ResourceType_value[perm.ResourceType]),
+			ResourceId:      perm.ResourceID.String(),
+			CreateTimestamp: perm.CreateTimestamp,
+			UpdateTimestamp: perm.UpdateTimestamp,
+			ExpirationTime:  perm.ExpirationTime,
+		}
+	}
+
+	resp = &types.GfSpListObjectPoliciesResponse{Policies: policies}
+	log.CtxInfo(ctx, "succeed to list objects by object ids")
+	return resp, nil
 }

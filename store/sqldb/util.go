@@ -37,6 +37,11 @@ func TimeToYearMonth(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05")[0:7]
 }
 
+// TimestampYearMonth convert a microsecond timestamp to YYYY-MM string
+func TimestampYearMonth(ts int64) string {
+	return TimeToYearMonth(TimestampUsToTime(ts))
+}
+
 func isAlreadyExists(err error) bool {
 	return strings.HasPrefix(err.Error(), TableAlreadyExistsErrorPrefix)
 }

@@ -73,6 +73,38 @@ message ObjectDetails {
   greenfield.virtualgroup.GlobalVirtualGroup gvg = 3;
 }
 
+// VGFInfoBucket is the structure for user bucket with related vgf info
+message VGFInfoBucket {
+  // bucket_info defines the information of the bucket.
+  greenfield.storage.BucketInfo bucket_info = 1;
+  // removed defines the bucket is deleted or not
+  bool removed = 2;
+  // delete_at defines the block number when the bucket deleted.
+  int64 delete_at = 3;
+  // delete_reason defines the deleted reason of bucket
+  string delete_reason = 4;
+  // operator defines the operator address of bucket
+  string operator = 5;
+  // create_tx_hash defines the creation transaction hash of object
+  string create_tx_hash = 6;
+  // update_tx_hash defines the update transaction hash of object
+  string update_tx_hash = 7;
+  // update_at defines the block number when the object updated
+  int64 update_at = 8;
+  // update_time defines the block number when the object updated
+  int64 update_time = 9;
+  // vgf defines the vgf info
+  greenfield.virtualgroup.GlobalVirtualGroupFamily vgf = 10;
+}
+
+// StreamRecordMeta is the structure for user bucket with related vgf info
+message StreamRecordMeta {
+  // stream_records defines stream payment records of a stream account
+  greenfield.payment.StreamRecord stream_record = 1;
+  // refundable defines the payment account is refundable or not
+  bool refundable = 2;
+}
+
 // GfSpGetUserBucketsRequest is request type for the GfSpGetUserBuckets RPC method.
 message GfSpGetUserBucketsRequest {
   // account_id is the account address of user
@@ -84,7 +116,7 @@ message GfSpGetUserBucketsRequest {
 // GfSpGetUserBucketsResponse is response type for the GfSpGetUserBuckets RPC method.
 message GfSpGetUserBucketsResponse {
   // buckets defines the list of bucket
-  repeated Bucket buckets = 1;
+  repeated VGFInfoBucket buckets = 1;
 }
 
 // GfSpListObjectsByBucketNameRequest is request type for the GfSpListObjectsByBucketName RPC method
@@ -285,6 +317,8 @@ message GfSpGetEndpointBySpIDResponse {
 message GfSpGetBucketReadQuotaRequest {
   // bucket info from the greenfield chain
   greenfield.storage.BucketInfo bucket_info = 1;
+  // year_month is the query bucket quota's month, like "2023-03"
+  string year_month = 2;
 }
 
 // GfSpGetBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuota RPC method.
@@ -296,6 +330,8 @@ message GfSpGetBucketReadQuotaResponse {
   uint64 sp_free_quota_size = 3;
   // consumed_size is currently consumed size
   uint64 consumed_size = 4;
+  // free_quota_consume_siz is currently consumed size
+  uint64 free_quota_consume_size = 5;
 }
 
 // ListBucketReadRecordRequest is request type for the ListBucketReadRecord RPC method.
@@ -374,8 +410,10 @@ message Group {
   int64 update_at = 5;
   // update_time defines the timestamp when the group updated
   int64 update_time = 6;
+  // number_of_members defines how many members in this group
+  int64 number_of_members = 7;
   // removed defines the group is deleted or not
-  bool removed = 7;
+  bool removed = 8;
 }
 
 // GroupMember is the structure for group-account information
@@ -765,6 +803,78 @@ message GfSpGetUserOwnedGroupsResponse {
   repeated GroupMember groups = 1;
 }
 
+message Policy {
+  // principal_type defines the type of principal
+  int32 principal_type = 1;
+  // principal_value defines the value of principal
+  string principal_value = 2;
+  // resource_type defines the type of resource that grants permission for
+  greenfield.resource.ResourceType resource_type = 3;
+  // resource_id defines the bucket/object/group id of the resource that grants permission for
+  string resource_id = 4;
+  // create_timestamp defines the create time of permission
+  int64 create_timestamp = 5;
+  // update_timestamp defines the update time of permission
+  int64 update_timestamp = 6;
+  // expiration_time defines the expiration time of permission
+  int64 expiration_time = 7;
+}
+
+// GfSpListObjectPoliciesRequest is request type for the GfSpListObjectPolicies RPC method
+message GfSpListObjectPoliciesRequest {
+  // object_name defines the name of object
+  string object_name = 1;
+  // bucket_name defines the name of bucket
+  string bucket_name = 2;
+  // action_type defines the requested action type of permission
+  greenfield.permission.ActionType action_type = 3;
+  // limit sets the limit of keys returned in the response
+  uint32 limit = 4;
+  // start_after is where you want to start listing from
+  uint64 start_after = 5;
+}
+
+// GfSpListObjectPoliciesResponse is response type for the GfSpListObjectPolicies RPC method
+message GfSpListObjectPoliciesResponse {
+  repeated Policy policies = 1;
+}
+
+// GfSpListPaymentAccountStreamsRequest is request type for the GfSpListPaymentAccountStreams RPC method
+message GfSpListPaymentAccountStreamsRequest {
+  // payment_account defines the address of payment account
+  string payment_account = 1;
+}
+
+// GfSpListPaymentAccountStreamsResponse is response type for the GfSpListPaymentAccountStreams RPC method
+message GfSpListPaymentAccountStreamsResponse {
+  // buckets defines the list of bucket
+  repeated Bucket buckets = 1;
+}
+
+// GfSpListUserPaymentAccountsRequest is request type for the GfSpListUserPaymentAccounts RPC method
+message GfSpListUserPaymentAccountsRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+}
+
+// GfSpListUserPaymentAccountsResponse is response type for the GfSpListUserPaymentAccounts RPC method
+message GfSpListUserPaymentAccountsResponse {
+  // stream_records defines stream payment records of a stream account
+  repeated StreamRecordMeta stream_records = 1;
+}
+
+// GfSpListGroupsByIDsRequest is request type for the GfSpListGroupsByIDs RPC method
+message GfSpListGroupsByIDsRequest {
+  // group_ids is the list of unique identifier for groups
+  repeated uint64 group_ids = 1;
+}
+
+// GfSpListGroupsByIDsResponse is response type for the GfSpListGroupsByIDs RPC method.
+message GfSpListGroupsByIDsResponse {
+  // groups defines the information of a group map
+  map<uint64, Group> groups = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -804,4 +914,8 @@ service GfSpMetadataService {
   rpc GfSpGetUserGroups(GfSpGetUserGroupsRequest) returns (GfSpGetUserGroupsResponse) {}
   rpc GfSpGetGroupMembers(GfSpGetGroupMembersRequest) returns (GfSpGetGroupMembersResponse) {}
   rpc GfSpGetUserOwnedGroups(GfSpGetUserOwnedGroupsRequest) returns (GfSpGetUserOwnedGroupsResponse) {}
+  rpc GfSpListObjectPolicies(GfSpListObjectPoliciesRequest) returns (GfSpListObjectPoliciesResponse) {}
+  rpc GfSpListPaymentAccountStreams(GfSpListPaymentAccountStreamsRequest) returns (GfSpListPaymentAccountStreamsResponse) {}
+  rpc GfSpListUserPaymentAccounts(GfSpListUserPaymentAccountsRequest) returns (GfSpListUserPaymentAccountsResponse) {}
+  rpc GfSpListGroupsByIDs(GfSpListGroupsByIDsRequest) returns (GfSpListGroupsByIDsResponse) {}
 }

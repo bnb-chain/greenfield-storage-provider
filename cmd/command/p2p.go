@@ -9,9 +9,10 @@ import (
 )
 
 var numberFlag = &cli.IntFlag{
-	Name:  "n",
-	Usage: "The number of key pairs",
-	Value: 1,
+	Name:     "n",
+	Usage:    "The number of key pairs",
+	Value:    1,
+	Required: true,
 }
 
 var P2PCreateKeysCmd = &cli.Command{

@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -14,10 +13,12 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 const (
@@ -165,8 +166,8 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	nonceInt, err := strconv.Atoi(nonce)
-	if err != nil || int(nextNonce) != nonceInt { // nonce must be the same as NextNonce
+	nonceInt, err := util.StringToInt32(nonce)
+	if err != nil || nextNonce != nonceInt { // nonce must be the same as NextNonce
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey due to bad nonce")
 		err = ErrInvalidRegNonceHeader
 		return
@@ -191,7 +192,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, account, domain, currentNonce, int32(nonceInt), userPublicKey, expiryDate.UnixMilli())
+	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKey(ctx, account, domain, currentNonce, nonceInt, userPublicKey, expiryDate.UnixMilli())
 	if err != nil {
 		log.Errorw("failed to updateUserPublicKey when saving key")
 		return
@@ -262,7 +263,7 @@ func VerifyPersonalSignature(signedMsg string, sigString string) (sdk.AccAddress
 	}
 
 	// check signature consistent
-	addr, _, err := RecoverAddr(realMsgToSign, signature)
+	addr, _, err := commonhash.RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.Errorw("failed to recover address")
 		return nil, ErrSignature
@@ -296,7 +297,7 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 
 	var found = false
 	for _, spInfoMatches := range spsMatch {
-		if len(patternMatches) < 4 {
+		if len(spInfoMatches) < 4 {
 			return ErrSignedMsgNotMatchTemplate
 		}
 		spAddress := spInfoMatches[1]

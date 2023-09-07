@@ -34,9 +34,7 @@ func DefaultDownloaderOptions(downloader *DownloadModular, cfg *gfspconfig.GfSpC
 	if cfg.Parallel.ChallengePieceParallelPerNode == 0 {
 		cfg.Parallel.ChallengePieceParallelPerNode = DefaultChallengePieceParallelPerNode
 	}
-	if cfg.Bucket.FreeQuotaPerBucket == 0 {
-		cfg.Bucket.FreeQuotaPerBucket = DefaultBucketFreeQuota
-	}
+
 	cache, err := lru.New(cfg.Parallel.DownloadObjectParallelPerNode)
 	if err != nil {
 		return err
@@ -45,6 +43,5 @@ func DefaultDownloaderOptions(downloader *DownloadModular, cfg *gfspconfig.GfSpC
 	downloader.pieceCache = cache
 	downloader.downloadParallel = int64(cfg.Parallel.DownloadObjectParallelPerNode)
 	downloader.challengeParallel = int64(cfg.Parallel.ChallengePieceParallelPerNode)
-	downloader.bucketFreeQuota = cfg.Bucket.FreeQuotaPerBucket
 	return nil
 }

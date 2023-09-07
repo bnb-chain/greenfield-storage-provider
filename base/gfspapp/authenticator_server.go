@@ -58,9 +58,11 @@ func (g *GfSpBaseApp) GetAuthNonce(ctx context.Context, req *gfspserver.GetAuthN
 
 // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
 func (g *GfSpBaseApp) UpdateUserPublicKey(ctx context.Context, req *gfspserver.UpdateUserPublicKeyRequest) (*gfspserver.UpdateUserPublicKeyResponse, error) {
-	log.CtxDebugw(ctx, "begin to update user public key", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.UserPublicKey)
+	log.CtxDebugw(ctx, "begin to update user public key", "user", req.GetAccountId(), "domain", req.GetDomain(),
+		"public_key", req.UserPublicKey)
 	resp, err := g.authenticator.UpdateUserPublicKey(ctx, req.AccountId, req.Domain, req.CurrentNonce, req.Nonce, req.UserPublicKey, req.ExpiryDate)
-	log.CtxDebugw(ctx, "finish to update user public key", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
+	log.CtxDebugw(ctx, "finish to update user public key", "user", req.GetAccountId(), "domain", req.GetDomain(),
+		"error", err)
 	return &gfspserver.UpdateUserPublicKeyResponse{
 		Err:    gfsperrors.MakeGfSpError(err),
 		Result: resp,
@@ -69,9 +71,11 @@ func (g *GfSpBaseApp) UpdateUserPublicKey(ctx context.Context, req *gfspserver.U
 
 // VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 func (g *GfSpBaseApp) VerifyGNFD1EddsaSignature(ctx context.Context, req *gfspserver.VerifyGNFD1EddsaSignatureRequest) (*gfspserver.VerifyGNFD1EddsaSignatureResponse, error) {
-	log.CtxDebugw(ctx, "begin to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "off_chain_sig", req.OffChainSig, "real_msg_to_sign", req.RealMsgToSign)
+	log.CtxDebugw(ctx, "begin to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(),
+		"off_chain_sig", req.OffChainSig, "real_msg_to_sign", req.RealMsgToSign)
 	resp, err := g.authenticator.VerifyGNFD1EddsaSignature(ctx, req.AccountId, req.Domain, req.OffChainSig, req.RealMsgToSign)
-	log.CtxDebugw(ctx, "finish to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
+	log.CtxDebugw(ctx, "finish to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(),
+		"error", err)
 	return &gfspserver.VerifyGNFD1EddsaSignatureResponse{
 		Err:    gfsperrors.MakeGfSpError(err),
 		Result: resp,

@@ -2,15 +2,11 @@ package gater
 
 import (
 	"encoding/xml"
-	"errors"
 	"net/http"
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -21,24 +17,23 @@ import (
 // getBucketReadQuotaHandler handles the get bucket read quota request.
 func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                   error
-		reqCtx                *RequestContext
-		authenticated         bool
-		bucketInfo            *storagetypes.BucketInfo
-		charge, free, consume uint64
-		bucketTraffic         *spdb.BucketTraffic
+		err                                 error
+		reqCtx                              *RequestContext
+		authenticated                       bool
+		bucketInfo                          *storagetypes.BucketInfo
+		charge, free, consume, free_consume uint64
 	)
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
@@ -68,26 +63,13 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	bucketTraffic, err = g.baseApp.GfSpDB().GetBucketTraffic(
-		bucketInfo.Id.Uint64())
-	// if the traffic table has not been created and initialized yet, return the chain info
-	if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
-		free, err = g.baseApp.Consensus().QuerySPFreeQuota(reqCtx.Context(), g.baseApp.OperatorAddress())
-		if err != nil {
-			err = ErrConsensusWithDetail("QuerySPFreeQuota error: " + err.Error())
-		}
-		charge = bucketInfo.GetChargedReadQuota()
-		log.CtxDebugw(reqCtx.Context(), "fail to get traffic info in db, return the chain meta", "free_quota", free, "charged_quota", charge)
-		consume = 0
-	} else {
-		// if the traffic table has been created, return the db info from meta service
-		charge, free, consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
-			reqCtx.Context(), bucketInfo)
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "error", err)
-			return
-		}
+	charge, free, consume, free_consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
+		reqCtx.Context(), bucketInfo, reqCtx.vars["year_month"])
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "error", err)
+		return
 	}
+
 	var xmlInfo = struct {
 		XMLName             xml.Name `xml:"GetReadQuotaResult"`
 		Version             string   `xml:"version,attr"`
@@ -96,6 +78,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		ReadQuotaSize       uint64   `xml:"ReadQuotaSize"`
 		SPFreeReadQuotaSize uint64   `xml:"SPFreeReadQuotaSize"`
 		ReadConsumedSize    uint64   `xml:"ReadConsumedSize"`
+		FreeConsumedSize    uint64   `xml:"FreeConsumedSize"`
 	}{
 		Version:             GnfdResponseXMLVersion,
 		BucketName:          bucketInfo.GetBucketName(),
@@ -103,6 +86,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		ReadQuotaSize:       charge,
 		SPFreeReadQuotaSize: free,
 		ReadConsumedSize:    consume,
+		FreeConsumedSize:    free_consume,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
@@ -136,12 +120,12 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		reqCtx.Cancel()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHttpCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
-			reqCtx.SetHttpCode(http.StatusOK)
+			reqCtx.SetHTTPCode(http.StatusOK)
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}

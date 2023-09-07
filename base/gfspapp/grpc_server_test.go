@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
@@ -55,7 +57,7 @@ func TestGetIPFromGRPCContext(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			addr := GetRPCRemoteAddress(tt.ctx)
+			addr := util.GetRPCRemoteAddress(tt.ctx)
 			assert.Equal(t, tt.addr, addr)
 		})
 	}

@@ -14,6 +14,7 @@ func (m *GfSpLimit) GetMemoryLimit() int64 {
 func (m *GfSpLimit) GetFDLimit() int {
 	return int(m.GetFd())
 }
+
 func (m *GfSpLimit) GetConnLimit(direction rcmgr.Direction) int {
 	if direction == rcmgr.DirOutbound {
 		return int(m.GetConnsOutbound())
@@ -79,9 +80,6 @@ func (m *GfSpLimit) NotLess(x rcmgr.Limit) bool {
 	if m.GetTaskLimit(rcmgr.ReserveTaskPriorityLow) < x.GetTaskLimit(rcmgr.ReserveTaskPriorityLow) {
 		return false
 	}
-	if m.GetTaskTotalLimit() < x.GetTaskTotalLimit() {
-		return false
-	}
 	return true
 }
 
@@ -139,9 +137,6 @@ func (m *GfSpLimit) Equal(x rcmgr.Limit) bool {
 		return false
 	}
 	if m.GetTaskLimit(rcmgr.ReserveTaskPriorityLow) != x.GetTaskLimit(rcmgr.ReserveTaskPriorityLow) {
-		return false
-	}
-	if m.GetTaskTotalLimit() != x.GetTaskTotalLimit() {
 		return false
 	}
 	return true

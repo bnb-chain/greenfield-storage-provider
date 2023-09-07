@@ -18,10 +18,11 @@ var _ coretask.ApprovalMigrateBucketTask = &GfSpMigrateBucketApprovalTask{}
 var _ coretask.ApprovalCreateObjectTask = &GfSpCreateObjectApprovalTask{}
 var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
 
-func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(
-	account string, bucket *storagetypes.MsgCreateBucket, priority coretask.TPriority) {
+func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(account string, bucket *storagetypes.MsgCreateBucket,
+	fingerprint []byte, priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.Fingerprint = fingerprint
 	m.GetTask().SetCreateTime(time.Now().Unix())
 	m.GetTask().SetUpdateTime(time.Now().Unix())
 	m.SetUserAddress(account)
@@ -30,10 +31,7 @@ func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(
 }
 
 func (m *GfSpCreateBucketApprovalTask) Key() coretask.TKey {
-	return GfSpCreateBucketApprovalTaskKey(
-		m.GetCreateBucketInfo().GetBucketName(),
-		m.GetUserAddress(),
-		int32(m.GetCreateBucketInfo().GetVisibility()))
+	return GfSpCreateBucketApprovalTaskKey(m.GetCreateBucketInfo().GetBucketName(), m.GetUserAddress(), m.GetFingerprint())
 }
 
 func (m *GfSpCreateBucketApprovalTask) Type() coretask.TType {
@@ -306,12 +304,11 @@ func (m *GfSpMigrateBucketApprovalTask) SetUserAddress(address string) {
 	m.GetTask().SetUserAddress(address)
 }
 
-func (m *GfSpCreateObjectApprovalTask) InitApprovalCreateObjectTask(
-	account string,
-	object *storagetypes.MsgCreateObject,
-	priority coretask.TPriority) {
+func (m *GfSpCreateObjectApprovalTask) InitApprovalCreateObjectTask(account string, object *storagetypes.MsgCreateObject,
+	fingerprint []byte, priority coretask.TPriority) {
 	m.Reset()
 	m.Task = &GfSpTask{}
+	m.Fingerprint = fingerprint
 	m.GetTask().SetCreateTime(time.Now().Unix())
 	m.GetTask().SetUpdateTime(time.Now().Unix())
 	m.SetUserAddress(account)
@@ -324,7 +321,7 @@ func (m *GfSpCreateObjectApprovalTask) Key() coretask.TKey {
 		m.GetCreateObjectInfo().GetBucketName(),
 		m.GetCreateObjectInfo().GetObjectName(),
 		m.GetUserAddress(),
-		int32(m.GetCreateObjectInfo().GetVisibility()))
+		m.Fingerprint)
 }
 
 func (m *GfSpCreateObjectApprovalTask) Type() coretask.TType {

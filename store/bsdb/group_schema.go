@@ -43,6 +43,11 @@ type GroupMeta struct {
 	ExpirationTime int64 `gorm:"column:expiration_time"`
 }
 
+type GroupCount struct {
+	GroupID common.Hash `gorm:"column:group_id"`
+	Count   int64       `gorm:"column:count"`
+}
+
 // TableName is used to set Group table name in database
 func (g *Group) TableName() string {
 	return GroupTableName

@@ -79,37 +79,48 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	return nil
 }
 
-func getUpdatedConsumedQuota(record *corespdb.ReadRecord, freeQuota, freeConsumedQuota, totalConsumeQuota, chargedQuota uint64) (uint64, uint64, error) {
-	recordQuotaCost := record.ReadSize
-	needCheckChainQuota := true
-	freeQuotaRemain := freeQuota - freeConsumedQuota
-	// if remain free quota more than 0, consume free quota first
-	if freeQuotaRemain > 0 && recordQuotaCost < freeQuotaRemain {
-		// if free quota is enough, no need to check charged quota
-		totalConsumeQuota += recordQuotaCost
-		freeConsumedQuota += recordQuotaCost
-		needCheckChainQuota = false
-	}
-	// if free quota is not enough, check the charged quota
-	if needCheckChainQuota {
-		if totalConsumeQuota+recordQuotaCost > chargedQuota+freeQuota {
-			return 0, 0, ErrCheckQuotaEnough
-		}
-		totalConsumeQuota += recordQuotaCost
+// getUpdatedConsumedQuota compute the updated quota of traffic table by the incoming read cost and the newest record.
+// it returns the updated consumed free quota,consumed charged quota and remained free quota
+func getUpdatedConsumedQuota(recordQuotaCost, freeQuotaRemain, consumeFreeQuota, consumeChargedQuota, chargedQuota uint64) (uint64, uint64, uint64, bool, error) {
+	// if remain free quota enough, just consume free quota
+	needUpdateFreeQuota := false
+	if recordQuotaCost < freeQuotaRemain {
+		needUpdateFreeQuota = true
+		consumeFreeQuota += recordQuotaCost
+		freeQuotaRemain -= recordQuotaCost
+	} else {
+		// if free remain quota exist, consume all the free remain quota first
 		if freeQuotaRemain > 0 {
-			freeConsumedQuota += freeQuotaRemain
+			if freeQuotaRemain+chargedQuota < recordQuotaCost {
+				return 0, 0, 0, false, ErrCheckQuotaEnough
+			}
+			needUpdateFreeQuota = true
+			consumeFreeQuota += freeQuotaRemain
+			// update the consumed charge quota by remained free quota
+			// if read cost 5G, and the remained free quota is 2G, consumed charge quota should be 3G and remained free quota should be 0
+			consumeQuota := recordQuotaCost - freeQuotaRemain
+			consumeChargedQuota += consumeQuota
+			freeQuotaRemain = uint64(0)
+			log.CtxDebugw(context.Background(), "free quota has been exhausted", "consumed", consumeFreeQuota, "remained", freeQuotaRemain)
+		} else {
+			// free remain quota is zero, no need to consider the free quota
+			// the consumeChargedQuota plus record cost need to be more than total charged quota
+			if chargedQuota < consumeChargedQuota+recordQuotaCost {
+				return 0, 0, 0, false, ErrCheckQuotaEnough
+			}
+			consumeChargedQuota += recordQuotaCost
 		}
 	}
-
-	return freeConsumedQuota, totalConsumeQuota, nil
+	return consumeFreeQuota, consumeChargedQuota, freeQuotaRemain, needUpdateFreeQuota, nil
 }
 
 // updateConsumedQuota update the consumed quota of BucketTraffic table in the transaction way
 func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
+	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var bucketTraffic BucketTrafficTable
 		var err error
-		if err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("bucket_id = ?", record.BucketID).Find(&bucketTraffic).Error; err != nil {
+		if err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("bucket_id = ? and month = ?", record.BucketID, yearMonth).First(&bucketTraffic).Error; err != nil {
 			return fmt.Errorf("failed to query bucket traffic table: %v", err)
 		}
 
@@ -120,61 +131,99 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 					ChargedQuotaSize: quota.ChargedQuotaSize,
 					ModifiedTime:     time.Now(),
 				})
+
 			if result.Error != nil {
 				return fmt.Errorf("failed to update bucket traffic table: %s", result.Error)
 			}
-
 			if result.RowsAffected != 1 {
 				return fmt.Errorf("update traffic of %s has affected more than one rows %d, "+
 					"update charged quota %d", bucketTraffic.BucketName, result.RowsAffected, quota.ChargedQuotaSize)
 			}
+			log.CtxDebugw(context.Background(), "updated quota", "charged quota", quota.ChargedQuotaSize)
 		}
 
-		// compute the new consumed quota size to be updated
-		updatedReadConsumedSize, updatedFreeConsumedSize, err := getUpdatedConsumedQuota(record, bucketTraffic.FreeQuotaSize, bucketTraffic.FreeQuotaConsumedSize,
-			bucketTraffic.ReadConsumedSize, bucketTraffic.ChargedQuotaSize)
+		// compute the new consumed quota size to be updated by the newest record and the read cost size
+		updatedConsumedFreeQuota, updatedConsumedChargedQuota, updatedRemainedFreeQuota, needUpdateFreeQuota, err := getUpdatedConsumedQuota(record.ReadSize,
+			bucketTraffic.FreeQuotaSize, bucketTraffic.FreeQuotaConsumedSize,
+			bucketTraffic.ReadConsumedSize, quota.ChargedQuotaSize)
 		if err != nil {
 			return err
 		}
 
-		if err = tx.Model(&bucketTraffic).
-			Updates(BucketTrafficTable{
-				ReadConsumedSize:      updatedReadConsumedSize,
-				FreeQuotaConsumedSize: updatedFreeConsumedSize,
+		if needUpdateFreeQuota {
+			// it is needed to add select items if you need to update a value to zero in gorm db
+			err = tx.Model(&bucketTraffic).
+				Select("read_consumed_size", "free_quota_consumed_size", "free_quota_size", "modified_time").Updates(BucketTrafficTable{
+				ReadConsumedSize:      updatedConsumedChargedQuota,
+				FreeQuotaConsumedSize: updatedConsumedFreeQuota,
+				FreeQuotaSize:         updatedRemainedFreeQuota,
 				ModifiedTime:          time.Now(),
-			}).Error; err != nil {
+			}).Error
+		} else {
+			err = tx.Model(&bucketTraffic).Updates(BucketTrafficTable{
+				ReadConsumedSize: updatedConsumedChargedQuota,
+				ModifiedTime:     time.Now(),
+			}).Error
+		}
+		if err != nil {
 			return fmt.Errorf("failed to update bucket traffic table: %v", err)
 		}
 
 		return nil
 	})
 
+	if err != nil {
+		log.CtxErrorw(context.Background(), "updated quota transaction fail", "error", err)
+	}
 	return err
 }
 
 // InitBucketTraffic init the bucket traffic table
-func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *corespdb.BucketQuota) error {
-	var bucketTraffic BucketTrafficTable
-	result := s.db.Where("bucket_id = ?", bucketID).First(&bucketTraffic)
-	if result.Error != nil {
-		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return result.Error
-		}
-	} else {
-		return nil
-	}
+func (s *SpDBImpl) InitBucketTraffic(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
+	bucketID := record.BucketID
+	bucketName := record.BucketName
+	yearMonth := TimestampYearMonth(record.ReadTimestampUs)
 	// if not created, init the bucket id in transaction
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		insertBucketTraffic := &BucketTrafficTable{
-			BucketID:              bucketID,
-			FreeQuotaSize:         quota.FreeQuotaSize,
-			FreeQuotaConsumedSize: 0,
-			BucketName:            bucketName,
-			ReadConsumedSize:      0,
-			ChargedQuotaSize:      quota.ChargedQuotaSize,
-			ModifiedTime:          time.Now(),
-		}
+		var insertBucketTraffic *BucketTrafficTable
+		var bucketTraffic BucketTrafficTable
+		result := s.db.Where("bucket_id = ?", bucketID).First(&bucketTraffic)
+		if result.Error != nil {
+			if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				return result.Error
+			} else {
+				// If the record of this bucket id does not exist, then the free quota consumed is initialized to 0
+				insertBucketTraffic = &BucketTrafficTable{
+					BucketID:              bucketID,
+					Month:                 yearMonth,
+					FreeQuotaSize:         quota.FreeQuotaSize,
+					FreeQuotaConsumedSize: 0,
+					BucketName:            bucketName,
+					ReadConsumedSize:      0,
+					ChargedQuotaSize:      quota.ChargedQuotaSize,
+					ModifiedTime:          time.Now(),
+				}
+			}
+		} else {
+			// If the record of this bucket id already exist, then read the record of the newest month
+			// and use the free quota consumed of this record to init free quota item
+			var newestTraffic BucketTrafficTable
+			queryErr := s.db.Where("bucket_id = ?", bucketID).Order("month DESC").Limit(1).Find(&newestTraffic).Error
+			if queryErr != nil {
+				return queryErr
+			}
 
+			insertBucketTraffic = &BucketTrafficTable{
+				BucketID:              bucketID,
+				Month:                 yearMonth,
+				FreeQuotaSize:         newestTraffic.FreeQuotaSize,
+				FreeQuotaConsumedSize: 0,
+				BucketName:            bucketName,
+				ReadConsumedSize:      0,
+				ChargedQuotaSize:      quota.ChargedQuotaSize,
+				ModifiedTime:          time.Now(),
+			}
+		}
 		result = tx.Create(insertBucketTraffic)
 		if result.Error != nil && MysqlErrCode(result.Error) != ErrDuplicateEntryCode {
 			return fmt.Errorf("failed to create bucket traffic table: %s", result.Error)
@@ -189,8 +238,9 @@ func (s *SpDBImpl) InitBucketTraffic(bucketID uint64, bucketName string, quota *
 	return err
 }
 
-// GetBucketTraffic return bucket traffic info
-func (s *SpDBImpl) GetBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTraffic, err error) {
+// GetBucketTraffic return bucket traffic info by the year and month info
+// year_month is the query bucket quota's month, like "2023-03"
+func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (traffic *corespdb.BucketTraffic, err error) {
 	var (
 		result      *gorm.DB
 		queryReturn BucketTrafficTable
@@ -209,7 +259,7 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTr
 			time.Since(startTime).Seconds())
 	}()
 
-	result = s.db.Where("bucket_id = ?", bucketID).First(&queryReturn)
+	result = s.db.Where("bucket_id = ? and month = ?", bucketID, yearMonth).First(&queryReturn)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		err = result.Error
 		return nil, err
@@ -218,8 +268,10 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTr
 		err = fmt.Errorf("failed to query bucket traffic table: %s", result.Error)
 		return nil, err
 	}
+
 	return &corespdb.BucketTraffic{
 		BucketID:              queryReturn.BucketID,
+		YearMonth:             queryReturn.Month,
 		FreeQuotaSize:         queryReturn.FreeQuotaSize,
 		FreeQuotaConsumedSize: queryReturn.FreeQuotaConsumedSize,
 		BucketName:            queryReturn.BucketName,

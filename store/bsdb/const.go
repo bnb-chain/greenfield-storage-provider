@@ -16,6 +16,10 @@ const (
 	ListObjectsLimitSize = 1000
 	// ListGroupsLimitSize defines the default limit of GetUserGroups response
 	ListGroupsLimitSize = 1000
+	// 	LisPoliciesDefaultLimit defines the default size of policies response
+	LisPoliciesDefaultLimit = 50
+	// LisPoliciesLimitSize defines the max limit of policies response
+	LisPoliciesLimitSize = 1000
 )
 
 // define table name constant of block syncer db
@@ -38,8 +42,8 @@ const (
 	PrefixTreeTableName = "slash_prefix_tree_nodes"
 	// GlobalVirtualGroupFamilyTableName defines the name of global virtual group family table
 	GlobalVirtualGroupFamilyTableName = "global_virtual_group_families"
-	// LocalVirtualGroupFamilyTableName defines the name of local virtual group table
-	LocalVirtualGroupFamilyTableName = "local_virtual_groups"
+	// LocalVirtualGroupTableName defines the name of local virtual group table
+	LocalVirtualGroupTableName = "local_virtual_groups"
 	// GlobalVirtualGroupTableName defines the name of global virtual group table
 	GlobalVirtualGroupTableName = "global_virtual_groups"
 	// EventMigrationTableName defines the name of event migrate bucket table
@@ -56,13 +60,16 @@ const (
 	EventSwapOutTableName = "event_swap_out"
 	// ObjectIDMapTableName defines the name of object id map table
 	ObjectIDMapTableName = "object_id_map"
-	// EventCancelSwapOutTableName defines the name of event cancel swap out table
 	// EventCompleteSwapOutTableName defines the name of event swap out complete table
 	EventCompleteSwapOutTableName = "event_swap_out_complete"
 	// EventCancelSwapOutTableName defines the name of event swap out cancel table
 	EventCancelSwapOutTableName = "event_cancel_swap_out"
 	// StorageProviderTableName defines the name of storage providers table
 	StorageProviderTableName = "storage_providers"
+	// StreamRecordTableName stream records of payment info
+	StreamRecordTableName = "stream_records"
+	// PaymentAccountTableName defines payment account info
+	PaymentAccountTableName = "payment_accounts"
 )
 
 // define the list objects const
