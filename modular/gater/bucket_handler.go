@@ -169,7 +169,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	}
 	maxRecordNum, err = util.StringToInt64(reqCtx.vars["max_records"])
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse max record num query", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to parse max_records num query", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
@@ -193,13 +193,13 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		ReadSize           uint64   `xml:"ReadSize"`
 	}
 	xmlRecords := make([]ReadRecord, 0)
-	for _, r := range records {
+	for _, record := range records {
 		xmlRecords = append(xmlRecords, ReadRecord{
-			ObjectName:         r.GetObjectName(),
-			ObjectID:           util.Uint64ToString(r.GetObjectId()),
-			ReadAccountAddress: r.GetAccountAddress(),
-			ReadTimestampUs:    r.GetTimestampUs(),
-			ReadSize:           r.GetReadSize(),
+			ObjectName:         record.GetObjectName(),
+			ObjectID:           util.Uint64ToString(record.GetObjectId()),
+			ReadAccountAddress: record.GetAccountAddress(),
+			ReadTimestampUs:    record.GetTimestampUs(),
+			ReadSize:           record.GetReadSize(),
 		})
 	}
 	var xmlInfo = struct {

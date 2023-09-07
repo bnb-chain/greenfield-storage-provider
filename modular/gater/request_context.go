@@ -75,7 +75,6 @@ func NewRequestContext(r *http.Request, g *GateModular) (*RequestContext, error)
 		vars:       vars,
 		startTime:  time.Now(),
 	}
-	log.Infof("routerName is %s", routerName)
 	if slices.Contains(skipAuthRouterNames, routerName) {
 		return reqCtx, nil
 	}
@@ -216,7 +215,7 @@ func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (
 	// check signature consistent
 	addr, _, err := commonhash.RecoverAddr(realMsgToSign, signature)
 	if err != nil {
-		log.CtxErrorw(r.ctx, "failed to recover address")
+		log.CtxError(r.ctx, "failed to recover address")
 		return nil, ErrRequestConsistent
 	}
 	return addr, nil
@@ -234,7 +233,7 @@ func (r *RequestContext) verifyTaskSignature(taskMsgBytes []byte, taskSignature 
 		return nil, err
 	}
 	if !secp256k1.VerifySignature(pk.Bytes(), taskMsgBytes, taskSignature[:len(taskSignature)-1]) {
-		log.CtxErrorw(r.ctx, "failed to verify task signature")
+		log.CtxError(r.ctx, "failed to verify task signature")
 		return nil, err
 	}
 	return addr, nil
@@ -255,7 +254,7 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 
 	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
-		log.Errorf("failed to verify signature for GNFD1-Eddsa", "error", err)
+		log.Errorw("failed to verify signature for GNFD1-Eddsa", "error", err)
 		return nil, err
 	} else {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
@@ -275,7 +274,7 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1AuthForPreSignedURL(r.request)
 	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
 	if err != nil {
-		log.Errorf("failed to verify off chain signature", "error", err)
+		log.Errorw("failed to verify off chain signature", "error", err)
 		return nil, err
 	} else {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
