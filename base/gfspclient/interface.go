@@ -131,6 +131,7 @@ type MetadataAPI interface {
 	ListPaymentAccountStreams(ctx context.Context, paymentAccount string, opts ...grpc.DialOption) ([]*types.Bucket, error)
 	ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.StreamRecordMeta, error)
 	ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error)
+	GetSPMigratingBucketNumber(ctx context.Context, spID uint32, opts ...grpc.DialOption) (uint64, error)
 }
 
 // P2PAPI for mock use

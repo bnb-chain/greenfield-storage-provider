@@ -629,6 +629,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: listGroupsByIDsRouterName,
 		},
+		{
+			name:             "Get the latest active migration bucket by specific sp",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, GetSPMigratingBucketNumberQuery, SpIDQuery),
+			shouldMatch:      true,
+			wantedRouterName: getSPMigratingBucketNumberRouterName,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

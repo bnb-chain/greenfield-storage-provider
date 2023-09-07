@@ -125,6 +125,8 @@ const (
 	ListObjectsInGVGQuery = "objects-gvg"
 	// ListMigrateBucketEventsQuery defines list migrate bucket events, which is used to route request
 	ListMigrateBucketEventsQuery = "migrate-bucket-events"
+	// GetSPMigratingBucketNumberQuery defines get the latest active migrating bucket by specific sp, which is used to route request
+	GetSPMigratingBucketNumberQuery = "migrate-bucket-count"
 	// ListSwapOutEventsQuery defines list swap out events, which is used to route request
 	ListSwapOutEventsQuery = "swap-out-events"
 	// ListSpExitEventsQuery defines list swap out events, which is used to route request

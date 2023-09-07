@@ -87,7 +87,7 @@ type Metadata interface {
 	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
 	// ListMigrateBucketEvents list migrate bucket events
-	ListMigrateBucketEvents(blockID uint64, spID uint32) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error)
+	ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error)
 	// GetMigrateBucketEventByBucketID get migrate bucket event by bucket id
 	GetMigrateBucketEventByBucketID(bucketID common.Hash) (*EventCompleteMigrationBucket, error)
 	// ListSwapOutEvents list swap out events

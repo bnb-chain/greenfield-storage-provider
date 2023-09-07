@@ -69,6 +69,7 @@ const (
 	listUserPaymentAccountsRouterName              = "ListUserPaymentAccounts"
 	listPaymentAccountStreamsRouterName            = "ListPaymentAccountStreams"
 	listGroupsByIDsRouterName                      = "ListGroupsByIDs"
+	getSPMigratingBucketNumberRouterName           = "GetSPMigratingBucketNumber"
 )
 
 const (
@@ -270,6 +271,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// Get Sp info by operator address
 		router.Path("/").Name(getSPInfoRouterName).Methods(http.MethodGet).Queries(GetSPInfoQuery, "").HandlerFunc(g.getSPInfoHandler)
+
+		// Get SP Migrate Bucket Number
+		router.Path("/").Name(getSPMigratingBucketNumberRouterName).Methods(http.MethodGet).Queries(GetSPMigratingBucketNumberQuery, "").HandlerFunc(g.getSPMigratingBucketNumberHandler)
 	}
 
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
