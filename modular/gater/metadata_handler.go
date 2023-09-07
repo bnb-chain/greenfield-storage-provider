@@ -2684,6 +2684,60 @@ func (g *GateModular) listGroupsByIDsHandler(w http.ResponseWriter, r *http.Requ
 	w.Write(respBytes)
 }
 
+// getSPMigratingBucketNumberHandler get the latest active migrating bucket by specific sp
+func (g *GateModular) getSPMigratingBucketNumberHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		respBytes   []byte
+		reqCtx      *RequestContext
+		requestSpID string
+		spID        uint32
+		count       uint64
+		queryParams url.Values
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to get the latest active migrating bucket by specific sp", reqCtx.String())
+			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestSpID = queryParams.Get(SpIDQuery)
+
+	if spID, err = util.StringToUint32(requestSpID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestSpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	count, err = g.baseApp.GfSpClient().GetSPMigratingBucketNumber(reqCtx.Context(), spID)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get the latest active migrating bucket by specific sp", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpGetSPMigratingBucketNumberResponse{Count: count}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get the latest active migrating bucket by specific sp", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
 // processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
 func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)

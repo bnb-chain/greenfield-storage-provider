@@ -24,7 +24,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 	}
 	var sendSize = 0
 	defer func() {
-		conn.Close()
+		_ = conn.Close()
 		if task != nil {
 			log.CtxDebugw(ctx, "succeed to send payload data", "info", task.Info(),
 				"send_size", sendSize)
@@ -47,9 +47,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_read_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		sendSize += n
 		if streamErr == io.EOF {
-			log.Info("weijfweneni")
 			if n != 0 {
-				log.Info("12312203")
 				req := &gfspserver.GfSpUploadObjectRequest{
 					UploadObjectTask: task.(*gfsptask.GfSpUploadObjectTask),
 					Payload:          buf[0:n],

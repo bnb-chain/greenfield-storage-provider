@@ -88,7 +88,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 
 	log.Debugw("replicate task info", "task_sps", rTask.GetSecondaryEndpoints())
 
-	doReplicateECPiece := func(segIdx uint32, data [][]byte, errChan chan error) {
+	doReplicateECPiece := func(ctx context.Context, segIdx uint32, data [][]byte, errChan chan error) {
 		log.Debug("start to replicate ec piece")
 		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate ec piece", "sp", sp)
@@ -104,7 +104,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		wg.Wait()
 		log.Debug("finish to replicate ec piece")
 	}
-	doReplicateSegmentPiece := func(segIdx uint32, data []byte, errChan chan error) {
+	doReplicateSegmentPiece := func(ctx context.Context, segIdx uint32, data []byte, errChan chan error) {
 		log.Debug("start to replicate segment piece")
 		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate segment piece", "sp", sp)
@@ -120,7 +120,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		wg.Wait()
 		log.Debug("finish to replicate segment piece")
 	}
-	doneReplicate := func() error {
+	doneReplicate := func(ctx context.Context) error {
 		log.Debug("start to done replicate")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", sp)
@@ -139,6 +139,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	startReplicatePieceTime := time.Now()
 	errChan := make(chan error)
 	quitChan := make(chan struct{})
+	childCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	go func() {
 		for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
 			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
@@ -163,15 +165,15 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 					rTask.SetError(err)
 					errChan <- err
 				}
-				doReplicateECPiece(segIdx, ecData, errChan)
+				doReplicateECPiece(childCtx, segIdx, ecData, errChan)
 			} else {
-				doReplicateSegmentPiece(segIdx, segData, errChan)
+				doReplicateSegmentPiece(childCtx, segIdx, segData, errChan)
 			}
 		}
 		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 		doneTime := time.Now()
-		err = doneReplicate()
+		err = doneReplicate(childCtx)
 		metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_time").Observe(time.Since(doneTime).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 		if err == nil {
@@ -182,6 +184,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 
 	select {
 	case err = <-errChan:
+		cancel()
 		return err
 	case <-quitChan:
 		return nil

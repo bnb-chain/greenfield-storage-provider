@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
+	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -151,6 +152,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		completeEventsMap map[common.Hash]*model.EventCompleteMigrationBucket
 		cancelEventsMap   map[common.Hash]*model.EventCancelMigrationBucket
 		res               []*types.ListMigrateBucketEvents
+		filters           []func(*gorm.DB) *gorm.DB
 		latestBlock       int64
 	)
 
@@ -165,7 +167,8 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		return nil, ErrExceedBlockHeight
 	}
 	log.Debugw("GfSpListMigrateBucketEvents", "sp-id", req.SpId, "block-id", req.BlockId)
-	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.BlockId, req.SpId)
+	filters = append(filters, model.CreateAtFilter(int64(req.BlockId)))
+	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.SpId, filters...)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
@@ -432,5 +435,63 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		CompleteEvent: spCompleteEvent,
 	}}
 	log.CtxInfow(ctx, "succeed to list sp exit events", "request", req, "response", resp)
+	return resp, nil
+}
+
+// GfSpGetSPMigratingBucketNumber get the latest active migrating bucket by specific sp
+func (r *MetadataModular) GfSpGetSPMigratingBucketNumber(ctx context.Context, req *types.GfSpGetSPMigratingBucketNumberRequest) (resp *types.GfSpGetSPMigratingBucketNumberResponse, err error) {
+	var (
+		events            []*model.EventMigrationBucket
+		completeEvents    []*model.EventCompleteMigrationBucket
+		cancelEvents      []*model.EventCancelMigrationBucket
+		eventsMap         map[common.Hash]*model.EventMigrationBucket
+		completeEventsMap map[common.Hash]*model.EventCompleteMigrationBucket
+		cancelEventsMap   map[common.Hash]*model.EventCancelMigrationBucket
+		cancelFlag        bool
+		completeFlag      bool
+		count             uint64
+	)
+
+	ctx = log.Context(ctx, req)
+
+	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.SpId)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get the latest active migrating bucket by specific sp", "error", err)
+		return nil, err
+	}
+
+	eventsMap = make(map[common.Hash]*model.EventMigrationBucket)
+	for _, e := range events {
+		eventsMap[e.BucketID] = e
+	}
+
+	completeEventsMap = make(map[common.Hash]*model.EventCompleteMigrationBucket)
+	for _, e := range completeEvents {
+		completeEventsMap[e.BucketID] = e
+	}
+
+	cancelEventsMap = make(map[common.Hash]*model.EventCancelMigrationBucket)
+	for _, e := range cancelEvents {
+		cancelEventsMap[e.BucketID] = e
+	}
+
+	for _, event := range eventsMap {
+		completeFlag = false
+		cancelFlag = false
+		complete := completeEventsMap[event.BucketID]
+		cancel := cancelEventsMap[event.BucketID]
+		if complete != nil && complete.CreateAt >= event.CreateAt {
+			completeFlag = true
+		}
+		if cancel != nil && cancel.CreateAt >= event.CreateAt && complete == nil {
+			cancelFlag = true
+		}
+		if !completeFlag && !cancelFlag && event != nil {
+			count++
+		}
+	}
+
+	resp = &types.GfSpGetSPMigratingBucketNumberResponse{Count: count}
+	log.CtxInfow(ctx, "succeed to get the latest active migrating bucket by specific sp", "request", req, "response", resp)
 	return resp, nil
 }

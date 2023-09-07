@@ -69,6 +69,7 @@ const (
 	listUserPaymentAccountsRouterName              = "ListUserPaymentAccounts"
 	listPaymentAccountStreamsRouterName            = "ListPaymentAccountStreams"
 	listGroupsByIDsRouterName                      = "ListGroupsByIDs"
+	getSPMigratingBucketNumberRouterName           = "GetSPMigratingBucketNumber"
 )
 
 const (
@@ -135,36 +136,36 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
 	for _, r := range routers {
 		// Put Object By Offset
-		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).Queries(
-			"offset", "{offset}", "complete", "{complete}")
+		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).
+			Queries("offset", "{offset}", "complete", "{complete}")
 		// Put Object
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 
 		// QueryPutObjectOffset
-		r.NewRoute().Name(queryResumeOffsetName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryResumeOffsetHandler).Queries(
-			UploadContextQuery, "")
+		r.NewRoute().Name(queryResumeOffsetName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryResumeOffsetHandler).
+			Queries(UploadContextQuery, "")
 
 		// Query upload progress
-		r.NewRoute().Name(queryUploadProgressRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryUploadProgressHandler).Queries(
-			UploadProgressQuery, "")
+		r.NewRoute().Name(queryUploadProgressRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryUploadProgressHandler).
+			Queries(UploadProgressQuery, "")
 
 		// Get Bucket Meta
 		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
 
 		// Get Object Meta
-		r.NewRoute().Name(getObjectMetaRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectMetaHandler).Queries(
-			GetObjectMetaQuery, "")
+		r.NewRoute().Name(getObjectMetaRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectMetaHandler).
+			Queries(GetObjectMetaQuery, "")
 
 		// List Object Policies
-		r.NewRoute().Name(listObjectPoliciesRouterName).Methods(http.MethodGet).Path("/{object:.+}").Queries(ListObjectPoliciesQuery, "").HandlerFunc(g.listObjectPoliciesHandler)
+		r.NewRoute().Name(listObjectPoliciesRouterName).Methods(http.MethodGet).Path("/{object:.+}").Queries(ListObjectPoliciesQuery, "").
+			HandlerFunc(g.listObjectPoliciesHandler)
 
 		// Get Object
 		r.NewRoute().Name(getObjectRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectHandler)
 
 		// Get Bucket Read Quota
 		r.NewRoute().Name(getBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.getBucketReadQuotaHandler).Queries(
-			GetBucketReadQuotaQuery, "",
-			GetBucketReadQuotaMonthQuery, "{year_month}")
+			GetBucketReadQuotaQuery, "", GetBucketReadQuotaMonthQuery, "{year_month}")
 
 		if g.env != gfspapp.EnvMainnet {
 			// Get Bucket By Bucket Name
@@ -270,6 +271,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// Get Sp info by operator address
 		router.Path("/").Name(getSPInfoRouterName).Methods(http.MethodGet).Queries(GetSPInfoQuery, "").HandlerFunc(g.getSPInfoHandler)
+
+		// Get SP Migrate Bucket Number
+		router.Path("/").Name(getSPMigratingBucketNumberRouterName).Methods(http.MethodGet).Queries(GetSPMigratingBucketNumberQuery, "").HandlerFunc(g.getSPMigratingBucketNumberHandler)
 	}
 
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)

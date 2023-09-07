@@ -37,6 +37,7 @@ exclude:
     - e2e/.*          # excludes e2e directory files
     - modular/p2p/.*
     - base/gfspclient/metadata.go
+    - modular/gater/metadata_handler.go
 
 # NOTES:
 # - symbol `/` in all path regexps will be replaced by
