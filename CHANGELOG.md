@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.5-alpha.2
+
+FEATURES
+* [#1112](https://github.com/bnb-chain/greenfield-storage-provider/pull/1112) feat: support GfSpGetSPMigrateBucketNumber
+
+BUGFIX
+* [#1121](https://github.com/bnb-chain/greenfield-storage-provider/pull/1121) fix: fix tls MinVersion to 1.2
+* [#1119](https://github.com/bnb-chain/greenfield-storage-provider/pull/1119) fix: stop all replicate jobs and done replicate job by context
+* [#1117](https://github.com/bnb-chain/greenfield-storage-provider/pull/1117) fix: include private cause bucket not found
+
+TEST
+* [#1115](https://github.com/bnb-chain/greenfield-storage-provider/pull/1115) test: modular/gater pkg adds UTs part II
+
 ## v0.2.5-alpha.1
 
 FEATURES
