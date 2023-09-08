@@ -1,6 +1,8 @@
 package gater
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/bnb-chain/greenfield/sdk/keys"
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -142,6 +149,23 @@ func mockMigratePieceHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 	return router
 }
 
+func makeMockMigrateGVGTaskHeader(t *testing.T, addValidExpireTime bool) string {
+	mockTask := &gfsptask.GfSpMigrateGVGTask{}
+	if addValidExpireTime {
+		mockTask.ExpireTime = time.Now().Unix() + 5*60
+	} else {
+		mockTask.ExpireTime = time.Now().Unix() - 5*60
+	}
+	mockKM, err := keys.NewPrivateKeyManager(util.RandHexKey())
+	assert.Nil(t, err)
+	signature, err := mockKM.Sign(mockTask.GetSignBytes())
+	assert.Nil(t, err)
+	mockTask.SetSignature(signature)
+	msg, err := json.Marshal(mockTask)
+	assert.Nil(t, err)
+	return hex.EncodeToString(msg)
+}
+
 func TestGateModular_migratePieceHandler(t *testing.T) {
 	cases := []struct {
 		name         string
@@ -167,6 +191,7 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigratePieceMsgHeader, "48656c6c6f20476f706865722")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
 			wantedResult: "gnfd msg encoding error",
@@ -189,12 +214,13 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigratePieceMsgHeader, "48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
 			wantedResult: "gnfd msg encoding error",
 		},
 		{
-			name: "failed to get migrate piece object info due to has no object info",
+			name: "failed to get migrate piece object info due to gvg expire time",
 			fn: func() *GateModular {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
@@ -211,6 +237,108 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d7d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, false))
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to get migrate piece object info due to query sp error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, fmt.Errorf("failed to query sp")).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, MigratePiecePath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d7d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
+				return req
+			},
+			wantedResult: "failed to query sp",
+		},
+		{
+			name: "failed to get migrate piece object info due to metadata api error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to query metadata")).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, MigratePiecePath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d7d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
+				return req
+			},
+			wantedResult: "failed to query metadata",
+		},
+		{
+			name: "failed to get migrate piece object info due to metadata no permission",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				mockEffect := permissiontypes.EFFECT_DENY
+				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, MigratePiecePath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d7d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to get migrate piece object info due to has no object info",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				mockEffect := permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, MigratePiecePath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d7d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
 			wantedResult: "invalid request header",
@@ -223,6 +351,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				mockEffect := permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -238,6 +369,7 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c226f626a6563745f696e666f223a7b226f626a6563745f6e616d65223a226d6f636b2d6f626a6563742d6e616d65222c226964223a2231227d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d7d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
 			wantedResult: "invalid request header",
@@ -250,6 +382,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				mockEffect := permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -269,6 +404,7 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c226f626a6563745f696e666f223a7b226f626a6563745f6e616d65223a226d6f636b2d6f626a6563742d6e616d65222c226964223a2231227d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d2c22726564756e64616e63795f696478223a2d327d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
 			wantedResult: "invalid redundancy index",
@@ -281,6 +417,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				mockEffect := permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
@@ -306,6 +445,7 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c226f626a6563745f696e666f223a7b226f626a6563745f6e616d65223a226d6f636b2d6f626a6563742d6e616d65222c226964223a2231227d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d2c22726564756e64616e63795f696478223a2d317d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
 			wantedResult: "mock error",
@@ -318,6 +458,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				mockEffect := permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("data"), nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
@@ -343,6 +486,7 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigratePieceMsgHeader, "7b227461736b223a7b7d2c226f626a6563745f696e666f223a7b226f626a6563745f6e616d65223a226d6f636b2d6f626a6563742d6e616d65222c226964223a2231227d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b226d61785f7365676d656e745f73697a65223a31302c22726564756e64616e745f646174615f6368756e6b5f6e756d223a342c22726564756e64616e745f7061726974795f6368756e6b5f6e756d223a327d7d2c22726564756e64616e63795f696478223a317d")
+				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
 			wantedResult: "",

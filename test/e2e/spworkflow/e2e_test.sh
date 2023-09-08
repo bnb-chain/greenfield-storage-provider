@@ -6,10 +6,10 @@ export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_REPO_TAG="v0.2.5-alpha.1"
+GREENFIELD_TAG="v0.2.5-alpha.1"
 # greenfield cmd tag name: v0.1.0
 GREENFIELD_CMD_TAG="v0.1.0"
-# greenfield go sdk tag name: v0.2.4
+# greenfield go sdk tag name: v0.2.5-alpha.1
 GREENFIELD_GO_SDK_TAG="v0.2.5-alpha.1"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
@@ -31,7 +31,7 @@ function greenfield_chain() {
   cd ${workspace}
   git clone https://github.com/bnb-chain/greenfield.git
   cd greenfield/
-  git checkout ${GREENFIELD_REPO_TAG}
+  git checkout ${GREENFIELD_TAG}
   make proto-gen & make build
 
   # start Greenfield chain

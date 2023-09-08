@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -67,7 +68,6 @@ func (g *GateModular) checkMigratePieceAuth(reqCtx *RequestContext, migrateGVGHe
 		log.Errorw("failed to parse migrate gvg header", "migrate_gvg_header", migrateGVGHeader, "error", err)
 		return false, ErrDecodeMsg
 	}
-
 	migrateGVG := gfsptask.GfSpMigrateGVGTask{}
 	err = json.Unmarshal(migrateGVGMsg, &migrateGVG)
 	if err != nil {
@@ -83,16 +83,27 @@ func (g *GateModular) checkMigratePieceAuth(reqCtx *RequestContext, migrateGVGHe
 		log.Errorw("failed to verify task signature", "gvg_task", migrateGVG, "error", err)
 		return false, err
 	}
-	_, _ = g.baseApp.GfSpClient().QuerySPByOperatorAddress(reqCtx.Context(), destSPAddr.String())
-	// TODO: query metadata
-	return true, nil
+	sp, err := g.baseApp.GfSpClient().QuerySPByOperatorAddress(reqCtx.Context(), destSPAddr.String())
+	if err != nil {
+		log.Errorw("failed to query sp", "gvg_task", migrateGVG, "dest_sp_addr", destSPAddr.String(), "error", err)
+		return false, err
+	}
+	effect, err := g.baseApp.GfSpClient().VerifyMigrateGVGPermission(reqCtx.Context(), migrateGVG.GetBucketID(), migrateGVG.GetSrcGvg().GetId(), sp.GetId())
+	if effect == nil || err != nil {
+		log.Errorw("failed to verify migrate gvg permission", "gvg_task", migrateGVG, "dest_sp", sp, "effect", effect, "error", err)
+		return false, err
+	}
+	if *effect == permissiontypes.EFFECT_ALLOW {
+		return true, nil
+	}
+	return false, nil
 }
 
 // migratePieceHandler handles migrate piece request between SPs which is used in SP exiting case.
 func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err error
-		//allowMigrate    bool
+		err             error
+		allowMigrate    bool
 		reqCtx          *RequestContext
 		migratePieceMsg []byte
 		pieceKey        string
@@ -128,15 +139,15 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	//if allowMigrate, err = g.checkMigratePieceAuth(reqCtx, r.Header.Get(GnfdMigrateGVGMsgHeader)); err != nil {
-	//	log.CtxErrorw(reqCtx.Context(), "failed to check migrate piece auth", "migrate_piece", migratePiece, "error", err)
-	//	return
-	//}
-	//if !allowMigrate {
-	//	log.CtxErrorw(reqCtx.Context(), "has no permission to migrate piece", "migrate_piece", migratePiece)
-	//	err = ErrNoPermission
-	//	return
-	//}
+	if allowMigrate, err = g.checkMigratePieceAuth(reqCtx, r.Header.Get(GnfdMigrateGVGMsgHeader)); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check migrate piece auth", "migrate_piece", migratePiece, "error", err)
+		return
+	}
+	if !allowMigrate {
+		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_piece", migratePiece)
+		err = ErrNoPermission
+		return
+	}
 
 	objectInfo := migratePiece.GetObjectInfo()
 	if objectInfo == nil {

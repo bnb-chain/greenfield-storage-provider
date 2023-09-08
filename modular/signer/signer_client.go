@@ -191,7 +191,6 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 	if err != nil {
 		return false
 	}
-
 	return types.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
 }
 

@@ -209,11 +209,11 @@ func (sm *spManager) querySPByID(spID uint32) (*sptypes.StorageProvider, error) 
 }
 
 func (sm *spManager) querySPByAddress(spAddr string) (*sptypes.StorageProvider, error) {
-	if sm.selfSP.GetOperatorAddress() == spAddr {
+	if strings.EqualFold(sm.selfSP.GetOperatorAddress(), spAddr) {
 		return sm.selfSP, nil
 	}
 	for _, sp := range sm.otherSPs {
-		if sp.GetOperatorAddress() == spAddr {
+		if strings.EqualFold(sp.GetOperatorAddress(), spAddr) {
 			return sp, nil
 		}
 	}
