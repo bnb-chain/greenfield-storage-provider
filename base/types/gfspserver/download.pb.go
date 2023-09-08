@@ -333,6 +333,111 @@ func (m *GfSpGetChallengeInfoResponse) GetChecksums() [][]byte {
 	return nil
 }
 
+type GfSpReimburseQuotaRequest struct {
+	BucketId   uint64 `protobuf:"varint,1,opt,name=bucket_id,json=bucketId,proto3" json:"bucket_id,omitempty"`
+	ExtraQuota uint64 `protobuf:"varint,2,opt,name=extra_quota,json=extraQuota,proto3" json:"extra_quota,omitempty"`
+	// year_month is the query bucket quota's month, like "2023-03"
+	YearMonth string `protobuf:"bytes,3,opt,name=year_month,json=yearMonth,proto3" json:"year_month,omitempty"`
+}
+
+func (m *GfSpReimburseQuotaRequest) Reset()         { *m = GfSpReimburseQuotaRequest{} }
+func (m *GfSpReimburseQuotaRequest) String() string { return proto.CompactTextString(m) }
+func (*GfSpReimburseQuotaRequest) ProtoMessage()    {}
+func (*GfSpReimburseQuotaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4e9c5d8fc8df4b20, []int{6}
+}
+func (m *GfSpReimburseQuotaRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpReimburseQuotaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpReimburseQuotaRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpReimburseQuotaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpReimburseQuotaRequest.Merge(m, src)
+}
+func (m *GfSpReimburseQuotaRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpReimburseQuotaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpReimburseQuotaRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpReimburseQuotaRequest proto.InternalMessageInfo
+
+func (m *GfSpReimburseQuotaRequest) GetBucketId() uint64 {
+	if m != nil {
+		return m.BucketId
+	}
+	return 0
+}
+
+func (m *GfSpReimburseQuotaRequest) GetExtraQuota() uint64 {
+	if m != nil {
+		return m.ExtraQuota
+	}
+	return 0
+}
+
+func (m *GfSpReimburseQuotaRequest) GetYearMonth() string {
+	if m != nil {
+		return m.YearMonth
+	}
+	return ""
+}
+
+type GfSpReimburseQuotaResponse struct {
+	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+}
+
+func (m *GfSpReimburseQuotaResponse) Reset()         { *m = GfSpReimburseQuotaResponse{} }
+func (m *GfSpReimburseQuotaResponse) String() string { return proto.CompactTextString(m) }
+func (*GfSpReimburseQuotaResponse) ProtoMessage()    {}
+func (*GfSpReimburseQuotaResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4e9c5d8fc8df4b20, []int{7}
+}
+func (m *GfSpReimburseQuotaResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpReimburseQuotaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpReimburseQuotaResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpReimburseQuotaResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpReimburseQuotaResponse.Merge(m, src)
+}
+func (m *GfSpReimburseQuotaResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpReimburseQuotaResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpReimburseQuotaResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpReimburseQuotaResponse proto.InternalMessageInfo
+
+func (m *GfSpReimburseQuotaResponse) GetErr() *gfsperrors.GfSpError {
+	if m != nil {
+		return m.Err
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GfSpDownloadObjectRequest)(nil), "base.types.gfspserver.GfSpDownloadObjectRequest")
 	proto.RegisterType((*GfSpDownloadObjectResponse)(nil), "base.types.gfspserver.GfSpDownloadObjectResponse")
@@ -340,6 +445,8 @@ func init() {
 	proto.RegisterType((*GfSpDownloadPieceResponse)(nil), "base.types.gfspserver.GfSpDownloadPieceResponse")
 	proto.RegisterType((*GfSpGetChallengeInfoRequest)(nil), "base.types.gfspserver.GfSpGetChallengeInfoRequest")
 	proto.RegisterType((*GfSpGetChallengeInfoResponse)(nil), "base.types.gfspserver.GfSpGetChallengeInfoResponse")
+	proto.RegisterType((*GfSpReimburseQuotaRequest)(nil), "base.types.gfspserver.GfSpReimburseQuotaRequest")
+	proto.RegisterType((*GfSpReimburseQuotaResponse)(nil), "base.types.gfspserver.GfSpReimburseQuotaResponse")
 }
 
 func init() {
@@ -347,39 +454,45 @@ func init() {
 }
 
 var fileDescriptor_4e9c5d8fc8df4b20 = []byte{
-	// 505 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xdd, 0x6e, 0xd3, 0x30,
-	0x14, 0x6e, 0xe8, 0x84, 0x84, 0x19, 0x48, 0xf3, 0x86, 0x14, 0xc2, 0x14, 0x95, 0x08, 0xa4, 0x0a,
-	0xd4, 0x78, 0x74, 0x6f, 0xc0, 0xdf, 0xe0, 0x0a, 0x94, 0x71, 0x35, 0x09, 0x15, 0xc7, 0x39, 0x4d,
-	0x42, 0x3b, 0x3b, 0xd8, 0x6e, 0x61, 0xc0, 0x0d, 0x6f, 0xb0, 0xf7, 0xe0, 0x45, 0xb8, 0xdc, 0x25,
-	0x97, 0xa8, 0x7d, 0x11, 0x14, 0xf7, 0x2f, 0x24, 0x29, 0xdb, 0xa4, 0xdd, 0x24, 0xd6, 0x39, 0xe7,
-	0xfb, 0x3e, 0x7f, 0x3e, 0xc7, 0x46, 0x0f, 0x42, 0xaa, 0x80, 0xe8, 0x93, 0x0c, 0x14, 0x89, 0xfb,
-	0x2a, 0x53, 0x20, 0xc7, 0x20, 0x49, 0x24, 0x3e, 0xf3, 0xa1, 0xa0, 0x91, 0x9f, 0x49, 0xa1, 0x05,
-	0xbe, 0x93, 0x57, 0xf9, 0xa6, 0xca, 0x5f, 0x55, 0x39, 0xf7, 0x4b, 0x60, 0x90, 0x52, 0x48, 0x45,
-	0xcc, 0x6f, 0x86, 0x74, 0xdc, 0x52, 0x89, 0xa6, 0x6a, 0x40, 0xf2, 0xcf, 0x2c, 0xef, 0x7d, 0x45,
-	0x77, 0x0f, 0xfa, 0x87, 0xd9, 0xf3, 0xb9, 0xde, 0x9b, 0xf0, 0x23, 0x30, 0x1d, 0xc0, 0xa7, 0x11,
-	0x28, 0x8d, 0xdf, 0xa3, 0x9d, 0xc5, 0x46, 0x7a, 0xc2, 0x64, 0x7a, 0x39, 0xd4, 0xb6, 0x5a, 0x56,
-	0xfb, 0x66, 0xf7, 0xb1, 0x5f, 0xda, 0x95, 0xa1, 0xad, 0xb2, 0xbd, 0xa3, 0x6a, 0x10, 0xe0, 0xa8,
-	0x12, 0xf3, 0x22, 0xe4, 0xd4, 0x69, 0xab, 0x4c, 0x70, 0x05, 0xb8, 0x8b, 0x9a, 0x20, 0xe5, 0x5c,
-	0xab, 0x55, 0xd6, 0x9a, 0x59, 0x35, 0x6a, 0x2f, 0xf2, 0x65, 0x90, 0x17, 0x63, 0x8c, 0x36, 0x22,
-	0xaa, 0xa9, 0x7d, 0xad, 0x65, 0xb5, 0x37, 0x03, 0xb3, 0xf6, 0xc6, 0xc8, 0x2e, 0xaa, 0xbc, 0x4d,
-	0x81, 0xc1, 0xc2, 0xe0, 0x11, 0xda, 0x5e, 0x1a, 0xcc, 0xf2, 0x44, 0xd1, 0xdf, 0xa3, 0x73, 0xfd,
-	0x19, 0x2e, 0x63, 0x6f, 0x2b, 0x2a, 0x87, 0x3c, 0xf6, 0xef, 0xc9, 0xce, 0x75, 0xaf, 0xd8, 0xdc,
-	0x77, 0x74, 0x2f, 0xaf, 0x3a, 0x00, 0xfd, 0x2c, 0xa1, 0xc3, 0x21, 0xf0, 0x18, 0x5e, 0xf3, 0xbe,
-	0x28, 0x34, 0x90, 0x2d, 0xe2, 0x55, 0x83, 0xeb, 0x1b, 0xb8, 0x24, 0x5b, 0x39, 0xc4, 0xac, 0x12,
-	0xf3, 0x7e, 0x5a, 0x68, 0xb7, 0x5e, 0xfe, 0x6a, 0x6d, 0xe2, 0x87, 0xe8, 0x76, 0xca, 0x35, 0xc4,
-	0x32, 0xd5, 0x27, 0xbd, 0x84, 0xaa, 0xc4, 0x6e, 0x9a, 0xec, 0xad, 0x65, 0xf4, 0x15, 0x55, 0x09,
-	0xde, 0x45, 0x37, 0x58, 0x02, 0x6c, 0xa0, 0x46, 0xc7, 0xca, 0xde, 0x68, 0x35, 0xdb, 0x9b, 0xc1,
-	0x2a, 0xd0, 0x3d, 0x6d, 0xa2, 0xed, 0x62, 0x47, 0x0e, 0x41, 0x8e, 0x53, 0x06, 0xf8, 0x1b, 0xc2,
-	0xd5, 0x31, 0xc4, 0x7b, 0x7e, 0xed, 0x9d, 0xf3, 0xd7, 0xde, 0x16, 0xe7, 0xc9, 0x25, 0x10, 0xb3,
-	0xf3, 0xf1, 0x1a, 0xf8, 0x0b, 0xda, 0xaa, 0x4c, 0x09, 0x26, 0x17, 0x60, 0x2a, 0xce, 0xb1, 0xb3,
-	0x77, 0x71, 0xc0, 0x52, 0xf9, 0x87, 0x85, 0x76, 0xea, 0x9a, 0x87, 0xbb, 0xff, 0x21, 0x5b, 0x33,
-	0x68, 0xce, 0xfe, 0xa5, 0x30, 0x8b, 0x3d, 0x3c, 0xfd, 0xf0, 0x6b, 0xe2, 0x5a, 0x67, 0x13, 0xd7,
-	0xfa, 0x33, 0x71, 0xad, 0xd3, 0xa9, 0xdb, 0x38, 0x9b, 0xba, 0x8d, 0xdf, 0x53, 0xb7, 0x71, 0xf4,
-	0x32, 0x4e, 0x75, 0x32, 0x0a, 0x7d, 0x26, 0x8e, 0x49, 0xc8, 0xc3, 0x0e, 0x4b, 0x68, 0xca, 0x49,
-	0x2c, 0x01, 0x78, 0x3f, 0x85, 0x61, 0xd4, 0x51, 0x5a, 0x48, 0x1a, 0x43, 0x27, 0x93, 0x62, 0x9c,
-	0x46, 0x20, 0x49, 0xed, 0x43, 0x1a, 0x5e, 0x37, 0xcf, 0xdc, 0xfe, 0xdf, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x6f, 0xd6, 0xc1, 0x00, 0x68, 0x05, 0x00, 0x00,
+	// 602 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcb, 0x6e, 0xd3, 0x40,
+	0x14, 0x8d, 0x69, 0x84, 0xc8, 0xb4, 0x20, 0x75, 0x5a, 0xa4, 0xe0, 0x16, 0x13, 0x2c, 0x90, 0x2a,
+	0x50, 0xed, 0x92, 0xfe, 0x01, 0xaf, 0xd2, 0x05, 0xa2, 0xb8, 0xac, 0x2a, 0x21, 0x33, 0xb6, 0x6f,
+	0x6c, 0x93, 0xc4, 0xe3, 0xce, 0x8c, 0x43, 0x02, 0x6c, 0xf8, 0x00, 0x24, 0xfe, 0x83, 0x1f, 0x61,
+	0xd9, 0x25, 0x4b, 0x94, 0xfc, 0x08, 0xf2, 0x38, 0xaf, 0xda, 0x4e, 0x68, 0x51, 0x37, 0x89, 0x75,
+	0xee, 0xe3, 0xdc, 0x73, 0x1f, 0x36, 0x7a, 0xe0, 0x10, 0x0e, 0xa6, 0x18, 0xc4, 0xc0, 0x4d, 0xbf,
+	0xc5, 0x63, 0x0e, 0xac, 0x07, 0xcc, 0xf4, 0xe8, 0xa7, 0xa8, 0x43, 0x89, 0x67, 0xc4, 0x8c, 0x0a,
+	0x8a, 0x6f, 0xa7, 0x5e, 0x86, 0xf4, 0x32, 0x66, 0x5e, 0xea, 0xfd, 0x5c, 0x30, 0x30, 0x46, 0x19,
+	0x37, 0xe5, 0x5f, 0x16, 0xa9, 0x6a, 0x39, 0x17, 0x41, 0x78, 0xdb, 0x4c, 0x7f, 0x32, 0xbb, 0xfe,
+	0x19, 0xdd, 0x39, 0x68, 0x1d, 0xc7, 0xcf, 0xc7, 0x7c, 0x6f, 0x9c, 0x8f, 0xe0, 0x0a, 0x0b, 0x4e,
+	0x13, 0xe0, 0x02, 0xbf, 0x47, 0x9b, 0x93, 0x42, 0x6c, 0x2a, 0x2d, 0x76, 0x1a, 0x5a, 0x57, 0x1a,
+	0xca, 0xce, 0x6a, 0xf3, 0xb1, 0x91, 0xab, 0x4a, 0xa6, 0x2d, 0x66, 0x7b, 0x47, 0x78, 0xdb, 0xc2,
+	0x5e, 0x01, 0xd3, 0x3d, 0xa4, 0x96, 0x71, 0xf3, 0x98, 0x46, 0x1c, 0x70, 0x13, 0xad, 0x00, 0x63,
+	0x63, 0xae, 0x46, 0x9e, 0x2b, 0x93, 0x2a, 0xd9, 0x5e, 0xa4, 0x8f, 0x56, 0xea, 0x8c, 0x31, 0xaa,
+	0x7a, 0x44, 0x90, 0xfa, 0xb5, 0x86, 0xb2, 0xb3, 0x66, 0xc9, 0x67, 0xbd, 0x87, 0xea, 0xf3, 0x2c,
+	0x47, 0x21, 0xb8, 0x30, 0x11, 0x78, 0x82, 0x36, 0xa6, 0x02, 0xe3, 0xd4, 0x30, 0xaf, 0xef, 0xd1,
+	0x3f, 0xf5, 0xc9, 0x5c, 0x52, 0xde, 0xba, 0x97, 0x87, 0x74, 0xf7, 0x7c, 0x67, 0xc7, 0xbc, 0x57,
+	0x2c, 0xee, 0x2b, 0xda, 0x4a, 0xbd, 0x0e, 0x40, 0x3c, 0x0b, 0x48, 0xa7, 0x03, 0x91, 0x0f, 0x87,
+	0x51, 0x8b, 0xce, 0x0d, 0xd0, 0x9d, 0xe0, 0x45, 0x81, 0x8b, 0x07, 0x38, 0x4d, 0x36, 0x53, 0x88,
+	0xdd, 0x02, 0xa6, 0xff, 0x54, 0xd0, 0x76, 0x39, 0xfd, 0xd5, 0xca, 0xc4, 0x0f, 0xd1, 0xad, 0x30,
+	0x12, 0xe0, 0xb3, 0x50, 0x0c, 0xec, 0x80, 0xf0, 0xa0, 0xbe, 0x22, 0xad, 0x37, 0xa7, 0xe8, 0x2b,
+	0xc2, 0x03, 0xbc, 0x8d, 0x6a, 0x6e, 0x00, 0x6e, 0x9b, 0x27, 0x5d, 0x5e, 0xaf, 0x36, 0x56, 0x76,
+	0xd6, 0xac, 0x19, 0xa0, 0xf7, 0xb3, 0x81, 0x58, 0x10, 0x76, 0x9d, 0x84, 0x71, 0x78, 0x9b, 0x50,
+	0x41, 0x26, 0x9d, 0xda, 0x42, 0x35, 0x27, 0x71, 0xdb, 0x20, 0xec, 0xd0, 0x93, 0xf5, 0x56, 0xad,
+	0x1b, 0x19, 0x70, 0xe8, 0xe1, 0x7b, 0x68, 0x15, 0xfa, 0x82, 0x11, 0xfb, 0x34, 0x0d, 0x91, 0x95,
+	0x55, 0x2d, 0x24, 0x21, 0x99, 0x04, 0xdf, 0x45, 0x68, 0x00, 0x84, 0xd9, 0x5d, 0x1a, 0x89, 0xac,
+	0xb6, 0x9a, 0x55, 0x4b, 0x91, 0xd7, 0x29, 0xa0, 0x1f, 0x65, 0x8b, 0x9e, 0x67, 0xfe, 0xff, 0x26,
+	0x35, 0xbf, 0x57, 0xd1, 0xc6, 0xfc, 0x76, 0x1d, 0x03, 0xeb, 0x85, 0x2e, 0xe0, 0x2f, 0x08, 0x17,
+	0x4f, 0x0a, 0xef, 0x19, 0xa5, 0xef, 0x0f, 0x63, 0xe1, 0xe5, 0xab, 0x4f, 0x2e, 0x11, 0x91, 0xc9,
+	0xd0, 0x2b, 0xb8, 0x8f, 0xd6, 0x0b, 0x1b, 0x8f, 0xcd, 0x0b, 0x64, 0x9a, 0xbf, 0x49, 0x75, 0xef,
+	0xe2, 0x01, 0x53, 0xe6, 0x6f, 0x0a, 0xda, 0x2c, 0x5b, 0x44, 0xdc, 0x5c, 0x92, 0x6c, 0xc1, 0xd1,
+	0xa8, 0xfb, 0x97, 0x8a, 0x99, 0xd6, 0x30, 0x6e, 0xfd, 0xf9, 0x21, 0x2f, 0x6d, 0x7d, 0xe9, 0x26,
+	0x2e, 0x6d, 0x7d, 0xf9, 0x06, 0xe9, 0x95, 0xa7, 0x1f, 0x7e, 0x0d, 0x35, 0xe5, 0x6c, 0xa8, 0x29,
+	0x7f, 0x86, 0x9a, 0xf2, 0x63, 0xa4, 0x55, 0xce, 0x46, 0x5a, 0xe5, 0xf7, 0x48, 0xab, 0x9c, 0xbc,
+	0xf4, 0x43, 0x11, 0x24, 0x8e, 0xe1, 0xd2, 0xae, 0xe9, 0x44, 0xce, 0xae, 0x1b, 0x90, 0x30, 0x32,
+	0x7d, 0x06, 0x10, 0xb5, 0x42, 0xe8, 0x78, 0xbb, 0x5c, 0x50, 0x46, 0x7c, 0xd8, 0x8d, 0x19, 0xed,
+	0x85, 0x1e, 0x30, 0xb3, 0xf4, 0x8b, 0xe4, 0x5c, 0x97, 0xdf, 0x8b, 0xfd, 0xbf, 0x01, 0x00, 0x00,
+	0xff, 0xff, 0x74, 0x6d, 0x4b, 0x17, 0xb1, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -397,6 +510,7 @@ type GfSpDownloadServiceClient interface {
 	GfSpDownloadObject(ctx context.Context, in *GfSpDownloadObjectRequest, opts ...grpc.CallOption) (*GfSpDownloadObjectResponse, error)
 	GfSpDownloadPiece(ctx context.Context, in *GfSpDownloadPieceRequest, opts ...grpc.CallOption) (*GfSpDownloadPieceResponse, error)
 	GfSpGetChallengeInfo(ctx context.Context, in *GfSpGetChallengeInfoRequest, opts ...grpc.CallOption) (*GfSpGetChallengeInfoResponse, error)
+	GfSpReimburseQuota(ctx context.Context, in *GfSpReimburseQuotaRequest, opts ...grpc.CallOption) (*GfSpReimburseQuotaResponse, error)
 }
 
 type gfSpDownloadServiceClient struct {
@@ -434,11 +548,21 @@ func (c *gfSpDownloadServiceClient) GfSpGetChallengeInfo(ctx context.Context, in
 	return out, nil
 }
 
+func (c *gfSpDownloadServiceClient) GfSpReimburseQuota(ctx context.Context, in *GfSpReimburseQuotaRequest, opts ...grpc.CallOption) (*GfSpReimburseQuotaResponse, error) {
+	out := new(GfSpReimburseQuotaResponse)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpDownloadService/GfSpReimburseQuota", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GfSpDownloadServiceServer is the server API for GfSpDownloadService service.
 type GfSpDownloadServiceServer interface {
 	GfSpDownloadObject(context.Context, *GfSpDownloadObjectRequest) (*GfSpDownloadObjectResponse, error)
 	GfSpDownloadPiece(context.Context, *GfSpDownloadPieceRequest) (*GfSpDownloadPieceResponse, error)
 	GfSpGetChallengeInfo(context.Context, *GfSpGetChallengeInfoRequest) (*GfSpGetChallengeInfoResponse, error)
+	GfSpReimburseQuota(context.Context, *GfSpReimburseQuotaRequest) (*GfSpReimburseQuotaResponse, error)
 }
 
 // UnimplementedGfSpDownloadServiceServer can be embedded to have forward compatible implementations.
@@ -453,6 +577,9 @@ func (*UnimplementedGfSpDownloadServiceServer) GfSpDownloadPiece(ctx context.Con
 }
 func (*UnimplementedGfSpDownloadServiceServer) GfSpGetChallengeInfo(ctx context.Context, req *GfSpGetChallengeInfoRequest) (*GfSpGetChallengeInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GfSpGetChallengeInfo not implemented")
+}
+func (*UnimplementedGfSpDownloadServiceServer) GfSpReimburseQuota(ctx context.Context, req *GfSpReimburseQuotaRequest) (*GfSpReimburseQuotaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GfSpReimburseQuota not implemented")
 }
 
 func RegisterGfSpDownloadServiceServer(s grpc1.Server, srv GfSpDownloadServiceServer) {
@@ -513,6 +640,24 @@ func _GfSpDownloadService_GfSpGetChallengeInfo_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GfSpDownloadService_GfSpReimburseQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GfSpReimburseQuotaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GfSpDownloadServiceServer).GfSpReimburseQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.types.gfspserver.GfSpDownloadService/GfSpReimburseQuota",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GfSpDownloadServiceServer).GfSpReimburseQuota(ctx, req.(*GfSpReimburseQuotaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _GfSpDownloadService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpDownloadService",
 	HandlerType: (*GfSpDownloadServiceServer)(nil),
@@ -528,6 +673,10 @@ var _GfSpDownloadService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GfSpGetChallengeInfo",
 			Handler:    _GfSpDownloadService_GfSpGetChallengeInfo_Handler,
+		},
+		{
+			MethodName: "GfSpReimburseQuota",
+			Handler:    _GfSpDownloadService_GfSpReimburseQuota_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -781,6 +930,81 @@ func (m *GfSpGetChallengeInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
+func (m *GfSpReimburseQuotaRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpReimburseQuotaRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpReimburseQuotaRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.YearMonth) > 0 {
+		i -= len(m.YearMonth)
+		copy(dAtA[i:], m.YearMonth)
+		i = encodeVarintDownload(dAtA, i, uint64(len(m.YearMonth)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ExtraQuota != 0 {
+		i = encodeVarintDownload(dAtA, i, uint64(m.ExtraQuota))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.BucketId != 0 {
+		i = encodeVarintDownload(dAtA, i, uint64(m.BucketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GfSpReimburseQuotaResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpReimburseQuotaResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpReimburseQuotaResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Err != nil {
+		{
+			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDownload(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintDownload(dAtA []byte, offset int, v uint64) int {
 	offset -= sovDownload(v)
 	base := offset
@@ -888,6 +1112,38 @@ func (m *GfSpGetChallengeInfoResponse) Size() (n int) {
 			l = len(b)
 			n += 1 + l + sovDownload(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *GfSpReimburseQuotaRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BucketId != 0 {
+		n += 1 + sovDownload(uint64(m.BucketId))
+	}
+	if m.ExtraQuota != 0 {
+		n += 1 + sovDownload(uint64(m.ExtraQuota))
+	}
+	l = len(m.YearMonth)
+	if l > 0 {
+		n += 1 + l + sovDownload(uint64(l))
+	}
+	return n
+}
+
+func (m *GfSpReimburseQuotaResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Err != nil {
+		l = m.Err.Size()
+		n += 1 + l + sovDownload(uint64(l))
 	}
 	return n
 }
@@ -1560,6 +1816,212 @@ func (m *GfSpGetChallengeInfoResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Checksums = append(m.Checksums, make([]byte, postIndex-iNdEx))
 			copy(m.Checksums[len(m.Checksums)-1], dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDownload(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthDownload
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GfSpReimburseQuotaRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDownload
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpReimburseQuotaRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpReimburseQuotaRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BucketId", wireType)
+			}
+			m.BucketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDownload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BucketId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExtraQuota", wireType)
+			}
+			m.ExtraQuota = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDownload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExtraQuota |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field YearMonth", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDownload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDownload
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDownload
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.YearMonth = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDownload(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthDownload
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GfSpReimburseQuotaResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDownload
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpReimburseQuotaResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpReimburseQuotaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDownload
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDownload
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDownload
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Err == nil {
+				m.Err = &gfsperrors.GfSpError{}
+			}
+			if err := m.Err.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

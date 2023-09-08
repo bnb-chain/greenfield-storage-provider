@@ -42,6 +42,17 @@ func TimestampYearMonth(ts int64) string {
 	return TimeToYearMonth(TimestampUsToTime(ts))
 }
 
+// IsNextMonth judge if the firstYearMonth is the next month of secondYearMonth
+func IsNextMonth(firstYearMonth, secondYearMonth string) bool {
+	layout := "2006-01"
+	time1, _ := time.Parse(layout, firstYearMonth)
+	time2, _ := time.Parse(layout, secondYearMonth)
+
+	nextMonth := time2.AddDate(0, 1, 0)
+
+	return time1.Equal(nextMonth)
+}
+
 func isAlreadyExists(err error) bool {
 	return strings.HasPrefix(err.Error(), TableAlreadyExistsErrorPrefix)
 }
