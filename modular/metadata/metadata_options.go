@@ -5,6 +5,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"runtime"
+	"time"
 )
 
 const (
@@ -51,5 +54,16 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	SpOperatorAddress = cfg.SpAccount.SpOperatorAddress
 	GatewayDomainName = cfg.Gateway.DomainName
 
+	startGoRoutineListener()
 	return nil
+}
+
+// startGoRoutineListener sets up a ticker to periodically check for go routine count of metadata service.
+func startGoRoutineListener() {
+	go func() {
+		dbSwitchTicker := time.NewTicker(500 * time.Millisecond)
+		for range dbSwitchTicker.C {
+			metrics.GoRoutineCount.Set(float64(runtime.NumGoroutine()))
+		}
+	}()
 }
