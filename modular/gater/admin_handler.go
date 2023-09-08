@@ -28,6 +28,8 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+const MaxSpRequestExpiryAgeInSec int32 = 1000
+
 // getApprovalHandler handles the get create bucket/object approval request.
 // Before create bucket/object to the greenfield, the user should the primary
 // SP whether willing serve for the user to manage the bucket/object.
@@ -534,6 +536,15 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get recover task address", "error", err)
 		err = ErrSignature
+		return
+	}
+
+	// check if the update time of the task has expired
+	taskUpdateTime := recoveryTask.GetUpdateTime()
+	timeDifference := time.Duration(time.Now().Unix()-taskUpdateTime) * time.Second
+	if int32(timeDifference.Seconds()) > MaxSpRequestExpiryAgeInSec {
+		log.CtxErrorw(reqCtx.Context(), "the update time of task has exceeded the expiration time")
+		err = ErrTaskMsgExpired
 		return
 	}
 

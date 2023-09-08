@@ -187,7 +187,7 @@ func (m *GfSpRecoverPieceTask) GetSignBytes() []byte {
 	fakeMsg := &GfSpRecoverPieceTask{
 		ObjectInfo:    m.GetObjectInfo(),
 		StorageParams: m.GetStorageParams(),
-		Task:          &GfSpTask{CreateTime: m.GetCreateTime()},
+		Task:          &GfSpTask{CreateTime: m.GetCreateTime(), UpdateTime: m.GetUpdateTime()},
 		PieceSize:     m.GetPieceSize(),
 		SegmentIdx:    m.GetSegmentIdx(),
 		// TODO rename EcIdx to ReplicateIdx
