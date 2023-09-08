@@ -430,6 +430,15 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if the update time of the task has expired
+	taskUpdateTime := receiveTask.GetUpdateTime()
+	timeDifference := time.Duration(time.Now().Unix()-taskUpdateTime) * time.Second
+	if int32(timeDifference.Seconds()) > MaxSpRequestExpiryAgeInSec {
+		log.CtxErrorw(reqCtx.Context(), "the update time of receive task has exceeded the expiration time", "object", receiveTask.ObjectInfo.ObjectName)
+		err = ErrTaskMsgExpired
+		return
+	}
+
 	// verify receive task signature
 	_, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
@@ -543,7 +552,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 	taskUpdateTime := recoveryTask.GetUpdateTime()
 	timeDifference := time.Duration(time.Now().Unix()-taskUpdateTime) * time.Second
 	if int32(timeDifference.Seconds()) > MaxSpRequestExpiryAgeInSec {
-		log.CtxErrorw(reqCtx.Context(), "the update time of task has exceeded the expiration time")
+		log.CtxErrorw(reqCtx.Context(), "the update time of recover task has exceeded the expiration time", "object", recoveryTask.ObjectInfo.ObjectName)
 		err = ErrTaskMsgExpired
 		return
 	}
