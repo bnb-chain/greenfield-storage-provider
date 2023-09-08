@@ -18,9 +18,7 @@ import (
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
@@ -101,26 +99,26 @@ type MetadataAPI interface {
 	VerifyPermission(ctx context.Context, Operator string, bucketName string, objectName string, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)
 	GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, *payment_types.StreamRecord, error)
 	GetEndpointBySpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) (string, error)
-	GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error)
-	ListBucketReadRecord(ctx context.Context, bucket *storage_types.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error)
+	GetBucketReadQuota(ctx context.Context, bucket *storagetypes.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error)
+	ListBucketReadRecord(ctx context.Context, bucket *storagetypes.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error)
 	GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error)
 	GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error)
 	GetGroupList(ctx context.Context, name string, prefix string, sourceType string, limit int64, offset int64, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Group, int64, error)
 	ListBucketsByIDs(ctx context.Context, bucketIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Bucket, error)
 	ListObjectsByIDs(ctx context.Context, objectIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Object, error)
-	ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroupFamily, error)
-	GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error)
+	ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error)
+	GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uint32, opts ...grpc.DialOption) (*virtualgrouptypes.GlobalVirtualGroup, error)
 	ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error)
 	ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error)
 	ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error)
-	GetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroupFamily, error)
-	GetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*virtual_types.GlobalVirtualGroup, error)
-	ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error)
-	ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtual_types.GlobalVirtualGroup, error)
+	GetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*virtualgrouptypes.GlobalVirtualGroupFamily, error)
+	GetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*virtualgrouptypes.GlobalVirtualGroup, error)
+	ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
+	ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
 	ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListMigrateBucketEvents, error)
 	ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListSwapOutEvents, error)
 	ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error)
-	GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*storage_types.ObjectInfo, error)
+	GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*storagetypes.ObjectInfo, error)
 	VerifyPermissionByID(ctx context.Context, Operator string, resourceType resource.ResourceType, resourceID uint64, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)
 	GetSPInfo(ctx context.Context, operatorAddress string, opts ...grpc.DialOption) (*sptypes.StorageProvider, error)
 	GetStatus(ctx context.Context, opts ...grpc.DialOption) (*types.Status, error)
@@ -201,4 +199,5 @@ type GfSpConnAPI interface {
 // nolint:unused
 type stdLib interface {
 	io.Reader
+	io.ReadCloser
 }

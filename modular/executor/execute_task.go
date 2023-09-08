@@ -20,7 +20,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -80,7 +80,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
 	task.AppendLog("executor-end-handle-seal-task")
-	log.CtxDebugw(ctx, "finish to handle seal object task", "error", task.Error())
+	log.CtxDebugw(ctx, "finished to handle seal object task", "error", task.Error())
 }
 
 func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTask, sealMsg *storagetypes.MsgSealObject) error {
@@ -102,8 +102,8 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 		txHash, err = e.baseApp.GfSpClient().SealObject(ctx, sealMsg)
 		if err != nil {
 			task.AppendLog(fmt.Sprintf("executor-seal-tx-failed-error:%s-retry:%d", err.Error(), retry))
-			log.CtxErrorw(ctx, "failed to seal object", "retry", retry,
-				"max_retry", task.GetMaxRetry(), "error", err)
+			log.CtxErrorw(ctx, "failed to seal object", "retry", retry, "max_retry", task.GetMaxRetry(),
+				"error", err)
 			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
 		} else {
 			task.AppendLog(fmt.Sprintf("executor-seal-tx-succeed-retry:%d-txHash:%s", retry, txHash))
@@ -123,8 +123,7 @@ func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.Obj
 		sealed bool
 	)
 	for retry := 0; retry < e.maxListenSealRetry; retry++ {
-		sealed, err = e.baseApp.Consensus().ListenObjectSeal(ctx,
-			object.Id.Uint64(), e.listenSealTimeoutHeight)
+		sealed, err = e.baseApp.Consensus().ListenObjectSeal(ctx, object.Id.Uint64(), e.listenSealTimeoutHeight)
 		if err != nil {
 			task.AppendLog(fmt.Sprintf("executor-listen-seal-failed-error:%s-retry:%d", err.Error(), retry))
 			log.CtxErrorw(ctx, "failed to listen object seal", "retry", retry,
@@ -148,7 +147,7 @@ func (e *ExecuteModular) listenSealObject(ctx context.Context, task coretask.Obj
 
 func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask) {
 	if task.GetObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to handle receive piece confirm, task pointer dangling")
+		log.CtxError(ctx, "failed to handle receive piece confirm, task pointer dangling")
 		return
 	}
 	var (
@@ -162,21 +161,23 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		return
 	}
 	if offChainObject.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.CtxErrorw(ctx, "failed to confirm receive task, object is unsealed")
+		log.CtxError(ctx, "failed to confirm receive task, object is unsealed")
 		task.SetError(ErrUnsealed)
 		return
 	}
+
 	// regardless of whether the sp is as secondary or not, it needs to be set to the
 	// sealed state to let the manager clear the task.
 	task.SetSealed(true)
 	// TODO: might add api GetGvgByObjectId in meta
 	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, offChainObject.BucketName, true)
 	if err != nil || bucketInfo == nil {
-		log.Errorf("failed to get bucket by bucket name", "error", err)
+		log.Errorw("failed to get bucket by bucket name", "error", err)
 		return
 	}
 	gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), offChainObject.LocalVirtualGroupId)
 	if err != nil {
+		log.Errorw("failed to get global virtual group", "error", err)
 		return
 	}
 	if int(task.GetRedundancyIdx()) >= len(gvg.GetSecondarySpIds()) {
@@ -185,25 +186,26 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		task.SetError(ErrReplicateIdsOutOfBounds)
 		return
 	}
+
 	spID, err := e.getSPID()
 	if err != nil {
+		log.Errorw("failed to get sp id", "error", err)
 		return
 	}
 	if gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())] != spID {
-		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch",
-			"expect", gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())], "current", e.baseApp.OperatorAddress())
+		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch", "expect",
+			gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())], "current", e.baseApp.OperatorAddress())
 		task.SetError(ErrSecondaryMismatch)
 		err = e.baseApp.GfSpDB().DeleteObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx())
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to delete integrity")
+			log.CtxError(ctx, "failed to delete integrity")
 		}
 		var pieceKey string
 		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(offChainObject.GetPayloadSize(),
 			task.GetStorageParams().GetMaxPayloadSize())
 		for i := uint32(0); i < segmentCount; i++ {
 			if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-				pieceKey = e.baseApp.PieceOp().ECPieceKey(offChainObject.Id.Uint64(), i,
-					uint32(task.GetRedundancyIdx()))
+				pieceKey = e.baseApp.PieceOp().ECPieceKey(offChainObject.Id.Uint64(), i, uint32(task.GetRedundancyIdx()))
 			} else {
 				pieceKey = e.baseApp.PieceOp().SegmentPieceKey(offChainObject.Id.Uint64(), i)
 			}
@@ -220,7 +222,7 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.GCObjectTask) {
 	var (
 		err                error
-		waitingGCObjects   []*types.Object
+		waitingGCObjects   []*metadatatypes.Object
 		currentGCBlockID   uint64
 		currentGCObjectID  uint64
 		responseEndBlockID uint64
@@ -246,26 +248,25 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			task.SetError(err)
 			reportProgress()
 		}
-		log.CtxDebugw(ctx, "gc object task",
-			"task_info", task.Info(), "is_succeed", isSucceed,
+		log.CtxDebugw(ctx, "gc object task", "task_info", task.Info(), "is_succeed", isSucceed,
 			"response_end_block_id", responseEndBlockID, "waiting_gc_object_number", len(waitingGCObjects),
 			"has_gc_object_number", gcObjectNumber, "try_again_later", tryAgainLater,
 			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
 	}()
 
-	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(
-		ctx, e.baseApp.OperatorAddress(), task.GetStartBlockNumber(),
-		task.GetEndBlockNumber(), true); err != nil {
+	if waitingGCObjects, responseEndBlockID, err = e.baseApp.GfSpClient().ListDeletedObjectsByBlockNumberRange(ctx,
+		e.baseApp.OperatorAddress(), task.GetStartBlockNumber(), task.GetEndBlockNumber(), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
 		return
 	}
 	if responseEndBlockID < task.GetStartBlockNumber() || responseEndBlockID < task.GetEndBlockNumber() {
 		tryAgainLater = true
-		log.CtxInfow(ctx, "metadata is not latest, try again later",
-			"response_end_block_id", responseEndBlockID, "task_info", task.Info())
+		log.CtxInfow(ctx, "metadata is not latest, try again later", "response_end_block_id",
+			responseEndBlockID, "task_info", task.Info())
 		return
 	}
 	if len(waitingGCObjects) == 0 {
+		log.Error("no waiting gc objects")
 		hasNoObject = true
 		return
 	}
@@ -285,27 +286,29 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				"task_current_gc_block_id", task.GetCurrentBlockNumber())
 			continue
 		}
-		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(
-			objectInfo.GetPayloadSize(), storageParams.VersionedParams.GetMaxSegmentSize())
+		segmentCount := e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
+			storageParams.VersionedParams.GetMaxSegmentSize())
 		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(currentGCObjectID, segIdx)
 			// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
 			deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-			log.CtxDebugw(ctx, "delete the primary sp pieces",
-				"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
+			log.CtxDebugw(ctx, "delete the primary sp pieces", "object_info", objectInfo,
+				"piece_key", pieceKey, "error", deleteErr)
 		}
 		bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
 		if err != nil || bucketInfo == nil {
-			log.Errorf("failed to get bucket by bucket name", "error", err)
+			log.Errorw("failed to get bucket by bucket name", "error", err)
 			return
 		}
 		gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 		if err != nil {
+			log.Errorw("failed to get global virtual group", "error", err)
 			return
 		}
 		// TODO get sp id from config
 		spId, err := e.getSPID()
 		if err != nil {
+			log.Errorw("failed to get sp id", "error", err)
 			return
 		}
 		var redundancyIndex int32 = -1
@@ -391,6 +394,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 	}
 
 	if redundancyIdx >= 0 {
+		log.Info(1)
 		// recover secondary SP data by the primary SP
 		if err = e.recoverByPrimarySP(ctx, task); err != nil {
 			// if failed to recover by the primary SP, try to recovery secondary SP data from the other secondary SPs
@@ -586,11 +590,12 @@ loop:
 }
 
 // getECPieceBySegment return the EC encodes data based on the redundancyIdx and the segment data
-func (e *ExecuteModular) getECPieceBySegment(ctx context.Context, redundancyIdx int32, objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params, recoverySegData []byte, segmentIdx uint32) ([]byte, error) {
+func (e *ExecuteModular) getECPieceBySegment(ctx context.Context, redundancyIdx int32, objectInfo *storagetypes.ObjectInfo,
+	params *storagetypes.Params, recoverySegData []byte, segmentIdx uint32) ([]byte, error) {
 	dataShards := params.GetRedundantDataChunkNum()
 	parityShards := params.GetRedundantParityChunkNum()
 	if redundancyIdx < 0 || redundancyIdx > int32(dataShards+parityShards-1) {
-		return nil, fmt.Errorf("invaild redundancyIdx ")
+		return nil, fmt.Errorf("invalid redundancyIdx")
 	}
 	// if it is the data shards of ec-encoded pieces, just get the ec data by offset
 	if redundancyIdx > 0 && redundancyIdx < int32(dataShards)-1 {
@@ -602,9 +607,7 @@ func (e *ExecuteModular) getECPieceBySegment(ctx context.Context, redundancyIdx 
 	}
 
 	// if it is the parity shard, it needs to encode again to compute the parity shards
-	ECEncodeData, err := redundancy.EncodeRawSegment(recoverySegData,
-		int(dataShards),
-		int(parityShards))
+	ECEncodeData, err := redundancy.EncodeRawSegment(recoverySegData, int(dataShards), int(parityShards))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to ec encode data when recovering secondary SP", "error", err)
 		return nil, err
@@ -615,11 +618,15 @@ func (e *ExecuteModular) getECPieceBySegment(ctx context.Context, redundancyIdx 
 func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretask.RecoveryPieceTask, recoveryChecksum []byte) error {
 	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetEcIdx())
 	if err != nil {
-		log.CtxErrorw(ctx, "search integrity hash in db error when recovery", "objectName:", task.GetObjectInfo().ObjectName, "error", err)
-		return ErrGfSpDBWithDetail("search integrity hash in db error when recovery, objectName: " + task.GetObjectInfo().ObjectName + ",error: " + err.Error())
+		log.CtxErrorw(ctx, "failed to get object integrity hash in db when recovery", "objectName:",
+			task.GetObjectInfo().ObjectName, "error", err)
+		return ErrGfSpDBWithDetail("failed to get object integrity hash in db when recovery, objectName: " +
+			task.GetObjectInfo().ObjectName + ",error: " + err.Error())
 	}
 
 	expectedHash := integrityMeta.PieceChecksumList[task.GetSegmentIdx()]
+	fmt.Println(expectedHash)
+	fmt.Println(recoveryChecksum)
 	if !bytes.Equal(recoveryChecksum, expectedHash) {
 		log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
 			"expected value", hex.EncodeToString(expectedHash), "actual value", recoveryChecksum, "error", ErrRecoveryPieceChecksum)
@@ -628,7 +635,8 @@ func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretas
 	return nil
 }
 
-func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string) (data []byte, err error) {
+func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string) (
+	data []byte, err error) {
 	var (
 		signature []byte
 		pieceData []byte
@@ -642,7 +650,7 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 	// recovery primary sp segment or secondary piece
 	respBody, err := e.baseApp.GfSpClient().GetPieceFromECChunks(ctx, endpoint, rTask)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to recovery piece", "objectID", rTask.GetObjectInfo().Id,
+		log.CtxErrorw(ctx, "failed to get piece from ec chunks", "objectID", rTask.GetObjectInfo().Id,
 			"segment_idx", rTask.GetSegmentIdx(), "secondary endpoint", endpoint, "error", err)
 		return
 	}
@@ -663,7 +671,7 @@ func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.Rec
 
 // getObjectSecondaryEndpoints return the secondary sp endpoints list of the specific object
 func (e *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, objectInfo *storagetypes.ObjectInfo) ([]string, int, error) {
-	// TODO: might add api GetGvgByObjectId in meta
+	// TODO: might add api GetGvgByObjectID in meta
 	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
 	if err != nil {
 		log.Errorf("failed to get bucket by bucket name", "error", err)
