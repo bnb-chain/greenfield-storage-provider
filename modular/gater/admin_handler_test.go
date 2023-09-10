@@ -1238,17 +1238,13 @@ func TestGateModular_getReplicateHandlerHandler(t *testing.T) {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					false, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, ReplicateObjectPiecePath)
 				req := httptest.NewRequest(http.MethodPut, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				// no expire header was set between the http request of SPs, the expiry info is judged by the task update time info of the receive task
 				req.Header.Set(GnfdReceiveMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
@@ -1260,17 +1256,13 @@ func TestGateModular_getReplicateHandlerHandler(t *testing.T) {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					false, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, ReplicateObjectPiecePath)
 				req := httptest.NewRequest(http.MethodPut, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				// no expire header was set between the http request of SPs, the expiry info is judged by the task update time info of the receive task
 				req.Header.Set(GnfdRecoveryMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
@@ -1282,17 +1274,13 @@ func TestGateModular_getReplicateHandlerHandler(t *testing.T) {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					false, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, ReplicateObjectPiecePath)
 				req := httptest.NewRequest(http.MethodPut, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				// no expire header was set between the http request of SPs, the expiry info is judged by the task update time info of the receive task
 				req.Header.Set(GnfdReceiveMsgHeader, "7b227461736b223a7b7d2c226f626a6563745f696e666f223a7b226f626a6563745f6e616d65223a226d6f636b2d6f626a6563742d6e616d65222c226964223a2230227d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b7d2c226d61785f7061796c6f61645f73697a65223a31307d2c227365676d656e745f696478223a312c22726564756e64616e63795f696478223a327d")
 				return req
 			},
@@ -1329,17 +1317,13 @@ func TestGateModular_getRecoverDataHandler(t *testing.T) {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					false, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, RecoverObjectPiecePath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				// no expire header was set between the http request of SPs, the expiry info is judged by the task update time info of the receive task
 				req.Header.Set(GnfdRecoveryMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
@@ -1351,17 +1335,13 @@ func TestGateModular_getRecoverDataHandler(t *testing.T) {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					false, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, RecoverObjectPiecePath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				// no expire header was set between the http request of SPs, the expiry info is judged by the task update time info of the receive task
 				req.Header.Set(GnfdRecoveryMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
@@ -1373,17 +1353,13 @@ func TestGateModular_getRecoverDataHandler(t *testing.T) {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					false, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, RecoverObjectPiecePath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				// no expire header was set between the http request of SPs, the expiry info is judged by the task update time info of the receive task
 				req.Header.Set(GnfdRecoveryMsgHeader, "7b227461736b223a7b7d2c226f626a6563745f696e666f223a7b226f626a6563745f6e616d65223a226d6f636b2d6f626a6563742d6e616d65222c226964223a2230227d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b7d2c226d61785f7061796c6f61645f73697a65223a31307d2c227365676d656e745f696478223a312c22726564756e64616e63795f696478223a327d")
 				return req
 			},
