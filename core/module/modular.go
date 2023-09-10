@@ -221,6 +221,8 @@ type Manager interface {
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
+	// QueryUploadTasksStats queries object related tasks count
+	QueryUploadTasksStats(ctx context.Context) (int, int, int, int, int)
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

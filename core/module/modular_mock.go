@@ -1253,6 +1253,24 @@ func (mr *MockManagerMockRecorder) QueryTasks(ctx, subKey interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockManager)(nil).QueryTasks), ctx, subKey)
 }
 
+// QueryUploadTasksStats mocks base method.
+func (m *MockManager) QueryUploadTasksStats(ctx context.Context) (int, int, int, int, int) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryUploadTasksStats", ctx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(int)
+	ret4, _ := ret[4].(int)
+	return ret0, ret1, ret2, ret3, ret4
+}
+
+// QueryUploadTasksStats indicates an expected call of QueryUploadTasksStats.
+func (mr *MockManagerMockRecorder) QueryUploadTasksStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryUploadTasksStats", reflect.TypeOf((*MockManager)(nil).QueryUploadTasksStats), ctx)
+}
+
 // ReleaseResource mocks base method.
 func (m *MockManager) ReleaseResource(ctx context.Context, scope rcmgr.ResourceScopeSpan) {
 	m.ctrl.T.Helper()

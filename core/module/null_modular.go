@@ -64,6 +64,11 @@ func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateB
 func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.MsgSwapOut) error {
 	return ErrNilModular
 }
+
+func (m *NullModular) QueryUploadTasksStats(context.Context) (int, int, int, int, int) {
+	return 0, 0, 0, 0, 0
+}
+
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
 }

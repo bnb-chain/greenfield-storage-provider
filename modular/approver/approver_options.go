@@ -22,6 +22,9 @@ const (
 	// DefaultCreateObjectApprovalParallel defines the default value of parallel
 	// for approved create object per approver
 	DefaultCreateObjectApprovalParallel = 10240
+	// DefaultSPMigrateBucketParallel defines the default value of parallel
+	// for migrating bucket to the dest SP
+	DefaultSPMigrateBucketParallel = 1024
 )
 
 func NewApprovalModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -53,4 +56,8 @@ func defaultApprovalOptions(cfg *gfspconfig.GfSpConfig, approver *ApprovalModula
 		approver.Name()+"-create-bucket-approval", cfg.Parallel.GlobalCreateBucketApprovalParallel)
 	approver.objectQueue = cfg.Customize.NewStrategyTQueueFunc(
 		approver.Name()+"-create-object-approval", cfg.Parallel.GlobalCreateObjectApprovalParallel)
+	if cfg.Parallel.SPMigrateBucketParallel == uint64(0) {
+		cfg.Parallel.SPMigrateBucketParallel = DefaultSPMigrateBucketParallel
+	}
+	approver.migrateBucketLimit = cfg.Parallel.SPMigrateBucketParallel
 }

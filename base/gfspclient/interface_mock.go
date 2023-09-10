@@ -816,6 +816,21 @@ func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectState(ctx, objectID inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadObjectState", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUploadObjectState), varargs...)
 }
 
+// GetUploadTasksStats mocks base method.
+func (m *MockGfSpClientAPI) GetUploadTasksStats(ctx context.Context) (*gfspserver.UploadTasksStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUploadTasksStats", ctx)
+	ret0, _ := ret[0].(*gfspserver.UploadTasksStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUploadTasksStats indicates an expected call of GetUploadTasksStats.
+func (mr *MockGfSpClientAPIMockRecorder) GetUploadTasksStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadTasksStats", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUploadTasksStats), ctx)
+}
+
 // GetUserBuckets mocks base method.
 func (m *MockGfSpClientAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	m.ctrl.T.Helper()
@@ -2406,6 +2421,21 @@ func (m *MockManagerAPI) CreateUploadObject(ctx context.Context, task task.Uploa
 func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
+}
+
+// GetUploadTasksStats mocks base method.
+func (m *MockManagerAPI) GetUploadTasksStats(ctx context.Context) (*gfspserver.UploadTasksStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUploadTasksStats", ctx)
+	ret0, _ := ret[0].(*gfspserver.UploadTasksStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUploadTasksStats indicates an expected call of GetUploadTasksStats.
+func (mr *MockManagerAPIMockRecorder) GetUploadTasksStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadTasksStats", reflect.TypeOf((*MockManagerAPI)(nil).GetUploadTasksStats), ctx)
 }
 
 // NotifyMigrateSwapOut mocks base method.

@@ -792,3 +792,7 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 
 	return pushErr
 }
+
+func (m *ManageModular) QueryUploadTasksStats(_ context.Context) (int, int, int, int, int) {
+	return m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(), m.resumableUploadQueue.Len(), m.maxUploadObjectNumber
+}
