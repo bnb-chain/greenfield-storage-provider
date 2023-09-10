@@ -188,6 +188,11 @@ function test_sp_exit() {
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     sleep 180
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
+    ./gnfd-cmd -c ./config.toml --home ./ sp ls |grep sp5
+    if [ $? -eq 0 ]; then
+        echo "sp5 has no completed exit yet"
+        exit 1
+    fi
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
     ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/example.json ./new1.json

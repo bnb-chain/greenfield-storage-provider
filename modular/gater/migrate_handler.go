@@ -90,7 +90,8 @@ func (g *GateModular) checkMigratePieceAuth(reqCtx *RequestContext, migrateGVGHe
 	}
 	effect, err := g.baseApp.GfSpClient().VerifyMigrateGVGPermission(reqCtx.Context(), migrateGVG.GetBucketID(), migrateGVG.GetSrcGvg().GetId(), sp.GetId())
 	if effect == nil || err != nil {
-		log.Errorw("failed to verify migrate gvg permission", "gvg_task", migrateGVG, "dest_sp", sp, "effect", effect, "error", err)
+		log.Errorw("failed to verify migrate gvg permission", "gvg_bucket_id", migrateGVG.GetBucketID(),
+			"src_gvg_id", migrateGVG.GetSrcGvg().GetId(), "dest_sp", sp.GetId(), "effect", effect, "error", err)
 		return false, err
 	}
 	if *effect == permissiontypes.EFFECT_ALLOW {
