@@ -124,25 +124,3 @@ func (b *BsDBImpl) ListVirtualGroupFamiliesByVgfIDs(vgfIDs []uint32) ([]*GlobalV
 
 	return families, err
 }
-
-// GetVgfByGvgID get vgf by gvg id
-func (b *BsDBImpl) GetVgfByGvgID(gvgIDs uint32) (*GlobalVirtualGroupFamily, error) {
-	var (
-		vgf   *GlobalVirtualGroupFamily
-		query string
-		err   error
-	)
-	startTime := time.Now()
-	methodName := currentFunction()
-	defer func() {
-		if err != nil {
-			MetadataDatabaseFailureMetrics(err, startTime, methodName)
-		} else {
-			MetadataDatabaseSuccessMetrics(startTime, methodName)
-		}
-	}()
-	query = fmt.Sprintf("select * from global_virtual_group_families where FIND_IN_SET('%d', global_virtual_group_ids) > 0 and removed = false;", gvgIDs)
-	err = b.db.Raw(query).Find(&vgf).Error
-
-	return vgf, err
-}

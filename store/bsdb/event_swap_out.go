@@ -81,7 +81,7 @@ func (b *BsDBImpl) GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error) {
 		event       *EventSwapOut
 		cancelEvent *EventCancelSwapOut
 		query       string
-		vgf         *GlobalVirtualGroupFamily
+		gvg         *GlobalVirtualGroup
 		err         error
 	)
 	startTime := time.Now()
@@ -94,18 +94,18 @@ func (b *BsDBImpl) GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error) {
 		}
 	}()
 
-	vgf, err = b.GetVgfByGvgID(gvgID)
-	if err != nil {
+	gvg, err = b.GetGlobalVirtualGroupByGvgID(gvgID)
+	if err != nil || gvg == nil {
 		return nil, err
 	}
 
-	query = fmt.Sprintf("select * from event_swap_out where FIND_IN_SET('%d', global_virtual_group_ids) > 0 or global_virtual_group_family_id = %d order by create_at desc;", gvgID, vgf.GlobalVirtualGroupFamilyId)
+	query = fmt.Sprintf("select * from event_swap_out where FIND_IN_SET('%d', global_virtual_group_ids) > 0 or global_virtual_group_family_id = %d order by create_at desc;", gvgID, gvg.FamilyId)
 	err = b.db.Raw(query).Take(&event).Error
 	if err != nil {
 		return nil, err
 	}
 
-	query = fmt.Sprintf("select * from event_cancel_swap_out where FIND_IN_SET('%d', global_virtual_group_ids) > 0 or global_virtual_group_family_id = %d order by create_at desc;", gvgID, vgf.GlobalVirtualGroupFamilyId)
+	query = fmt.Sprintf("select * from event_cancel_swap_out where FIND_IN_SET('%d', global_virtual_group_ids) > 0 or global_virtual_group_family_id = %d order by create_at desc;", gvgID, gvg.FamilyId)
 	err = b.db.Raw(query).Take(&cancelEvent).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

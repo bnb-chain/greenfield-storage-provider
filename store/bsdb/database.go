@@ -128,8 +128,6 @@ type Metadata interface {
 	GetEventMigrationBucketByBucketID(bucketID common.Hash) (*EventMigrationBucket, error)
 	//GetEventSwapOutByGvgID get swap out event by gvg id
 	GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error)
-	// GetVgfByGvgID get vgf by gvg id
-	GetVgfByGvgID(gvgIDs uint32) (*GlobalVirtualGroupFamily, error)
 }
 
 // BSDB contains all the methods required by block syncer database
