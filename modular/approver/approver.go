@@ -21,16 +21,17 @@ const (
 
 var _ module.Approver = &ApprovalModular{}
 
-type managerUploadTasksStats struct {
-	uploadTaskCount          uint32
-	replicateTaskCount       uint32
-	sealTaskCount            uint32
-	resumableUploadTaskCount uint32
-	maxUploadingCount        uint32
+type managerTasksStats struct {
+	uploadTaskCount    uint32
+	replicateTaskCount uint32
+	sealTaskCount      uint32
+	resumableTaskCount uint32
+	maxUploadingCount  uint32
+	migrateGVGCount    uint32
 }
 
-func (s *managerUploadTasksStats) getTotalTasksNumber() uint32 {
-	return s.uploadTaskCount + s.replicateTaskCount + s.sealTaskCount + s.resumableUploadTaskCount
+func (s *managerTasksStats) totalUploadTasks() uint32 {
+	return s.uploadTaskCount + s.replicateTaskCount + s.sealTaskCount + s.resumableTaskCount
 }
 
 type ApprovalModular struct {
@@ -49,10 +50,10 @@ type ApprovalModular struct {
 	objectApprovalTimeoutHeight uint64
 
 	// the maximum number of buckets migrating to current SP concurrently is allowed
-	migrateBucketLimit uint64
+	migrateGVGLimit int
 
-	mtx              sync.Mutex
-	uploadTasksStats *managerUploadTasksStats
+	mtx        sync.Mutex
+	tasksStats *managerTasksStats
 
 	spID uint32
 }
@@ -69,7 +70,7 @@ func (a *ApprovalModular) Start(ctx context.Context) error {
 		return err
 	}
 	a.scope = scope
-	a.uploadTasksStats = &managerUploadTasksStats{}
+	a.tasksStats = &managerTasksStats{}
 	go a.eventLoop(ctx)
 	return nil
 }
@@ -110,16 +111,16 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 			}
 			a.SetCurrentBlockHeight(current)
 		case <-updateManagerTasksStatsTicket.C:
-			stats, err := a.baseApp.GfSpClient().GetUploadTasksStats(context.Background())
+			stats, err := a.baseApp.GfSpClient().GetTasksStats(context.Background())
 			if err != nil {
 				return
 			}
 			a.mtx.Lock()
-			a.uploadTasksStats = &managerUploadTasksStats{
-				stats.GetUploadTaskCount(), stats.GetReplicateTaskCount(), stats.GetSealTaskCount(), stats.GetUploadTaskCount(),
-				stats.GetMaxUploadingCount(),
+			a.tasksStats = &managerTasksStats{
+				stats.GetUploadTaskCount(), stats.GetReplicateTaskCount(), stats.GetSealTaskCount(), stats.GetResumableUploadTaskCount(),
+				stats.GetMaxUploadingCount(), stats.GetMigrateGvgCount(),
 			}
-			log.Debugw("cur managerUploadTasksStats", "a.uploadTasksStats", a.uploadTasksStats)
+			log.Debugw("cur managerTasksStats", "a.TasksStats", a.tasksStats)
 			a.mtx.Unlock()
 		}
 	}
@@ -158,11 +159,14 @@ func (a *ApprovalModular) getSPID() (uint32, error) {
 	return a.spID, nil
 }
 
-func (a *ApprovalModular) exceedApprovalLimit() bool {
+func (a *ApprovalModular) exceedCreateObjectLimit() bool {
 	a.mtx.Lock()
 	defer a.mtx.Unlock()
+	return a.tasksStats.totalUploadTasks() >= a.tasksStats.maxUploadingCount
+}
 
-	log.Debugw("exceedApprovalLimit", "getTotalTasksNumber", a.uploadTasksStats.getTotalTasksNumber(),
-		"maxUploadingCount", a.uploadTasksStats.maxUploadingCount)
-	return a.uploadTasksStats.getTotalTasksNumber() >= a.uploadTasksStats.maxUploadingCount
+func (a *ApprovalModular) exceedMigrateGVGALimit() bool {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+	return a.tasksStats.migrateGVGCount >= uint32(a.migrateGVGLimit)
 }

@@ -201,10 +201,67 @@ func TestApprovalModular_PostCreateBucketApproval(t *testing.T) {
 	a.PostCreateBucketApproval(context.TODO(), nil)
 }
 
-func TestApprovalModular_PreMigrateBucketApproval(t *testing.T) {
+func TestApprovalModular_PreMigrateBucketApprovalSuccess(t *testing.T) {
 	a := setup(t)
-	err := a.PreMigrateBucketApproval(context.TODO(), nil)
+	a.spID = 1
+	a.migrateGVGLimit = 2
+	a.tasksStats = &managerTasksStats{
+		migrateGVGCount: 1,
+	}
+	ctrl := gomock.NewController(t)
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	a.baseApp.SetGfSpClient(m1)
+	req := &gfsptask.GfSpMigrateBucketApprovalTask{
+		Task: &gfsptask.GfSpTask{},
+		MigrateBucketInfo: &storagetypes.MsgMigrateBucket{
+			BucketName:     "mockBucketName",
+			DstPrimarySpId: 1,
+		},
+	}
+	err := a.PreMigrateBucketApproval(context.TODO(), req)
 	assert.Nil(t, err)
+}
+
+func TestApprovalModular_PreMigrateBucketApprovalFailure1(t *testing.T) {
+	a := setup(t)
+	a.spID = 1
+	a.migrateGVGLimit = 2
+	a.tasksStats = &managerTasksStats{
+		migrateGVGCount: 1,
+	}
+	ctrl := gomock.NewController(t)
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	a.baseApp.SetGfSpClient(m1)
+	req := &gfsptask.GfSpMigrateBucketApprovalTask{
+		Task: &gfsptask.GfSpTask{},
+		MigrateBucketInfo: &storagetypes.MsgMigrateBucket{
+			BucketName:     "mockBucketName",
+			DstPrimarySpId: 2,
+		},
+	}
+	err := a.PreMigrateBucketApproval(context.TODO(), req)
+	assert.NotNil(t, err)
+}
+
+func TestApprovalModular_PreMigrateBucketApprovalFailure2(t *testing.T) {
+	a := setup(t)
+	a.spID = 1
+	a.migrateGVGLimit = 2
+	a.tasksStats = &managerTasksStats{
+		migrateGVGCount: 2,
+	}
+	ctrl := gomock.NewController(t)
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	a.baseApp.SetGfSpClient(m1)
+	req := &gfsptask.GfSpMigrateBucketApprovalTask{
+		Task: &gfsptask.GfSpTask{},
+		MigrateBucketInfo: &storagetypes.MsgMigrateBucket{
+			BucketName:     "mockBucketName",
+			DstPrimarySpId: 1,
+		},
+	}
+	err := a.PreMigrateBucketApproval(context.TODO(), req)
+	assert.NotNil(t, err)
 }
 
 func TestApprovalModular_HandleMigrateBucketApprovalTaskSuccess1(t *testing.T) {
@@ -294,10 +351,36 @@ func TestApprovalModular_PostMigrateBucketApproval(t *testing.T) {
 	a.PostMigrateBucketApproval(context.TODO(), nil)
 }
 
-func TestApprovalModular_PreCreateObjectApproval(t *testing.T) {
+func TestApprovalModular_PreCreateObjectApprovalSuccess(t *testing.T) {
 	a := setup(t)
+	ctrl := gomock.NewController(t)
+	a.tasksStats = &managerTasksStats{
+		uploadTaskCount:    1,
+		replicateTaskCount: 1,
+		sealTaskCount:      1,
+		resumableTaskCount: 1,
+		maxUploadingCount:  5,
+	}
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	a.baseApp.SetGfSpClient(m1)
 	err := a.PreCreateObjectApproval(context.TODO(), nil)
 	assert.Nil(t, err)
+}
+
+func TestApprovalModular_PreCreateObjectApprovalFailure1(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	a.tasksStats = &managerTasksStats{
+		uploadTaskCount:    1,
+		replicateTaskCount: 1,
+		sealTaskCount:      1,
+		resumableTaskCount: 1,
+		maxUploadingCount:  4,
+	}
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	a.baseApp.SetGfSpClient(m1)
+	err := a.PreCreateObjectApproval(context.TODO(), nil)
+	assert.NotNil(t, err)
 }
 
 func TestApprovalModular_HandleCreateObjectApprovalTaskSuccess1(t *testing.T) {

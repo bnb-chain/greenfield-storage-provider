@@ -180,13 +180,12 @@ type ParallelConfig struct {
 	GlobalGcObjectSafeBlockDistance   uint64 `comment:"optional"`
 	GlobalSyncConsensusInfoInterval   uint64 `comment:"optional"`
 
-	SPMigrateBucketParallel             uint64 `comment:"optional"`
-	UploadObjectParallelPerNode         int    `comment:"optional"`
-	ReceivePieceParallelPerNode         int    `comment:"optional"`
-	DownloadObjectParallelPerNode       int    `comment:"optional"`
-	ChallengePieceParallelPerNode       int    `comment:"optional"`
-	AskReplicateApprovalParallelPerNode int    `comment:"optional"`
-	QuerySPParallelPerNode              int64  `comment:"optional"`
+	UploadObjectParallelPerNode         int   `comment:"optional"`
+	ReceivePieceParallelPerNode         int   `comment:"optional"`
+	DownloadObjectParallelPerNode       int   `comment:"optional"`
+	ChallengePieceParallelPerNode       int   `comment:"optional"`
+	AskReplicateApprovalParallelPerNode int   `comment:"optional"`
+	QuerySPParallelPerNode              int64 `comment:"optional"`
 
 	DiscontinueBucketEnabled       bool `comment:"required"`
 	DiscontinueBucketTimeInterval  int  `comment:"optional"`

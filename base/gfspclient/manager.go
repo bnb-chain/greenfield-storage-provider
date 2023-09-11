@@ -183,19 +183,16 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 	return nil
 }
 
-func (s *GfSpClient) GetUploadTasksStats(ctx context.Context) (*gfspserver.UploadTasksStats, error) {
+func (s *GfSpClient) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
 		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
 	}
-	resp, err := gfspserver.NewGfSpManageServiceClient(conn).QueryUploadTasksStats(ctx, &gfspserver.GfSpQueryUploadTasksStatsRequest{})
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).QueryTasksStats(ctx, &gfspserver.GfSpQueryTasksStatsRequest{})
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query manager's task stats", "error", err)
 		return nil, ErrRPCUnknownWithDetail("client failed to query manager's task stats, error: " + err.Error())
-	}
-	if resp.GetErr() != nil {
-		return nil, resp.GetErr()
 	}
 	return resp.GetStats(), nil
 }

@@ -332,17 +332,18 @@ func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspser
 	return &gfspserver.GfSpNotifyMigrateSwapOutResponse{}, nil
 }
 
-func (g *GfSpBaseApp) QueryUploadTasksStats(ctx context.Context, _ *gfspserver.GfSpQueryUploadTasksStatsRequest) (
-	*gfspserver.GfSpQueryUploadTasksStatsResponse, error) {
-	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber := g.manager.QueryUploadTasksStats(ctx)
-	stats := &gfspserver.UploadTasksStats{
+func (g *GfSpBaseApp) QueryTasksStats(ctx context.Context, _ *gfspserver.GfSpQueryTasksStatsRequest) (
+	*gfspserver.GfSpQueryTasksStatsResponse, error) {
+	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount := g.manager.QueryTasksStats(ctx)
+	stats := &gfspserver.TasksStats{
 		UploadTaskCount:          uint32(uploadTaskCount),
 		ReplicateTaskCount:       uint32(replicateTaskCount),
 		SealTaskCount:            uint32(sealTaskCount),
 		ResumableUploadTaskCount: uint32(resumeUploadTaskCount),
 		MaxUploadingCount:        uint32(maxUploadingNumber),
+		MigrateGvgCount:          uint32(migrateGVGCount),
 	}
-	return &gfspserver.GfSpQueryUploadTasksStatsResponse{
+	return &gfspserver.GfSpQueryTasksStatsResponse{
 		Stats: stats,
 	}, nil
 }

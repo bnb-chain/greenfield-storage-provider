@@ -329,12 +329,12 @@ func (mockManagerServer) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfsp
 	}
 }
 
-func (s mockManagerServer) QueryUploadTasksStats(ctx context.Context, req *gfspserver.GfSpQueryUploadTasksStatsRequest) (*gfspserver.GfSpQueryUploadTasksStatsResponse, error) {
+func (s mockManagerServer) QueryTasksStats(ctx context.Context, req *gfspserver.GfSpQueryTasksStatsRequest) (*gfspserver.GfSpQueryTasksStatsResponse, error) {
 	if req == nil {
 		return nil, mockRPCErr
 	}
-	return &gfspserver.GfSpQueryUploadTasksStatsResponse{
-		Stats: &gfspserver.UploadTasksStats{},
+	return &gfspserver.GfSpQueryTasksStatsResponse{
+		Stats: &gfspserver.TasksStats{},
 	}, nil
 }
 

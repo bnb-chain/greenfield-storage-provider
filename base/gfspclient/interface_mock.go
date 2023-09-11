@@ -816,19 +816,19 @@ func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectState(ctx, objectID inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadObjectState", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUploadObjectState), varargs...)
 }
 
-// GetUploadTasksStats mocks base method.
-func (m *MockGfSpClientAPI) GetUploadTasksStats(ctx context.Context) (*gfspserver.UploadTasksStats, error) {
+// GetTasksStats mocks base method.
+func (m *MockGfSpClientAPI) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadTasksStats", ctx)
-	ret0, _ := ret[0].(*gfspserver.UploadTasksStats)
+	ret := m.ctrl.Call(m, "GetTasksStats", ctx)
+	ret0, _ := ret[0].(*gfspserver.TasksStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUploadTasksStats indicates an expected call of GetUploadTasksStats.
-func (mr *MockGfSpClientAPIMockRecorder) GetUploadTasksStats(ctx interface{}) *gomock.Call {
+// GetTasksStats indicates an expected call of GetTasksStats.
+func (mr *MockGfSpClientAPIMockRecorder) GetTasksStats(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadTasksStats", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUploadTasksStats), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksStats", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetTasksStats), ctx)
 }
 
 // GetUserBuckets mocks base method.
@@ -2423,19 +2423,19 @@ func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
 }
 
-// GetUploadTasksStats mocks base method.
-func (m *MockManagerAPI) GetUploadTasksStats(ctx context.Context) (*gfspserver.UploadTasksStats, error) {
+// GetTasksStats mocks base method.
+func (m *MockManagerAPI) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUploadTasksStats", ctx)
-	ret0, _ := ret[0].(*gfspserver.UploadTasksStats)
+	ret := m.ctrl.Call(m, "GetTasksStats", ctx)
+	ret0, _ := ret[0].(*gfspserver.TasksStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUploadTasksStats indicates an expected call of GetUploadTasksStats.
-func (mr *MockManagerAPIMockRecorder) GetUploadTasksStats(ctx interface{}) *gomock.Call {
+// GetTasksStats indicates an expected call of GetTasksStats.
+func (mr *MockManagerAPIMockRecorder) GetTasksStats(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadTasksStats", reflect.TypeOf((*MockManagerAPI)(nil).GetUploadTasksStats), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksStats", reflect.TypeOf((*MockManagerAPI)(nil).GetTasksStats), ctx)
 }
 
 // NotifyMigrateSwapOut mocks base method.

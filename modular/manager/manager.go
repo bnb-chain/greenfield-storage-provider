@@ -793,6 +793,18 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 	return pushErr
 }
 
-func (m *ManageModular) QueryUploadTasksStats(_ context.Context) (int, int, int, int, int) {
-	return m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(), m.resumableUploadQueue.Len(), m.maxUploadObjectNumber
+func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
+	replicateCount int,
+	sealCount int,
+	resumableUploadCount int,
+	maxUploadCount int,
+	migrateGVGCount int,
+) {
+	uploadTasks = m.uploadQueue.Len()
+	replicateCount = m.replicateQueue.Len()
+	sealCount = m.sealQueue.Len()
+	resumableUploadCount = m.resumableUploadQueue.Len()
+	maxUploadCount = m.maxUploadObjectNumber
+	migrateGVGCount = m.migrateGVGQueue.Len()
+	return
 }

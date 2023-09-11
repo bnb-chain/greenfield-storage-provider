@@ -118,13 +118,8 @@ func (a *ApprovalModular) PreMigrateBucketApproval(ctx context.Context, task cor
 	if selfSPID != task.GetMigrateBucketInfo().GetDstPrimarySpId() {
 		return fmt.Errorf("not the correct sp to ask approval")
 	}
-
-	migratingBucketCount, err := a.baseApp.GfSpClient().GetSPMigratingBucketNumber(ctx, selfSPID)
-	if err != nil {
-		return err
-	}
-	if migratingBucketCount >= a.migrateBucketLimit {
-		log.CtxErrorw(ctx, "Exceeding SP concurrent bucket migration limit", "current migrating buckets", migratingBucketCount, "limit", a.migrateBucketLimit)
+	if a.exceedMigrateGVGALimit() {
+		log.CtxErrorw(ctx, "Exceeding SP concurrent bucket migration limit", "limit", a.migrateGVGLimit)
 		return ErrExceedApprovalLimit
 	}
 	return nil
@@ -171,7 +166,7 @@ func (a *ApprovalModular) PostMigrateBucketApproval(ctx context.Context, task co
 }
 
 func (a *ApprovalModular) PreCreateObjectApproval(_ context.Context, _ coretask.ApprovalCreateObjectTask) error {
-	if a.exceedApprovalLimit() {
+	if a.exceedCreateObjectLimit() {
 		return ErrExceedApprovalLimit
 	}
 	return nil
