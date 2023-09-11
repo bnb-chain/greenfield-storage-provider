@@ -158,7 +158,7 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, task coretask.Mi
 func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,
 	objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params) error {
 	index := util.ContainOnlyOneDifferentElement(srcGvg.GetSecondarySpIds(), destGvg.GetSecondarySpIds())
-	if index == -1 {
+	if index == piecestore.PrimarySPRedundancyIndex {
 		// no conflict
 		return nil
 	}
