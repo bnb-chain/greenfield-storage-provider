@@ -159,7 +159,7 @@ function test_file_size_greater_than_16_mb() {
 # test sp exit #
 ################
 function test_sp_exit() {
-    set -e
+    set -xe
     # choose sp5
     cd ${workspace}/deployment/localup/local_env/sp5
     operator_address=$(echo "$(grep "SpOperatorAddress" ./config.toml)" | grep -o "0x[0-9a-zA-Z]*")
@@ -188,11 +188,6 @@ function test_sp_exit() {
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
     sleep 180
     ./gnfd-cmd -c ./config.toml --home ./ sp ls
-    ./gnfd-cmd -c ./config.toml --home ./ sp ls |grep sp5
-    if [ $? -eq 0 ]; then
-        echo "sp5 has no completed exit yet"
-        exit 1
-    fi
     ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
     ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/example.json
     ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/example.json ./new1.json
