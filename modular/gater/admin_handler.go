@@ -9,11 +9,6 @@ import (
 	"strings"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -25,8 +20,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
+
+const MaxSpRequestExpiryAgeInSec int32 = 1000
 
 // getApprovalHandler handles the get create bucket/object approval request.
 // Before create bucket/object to the greenfield, the user should the primary
@@ -405,6 +404,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
 	reqCtx, _ = NewRequestContext(r, g)
@@ -433,6 +433,15 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify receive task", "error", err, "task", receiveTask)
 		err = ErrSignature
+		return
+	}
+
+	// check if the update time of the task has expired
+	taskUpdateTime := receiveTask.GetUpdateTime()
+	timeDifference := time.Duration(time.Now().Unix()-taskUpdateTime) * time.Second
+	if int32(timeDifference.Seconds()) > MaxSpRequestExpiryAgeInSec {
+		log.CtxErrorw(reqCtx.Context(), "the update time of receive task has exceeded the expiration time", "object", receiveTask.ObjectInfo.ObjectName)
+		err = ErrTaskMsgExpired
 		return
 	}
 
@@ -528,18 +537,20 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// check signature consistent
-	taskSignature := recoveryTask.GetSignature()
-	signatureAddr, pk, err := commonhash.RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
+	// verify recovery task signature
+	signatureAddr, err := reqCtx.verifyTaskSignature(recoveryTask.GetSignBytes(), recoveryTask.GetSignature())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get recover task address", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task", "error", err, "task", recoveryTask)
 		err = ErrSignature
 		return
 	}
 
-	if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature[:len(taskSignature)-1]) {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
-		err = ErrSignature
+	// check if the update time of the task has expired
+	taskUpdateTime := recoveryTask.GetUpdateTime()
+	timeDifference := time.Duration(time.Now().Unix()-taskUpdateTime) * time.Second
+	if int32(timeDifference.Seconds()) > MaxSpRequestExpiryAgeInSec {
+		log.CtxErrorw(reqCtx.Context(), "the update time of recovery task has exceeded the expiration time", "object", recoveryTask.ObjectInfo.ObjectName)
+		err = ErrTaskMsgExpired
 		return
 	}
 

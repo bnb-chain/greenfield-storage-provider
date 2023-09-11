@@ -687,7 +687,7 @@ func (m *GfSpReceivePieceTask) GetSignBytes() []byte {
 	fakeMsg := &GfSpReceivePieceTask{
 		ObjectInfo:    m.GetObjectInfo(),
 		StorageParams: m.GetStorageParams(),
-		Task:          &GfSpTask{CreateTime: m.GetCreateTime()},
+		Task:          &GfSpTask{CreateTime: m.GetCreateTime(), UpdateTime: m.GetUpdateTime()},
 		SegmentIdx:    m.GetSegmentIdx(),
 		RedundancyIdx: m.GetRedundancyIdx(),
 		PieceSize:     m.GetPieceSize(),

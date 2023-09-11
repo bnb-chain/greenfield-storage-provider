@@ -400,7 +400,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				if quotaUpdateErr != nil {
 					log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
 				}
-				log.CtxDebugw(reqCtx.Context(), "success to recoup extra quota to user", "extra quota:", extraQuota)
+				log.CtxDebugw(reqCtx.Context(), "//"+
+					"success to recoup extra quota to user", "extra quota:", extraQuota)
 			}
 
 			log.CtxDebugw(reqCtx.Context(), "get object error")
