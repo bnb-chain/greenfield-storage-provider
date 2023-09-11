@@ -178,16 +178,20 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 		if err == nil {
 			rTask.SetSecondarySignatures(secondarySignatures)
-			quitChan <- struct{}{}
 		}
+		quitChan <- struct{}{}
 	}()
-
-	select {
-	case err = <-errChan:
-		cancel()
-		return err
-	case <-quitChan:
-		return nil
+	var replicateErr error
+	for {
+		select {
+		case replicateErr = <-errChan:
+			cancel()
+		case <-quitChan:
+			if replicateErr != nil {
+				return replicateErr
+			}
+			return err
+		}
 	}
 }
 
