@@ -82,11 +82,11 @@ message GfSpQueryTasksStatsResponse {
 }
 
 message TasksStats {
-  uint32 upload_task_count = 1;
-  uint32 replicate_task_count = 2;
-  uint32 seal_task_count = 3;
-  uint32 resumable_upload_task_count = 4;
-  uint32 max_uploading_count = 5;
+  uint32 upload_count = 1;
+  uint32 replicate_count = 2;
+  uint32 seal_count = 3;
+  uint32 resumable_upload_count = 4;
+  uint32 max_uploading = 5;
   uint32 migrate_gvg_count = 6;
 }
 
@@ -96,5 +96,5 @@ service GfSpManageService {
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
   rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
-  rpc QueryTasksStats(GfSpQueryTasksStatsRequest) returns (GfSpQueryTasksStatsResponse) {}
+  rpc GfSpQueryTasksStats(GfSpQueryTasksStatsRequest) returns (GfSpQueryTasksStatsResponse) {}
 }

@@ -117,8 +117,8 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 			}
 			a.mtx.Lock()
 			a.tasksStats = &managerTasksStats{
-				stats.GetUploadTaskCount(), stats.GetReplicateTaskCount(), stats.GetSealTaskCount(), stats.GetResumableUploadTaskCount(),
-				stats.GetMaxUploadingCount(), stats.GetMigrateGvgCount(),
+				stats.GetUploadCount(), stats.GetReplicateCount(), stats.GetSealCount(), stats.GetResumableUploadCount(),
+				stats.GetMaxUploading(), stats.GetMigrateGvgCount(),
 			}
 			log.Debugw("cur managerTasksStats", "a.TasksStats", a.tasksStats)
 			a.mtx.Unlock()

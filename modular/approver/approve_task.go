@@ -17,7 +17,7 @@ import (
 var (
 	ErrDanglingPointer     = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
 	ErrExceedBucketNumber  = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
-	ErrExceedApprovalLimit = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10003, "SP is not able to approve request, please come back later")
+	ErrExceedApprovalLimit = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10003, "SP is too busy to approve the request, please come back later")
 )
 
 func ErrSignerWithDetail(detail string) *gfsperrors.GfSpError {
@@ -116,7 +116,7 @@ func (a *ApprovalModular) PreMigrateBucketApproval(ctx context.Context, task cor
 		return err
 	}
 	if selfSPID != task.GetMigrateBucketInfo().GetDstPrimarySpId() {
-		return fmt.Errorf("not the correct sp to ask approval")
+		return fmt.Errorf("current SP is not the correct one to ask for approval")
 	}
 	if a.exceedMigrateGVGALimit() {
 		log.CtxErrorw(ctx, "Exceeding SP concurrent bucket migration limit", "limit", a.migrateGVGLimit)

@@ -221,7 +221,7 @@ type Manager interface {
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
-	// QueryTasksStats tasks stats from Manager
+	// QueryTasksStats queries tasks stats from Manager server
 	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int)
 }
 
