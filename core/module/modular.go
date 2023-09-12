@@ -125,7 +125,6 @@ type Downloader interface {
 	// PostDownloadPiece is called after HandleDownloadPieceTask, it can recycle
 	// resources, make statistics and do some other operations.
 	PostDownloadPiece(ctx context.Context, task task.DownloadPieceTask)
-
 	// PreChallengePiece prepares to handle ChallengePiece, it can do some checks
 	// such as checking for duplicates, if limitation of SP has been reached, etc.
 	PreChallengePiece(ctx context.Context, task task.ChallengePieceTask) error

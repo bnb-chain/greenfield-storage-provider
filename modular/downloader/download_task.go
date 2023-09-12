@@ -279,17 +279,6 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		bucketID := downloadPieceTask.GetBucketInfo().Id.Uint64()
 		bucketName := downloadPieceTask.GetBucketInfo().GetBucketName()
 
-		// if stream account has been frozen, it is not allowed to download
-		streamRecord, checkErr := d.baseApp.GfSpClient().GetPaymentByBucketName(ctx, bucketName, true)
-		if checkErr == nil {
-			if streamRecord.Status != payment_types.STREAM_ACCOUNT_STATUS_ACTIVE {
-				return ErrAccountFrozen
-			}
-		} else {
-			// the meta service happen error will not be return
-			log.CtxDebugw(ctx, "failed to get stream record info", "error", checkErr)
-		}
-
 		readRecord := &spdb.ReadRecord{
 			BucketID:        bucketID,
 			ObjectID:        downloadPieceTask.GetObjectInfo().Id.Uint64(),

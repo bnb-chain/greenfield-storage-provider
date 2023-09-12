@@ -51,6 +51,8 @@ var (
 	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50032, "System busy, try to request later")
 	ErrInvalidRedundancyIndex = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50035, "invalid redundancy index")
 	ErrBucketUnavailable      = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50036, "bucket is not in service status")
+	ErrReplyDownloadData      = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50037, "reply the downloaded data to client failed")
+	ErrTaskMsgExpired         = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50038, "the update time of the task has exceed the expire time")
 )
 
 func ErrEncodeResponseWithDetail(detail string) *gfsperrors.GfSpError {

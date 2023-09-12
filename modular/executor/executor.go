@@ -10,14 +10,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-var _ module.TaskExecutor = &ExecuteModular{}
+var _ coremodule.TaskExecutor = &ExecuteModular{}
 
 type ExecuteModular struct {
 	baseApp *gfspapp.GfSpBaseApp
@@ -51,7 +51,7 @@ type ExecuteModular struct {
 }
 
 func (e *ExecuteModular) Name() string {
-	return module.ExecuteModularName
+	return coremodule.ExecuteModularName
 }
 
 func (e *ExecuteModular) Start(ctx context.Context) error {
@@ -134,8 +134,8 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	if askTask == nil {
 		metrics.ReqCounter.WithLabelValues(ExecutorFailureAskTask).Inc()
 		metrics.ReqTime.WithLabelValues(ExecutorFailureAskTask).Observe(time.Since(startTime).Seconds())
-		log.CtxErrorw(ctx, "failed to ask task due to dangling pointer",
-			"remaining", limit.String(), "error", err)
+		log.CtxErrorw(ctx, "failed to ask task due to dangling pointer", "remaining", limit.String(),
+			"error", err)
 		return ErrDanglingPointer
 	}
 	metrics.ReqCounter.WithLabelValues(ExecutorSuccessAskTask).Inc()
@@ -228,7 +228,7 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 	default:
 		log.CtxError(ctx, "unsupported task type")
 	}
-	log.CtxDebug(ctx, "finish to handle task")
+	log.CtxDebug(ctx, "finished to handle task")
 	return nil
 }
 
@@ -245,7 +245,7 @@ func (e *ExecuteModular) ReportTask(ctx context.Context, task coretask.Task) (er
 	}()
 
 	err = e.baseApp.GfSpClient().ReportTask(ctx, task)
-	log.CtxDebugw(ctx, "finish to report task", "task_info", task.Info(), "error", err)
+	log.CtxDebugw(ctx, "finished to report task", "task_info", task.Info(), "error", err)
 	return err
 }
 

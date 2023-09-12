@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
-	"github.com/avast/retry-go/v4"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -294,17 +294,17 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 
 	// TODO:
 	// veritySignatureTime := time.Now()
-	// TODO get gvgID and blsPubKey from task, bls pub key alreay injected via key manager for current sp
+	// TODO get gvgID and blsPubKey from task, bls pub key already injected via key manager for current sp
 	// var blsPubKey bls.PublicKey
 	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
 	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
 	// metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
-			"redundancy_idx", redundancyIdx, "error", err)
-		return nil, err
-	}
+	// metrics.PerfPutObjectTime.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
+	// if err != nil {
+	// 	log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
+	// 		"redundancy_idx", redundancyIdx, "error", err)
+	// 	return nil, err
+	// }
 	log.CtxDebugw(ctx, "succeed to done replicate", "endpoint", spEndpoint, "redundancy_idx", redundancyIdx)
 	return signature, nil
 }

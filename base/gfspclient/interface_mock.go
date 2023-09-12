@@ -670,6 +670,23 @@ func (mr *MockGfSpClientAPIMockRecorder) GetPiece(ctx, downloadPieceTask interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetPiece), varargs...)
 }
 
+func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, bucketID, extraQuota, yearMonth}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RecoupQuota", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx context.Context, bucketID, extraQuota,yearMonth interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).RecoupQuota), varargs...)
+}
+
 // GetPieceFromECChunks mocks base method.
 func (m *MockGfSpClientAPI) GetPieceFromECChunks(ctx context.Context, endpoint string, task task.RecoveryPieceTask) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()
@@ -2214,6 +2231,23 @@ func (mr *MockDownloaderAPIMockRecorder) GetPiece(ctx, downloadPieceTask interfa
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, downloadPieceTask}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockDownloaderAPI)(nil).GetPiece), varargs...)
+}
+
+func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption)  error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, bucketID,extraQuota,yearMonth}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RecoupQuota", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (mr *MockDownloaderAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockDownloaderAPI)(nil).RecoupQuota), varargs...)
 }
 
 // MockGaterAPI is a mock of GaterAPI interface.
@@ -4155,6 +4189,20 @@ func NewMockstdLib(ctrl *gomock.Controller) *MockstdLib {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockstdLib) EXPECT() *MockstdLibMockRecorder {
 	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockstdLib) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockstdLibMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockstdLib)(nil).Close))
 }
 
 // Read mocks base method.

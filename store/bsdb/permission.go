@@ -161,9 +161,9 @@ func (b *BsDBImpl) ListObjectPolicies(objectID common.Hash, actionType permtypes
 			permission.resource_type = ? AND 
 			permission.resource_id = ? AND 
 			permission.policy_id > ? AND 
-			permission.expiration_time > ? AND 
+			(permission.expiration_time > ? OR permission.expiration_time = 0) AND 
 			permission.removed = false AND 
-			statements.expiration_time > ? AND 
+			(statements.expiration_time > ? OR statements.expiration_time = 0)AND 
 			statements.action_value in (?) AND 
 			statements.removed = false`,
 			gnfdresource.RESOURCE_TYPE_OBJECT.String(),
