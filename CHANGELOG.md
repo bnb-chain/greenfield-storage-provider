@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.5-alpha.3
+
+FEATURES
+* [#1129](https://github.com/bnb-chain/greenfield-storage-provider/pull/1129) feat: add back metadata go routine listener
+* [#1128](https://github.com/bnb-chain/greenfield-storage-provider/pull/1128) feat: support expire time check of SP task info
+
+BUGFIX
+* [#1092](https://github.com/bnb-chain/greenfield-storage-provider/pull/1092) fix: support reimburse quota if download consumed extra quota
+* [#1127](https://github.com/bnb-chain/greenfield-storage-provider/pull/1127) fix:bs groups unique index
+* [#1125](https://github.com/bnb-chain/greenfield-storage-provider/pull/1125) fix: expiration time for statement
+
+
+TEST
+* [#1126](https://github.com/bnb-chain/greenfield-storage-provider/pull/1126) test: modular/executor pkg adds UTs
+
 ## v0.2.5-alpha.2
 
 FEATURES
