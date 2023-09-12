@@ -11,7 +11,6 @@ BUGFIX
 * [#1127](https://github.com/bnb-chain/greenfield-storage-provider/pull/1127) fix:bs groups unique index
 * [#1125](https://github.com/bnb-chain/greenfield-storage-provider/pull/1125) fix: expiration time for statement
 
-
 TEST
 * [#1126](https://github.com/bnb-chain/greenfield-storage-provider/pull/1126) test: modular/executor pkg adds UTs
 
