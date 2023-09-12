@@ -165,6 +165,7 @@ func (b *BsDBImpl) ListObjectPolicies(objectID common.Hash, actionType permtypes
 			permission.removed = false AND 
 			(statements.expiration_time > ? OR statements.expiration_time = 0)AND 
 			statements.action_value in (?) AND 
+			statements.effect = "EFFECT_ALLOW" AND
 			statements.removed = false`,
 			gnfdresource.RESOURCE_TYPE_OBJECT.String(),
 			objectID,
