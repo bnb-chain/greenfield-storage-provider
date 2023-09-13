@@ -375,35 +375,14 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 // getObjectHandler handles the download object request.
 func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                       error
-		reqCtxErr                 error
-		reqCtx                    *RequestContext
-		authenticated             bool
-		objectInfo                *storagetypes.ObjectInfo
-		bucketInfo                *storagetypes.BucketInfo
-		params                    *storagetypes.Params
-		lowOffset                 int64
-		highOffset                int64
-		pieceInfos                []*downloader.SegmentPieceInfo
-		pieceData                 []byte
-		extraQuota, consumedQuota uint64
-		replyDataSize             int
-		dbUpdateTimeStamp         int64
+		err           error
+		reqCtxErr     error
+		reqCtx        *RequestContext
+		authenticated bool
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
 		if err != nil {
-			// if the bucket exists extra quota when download object, recoup the quota to user
-			if extraQuota > 0 {
-				quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), bucketInfo.Id.Uint64(), extraQuota, sqldb.TimestampYearMonth(dbUpdateTimeStamp))
-				// no need to return the db error to user
-				if quotaUpdateErr != nil {
-					log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
-				}
-				log.CtxDebugw(reqCtx.Context(), "//"+
-					"success to recoup extra quota to user", "extra quota:", extraQuota)
-			}
-
 			log.CtxDebugw(reqCtx.Context(), "get object error")
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
@@ -497,13 +476,55 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	} // else anonymous users can get public object.
 
+	// do the actual download
+	err = g.downloadObject(w, reqCtx)
+	if err != nil {
+		return
+	}
+}
+
+func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestContext) error {
+	var (
+		err                       error
+		params                    *storagetypes.Params
+		bucketInfo                *storagetypes.BucketInfo
+		objectInfo                *storagetypes.ObjectInfo
+		isRange                   bool
+		rangeStart, rangeEnd      int64
+		lowOffset                 int64
+		highOffset                int64
+		pieceInfos                []*downloader.SegmentPieceInfo
+		pieceData                 []byte
+		extraQuota, consumedQuota uint64
+		replyDataSize             int
+		dbUpdateTimeStamp         int64
+	)
+	defer func() {
+		if err != nil {
+			// if the bucket exists extra quota when download object, recoup the quota to user
+			if extraQuota > 0 {
+				quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), bucketInfo.Id.Uint64(), extraQuota, sqldb.TimestampYearMonth(dbUpdateTimeStamp))
+				// no need to return the db error to user
+				if quotaUpdateErr != nil {
+					log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
+				}
+				log.CtxDebugw(reqCtx.Context(), "//"+
+					"success to recoup extra quota to user", "extra quota:", extraQuota)
+			}
+			w.Header().Del(ContentLengthHeader)
+			w.Header().Del(ContentRangeHeader)
+			w.Header().Del(ContentTypeHeader)
+			w.Header().Del(ContentDispositionHeader)
+		}
+	}()
+
 	getObjectTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
-		return
+		return err
 	}
 
 	getBucketTime := time.Now()
@@ -512,7 +533,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
-		return
+		return err
 	}
 
 	getParamTime := time.Now()
@@ -521,16 +542,16 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
-		return
+		return err
 	}
 
-	isRange, rangeStart, rangeEnd := parseRange(reqCtx.request.Header.Get(RangeHeader))
+	isRange, rangeStart, rangeEnd = parseRange(reqCtx.request.Header.Get(RangeHeader))
 	if isRange && (rangeEnd < 0 || rangeEnd >= int64(objectInfo.GetPayloadSize())) {
 		rangeEnd = int64(objectInfo.GetPayloadSize()) - 1
 	}
 	if isRange && (rangeStart < 0 || rangeEnd < 0 || rangeStart > rangeEnd) {
 		err = ErrInvalidRange
-		return
+		return err
 	}
 
 	if isRange {
@@ -546,7 +567,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		lowOffset, highOffset, g.baseApp.TaskTimeout(task, uint64(highOffset-lowOffset+1)), g.baseApp.TaskMaxRetry(task))
 	if pieceInfos, err = downloader.SplitToSegmentPieceInfos(task, g.baseApp.PieceOp()); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
-		return
+		return err
 	}
 	w.Header().Set(ContentTypeHeader, objectInfo.GetContentType())
 	if isRange {
@@ -581,7 +602,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			if idx >= 1 || (idx == 0 && downloaderErr.GetInnerCode() == 85101) {
 				extraQuota = downloadSize - consumedQuota
 			}
-			return
+			return err
 		}
 
 		writeTime := time.Now()
@@ -591,7 +612,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			log.CtxErrorw(reqCtx.Context(), "failed to write the data to connection", "objectName", objectInfo.ObjectName, "error", err)
 			extraQuota = downloadSize - consumedQuota
 			err = ErrReplyDownloadData
-			return
+			return err
 		}
 		// the quota value should be computed by the reply content length
 		consumedQuota += uint64(replyDataSize)
@@ -600,6 +621,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	metrics.ReqPieceSize.WithLabelValues(GatewayGetObjectSize).Observe(float64(highOffset - lowOffset + 1))
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
+	return nil
 }
 
 // queryUploadProgressHandler handles the query uploaded object progress request.
@@ -700,31 +722,17 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		err                  error
 		reqCtx               *RequestContext
 		authenticated        bool
-		isRange              bool
-		rangeStart, rangeEnd int64
 		redirectURL          string
-		params               *storagetypes.Params
 		bucketInfo           *storagetypes.BucketInfo
 		objectInfo           *storagetypes.ObjectInfo
 		isRequestFromBrowser bool
 		spEndpoint           string
 		getEndpointErr       error
-		dbUpdateTimeStamp    int64
-		extraQuota           uint64
 	)
 	startTime := time.Now()
 	defer func() {
 		reqCtx.Cancel()
 		if err != nil {
-			// if the bucket exists extra quota when download object, recoup the quota to user
-			if extraQuota > 0 {
-				quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), bucketInfo.Id.Uint64(), extraQuota, sqldb.TimestampYearMonth(dbUpdateTimeStamp))
-				// no need to return the db error to user
-				if quotaUpdateErr != nil {
-					log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
-				}
-				log.CtxDebugw(reqCtx.Context(), "success to recoup extra quota to user", "extra quota:", extraQuota)
-			}
 			spErrCode := gfsperrors.MakeGfSpError(err).GetInnerCode()
 			if isRequestFromBrowser {
 				reqCtx.SetHTTPCode(http.StatusOK)
@@ -911,60 +919,15 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		}
 
 	}
-
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
-		return
-	}
-
-	var low int64
-	var high int64
-	if isRange {
-		low = rangeStart
-		high = rangeEnd
-	} else {
-		low = 0
-		high = int64(objectInfo.GetPayloadSize()) - 1
-	}
-
-	task := &gfsptask.GfSpDownloadObjectTask{}
-	downloadSize := uint64(high - low + 1)
-	task.InitDownloadObjectTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
-		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
-
-	data, getObjectErr := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
-	if getObjectErr != nil {
-		err = getObjectErr
-		downloaderErr := gfsperrors.MakeGfSpError(err)
-		// if the error is  split piece error or piece store error, the traffic should have already consumed extra data
-		if downloaderErr.GetInnerCode() == 85101 || downloaderErr.GetInnerCode() == downloader.ErrInvalidParam.InnerCode {
-			extraQuota = downloadSize
-		}
-		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
-		return
-	}
-
 	if isDownload {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	} else {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
 	}
-	w.Header().Set(ContentTypeHeader, objectInfo.GetContentType())
-	if isRange {
-		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
-			"-"+util.Uint64ToString(uint64(high)))
-	} else {
-		w.Header().Set(ContentLengthHeader, util.Uint64ToString(objectInfo.GetPayloadSize()))
-	}
 
-	replyDataSize, err := w.Write(data)
-	// if the connection of client has been disconnected, the response will fail
+	// do the actual download
+	err = g.downloadObject(w, reqCtx)
 	if err != nil {
-		extraQuota = downloadSize - uint64(replyDataSize)
-		err = ErrReplyDownloadData
-		log.CtxErrorw(reqCtx.Context(), "failed to write the data to connection", "objectName", objectInfo.ObjectName, "error", err)
 		return
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
