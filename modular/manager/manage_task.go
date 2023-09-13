@@ -9,41 +9,40 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"cosmossdk.io/math"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
-	ErrDanglingTask         = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60001, "OoooH... request lost")
-	ErrRepeatedTask         = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60002, "request repeated")
-	ErrExceedTask           = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60003, "OoooH... request exceed, try again later")
-	ErrCanceledTask         = gfsperrors.Register(module.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
-	ErrFutureSupport        = gfsperrors.Register(module.ManageModularName, http.StatusNotFound, 60005, "future support")
-	ErrNotifyMigrateSwapOut = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60006, "failed to notify swap out start")
+	ErrDanglingTask         = gfsperrors.Register(coremodule.ManageModularName, http.StatusBadRequest, 60001, "OoooH... request lost")
+	ErrRepeatedTask         = gfsperrors.Register(coremodule.ManageModularName, http.StatusNotAcceptable, 60002, "request repeated")
+	ErrExceedTask           = gfsperrors.Register(coremodule.ManageModularName, http.StatusNotAcceptable, 60003, "OoooH... request exceed, try again later")
+	ErrCanceledTask         = gfsperrors.Register(coremodule.ManageModularName, http.StatusBadRequest, 60004, "task canceled")
+	ErrFutureSupport        = gfsperrors.Register(coremodule.ManageModularName, http.StatusNotFound, 60005, "future support")
+	ErrNotifyMigrateSwapOut = gfsperrors.Register(coremodule.ManageModularName, http.StatusNotAcceptable, 60006, "failed to notify swap out start")
 )
 
 func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
-	return gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 65201, detail)
+	return gfsperrors.Register(coremodule.ManageModularName, http.StatusInternalServerError, 65201, detail)
 }
 
-func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error) {
+func (m *ManageModular) DispatchTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -52,7 +51,8 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 		case dispatchTask := <-m.taskCh:
 			atomic.AddInt64(&m.backupTaskNum, -1)
 			if !limit.NotLess(dispatchTask.EstimateLimit()) {
-				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit", dispatchTask.EstimateLimit().String(), "task_info", dispatchTask.Info())
+				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit",
+					dispatchTask.EstimateLimit().String(), "task_info", dispatchTask.Info())
 				go func() {
 					m.taskCh <- dispatchTask
 					atomic.AddInt64(&m.backupTaskNum, 1)
@@ -70,7 +70,7 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit rcmgr.Limit) (ta
 	}
 }
 
-func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error {
+func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task coretask.UploadObjectTask) error {
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle begin upload object due to task pointer dangling")
 		return ErrDanglingTask
@@ -95,7 +95,7 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 	return nil
 }
 
-func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error {
+func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task coretask.UploadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle done upload object due to pointer dangling")
 		return ErrDanglingTask
@@ -108,7 +108,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 	}
 	if task.Error() != nil {
 		go func() {
-			err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         task.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
 				ErrorDescription: task.Error().Error(),
@@ -130,7 +130,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
 }
 
-func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task task.ObjectTask) error {
+func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task coretask.ObjectTask) error {
 	startPickGVGTime := time.Now()
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, vgfID, task.GetStorageParams())
 	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
@@ -154,9 +154,9 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
-	go m.backUpTask()
+	go m.backupTask()
 	go func() {
-		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+		err = m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
 			TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
 		})
@@ -169,7 +169,7 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	return nil
 }
 
-func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error {
+func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask) error {
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle begin upload object due to task pointer dangling")
 		return ErrDanglingTask
@@ -198,7 +198,7 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 	return nil
 }
 
-func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error {
+func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle done upload object, pointer dangling")
 		return ErrDanglingTask
@@ -212,7 +212,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 	}
 	if task.Error() != nil {
 		go func() error {
-			err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         task.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
 				ErrorDescription: task.Error().Error(),
@@ -254,9 +254,9 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
 		return err
 	}
-	go m.backUpTask()
+	go m.backupTask()
 	go func() error {
-		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+		err = m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
 			TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
 		})
@@ -270,7 +270,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 	return nil
 }
 
-func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask) error {
+func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle replicate piece due to pointer dangling")
 		return ErrDanglingTask
@@ -297,7 +297,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		go func() {
 			_ = m.baseApp.GfSpDB().InsertPutEvent(task)
 			log.Debugw("replicate piece object task has combined seal object task", "task_info", task.Info())
-			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:  task.GetObjectInfo().Id.Uint64(),
 				TaskState: types.TaskState_TASK_STATE_SEAL_OBJECT_DONE,
 			}); err != nil {
@@ -330,9 +330,9 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		log.CtxErrorw(ctx, "failed to push seal object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-	go m.backUpTask()
+	go m.backupTask()
 	go func() {
-		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+		if err = m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 			ObjectID:             task.GetObjectInfo().Id.Uint64(),
 			TaskState:            types.TaskState_TASK_STATE_SEAL_OBJECT_DOING,
 			GlobalVirtualGroupID: task.GetGlobalVirtualGroupId(),
@@ -348,7 +348,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	return nil
 }
 
-func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask task.ReplicatePieceTask) error {
+func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask coretask.ReplicatePieceTask) error {
 	if handleTask.GetNotAvailableSpIdx() != -1 {
 		gvgID := handleTask.GetGlobalVirtualGroupId()
 		gvg, err := m.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
@@ -390,7 +390,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
 		return ErrCanceledTask
 	}
-	handleTask = oldTask.(task.ReplicatePieceTask)
+	handleTask = oldTask.(coretask.ReplicatePieceTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-repush:%d", shadowTask.GetRetry()))
 		handleTask.AppendLog(shadowTask.GetLogs())
@@ -404,7 +404,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			time.Since(time.Unix(handleTask.GetCreateTime(), 0)).Seconds())
 		go func() {
 			_ = m.baseApp.GfSpDB().InsertPutEvent(shadowTask)
-			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
 				ErrorDescription: "exceed_replicate_retry",
@@ -419,7 +419,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 	return nil
 }
 
-func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.SealObjectTask) error {
+func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) error {
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle seal object due to task pointer dangling")
 		return ErrDanglingTask
@@ -440,7 +440,7 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 		m.sealQueue.PopByKey(task.Key())
 		task.AppendLog(fmt.Sprintf("manager-handle-succeed-seal-task-retry:%d", task.GetRetry()))
 		_ = m.baseApp.GfSpDB().InsertPutEvent(task)
-		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+		if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 			ObjectID:  task.GetObjectInfo().Id.Uint64(),
 			TaskState: types.TaskState_TASK_STATE_SEAL_OBJECT_DONE,
 		}); err != nil {
@@ -453,7 +453,7 @@ func (m *ManageModular) HandleSealObjectTask(ctx context.Context, task task.Seal
 	return nil
 }
 
-func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTask task.SealObjectTask) error {
+func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTask coretask.SealObjectTask) error {
 	shadowTask := handleTask
 	oldTask := m.sealQueue.PopByKey(handleTask.Key())
 	if m.TaskUploading(ctx, handleTask) {
@@ -464,7 +464,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
 		return ErrCanceledTask
 	}
-	handleTask = oldTask.(task.SealObjectTask)
+	handleTask = oldTask.(coretask.SealObjectTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-seal-task-error:%s-repush:%d", shadowTask.Error().Error(), shadowTask.GetRetry()))
 		handleTask.AppendLog(shadowTask.GetLogs())
@@ -479,7 +479,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 		metrics.ManagerTime.WithLabelValues(ManagerCancelSeal).Observe(
 			time.Since(time.Unix(handleTask.GetCreateTime(), 0)).Seconds())
 		go func() {
-			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         handleTask.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
 				ErrorDescription: "exceed_seal_retry",
@@ -494,7 +494,7 @@ func (m *ManageModular) handleFailedSealObjectTask(ctx context.Context, handleTa
 	return nil
 }
 
-func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) error {
+func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask) error {
 	if task.GetSealed() {
 		go m.receiveQueue.PopByKey(task.Key())
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessConfirmReceive).Inc()
@@ -517,20 +517,20 @@ func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.Re
 			err := m.receiveQueue.Push(task)
 			log.CtxErrorw(ctx, "push receive task to queue", "error", err)
 			if err == nil {
-				go m.backUpTask()
+				go m.backupTask()
 			}
 		}()
 	}
 	return nil
 }
 
-func (m *ManageModular) handleFailedReceivePieceTask(ctx context.Context, handleTask task.ReceivePieceTask) error {
+func (m *ManageModular) handleFailedReceivePieceTask(ctx context.Context, handleTask coretask.ReceivePieceTask) error {
 	oldTask := m.receiveQueue.PopByKey(handleTask.Key())
 	if oldTask == nil {
 		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
 		return ErrCanceledTask
 	}
-	handleTask = oldTask.(task.ReceivePieceTask)
+	handleTask = oldTask.(coretask.ReceivePieceTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
 		err := m.receiveQueue.Push(handleTask)
@@ -542,9 +542,9 @@ func (m *ManageModular) handleFailedReceivePieceTask(ctx context.Context, handle
 	return nil
 }
 
-func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCObjectTask) error {
+func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask coretask.GCObjectTask) error {
 	if gcTask == nil {
-		log.CtxErrorw(ctx, "failed to handle gc object due to task pointer dangling")
+		log.CtxError(ctx, "failed to handle gc object due to task pointer dangling")
 		return ErrDanglingTask
 	}
 	if !m.gcObjectQueue.Has(gcTask.Key()) {
@@ -554,15 +554,15 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 	if gcTask.GetCurrentBlockNumber() > gcTask.GetEndBlockNumber() {
 		log.CtxInfow(ctx, "succeed to finish the gc object task", "task_info", gcTask.Info())
 		m.gcObjectQueue.PopByKey(gcTask.Key())
-		m.baseApp.GfSpDB().DeleteGCObjectProgress(gcTask.Key().String())
+		_ = m.baseApp.GfSpDB().DeleteGCObjectProgress(gcTask.Key().String())
 		return nil
 	}
 	gcTask.SetUpdateTime(time.Now().Unix())
 	oldTask := m.gcObjectQueue.PopByKey(gcTask.Key())
 	if oldTask != nil {
-		if oldTask.(task.GCObjectTask).GetCurrentBlockNumber() > gcTask.GetCurrentBlockNumber() ||
-			(oldTask.(task.GCObjectTask).GetCurrentBlockNumber() == gcTask.GetCurrentBlockNumber() &&
-				oldTask.(task.GCObjectTask).GetLastDeletedObjectId() > gcTask.GetLastDeletedObjectId()) {
+		if oldTask.(coretask.GCObjectTask).GetCurrentBlockNumber() > gcTask.GetCurrentBlockNumber() ||
+			(oldTask.(coretask.GCObjectTask).GetCurrentBlockNumber() == gcTask.GetCurrentBlockNumber() &&
+				oldTask.(coretask.GCObjectTask).GetLastDeletedObjectId() > gcTask.GetLastDeletedObjectId()) {
 			log.CtxErrorw(ctx, "the reported gc object task is expired", "report_info", gcTask.Info(),
 				"current_info", oldTask.Info())
 			return ErrCanceledTask
@@ -574,7 +574,7 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 	err := m.gcObjectQueue.Push(gcTask)
 	log.CtxInfow(ctx, "push gc object task to queue again", "from", oldTask, "to", gcTask, "error", err)
 	currentGCBlockID, deletedObjectID := gcTask.GetGCObjectProgress()
-	err = m.baseApp.GfSpDB().UpdateGCObjectProgress(&spdb.GCObjectMeta{
+	err = m.baseApp.GfSpDB().UpdateGCObjectProgress(&corespdb.GCObjectMeta{
 		TaskKey:             gcTask.Key().String(),
 		CurrentBlockHeight:  currentGCBlockID,
 		LastDeletedObjectID: deletedObjectID,
@@ -583,27 +583,39 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 	return nil
 }
 
-func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask) error {
+func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, task coretask.GCZombiePieceTask) error {
 	return ErrFutureSupport
 }
 
-func (m *ManageModular) HandleGCMetaTask(ctx context.Context, task task.GCMetaTask) error {
+func (m *ManageModular) HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask) error {
 	return ErrFutureSupport
 }
 
-func (m *ManageModular) HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error {
-	m.downloadQueue.Push(task)
+func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, task coretask.GCBucketMigrationTask) error {
+	if task == nil {
+		log.CtxError(ctx, "failed to handle gc bucket migration due to task pointer dangling")
+		return ErrDanglingTask
+	}
+	if !m.gcBucketMigrationQueue.Has(task.Key()) {
+		log.CtxErrorw(ctx, "task is not in the gc bucket migration queue", "task_info", task.Info())
+		return ErrCanceledTask
+	}
+	return nil
+}
+
+func (m *ManageModular) HandleDownloadObjectTask(ctx context.Context, task coretask.DownloadObjectTask) error {
+	_ = m.downloadQueue.Push(task)
 	log.CtxDebugw(ctx, "add download object task to queue")
 	return nil
 }
 
-func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error {
-	m.challengeQueue.Push(task)
+func (m *ManageModular) HandleChallengePieceTask(ctx context.Context, task coretask.ChallengePieceTask) error {
+	_ = m.challengeQueue.Push(task)
 	log.CtxDebugw(ctx, "add challenge piece task to queue")
 	return nil
 }
 
-func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error {
+func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) error {
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		log.CtxErrorw(ctx, "failed to handle recovery piece due to pointer dangling")
 		return ErrDanglingTask
@@ -634,13 +646,13 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 	return nil
 }
 
-func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handleTask task.RecoveryPieceTask) error {
+func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handleTask coretask.RecoveryPieceTask) error {
 	oldTask := m.recoveryQueue.PopByKey(handleTask.Key())
 	if oldTask == nil {
 		log.CtxErrorw(ctx, "task has been canceled", "task_info", handleTask.Info())
 		return ErrCanceledTask
 	}
-	handleTask = oldTask.(task.RecoveryPieceTask)
+	handleTask = oldTask.(coretask.RecoveryPieceTask)
 	if !handleTask.ExceedRetry() {
 		handleTask.SetUpdateTime(time.Now().Unix())
 		err := m.recoveryQueue.Push(handleTask)
@@ -651,7 +663,7 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 	return nil
 }
 
-func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error {
+func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) error {
 	if task == nil {
 		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
 		return ErrDanglingTask
@@ -660,7 +672,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 	cancelTask := false
 
 	if task.GetBucketID() != 0 {
-		// if there is no execute plan, we should cancel this task
+		// if there is no execution plan, we should cancel this task
 		if _, err = m.bucketMigrateScheduler.getExecutePlanByBucketID(task.GetBucketID()); err != nil {
 			cancelTask = true
 		}
@@ -682,7 +694,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 	return err
 }
 
-func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error) {
+func (m *ManageModular) QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error) {
 	uploadTasks, _ := taskqueue.ScanTQueueBySubKey(m.uploadQueue, subKey)
 	replicateTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.replicateQueue, subKey)
 	sealTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.sealQueue, subKey)
@@ -694,8 +706,9 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	challengeTasks, _ := taskqueue.ScanTQueueBySubKey(m.challengeQueue, subKey)
 	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
 	migrateGVGTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.migrateGVGQueue, subKey)
+	gcBucketMigrationTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcBucketMigrationQueue, subKey)
 
-	var tasks []task.Task
+	var tasks []coretask.Task
 	tasks = append(tasks, uploadTasks...)
 	tasks = append(tasks, replicateTasks...)
 	tasks = append(tasks, receiveTasks...)
@@ -707,6 +720,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, challengeTasks...)
 	tasks = append(tasks, recoveryTasks...)
 	tasks = append(tasks, migrateGVGTasks...)
+	tasks = append(tasks, gcBucketMigrationTasks...)
 	return tasks, nil
 }
 
@@ -731,7 +745,7 @@ func (m *ManageModular) QuerySpExit(ctx context.Context) (res *gfspserver.GfSpQu
 }
 
 // PickVirtualGroupFamily is used to pick a suitable vgf for creating bucket.
-func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
+func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error) {
 	var (
 		err error
 		vgf *vgmgr.VirtualGroupFamilyMeta
@@ -743,7 +757,7 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
 			return 0, err
 		}
-		m.virtualGroupManager.ForceRefreshMeta()
+		_ = m.virtualGroupManager.ForceRefreshMeta()
 		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
 			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
 			return 0, err
@@ -821,7 +835,8 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 }
 
 // pickGlobalVirtualGroup is used to pick a suitable gvg for replicating object.
-func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32, param *storagetypes.Params) (
+	*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		err error
 		gvg *vgmgr.GlobalVirtualGroupMeta
@@ -833,7 +848,7 @@ func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32
 			log.CtxErrorw(ctx, "failed to create global virtual group", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}
-		m.virtualGroupManager.ForceRefreshMeta()
+		_ = m.virtualGroupManager.ForceRefreshMeta()
 		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
 			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
 			return gvg, err

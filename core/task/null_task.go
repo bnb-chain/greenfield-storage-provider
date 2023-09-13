@@ -24,6 +24,7 @@ var _ GCZombiePieceTask = (*NullTask)(nil)
 var _ GCMetaTask = (*NullTask)(nil)
 var _ RecoveryPieceTask = (*NullTask)(nil)
 var _ MigrateGVGTask = (*NullTask)(nil)
+var _ GCBucketMigrationTask = (*NullTask)(nil)
 
 type NullTask struct{}
 

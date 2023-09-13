@@ -8,9 +8,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -24,9 +24,9 @@ import (
 type Modular interface {
 	lifecycle.Service
 	// ReserveResource reserves the resources from Modular resources pool.
-	ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error)
+	ReserveResource(ctx context.Context, state *corercmgr.ScopeStat) (corercmgr.ResourceScopeSpan, error)
 	// ReleaseResource releases the resources to Modular resources pool.
-	ReleaseResource(ctx context.Context, scope rcmgr.ResourceScopeSpan)
+	ReleaseResource(ctx context.Context, scope corercmgr.ResourceScopeSpan)
 }
 
 // AuthOpType defines the operator type used to authentication verification.
@@ -63,7 +63,7 @@ type Authenticator interface {
 	// VerifyAuthentication verifies the operator authentication.
 	VerifyAuthentication(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error)
 	// GetAuthNonce get the auth nonce for which the dApp or client can generate EDDSA key pairs.
-	GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error)
+	GetAuthNonce(ctx context.Context, account string, domain string) (*corespdb.OffChainAuthKey, error)
 	// UpdateUserPublicKey updates the user public key once the dApp or client generates the EDDSA key pairs.
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32,
 		userPublicKey string, expiryDate int64) (bool, error)
@@ -76,32 +76,32 @@ type Approver interface {
 	Modular
 	// PreCreateBucketApproval prepares to handle CreateBucketApproval, it can do some
 	// checks such as checking for duplicates, if limitation of SP has been reached, etc.
-	PreCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask) error
+	PreCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) error
 	// HandleCreateBucketApprovalTask handles the CreateBucketApproval, it can set expired height, sign the MsgCreateBucket and so on.
-	HandleCreateBucketApprovalTask(ctx context.Context, task task.ApprovalCreateBucketTask) (bool, error)
+	HandleCreateBucketApprovalTask(ctx context.Context, task coretask.ApprovalCreateBucketTask) (bool, error)
 	// PostCreateBucketApproval is called after HandleCreateBucketApprovalTask, it can recycle resources, make statistics
 	// and do some other operations.
-	PostCreateBucketApproval(ctx context.Context, task task.ApprovalCreateBucketTask)
+	PostCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask)
 
 	// PreMigrateBucketApproval prepares to handle MigrateBucketApproval, it can do some
 	// checks such as checking for duplicates, if limitation of SP has been reached, etc.
-	PreMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask) error
+	PreMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) error
 	// HandleMigrateBucketApprovalTask handles the MigrateBucketApproval, it can set expired height, sign the MsgMigrateBucket and so on.
-	HandleMigrateBucketApprovalTask(ctx context.Context, task task.ApprovalMigrateBucketTask) (bool, error)
+	HandleMigrateBucketApprovalTask(ctx context.Context, task coretask.ApprovalMigrateBucketTask) (bool, error)
 	// PostMigrateBucketApproval is called after HandleMigrateBucketApprovalTask, it can recycle resources, make statistics
 	// and do some other operations.
-	PostMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask)
+	PostMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask)
 
 	// PreCreateObjectApproval prepares to handle CreateObjectApproval, it can do some
 	// checks such as check for duplicates, if limitation of SP has been reached, etc.
-	PreCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask) error
+	PreCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) error
 	// HandleCreateObjectApprovalTask handles the CreateObjectApproval, it can set expired height, sign the MsgCreateObject and so on.
-	HandleCreateObjectApprovalTask(ctx context.Context, task task.ApprovalCreateObjectTask) (bool, error)
+	HandleCreateObjectApprovalTask(ctx context.Context, task coretask.ApprovalCreateObjectTask) (bool, error)
 	// PostCreateObjectApproval is called after HandleCreateObjectApprovalTask, it can
 	// recycle resources, make statistics and do some other operations.
-	PostCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask)
+	PostCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask)
 	// QueryTasks queries tasks that running on approver by task sub-key.
-	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error)
 }
 
 // Downloader is an abstract interface to handle getting object requests from users' account, and getting
@@ -110,31 +110,31 @@ type Downloader interface {
 	Modular
 	// PreDownloadObject prepares to handle DownloadObject, it can do some checks
 	// such as checking for duplicates, if limitation of SP has been reached, etc.
-	PreDownloadObject(ctx context.Context, task task.DownloadObjectTask) error
+	PreDownloadObject(ctx context.Context, task coretask.DownloadObjectTask) error
 	// HandleDownloadObjectTask handles the DownloadObject and get data from piece store.
-	HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) ([]byte, error)
+	HandleDownloadObjectTask(ctx context.Context, task coretask.DownloadObjectTask) ([]byte, error)
 	// PostDownloadObject is called after HandleDownloadObjectTask, it can recycle
 	// resources, make statistics and do some other operations..
-	PostDownloadObject(ctx context.Context, task task.DownloadObjectTask)
+	PostDownloadObject(ctx context.Context, task coretask.DownloadObjectTask)
 
 	// PreDownloadPiece prepares to handle DownloadPiece, it can do some checks such as check for duplicates,
 	// if limitation of SP has been reached, etc.
-	PreDownloadPiece(ctx context.Context, task task.DownloadPieceTask) error
+	PreDownloadPiece(ctx context.Context, task coretask.DownloadPieceTask) error
 	// HandleDownloadPieceTask handles the DownloadPiece and get data from piece store.
-	HandleDownloadPieceTask(ctx context.Context, task task.DownloadPieceTask) ([]byte, error)
+	HandleDownloadPieceTask(ctx context.Context, task coretask.DownloadPieceTask) ([]byte, error)
 	// PostDownloadPiece is called after HandleDownloadPieceTask, it can recycle
 	// resources, make statistics and do some other operations.
-	PostDownloadPiece(ctx context.Context, task task.DownloadPieceTask)
+	PostDownloadPiece(ctx context.Context, task coretask.DownloadPieceTask)
 	// PreChallengePiece prepares to handle ChallengePiece, it can do some checks
 	// such as checking for duplicates, if limitation of SP has been reached, etc.
-	PreChallengePiece(ctx context.Context, task task.ChallengePieceTask) error
+	PreChallengePiece(ctx context.Context, task coretask.ChallengePieceTask) error
 	// HandleChallengePiece handles ChallengePiece, get piece data from piece store and get integrity hash from db.
-	HandleChallengePiece(ctx context.Context, task task.ChallengePieceTask) ([]byte, [][]byte, []byte, error)
+	HandleChallengePiece(ctx context.Context, task coretask.ChallengePieceTask) ([]byte, [][]byte, []byte, error)
 	// PostChallengePiece is called after HandleChallengePiece, it can recycle resources, make statistics
 	// and do some other operations.
-	PostChallengePiece(ctx context.Context, task task.ChallengePieceTask)
+	PostChallengePiece(ctx context.Context, task coretask.ChallengePieceTask)
 	// QueryTasks queries download/challenge tasks that running on downloader by task sub-key.
-	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error)
 }
 
 // TaskExecutor is an abstract interface to handle background tasks.
@@ -145,22 +145,22 @@ type TaskExecutor interface {
 	// AskTask asks the task by remaining limitation from manager module.
 	AskTask(ctx context.Context) error
 	// HandleReplicatePieceTask handles ReplicatePieceTask that is asked from manager module.
-	HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask)
+	HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask)
 	// HandleSealObjectTask handles SealObjectTask that is asked from manager module.
-	HandleSealObjectTask(ctx context.Context, task task.SealObjectTask)
+	HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask)
 	// HandleReceivePieceTask handles the ReceivePieceTask that is asked from manager module.
 	// It will confirm the piece data that is synced to secondary SP whether has been sealed.
-	HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask)
+	HandleReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask)
 	// HandleGCObjectTask handles the GCObjectTask that is asked from manager module.
-	HandleGCObjectTask(ctx context.Context, task task.GCObjectTask)
+	HandleGCObjectTask(ctx context.Context, task coretask.GCObjectTask)
 	// HandleGCZombiePieceTask handles the GCZombiePieceTask that is asked from manager module.
-	HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask)
+	HandleGCZombiePieceTask(ctx context.Context, task coretask.GCZombiePieceTask)
 	// HandleGCMetaTask handles the GCMetaTask that is asked from manager module.
-	HandleGCMetaTask(ctx context.Context, task task.GCMetaTask)
+	HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask)
 	// HandleMigrateGVGTask handles the MigrateGVGTask that is asked from manager module
-	HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask)
+	HandleMigrateGVGTask(ctx context.Context, gvgTask coretask.MigrateGVGTask)
 	// ReportTask reports the results or status of running task to manager module.
-	ReportTask(ctx context.Context, task task.Task) error
+	ReportTask(ctx context.Context, task coretask.Task) error
 }
 
 // Manager is an abstract interface to do some internal service management, it is responsible for task
@@ -169,9 +169,9 @@ type Manager interface {
 	Modular
 	// DispatchTask dispatches the task to TaskExecutor module when it asks tasks.
 	// It will consider task remaining resources when dispatching task.
-	DispatchTask(ctx context.Context, limit rcmgr.Limit) (task.Task, error)
+	DispatchTask(ctx context.Context, limit corercmgr.Limit) (coretask.Task, error)
 	// QueryTasks queries tasks that hold on manager by task sub-key.
-	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error)
 	// QueryBucketMigrate queries tasks that hold on manager by task sub-key.
 	QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQueryBucketMigrateResponse, error)
 	// QuerySpExit queries tasks that hold on manager by task sub-key.
@@ -180,46 +180,50 @@ type Manager interface {
 	// the users' UploadObject requests, it should send CreateUploadObject requests to Manager ask if it's ok.
 	// Through this interface SP implements the global uploading object strategy.
 	// For example: control the concurrency of global uploads, avoid repeated uploads, rate control, etc.
-	HandleCreateUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error
+	HandleCreateUploadObjectTask(ctx context.Context, task coretask.UploadObjectTask) error
 	// HandleDoneUploadObjectTask handles the result of uploading object payload data to primary, Manager should
 	// generate ReplicatePieceTask for TaskExecutor to run.
-	HandleDoneUploadObjectTask(ctx context.Context, task task.UploadObjectTask) error
+	HandleDoneUploadObjectTask(ctx context.Context, task coretask.UploadObjectTask) error
 	// HandleCreateResumableUploadObjectTask handles the CreateUploadObject request from
 	// Uploader, before Uploader handles the user's UploadObject request, it should
 	// send CreateUploadObject request to Manager ask if it's ok. Through this
 	// interface that SP implements the global upload object strategy.
-	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
+	HandleCreateResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask) error
 
 	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,
 	// Manager should generate ReplicatePieceTask for TaskExecutor to run.
-	HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
+	HandleDoneResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask) error
 	// HandleReplicatePieceTask handles the result of replicating piece data to secondary SPs,
 	// the request comes from TaskExecutor.
-	HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask) error
+	HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) error
 	// HandleSealObjectTask handles the result of sealing object to the greenfield the request comes from TaskExecutor.
-	HandleSealObjectTask(ctx context.Context, task task.SealObjectTask) error
+	HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) error
 	// HandleReceivePieceTask handles the result of receiving piece task, the request comes from Receiver that
 	// reports have completed ReceivePieceTask to manager and TaskExecutor that the result of confirming whether
 	// the object that is synced to secondary SP has been sealed.
-	HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) error
+	HandleReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask) error
 	// HandleGCObjectTask handles GCObjectTask, the request comes from TaskExecutor.
-	HandleGCObjectTask(ctx context.Context, task task.GCObjectTask) error
+	HandleGCObjectTask(ctx context.Context, task coretask.GCObjectTask) error
 	// HandleGCZombiePieceTask handles GCZombiePieceTask, the request comes from TaskExecutor.
-	HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask) error
+	HandleGCZombiePieceTask(ctx context.Context, task coretask.GCZombiePieceTask) error
 	// HandleGCMetaTask handles GCMetaTask, the request comes from TaskExecutor.
-	HandleGCMetaTask(ctx context.Context, task task.GCMetaTask) error
+	HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask) error
 	// HandleDownloadObjectTask handles DownloadObjectTask, the request comes from Downloader.
-	HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error
+	HandleDownloadObjectTask(ctx context.Context, task coretask.DownloadObjectTask) error
 	// HandleChallengePieceTask handles ChallengePieceTask, the request comes from Downloader.
-	HandleChallengePieceTask(ctx context.Context, task task.ChallengePieceTask) error
+	HandleChallengePieceTask(ctx context.Context, task coretask.ChallengePieceTask) error
 	// PickVirtualGroupFamily is used to pick vgf for the new bucket.
-	PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error)
+	PickVirtualGroupFamily(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
 	// HandleRecoverPieceTask handles the result of recovering piece task, the request comes from TaskExecutor.
-	HandleRecoverPieceTask(ctx context.Context, task task.RecoveryPieceTask) error
+	HandleRecoverPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) error
 	// NotifyMigrateSwapOut is used to notify dest sp migrate swap out.
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
-	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
+	HandleMigrateGVGTask(ctx context.Context, task coretask.MigrateGVGTask) error
+	// NotifyBucketMigrationDone is used to notify src sp that bucket migration is done.
+	NotifyBucketMigrationDone(ctx context.Context, bucketID uint64) error
+	// HandleGCBucketMigrationTask handles GCBucketMigrationTask, the request comes from TaskExecutor
+	HandleGCBucketMigrationTask(ctx context.Context, task coretask.GCBucketMigrationTask) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -228,24 +232,24 @@ type P2P interface {
 	// HandleReplicatePieceApproval handles the asking replicate piece approval, it will
 	// broadcast the approval to other SPs, waiting the responses. If up to min approved
 	// number or max approved number before timeout, it will return the approvals.
-	HandleReplicatePieceApproval(ctx context.Context, t task.ApprovalReplicatePieceTask, min, max int32,
-		timeout int64) ([]task.ApprovalReplicatePieceTask, error)
+	HandleReplicatePieceApproval(ctx context.Context, t coretask.ApprovalReplicatePieceTask, min, max int32,
+		timeout int64) ([]coretask.ApprovalReplicatePieceTask, error)
 	// HandleQueryBootstrap handles the query p2p node bootstrap node info.
 	HandleQueryBootstrap(ctx context.Context) ([]string, error)
 	// QueryTasks queries replicate piece approval tasks that running on p2p by task sub-key.
-	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error)
 }
 
 // Receiver is an abstract interface to receive the piece data from primary SP.
 type Receiver interface {
 	Modular
 	// HandleReceivePieceTask stores piece data into secondary SP.
-	HandleReceivePieceTask(ctx context.Context, task task.ReceivePieceTask, data []byte) error
+	HandleReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask, data []byte) error
 	// HandleDoneReceivePieceTask calculates the secondary bls of the object and sign it, returns to the primary
 	// SP for sealed object.
-	HandleDoneReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
+	HandleDoneReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask) ([]byte, error)
 	// QueryTasks queries replicate piece tasks that running on receiver by task sub-key.
-	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error)
 }
 
 // Signer is an abstract interface to handle the signature of SP and on greenfield chain operator.
@@ -259,13 +263,13 @@ type Signer interface {
 	// SignCreateObjectApproval signs the MsgCreateObject for asking create object approval.
 	SignCreateObjectApproval(ctx context.Context, task *storagetypes.MsgCreateObject) ([]byte, error)
 	// SignReplicatePieceApproval signs the ApprovalReplicatePieceTask for asking replicate pieces to secondary SPs.
-	SignReplicatePieceApproval(ctx context.Context, task task.ApprovalReplicatePieceTask) ([]byte, error)
+	SignReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask) ([]byte, error)
 	// SignReceivePieceTask signs the ReceivePieceTask for replicating pieces data between SPs.
-	SignReceivePieceTask(ctx context.Context, task task.ReceivePieceTask) ([]byte, error)
+	SignReceivePieceTask(ctx context.Context, task coretask.ReceivePieceTask) ([]byte, error)
 	// SignSecondarySealBls signs the secondary bls for sealing object.
 	SignSecondarySealBls(ctx context.Context, objectID uint64, gvgId uint32, hash [][]byte) ([]byte, error)
 	// SignRecoveryPieceTask signs the RecoveryPieceTask for recovering piece data
-	SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) ([]byte, error)
+	SignRecoveryPieceTask(ctx context.Context, task coretask.RecoveryPieceTask) ([]byte, error)
 	// SignP2PPingMsg signs the ping msg for p2p node probing.
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
 	// SignP2PPongMsg signs the pong msg for p2p to response ping msg.
@@ -304,22 +308,22 @@ type Uploader interface {
 	Modular
 	// PreUploadObject prepares to handle UploadObject, it can do some checks
 	// such as checking for duplicates, if limitation of SP has been reached, etc.
-	PreUploadObject(ctx context.Context, task task.UploadObjectTask) error
+	PreUploadObject(ctx context.Context, task coretask.UploadObjectTask) error
 	// HandleUploadObjectTask handles the UploadObject, store payload data into piece store by data stream.
-	HandleUploadObjectTask(ctx context.Context, task task.UploadObjectTask, stream io.Reader) error
+	HandleUploadObjectTask(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader) error
 	// PostUploadObject is called after HandleUploadObjectTask, it can recycle
 	// resources, make statistics and do some other operations.
-	PostUploadObject(ctx context.Context, task task.UploadObjectTask)
+	PostUploadObject(ctx context.Context, task coretask.UploadObjectTask)
 
 	// PreResumableUploadObject prepares to handle ResumableUploadObject, it can do some checks
 	// such as checking for duplicates, if limitation of SP has been reached, etc.
-	PreResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask) error
+	PreResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask) error
 	// HandleResumableUploadObjectTask handles the ResumableUploadObject, store payload data into piece store by data stream.
-	HandleResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader) error
+	HandleResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader) error
 	// PostResumableUploadObject is called after HandleResumableUploadObjectTask, it can recycle
 	// resources, statistics and other operations.
-	PostResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask)
+	PostResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask)
 
 	// QueryTasks queries upload object tasks that running on uploading by task sub-key.
-	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	QueryTasks(ctx context.Context, subKey coretask.TKey) ([]coretask.Task, error)
 }

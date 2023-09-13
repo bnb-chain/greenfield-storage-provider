@@ -198,3 +198,124 @@ func (g *GfSpMigratePieceTask) GetSignBytes() []byte {
 		RedundancyIdx: g.GetRedundancyIdx(),
 	}))
 }
+
+// ======================= GfSpGCBucketMigrationTask =====================================
+
+func (m *GfSpGCBucketMigrationTask) Key() coretask.TKey {
+	return GfSpGCBucketMigrationTaskKey(m.GetBucketId())
+}
+
+func (m *GfSpGCBucketMigrationTask) Type() coretask.TType {
+	return coretask.TypeTaskMigrateGVG
+}
+
+func (m *GfSpGCBucketMigrationTask) Info() string {
+	return fmt.Sprintf(
+		"key[%s], type[%s], priority[%d], limit[%s], bucketID[%d], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetBucketId(), m.GetTask().Info())
+}
+
+func (m *GfSpGCBucketMigrationTask) GetAddress() string {
+	return m.GetTask().GetAddress()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetAddress(address string) {
+	m.GetTask().SetAddress(address)
+}
+
+func (m *GfSpGCBucketMigrationTask) GetCreateTime() int64 {
+	return m.GetTask().GetCreateTime()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetCreateTime(time int64) {
+	m.GetTask().SetCreateTime(time)
+}
+
+func (m *GfSpGCBucketMigrationTask) GetUpdateTime() int64 {
+	return m.GetTask().GetUpdateTime()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetUpdateTime(time int64) {
+	m.GetTask().SetUpdateTime(time)
+}
+
+func (m *GfSpGCBucketMigrationTask) GetTimeout() int64 {
+	return m.GetTask().GetTimeout()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetTimeout(time int64) {
+	m.GetTask().SetTimeout(time)
+}
+
+func (m *GfSpGCBucketMigrationTask) ExceedTimeout() bool {
+	return m.GetTask().ExceedTimeout()
+}
+
+func (m *GfSpGCBucketMigrationTask) GetRetry() int64 {
+	return m.GetTask().GetRetry()
+}
+
+func (m *GfSpGCBucketMigrationTask) IncRetry() {
+	m.GetTask().IncRetry()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetRetry(retry int) {
+	m.GetTask().SetRetry(retry)
+}
+
+func (m *GfSpGCBucketMigrationTask) GetMaxRetry() int64 {
+	return m.GetTask().GetMaxRetry()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetMaxRetry(limit int64) {
+	m.GetTask().SetMaxRetry(limit)
+}
+
+func (m *GfSpGCBucketMigrationTask) ExceedRetry() bool {
+	return m.GetTask().ExceedRetry()
+}
+
+func (m *GfSpGCBucketMigrationTask) Expired() bool {
+	return m.GetTask().Expired()
+}
+
+func (m *GfSpGCBucketMigrationTask) GetPriority() coretask.TPriority {
+	return m.GetTask().GetPriority()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetPriority(priority coretask.TPriority) {
+	m.GetTask().SetPriority(priority)
+}
+
+func (m *GfSpGCBucketMigrationTask) EstimateLimit() corercmgr.Limit {
+	return LimitEstimateByPriority(m.GetPriority())
+}
+
+func (m *GfSpGCBucketMigrationTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpGCBucketMigrationTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpGCBucketMigrationTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
+func (m *GfSpGCBucketMigrationTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetUserAddress(s string) {
+	m.GetTask().SetUserAddress(s)
+}
+
+func (m *GfSpGCBucketMigrationTask) Error() error {
+	return m.GetTask().Error()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetError(err error) {
+	m.GetTask().SetError(err)
+}

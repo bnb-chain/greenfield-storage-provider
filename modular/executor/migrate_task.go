@@ -168,7 +168,8 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 		return err
 	}
 	if spID != srcGvg.GetSecondarySpIds()[index] {
-		log.Debugw("invalid secondary sp id in src gvg", "index", index, "sp_id", e.spID, "src_gvg", srcGvg, "dest_gvg", destGvg)
+		log.Debugw("invalid secondary sp id in src gvg", "index", index, "sp_id", e.spID, "src_gvg", srcGvg,
+			"dest_gvg", destGvg)
 		return fmt.Errorf("invalid secondary sp id in src gvg")
 	}
 	destSecondarySPID := destGvg.GetSecondarySpIds()[index]
@@ -194,7 +195,8 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 			log.CtxErrorw(ctx, "failed to get piece data from piece store", "error", err, "piece_key", pieceKey)
 			return err
 		}
-		err = e.doBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), segIdx, uint32(index), pieceData)
+		err = e.doBucketMigrationReplicatePiece(ctx, destGvg.GetId(), objectInfo, params, spInfo.GetEndpoint(), segIdx,
+			uint32(index), pieceData)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to do bucket migration to replicate pieces", "error", err, "piece_key", pieceKey)
 			return err

@@ -9,11 +9,16 @@ import (
 
 type MigrateStatus int32
 
-// migrate: WaitForMigrate(created)->Migrating(schedule success)->Migrated(executor report success).
 var (
+	// migrate: WaitForMigrate(created)->Migrating(schedule success)->Migrated(executor report success).
 	WaitForMigrate MigrateStatus = 0
 	Migrating      MigrateStatus = 1
 	Migrated       MigrateStatus = 2
+
+	// gc: used for bucket migration
+	WaitForGC MigrateStatus = 3
+	DoingGC   MigrateStatus = 4
+	DoneGC    MigrateStatus = 5
 )
 
 type BasicGVGMigrateExecuteUnit struct {

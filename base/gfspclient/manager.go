@@ -90,6 +90,8 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 		return t.RecoverPieceTask, nil
 	case *gfspserver.GfSpAskTaskResponse_MigrateGvgTask:
 		return t.MigrateGvgTask, nil
+	case *gfspserver.GfSpAskTaskResponse_GcBucketMigrationTask:
+		return t.GcBucketMigrationTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}
@@ -127,6 +129,8 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		req.Request = &gfspserver.GfSpReportTaskRequest_RecoverPieceTask{RecoverPieceTask: t}
 	case *gfsptask.GfSpMigrateGVGTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{MigrateGvgTask: t}
+	case *gfsptask.GfSpGCBucketMigrationTask:
+		req.Request = &gfspserver.GfSpReportTaskRequest_GcBucketMigrationTask{GcBucketMigrationTask: t}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type to report")
 		return ErrTypeMismatch
@@ -178,6 +182,25 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 	}
 	if resp.GetErr() != nil {
 		log.CtxErrorw(ctx, "failed to notify migrate swap out", "request", req, "error", resp.GetErr())
+		return resp.GetErr()
+	}
+	return nil
+}
+
+func (s *GfSpClient) NotifyBucketMigrationDone(ctx context.Context, bucketID uint64) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+	}
+	req := &gfspserver.GfSpNotifyBucketMigrationDoneRequest{BucketId: bucketID}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyBucketMigrationDone(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to notify bucket migration done", "error", err)
+		return ErrRPCUnknownWithDetail("client failed to notify bucket migration done, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to notify done", "request", req, "error", err)
 		return resp.GetErr()
 	}
 	return nil

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -54,6 +55,10 @@ const (
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
+	// NotifyBucketMigrationDonePath defines dest sp notifies src sp that bucket migration is done.
+	NotifyBucketMigrationDonePath = "/greenfield/migrate/v1/notify-bucket-migration-done"
+	// GnfdBucketIDHeader defines which bucket id completes migration
+	GnfdBucketIDHeader = "X-Gnfd-Bucket-ID"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask,
@@ -261,4 +266,27 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 		return nil, err
 	}
 	return swapOut, nil
+}
+
+// NotifySrcSPBucketMigrationDone is used to notify src sp that bucket migration is done
+func (s *GfSpClient) NotifySrcSPBucketMigrationDone(ctx context.Context, srcEndpoint string, bucketID uint64) error {
+	req, err := http.NewRequest(http.MethodPost, srcEndpoint+NotifyBucketMigrationDonePath, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", srcEndpoint, "error", err)
+		return err
+	}
+	bucketIDStr := strconv.FormatUint(bucketID, 10)
+	req.Header.Add(GnfdBucketIDHeader, bucketIDStr)
+	resp, err := s.HTTPClient(ctx).Do(req)
+	if err != nil {
+		log.Errorw("failed to notify bucket migration done", "error", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to notify bucket migration done, status_code(%d), endpoint(%s)",
+			resp.StatusCode, srcEndpoint)
+	}
+	return nil
 }

@@ -195,3 +195,8 @@ message GfSpMigratePieceTask {
   bytes signature = 7;
   bool is_bucket_migrate = 8;
 }
+
+message GfSpGCBucketMigrationTask {
+  GfSpTask task = 1;
+  uint64 bucket_id = 2;
+}

@@ -47,6 +47,7 @@ const (
 	migratePieceRouterName                         = "MigratePiece"
 	migrationBucketApprovalName                    = "MigrationBucketApproval"
 	swapOutApprovalName                            = "SwapOutApproval"
+	notifyBucketMigrationDoneRouterName            = "BucketMigrationDone"
 	listVirtualGroupFamiliesBySpIDRouterName       = "ListVirtualGroupFamiliesBySpID"
 	getVirtualGroupFamilyRouterName                = "GetVirtualGroupFamily"
 	getGlobalVirtualGroupByGvgIDRouterName         = "GetGlobalVirtualGroupByGvgID"
@@ -109,14 +110,16 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// data recovery
 	router.Path(RecoverObjectPiecePath).Name(recoveryPieceRouterName).Methods(http.MethodGet).HandlerFunc(g.getRecoverDataHandler)
 
-	// dest sp receive swap out notify from src sp.
+	// dest sp receives swap out notify from src sp
 	router.Path(NotifyMigrateSwapOutTaskPath).Name(notifyMigrateSwapOutRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyMigrateSwapOutHandler)
-	// dest sp pull piece data from src sp, for sp exit and bucket migrate.
+	// dest sp pulls piece data from src sp, for sp exit and bucket migrate
 	router.Path(MigratePiecePath).Name(migratePieceRouterName).Methods(http.MethodGet).HandlerFunc(g.migratePieceHandler)
-	// migration bucket approval for secondary sp bls signature.
+	// migration bucket approval for secondary sp bls signature
 	router.Path(SecondarySPMigrationBucketApprovalPath).Name(migrationBucketApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSecondaryBlsMigrationBucketApprovalHandler)
-	// swap out approval for sp exiting.
+	// swap out approval for sp exiting
 	router.Path(SwapOutApprovalPath).Name(swapOutApprovalName).Methods(http.MethodGet).HandlerFunc(g.getSwapOutApproval)
+	// dest sp notifies src sp that bucket migration is done
+	router.Path(NotifyBucketMigrationDonePath).Name(notifyBucketMigrationDoneRouterName).Methods(http.MethodPost).HandlerFunc(g.notifyBucketMigrationDone)
 
 	// universal endpoint download
 	router.Path("/download/{bucket:[^/]*}/{object:.+}").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).

@@ -530,9 +530,7 @@ func (m *GfSpSealObjectTask) InitSealObjectTask(vgfID uint32, object *storagetyp
 }
 
 func (m *GfSpSealObjectTask) Key() coretask.TKey {
-	return GfSpSealObjectTaskKey(
-		m.GetObjectInfo().GetBucketName(),
-		m.GetObjectInfo().GetObjectName(),
+	return GfSpSealObjectTaskKey(m.GetObjectInfo().GetBucketName(), m.GetObjectInfo().GetObjectName(),
 		m.GetObjectInfo().Id.String())
 }
 
@@ -698,12 +696,8 @@ func (m *GfSpReceivePieceTask) GetSignBytes() []byte {
 }
 
 func (m *GfSpReceivePieceTask) Key() coretask.TKey {
-	return GfSpReceivePieceTaskKey(
-		m.GetObjectInfo().GetBucketName(),
-		m.GetObjectInfo().GetObjectName(),
-		m.GetObjectInfo().Id.String(),
-		m.GetSegmentIdx(),
-		m.GetRedundancyIdx())
+	return GfSpReceivePieceTaskKey(m.GetObjectInfo().GetBucketName(), m.GetObjectInfo().GetObjectName(),
+		m.GetObjectInfo().Id.String(), m.GetSegmentIdx(), m.GetRedundancyIdx())
 }
 
 func (m *GfSpReceivePieceTask) Type() coretask.TType {

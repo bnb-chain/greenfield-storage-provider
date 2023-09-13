@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -237,4 +238,39 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 	bz := storagetypes.ModuleCdc.MustMarshalJSON(swapOutApproval)
 	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(sdktypes.MustSortJSON(bz)))
 	log.CtxInfow(reqCtx.Context(), "succeed to sign swap out approval", "swap_out", swapOutApproval.String())
+}
+
+// notifyBucketMigrationDone dest sp notifies src sp that bucket migration is done
+func (g *GateModular) notifyBucketMigrationDone(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		reqCtx *RequestContext
+	)
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(err)
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+		} else {
+			reqCtx.SetHTTPCode(http.StatusOK)
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	bucketIDHeader := r.Header.Get(GnfdBucketIDHeader)
+	bucketID, err := util.StringToUint64(bucketIDHeader)
+	if err != nil {
+		log.Errorw("failed to parse bucket id header", "bucket id header", bucketIDHeader, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+	// TODO: how to verify the request comes from real dest sp?
+	log.Infof("bucket id: %d", bucketID)
+
+	if err = g.baseApp.GfSpClient().NotifyBucketMigrationDone(reqCtx.Context(), bucketID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to notify bucket migration done to manager", "error", err)
+		return
+	}
 }

@@ -91,6 +91,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: migrationBucketApprovalName,
 		},
 		{
+			name:             "Notify bucket migration done",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, NotifyBucketMigrationDonePath),
+			shouldMatch:      true,
+			wantedRouterName: notifyBucketMigrationDoneRouterName,
+		},
+		{
 			name:             "Put object router，virtual host style",
 			router:           gwRouter,
 			method:           http.MethodPut,

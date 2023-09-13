@@ -72,6 +72,7 @@ type GaterAPI interface {
 	NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
 	GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (*virtualgrouptypes.MsgSwapOut, error)
+	NotifySrcSPBucketMigrationDone(ctx context.Context, srcEndpoint string, bucketID uint64) error
 }
 
 // ManagerAPI for mock use
@@ -82,9 +83,10 @@ type ManagerAPI interface {
 	ReportTask(ctx context.Context, report coretask.Task) error
 	PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
+	NotifyBucketMigrationDone(ctx context.Context, bucketID uint64) error
 }
 
-// MetadataAPI for mock sue
+// MetadataAPI for mock use
 type MetadataAPI interface {
 	GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error)
 	ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error)

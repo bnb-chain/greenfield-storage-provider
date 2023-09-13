@@ -1,7 +1,7 @@
 package task
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -76,7 +76,7 @@ type Task interface {
 	// EstimateLimit returns estimated resource will be consumed. It is used for
 	// application resources to the rcmgr and decide whether it can be executed
 	// immediately.
-	EstimateLimit() rcmgr.Limit
+	EstimateLimit() corercmgr.Limit
 	// SetLogs sets the event logs to task
 	SetLogs(logs string)
 	// GetLogs returns the logs of task
@@ -454,9 +454,7 @@ type ChallengePieceTask interface {
 }
 
 // GCTask is an abstract interface to record the information of garbage collection.
-type GCTask interface {
-	Task
-}
+type GCTask interface{ Task }
 
 // GCObjectTask is an abstract interface to record the information for collecting the
 // piece store space by deleting object payload data that the object has been deleted
@@ -572,4 +570,9 @@ type MigrateGVGTask interface {
 	GetFinished() bool
 	// SetFinished sets the migrated gvg task status when finished
 	SetFinished(bool)
+}
+
+// GCBucketMigrationTask is an abstract interface to gc useless object piece data and integrity meta
+type GCBucketMigrationTask interface {
+	GCTask
 }

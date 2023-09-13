@@ -1053,6 +1053,20 @@ func (mr *MockManagerMockRecorder) HandleDownloadObjectTask(ctx, task interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleDownloadObjectTask", reflect.TypeOf((*MockManager)(nil).HandleDownloadObjectTask), ctx, task)
 }
 
+// HandleGCBucketMigrationTask mocks base method.
+func (m *MockManager) HandleGCBucketMigrationTask(ctx context.Context, task task.GCBucketMigrationTask) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HandleGCBucketMigrationTask", ctx, task)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// HandleGCBucketMigrationTask indicates an expected call of HandleGCBucketMigrationTask.
+func (mr *MockManagerMockRecorder) HandleGCBucketMigrationTask(ctx, task interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleGCBucketMigrationTask", reflect.TypeOf((*MockManager)(nil).HandleGCBucketMigrationTask), ctx, task)
+}
+
 // HandleGCMetaTask mocks base method.
 func (m *MockManager) HandleGCMetaTask(ctx context.Context, task task.GCMetaTask) error {
 	m.ctrl.T.Helper()

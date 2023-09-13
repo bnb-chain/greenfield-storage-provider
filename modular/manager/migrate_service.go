@@ -42,3 +42,8 @@ func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtu
 
 	return m.spExitScheduler.AddSwapOutToTaskRunner(swapOut)
 }
+
+// NotifyBucketMigrationDone is used to notify src sp that bucket migration is done.
+func (m *ManageModular) NotifyBucketMigrationDone(ctx context.Context, bucketID uint64) error {
+	return nil
+}

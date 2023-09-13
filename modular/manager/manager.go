@@ -12,10 +12,10 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -42,13 +42,13 @@ const (
 	DefaultBackupTaskTimeout = 1
 )
 
-var _ module.Manager = &ManageModular{}
+var _ coremodule.Manager = &ManageModular{}
 
 type ManageModular struct {
 	baseApp *gfspapp.GfSpBaseApp
-	scope   rcmgr.ResourceScope
+	scope   corercmgr.ResourceScope
 
-	taskCh        chan task.Task
+	taskCh        chan coretask.Task
 	backupTaskNum int64
 	backupTaskMux sync.Mutex
 
@@ -58,19 +58,20 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue          taskqueue.TQueueOnStrategy
-	resumableUploadQueue taskqueue.TQueueOnStrategy
-	replicateQueue       taskqueue.TQueueOnStrategyWithLimit
-	sealQueue            taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue         taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue        taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue        taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue          taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue        taskqueue.TQueueOnStrategy
-	challengeQueue       taskqueue.TQueueOnStrategy
-	recoveryQueue        taskqueue.TQueueOnStrategyWithLimit
-	migrateGVGQueue      taskqueue.TQueueOnStrategyWithLimit
-	migrateGVGQueueMux   sync.Mutex
+	uploadQueue            taskqueue.TQueueOnStrategy
+	resumableUploadQueue   taskqueue.TQueueOnStrategy
+	replicateQueue         taskqueue.TQueueOnStrategyWithLimit
+	sealQueue              taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue           taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue          taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue            taskqueue.TQueueOnStrategyWithLimit
+	downloadQueue          taskqueue.TQueueOnStrategy
+	challengeQueue         taskqueue.TQueueOnStrategy
+	recoveryQueue          taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueueMux     sync.Mutex
+	gcBucketMigrationQueue taskqueue.TQueueOnStrategyWithLimit
 
 	maxUploadObjectNumber int
 
@@ -102,7 +103,7 @@ type ManageModular struct {
 }
 
 func (m *ManageModular) Name() string {
-	return module.ManageModularName
+	return coremodule.ManageModularName
 }
 
 func (m *ManageModular) Start(ctx context.Context) error {
@@ -128,10 +129,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		return err
 	}
 	m.scope = scope
-	err = m.LoadTaskFromDB()
-	if err != nil {
-		return err
-	}
 
 	if err = m.LoadTaskFromDB(); err != nil {
 		return err
@@ -144,7 +141,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 
 func (m *ManageModular) delayStartMigrateScheduler() {
 	// delay start to wait metadata service ready.
-	// migrate scheduler init depend metadata.
+	// migrate scheduler initialization depends on metadata.
 	for {
 		time.Sleep(5 * time.Second)
 		var err error
@@ -181,7 +178,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 		case <-syncConsensusInfoTicker.C:
 			m.syncConsensusInfo(ctx)
 		case <-backupTaskTicker.C:
-			m.backUpTask()
+			m.backupTask()
 		case <-gcObjectTicker.C:
 			start := m.gcBlockHeight
 			end := m.gcBlockHeight + m.gcObjectBlockInterval
@@ -192,10 +189,8 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			if end+m.gcSafeBlockDistance > currentBlockHeight {
 				log.CtxErrorw(ctx, "current block number less safe distance and try again later",
-					"start_gc_block_height", start,
-					"end_gc_block_height", end,
-					"safe_distance", m.gcSafeBlockDistance,
-					"current_block_height", currentBlockHeight)
+					"start_gc_block_height", start, "end_gc_block_height", end,
+					"safe_distance", m.gcSafeBlockDistance, "current_block_height", currentBlockHeight)
 				continue
 			}
 			task := &gfsptask.GfSpGCObjectTask{}
@@ -205,7 +200,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				metrics.GCBlockNumberGauge.WithLabelValues(ManagerGCBlockNumber).Set(float64(m.gcBlockHeight))
 				m.gcBlockHeight = end + 1
 
-				if err = m.baseApp.GfSpDB().InsertGCObjectProgress(&spdb.GCObjectMeta{
+				if err = m.baseApp.GfSpDB().InsertGCObjectProgress(&corespdb.GCObjectMeta{
 					TaskKey:          task.Key().String(),
 					StartBlockHeight: start,
 					EndBlockHeight:   end,
@@ -232,8 +227,8 @@ func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 		log.Errorw("failed to query sp id", "error", err)
 		return
 	}
-	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(),
-		createAt.Unix(), spID, DiscontinueBucketLimit)
+	buckets, err := m.baseApp.GfSpClient().ListExpiredBucketsBySp(context.Background(), createAt.Unix(), spID,
+		DiscontinueBucketLimit)
 	if err != nil {
 		log.Errorw("failed to query expired buckets", "error", err)
 		return
@@ -248,12 +243,11 @@ func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 		}
 		_, err = m.baseApp.GfSpClient().DiscontinueBucket(ctx, discontinueBucket)
 		if err != nil {
-			log.Errorw("failed to discontinue bucket on chain", "bucket_name",
-				discontinueBucket.BucketName, "error", err)
+			log.Errorw("failed to discontinue bucket on chain", "bucket_name", discontinueBucket.BucketName,
+				"error", err)
 			continue
 		} else {
-			log.Infow("succeed to discontinue bucket", "bucket_name",
-				discontinueBucket.BucketName)
+			log.Infow("succeed to discontinue bucket", "bucket_name", discontinueBucket.BucketName)
 		}
 	}
 }
@@ -263,7 +257,7 @@ func (m *ManageModular) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (m *ManageModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (rcmgr.ResourceScopeSpan, error) {
+func (m *ManageModular) ReserveResource(ctx context.Context, state *corercmgr.ScopeStat) (corercmgr.ResourceScopeSpan, error) {
 	span, err := m.scope.BeginSpan()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to begin span", "error", err)
@@ -277,7 +271,7 @@ func (m *ManageModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeS
 	return span, nil
 }
 
-func (m *ManageModular) ReleaseResource(ctx context.Context, span rcmgr.ResourceScopeSpan) {
+func (m *ManageModular) ReleaseResource(ctx context.Context, span corercmgr.ResourceScopeSpan) {
 	span.Done()
 }
 
@@ -289,11 +283,11 @@ func (m *ManageModular) LoadTaskFromDB() error {
 
 	var (
 		err                          error
-		replicateMetas               []*spdb.UploadObjectMeta
+		replicateMetas               []*corespdb.UploadObjectMeta
 		generateReplicateTaskCounter int
-		sealMetas                    []*spdb.UploadObjectMeta
+		sealMetas                    []*corespdb.UploadObjectMeta
 		generateSealTaskCounter      int
-		gcObjectMetas                []*spdb.GCObjectMeta
+		gcObjectMetas                []*corespdb.GCObjectMeta
 		generateGCObjectTaskCounter  int
 	)
 
@@ -385,12 +379,12 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		}
 	}
 
-	log.Infow("end to load task from sp db", "replicate_task_number", generateReplicateTaskCounter,
+	log.Infow("finished load task from sp db", "replicate_task_number", generateReplicateTaskCounter,
 		"seal_task_number", generateSealTaskCounter, "gc_object_task_number", generateGCObjectTaskCounter)
 	return nil
 }
 
-func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool {
+func (m *ManageModular) TaskUploading(ctx context.Context, task coretask.Task) bool {
 	if m.uploadQueue.Has(task.Key()) {
 		log.CtxDebugw(ctx, "uploading object repeated")
 		return true
@@ -410,12 +404,11 @@ func (m *ManageModular) TaskUploading(ctx context.Context, task task.Task) bool 
 	return false
 }
 
-func (m *ManageModular) TaskRecovering(ctx context.Context, task task.Task) bool {
+func (m *ManageModular) TaskRecovering(ctx context.Context, task coretask.Task) bool {
 	if m.recoveryQueue.Has(task.Key()) {
 		log.CtxDebugw(ctx, "recovery object repeated")
 		return true
 	}
-
 	return false
 }
 
@@ -423,11 +416,11 @@ func (m *ManageModular) UploadingObjectNumber() int {
 	return m.uploadQueue.Len() + m.replicateQueue.Len() + m.sealQueue.Len() + m.resumableUploadQueue.Len()
 }
 
-func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
-	task := qTask.(task.UploadObjectTask)
+func (m *ManageModular) GCUploadObjectQueue(qTask coretask.Task) bool {
+	task := qTask.(coretask.UploadObjectTask)
 	if task.Expired() {
 		go func() {
-			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         task.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
 				ErrorDescription: "expired",
@@ -440,11 +433,11 @@ func (m *ManageModular) GCUploadObjectQueue(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) GCResumableUploadObjectQueue(qTask task.Task) bool {
-	task := qTask.(task.ResumableUploadObjectTask)
+func (m *ManageModular) GCResumableUploadObjectQueue(qTask coretask.Task) bool {
+	task := qTask.(coretask.ResumableUploadObjectTask)
 	if task.Expired() {
 		go func() {
-			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         task.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
 				ErrorDescription: "expired",
@@ -457,11 +450,11 @@ func (m *ManageModular) GCResumableUploadObjectQueue(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
-	task := qTask.(task.ReplicatePieceTask)
+func (m *ManageModular) GCReplicatePieceQueue(qTask coretask.Task) bool {
+	task := qTask.(coretask.ReplicatePieceTask)
 	if task.Expired() {
 		go func() {
-			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         task.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR,
 				ErrorDescription: "expired",
@@ -474,11 +467,11 @@ func (m *ManageModular) GCReplicatePieceQueue(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
-	task := qTask.(task.SealObjectTask)
+func (m *ManageModular) GCSealObjectQueue(qTask coretask.Task) bool {
+	task := qTask.(coretask.SealObjectTask)
 	if task.Expired() {
 		go func() {
-			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
+			if err := m.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
 				ObjectID:         task.GetObjectInfo().Id.Uint64(),
 				TaskState:        types.TaskState_TASK_STATE_SEAL_OBJECT_ERROR,
 				ErrorDescription: "expired",
@@ -491,21 +484,21 @@ func (m *ManageModular) GCSealObjectQueue(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
+func (m *ManageModular) GCReceiveQueue(qTask coretask.Task) bool {
 	return qTask.ExceedRetry()
 }
 
-func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
+func (m *ManageModular) GCRecoverQueue(qTask coretask.Task) bool {
 	return qTask.ExceedRetry() || qTask.ExceedTimeout()
 }
 
-func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
-	task := qTask.(task.MigrateGVGTask)
+func (m *ManageModular) GCMigrateGVGQueue(qTask coretask.Task) bool {
+	task := qTask.(coretask.MigrateGVGTask)
 	return task.GetFinished()
 }
 
-func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
-	task := qTask.(task.GCObjectTask)
+func (m *ManageModular) ResetGCObjectTask(qTask coretask.Task) bool {
+	task := qTask.(coretask.GCObjectTask)
 	if task.Expired() {
 		log.Errorw("reset gc object task", "old_task_key", task.Key().String())
 		task.SetRetry(0)
@@ -514,15 +507,15 @@ func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) GCCacheQueue(qTask task.Task) bool {
+func (m *ManageModular) GCCacheQueue(qTask coretask.Task) bool {
 	return true
 }
 
-func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
+func (m *ManageModular) FilterGCTask(qTask coretask.Task) bool {
 	return qTask.GetRetry() == 0
 }
 
-func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
+func (m *ManageModular) FilterUploadingTask(qTask coretask.Task) bool {
 	if qTask.ExceedRetry() {
 		return false
 	}
@@ -535,7 +528,7 @@ func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) FilterGVGTask(qTask task.Task) bool {
+func (m *ManageModular) FilterGVGTask(qTask coretask.Task) bool {
 	if qTask.GetRetry() == 0 {
 		return true
 	}
@@ -545,7 +538,7 @@ func (m *ManageModular) FilterGVGTask(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) FilterReceiveTask(qTask task.Task) bool {
+func (m *ManageModular) FilterReceiveTask(qTask coretask.Task) bool {
 	if qTask.ExceedRetry() {
 		return false
 	}
@@ -555,7 +548,7 @@ func (m *ManageModular) FilterReceiveTask(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) (task.Task, []task.Task) {
+func (m *ManageModular) PickUpTask(ctx context.Context, tasks []coretask.Task) (coretask.Task, []coretask.Task) {
 	if len(tasks) == 0 {
 		return nil, nil
 	}
@@ -643,18 +636,18 @@ func (m *ManageModular) Statistics() string {
 		m.gcBlockHeight, m.gcSafeBlockDistance, m.backupTaskNum)
 }
 
-func (m *ManageModular) backUpTask() {
+func (m *ManageModular) backupTask() {
 	m.backupTaskMux.Lock()
 	defer m.backupTaskMux.Unlock()
 
 	startPopTime := time.Now().String()
 	var (
-		backupTasks   []task.Task
-		reservedTasks []task.Task
-		targetTask    task.Task
+		backupTasks   []coretask.Task
+		reservedTasks []coretask.Task
+		targetTask    coretask.Task
 
 		ctx   = context.Background()
-		limit = &rcmgr.Unlimited{}
+		limit = &corercmgr.Unlimited{}
 	)
 
 	targetTask = m.replicateQueue.PopByLimit(limit)
@@ -723,7 +716,7 @@ func (m *ManageModular) backUpTask() {
 	}
 }
 
-func (m *ManageModular) repushTask(reserved task.Task) {
+func (m *ManageModular) repushTask(reserved coretask.Task) {
 	switch t := reserved.(type) {
 	case *gfsptask.GfSpReplicatePieceTask:
 		err := m.replicateQueue.Push(t)
@@ -752,35 +745,30 @@ func (m *ManageModular) repushTask(reserved task.Task) {
 	}
 }
 
-func (m *ManageModular) migrateGVGQueuePush(task task.Task) error {
+func (m *ManageModular) migrateGVGQueuePush(task coretask.Task) error {
 	m.migrateGVGQueueMux.Lock()
 	defer m.migrateGVGQueueMux.Unlock()
-
-	err := m.migrateGVGQueue.Push(task)
-
-	return err
+	return m.migrateGVGQueue.Push(task)
 }
 
-func (m *ManageModular) migrateGVGQueuePopByLimit(limit rcmgr.Limit) task.Task {
+func (m *ManageModular) migrateGVGQueuePopByLimit(limit corercmgr.Limit) coretask.Task {
 	m.migrateGVGQueueMux.Lock()
 	defer m.migrateGVGQueueMux.Unlock()
 	task := m.migrateGVGQueue.PopByLimit(limit)
-
 	return task
 }
 
-func (m *ManageModular) migrateGVGQueuePopByKey(key task.TKey) {
+func (m *ManageModular) migrateGVGQueuePopByKey(key coretask.TKey) {
 	m.migrateGVGQueueMux.Lock()
 	defer m.migrateGVGQueueMux.Unlock()
 	m.migrateGVGQueue.PopByKey(key)
 }
 
-func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateGVGTask, push bool) error {
+func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task coretask.MigrateGVGTask, push bool) error {
 	m.migrateGVGQueueMux.Lock()
 	defer m.migrateGVGQueueMux.Unlock()
 
 	var pushErr error
-
 	m.migrateGVGQueue.PopByKey(task.Key())
 	task.SetUpdateTime(time.Now().Unix())
 	if !task.GetFinished() || push {

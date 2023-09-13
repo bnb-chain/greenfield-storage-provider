@@ -278,6 +278,11 @@ const (
 	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
 	// SwapOutApprovalPath defines get swap out approval path.
 	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
+	// NotifyBucketMigrationDonePath defines dest sp notifies src sp that bucket migration is done.
+	NotifyBucketMigrationDonePath = "/greenfield/migrate/v1/notify-bucket-migration-done"
+	// GnfdBucketIDHeader defines which bucket id completes migration
+	GnfdBucketIDHeader = "X-Gnfd-Bucket-ID"
+
 	// ObjectXmlSuffix defines the object has xml suffix
 	ObjectXmlSuffix = "xml"
 	// ObjectPdfSuffix defines the object has pdf suffix
