@@ -118,8 +118,8 @@ func (a *ApprovalModular) PreMigrateBucketApproval(ctx context.Context, task cor
 	if selfSPID != task.GetMigrateBucketInfo().GetDstPrimarySpId() {
 		return fmt.Errorf("current SP is not the correct one to ask for approval")
 	}
-	if a.exceedMigrateGVGALimit() {
-		log.CtxErrorw(ctx, "Exceeding SP concurrent bucket migration limit", "limit", a.migrateGVGLimit)
+	if a.exceedMigrateGVGLimit() {
+		log.CtxErrorw(ctx, "Exceeding SP concurrent GVGs migration limit", "limit", a.migrateGVGLimit)
 		return ErrExceedApprovalLimit
 	}
 	return nil

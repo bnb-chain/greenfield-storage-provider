@@ -355,11 +355,11 @@ func TestApprovalModular_PreCreateObjectApprovalSuccess(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
 	a.tasksStats = &managerTasksStats{
-		uploadTaskCount:    1,
-		replicateTaskCount: 1,
-		sealTaskCount:      1,
-		resumableTaskCount: 1,
-		maxUploadingCount:  5,
+		uploadTaskCount:          1,
+		replicateTaskCount:       1,
+		sealTaskCount:            1,
+		resumableUploadTaskCount: 1,
+		maxUploadingCount:        5,
 	}
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	a.baseApp.SetGfSpClient(m1)
@@ -371,11 +371,11 @@ func TestApprovalModular_PreCreateObjectApprovalFailure1(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
 	a.tasksStats = &managerTasksStats{
-		uploadTaskCount:    1,
-		replicateTaskCount: 1,
-		sealTaskCount:      1,
-		resumableTaskCount: 1,
-		maxUploadingCount:  4,
+		uploadTaskCount:          1,
+		replicateTaskCount:       1,
+		sealTaskCount:            1,
+		resumableUploadTaskCount: 1,
+		maxUploadingCount:        4,
 	}
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	a.baseApp.SetGfSpClient(m1)

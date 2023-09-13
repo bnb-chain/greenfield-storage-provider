@@ -22,16 +22,16 @@ const (
 var _ module.Approver = &ApprovalModular{}
 
 type managerTasksStats struct {
-	uploadTaskCount    uint32
-	replicateTaskCount uint32
-	sealTaskCount      uint32
-	resumableTaskCount uint32
-	maxUploadingCount  uint32
-	migrateGVGCount    uint32
+	uploadTaskCount          uint32
+	replicateTaskCount       uint32
+	sealTaskCount            uint32
+	resumableUploadTaskCount uint32
+	maxUploadingCount        uint32
+	migrateGVGCount          uint32
 }
 
 func (s *managerTasksStats) totalUploadTasks() uint32 {
-	return s.uploadTaskCount + s.replicateTaskCount + s.sealTaskCount + s.resumableTaskCount
+	return s.uploadTaskCount + s.replicateTaskCount + s.sealTaskCount + s.resumableUploadTaskCount
 }
 
 type ApprovalModular struct {
@@ -49,10 +49,10 @@ type ApprovalModular struct {
 	bucketApprovalTimeoutHeight uint64
 	objectApprovalTimeoutHeight uint64
 
-	// the maximum number of buckets migrating to current SP concurrently is allowed
+	// the maximum number of GVGs migrating to current SP concurrently is allowed
 	migrateGVGLimit int
 
-	mtx        sync.Mutex
+	statsMutex sync.Mutex
 	tasksStats *managerTasksStats
 
 	spID uint32
@@ -112,16 +112,18 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 			a.SetCurrentBlockHeight(current)
 		case <-updateManagerTasksStatsTicket.C:
 			stats, err := a.baseApp.GfSpClient().GetTasksStats(context.Background())
-			if err != nil {
-				return
+			if err == nil {
+				a.statsMutex.Lock()
+				a.tasksStats = &managerTasksStats{
+					stats.GetUploadCount(),
+					stats.GetReplicateCount(),
+					stats.GetSealCount(),
+					stats.GetResumableUploadCount(),
+					stats.GetMaxUploading(),
+					stats.GetMigrateGvgCount(),
+				}
+				a.statsMutex.Unlock()
 			}
-			a.mtx.Lock()
-			a.tasksStats = &managerTasksStats{
-				stats.GetUploadCount(), stats.GetReplicateCount(), stats.GetSealCount(), stats.GetResumableUploadCount(),
-				stats.GetMaxUploading(), stats.GetMigrateGvgCount(),
-			}
-			log.Debugw("cur managerTasksStats", "a.TasksStats", a.tasksStats)
-			a.mtx.Unlock()
 		}
 	}
 }
@@ -160,13 +162,13 @@ func (a *ApprovalModular) getSPID() (uint32, error) {
 }
 
 func (a *ApprovalModular) exceedCreateObjectLimit() bool {
-	a.mtx.Lock()
-	defer a.mtx.Unlock()
+	a.statsMutex.Lock()
+	defer a.statsMutex.Unlock()
 	return a.tasksStats.totalUploadTasks() >= a.tasksStats.maxUploadingCount
 }
 
-func (a *ApprovalModular) exceedMigrateGVGALimit() bool {
-	a.mtx.Lock()
-	defer a.mtx.Unlock()
+func (a *ApprovalModular) exceedMigrateGVGLimit() bool {
+	a.statsMutex.Lock()
+	defer a.statsMutex.Unlock()
 	return a.tasksStats.migrateGVGCount >= uint32(a.migrateGVGLimit)
 }
