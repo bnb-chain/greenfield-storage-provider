@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.5
+
+BUGFIX
+* [#1135](https://github.com/bnb-chain/greenfield-storage-provider/pull/1135) fix: effect allow issue
+
 ## v0.2.5-alpha.3
 
 FEATURES
