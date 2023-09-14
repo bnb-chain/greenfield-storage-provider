@@ -1,7 +1,6 @@
 package bsdb
 
 import (
-	"errors"
 	"time"
 
 	"github.com/forbole/juno/v4/common"
@@ -66,9 +65,6 @@ func (b *BsDBImpl) GetMigrateBucketEventByBucketID(bucketID common.Hash) (*Event
 		Where("bucket_id = ?", bucketID).
 		Order("create_time desc").
 		Take(&completeEvents).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
 
 	return completeEvents, err
 }

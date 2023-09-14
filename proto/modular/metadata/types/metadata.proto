@@ -593,8 +593,8 @@ message GfSpListObjectsInGVGAndBucketResponse {
 
 // GfSpListObjectByGVGAndBucketForGCRequest is request type for the GfSpListObjectByGVGAndBucketForGC RPC method
 message GfSpListObjectsByGVGAndBucketForGCRequest {
-  // gvg_id is the unique identification for gvg
-  uint32 gvg_id = 1;
+  // dst_gvg_id defines the destination of gvg id
+  uint32 dst_gvg_id = 1;
   // bucket_id is the unique identification for bucket
   uint64 bucket_id = 2;
   // start_after is where you want to start listing from

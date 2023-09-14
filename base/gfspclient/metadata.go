@@ -536,7 +536,7 @@ func (s *GfSpClient) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAf
 	return resp.Objects, nil
 }
 
-func (s *GfSpClient) ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
+func (s *GfSpClient) ListObjectsByGVGAndBucketForGC(ctx context.Context, dstGvgID uint32, bucketID uint64, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -544,7 +544,7 @@ func (s *GfSpClient) ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID u
 	}
 	defer conn.Close()
 	req := &types.GfSpListObjectsByGVGAndBucketForGCRequest{
-		GvgId:      gvgID,
+		DstGvgId:   dstGvgID,
 		BucketId:   bucketID,
 		StartAfter: startAfter,
 		Limit:      limit,
