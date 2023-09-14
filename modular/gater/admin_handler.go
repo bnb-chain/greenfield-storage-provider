@@ -644,7 +644,12 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	_, _ = w.Write(pieceData)
+	_, err = w.Write(pieceData)
+	if err != nil {
+		err = ErrReplyData
+		log.CtxErrorw(reqCtx.Context(), "failed to reply the recovery data", "error", err)
+		return
+	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
 
