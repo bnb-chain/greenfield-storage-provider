@@ -445,8 +445,9 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = g.checkReplicatePermission(reqCtx.Context(), receiveTask, signatureAddr.String())
+	err = g.checkReplicatePermission(receiveTask, signatureAddr.String())
 	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check the replicate permission", "error", err)
 		return
 	}
 
@@ -486,12 +487,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebug(reqCtx.Context(), "succeed to replicate piece")
 }
 
-func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
+func (g *GateModular) checkReplicatePermission(receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
+	ctx := context.Background()
 	// check if the request account is the primary SP of the object of the receiving task
 	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, receiveTask.GetObjectInfo().BucketName)
 	if err != nil {
-		err = ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
-		return err
+		return ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
 	}
 
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), receiveTask.GetGlobalVirtualGroupID())
@@ -499,7 +500,7 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 		return ErrConsensusWithDetail("QueryGVGInfo error: " + err.Error())
 	}
 
-	// judge if sender is primary sp
+	// judge if sender is the primary sp of the gvg
 	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, gvg.PrimarySpId)
 	if err != nil {
 		return ErrConsensusWithDetail("QuerySPInfo error: " + err.Error())
@@ -511,7 +512,7 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 		return ErrPrimaryMismatch
 	}
 
-	// judge if myself is secondary sp
+	// judge if myself is the right secondary sp of the gvg
 	spID, err := g.getSPID()
 	if err != nil {
 		return ErrConsensusWithDetail("getSPID error: " + err.Error())
