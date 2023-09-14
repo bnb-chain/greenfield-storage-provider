@@ -506,7 +506,9 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 	}
 
 	if primarySp.GetOperatorAccAddress().String() != signatureAddr {
-		return ErrSignedMsgNotMatchSPAddr
+		log.CtxErrorw(ctx, "primary sp mismatch", "expect",
+			primarySp.GetOperatorAccAddress().String(), "current", signatureAddr)
+		return ErrPrimaryMismatch
 	}
 
 	// judge if myself is secondary sp
@@ -515,9 +517,9 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 		return ErrConsensusWithDetail("getSPID error: " + err.Error())
 	}
 
-	if gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())] != spID {
-		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch", "expect",
-			gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())], "current", g.baseApp.OperatorAddress())
+	expectSecondarySPID := gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())]
+	if expectSecondarySPID != spID {
+		log.CtxErrorw(ctx, "secondary sp mismatch", "expect", expectSecondarySPID, "current", spID)
 		return ErrSecondaryMismatch
 	}
 
