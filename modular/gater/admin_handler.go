@@ -367,7 +367,12 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
 	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
-	_, _ = w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reply data", "error", err)
+		err = ErrReplyData
+		return
+	}
 	metrics.ReqPieceSize.WithLabelValues(GatewayChallengePieceSize).Observe(float64(len(data)))
 	log.CtxDebug(reqCtx.Context(), "succeed to get challenge info")
 }
