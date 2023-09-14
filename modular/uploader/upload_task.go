@@ -221,9 +221,11 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 		}
 		log.CtxDebugw(ctx, "finished to read data from stream", "info", task.Info(),
 			"read_size", readSize, "error", err)
-		if task.GetCompleted() {
-			err = u.baseApp.GfSpClient().ReportTask(ctx, task)
-		}
+		go func() {
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), task)
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+		}()
 	}()
 
 	for {
