@@ -429,7 +429,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify receive task signature
-	_, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
+	signatureAddr, err := reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify receive task", "error", err, "task", receiveTask)
 		err = ErrSignature
@@ -445,10 +445,8 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the request account is the primary SP of the object of the receiving task
-	_, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
+	err = g.checkReplicatePermission(reqCtx.Context(), receiveTask, signatureAddr.String())
 	if err != nil {
-		err = ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
 		return
 	}
 
@@ -486,6 +484,44 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
 	log.CtxDebug(reqCtx.Context(), "succeed to replicate piece")
+}
+
+func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
+	// check if the request account is the primary SP of the object of the receiving task
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, receiveTask.GetObjectInfo().BucketName)
+	if err != nil {
+		err = ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
+		return err
+	}
+
+	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), receiveTask.GetGlobalVirtualGroupID())
+	if err != nil {
+		return ErrConsensusWithDetail("QueryGVGInfo error: " + err.Error())
+	}
+
+	// judge if sender is primary sp
+	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, gvg.PrimarySpId)
+	if err != nil {
+		return ErrConsensusWithDetail("QuerySPInfo error: " + err.Error())
+	}
+
+	if primarySp.GetOperatorAccAddress().String() != signatureAddr {
+		return ErrSignedMsgNotMatchSPAddr
+	}
+
+	// judge if myself is secondary sp
+	spID, err := g.getSPID()
+	if err != nil {
+		return ErrConsensusWithDetail("getSPID error: " + err.Error())
+	}
+
+	if gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())] != spID {
+		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch", "expect",
+			gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())], "current", g.baseApp.OperatorAddress())
+		return ErrSecondaryMismatch
+	}
+
+	return nil
 }
 
 // getRecoverDataHandler handles the query for recovery request from secondary SP or primary SP.
@@ -625,8 +661,8 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	if err != nil {
 		return nil, err
 	}
-	// the primary sp of the object should be consistent with task signature
 
+	// the primary sp of the object should be consistent with task signature
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 	if err != nil {
 		return nil, err
@@ -634,15 +670,16 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 
 	sspAddress := make([]string, 0)
 	for _, sspID := range gvg.SecondarySpIds {
-		sp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspID)
-		if err != nil {
-			return nil, err
+		sp, queryErr := g.baseApp.Consensus().QuerySPByID(ctx, sspID)
+		if queryErr != nil {
+			return nil, queryErr
 		}
 		sspAddress = append(sspAddress, sp.OperatorAddress)
 	}
 
+	// if myself is secondary, the sender of the request can be both of  the primary SP or the secondary SP of the gvg
 	if primarySp.OperatorAddress != signatureAddr.String() {
-		log.CtxDebug(ctx, "recovery request not come from primary sp")
+		log.CtxDebug(ctx, "recovery request not come from primary sp", "secondary sp", signatureAddr.String())
 		// judge if the sender is not one of the secondary SP
 		isRequestFromSecondary := false
 		var taskECIndex int32
