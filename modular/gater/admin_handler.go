@@ -490,14 +490,13 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 func (g *GateModular) checkReplicatePermission(receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
 	ctx := context.Background()
 	// check if the request account is the primary SP of the object of the receiving task
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, receiveTask.GetObjectInfo().BucketName)
-	if err != nil {
-		return ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
-	}
-
-	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), receiveTask.GetGlobalVirtualGroupID())
+	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, receiveTask.GetGlobalVirtualGroupID())
 	if err != nil {
 		return ErrConsensusWithDetail("QueryGVGInfo error: " + err.Error())
+	}
+
+	if gvg == nil {
+		return ErrConsensusWithDetail("QueryGVGInfo nil: " + err.Error())
 	}
 
 	// judge if sender is the primary sp of the gvg
