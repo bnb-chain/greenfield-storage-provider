@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"time"
 
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/models"
 	"github.com/spaolacci/murmur3"
@@ -16,7 +17,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
-var verifyFuncs = []func(db *gorm.DB) error{verify1, verify2, verify3, verify4, verify5, verify6, verify7, verify8, verify9, verify10, verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify18, verify19, verify20, verify21, verify22, verify23, verify24, verify25}
+var verifyFuncs = []func(db *gorm.DB) error{verify1, verify2, verify3, verify4, verify5, verify6, verify7, verify8, verify9, verify10, verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify18, verify19, verify20, verify21, verify22, verify23, verify24, verify25, verify26, verify27,
+	verify28, verify29, verify30, verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40, verify41, verify42,
+}
 
 func Verify() error {
 	dsn := "root:root@tcp(localhost:3306)/block_syncer?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
@@ -289,6 +292,145 @@ func verify25(db *gorm.DB) error {
 	}
 	if !sp.Removed {
 		return errors.New("sp is not removed")
+	}
+	return nil
+}
+
+func verify26(db *gorm.DB) error {
+	var permission models.Permission
+	if err := db.Table((&models.Permission{}).TableName()).Where("policy_id = ?", common.BigToHash(big.NewInt(2))).Find(&permission).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func verify27(db *gorm.DB) error {
+	var permission models.Permission
+	if err := db.Table((&models.Permission{}).TableName()).Where("policy_id = ?", common.BigToHash(big.NewInt(2))).Find(&permission).Error; err != nil {
+		return err
+	}
+	if !permission.Removed {
+		return errors.New("permission is not removed")
+	}
+	return nil
+}
+
+func verify28(db *gorm.DB) error {
+	var object models.Object
+	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
+		return err
+	}
+	if !object.Removed {
+		return errors.New("object is not removed")
+	}
+	return nil
+}
+func verify29(db *gorm.DB) error {
+	var object models.Object
+	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
+		return err
+	}
+	if object.Status != storagetypes.OBJECT_STATUS_DISCONTINUED.String() {
+		return errors.New("object status error")
+	}
+	return nil
+}
+func verify30(db *gorm.DB) error {
+	return nil
+}
+func verify31(db *gorm.DB) error {
+	var object models.Object
+	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
+		return err
+	}
+	if !object.Removed || object.Operator.String() != "0x6fD578b6fd9635cB7a7dDF53B13DbB0c873aEFCD" {
+		return errors.New("object is not removed")
+	}
+	return nil
+}
+func verify32(db *gorm.DB) error {
+	var object models.Object
+	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
+		return err
+	}
+	if object.Visibility != "VISIBILITY_TYPE_INHERIT" {
+		return errors.New("object Visibility error")
+	}
+	return nil
+}
+func verify33(db *gorm.DB) error {
+	var object models.Object
+	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1204))).Find(&object).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify34(db *gorm.DB) error {
+	var cmb bsdb.EventCompleteMigrationBucket
+	if err := db.Table(bsdb.EventCompleteMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify35(db *gorm.DB) error {
+	var cmb bsdb.EventMigrationBucket
+	if err := db.Table(bsdb.EventMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify36(db *gorm.DB) error {
+	var cmb bsdb.EventCancelMigrationBucket
+	if err := db.Table(bsdb.EventCancelMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify37(db *gorm.DB) error {
+	var cmb bsdb.EventStorageProviderExit
+	if err := db.Table(bsdb.EventStorageProviderExitTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify38(db *gorm.DB) error {
+	var cmb bsdb.EventSwapOut
+	if err := db.Table(bsdb.EventSwapOutTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify39(db *gorm.DB) error {
+	var cmb bsdb.EventCompleteSwapOut
+	if err := db.Table(bsdb.EventCompleteSwapOutTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify40(db *gorm.DB) error {
+	var cmb bsdb.EventCompleteStorageProviderExit
+	if err := db.Table(bsdb.EventCompleteStorageProviderExitTableName).Where("storage_provider_id = ?", 10).Find(&cmb).Error; err != nil {
+		return err
+	}
+	return nil
+}
+func verify41(db *gorm.DB) error {
+	var g models.Group
+	if err := db.Table((&models.Group{}).TableName()).Where("account_id = ? and group_id = ?", common.HexToAddress("0x4d57d300AfaF9f407e26552965ce355786206cF4"), common.HexToHash("2")).Find(&g).Error; err != nil {
+		return err
+	}
+	if g.ExpirationTime != 33260975999 {
+		return errors.New("ExpirationTime err")
+	}
+	return nil
+}
+func verify42(db *gorm.DB) error {
+	var sp models.StorageProvider
+	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
+		return err
+	}
+	if sp.ReadPrice.Raw().Cmp(big.NewInt(1000.0)) == 0 || sp.StorePrice.Raw().Cmp(big.NewInt(100000)) == 0 {
+		return errors.New("price error")
 	}
 	return nil
 }
