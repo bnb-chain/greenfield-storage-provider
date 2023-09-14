@@ -450,7 +450,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = g.checkReplicatePermission(receiveTask, signatureAddr.String())
+	err = g.checkReplicatePermission(reqCtx.Context(), receiveTask, signatureAddr.String())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to check the replicate permission", "error", err)
 		return
@@ -492,8 +492,25 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	log.CtxDebug(reqCtx.Context(), "succeed to replicate piece")
 }
 
-func (g *GateModular) checkReplicatePermission(receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
-	ctx := context.Background()
+func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
+	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(ctx, receiveTask.ObjectInfo.BucketName, receiveTask.ObjectInfo.ObjectName)
+	if err != nil {
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
+		return err
+	}
+
+	if !receiveTask.BucketMigration {
+		// if it is replicate when uploading, the status should be created
+		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
+			return ErrNotCreatedState
+		}
+	} else {
+		// if it is bucket migration, the status should be sealed
+		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_SEALED {
+			return ErrNotCreatedState
+		}
+	}
+
 	// check if the request account is the primary SP of the object of the receiving task
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, receiveTask.GetGlobalVirtualGroupID())
 	if err != nil {
