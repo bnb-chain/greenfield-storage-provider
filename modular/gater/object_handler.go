@@ -483,6 +483,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// downloadObject this is common method, which does the actual download action.
+// It is called by both getObjectHandler and getObjectByUniversalEndpointHandler after passing the authentication and authorization.
 func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestContext) error {
 	var (
 		err                       error
