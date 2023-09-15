@@ -153,7 +153,7 @@ func (r *MetadataModular) verifyObject(ctx context.Context, req *types.GfSpVerif
 		}
 		return permtypes.EFFECT_DENY, err
 	}
-	bucketInfo, err = r.baseApp.GfBsDB().GetBucketByID(objectInfo.BucketID.Big().Int64(), false)
+	bucketInfo, err = r.baseApp.GfBsDB().GetBucketByID(objectInfo.BucketID.Big().Int64(), true)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket info", "error", err)
 		return permtypes.EFFECT_DENY, err
@@ -184,7 +184,7 @@ func (r *MetadataModular) verifyBucket(ctx context.Context, req *types.GfSpVerif
 		return permtypes.EFFECT_DENY, err
 	}
 
-	bucketInfo, err = r.baseApp.GfBsDB().GetBucketByID(int64(req.ResourceId), false)
+	bucketInfo, err = r.baseApp.GfBsDB().GetBucketByID(int64(req.ResourceId), true)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket info", "error", err)
 		return permtypes.EFFECT_DENY, err

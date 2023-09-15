@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
+	"sync/atomic"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -433,7 +434,9 @@ func (m *GfSpReplicatePieceTask) SetPriority(priority coretask.TPriority) {
 }
 
 func (m *GfSpReplicatePieceTask) SetNotAvailableSpIdx(idx int32) {
-	m.NotAvailableSpIdx = idx
+	if atomic.LoadInt32(&m.NotAvailableSpIdx) != idx {
+		atomic.StoreInt32(&m.NotAvailableSpIdx, idx)
+	}
 }
 
 func (m *GfSpReplicatePieceTask) EstimateLimit() corercmgr.Limit {
@@ -686,7 +689,7 @@ func (m *GfSpReceivePieceTask) GetSignBytes() []byte {
 	fakeMsg := &GfSpReceivePieceTask{
 		ObjectInfo:    m.GetObjectInfo(),
 		StorageParams: m.GetStorageParams(),
-		Task:          &GfSpTask{CreateTime: m.GetCreateTime()},
+		Task:          &GfSpTask{CreateTime: m.GetCreateTime(), UpdateTime: m.GetUpdateTime()},
 		SegmentIdx:    m.GetSegmentIdx(),
 		RedundancyIdx: m.GetRedundancyIdx(),
 		PieceSize:     m.GetPieceSize(),

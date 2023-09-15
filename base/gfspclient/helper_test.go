@@ -224,6 +224,11 @@ func (mockDownloaderServer) GfSpGetChallengeInfo(ctx context.Context, req *gfsps
 	}
 }
 
+func (mockDownloaderServer) GfSpReimburseQuota(ctx context.Context, req *gfspserver.GfSpReimburseQuotaRequest) (
+	*gfspserver.GfSpReimburseQuotaResponse, error) {
+	return &gfspserver.GfSpReimburseQuotaResponse{Err: ErrExceptionsStream}, nil
+}
+
 type mockManagerServer struct{}
 
 func (mockManagerServer) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeginTaskRequest) (
@@ -327,6 +332,15 @@ func (mockManagerServer) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfsp
 	} else {
 		return &gfspserver.GfSpNotifyMigrateSwapOutResponse{}, nil
 	}
+}
+
+func (s mockManagerServer) GfSpQueryTasksStats(ctx context.Context, req *gfspserver.GfSpQueryTasksStatsRequest) (*gfspserver.GfSpQueryTasksStatsResponse, error) {
+	if req == nil {
+		return nil, mockRPCErr
+	}
+	return &gfspserver.GfSpQueryTasksStatsResponse{
+		Stats: &gfspserver.TasksStats{},
+	}, nil
 }
 
 type mockP2PServer struct{}

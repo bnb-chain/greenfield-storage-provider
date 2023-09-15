@@ -4,6 +4,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
 )
 
 const (
@@ -53,4 +54,8 @@ func defaultApprovalOptions(cfg *gfspconfig.GfSpConfig, approver *ApprovalModula
 		approver.Name()+"-create-bucket-approval", cfg.Parallel.GlobalCreateBucketApprovalParallel)
 	approver.objectQueue = cfg.Customize.NewStrategyTQueueFunc(
 		approver.Name()+"-create-object-approval", cfg.Parallel.GlobalCreateObjectApprovalParallel)
+	if cfg.Parallel.GlobalMigrateGVGParallel == 0 {
+		cfg.Parallel.GlobalMigrateGVGParallel = manager.DefaultGlobalMigrateGVGParallel
+	}
+	approver.migrateGVGLimit = cfg.Parallel.GlobalMigrateGVGParallel
 }

@@ -281,6 +281,99 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (traffic 
 	}, nil
 }
 
+// UpdateExtraQuota update the read consumed quota and free consumed quota in traffic db with the extra quota
+func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth string) error {
+	log.CtxErrorw(context.Background(), "begin to update extra quota for traffic db", "extra quota", extraQuota)
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		var bucketTraffic BucketTrafficTable
+		var err error
+		yearMonthOfNow := TimestampYearMonth(GetCurrentTimestampUs())
+		var extraUpdateOnNextMonth bool
+
+		// In most cases, the month of extra quota compensation should be the same as the current month,
+		// if not, the current month is the next month of the compensation month
+		if IsNextMonth(yearMonthOfNow, yearMonth) {
+			err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("bucket_id = ? and month = ?", bucketID, yearMonthOfNow).First(&bucketTraffic).Error
+			if err != nil {
+				// if it is a new month but the record has not been inserted, just update the extra quota to the old month
+				// the new month will init by the newest old month record.
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					extraUpdateOnNextMonth = false
+				}
+			} else {
+				extraUpdateOnNextMonth = true
+			}
+		} else {
+			if yearMonthOfNow != yearMonth {
+				return fmt.Errorf("the month of record of traffic table is invalid %s", yearMonth)
+			}
+			if err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("bucket_id = ? and month = ?", bucketID, yearMonth).First(&bucketTraffic).Error; err != nil {
+				return fmt.Errorf("failed to query bucket traffic table: %v", err)
+			}
+		}
+
+		consumedFreeQuota := bucketTraffic.FreeQuotaConsumedSize
+		remainedFreeQuota := bucketTraffic.FreeQuotaSize
+		log.CtxDebugw(context.Background(), "updated read consumed quota with extra quota:", "month", yearMonth, "consumed:", bucketTraffic.ReadConsumedSize,
+			"remained free quota", remainedFreeQuota, "extra", extraQuota)
+
+		if extraUpdateOnNextMonth {
+			// if the extra quota generate on the different month, needed to add the extra quota to free quota
+			// for example, the extra quota was generated at the last second on August 31, and the action of replenishing the quota began on September 1.
+			// At this time, the latest quota record of traffic table is in September instead of August.
+			// This situation is very unlikely to happen, in this case, the quota will be restored to the free quota.
+			err = tx.Model(&bucketTraffic).
+				Updates(BucketTrafficTable{
+					FreeQuotaSize: bucketTraffic.FreeQuotaSize + extraQuota,
+					ModifiedTime:  time.Now(),
+				}).Error
+		} else {
+			// if the free quota has not exhaust even after consumed extra quota or the consumed charged quota is still zero,
+			// the consumed free quota should be updated
+			consumedChargeQuota := bucketTraffic.ReadConsumedSize
+			if bucketTraffic.FreeQuotaSize > 0 || (bucketTraffic.FreeQuotaSize == 0 && consumedChargeQuota == 0) {
+				err = tx.Model(&bucketTraffic).Select("free_quota_consumed_size", "free_quota_size", "modified_time").
+					Updates(BucketTrafficTable{
+						FreeQuotaConsumedSize: consumedFreeQuota - extraQuota,
+						FreeQuotaSize:         remainedFreeQuota + extraQuota,
+						ModifiedTime:          time.Now(),
+					}).Error
+			} else {
+				// if consumed charge quota is more than extra quota, excess quota needs to be deducted from the consumed charge quota
+				if consumedChargeQuota > extraQuota {
+					err = tx.Model(&bucketTraffic).Select("read_consumed_size", "modified_time").
+						Updates(BucketTrafficTable{
+							ReadConsumedSize: consumedChargeQuota - extraQuota,
+							ModifiedTime:     time.Now(),
+						}).Error
+				} else {
+					extraFreeQuota := extraQuota - consumedChargeQuota
+					// it is needed to add select items if you need to update a value to zero in gorm db
+					err = tx.Model(&bucketTraffic).
+						Select("read_consumed_size", "free_quota_consumed_size", "free_quota_size", "modified_time").Updates(BucketTrafficTable{
+						ReadConsumedSize:      uint64(0),
+						FreeQuotaConsumedSize: consumedFreeQuota - extraFreeQuota,
+						FreeQuotaSize:         remainedFreeQuota + extraFreeQuota,
+						ModifiedTime:          time.Now(),
+					}).Error
+				}
+			}
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed to update bucket traffic table: %v", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.CtxErrorw(context.Background(), "failed to update the table by extra quota ", "bucket id", bucketID, "error", err)
+	}
+
+	return err
+}
+
 // GetReadRecord return record list by time range
 func (s *SpDBImpl) GetReadRecord(timeRange *corespdb.TrafficTimeRange) (records []*corespdb.ReadRecord, err error) {
 	var (

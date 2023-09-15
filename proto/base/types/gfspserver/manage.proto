@@ -84,6 +84,21 @@ message GfSpQuerySPByOperatorAddressResponse {
   greenfield.sp.StorageProvider storage_provider = 2;
 }
 
+message GfSpQueryTasksStatsRequest {}
+
+message GfSpQueryTasksStatsResponse {
+  TasksStats stats = 1;
+}
+
+message TasksStats {
+  uint32 upload_count = 1;
+  uint32 replicate_count = 2;
+  uint32 seal_count = 3;
+  uint32 resumable_upload_count = 4;
+  uint32 max_uploading = 5;
+  uint32 migrate_gvg_count = 6;
+}
+
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
@@ -91,4 +106,5 @@ service GfSpManageService {
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
   rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
   rpc GfSpQuerySPByOperatorAddress(GfSpQuerySPByOperatorAddressRequest) returns (GfSpQuerySPByOperatorAddressResponse) {}
+  rpc GfSpQueryTasksStats(GfSpQueryTasksStatsRequest) returns (GfSpQueryTasksStatsResponse) {}
 }

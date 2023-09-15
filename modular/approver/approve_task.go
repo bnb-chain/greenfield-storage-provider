@@ -2,6 +2,7 @@ package approver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -14,8 +15,9 @@ import (
 )
 
 var (
-	ErrDanglingPointer    = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
-	ErrExceedBucketNumber = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
+	ErrDanglingPointer     = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
+	ErrExceedBucketNumber  = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
+	ErrExceedApprovalLimit = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10003, "SP is too busy to approve the request, please come back later")
 )
 
 func ErrSignerWithDetail(detail string) *gfsperrors.GfSpError {
@@ -98,7 +100,28 @@ func (a *ApprovalModular) PostCreateBucketApproval(ctx context.Context, task cor
 }
 
 func (a *ApprovalModular) PreMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) error {
-	// TODO: check sp id.
+	var err error
+	if task == nil || task.GetMigrateBucketInfo() == nil {
+		log.CtxError(ctx, "failed to ask migrate bucket approval due to bucket info pointer dangling")
+		return ErrDanglingPointer
+	}
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
+	selfSPID, err := a.getSPID()
+	if err != nil {
+		return err
+	}
+	if selfSPID != task.GetMigrateBucketInfo().GetDstPrimarySpId() {
+		return fmt.Errorf("current SP is not the correct one to ask for approval")
+	}
+	if a.exceedMigrateGVGLimit() {
+		log.CtxErrorw(ctx, "Exceeding SP concurrent GVGs migration limit", "limit", a.migrateGVGLimit)
+		return ErrExceedApprovalLimit
+	}
 	return nil
 }
 
@@ -142,7 +165,10 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 func (a *ApprovalModular) PostMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) {
 }
 
-func (a *ApprovalModular) PreCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) error {
+func (a *ApprovalModular) PreCreateObjectApproval(_ context.Context, _ coretask.ApprovalCreateObjectTask) error {
+	if a.exceedCreateObjectLimit() {
+		return ErrExceedApprovalLimit
+	}
 	return nil
 }
 

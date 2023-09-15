@@ -160,7 +160,7 @@ func (s *GfSpClient) HTTPClient(ctx context.Context) *http.Client {
 			Transport: &http.Transport{
 				MaxIdleConns:    HTTPMaxIdleConns,
 				IdleConnTimeout: HTTPIdleConnTimout,
-				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS13},
+				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 			}}
 	}
 	return s.httpClient

@@ -20,6 +20,7 @@ import (
 var mockErr = errors.New("mock error")
 
 func setup(t *testing.T) *ApprovalModular {
+	t.Helper()
 	return &ApprovalModular{baseApp: &gfspapp.GfSpBaseApp{}}
 }
 

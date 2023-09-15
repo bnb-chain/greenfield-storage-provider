@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.2.5
+
+BUGFIX
+* [#1135](https://github.com/bnb-chain/greenfield-storage-provider/pull/1135) fix: effect allow issue
+
+## v0.2.5-alpha.3
+
+FEATURES
+* [#1129](https://github.com/bnb-chain/greenfield-storage-provider/pull/1129) feat: add back metadata go routine listener
+* [#1128](https://github.com/bnb-chain/greenfield-storage-provider/pull/1128) feat: support expire time check of SP task info
+
+BUGFIX
+* [#1092](https://github.com/bnb-chain/greenfield-storage-provider/pull/1092) fix: support reimburse quota if download consumed extra quota
+* [#1127](https://github.com/bnb-chain/greenfield-storage-provider/pull/1127) fix:bs groups unique index
+* [#1125](https://github.com/bnb-chain/greenfield-storage-provider/pull/1125) fix: expiration time for statement
+
+TEST
+* [#1126](https://github.com/bnb-chain/greenfield-storage-provider/pull/1126) test: modular/executor pkg adds UTs
+
+## v0.2.5-alpha.2
+
+FEATURES
+* [#1112](https://github.com/bnb-chain/greenfield-storage-provider/pull/1112) feat: support GfSpGetSPMigrateBucketNumber
+
+BUGFIX
+* [#1121](https://github.com/bnb-chain/greenfield-storage-provider/pull/1121) fix: fix tls MinVersion to 1.2
+* [#1119](https://github.com/bnb-chain/greenfield-storage-provider/pull/1119) fix: stop all replicate jobs and done replicate job by context
+* [#1117](https://github.com/bnb-chain/greenfield-storage-provider/pull/1117) fix: include private cause bucket not found
+
+TEST
+* [#1115](https://github.com/bnb-chain/greenfield-storage-provider/pull/1115) test: modular/gater pkg adds UTs part II
+
 ## v0.2.5-alpha.1
 
 FEATURES

@@ -199,3 +199,17 @@ func (s *GfSpClient) QuerySPByOperatorAddress(ctx context.Context, operatorAddre
 	}
 	return resp.GetStorageProvider(), nil
 }
+
+func (s *GfSpClient) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryTasksStats(ctx, &gfspserver.GfSpQueryTasksStatsRequest{})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query manager's task stats", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to query manager's task stats, error: " + err.Error())
+	}
+	return resp.GetStats(), nil
+}

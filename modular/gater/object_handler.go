@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
@@ -378,17 +379,9 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		reqCtxErr     error
 		reqCtx        *RequestContext
 		authenticated bool
-		objectInfo    *storagetypes.ObjectInfo
-		bucketInfo    *storagetypes.BucketInfo
-		params        *storagetypes.Params
-		lowOffset     int64
-		highOffset    int64
-		pieceInfos    []*downloader.SegmentPieceInfo
-		pieceData     []byte
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
-		reqCtx.Cancel()
 		if err != nil {
 			log.CtxDebugw(reqCtx.Context(), "get object error")
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
@@ -406,6 +399,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			metrics.ReqTime.WithLabelValues(GatewaySuccessGetObject).Observe(time.Since(getObjectStartTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		reqCtx.Cancel()
 	}()
 
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
@@ -482,13 +476,57 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	} // else anonymous users can get public object.
 
+	// do the actual download
+	err = g.downloadObject(w, reqCtx)
+	if err != nil {
+		return
+	}
+}
+
+// downloadObject this is common method, which does the actual download action.
+// It is called by both getObjectHandler and getObjectByUniversalEndpointHandler after passing the authentication and authorization.
+func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestContext) error {
+	var (
+		err                       error
+		params                    *storagetypes.Params
+		bucketInfo                *storagetypes.BucketInfo
+		objectInfo                *storagetypes.ObjectInfo
+		isRange                   bool
+		rangeStart, rangeEnd      int64
+		lowOffset                 int64
+		highOffset                int64
+		pieceInfos                []*downloader.SegmentPieceInfo
+		pieceData                 []byte
+		extraQuota, consumedQuota uint64
+		replyDataSize             int
+		dbUpdateTimeStamp         int64
+	)
+	defer func() {
+		if err != nil {
+			// if the bucket exists extra quota when download object, recoup the quota to user
+			if extraQuota > 0 {
+				quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), bucketInfo.Id.Uint64(), extraQuota, sqldb.TimestampYearMonth(dbUpdateTimeStamp))
+				// no need to return the db error to user
+				if quotaUpdateErr != nil {
+					log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
+				}
+				log.CtxDebugw(reqCtx.Context(), "//"+
+					"success to recoup extra quota to user", "extra quota:", extraQuota)
+			}
+			w.Header().Del(ContentLengthHeader)
+			w.Header().Del(ContentRangeHeader)
+			w.Header().Del(ContentTypeHeader)
+			w.Header().Del(ContentDispositionHeader)
+		}
+	}()
+
 	getObjectTime := time.Now()
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
-		return
+		return err
 	}
 
 	getBucketTime := time.Now()
@@ -497,7 +535,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
-		return
+		return err
 	}
 
 	getParamTime := time.Now()
@@ -506,16 +544,16 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
-		return
+		return err
 	}
 
-	isRange, rangeStart, rangeEnd := parseRange(reqCtx.request.Header.Get(RangeHeader))
+	isRange, rangeStart, rangeEnd = parseRange(reqCtx.request.Header.Get(RangeHeader))
 	if isRange && (rangeEnd < 0 || rangeEnd >= int64(objectInfo.GetPayloadSize())) {
 		rangeEnd = int64(objectInfo.GetPayloadSize()) - 1
 	}
 	if isRange && (rangeStart < 0 || rangeEnd < 0 || rangeStart > rangeEnd) {
 		err = ErrInvalidRange
-		return
+		return err
 	}
 
 	if isRange {
@@ -531,7 +569,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		lowOffset, highOffset, g.baseApp.TaskTimeout(task, uint64(highOffset-lowOffset+1)), g.baseApp.TaskMaxRetry(task))
 	if pieceInfos, err = downloader.SplitToSegmentPieceInfos(task, g.baseApp.PieceOp()); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
-		return
+		return err
 	}
 	w.Header().Set(ContentTypeHeader, objectInfo.GetContentType())
 	if isRange {
@@ -542,29 +580,50 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getDataTime := time.Now()
+	consumedQuota = 0
+	extraQuota = 0
+	downloadSize := uint64(highOffset - lowOffset + 1)
 	for idx, pInfo := range pieceInfos {
 		enableCheck := false
 		if idx == 0 { // only check in first piece
 			enableCheck = true
+			dbUpdateTimeStamp = sqldb.GetCurrentTimestampUs()
 		}
 		pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 		pieceTask.InitDownloadPieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task),
-			enableCheck, reqCtx.Account(), uint64(highOffset-lowOffset+1), pInfo.SegmentPieceKey, pInfo.Offset,
+			enableCheck, reqCtx.Account(), downloadSize, pInfo.SegmentPieceKey, pInfo.Offset,
 			pInfo.Length, g.baseApp.TaskTimeout(task, uint64(pieceTask.GetSize())), g.baseApp.TaskMaxRetry(task))
 		getSegmentTime := time.Now()
 		pieceData, err = g.baseApp.GfSpClient().GetPiece(reqCtx.Context(), pieceTask)
+
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_segment_data_time").Observe(time.Since(getSegmentTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
-			return
+			downloaderErr := gfsperrors.MakeGfSpError(err)
+			// if it is the first piece and the quota db is not updated, no extra data need to updated
+			if idx >= 1 || (idx == 0 && downloaderErr.GetInnerCode() == 85101) {
+				extraQuota = downloadSize - consumedQuota
+			}
+			return err
 		}
 
 		writeTime := time.Now()
-		_, _ = w.Write(pieceData)
+		replyDataSize, err = w.Write(pieceData)
+		// if the connection of client has been disconnected, the response will fail
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to write the data to connection", "objectName", objectInfo.ObjectName, "error", err)
+			extraQuota = downloadSize - consumedQuota
+			err = ErrReplyData
+			return err
+		}
+		// the quota value should be computed by the reply content length
+		consumedQuota += uint64(replyDataSize)
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_write_time").Observe(time.Since(writeTime).Seconds())
 	}
+
 	metrics.ReqPieceSize.WithLabelValues(GatewayGetObjectSize).Observe(float64(highOffset - lowOffset + 1))
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_data_time").Observe(time.Since(getDataTime).Seconds())
+	return nil
 }
 
 // queryUploadProgressHandler handles the query uploaded object progress request.
@@ -665,11 +724,9 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		err                  error
 		reqCtx               *RequestContext
 		authenticated        bool
-		isRange              bool
-		rangeStart           int64
-		rangeEnd             int64
 		redirectURL          string
-		params               *storagetypes.Params
+		bucketInfo           *storagetypes.BucketInfo
+		objectInfo           *storagetypes.ObjectInfo
 		isRequestFromBrowser bool
 		spEndpoint           string
 		getEndpointErr       error
@@ -732,6 +789,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		return
 	}
 
+	bucketInfo = getBucketInfoRes.BucketInfo
 	// if bucket not in the current sp, 302 redirect to the sp that contains the bucket
 	// TODO get from config
 	spID, err := g.getSPID()
@@ -767,13 +825,14 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		err = ErrNoSuchObject
 		return
 	}
-
-	if getObjectInfoRes.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.Errorw("object is not sealed", "status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
+	objectInfo = getObjectInfoRes.ObjectInfo
+	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+		log.Errorw("object is not sealed",
+			"status", getObjectInfoRes.GetObjectInfo().GetObjectStatus())
 		err = ErrNoSuchObject
 		return
 	}
-	if isPrivateObject(getBucketInfoRes.GetBucketInfo(), getObjectInfoRes.GetObjectInfo()) {
+	if isPrivateObject(bucketInfo, objectInfo) {
 		// for private files, we return a built-in dapp and help users provide a signature for verification
 		var (
 			expiry    string
@@ -862,48 +921,17 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		}
 
 	}
-
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(),
-		getObjectInfoRes.GetObjectInfo().GetCreateAt())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
-		return
-	}
-
-	var low int64
-	var high int64
-	if isRange {
-		low = rangeStart
-		high = rangeEnd
-	} else {
-		low = 0
-		high = int64(getObjectInfoRes.GetObjectInfo().GetPayloadSize()) - 1
-	}
-
-	task := &gfsptask.GfSpDownloadObjectTask{}
-	task.InitDownloadObjectTask(getObjectInfoRes.GetObjectInfo(), getBucketInfoRes.GetBucketInfo(), params, g.baseApp.TaskPriority(task), reqCtx.Account(),
-		low, high, g.baseApp.TaskTimeout(task, uint64(high-low+1)), g.baseApp.TaskMaxRetry(task))
-	data, getObjectErr := g.baseApp.GfSpClient().GetObject(reqCtx.Context(), task)
-	if getObjectErr != nil {
-		err = getObjectErr
-		log.CtxErrorw(reqCtx.Context(), "failed to download object", "error", err)
-		return
-	}
-
 	if isDownload {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	} else {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
 	}
-	w.Header().Set(ContentTypeHeader, getObjectInfoRes.GetObjectInfo().GetContentType())
-	if isRange {
-		w.Header().Set(ContentRangeHeader, "bytes "+util.Uint64ToString(uint64(low))+
-			"-"+util.Uint64ToString(uint64(high)))
-	} else {
-		w.Header().Set(ContentLengthHeader, util.Uint64ToString(getObjectInfoRes.GetObjectInfo().GetPayloadSize()))
+
+	// do the actual download
+	err = g.downloadObject(w, reqCtx)
+	if err != nil {
+		return
 	}
-	_, _ = w.Write(data)
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
 }
 

@@ -51,6 +51,11 @@ var (
 	ErrRecoveryTimeout        = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50032, "System busy, try to request later")
 	ErrInvalidRedundancyIndex = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 50035, "invalid redundancy index")
 	ErrBucketUnavailable      = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50036, "bucket is not in service status")
+	ErrReplyData              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50037, "reply the downloaded data to client failed")
+	ErrTaskMsgExpired         = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50038, "the update time of the task has exceed the expire time")
+	ErrSecondaryMismatch      = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50039, "secondary sp mismatch")
+	ErrPrimaryMismatch        = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50040, "primary sp mismatch")
+	ErrNotCreatedState        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50041, "object has not been created state")
 )
 
 func ErrEncodeResponseWithDetail(detail string) *gfsperrors.GfSpError {
@@ -66,7 +71,7 @@ func ErrNotifySwapOutWithDetail(detail string) *gfsperrors.GfSpError {
 }
 
 func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
-	return gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 55001, detail)
+	return gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 55001, detail)
 }
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {

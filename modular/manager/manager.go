@@ -636,8 +636,8 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
-		m.uploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
+		"upload[%d], resumableUpload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
+		m.uploadQueue.Len(), m.resumableUploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
 		m.gcBlockHeight, m.gcSafeBlockDistance, m.backupTaskNum)
@@ -791,4 +791,20 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
 
 	return pushErr
+}
+
+func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
+	replicateCount int,
+	sealCount int,
+	resumableUploadCount int,
+	maxUploadCount int,
+	migrateGVGCount int,
+) {
+	uploadTasks = m.uploadQueue.Len()
+	replicateCount = m.replicateQueue.Len()
+	sealCount = m.sealQueue.Len()
+	resumableUploadCount = m.resumableUploadQueue.Len()
+	maxUploadCount = m.maxUploadObjectNumber
+	migrateGVGCount = m.migrateGVGQueue.Len()
+	return
 }

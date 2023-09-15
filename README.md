@@ -22,19 +22,35 @@ When users want to write an object into Greenfield, they or the client software 
 
 *Note*: Requires [Go 1.20+](https://go.dev/dl/)
 
-### Compile SP
+## Compile SP
 
-For detailed information about compiling SP, you can refer this doc to [Compile SP](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/compile-dependences.html#compile-sp).
+Compilation dependencies:
+
+- [Golang](https://go.dev/dl): SP is written in Golang, you need to install it. Golang version requires `1.20+`.
+- [Buf](https://buf.build/docs/installation/): A new way of working with Protocol Buffers. SP uses Buf to manage proto files.
+- [protoc-gen-gocosmos](https://github.com/cosmos/gogoproto): Protocol Buffers for Go with Gadgets. SP uses this protobuf compiler to generate pb.go files.
+- [mockgen](https://github.com/uber-go/mock): A mocking framework for the Go programming language that is used in unit test.
+- [jq](https://stedolan.github.io/jq/): Command-line JSON processor. Users should install jq according to your operating system.
 
 ```shell
-# install tools
+# clone source code
+git clone https://github.com/bnb-chain/greenfield-storage-provider.git
+
+cd greenfield-storage-provider
+
+# install dependent tools: buf, protoc-gen-gocosmos and mockgen
 make install-tools
 
-# build gnfd-sp
-make build && cd build 
-# show version
+# compile sp
+make build
+
+# move to build directory
+cd build
+
+# execute gnfd-sp binary file
 ./gnfd-sp version
 
+# show the gnfd-sp version information
 Greenfield Storage Provider
     __                                                       _     __
     _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
@@ -42,14 +58,100 @@ Greenfield Storage Provider
     (__  ) /_/ /_/ / /  / /_/ / /_/ /  __/  / /_/ / /  / /_/ / |/ / / /_/ /  __/ /
     /____/\__/\____/_/   \__,_/\__, /\___/  / .___/_/   \____/|___/_/\__,_/\___/_/
     /____/       /_/
+
 Version : vx.x.x
 Branch  : master
-Commit  : bfc32b9748c11d74493f93c420744ade4dbc18ac
-Build   : go1.20.3 darwin arm64 2023-06-20 13:37
+Commit  : 342930b89466c15653af2f3695cfc72f6466d4b8
+Build   : go1.20.3 darwin arm64 2023-06-20 10:31
 
-# show help
-./gnfd-sp help
+# show the gnfd-sp help info
+./gnfd-sp -h
 ```
+
+### Note
+
+If you've already executed `make install-tools` command in your shell, but you failed to make build and encountered one of the following error messages:
+
+```shell
+# error message 1
+buf: command not found
+# you can execute the following command, assumed that you installed golang in /usr/local/go/bin. Other OS are similar.
+GO111MODULE=on GOBIN=/usr/local/go/bin go install github.com/bufbuild/buf/cmd/buf@v1.25.0
+
+# error message 2
+Failure: plugin gocosmos: could not find protoc plugin for name gocosmos - please make sure protoc-gen-gocosmos is installed and present on your $PATH
+# you can execute the fowllowing command, assumed that you installed golang in /usr/local/go/bin. Other OS are similar.
+GO111MODULE=on GOBIN=/usr/local/go/bin go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
+
+# if you want to execute unit test of sp, you should execute the following command, assumed that you installed golang in /usr/local/go/bin. Other OS are similar.
+GO111MODULE=on GOBIN=/usr/local/go/bin go install go.uber.org/mock/mockgen@latest
+```
+
+Above error messages are due to users don't set go env correctly. More info users can search `GOROOT`, `GOPATH` and `GOBIN`.
+
+## SP Dependencies
+
+If a user wants to start SP in local mode or testnet mode, you must prepare `SPDB`, `BSDB` and `PieceStore` dependencies.
+
+### SPDB and BSDB
+
+SP uses [SPDB](../modules/spdb.md) and [BSDB](../modules/bsdb.md) to store some metadata such as object info, object integrity hash, etc. These two DBs now use `RDBMS` to complete corresponding function.
+
+Users now can use `MySQL` or `MariaDB` to store metadata.The following lists the supported RDBMS:
+
+1. [MySQL](https://www.mysql.com/)
+2. [MariaDB](https://mariadb.org/)
+
+More types of database such as `PostgreSQL` or NewSQL will be supported in the future.
+
+### PieceStore
+
+Greenfield is a decentralized data storage system which uses object storage as the main data storage system. SP encapsulates data storage as [PieceStore](../modules/piece-store.md) which provides common interfaces to be compatible with multiple data storage systems. Therefore, if a user wants to join SP or test the function of SP, you must use a data storage system.
+
+The following lists the supported data storage systems:
+
+1. [AWS S3](https://aws.amazon.com/s3/): An object storage can be used in production environment.
+2. [MinIO](https://min.io/): An object storage can be used in production environment which is compatible with AWS S3.
+3. [POSIX Filesystem](https://en.wikipedia.org/wiki/POSIX): Local filesystem is used for experiencing the basic features of SP and understanding how SP works. The piece data created by SP cannot be got within the network and can only be used on a single machine.
+
+### Install Dependencies
+
+#### Install MySQL in CentOS
+
+1. Install MySQL yum package
+
+```shell
+# 1. Download MySQL yum package
+wget http://repo.mysql.com/mysql57-community-release-el7-10.noarch.rpm
+
+# 2. Install MySQL source
+rpm -Uvh mysql57-community-release-el7-10.noarch.rpm
+
+# 3. Install public key
+rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+
+# 4. Install MySQL server
+yum install -y mysql-community-server
+
+# 5. Start MySQL
+systemctl start mysqld.service
+
+# 6. Check whether the startup is successful
+systemctl status mysqld.service
+
+# 7. Get temporary password
+grep 'temporary password' /var/log/mysqld.log 
+
+# 8. Login MySQL through temporary password
+# After you log in with the temporary password, do not perform any other operations. Otherwise, an error will occur. In this case, you need to change the password
+mysql -uroot -p
+
+# 9. change MySQL password rules
+mysql> set global validate_password_policy=0;
+mysql> set global validate_password_length=1;
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'yourpassword';
+```
+
 
 ### Configuration
 
@@ -60,59 +162,380 @@ Build   : go1.20.3 darwin arm64 2023-06-20 13:37
 ./gnfd-sp config.dump
 ```
 
-#### Edit configuration
-
-If you want to view detailed config.toml, you car visit this [page](./docs/run-book/config/config_template.toml).
-
-The following lists some important configuration information:
-
 ```toml
+# optional
+Env = ''
+# optional
+AppID = ''
+# optional
 Server = []
-GRPCAddress = '0.0.0.0:9333'
+# optional
+GRPCAddress = ''
 
 [SpDB]
-User = '${db_user}'
-Passwd = '${db_password}'
-Address = '${db_address}'
-Database = 'storage_provider_db'
+# required
+User = ''
+# required
+Passwd = ''
+# required
+Address = ''
+# required
+Database = ''
+# optional
+ConnMaxLifetime = 0
+# optional
+ConnMaxIdleTime = 0
+# optional
+MaxIdleConns = 0
+# optional
+MaxOpenConns = 0
 
 [BsDB]
-User = '${db_user}'
-Passwd = '${db_password}'
-Address = '${db_address}'
-Database = 'block_syncer'
-
-[BsDBBackup]
-User = '${db_user}'
-Passwd = '${db_password}'
-Address = '${db_address}'
-Database = 'block_syncer_backup'
+# required
+User = ''
+# required
+Passwd = ''
+# required
+Address = ''
+# required
+Database = ''
+# optional
+ConnMaxLifetime = 0
+# optional
+ConnMaxIdleTime = 0
+# optional
+MaxIdleConns = 0
+# optional
+MaxOpenConns = 0
 
 [PieceStore]
+# required
 Shards = 0
 
 [PieceStore.Store]
-Storage = 's3'
-BucketURL = '${bucket_url}'
-MaxRetries = 5
+# required
+Storage = ''
+# optional
+BucketURL = ''
+# optional
+MaxRetries = 0
+# optional
 MinRetryDelay = 0
+# optional
 TLSInsecureSkipVerify = false
-IAMType = 'SA'
+# required
+IAMType = ''
 
 [Chain]
-ChainID = '${chain_id}'
-ChainAddress = ['${chain_address}']
+# required
+ChainID = ''
+# required
+ChainAddress = []
+# optional
+SealGasLimit = 0
+# optional
+SealFeeAmount = 0
+# optional
+RejectSealGasLimit = 0
+# optional
+RejectSealFeeAmount = 0
+# optional
+DiscontinueBucketGasLimit = 0
+# optional
+DiscontinueBucketFeeAmount = 0
+# optional
+CreateGlobalVirtualGroupGasLimit = 0
+# optional
+CreateGlobalVirtualGroupFeeAmount = 0
+# optional
+CompleteMigrateBucketGasLimit = 0
+# optional
+CompleteMigrateBucketFeeAmount = 0
 
 [SpAccount]
-SpOperatorAddress = '${sp_operator_address}'
-OperatorPrivateKey = '${operator_private_key}'
-FundingPrivateKey = '${funding_private_key}'
-SealPrivateKey = '${seal_private_key}'
-ApprovalPrivateKey = '${approval_private_key}'
-GcPrivateKey = '${gc_private_key}'
+# required
+SpOperatorAddress = ''
+# required
+OperatorPrivateKey = ''
+# required
+SealPrivateKey = ''
+# required
+ApprovalPrivateKey = ''
+# required
+GcPrivateKey = ''
+# required
+BlsPrivateKey = ''
 
 [Endpoint]
-ApproverEndpoint = 'approver:9333'
+# required
+ApproverEndpoint = ''
+# required
+ManagerEndpoint = ''
+# required
+DownloaderEndpoint = ''
+# required
+ReceiverEndpoint = ''
+# required
+MetadataEndpoint = ''
+# required
+UploaderEndpoint = ''
+# required
+P2PEndpoint = ''
+# required
+SignerEndpoint = ''
+# required
+AuthenticatorEndpoint = ''
+
+[Approval]
+# optional
+BucketApprovalTimeoutHeight = 0
+# optional
+ObjectApprovalTimeoutHeight = 0
+# optional
+ReplicatePieceTimeoutHeight = 0
+
+[Bucket]
+# optional
+AccountBucketNumber = 0
+# optional
+FreeQuotaPerBucket = 0
+# optional
+MaxListReadQuotaNumber = 0
+# optional
+MaxPayloadSize = 0
+
+[Gateway]
+# required
+DomainName = ''
+# required
+HTTPAddress = ''
+
+[Executor]
+# optional
+MaxExecuteNumber = 0
+# optional
+AskTaskInterval = 0
+# optional
+AskReplicateApprovalTimeout = 0
+# optional
+AskReplicateApprovalExFactor = 0.0
+# optional
+ListenSealTimeoutHeight = 0
+# optional
+ListenSealRetryTimeout = 0
+# optional
+MaxListenSealRetry = 0
+
+[P2P]
+# optional
+P2PPrivateKey = ''
+# optional
+P2PAddress = ''
+# optional
+P2PAntAddress = ''
+# optional
+P2PBootstrap = []
+# optional
+P2PPingPeriod = 0
+
+[Parallel]
+# optional
+GlobalCreateBucketApprovalParallel = 0
+# optional
+GlobalCreateObjectApprovalParallel = 0
+# optional
+GlobalMaxUploadingParallel = 0
+# optional
+GlobalUploadObjectParallel = 0
+# optional
+GlobalReplicatePieceParallel = 0
+# optional
+GlobalSealObjectParallel = 0
+# optional
+GlobalReceiveObjectParallel = 0
+# optional
+GlobalGCObjectParallel = 0
+# optional
+GlobalGCZombieParallel = 0
+# optional
+GlobalGCMetaParallel = 0
+# optional
+GlobalRecoveryPieceParallel = 0
+# optional
+GlobalMigrateGVGParallel = 0
+# optional
+GlobalBackupTaskParallel = 0
+# optional
+GlobalDownloadObjectTaskCacheSize = 0
+# optional
+GlobalChallengePieceTaskCacheSize = 0
+# optional
+GlobalBatchGcObjectTimeInterval = 0
+# optional
+GlobalGcObjectBlockInterval = 0
+# optional
+GlobalGcObjectSafeBlockDistance = 0
+# optional
+GlobalSyncConsensusInfoInterval = 0
+# optional
+UploadObjectParallelPerNode = 0
+# optional
+ReceivePieceParallelPerNode = 0
+# optional
+DownloadObjectParallelPerNode = 0
+# optional
+ChallengePieceParallelPerNode = 0
+# optional
+AskReplicateApprovalParallelPerNode = 0
+# optional
+QuerySPParallelPerNode = 0
+# required
+DiscontinueBucketEnabled = false
+# optional
+DiscontinueBucketTimeInterval = 0
+# required
+DiscontinueBucketKeepAliveDays = 0
+# optional
+LoadReplicateTimeout = 0
+# optional
+LoadSealTimeout = 0
+
+[Task]
+# optional
+UploadTaskSpeed = 0
+# optional
+DownloadTaskSpeed = 0
+# optional
+ReplicateTaskSpeed = 0
+# optional
+ReceiveTaskSpeed = 0
+# optional
+SealObjectTaskTimeout = 0
+# optional
+GcObjectTaskTimeout = 0
+# optional
+GcZombieTaskTimeout = 0
+# optional
+GcMetaTaskTimeout = 0
+# optional
+SealObjectTaskRetry = 0
+# optional
+ReplicateTaskRetry = 0
+# optional
+ReceiveConfirmTaskRetry = 0
+# optional
+GcObjectTaskRetry = 0
+# optional
+GcZombieTaskRetry = 0
+# optional
+GcMetaTaskRetry = 0
+
+[Monitor]
+# required
+DisableMetrics = false
+# required
+DisablePProf = false
+# required
+MetricsHTTPAddress = ''
+# required
+PProfHTTPAddress = ''
+
+[Rcmgr]
+# optional
+DisableRcmgr = false
+
+[Log]
+# optional
+Level = ''
+# optional
+Path = ''
+
+[Metadata]
+# required
+IsMasterDB = false
+# optional
+BsDBSwitchCheckIntervalSec = 0
+
+[BlockSyncer]
+# required
+Modules = []
+# optional
+BsDBWriteAddress = ''
+# required
+Workers = 0
+
+[APIRateLimiter]
+# optional
+PathPattern = []
+# optional
+HostPattern = []
+# optional
+APILimits = []
+
+[APIRateLimiter.IPLimitCfg]
+# optional
+On = false
+# optional
+RateLimit = 0
+# optional
+RatePeriod = ''
+
+[Manager]
+# optional
+EnableLoadTask = false
+# optional
+SubscribeSPExitEventIntervalSec = 0
+# optional
+SubscribeSwapOutExitEventIntervalSec = 0
+# optional
+SubscribeBucketMigrateEventIntervalSec = 0
+# optional
+GVGPreferSPList = []
+```
+
+## App info
+These fields are optional and they can.
+```
+GRPCAddress = '0.0.0.0:9333'
+```
+## Database
+
+To config `[SpDB]`, `[BsDB]`, you have to input the `user name`, `db password`,`db address`  and  `db name` in these fields.
+
+## PieceStore
+
+To config `[PieceStore]` and `[PieceStore.Store]`, you can read the details in this [doc](./piece-store.md)
+
+## Chain info
+
+* `ChainID` of testnet is `greenfield_5600-1`.
+* `ChainAddress` is RPC endpoint of testnet, you can find RPC info [here](../../../api/endpoints.md)
+
+## SpAccount
+These private keys are generated during wallet setup.
+
+
+## Endpoint
+`[Endpoint]` specified the URL of different services.
+
+For single-machine host (not recommended):
+```
+[Endpoint]
+ApproverEndpoint = ''
+ManagerEndpoint = ''
+DownloaderEndpoint = ''
+ReceiverEndpoint = ''
+MetadataEndpoint = ''
+UploaderEndpoint = ''
+P2PEndpoint = ''
+SignerEndpoint = ''
+AuthenticatorEndpoint = ''
+```
+
+For K8S cluster:
+```
+[Endpoint]
+ApproverEndpoint = 'manager:9333'
 ManagerEndpoint = 'manager:9333'
 DownloaderEndpoint = 'downloader:9333'
 ReceiverEndpoint = 'receiver:9333'
@@ -121,51 +544,29 @@ UploaderEndpoint = 'uploader:9333'
 P2PEndpoint = 'p2p:9333'
 SignerEndpoint = 'signer:9333'
 AuthenticatorEndpoint = 'localhost:9333'
+```
 
+## P2P
+* `P2PPrivateKey` and `node_id` is generated by `./gnfd-sp p2p.create.key -n 1`
+
+* `P2PAntAddress` is your load balance address. If you don't have a load balance address, you should have a public IP and use it in `P2PAddress`. It consists of `ip:port`.
+
+* `P2PBootstrap` can be left empty.
+
+## Gateway
+```
 [Gateway]
-DomainName = '${gateway_domain_name}'
-HTTPAddress = '0.0.0.0:9033'
+DomainName = 'region.sp-name.com'
+```
+The correct configuration should not include the protocol prefix `https://`.
 
-[P2P]
-P2PPrivateKey = '${p2p_private_key}'
-P2PAddress = '0.0.0.0:9933'
-P2PAntAddress = '${p2p_ant_address}'
-P2PBootstrap = ['${node_id@p2p_ant_address}']
-P2PPingPeriod = 0
-
-[Parallel]
-DiscontinueBucketEnabled = true
-DiscontinueBucketKeepAliveDays = 2
-
-[Monitor]
-DisableMetrics = false
-DisablePProf = false
-MetricsHTTPAddress = '0.0.0.0:24367'
-PProfHTTPAddress = '0.0.0.0:24368'
-
-[Rcmgr]
-DisableRcmgr = false
-
-[Metadata]
-IsMasterDB = true
-BsDBSwitchCheckIntervalSec = 30
-
-[BlockSyncer]
-Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree']
-Dsn = '${dsn}'
-DsnSwitched = ''
-RecreateTables = false
+## BlockSyncer
+Here is block_syncer config.
+The configuration of BsDBWriteAddress can be the same as the BSDB.Address module here. To enhance performance, you can set up the write database address here and the corresponding read database address in BSDB.
+```
+Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree', 'virtual_group','sp_exit_events','object_id_map']
+BsDBWriteAddress = 'localhost:3306'
 Workers = 50
-EnableDualDB = false
-
-[APIRateLimiter]
-PathPattern = [{Key = ".*request_nonc.*", RateLimit = 10, RatePeriod = 'S'},{Key = ".*1l65v.*", RateLimit = 20, RatePeriod = 'S'}]
-HostPattern = [{Key = ".*vfdxy.*", RateLimit = 15, RatePeriod = 'S'}]
-
-[APIRateLimiter.IPLimitCfg]
-On = true
-RateLimit = 5000
-RatePeriod = 'S'
 ```
 
 ### Start
@@ -182,14 +583,14 @@ RatePeriod = 'S'
 ## Document
 
 * [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): The official Greenfield Whitepaper.
-* [Greenfield](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/overview.html): The Greenfield documents.
-* [Storage Module on Greenfield](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/modules/storage-module.html): The storage module on Greenfield Chain.
-* [Storage Provider on Greenfield](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/modules/storage-provider.html): The storage provider on Greenfield Chain.
-* [Data Availability Challenge](https://greenfield.bnbchain.org/docs/guide/greenfield-blockchain/modules/data-availability-challenge.html): The correctness of payload be stored in SP.
-* [SP Introduction](https://greenfield.bnbchain.org/docs/guide/storage-provider/introduction/overview.html): The Greenfield Storage Provider documents.
-* [SP Compiling and Dependencies](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/compile-dependences.html): The detailed introduction to sp compiling and dependencies.
-* [Run Local SP Network](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/run-local-SP-network.html): The introduction to run local SP env for testing.
-* [Run Testnet SP Node](https://greenfield.bnbchain.org/docs/guide/storage-provider/run-book/run-testnet-SP-node.html): The introduction to run testnet SP node.
+* [Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/overview): The Greenfield documents.
+* [Storage Module on Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/storage-module): The storage module on Greenfield Chain.
+* [Storage Provider on Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/storage-provider): The storage provider on Greenfield Chain.
+* [Data Availability Challenge](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/data-availability-challenge): The correctness of payload be stored in SP.
+* [SP Introduction](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/introduction/overview): The Greenfield Storage Provider documents.
+* [SP Compiling and Dependencies](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/compile-dependences): The detailed introduction to sp compiling and dependencies.
+* [Run Local SP Network](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-local-SP-network): The introduction to run local SP env for testing.
+* [Run Testnet SP Node](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node): The introduction to run testnet SP node.
 
 ## Related Projects
 

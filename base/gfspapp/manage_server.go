@@ -340,6 +340,21 @@ func (g *GfSpBaseApp) GfSpQuerySPByOperatorAddress(ctx context.Context, req *gfs
 		return nil, err
 	}
 	return &gfspserver.GfSpQuerySPByOperatorAddressResponse{
-		StorageProvider: sp,
+		StorageProvider: sp}, nil
+}
+
+func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfSpQueryTasksStatsRequest) (
+	*gfspserver.GfSpQueryTasksStatsResponse, error) {
+	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount := g.manager.QueryTasksStats(ctx)
+	stats := &gfspserver.TasksStats{
+		UploadCount:          uint32(uploadTaskCount),
+		ReplicateCount:       uint32(replicateTaskCount),
+		SealCount:            uint32(sealTaskCount),
+		ResumableUploadCount: uint32(resumeUploadTaskCount),
+		MaxUploading:         uint32(maxUploadingNumber),
+		MigrateGvgCount:      uint32(migrateGVGCount),
+	}
+	return &gfspserver.GfSpQueryTasksStatsResponse{
+		Stats: stats,
 	}, nil
 }

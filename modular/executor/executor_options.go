@@ -71,13 +71,11 @@ const (
 
 func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
 	executor := &ExecuteModular{baseApp: app}
-	if err := DefaultExecutorOptions(executor, cfg); err != nil {
-		return nil, err
-	}
+	defaultExecutorOptions(executor, cfg)
 	return executor, nil
 }
 
-func DefaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig) error {
+func defaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig) {
 	if cfg.Executor.MaxExecuteNumber == 0 {
 		// TODO:: DefaultExecutorMaxExecuteNum should core_num * multiple, the core_num is compatible with docker
 		cfg.Executor.MaxExecuteNumber = DefaultExecutorMaxExecuteNum
@@ -109,5 +107,4 @@ func DefaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig
 	executor.maxListenSealRetry = cfg.Executor.MaxListenSealRetry
 	executor.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	executor.enableSkipFailedToMigrateObject = cfg.Executor.EnableSkipFailedToMigrateObject
-	return nil
 }

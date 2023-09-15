@@ -191,7 +191,12 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, _ = w.Write(pieceData)
+	_, err = w.Write(pieceData)
+	if err != nil {
+		err = ErrReplyData
+		log.CtxErrorw(reqCtx.Context(), "failed to reply the migrate data", "error", err)
+		return
+	}
 	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "object_id", objectID, "segment_piece_index",
 		segmentIdx, "redundancy_index", redundancyIdx)
 }

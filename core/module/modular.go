@@ -125,7 +125,6 @@ type Downloader interface {
 	// PostDownloadPiece is called after HandleDownloadPieceTask, it can recycle
 	// resources, make statistics and do some other operations.
 	PostDownloadPiece(ctx context.Context, task task.DownloadPieceTask)
-
 	// PreChallengePiece prepares to handle ChallengePiece, it can do some checks
 	// such as checking for duplicates, if limitation of SP has been reached, etc.
 	PreChallengePiece(ctx context.Context, task task.ChallengePieceTask) error
@@ -222,6 +221,8 @@ type Manager interface {
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 	// QuerySPByOperatorAddress is used to query sp info by operator address.
 	QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error)
+	// QueryTasksStats queries tasks stats from Manager server
+	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int)
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

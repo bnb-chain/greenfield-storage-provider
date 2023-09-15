@@ -181,7 +181,7 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, gvgTask coretask
 func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,
 	objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params) error {
 	index := util.ContainOnlyOneDifferentElement(srcGvg.GetSecondarySpIds(), destGvg.GetSecondarySpIds())
-	if index == -1 {
+	if index == piecestore.PrimarySPRedundancyIndex {
 		// no conflict
 		return nil
 	}
@@ -240,6 +240,7 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx,
 		int32(redundancyIdx), int64(len(data)))
 	receive.SetPieceChecksum(hash.GenerateChecksum(data))
+	receive.SetBucketMigration(true)
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
 	signature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
 	if err != nil {

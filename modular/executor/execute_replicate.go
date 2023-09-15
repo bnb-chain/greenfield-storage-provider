@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
-	"github.com/avast/retry-go/v4"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -88,7 +88,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 
 	log.Debugw("replicate task info", "task_sps", rTask.GetSecondaryEndpoints())
 
-	doReplicateECPiece := func(segIdx uint32, data [][]byte, errChan chan error) {
+	doReplicateECPiece := func(ctx context.Context, segIdx uint32, data [][]byte, errChan chan error) {
 		log.Debug("start to replicate ec piece")
 		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate ec piece", "sp", sp)
@@ -104,7 +104,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		wg.Wait()
 		log.Debug("finish to replicate ec piece")
 	}
-	doReplicateSegmentPiece := func(segIdx uint32, data []byte, errChan chan error) {
+	doReplicateSegmentPiece := func(ctx context.Context, segIdx uint32, data []byte, errChan chan error) {
 		log.Debug("start to replicate segment piece")
 		for redundancyIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to replicate segment piece", "sp", sp)
@@ -120,7 +120,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		wg.Wait()
 		log.Debug("finish to replicate segment piece")
 	}
-	doneReplicate := func() error {
+	doneReplicate := func(ctx context.Context) error {
 		log.Debug("start to done replicate")
 		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", sp)
@@ -139,6 +139,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	startReplicatePieceTime := time.Now()
 	errChan := make(chan error)
 	quitChan := make(chan struct{})
+	childCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	go func() {
 		for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
 			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
@@ -163,28 +165,33 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 					rTask.SetError(err)
 					errChan <- err
 				}
-				doReplicateECPiece(segIdx, ecData, errChan)
+				doReplicateECPiece(childCtx, segIdx, ecData, errChan)
 			} else {
-				doReplicateSegmentPiece(segIdx, segData, errChan)
+				doReplicateSegmentPiece(childCtx, segIdx, segData, errChan)
 			}
 		}
 		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_all_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 		doneTime := time.Now()
-		err = doneReplicate()
+		err = doneReplicate(childCtx)
 		metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_time").Observe(time.Since(doneTime).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("background_done_replicate_piece_end_time").Observe(time.Since(startReplicatePieceTime).Seconds())
 		if err == nil {
 			rTask.SetSecondarySignatures(secondarySignatures)
-			quitChan <- struct{}{}
 		}
+		quitChan <- struct{}{}
 	}()
-
-	select {
-	case err = <-errChan:
-		return err
-	case <-quitChan:
-		return nil
+	var replicateErr error
+	for {
+		select {
+		case replicateErr = <-errChan:
+			cancel()
+		case <-quitChan:
+			if replicateErr != nil {
+				return replicateErr
+			}
+			return err
+		}
 	}
 }
 
@@ -291,17 +298,17 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 
 	// TODO:
 	// veritySignatureTime := time.Now()
-	// TODO get gvgID and blsPubKey from task, bls pub key alreay injected via key manager for current sp
+	// TODO get gvgID and blsPubKey from task, bls pub key already injected via key manager for current sp
 	// var blsPubKey bls.PublicKey
 	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
 	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
 	// metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
-			"redundancy_idx", redundancyIdx, "error", err)
-		return nil, err
-	}
+	// metrics.PerfPutObjectTime.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
+	// if err != nil {
+	// 	log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
+	// 		"redundancy_idx", redundancyIdx, "error", err)
+	// 	return nil, err
+	// }
 	log.CtxDebugw(ctx, "succeed to done replicate", "endpoint", spEndpoint, "redundancy_idx", redundancyIdx)
 	return signature, nil
 }

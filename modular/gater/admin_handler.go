@@ -9,11 +9,6 @@ import (
 	"strings"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/secp256k1"
-
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -25,8 +20,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
+
+const MaxSpRequestExpiryAgeInSec int32 = 1000
 
 // getApprovalHandler handles the get create bucket/object approval request.
 // Before create bucket/object to the greenfield, the user should the primary
@@ -368,7 +367,12 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set(GnfdObjectIDHeader, util.Uint64ToString(objectID))
 	w.Header().Set(GnfdIntegrityHashHeader, hex.EncodeToString(integrity))
 	w.Header().Set(GnfdPieceHashHeader, util.BytesSliceToString(checksums))
-	_, _ = w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reply data", "error", err)
+		err = ErrReplyData
+		return
+	}
 	metrics.ReqPieceSize.WithLabelValues(GatewayChallengePieceSize).Observe(float64(len(data)))
 	log.CtxDebug(reqCtx.Context(), "succeed to get challenge info")
 }
@@ -405,6 +409,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
+
 	// ignore the error, because the replicate request only between SPs, the request
 	// verification is by signature of the ReceivePieceTask
 	reqCtx, _ = NewRequestContext(r, g)
@@ -429,17 +434,25 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify receive task signature
-	_, err = reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
+	signatureAddr, err := reqCtx.verifyTaskSignature(receiveTask.GetSignBytes(), receiveTask.GetSignature())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify receive task", "error", err, "task", receiveTask)
 		err = ErrSignature
 		return
 	}
 
-	// check if the request account is the primary SP of the object of the receiving task
-	_, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), receiveTask.GetObjectInfo().BucketName)
+	// check if the update time of the task has expired
+	taskUpdateTime := receiveTask.GetUpdateTime()
+	timeDifference := time.Duration(time.Now().Unix()-taskUpdateTime) * time.Second
+	if int32(timeDifference.Seconds()) > MaxSpRequestExpiryAgeInSec {
+		log.CtxErrorw(reqCtx.Context(), "the update time of receive task has exceeded the expiration time", "object", receiveTask.ObjectInfo.ObjectName)
+		err = ErrTaskMsgExpired
+		return
+	}
+
+	err = g.checkReplicatePermission(reqCtx.Context(), receiveTask, signatureAddr.String())
 	if err != nil {
-		err = ErrConsensusWithDetail("QueryBucketInfo error: " + err.Error())
+		log.CtxErrorw(reqCtx.Context(), "failed to check the replicate permission", "error", err)
 		return
 	}
 
@@ -477,6 +490,62 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(GnfdIntegrityHashSignatureHeader, hex.EncodeToString(signature))
 	}
 	log.CtxDebug(reqCtx.Context(), "succeed to replicate piece")
+}
+
+func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
+	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(ctx, receiveTask.ObjectInfo.BucketName, receiveTask.ObjectInfo.ObjectName)
+	if err != nil {
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
+		return err
+	}
+
+	if !receiveTask.BucketMigration {
+		// if it is replicate when uploading, the status should be created
+		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
+			return ErrNotCreatedState
+		}
+	} else {
+		// if it is bucket migration, the status should be sealed
+		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_SEALED {
+			return ErrNotCreatedState
+		}
+	}
+
+	// check if the request account is the primary SP of the object of the receiving task
+	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, receiveTask.GetGlobalVirtualGroupID())
+	if err != nil {
+		return ErrConsensusWithDetail("QueryGVGInfo error: " + err.Error())
+	}
+
+	if gvg == nil {
+		return ErrConsensusWithDetail("QueryGVGInfo nil: " + err.Error())
+	}
+
+	// judge if sender is the primary sp of the gvg
+	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, gvg.PrimarySpId)
+	if err != nil {
+		return ErrConsensusWithDetail("QuerySPInfo error: " + err.Error())
+	}
+
+	if primarySp.GetOperatorAccAddress().String() != signatureAddr {
+		log.CtxErrorw(ctx, "primary sp mismatch", "expect",
+			primarySp.GetOperatorAccAddress().String(), "current", signatureAddr)
+		return ErrPrimaryMismatch
+	}
+
+	// judge if myself is the right secondary sp of the gvg
+	spID, err := g.getSPID()
+	if err != nil {
+		return ErrConsensusWithDetail("getSPID error: " + err.Error())
+	}
+
+	expectSecondarySPID := gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())]
+	if expectSecondarySPID != spID {
+		log.CtxErrorw(ctx, "secondary sp mismatch", "expect", expectSecondarySPID, "current", spID)
+		return ErrSecondaryMismatch
+	}
+
+	return nil
 }
 
 // getRecoverDataHandler handles the query for recovery request from secondary SP or primary SP.
@@ -528,18 +597,20 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// check signature consistent
-	taskSignature := recoveryTask.GetSignature()
-	signatureAddr, pk, err := commonhash.RecoverAddr(crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature)
+	// verify recovery task signature
+	signatureAddr, err := reqCtx.verifyTaskSignature(recoveryTask.GetSignBytes(), recoveryTask.GetSignature())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get recover task address", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task", "error", err, "task", recoveryTask)
 		err = ErrSignature
 		return
 	}
 
-	if !secp256k1.VerifySignature(pk.Bytes(), crypto.Keccak256(recoveryTask.GetSignBytes()), taskSignature[:len(taskSignature)-1]) {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify recovery task signature")
-		err = ErrSignature
+	// check if the update time of the task has expired
+	taskUpdateTime := recoveryTask.GetUpdateTime()
+	timeDifference := time.Duration(time.Now().Unix()-taskUpdateTime) * time.Second
+	if int32(timeDifference.Seconds()) > MaxSpRequestExpiryAgeInSec {
+		log.CtxErrorw(reqCtx.Context(), "the update time of recovery task has exceeded the expiration time", "object", recoveryTask.ObjectInfo.ObjectName)
+		err = ErrTaskMsgExpired
 		return
 	}
 
@@ -597,7 +668,12 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	_, _ = w.Write(pieceData)
+	_, err = w.Write(pieceData)
+	if err != nil {
+		err = ErrReplyData
+		log.CtxErrorw(reqCtx.Context(), "failed to reply the recovery data", "error", err)
+		return
+	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to get one ec piece data")
 }
 
@@ -614,8 +690,8 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	if err != nil {
 		return nil, err
 	}
-	// the primary sp of the object should be consistent with task signature
 
+	// the primary sp of the object should be consistent with task signature
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
 	if err != nil {
 		return nil, err
@@ -623,15 +699,16 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 
 	sspAddress := make([]string, 0)
 	for _, sspID := range gvg.SecondarySpIds {
-		sp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspID)
-		if err != nil {
-			return nil, err
+		sp, queryErr := g.baseApp.Consensus().QuerySPByID(ctx, sspID)
+		if queryErr != nil {
+			return nil, queryErr
 		}
 		sspAddress = append(sspAddress, sp.OperatorAddress)
 	}
 
+	// if myself is secondary, the sender of the request can be both of  the primary SP or the secondary SP of the gvg
 	if primarySp.OperatorAddress != signatureAddr.String() {
-		log.CtxDebug(ctx, "recovery request not come from primary sp")
+		log.CtxDebug(ctx, "recovery request not come from primary sp", "secondary sp", signatureAddr.String())
 		// judge if the sender is not one of the secondary SP
 		isRequestFromSecondary := false
 		var taskECIndex int32
