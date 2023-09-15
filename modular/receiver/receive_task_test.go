@@ -240,6 +240,35 @@ func TestHandleDoneReceivePieceTask_PieceCountMismatch(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestHandleDoneReceivePieceTask_Integarty_Mismatch(t *testing.T) {
+	r := setup(t)
+	ctrl := gomock.NewController(t)
+	q := taskqueue.NewMockTQueueOnStrategy(ctrl)
+	r.receiveQueue = q
+	r.baseApp.SetPieceOp(&gfsppieceop.GfSpPieceOp{})
+	q.EXPECT().Push(gomock.Any()).Return(nil).Times(1)
+	q.EXPECT().PopByKey(gomock.Any()).Return(nil).Times(1)
+	mockTask := &gfsptask.GfSpReceivePieceTask{
+		Task: &gfsptask.GfSpTask{},
+		ObjectInfo: &storagetypes.ObjectInfo{
+			Id:           sdkmath.NewUint(100),
+			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
+			PayloadSize:  100,
+			Checksums:    [][]byte{{1, 2, 3}, {1, 2, 3}},
+		},
+		StorageParams: &storagetypes.Params{
+			VersionedParams: storagetypes.VersionedParams{
+				MaxSegmentSize: 16 * 1024 * 1024,
+			}}}
+	mockSPDB := spdb.NewMockSPDB(ctrl)
+	r.baseApp.SetGfSpDB(mockSPDB)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)
+	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
+	r.baseApp.SetGfSpClient(mockGRPCAPI)
+	_, err := r.HandleDoneReceivePieceTask(context.TODO(), mockTask)
+	assert.NotNil(t, err)
+}
+
 func TestHandleDoneReceivePieceTask_SignSecondarySealBlsFailed(t *testing.T) {
 	r := setup(t)
 	ctrl := gomock.NewController(t)
@@ -254,6 +283,8 @@ func TestHandleDoneReceivePieceTask_SignSecondarySealBlsFailed(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
+			Checksums: [][]byte{{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129}},
 		},
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
@@ -261,7 +292,7 @@ func TestHandleDoneReceivePieceTask_SignSecondarySealBlsFailed(t *testing.T) {
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)
 	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
 	r.baseApp.SetGfSpClient(mockGRPCAPI)
 	mockGRPCAPI.EXPECT().SignSecondarySealBls(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to sign bls")).Times(1)
@@ -283,6 +314,8 @@ func TestHandleDoneReceivePieceTask_SetObjectIntegrityFailed(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
+			Checksums: [][]byte{{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129}},
 		},
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
@@ -290,7 +323,7 @@ func TestHandleDoneReceivePieceTask_SetObjectIntegrityFailed(t *testing.T) {
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)
 	mockSPDB.EXPECT().SetObjectIntegrity(gomock.Any()).Return(fmt.Errorf("failed to set integrity")).Times(1)
 	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
 	r.baseApp.SetGfSpClient(mockGRPCAPI)
@@ -313,6 +346,8 @@ func TestHandleDoneReceivePieceTask_HandleDoneReceivePieceTaskSucceed(t *testing
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
+			Checksums: [][]byte{{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129}},
 		},
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
@@ -320,7 +355,7 @@ func TestHandleDoneReceivePieceTask_HandleDoneReceivePieceTaskSucceed(t *testing
 			}}}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{[]byte("mock")}, nil).Times(1)
+	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)
 	mockSPDB.EXPECT().SetObjectIntegrity(gomock.Any()).Return(nil).Times(1)
 	mockSPDB.EXPECT().DeleteAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any()).Return(fmt.Errorf("failed to delete all piece checksum")).Times(1)
 	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
