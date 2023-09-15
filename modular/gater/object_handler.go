@@ -590,7 +590,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to write the data to connection", "objectName", objectInfo.ObjectName, "error", err)
 			extraQuota = downloadSize - consumedQuota
-			err = ErrReplyDownloadData
+			err = ErrReplyData
 			return
 		}
 		// the quota value should be computed by the reply content length
@@ -963,7 +963,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	// if the connection of client has been disconnected, the response will fail
 	if err != nil {
 		extraQuota = downloadSize - uint64(replyDataSize)
-		err = ErrReplyDownloadData
+		err = ErrReplyData
 		log.CtxErrorw(reqCtx.Context(), "failed to write the data to connection", "objectName", objectInfo.ObjectName, "error", err)
 		return
 	}
