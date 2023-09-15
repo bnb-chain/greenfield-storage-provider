@@ -8,12 +8,10 @@ import (
 
 // GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
 type GlobalVirtualGroupMeta struct {
-	ID             uint32
-	FamilyID       uint32
-	PrimarySPID    uint32
-	SecondarySPIDs []uint32
-	// TODO: refine it, current proto is not compatible
-	// SecondarySPs       []*sptypes.StorageProvider
+	ID                   uint32
+	FamilyID             uint32
+	PrimarySPID          uint32
+	SecondarySPIDs       []uint32
 	SecondarySPEndpoints []string
 	UsedStorageSize      uint64
 	StakingStorageSize   uint64 // init by staking deposit / staking price
@@ -115,8 +113,6 @@ type VirtualGroupManager interface {
 	PickSPByFilter(filter SPPickFilter) (*sptypes.StorageProvider, error)
 	// QuerySPByID returns sp proto.
 	QuerySPByID(spID uint32) (*sptypes.StorageProvider, error)
-	// QuerySPByAddress returns sp proto.
-	QuerySPByAddress(spAddr string) (*sptypes.StorageProvider, error)
 	// FreezeSPAndGVGs puts the secondary SP and its joining Global virtual groups into the freeze pool for a specific period,
 	// For those SPs which are in the pool will be skipped when creating a GVG, GVGs in the pool will not be chosen to seal Object
 	// until released

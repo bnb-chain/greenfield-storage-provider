@@ -250,8 +250,10 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, fmt.Errorf("failed to query sp")).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
+				chainMock := consensus.NewMockConsensus(ctrl)
+				chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, fmt.Errorf("failed to query sp")).Times(1)
+				g.spCachePool = NewSPCachePool(chainMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -274,9 +276,11 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
 				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to query metadata")).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
+				chainMock := consensus.NewMockConsensus(ctrl)
+				chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				g.spCachePool = NewSPCachePool(chainMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -299,10 +303,12 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
 				mockEffect := permissiontypes.EFFECT_DENY
 				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
+				chainMock := consensus.NewMockConsensus(ctrl)
+				chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				g.spCachePool = NewSPCachePool(chainMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -325,10 +331,12 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
 				mockEffect := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
+				chainMock := consensus.NewMockConsensus(ctrl)
+				chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				g.spCachePool = NewSPCachePool(chainMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -351,7 +359,6 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
 				mockEffect := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -360,6 +367,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil,
 					mockErr).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
+				chainMock := consensus.NewMockConsensus(ctrl)
+				chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				g.spCachePool = NewSPCachePool(chainMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -382,7 +392,6 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
 				mockEffect := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -395,6 +404,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
 					MaxPayloadSize: DefaultMaxPayloadSize}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
+				chainMock := consensus.NewMockConsensus(ctrl)
+				chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				g.spCachePool = NewSPCachePool(chainMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -417,7 +429,6 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
 				mockEffect := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
@@ -436,6 +447,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
 				pieceOpMock.EXPECT().SegmentPieceSize(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
+
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				g.spCachePool = NewSPCachePool(consensusMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -458,7 +472,6 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().QuerySPByOperatorAddress(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
 				mockEffect := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyMigrateGVGPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mockEffect, nil).Times(1)
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("data"), nil).Times(1)
@@ -477,6 +490,9 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
+
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
+				g.spCachePool = NewSPCachePool(consensusMock)
 				return g
 			},
 			request: func() *http.Request {

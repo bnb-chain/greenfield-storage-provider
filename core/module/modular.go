@@ -219,8 +219,6 @@ type Manager interface {
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
-	// QuerySPByOperatorAddress is used to query sp info by operator address.
-	QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error)
 	// QueryTasksStats queries tasks stats from Manager server
 	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int)
 }
@@ -281,8 +279,6 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
-	// SignMigratePiece signs the GfSpMigratePieceTask for migrating piece
-	SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
 	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
 	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 	// SignSecondarySPMigrationBucket signs secondary sp bls for bucket migration

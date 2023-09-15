@@ -83,7 +83,7 @@ func (g *GateModular) checkMigratePieceAuth(reqCtx *RequestContext, migrateGVGHe
 		log.Errorw("failed to verify task signature", "gvg_task", migrateGVG, "error", err)
 		return false, err
 	}
-	sp, err := g.baseApp.GfSpClient().QuerySPByOperatorAddress(reqCtx.Context(), destSPAddr.String())
+	sp, err := g.spCachePool.QuerySPByAddress(destSPAddr.String())
 	if err != nil {
 		log.Errorw("failed to query sp", "gvg_task", migrateGVG, "dest_sp_addr", destSPAddr.String(), "error", err)
 		return false, err

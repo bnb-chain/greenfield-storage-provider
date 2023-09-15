@@ -2,11 +2,61 @@ package gater
 
 import (
 	"context"
+	"sync"
+	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
+
+const (
+	ExpireIntervalSecond      = 30 * 60 * time.Second
+	CheckExpireIntervalSecond = 60 * time.Second
+)
+
+type SPCachePool struct {
+	cachePool   sync.Map
+	chainClient consensus.Consensus
+}
+
+type SPCacheItem struct {
+	SPInfo                *sptypes.StorageProvider
+	ExpireTimestampSecond int64
+}
+
+func NewSPCachePool(chainClient consensus.Consensus) *SPCachePool {
+	spCachePool := &SPCachePool{sync.Map{}, chainClient}
+	go spCachePool.loopCheckExpire()
+	return spCachePool
+}
+
+func (s *SPCachePool) QuerySPByAddress(spAddr string) (*sptypes.StorageProvider, error) {
+	item, found := s.cachePool.Load(spAddr)
+	if found {
+		return item.(*SPCacheItem).SPInfo, nil
+	}
+	spInfo, err := s.chainClient.QuerySP(context.Background(), spAddr)
+	if err != nil {
+		return nil, err
+	}
+	s.cachePool.Store(spInfo.GetOperatorAddress(), &SPCacheItem{SPInfo: spInfo, ExpireTimestampSecond: time.Now().Add(ExpireIntervalSecond).Unix()})
+	return spInfo, nil
+}
+
+func (s *SPCachePool) loopCheckExpire() {
+	ticker := time.NewTicker(CheckExpireIntervalSecond)
+	for range ticker.C {
+		s.cachePool.Range(func(k interface{}, v interface{}) bool {
+			spCacheItem := v.(*SPCacheItem)
+			if time.Now().Unix() > spCacheItem.ExpireTimestampSecond {
+				s.cachePool.Delete(k)
+			}
+			return true
+		})
+	}
+}
 
 func (g *GateModular) getObjectChainMeta(ctx context.Context, objectName, bucketName string) (*storagetypes.ObjectInfo,
 	*storagetypes.BucketInfo, *storagetypes.Params, error) {

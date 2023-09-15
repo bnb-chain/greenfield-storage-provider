@@ -202,12 +202,3 @@ func (g *GfSpMigratePieceTask) Key() coretask.TKey {
 	return GfSpMigratePieceTaskKey(g.GetObjectInfo().GetObjectName(), g.GetObjectInfo().Id.String(),
 		g.GetSegmentIdx(), g.GetRedundancyIdx())
 }
-
-func (g *GfSpMigratePieceTask) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpMigratePieceTask{
-		ObjectInfo:    g.GetObjectInfo(),
-		StorageParams: g.GetStorageParams(),
-		SegmentIdx:    g.GetSegmentIdx(),
-		RedundancyIdx: g.GetRedundancyIdx(),
-	}))
-}

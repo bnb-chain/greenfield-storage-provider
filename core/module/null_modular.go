@@ -45,10 +45,6 @@ func (m *NullModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpE
 	return nil, ErrNilModular
 }
 
-func (m *NullModular) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error) {
-	return nil, ErrNilModular
-}
-
 func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) error {
 	return ErrNilModular
 }
@@ -256,9 +252,6 @@ func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontin
 }
 func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
 	return "", ErrNilModular
-}
-func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
-	return nil, ErrNilModular
 }
 func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return "", ErrNilModular

@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	queryLimit                      = uint32(100)
-	reportProgressPerN              = 10
-	renewGVGSignatureIntervalSecond = 60 * 60
+	queryLimit             = uint32(100)
+	reportProgressPerN     = 10
+	renewSigIntervalSecond = 60 * 60
 
 	migrateGVGCostLabel              = "migrate_gvg_cost"
 	migrateGVGSucceedCounterLabel    = "migrate_gvg_succeed_counter"
@@ -69,7 +69,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		}
 
 		for index, object := range objectList {
-			if err = e.checkAndRenewGVGSignature(gvgTask.(*gfsptask.GfSpMigrateGVGTask)); err != nil {
+			if err = e.checkAndTryRenewSig(gvgTask.(*gfsptask.GfSpMigrateGVGTask)); err != nil {
 				log.CtxErrorw(ctx, "failed to check and renew gvg task signature", "gvg_task", gvgTask, "error", err)
 				return
 			}
@@ -100,20 +100,24 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 	}
 }
 
-func (e *ExecuteModular) checkAndRenewGVGSignature(gvgTask *gfsptask.GfSpMigrateGVGTask) error {
+func (e *ExecuteModular) checkAndTryRenewSig(gvgTask *gfsptask.GfSpMigrateGVGTask) error {
 	var (
 		signature []byte
 		err       error
 	)
-	if time.Now().Unix()+renewGVGSignatureIntervalSecond/10 > gvgTask.ExpireTime {
+	if time.Now().Unix()+renewSigIntervalSecond/10 > gvgTask.ExpireTime {
 		originExpireTime := gvgTask.ExpireTime
-		gvgTask.ExpireTime = time.Now().Unix() + renewGVGSignatureIntervalSecond
-		if signature, err = e.baseApp.GfSpClient().SignMigrateGVG(context.Background(), gvgTask); err != nil {
-			gvgTask.ExpireTime = originExpireTime // revert to origin expire time
-			log.Errorw("failed to sign migrate gvg", "gvg_task", gvgTask, "error", err)
-			return err
+		gvgTask.ExpireTime = time.Now().Unix() + renewSigIntervalSecond
+		signature, err = e.baseApp.GfSpClient().SignMigrateGVG(context.Background(), gvgTask)
+		if err != nil {
+			gvgTask.ExpireTime = originExpireTime       // revert to origin expire time
+			if time.Now().Unix() > gvgTask.ExpireTime { // the signature is indeed expired
+				log.Errorw("failed to sign migrate gvg", "gvg_task", gvgTask, "error", err)
+				return err
+			}
+		} else {
+			gvgTask.SetSignature(signature)
 		}
-		gvgTask.SetSignature(signature)
 	}
 	return nil
 }

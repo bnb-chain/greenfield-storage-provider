@@ -208,18 +208,6 @@ func (sm *spManager) querySPByID(spID uint32) (*sptypes.StorageProvider, error) 
 	return nil, ErrFailedPickDestSP
 }
 
-func (sm *spManager) querySPByAddress(spAddr string) (*sptypes.StorageProvider, error) {
-	if strings.EqualFold(sm.selfSP.GetOperatorAddress(), spAddr) {
-		return sm.selfSP, nil
-	}
-	for _, sp := range sm.otherSPs {
-		if strings.EqualFold(sp.GetOperatorAddress(), spAddr) {
-			return sp, nil
-		}
-	}
-	return nil, ErrFailedPickDestSP
-}
-
 // TODO: add metadata service client.
 type virtualGroupManager struct {
 	selfOperatorAddress string
@@ -432,18 +420,6 @@ func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvid
 	}
 	// query chain if it is not found in memory topology.
 	return vgm.chainClient.QuerySPByID(context.Background(), spID)
-}
-
-// QuerySPByAddress return sp info by sp address.
-func (vgm *virtualGroupManager) QuerySPByAddress(spAddr string) (*sptypes.StorageProvider, error) {
-	vgm.mutex.RLock()
-	sp, err := vgm.spManager.querySPByAddress(spAddr)
-	vgm.mutex.RUnlock()
-	if err == nil {
-		return sp, nil
-	}
-	// query chain if it is not found in memory topology.
-	return vgm.chainClient.QuerySP(context.Background(), spAddr)
 }
 
 func (vgm *virtualGroupManager) genVgfFilter() (*vgmgr.PickVGFFilter, error) {

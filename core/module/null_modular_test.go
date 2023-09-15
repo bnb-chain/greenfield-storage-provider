@@ -99,7 +99,6 @@ func TestNilModular(t *testing.T) {
 	_, _ = n.RejectUnSealObject(context.TODO(), nil)
 	_, _ = n.DiscontinueBucket(context.TODO(), nil)
 	_, _ = n.CreateGlobalVirtualGroup(context.TODO(), nil)
-	_, _ = n.SignMigratePiece(context.TODO(), nil)
 	_, _ = n.CompleteMigrateBucket(context.TODO(), nil)
 	_, _ = n.SignSecondarySPMigrationBucket(context.TODO(), nil)
 	_, _ = n.SwapOut(context.TODO(), nil)
@@ -108,6 +107,7 @@ func TestNilModular(t *testing.T) {
 	_, _ = n.SPExit(context.TODO(), nil)
 	_, _ = n.CompleteSPExit(context.TODO(), nil)
 	_, _ = n.UpdateSPPrice(context.TODO(), nil)
+	_, _ = n.SignMigrateGVG(context.TODO(), nil)
 }
 
 func TestNullReceiveModular(t *testing.T) {

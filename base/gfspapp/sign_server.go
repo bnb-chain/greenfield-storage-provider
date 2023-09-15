@@ -174,12 +174,6 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SignerSuccessRecoveryTask).Inc()
 			metrics.ReqTime.WithLabelValues(SignerSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
-	case *gfspserver.GfSpSignRequest_GfspMigratePieceTask:
-		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigratePieceTask.Key().String())
-		signature, err = g.signer.SignMigratePiece(ctx, t.GfspMigratePieceTask)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign migrate piece task", "error", err)
-		}
 	case *gfspserver.GfSpSignRequest_CompleteMigrateBucket:
 		txHash, err = g.signer.CompleteMigrateBucket(ctx, t.CompleteMigrateBucket)
 		if err != nil {

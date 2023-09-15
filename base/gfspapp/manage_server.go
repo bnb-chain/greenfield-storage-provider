@@ -332,17 +332,6 @@ func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspser
 	return &gfspserver.GfSpNotifyMigrateSwapOutResponse{}, nil
 }
 
-func (g *GfSpBaseApp) GfSpQuerySPByOperatorAddress(ctx context.Context, req *gfspserver.GfSpQuerySPByOperatorAddressRequest) (
-	*gfspserver.GfSpQuerySPByOperatorAddressResponse, error) {
-	sp, err := g.manager.QuerySPByOperatorAddress(ctx, req.GetOperatorAddress())
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to query sp", "operator_address", req.GetOperatorAddress(), "error", err)
-		return nil, err
-	}
-	return &gfspserver.GfSpQuerySPByOperatorAddressResponse{
-		StorageProvider: sp}, nil
-}
-
 func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfSpQueryTasksStatsRequest) (
 	*gfspserver.GfSpQueryTasksStatsResponse, error) {
 	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount := g.manager.QueryTasksStats(ctx)

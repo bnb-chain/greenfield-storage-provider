@@ -194,6 +194,5 @@ message GfSpMigratePieceTask {
   string src_sp_endpoint = 4;
   uint32 segment_idx = 5;
   int32 redundancy_idx = 6;
-  bytes signature = 7;
-  bool is_bucket_migrate = 8;
+  bool is_bucket_migrate = 7;
 }
