@@ -137,7 +137,6 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	if err != nil {
 		return err
 	}
-
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),

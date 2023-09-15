@@ -803,7 +803,7 @@ func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdCl
 		return "", sdkErrors.ErrWrongSequence
 	}
 	if resp.TxResponse.Code != 0 {
-		return "", fmt.Errorf("failed to broadcast tx, resp code: %d", resp.TxResponse.Code)
+		return "", fmt.Errorf("failed to broadcast tx, resp code: %d, code space: %s", resp.TxResponse.Code, resp.TxResponse.Codespace)
 	}
 	return resp.TxResponse.TxHash, nil
 }

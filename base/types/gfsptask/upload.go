@@ -434,9 +434,7 @@ func (m *GfSpReplicatePieceTask) SetPriority(priority coretask.TPriority) {
 }
 
 func (m *GfSpReplicatePieceTask) SetNotAvailableSpIdx(idx int32) {
-	if atomic.LoadInt32(&m.NotAvailableSpIdx) != idx {
-		atomic.StoreInt32(&m.NotAvailableSpIdx, idx)
-	}
+	atomic.CompareAndSwapInt32(&m.NotAvailableSpIdx, -1, idx)
 }
 
 func (m *GfSpReplicatePieceTask) EstimateLimit() corercmgr.Limit {
