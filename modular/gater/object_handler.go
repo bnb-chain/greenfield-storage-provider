@@ -614,7 +614,7 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 			log.CtxErrorw(reqCtx.Context(), "failed to write the data to connection", "objectName", objectInfo.ObjectName, "error", err)
 			extraQuota = downloadSize - consumedQuota
 			err = ErrReplyData
-			return
+			return err
 		}
 		// the quota value should be computed by the reply content length
 		consumedQuota += uint64(replyDataSize)
