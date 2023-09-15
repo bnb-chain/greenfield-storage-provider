@@ -8,7 +8,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	corelifecycle "github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
+	"github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -53,27 +53,29 @@ type GfSpBaseApp struct {
 
 	appCtx    context.Context
 	appCancel context.CancelFunc
-	services  []corelifecycle.Service
+	services  []lifecycle.Service
 
 	uploadSpeed    int64
 	downloadSpeed  int64
 	replicateSpeed int64
 	receiveSpeed   int64
 
-	sealObjectTimeout int64
-	gcObjectTimeout   int64
-	gcZombieTimeout   int64
-	gcMetaTimeout     int64
-	migrateGVGTimeout int64
+	sealObjectTimeout        int64
+	gcObjectTimeout          int64
+	gcZombieTimeout          int64
+	gcMetaTimeout            int64
+	migrateGVGTimeout        int64
+	gcBucketMigrationTimeout int64
 
-	sealObjectRetry     int64
-	replicateRetry      int64
-	receiveConfirmRetry int64
-	gcObjectRetry       int64
-	gcZombieRetry       int64
-	gcMetaRetry         int64
-	recoveryRetry       int64
-	migrateGVGRetry     int64
+	sealObjectRetry        int64
+	replicateRetry         int64
+	receiveConfirmRetry    int64
+	gcObjectRetry          int64
+	gcZombieRetry          int64
+	gcMetaRetry            int64
+	recoveryRetry          int64
+	migrateGVGRetry        int64
+	gcBucketMigrationRetry int64
 }
 
 // AppID returns the GfSpBaseApp ID, the default value is prefix(gfsp) add

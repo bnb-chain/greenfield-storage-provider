@@ -38,13 +38,12 @@ type SPExitGVGExecuteUnit struct {
 
 // Key is used to as primary key.
 func (u *SPExitGVGExecuteUnit) Key() string {
-	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]",
-		u.SrcGVG.GetId(), u.SrcGVG.GetFamilyId(), u.RedundancyIndex)
+	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]", u.SrcGVG.GetId(),
+		u.SrcGVG.GetFamilyId(), u.RedundancyIndex)
 }
 
 func MakeGVGMigrateKey(gvgID uint32, vgfID uint32, redundancyIndex int32) string {
-	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]",
-		gvgID, vgfID, redundancyIndex)
+	return fmt.Sprintf("SPExit-gvg_id[%d]-vgf_id[%d]-redundancy_idx[%d]", gvgID, vgfID, redundancyIndex)
 }
 
 // BucketMigrateGVGExecuteUnit is used to record bucket migrate gvg unit.

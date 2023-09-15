@@ -199,4 +199,7 @@ message GfSpMigratePieceTask {
 message GfSpGCBucketMigrationTask {
   GfSpTask task = 1;
   uint64 bucket_id = 2;
+  greenfield.virtualgroup.GlobalVirtualGroup src_gvg = 3;
+  greenfield.virtualgroup.GlobalVirtualGroup dest_gvg = 4;
+  greenfield.sp.StorageProvider src_sp = 5;
 }

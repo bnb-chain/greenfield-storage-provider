@@ -46,12 +46,12 @@ func (m *ManageModular) DispatchTask(ctx context.Context, limit corercmgr.Limit)
 	for {
 		select {
 		case <-ctx.Done():
-			log.CtxErrorw(ctx, "dispatch task context is canceled")
+			log.CtxError(ctx, "dispatch task context is canceled")
 			return nil, nil
 		case dispatchTask := <-m.taskCh:
 			atomic.AddInt64(&m.backupTaskNum, -1)
 			if !limit.NotLess(dispatchTask.EstimateLimit()) {
-				log.CtxErrorw(ctx, "resource exceed", "executor_limit", limit.String(), "task_limit",
+				log.CtxErrorw(ctx, "resource exceeds", "executor_limit", limit.String(), "task_limit",
 					dispatchTask.EstimateLimit().String(), "task_info", dispatchTask.Info())
 				go func() {
 					m.taskCh <- dispatchTask

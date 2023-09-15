@@ -422,10 +422,8 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, challengePie
 		return nil, nil, nil, err
 	}
 
-	pieceKey := d.baseApp.PieceOp().ChallengePieceKey(
-		challengePieceTask.GetObjectInfo().Id.Uint64(),
-		challengePieceTask.GetSegmentIdx(),
-		challengePieceTask.GetRedundancyIdx())
+	pieceKey := d.baseApp.PieceOp().ChallengePieceKey(challengePieceTask.GetObjectInfo().Id.Uint64(),
+		challengePieceTask.GetSegmentIdx(), challengePieceTask.GetRedundancyIdx())
 	getIntegrityTime := time.Now()
 	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(challengePieceTask.GetObjectInfo().Id.Uint64(), challengePieceTask.GetRedundancyIdx())
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_integrity_time").Observe(time.Since(getIntegrityTime).Seconds())

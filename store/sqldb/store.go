@@ -65,6 +65,7 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("gorm failed to set db params", "error", err)
 		return nil, err
 	}
+	defer sqlDB.Close()
 	sqlDB.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Second)
 	sqlDB.SetConnMaxIdleTime(time.Duration(config.ConnMaxIdleTime) * time.Second)
 	sqlDB.SetMaxIdleConns(config.MaxIdleConns)

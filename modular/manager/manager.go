@@ -123,6 +123,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.recoveryQueue.SetFilterTaskStrategy(m.FilterUploadingTask)
 	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
+	m.gcBucketMigrationQueue.SetRetireTaskStrategy(m.ResetGCBucketMigrationQueue)
+	m.gcBucketMigrationQueue.SetFilterTaskStrategy(m.FilterGCTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -511,6 +513,16 @@ func (m *ManageModular) GCCacheQueue(qTask coretask.Task) bool {
 	return true
 }
 
+func (m *ManageModular) ResetGCBucketMigrationQueue(qTask coretask.Task) bool {
+	task := qTask.(coretask.GCBucketMigrationTask)
+	if task.Expired() {
+		log.Errorw("reset gc bucket migration task", "old_task_key", task.Key().String())
+		task.SetRetry(0)
+		log.Errorw("reset gc bucket migration task", "new_task_key", task.Key().String())
+	}
+	return false
+}
+
 func (m *ManageModular) FilterGCTask(qTask coretask.Task) bool {
 	return qTask.GetRetry() == 0
 }
@@ -697,6 +709,12 @@ func (m *ManageModular) backupTask() {
 		log.CtxDebugw(ctx, "add confirm migrate gvg to backup set", "task_key", targetTask.Key().String())
 		backupTasks = append(backupTasks, targetTask)
 	}
+	targetTask = m.gcBucketMigrationQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add gc bucket migration task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
 	endPopTime := time.Now().String()
 
 	startPickUpTime := time.Now().String()
@@ -742,6 +760,9 @@ func (m *ManageModular) repushTask(reserved coretask.Task) {
 	case *gfsptask.GfSpMigrateGVGTask:
 		err := m.migrateGVGQueuePush(t)
 		log.Infow("retry push migration gvg task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpGCBucketMigrationTask:
+		err := m.gcBucketMigrationQueue.Push(t)
+		log.Infow("retry push gc bucket migration task to queue after dispatching", "error", err)
 	}
 }
 

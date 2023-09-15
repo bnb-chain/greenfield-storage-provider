@@ -1,7 +1,7 @@
 package task
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -49,7 +49,7 @@ func (*NullTask) ExceedRetry() bool                        { return false }
 func (*NullTask) GetRetry() int64                          { return 0 }
 func (*NullTask) GetMaxRetry() int64                       { return 0 }
 func (*NullTask) SetMaxRetry(int64)                        {}
-func (*NullTask) EstimateLimit() rcmgr.Limit               { return nil }
+func (*NullTask) EstimateLimit() corercmgr.Limit           { return nil }
 func (*NullTask) Error() error                             { return nil }
 func (NullTask) SetLogs(logs string)                       {}
 func (NullTask) GetLogs() string                           { return "" }

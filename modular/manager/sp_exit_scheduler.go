@@ -112,15 +112,13 @@ func NewSPExitScheduler(manager *ManageModular) (*SPExitScheduler, error) {
 func (s *SPExitScheduler) Init(m *ManageModular) error {
 	var (
 		err error
-		sp  *sptypes.StorageProvider
 	)
 	s.manager = m
-	if sp, err = s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress()); err != nil {
+	if s.selfSP, err = s.manager.baseApp.Consensus().QuerySP(context.Background(), s.manager.baseApp.OperatorAddress()); err != nil {
 		log.Errorw("failed to init sp exit scheduler due to query sp error",
 			"operator_address", s.manager.baseApp.OperatorAddress(), "error", err)
 		return err
 	}
-	s.selfSP = sp
 	if s.lastSubscribedSPExitBlockHeight, err = s.manager.baseApp.GfSpDB().QuerySPExitSubscribeProgress(); err != nil {
 		log.Errorw("failed to init sp exit scheduler due to init subscribe sp exit progress", "error", err)
 		return err
@@ -1037,7 +1035,6 @@ func (runner *DestSPTaskRunner) startDestSPSchedule() {
 }
 
 /*
-FamilyConflictChecker
 1.Current virtual group and sp status
 
 	sp_list=[sp1,sp2,sp3,sp4,sp5,sp6,sp7,sp8]
@@ -1061,6 +1058,7 @@ FamilyConflictChecker
 
 	sp1 complete sp exit.
 */
+// FamilyConflictChecker
 type FamilyConflictChecker struct {
 	vgf    *virtualgrouptypes.GlobalVirtualGroupFamily
 	plan   *SrcSPSwapOutPlan
@@ -1217,33 +1215,31 @@ func GetSwapOutApprovalAndSendTx(baseApp *gfspapp.GfSpBaseApp, destSP *sptypes.S
 }
 
 func SendAndConfirmCompleteSwapOutTx(baseApp *gfspapp.GfSpBaseApp, msg *virtualgrouptypes.MsgCompleteSwapOut) error {
-	return SendAndConfirmTx(baseApp.Consensus(),
-		func() (string, error) {
-			var (
-				txHash string
-				txErr  error
-			)
-			if txHash, txErr = baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
-				log.Errorw("failed to send complete swap out", "complete_swap_out_msg", msg, "error", txErr)
-				return "", txErr
-			}
-			return txHash, nil
-		})
+	return SendAndConfirmTx(baseApp.Consensus(), func() (string, error) {
+		var (
+			txHash string
+			txErr  error
+		)
+		if txHash, txErr = baseApp.GfSpClient().CompleteSwapOut(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
+			log.Errorw("failed to send complete swap out", "complete_swap_out_msg", msg, "error", txErr)
+			return "", txErr
+		}
+		return txHash, nil
+	})
 }
 
 func SendAndConfirmCompleteSPExitTx(baseApp *gfspapp.GfSpBaseApp, msg *virtualgrouptypes.MsgCompleteStorageProviderExit) error {
-	return SendAndConfirmTx(baseApp.Consensus(),
-		func() (string, error) {
-			var (
-				txHash string
-				txErr  error
-			)
-			if txHash, txErr = baseApp.GfSpClient().CompleteSPExit(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
-				log.Errorw("failed to send complete sp exit", "complete_sp_exit_msg", msg, "error", txErr)
-				return "", txErr
-			}
-			return txHash, nil
-		})
+	return SendAndConfirmTx(baseApp.Consensus(), func() (string, error) {
+		var (
+			txHash string
+			txErr  error
+		)
+		if txHash, txErr = baseApp.GfSpClient().CompleteSPExit(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
+			log.Errorw("failed to send complete sp exit", "complete_sp_exit_msg", msg, "error", txErr)
+			return "", txErr
+		}
+		return txHash, nil
+	})
 }
 
 func isAlreadyExists(err error) bool {

@@ -670,23 +670,6 @@ func (mr *MockGfSpClientAPIMockRecorder) GetPiece(ctx, downloadPieceTask interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetPiece), varargs...)
 }
 
-func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, bucketID, extraQuota, yearMonth}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RecoupQuota", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx context.Context, bucketID, extraQuota,yearMonth interface{}, opts ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).RecoupQuota), varargs...)
-}
-
 // GetPieceFromECChunks mocks base method.
 func (m *MockGfSpClientAPI) GetPieceFromECChunks(ctx context.Context, endpoint string, task task.RecoveryPieceTask) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()
@@ -1373,6 +1356,20 @@ func (mr *MockGfSpClientAPIMockRecorder) MigratePiece(ctx, task interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigratePiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).MigratePiece), ctx, task)
 }
 
+// NotifyBucketMigrationDone mocks base method.
+func (m *MockGfSpClientAPI) NotifyBucketMigrationDone(ctx context.Context, bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NotifyBucketMigrationDone", ctx, bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NotifyBucketMigrationDone indicates an expected call of NotifyBucketMigrationDone.
+func (mr *MockGfSpClientAPIMockRecorder) NotifyBucketMigrationDone(ctx, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyBucketMigrationDone", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyBucketMigrationDone), ctx, bucketID)
+}
+
 // NotifyDestSPMigrateSwapOut mocks base method.
 func (m *MockGfSpClientAPI) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *types4.MsgSwapOut) error {
 	m.ctrl.T.Helper()
@@ -1399,6 +1396,20 @@ func (m *MockGfSpClientAPI) NotifyMigrateSwapOut(ctx context.Context, swapOut *t
 func (mr *MockGfSpClientAPIMockRecorder) NotifyMigrateSwapOut(ctx, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyMigrateSwapOut", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyMigrateSwapOut), ctx, swapOut)
+}
+
+// NotifySrcSPBucketMigrationDone mocks base method.
+func (m *MockGfSpClientAPI) NotifySrcSPBucketMigrationDone(ctx context.Context, srcEndpoint string, bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NotifySrcSPBucketMigrationDone", ctx, srcEndpoint, bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NotifySrcSPBucketMigrationDone indicates an expected call of NotifySrcSPBucketMigrationDone.
+func (mr *MockGfSpClientAPIMockRecorder) NotifySrcSPBucketMigrationDone(ctx, srcEndpoint, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifySrcSPBucketMigrationDone", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifySrcSPBucketMigrationDone), ctx, srcEndpoint, bucketID)
 }
 
 // P2PConn mocks base method.
@@ -1509,6 +1520,25 @@ func (mr *MockGfSpClientAPIMockRecorder) QueryTasks(ctx, endpoint, subKey interf
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, endpoint, subKey}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryTasks), varargs...)
+}
+
+// RecoupQuota mocks base method.
+func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, bucketID, extraQuota, yearMonth}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RecoupQuota", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RecoupQuota indicates an expected call of RecoupQuota.
+func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).RecoupQuota), varargs...)
 }
 
 // RejectUnSealObject mocks base method.
@@ -2233,9 +2263,10 @@ func (mr *MockDownloaderAPIMockRecorder) GetPiece(ctx, downloadPieceTask interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockDownloaderAPI)(nil).GetPiece), varargs...)
 }
 
-func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption)  error {
+// RecoupQuota mocks base method.
+func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, bucketID,extraQuota,yearMonth}
+	varargs := []interface{}{ctx, bucketID, extraQuota, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2244,6 +2275,7 @@ func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuot
 	return ret0
 }
 
+// RecoupQuota indicates an expected call of RecoupQuota.
 func (mr *MockDownloaderAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
@@ -2362,6 +2394,20 @@ func (mr *MockGaterAPIMockRecorder) NotifyDestSPMigrateSwapOut(ctx, destEndpoint
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyDestSPMigrateSwapOut", reflect.TypeOf((*MockGaterAPI)(nil).NotifyDestSPMigrateSwapOut), ctx, destEndpoint, swapOut)
 }
 
+// NotifySrcSPBucketMigrationDone mocks base method.
+func (m *MockGaterAPI) NotifySrcSPBucketMigrationDone(ctx context.Context, srcEndpoint string, bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NotifySrcSPBucketMigrationDone", ctx, srcEndpoint, bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NotifySrcSPBucketMigrationDone indicates an expected call of NotifySrcSPBucketMigrationDone.
+func (mr *MockGaterAPIMockRecorder) NotifySrcSPBucketMigrationDone(ctx, srcEndpoint, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifySrcSPBucketMigrationDone", reflect.TypeOf((*MockGaterAPI)(nil).NotifySrcSPBucketMigrationDone), ctx, srcEndpoint, bucketID)
+}
+
 // ReplicatePieceToSecondary mocks base method.
 func (m *MockGaterAPI) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive task.ReceivePieceTask, data []byte) error {
 	m.ctrl.T.Helper()
@@ -2440,6 +2486,20 @@ func (m *MockManagerAPI) CreateUploadObject(ctx context.Context, task task.Uploa
 func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
+}
+
+// NotifyBucketMigrationDone mocks base method.
+func (m *MockManagerAPI) NotifyBucketMigrationDone(ctx context.Context, bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NotifyBucketMigrationDone", ctx, bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NotifyBucketMigrationDone indicates an expected call of NotifyBucketMigrationDone.
+func (mr *MockManagerAPIMockRecorder) NotifyBucketMigrationDone(ctx, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyBucketMigrationDone", reflect.TypeOf((*MockManagerAPI)(nil).NotifyBucketMigrationDone), ctx, bucketID)
 }
 
 // NotifyMigrateSwapOut mocks base method.

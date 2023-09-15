@@ -50,6 +50,8 @@ const (
 	TypeTaskRecoverPiece
 	// TypeTaskMigrateGVG defines the type of migrating gvg task.
 	TypeTaskMigrateGVG
+	// TypeTaskGCBucketMigration defines the type of gc bucket migration task.
+	TypeTaskGCBucketMigration
 )
 
 var TypeTaskMap = map[TType]string{
@@ -69,6 +71,7 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCMeta:                 "GCMetaTask",
 	TypeTaskRecoverPiece:           "RecoverPieceTask",
 	TypeTaskMigrateGVG:             "MigrateGVGTask",
+	TypeTaskGCBucketMigration:      "GCBucketMigrationTask",
 }
 
 func TaskTypeName(taskType TType) string {

@@ -1193,6 +1193,20 @@ func (mr *MockManagerMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockManager)(nil).Name))
 }
 
+// NotifyBucketMigrationDone mocks base method.
+func (m *MockManager) NotifyBucketMigrationDone(ctx context.Context, bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NotifyBucketMigrationDone", ctx, bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NotifyBucketMigrationDone indicates an expected call of NotifyBucketMigrationDone.
+func (mr *MockManagerMockRecorder) NotifyBucketMigrationDone(ctx, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyBucketMigrationDone", reflect.TypeOf((*MockManager)(nil).NotifyBucketMigrationDone), ctx, bucketID)
+}
+
 // NotifyMigrateSwapOut mocks base method.
 func (m *MockManager) NotifyMigrateSwapOut(ctx context.Context, swapOut *types1.MsgSwapOut) error {
 	m.ctrl.T.Helper()

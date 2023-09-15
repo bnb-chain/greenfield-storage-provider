@@ -44,6 +44,7 @@ type ExecuteModular struct {
 	doingGCGCMetaTaskCnt       int64
 	doingRecoveryPieceTaskCnt  int64
 	doingMigrationGVGTaskCnt   int64
+	doingGCBucketMigrationCnt  int64
 
 	enableSkipFailedToMigrateObject bool // only for debugging, and online config can only be false
 
@@ -225,6 +226,10 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		atomic.AddInt64(&e.doingMigrationGVGTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingMigrationGVGTaskCnt, -1)
 		e.HandleMigrateGVGTask(ctx, t)
+	case *gfsptask.GfSpGCBucketMigrationTask:
+		atomic.AddInt64(&e.doingGCBucketMigrationCnt, 1)
+		defer atomic.AddInt64(&e.doingGCBucketMigrationCnt, -1)
+		e.HandleGCBucketMigrationBucket(ctx, t)
 	default:
 		log.CtxError(ctx, "unsupported task type")
 	}
@@ -272,25 +277,10 @@ func (e *ExecuteModular) ReleaseResource(ctx context.Context, span corercmgr.Res
 
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
-		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], migrateGVG[%d]",
+		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], migrateGVG[%d], gcBucketMigration[%d]",
 		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
-		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
-		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
-		atomic.LoadInt64(&e.doingReceivePieceTaskCnt),
-		atomic.LoadInt64(&e.doingGCObjectTaskCnt),
-		atomic.LoadInt64(&e.doingGCZombiePieceTaskCnt),
-		atomic.LoadInt64(&e.doingGCGCMetaTaskCnt),
-		atomic.LoadInt64(&e.doingMigrationGVGTaskCnt))
-}
-
-func (e *ExecuteModular) getSPID() (uint32, error) {
-	if e.spID != 0 {
-		return e.spID, nil
-	}
-	spInfo, err := e.baseApp.Consensus().QuerySP(context.Background(), e.baseApp.OperatorAddress())
-	if err != nil {
-		return 0, err
-	}
-	e.spID = spInfo.GetId()
-	return e.spID, nil
+		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt), atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
+		atomic.LoadInt64(&e.doingReceivePieceTaskCnt), atomic.LoadInt64(&e.doingGCObjectTaskCnt),
+		atomic.LoadInt64(&e.doingGCZombiePieceTaskCnt), atomic.LoadInt64(&e.doingGCGCMetaTaskCnt),
+		atomic.LoadInt64(&e.doingMigrationGVGTaskCnt), atomic.LoadInt64(&e.doingGCBucketMigrationCnt))
 }

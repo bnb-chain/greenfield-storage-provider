@@ -187,11 +187,12 @@ func (e *ExecuteModular) HandleReceivePieceTask(ctx context.Context, task coreta
 		return
 	}
 
-	spID, err := e.getSPID()
+	spID, err := util.GetSPID(e.spID, e.baseApp.Consensus(), e.baseApp.OperatorAddress())
 	if err != nil {
 		log.Errorw("failed to get sp id", "error", err)
 		return
 	}
+	e.spID = spID
 	if gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())] != spID {
 		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch", "expect",
 			gvg.GetSecondarySpIds()[int(task.GetRedundancyIdx())], "current", e.baseApp.OperatorAddress())
@@ -306,14 +307,15 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			return
 		}
 		// TODO get sp id from config
-		spId, err := e.getSPID()
+		spID, err := util.GetSPID(e.spID, e.baseApp.Consensus(), e.baseApp.OperatorAddress())
 		if err != nil {
 			log.Errorw("failed to get sp id", "error", err)
 			return
 		}
+		e.spID = spID
 		var redundancyIndex int32 = -1
-		for rIdx, sspId := range gvg.GetSecondarySpIds() {
-			if spId == sspId {
+		for rIdx, sspID := range gvg.GetSecondarySpIds() {
+			if spID == sspID {
 				redundancyIndex = int32(rIdx)
 				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx))
@@ -701,16 +703,16 @@ func (e *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, object
 	return secondaryEndpointList, secondaryCount, nil
 }
 
-func (g *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
-	bucketMeta, _, err := g.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
+func (e *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
+	bucketMeta, _, err := e.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
 	if err != nil {
 		return "", err
 	}
-	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketMeta.GetBucketInfo())
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, e.baseApp.Consensus(), bucketMeta.GetBucketInfo())
 	if err != nil {
 		return "", err
 	}
-	spList, err := g.baseApp.Consensus().ListSPs(ctx)
+	spList, err := e.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -720,4 +722,8 @@ func (g *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketN
 		}
 	}
 	return "", ErrPrimaryNotFound
+}
+
+func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task coretask.GCBucketMigrationTask) {
+
 }
