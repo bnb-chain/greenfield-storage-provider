@@ -406,7 +406,7 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 	if req.Limit > model.ListObjectsLimitSize {
 		limit = model.ListObjectsLimitSize
 	}
-	objects, bucket, err = r.baseApp.GfBsDB().ListObjectsByGVGAndBucketForGC(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.GvgId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
+	objects, bucket, err = r.baseApp.GfBsDB().ListObjectsByGVGAndBucketForGC(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.DstGvgId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list objects by gvg and bucket for gc", "error", err)
 		return nil, err
