@@ -82,6 +82,7 @@ type ManagerAPI interface {
 	ReportTask(ctx context.Context, report coretask.Task) error
 	PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
+	GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error)
 }
 
 // MetadataAPI for mock sue

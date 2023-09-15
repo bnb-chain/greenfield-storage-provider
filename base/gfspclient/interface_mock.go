@@ -833,6 +833,21 @@ func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectState(ctx, objectID inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadObjectState", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUploadObjectState), varargs...)
 }
 
+// GetTasksStats mocks base method.
+func (m *MockGfSpClientAPI) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTasksStats", ctx)
+	ret0, _ := ret[0].(*gfspserver.TasksStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTasksStats indicates an expected call of GetTasksStats.
+func (mr *MockGfSpClientAPIMockRecorder) GetTasksStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksStats", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetTasksStats), ctx)
+}
+
 // GetUserBuckets mocks base method.
 func (m *MockGfSpClientAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	m.ctrl.T.Helper()
@@ -2440,6 +2455,21 @@ func (m *MockManagerAPI) CreateUploadObject(ctx context.Context, task task.Uploa
 func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
+}
+
+// GetTasksStats mocks base method.
+func (m *MockManagerAPI) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTasksStats", ctx)
+	ret0, _ := ret[0].(*gfspserver.TasksStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTasksStats indicates an expected call of GetTasksStats.
+func (mr *MockManagerAPIMockRecorder) GetTasksStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksStats", reflect.TypeOf((*MockManagerAPI)(nil).GetTasksStats), ctx)
 }
 
 // NotifyMigrateSwapOut mocks base method.

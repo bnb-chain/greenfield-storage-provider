@@ -334,6 +334,15 @@ func (mockManagerServer) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfsp
 	}
 }
 
+func (s mockManagerServer) GfSpQueryTasksStats(ctx context.Context, req *gfspserver.GfSpQueryTasksStatsRequest) (*gfspserver.GfSpQueryTasksStatsResponse, error) {
+	if req == nil {
+		return nil, mockRPCErr
+	}
+	return &gfspserver.GfSpQueryTasksStatsResponse{
+		Stats: &gfspserver.TasksStats{},
+	}, nil
+}
+
 type mockP2PServer struct{}
 
 func (mockP2PServer) GfSpAskSecondaryReplicatePieceApproval(ctx context.Context, req *gfspserver.GfSpAskSecondaryReplicatePieceApprovalRequest) (
