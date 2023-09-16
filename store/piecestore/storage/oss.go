@@ -150,7 +150,17 @@ func newOSSStore(cfg ObjectStorageConfig) (ObjectStorage, error) {
 
 	switch cfg.IAMType {
 	case AKSKIAMType:
-		key := getOSSSecretKeyFromEnv(OSSRegion, OSSAccessKey, OSSSecretKey, OSSSessionToken)
+	
+		var key *ossStorageSecretKey
+		
+		if cfg.AccessKeyID != "" && cfg.AccessSecretKey != "" {
+			key = &ossStorageSecretKey{}
+			key.accessKey = cfg.AccessKeyID
+			key.secretKey = cfg.AccessSecretKey
+		} else {
+			key = getOSSSecretKeyFromEnv(OSSRegion, OSSAccessKey, OSSSecretKey, OSSSessionToken)
+		}
+
 		if key.accessKey != "" && key.secretKey != "" {
 			cli, err = oss.New(endpoint, key.accessKey, key.secretKey, oss.SecurityToken(key.sessionToken),
 				oss.Region(region), oss.HTTPClient(getHTTPClient(cfg.TLSInsecureSkipVerify)))

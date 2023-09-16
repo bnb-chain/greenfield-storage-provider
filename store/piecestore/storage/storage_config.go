@@ -22,4 +22,7 @@ type ObjectStorageConfig struct {
 	TLSInsecureSkipVerify bool `comment:"optional"`
 	// IAMType is identity and access management type which contains two types: AKSKIAMType/SAIAMType
 	IAMType string `comment:"required"`
+	//for input from console
+	AccessKeyID     string `comment:"optional"`
+	AccessSecretKey string `comment:"optional"`	
 }
