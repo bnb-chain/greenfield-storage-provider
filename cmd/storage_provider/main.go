@@ -145,11 +145,7 @@ func storageProvider(ctx *cli.Context) error {
 		return nil
 	}
 	
-	err = checkAndInput(cfg)
-	if err != nil {
-		log.Errorw("failed to input keys", "error", err)
-		return nil
-	}	
+	checkAndInput(cfg)
 	
 	err = utils.MakeEnv(ctx, cfg)
 	if err != nil {
@@ -165,28 +161,33 @@ func storageProvider(ctx *cli.Context) error {
 }
 
 
-func checkAndInput(cfg *gfspconfig.GfSpConfig) error {
+func checkAndInput(cfg *gfspconfig.GfSpConfig) {
 
 	if strings.ToLower(cfg.PieceStore.Store.Storage) == "oss" &&
 		strings.ToLower(cfg.PieceStore.Store.IAMType) == "aksk" {
+
+		if cfg.PieceStore.Store.AccessKeyID != "" &&
+			cfg.PieceStore.Store.AccessSecretKey != "" {
+			return
+		}
+
 		fmt.Println("please input AccessKeyId:")
 		reader := bufio.NewReader(os.Stdin)
 
 		text, err := reader.ReadString('\n')
 		if err != nil {
-			return err
+			return
 		}
 		cfg.PieceStore.Store.AccessKeyID = strings.Trim(text, "\n")
 
 		fmt.Println("\nplease input AccessSecretKey:")
 		text, err = reader.ReadString('\n')
 		if err != nil {
-			return err
+			return
 		}
 
 		cfg.PieceStore.Store.AccessSecretKey = strings.Trim(text, "\n")
 	}
 
-	return nil
+	return
 }
-
