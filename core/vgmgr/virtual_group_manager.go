@@ -8,12 +8,10 @@ import (
 
 // GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
 type GlobalVirtualGroupMeta struct {
-	ID             uint32
-	FamilyID       uint32
-	PrimarySPID    uint32
-	SecondarySPIDs []uint32
-	// TODO: refine it, current proto is not compatible
-	// SecondarySPs       []*sptypes.StorageProvider
+	ID                   uint32
+	FamilyID             uint32
+	PrimarySPID          uint32
+	SecondarySPIDs       []uint32
 	SecondarySPEndpoints []string
 	UsedStorageSize      uint64
 	StakingStorageSize   uint64 // init by staking deposit / staking price

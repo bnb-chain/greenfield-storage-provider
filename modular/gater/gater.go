@@ -29,7 +29,8 @@ type GateModular struct {
 	maxListReadQuota int64
 	maxPayloadSize   uint64
 
-	spID uint32
+	spID        uint32
+	spCachePool *SPCachePool
 }
 
 func (g *GateModular) Name() string {
@@ -43,6 +44,7 @@ func (g *GateModular) Start(ctx context.Context) error {
 	}
 	g.scope = scope
 	go g.server(ctx)
+	g.spCachePool = NewSPCachePool(g.baseApp.Consensus())
 	return nil
 }
 

@@ -499,14 +499,14 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 		return err
 	}
 
-	if !receiveTask.BucketMigration {
-		// if it is replicate when uploading, the status should be created
-		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
-			return ErrNotCreatedState
-		}
-	} else {
+	if receiveTask.BucketMigration {
 		// if it is bucket migration, the status should be sealed
 		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_SEALED {
+			return ErrNotSealedState
+		}
+	} else {
+		// if it is replicate when uploading, the status should be created
+		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
 			return ErrNotCreatedState
 		}
 	}
@@ -528,8 +528,8 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 	}
 
 	if primarySp.GetOperatorAccAddress().String() != signatureAddr {
-		log.CtxErrorw(ctx, "primary sp mismatch", "expect",
-			primarySp.GetOperatorAccAddress().String(), "current", signatureAddr)
+		log.CtxErrorw(ctx, "primary sp mismatch", "expected",
+			primarySp.GetOperatorAccAddress().String(), "actual", signatureAddr)
 		return ErrPrimaryMismatch
 	}
 
@@ -541,7 +541,7 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 
 	expectSecondarySPID := gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())]
 	if expectSecondarySPID != spID {
-		log.CtxErrorw(ctx, "secondary sp mismatch", "expect", expectSecondarySPID, "current", spID)
+		log.CtxErrorw(ctx, "secondary sp mismatch", "gvg_info", gvg, "expected", expectSecondarySPID, "actual", spID)
 		return ErrSecondaryMismatch
 	}
 

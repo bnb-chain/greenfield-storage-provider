@@ -575,10 +575,10 @@ func (mockSignerServer) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRe
 		} else {
 			return &gfspserver.GfSpSignResponse{Signature: mockSignature}, nil
 		}
-	case *gfspserver.GfSpSignRequest_GfspMigratePieceTask:
-		if req.GetGfspMigratePieceTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
+	case *gfspserver.GfSpSignRequest_GfspMigrateGvgTask:
+		if req.GetGfspMigrateGvgTask().GetBucketID() == 2 {
 			return nil, mockRPCErr
-		} else if req.GetGfspMigratePieceTask().GetObjectInfo().GetObjectName() == mockObjectName2 {
+		} else if req.GetGfspMigrateGvgTask().GetBucketID() == 3 {
 			return &gfspserver.GfSpSignResponse{Err: ErrExceptionsStream}, nil
 		} else {
 			return &gfspserver.GfSpSignResponse{Signature: mockSignature}, nil

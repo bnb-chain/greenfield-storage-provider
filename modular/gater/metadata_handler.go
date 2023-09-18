@@ -2738,6 +2738,78 @@ func (g *GateModular) getSPMigratingBucketNumberHandler(w http.ResponseWriter, r
 	w.Write(respBytes)
 }
 
+// verifyMigrateGVGPermissionHandler handle verify the destination sp id of bucket migration & swap out request
+func (g *GateModular) verifyMigrateGVGPermissionHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err             error
+		requestGvgID    string
+		requestSpID     string
+		requestBucketID string
+		bucketID        uint64
+		spID            uint32
+		gvgID           uint32
+		respBytes       []byte
+		queryParams     url.Values
+		effect          *permission_types.Effect
+		reqCtx          *RequestContext
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		handlerName := mux.CurrentRoute(r).GetName()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to verify the destination sp id of bucket migration & swap out", reqCtx.String())
+			MakeErrorResponse(w, err)
+			MetadataHandlerFailureMetrics(err, startTime, handlerName)
+		} else {
+			MetadataHandlerSuccessMetrics(startTime, handlerName)
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+
+	queryParams = reqCtx.request.URL.Query()
+	requestGvgID = queryParams.Get(GvgIDQuery)
+	requestSpID = queryParams.Get(SpIDQuery)
+	requestBucketID = queryParams.Get(BucketIDQuery)
+
+	if gvgID, err = util.StringToUint32(requestGvgID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check gvg id", "gvg-id", requestGvgID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if spID, err = util.StringToUint32(requestSpID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check sp id", "sp-id", requestSpID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	if bucketID, err = util.StringToUint64(requestBucketID); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse or check bucket id", "bucket-id", requestBucketID, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
+	effect, err = g.baseApp.GfSpClient().VerifyMigrateGVGPermission(reqCtx.Context(), bucketID, gvgID, spID)
+	if err != nil {
+		log.Errorf("failed to verify the destination sp id of bucket migration & swap out", "error", err)
+		return
+	}
+
+	grpcResponse := &types.GfSpVerifyMigrateGVGPermissionResponse{Effect: *effect}
+
+	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.Errorf("failed to verify the destination sp id of bucket migration & swap out", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
 // processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
 func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
 	respString := string(respBytes)

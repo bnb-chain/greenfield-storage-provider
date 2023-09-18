@@ -1374,18 +1374,18 @@ func (mr *MockGfSpClientAPIMockRecorder) ManagerConn(ctx interface{}, opts ...in
 }
 
 // MigratePiece mocks base method.
-func (m *MockGfSpClientAPI) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+func (m *MockGfSpClientAPI) MigratePiece(ctx context.Context, gvgTask *gfsptask.GfSpMigrateGVGTask, pieceTask *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MigratePiece", ctx, task)
+	ret := m.ctrl.Call(m, "MigratePiece", ctx, gvgTask, pieceTask)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // MigratePiece indicates an expected call of MigratePiece.
-func (mr *MockGfSpClientAPIMockRecorder) MigratePiece(ctx, task interface{}) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) MigratePiece(ctx, gvgTask, pieceTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigratePiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).MigratePiece), ctx, task)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigratePiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).MigratePiece), ctx, gvgTask, pieceTask)
 }
 
 // NotifyDestSPMigrateSwapOut mocks base method.
@@ -1484,6 +1484,21 @@ func (m *MockGfSpClientAPI) QueryP2PBootstrap(ctx context.Context) ([]string, er
 func (mr *MockGfSpClientAPIMockRecorder) QueryP2PBootstrap(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryP2PBootstrap", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryP2PBootstrap), ctx)
+}
+
+// QuerySPByOperatorAddress mocks base method.
+func (m *MockGfSpClientAPI) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*types2.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySPByOperatorAddress", ctx, operatorAddress)
+	ret0, _ := ret[0].(*types2.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySPByOperatorAddress indicates an expected call of QuerySPByOperatorAddress.
+func (mr *MockGfSpClientAPIMockRecorder) QuerySPByOperatorAddress(ctx, operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPByOperatorAddress", reflect.TypeOf((*MockGfSpClientAPI)(nil).QuerySPByOperatorAddress), ctx, operatorAddress)
 }
 
 // QuerySPExit mocks base method.
@@ -1680,6 +1695,21 @@ func (m *MockGfSpClientAPI) SignMigrateBucketApproval(ctx context.Context, bucke
 func (mr *MockGfSpClientAPIMockRecorder) SignMigrateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateBucketApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignMigrateBucketApproval), ctx, bucket)
+}
+
+// SignMigrateGVG mocks base method.
+func (m *MockGfSpClientAPI) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignMigrateGVG", ctx, task)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignMigrateGVG indicates an expected call of SignMigrateGVG.
+func (mr *MockGfSpClientAPIMockRecorder) SignMigrateGVG(ctx, task interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateGVG", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignMigrateGVG), ctx, task)
 }
 
 // SignMigratePiece mocks base method.
@@ -1944,6 +1974,26 @@ func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account,
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
+}
+
+// VerifyMigrateGVGPermission mocks base method.
+func (m *MockGfSpClientAPI) VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*types1.Effect, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, bucketID, gvgID, dstSpID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyMigrateGVGPermission", varargs...)
+	ret0, _ := ret[0].(*types1.Effect)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyMigrateGVGPermission indicates an expected call of VerifyMigrateGVGPermission.
+func (mr *MockGfSpClientAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, bucketID, gvgID, dstSpID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyMigrateGVGPermission", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyMigrateGVGPermission), varargs...)
 }
 
 // VerifyPermission mocks base method.
@@ -2349,18 +2399,18 @@ func (mr *MockGaterAPIMockRecorder) GetSwapOutApproval(ctx, destSPEndpoint, swap
 }
 
 // MigratePiece mocks base method.
-func (m *MockGaterAPI) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+func (m *MockGaterAPI) MigratePiece(ctx context.Context, gvgTask *gfsptask.GfSpMigrateGVGTask, pieceTask *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MigratePiece", ctx, task)
+	ret := m.ctrl.Call(m, "MigratePiece", ctx, gvgTask, pieceTask)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // MigratePiece indicates an expected call of MigratePiece.
-func (mr *MockGaterAPIMockRecorder) MigratePiece(ctx, task interface{}) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) MigratePiece(ctx, gvgTask, pieceTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigratePiece", reflect.TypeOf((*MockGaterAPI)(nil).MigratePiece), ctx, task)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigratePiece", reflect.TypeOf((*MockGaterAPI)(nil).MigratePiece), ctx, gvgTask, pieceTask)
 }
 
 // NotifyDestSPMigrateSwapOut mocks base method.
@@ -2499,6 +2549,21 @@ func (m *MockManagerAPI) PickVirtualGroupFamilyID(ctx context.Context, task task
 func (mr *MockManagerAPIMockRecorder) PickVirtualGroupFamilyID(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PickVirtualGroupFamilyID", reflect.TypeOf((*MockManagerAPI)(nil).PickVirtualGroupFamilyID), ctx, task)
+}
+
+// QuerySPByOperatorAddress mocks base method.
+func (m *MockManagerAPI) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*types2.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySPByOperatorAddress", ctx, operatorAddress)
+	ret0, _ := ret[0].(*types2.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySPByOperatorAddress indicates an expected call of QuerySPByOperatorAddress.
+func (mr *MockManagerAPIMockRecorder) QuerySPByOperatorAddress(ctx, operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPByOperatorAddress", reflect.TypeOf((*MockManagerAPI)(nil).QuerySPByOperatorAddress), ctx, operatorAddress)
 }
 
 // ReportTask mocks base method.
@@ -3395,6 +3460,26 @@ func (mr *MockMetadataAPIMockRecorder) ListVirtualGroupFamiliesSpID(ctx, spID in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesSpID", reflect.TypeOf((*MockMetadataAPI)(nil).ListVirtualGroupFamiliesSpID), varargs...)
 }
 
+// VerifyMigrateGVGPermission mocks base method.
+func (m *MockMetadataAPI) VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*types1.Effect, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, bucketID, gvgID, dstSpID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyMigrateGVGPermission", varargs...)
+	ret0, _ := ret[0].(*types1.Effect)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyMigrateGVGPermission indicates an expected call of VerifyMigrateGVGPermission.
+func (mr *MockMetadataAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, bucketID, gvgID, dstSpID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyMigrateGVGPermission", reflect.TypeOf((*MockMetadataAPI)(nil).VerifyMigrateGVGPermission), varargs...)
+}
+
 // VerifyPermission mocks base method.
 func (m *MockMetadataAPI) VerifyPermission(ctx context.Context, Operator, bucketName, objectName string, actionType types1.ActionType, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
@@ -3819,6 +3904,21 @@ func (m *MockSignerAPI) SignMigrateBucketApproval(ctx context.Context, bucket *t
 func (mr *MockSignerAPIMockRecorder) SignMigrateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateBucketApproval", reflect.TypeOf((*MockSignerAPI)(nil).SignMigrateBucketApproval), ctx, bucket)
+}
+
+// SignMigrateGVG mocks base method.
+func (m *MockSignerAPI) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignMigrateGVG", ctx, task)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignMigrateGVG indicates an expected call of SignMigrateGVG.
+func (mr *MockSignerAPIMockRecorder) SignMigrateGVG(ctx, task interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateGVG", reflect.TypeOf((*MockSignerAPI)(nil).SignMigrateGVG), ctx, task)
 }
 
 // SignMigratePiece mocks base method.

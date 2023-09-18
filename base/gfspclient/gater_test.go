@@ -235,7 +235,7 @@ func TestGfSpClient_MigratePiece(t *testing.T) {
 			s := mockBufClient()
 			if tt.server != nil {
 				defer tt.server.Close()
-				result, err := s.MigratePiece(context.TODO(), &gfsptask.GfSpMigratePieceTask{SrcSpEndpoint: tt.server.URL})
+				result, err := s.MigratePiece(context.TODO(), &gfsptask.GfSpMigrateGVGTask{}, &gfsptask.GfSpMigratePieceTask{SrcSpEndpoint: tt.server.URL})
 				if tt.wantedIsErr {
 					assert.Contains(t, err.Error(), tt.wantedErrStr)
 					assert.Nil(t, result)
@@ -244,7 +244,7 @@ func TestGfSpClient_MigratePiece(t *testing.T) {
 					assert.NotNil(t, result)
 				}
 			} else {
-				result, err := s.MigratePiece(context.TODO(), &gfsptask.GfSpMigratePieceTask{SrcSpEndpoint: tt.endpoint})
+				result, err := s.MigratePiece(context.TODO(), &gfsptask.GfSpMigrateGVGTask{}, &gfsptask.GfSpMigratePieceTask{SrcSpEndpoint: tt.endpoint})
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 				assert.Nil(t, result)
 			}

@@ -239,7 +239,6 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		return nil
 	}
 
-	// TODO: refine it.
 	startPickGVGTime := time.Now()
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
 	if err != nil {

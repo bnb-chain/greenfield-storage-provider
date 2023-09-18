@@ -572,4 +572,8 @@ type MigrateGVGTask interface {
 	GetFinished() bool
 	// SetFinished sets the migrated gvg task status when finished
 	SetFinished(bool)
+	// GetSignBytes returns the bytes from the task to sign.
+	GetSignBytes() []byte
+	// SetSignature sets the task signature.
+	SetSignature([]byte)
 }

@@ -161,10 +161,10 @@ func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtual
 	return s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
 }
 
-func (s *SignModular) SignMigratePiece(ctx context.Context, mp *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+func (s *SignModular) SignMigrateGVG(ctx context.Context, mp *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
 	sig, err := s.client.Sign(SignOperator, mp.GetSignBytes())
 	if err != nil {
-		log.Errorw("failed to sign migrate piece", "error", err)
+		log.Errorw("failed to sign migrate gvg", "error", err)
 		return nil, err
 	}
 	return sig, nil

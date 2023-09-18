@@ -38,6 +38,8 @@ const (
 	MigratePiecePath = "/greenfield/migrate/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
+	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header
+	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
 	// NotifyMigrateSwapOutTaskPath defines dispatch migrate gvg task from src sp to dest sp.
 	NotifyMigrateSwapOutTaskPath = "/greenfield/migrate/v1/notify-migrate-swap-out-task"
 	// GnfdMigrateSwapOutMsgHeader defines migrate swap out msg header
@@ -142,16 +144,23 @@ func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint
 	return signature, nil
 }
 
-func (s *GfSpClient) MigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
-	endpoint := task.GetSrcSpEndpoint()
+func (s *GfSpClient) MigratePiece(ctx context.Context, gvgTask *gfsptask.GfSpMigrateGVGTask, pieceTask *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
+	endpoint := pieceTask.GetSrcSpEndpoint()
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", endpoint, MigratePiecePath), nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
 		return nil, err
 	}
 
-	msg, err := json.Marshal(task)
+	msg, err := json.Marshal(gvgTask)
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to marshal gvg task", "gvg_task", gvgTask, "piece_task", pieceTask)
+		return nil, err
+	}
+	req.Header.Add(GnfdMigrateGVGMsgHeader, hex.EncodeToString(msg))
+	msg, err = json.Marshal(pieceTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to marshal piece task", "gvg_task", gvgTask, "piece_task", pieceTask)
 		return nil, err
 	}
 	req.Header.Add(GnfdMigratePieceMsgHeader, hex.EncodeToString(msg))

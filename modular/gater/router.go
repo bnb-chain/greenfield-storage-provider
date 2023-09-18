@@ -70,6 +70,7 @@ const (
 	listPaymentAccountStreamsRouterName            = "ListPaymentAccountStreams"
 	listGroupsByIDsRouterName                      = "ListGroupsByIDs"
 	getSPMigratingBucketNumberRouterName           = "GetSPMigratingBucketNumber"
+	verifyMigrateGVGPermissionRouterName           = "VerifyMigrateGVGPermission"
 )
 
 const (
@@ -274,6 +275,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// Get SP Migrate Bucket Number
 		router.Path("/").Name(getSPMigratingBucketNumberRouterName).Methods(http.MethodGet).Queries(GetSPMigratingBucketNumberQuery, "").HandlerFunc(g.getSPMigratingBucketNumberHandler)
+
+		// Verify the destination sp id of bucket migration & swap out
+		router.Path("/").Name(verifyMigrateGVGPermissionRouterName).Methods(http.MethodGet).Queries(VerifyMigrateGVGPermissionQuery, "").HandlerFunc(g.verifyMigrateGVGPermissionHandler)
 	}
 
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)

@@ -50,6 +50,7 @@ message GfSpSignRequest {
     greenfield.virtualgroup.MsgStorageProviderExit sp_exit = 20;
     greenfield.virtualgroup.MsgCompleteStorageProviderExit complete_sp_exit = 21;
     greenfield.sp.MsgUpdateSpStoragePrice sp_storage_price = 22;
+    base.types.gfsptask.GfSpMigrateGVGTask gfsp_migrate_gvg_task = 23;
   }
 }
 

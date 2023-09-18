@@ -44,6 +44,7 @@ func (m *NullModular) QueryBucketMigrate(ctx context.Context) (*gfspserver.GfSpQ
 func (m *NullModular) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
 	return nil, ErrNilModular
 }
+
 func (*NullModular) PreCreateBucketApproval(context.Context, task.ApprovalCreateBucketTask) error {
 	return ErrNilModular
 }
@@ -252,9 +253,6 @@ func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontin
 func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
 	return "", ErrNilModular
 }
-func (*NilModular) SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error) {
-	return nil, ErrNilModular
-}
 func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return "", ErrNilModular
 }
@@ -279,6 +277,9 @@ func (*NilModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgr
 
 func (*NilModular) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
 	return "", ErrNilModular
+}
+func (*NilModular) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	return nil, ErrNilModular
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

@@ -183,18 +183,22 @@ func (m *GfSpMigrateGVGTask) SetFinished(finished bool) {
 	m.Finished = finished
 }
 
+func (m *GfSpMigrateGVGTask) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpMigrateGVGTask{
+		BucketId:      m.GetBucketID(),
+		SrcGvg:        m.GetSrcGvg(),
+		RedundancyIdx: m.GetRedundancyIdx(),
+		ExpireTime:    m.GetExpireTime(),
+	}))
+}
+
+func (m *GfSpMigrateGVGTask) SetSignature(signature []byte) {
+	m.Signature = signature
+}
+
 // ======================= MigratePieceTask =====================================
 
 func (g *GfSpMigratePieceTask) Key() coretask.TKey {
 	return GfSpMigratePieceTaskKey(g.GetObjectInfo().GetObjectName(), g.GetObjectInfo().Id.String(),
 		g.GetSegmentIdx(), g.GetRedundancyIdx())
-}
-
-func (g *GfSpMigratePieceTask) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpMigratePieceTask{
-		ObjectInfo:    g.GetObjectInfo(),
-		StorageParams: g.GetStorageParams(),
-		SegmentIdx:    g.GetSegmentIdx(),
-		RedundancyIdx: g.GetRedundancyIdx(),
-	}))
 }

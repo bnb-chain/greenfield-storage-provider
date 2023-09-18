@@ -12,6 +12,17 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
+func TestSPCachePool_QuerySP(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	chainMock := consensus.NewMockConsensus(ctrl)
+	chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{OperatorAddress: "abc"}, nil).Times(1)
+	pool := NewSPCachePool(chainMock)
+	_, err := pool.QuerySPByAddress("abc") // query chain.
+	assert.Nil(t, err)
+	_, err = pool.QuerySPByAddress("abc") // cached.
+	assert.Nil(t, err)
+}
+
 func Test_getObjectChainMeta(t *testing.T) {
 	cases := []struct {
 		name        string
