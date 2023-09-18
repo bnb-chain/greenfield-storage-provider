@@ -764,7 +764,7 @@ func TestExecuteModular_recoverByPrimarySPSuccess(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	m := gfspclient.NewMockGfSpClientAPI(ctrl)
-	m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.Bucket{
+	m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
 		BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil, nil).Times(1)
 	m.EXPECT().SignRecoveryTask(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
 	m.EXPECT().GetPieceFromECChunks(gomock.Any(), gomock.Any(), gomock.Any()).Return(io.NopCloser(
@@ -1170,7 +1170,7 @@ func TestExecuteModular_getBucketPrimarySPEndpoint(t *testing.T) {
 				e := setup(t)
 				ctrl := gomock.NewController(t)
 				m := gfspclient.NewMockGfSpClientAPI(ctrl)
-				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
 					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil, nil).Times(1)
 				e.baseApp.SetGfSpClient(m)
 
@@ -1188,7 +1188,7 @@ func TestExecuteModular_getBucketPrimarySPEndpoint(t *testing.T) {
 				e := setup(t)
 				ctrl := gomock.NewController(t)
 				m := gfspclient.NewMockGfSpClientAPI(ctrl)
-				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
 					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil, nil).Times(1)
 				e.baseApp.SetGfSpClient(m)
 
@@ -1208,7 +1208,7 @@ func TestExecuteModular_getBucketPrimarySPEndpoint(t *testing.T) {
 				e := setup(t)
 				ctrl := gomock.NewController(t)
 				m := gfspclient.NewMockGfSpClientAPI(ctrl)
-				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
 					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil, nil).Times(1)
 				e.baseApp.SetGfSpClient(m)
 
@@ -1228,7 +1228,7 @@ func TestExecuteModular_getBucketPrimarySPEndpoint(t *testing.T) {
 				e := setup(t)
 				ctrl := gomock.NewController(t)
 				m := gfspclient.NewMockGfSpClientAPI(ctrl)
-				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
 					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil, nil).Times(1)
 				e.baseApp.SetGfSpClient(m)
 
