@@ -131,6 +131,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"object_info", uploadObjectTask.GetObjectInfo(), "actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
+				err = ErrInvalidIntegrity
 				return ErrInvalidIntegrity
 			}
 			integrityMeta := &corespdb.IntegrityMeta{
@@ -263,6 +264,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 				if !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
 					log.CtxErrorw(ctx, "invalid integrity hash", "object_info", task.GetObjectInfo(),
 						"actual", hex.EncodeToString(integrityHash), "expected", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
+					err = ErrInvalidIntegrity
 					return ErrInvalidIntegrity
 				}
 				integrityMeta.IntegrityChecksum = integrityHash
