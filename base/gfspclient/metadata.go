@@ -270,7 +270,7 @@ func (s *GfSpClient) VerifyPermission(ctx context.Context, Operator string, buck
 
 // GetBucketMeta get bucket info along with its related info such as payment
 func (s *GfSpClient) GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool,
-	opts ...grpc.DialOption) (*types.Bucket, *payment_types.StreamRecord, error) {
+	opts ...grpc.DialOption) (*types.VGFInfoBucket, *payment_types.StreamRecord, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
 		return nil, nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
@@ -870,7 +870,7 @@ func (s *GfSpClient) ListPaymentAccountStreams(ctx context.Context, paymentAccou
 	return resp.Buckets, nil
 }
 
-func (s *GfSpClient) ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.StreamRecordMeta, error) {
+func (s *GfSpClient) ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.PaymentAccountMeta, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
@@ -883,7 +883,7 @@ func (s *GfSpClient) ListUserPaymentAccounts(ctx context.Context, accountID stri
 		log.CtxErrorw(ctx, "client failed to list payment accounts by owner address", "error", err)
 		return nil, ErrRPCUnknownWithDetail("client failed to list payment accounts by owner address, error: " + err.Error())
 	}
-	return resp.StreamRecords, nil
+	return resp.PaymentAccounts, nil
 }
 
 func (s *GfSpClient) ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error) {
