@@ -242,18 +242,13 @@ func TestGfSpBaseApp_GfSpSignSuccess13(t *testing.T) {
 }
 
 func TestGfSpBaseApp_GfSpSignSuccess14(t *testing.T) {
-	t.Log("Success case description: sign migrate piece task")
+	t.Log("Success case description: sign migrate gvg task")
 	g := setup(t)
 	ctrl := gomock.NewController(t)
 	m := module.NewMockSigner(ctrl)
 	g.signer = m
-	m.EXPECT().SignMigratePiece(gomock.Any(), gomock.Any()).Return(mockSig, nil).Times(1)
-	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_GfspMigratePieceTask{
-		GfspMigratePieceTask: &gfsptask.GfSpMigratePieceTask{
-			Task:          &gfsptask.GfSpTask{},
-			ObjectInfo:    mockObjectInfo,
-			StorageParams: mockStorageParams,
-		}}}
+	m.EXPECT().SignMigrateGVG(gomock.Any(), gomock.Any()).Return(mockSig, nil).Times(1)
+	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_GfspMigrateGvgTask{}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -614,18 +609,13 @@ func TestGfSpBaseApp_GfSpSignFailure14(t *testing.T) {
 }
 
 func TestGfSpBaseApp_GfSpSignFailure15(t *testing.T) {
-	t.Log("Failure case description: failed to sign migrate piece task")
+	t.Log("Failure case description: failed to sign migrate gvg task")
 	g := setup(t)
 	ctrl := gomock.NewController(t)
 	m := module.NewMockSigner(ctrl)
 	g.signer = m
-	m.EXPECT().SignMigratePiece(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
-	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_GfspMigratePieceTask{
-		GfspMigratePieceTask: &gfsptask.GfSpMigratePieceTask{
-			Task:          &gfsptask.GfSpTask{},
-			ObjectInfo:    mockObjectInfo,
-			StorageParams: mockStorageParams,
-		}}}
+	m.EXPECT().SignMigrateGVG(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_GfspMigrateGvgTask{}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())

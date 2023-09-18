@@ -118,7 +118,16 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	if len(pieceChecksums) != int(segmentCount) {
 		log.CtxErrorw(ctx, "replicate piece unfinished", "task", task)
+		err = ErrUnfinishedTask
 		return nil, ErrUnfinishedTask
+	}
+	expectedIntegrityHash := task.GetObjectInfo().GetChecksums()[task.GetRedundancyIdx()+1]
+	integrityChecksum := hash.GenerateIntegrityHash(pieceChecksums)
+
+	if !bytes.Equal(expectedIntegrityHash, integrityChecksum) {
+		log.CtxErrorw(ctx, "failed to compare checksum", "task", task, "actual_checksum", integrityChecksum, "expected_checksum", expectedIntegrityHash)
+		err = ErrInvalidDataChecksum
+		return nil, ErrInvalidDataChecksum
 	}
 
 	signTime := time.Now()
@@ -133,7 +142,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	integrityMeta := &corespdb.IntegrityMeta{
 		ObjectID:          task.GetObjectInfo().Id.Uint64(),
 		RedundancyIndex:   task.GetRedundancyIdx(),
-		IntegrityChecksum: hash.GenerateIntegrityHash(pieceChecksums),
+		IntegrityChecksum: integrityChecksum,
 		PieceChecksumList: pieceChecksums,
 	}
 	setIntegrityTime := time.Now()

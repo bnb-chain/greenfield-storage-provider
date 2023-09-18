@@ -183,6 +183,8 @@ message GfSpMigrateGVGTask {
   greenfield.sp.StorageProvider src_sp = 6;
   uint64 last_migrated_object_id = 7;
   bool finished = 8;
+  int64 expire_time = 9;
+  bytes signature = 10;
 }
 
 message GfSpMigratePieceTask {
@@ -192,6 +194,5 @@ message GfSpMigratePieceTask {
   string src_sp_endpoint = 4;
   uint32 segment_idx = 5;
   int32 redundancy_idx = 6;
-  bytes signature = 7;
-  bool is_bucket_migrate = 8;
+  bool is_bucket_migrate = 7;
 }

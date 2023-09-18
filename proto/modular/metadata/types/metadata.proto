@@ -887,6 +887,22 @@ message GfSpGetSPMigratingBucketNumberResponse {
   uint64 count = 1;
 }
 
+// GfSpVerifyMigrateGVGPermissionRequest is request type for the VerifyMigrateGVGPermission RPC method
+message GfSpVerifyMigrateGVGPermissionRequest {
+  // bucket_id is the unique identification for bucket
+  uint64 bucket_id = 1;
+  // gvg_id is the unique identification for gvg
+  uint32 gvg_id = 2;
+  // dst_sp_id is the destination sp id
+  uint32 dst_sp_id = 3;
+}
+
+// GfSpVerifyMigrateGVGPermissionResponse is response type for the VerifyMigrateGVGPermission RPC method
+message GfSpVerifyMigrateGVGPermissionResponse {
+  // effect define the effect of the operation permission, include Allow or deny
+  greenfield.permission.Effect effect = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -931,4 +947,5 @@ service GfSpMetadataService {
   rpc GfSpListUserPaymentAccounts(GfSpListUserPaymentAccountsRequest) returns (GfSpListUserPaymentAccountsResponse) {}
   rpc GfSpListGroupsByIDs(GfSpListGroupsByIDsRequest) returns (GfSpListGroupsByIDsResponse) {}
   rpc GfSpGetSPMigratingBucketNumber(GfSpGetSPMigratingBucketNumberRequest) returns (GfSpGetSPMigratingBucketNumberResponse) {}
+  rpc GfSpVerifyMigrateGVGPermission(GfSpVerifyMigrateGVGPermissionRequest) returns (GfSpVerifyMigrateGVGPermissionResponse) {}
 }

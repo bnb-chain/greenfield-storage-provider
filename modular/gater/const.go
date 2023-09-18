@@ -135,6 +135,8 @@ const (
 	VerifyPermissionByIDQuery = "verify-id"
 	// GetSPInfoQuery defines query sp info, which is used to route request
 	GetSPInfoQuery = "query-sp"
+	// VerifyMigrateGVGPermissionQuery defines verify the destination sp id of bucket migration & swap out, which is used to route request
+	VerifyMigrateGVGPermissionQuery = "gvg-permission"
 	// GetUserGroupsQuery defines get groups info by a user address, which is used to route request
 	GetUserGroupsQuery = "user-groups"
 	// GetUserOwnedGroupsQuery defines retrieve groups where the user is the owner, which is used to route request
@@ -266,6 +268,8 @@ const (
 	MigratePiecePath = "/greenfield/migrate/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header.
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
+	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header.
+	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
 	// NotifyMigrateSwapOutTaskPath defines dispatch swap out from src sp to dest sp.
 	NotifyMigrateSwapOutTaskPath = "/greenfield/migrate/v1/notify-migrate-swap-out-task"
 	// GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg" defines migrate gvg msg header.

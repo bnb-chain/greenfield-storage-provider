@@ -749,61 +749,6 @@ func TestGfSpClient_SignP2PPongMsgFailure(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestGfSpClient_SignMigratePiece(t *testing.T) {
-	cases := []struct {
-		name        string
-		task        *gfsptask.GfSpMigratePieceTask
-		wantedIsErr bool
-		wantedErr   error
-	}{
-		{
-			name: "success",
-			task: &gfsptask.GfSpMigratePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName3}},
-			wantedIsErr: false,
-		},
-		{
-			name: "mock rpc error",
-			task: &gfsptask.GfSpMigratePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName1}},
-			wantedIsErr: true,
-			wantedErr:   mockRPCErr,
-		},
-		{
-			name: "mock response returns error",
-			task: &gfsptask.GfSpMigratePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName2}},
-			wantedIsErr: true,
-			wantedErr:   ErrExceptionsStream,
-		},
-	}
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-			s := setup(t, ctx)
-			result, err := s.SignMigratePiece(ctx, tt.task)
-			if tt.wantedIsErr {
-				assert.Contains(t, err.Error(), tt.wantedErr.Error())
-				assert.Nil(t, result)
-			} else {
-				assert.Nil(t, err)
-				assert.Equal(t, mockSignature, result)
-			}
-		})
-	}
-}
-
-func TestGfSpClient_SignMigratePieceFailure(t *testing.T) {
-	t.Log("Failure case description: client failed to connect signer")
-	ctx, cancel := context.WithCancel(context.Background())
-	s := mockBufClient()
-	defer s.Close()
-	cancel()
-	result, err := s.SignMigratePiece(ctx, &gfsptask.GfSpMigratePieceTask{})
-	assert.Contains(t, err.Error(), context.Canceled.Error())
-	assert.Nil(t, result)
-}
-
 func TestGfSpClient_CompleteMigrateBucket(t *testing.T) {
 	cases := []struct {
 		name          string
@@ -1166,4 +1111,56 @@ func TestGfSpClient_CompleteSPExitFailure(t *testing.T) {
 	result, err := s.CompleteSPExit(ctx, &virtualgrouptypes.MsgCompleteStorageProviderExit{})
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 	assert.Empty(t, result)
+}
+
+func TestGfSpClient_SignMigrateGVG(t *testing.T) {
+	cases := []struct {
+		name        string
+		task        *gfsptask.GfSpMigrateGVGTask
+		wantedIsErr bool
+		wantedErr   error
+	}{
+		{
+			name:        "success",
+			task:        &gfsptask.GfSpMigrateGVGTask{Task: &gfsptask.GfSpTask{}, BucketId: 1},
+			wantedIsErr: false,
+		},
+		{
+			name:        "mock rpc error",
+			task:        &gfsptask.GfSpMigrateGVGTask{Task: &gfsptask.GfSpTask{}, BucketId: 2},
+			wantedIsErr: true,
+			wantedErr:   mockRPCErr,
+		},
+		{
+			name:        "mock response returns error",
+			task:        &gfsptask.GfSpMigrateGVGTask{Task: &gfsptask.GfSpTask{}, BucketId: 3},
+			wantedIsErr: true,
+			wantedErr:   ErrExceptionsStream,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			s := setup(t, ctx)
+			result, err := s.SignMigrateGVG(ctx, tt.task)
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErr.Error())
+				assert.Nil(t, result)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, mockSignature, result)
+			}
+		})
+	}
+}
+
+func TestGfSpClient_SignMigratePieceFailure(t *testing.T) {
+	t.Log("Failure case description: client failed to connect signer")
+	ctx, cancel := context.WithCancel(context.Background())
+	s := mockBufClient()
+	defer s.Close()
+	cancel()
+	result, err := s.SignMigrateGVG(ctx, &gfsptask.GfSpMigrateGVGTask{})
+	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Nil(t, result)
 }

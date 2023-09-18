@@ -4,7 +4,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"time"
 
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -56,15 +58,58 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 	}
 }
 
+func (g *GateModular) checkMigratePieceAuth(reqCtx *RequestContext, migrateGVGHeader string) (bool, error) {
+	var (
+		err           error
+		migrateGVGMsg []byte
+	)
+	migrateGVGMsg, err = hex.DecodeString(migrateGVGHeader)
+	if err != nil {
+		log.Errorw("failed to parse migrate gvg header", "migrate_gvg_header", migrateGVGHeader, "error", err)
+		return false, ErrDecodeMsg
+	}
+	migrateGVG := gfsptask.GfSpMigrateGVGTask{}
+	err = json.Unmarshal(migrateGVGMsg, &migrateGVG)
+	if err != nil {
+		log.Errorw("failed to unmarshal migrate gvg msg", "error", err)
+		return false, ErrDecodeMsg
+	}
+	if migrateGVG.GetExpireTime() < time.Now().Unix() {
+		log.Errorw("failed to check migrate gvg expire time", "gvg_task", migrateGVG)
+		return false, ErrNoPermission
+	}
+	destSPAddr, err := reqCtx.verifyTaskSignature(migrateGVG.GetSignBytes(), migrateGVG.GetSignature())
+	if err != nil {
+		log.Errorw("failed to verify task signature", "gvg_task", migrateGVG, "error", err)
+		return false, err
+	}
+	sp, err := g.spCachePool.QuerySPByAddress(destSPAddr.String())
+	if err != nil {
+		log.Errorw("failed to query sp", "gvg_task", migrateGVG, "dest_sp_addr", destSPAddr.String(), "error", err)
+		return false, err
+	}
+	effect, err := g.baseApp.GfSpClient().VerifyMigrateGVGPermission(reqCtx.Context(), migrateGVG.GetBucketID(), migrateGVG.GetSrcGvg().GetId(), sp.GetId())
+	if effect == nil || err != nil {
+		log.Errorw("failed to verify migrate gvg permission", "gvg_bucket_id", migrateGVG.GetBucketID(),
+			"src_gvg_id", migrateGVG.GetSrcGvg().GetId(), "dest_sp", sp.GetId(), "effect", effect, "error", err)
+		return false, err
+	}
+	if *effect == permissiontypes.EFFECT_ALLOW {
+		return true, nil
+	}
+	return false, nil
+}
+
 // migratePieceHandler handles migrate piece request between SPs which is used in SP exiting case.
 func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err        error
-		reqCtx     *RequestContext
-		migrateMsg []byte
-		pieceKey   string
-		pieceSize  int64
-		pieceData  []byte
+		err             error
+		allowMigrate    bool
+		reqCtx          *RequestContext
+		migratePieceMsg []byte
+		pieceKey        string
+		pieceSize       int64
+		pieceData       []byte
 	)
 	defer func() {
 		reqCtx.Cancel()
@@ -79,8 +124,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	migrateHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
-	migrateMsg, err = hex.DecodeString(migrateHeader)
+	migratePieceHeader := r.Header.Get(GnfdMigratePieceMsgHeader)
+	migratePieceMsg, err = hex.DecodeString(migratePieceHeader)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate piece header", "error", err)
 		err = ErrDecodeMsg
@@ -88,12 +133,23 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	migratePiece := gfsptask.GfSpMigratePieceTask{}
-	err = json.Unmarshal(migrateMsg, &migratePiece)
+	err = json.Unmarshal(migratePieceMsg, &migratePiece)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate piece msg", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
+
+	if allowMigrate, err = g.checkMigratePieceAuth(reqCtx, r.Header.Get(GnfdMigrateGVGMsgHeader)); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check migrate piece auth", "migrate_piece", migratePiece, "error", err)
+		return
+	}
+	if !allowMigrate {
+		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_piece", migratePiece)
+		err = ErrNoPermission
+		return
+	}
+
 	objectInfo := migratePiece.GetObjectInfo()
 	if objectInfo == nil {
 		log.CtxError(reqCtx.Context(), "failed to get migrate piece object info due to has no object info")
@@ -135,7 +191,12 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, _ = w.Write(pieceData)
+	_, err = w.Write(pieceData)
+	if err != nil {
+		err = ErrReplyData
+		log.CtxErrorw(reqCtx.Context(), "failed to reply the migrate data", "error", err)
+		return
+	}
 	log.CtxInfow(reqCtx.Context(), "succeed to migrate one piece", "object_id", objectID, "segment_piece_index",
 		segmentIdx, "redundancy_index", redundancyIdx)
 }

@@ -124,6 +124,10 @@ type Metadata interface {
 	ListPaymentAccountStreams(paymentAccount common.Address) ([]*Bucket, error)
 	// ListGroupsByIDs list groups by ids
 	ListGroupsByIDs(ids []common.Hash) ([]*Group, error)
+	//GetEventMigrationBucketByBucketID get migration bucket event by bucket id
+	GetEventMigrationBucketByBucketID(bucketID common.Hash) (*EventMigrationBucket, error)
+	//GetEventSwapOutByGvgID get swap out event by gvg id
+	GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error)
 }
 
 // BSDB contains all the methods required by block syncer database

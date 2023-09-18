@@ -918,3 +918,25 @@ func (s *GfSpClient) GetSPMigratingBucketNumber(ctx context.Context, spID uint32
 	}
 	return resp.Count, nil
 }
+
+// VerifyMigrateGVGPermission verify the destination sp id of bucket migration & swap out
+func (s *GfSpClient) VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*permission_types.Effect, error) {
+	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if err != nil {
+		return nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
+	}
+	defer conn.Close()
+
+	req := &types.GfSpVerifyMigrateGVGPermissionRequest{
+		BucketId: bucketID,
+		GvgId:    gvgID,
+		DstSpId:  dstSpID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpVerifyMigrateGVGPermission(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send verify migrate GVG permission rpc", "error", err)
+		return nil, ErrRPCUnknownWithDetail("failed to send verify migrate GVG permission rpc, error: " + err.Error())
+	}
+	return &resp.Effect, nil
+}

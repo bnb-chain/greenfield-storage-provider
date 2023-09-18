@@ -233,7 +233,12 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
 
-	// TODO: refine it.
+	// During a resumable upload, the uploader reports each uploaded segment to the manager.
+	// Once all segments are reported as completed, the replication process can begin.
+	if !task.GetCompleted() {
+		return nil
+	}
+
 	startPickGVGTime := time.Now()
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
 	if err != nil {

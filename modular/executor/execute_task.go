@@ -625,8 +625,6 @@ func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretas
 	}
 
 	expectedHash := integrityMeta.PieceChecksumList[task.GetSegmentIdx()]
-	fmt.Println(expectedHash)
-	fmt.Println(recoveryChecksum)
 	if !bytes.Equal(recoveryChecksum, expectedHash) {
 		log.CtxErrorw(ctx, "check integrity hash of recovery data err", "objectName:", task.GetObjectInfo().ObjectName,
 			"expected value", hex.EncodeToString(expectedHash), "actual value", recoveryChecksum, "error", ErrRecoveryPieceChecksum)

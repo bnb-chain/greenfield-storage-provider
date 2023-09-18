@@ -122,8 +122,10 @@ func (m *Module) handlePutPolicy(ctx context.Context, block *tmctypes.ResultBloc
 	res := make(map[string][]interface{})
 	k, v := m.db.SavePermissionToSQL(ctx, p)
 	res[k] = v
-	k, v = m.db.MultiSaveStatementToSQL(ctx, statements)
-	res[k] = v
+	if len(statements) != 0 {
+		k, v = m.db.MultiSaveStatementToSQL(ctx, statements)
+		res[k] = v
+	}
 
 	return res, nil
 }

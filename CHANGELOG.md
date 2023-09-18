@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.2.6-alpha.1
+
+FEATURES
+* [#1109](https://github.com/bnb-chain/greenfield-storage-provider/pull/1109) feat: add migrate piece auth check
+* [#1131](https://github.com/bnb-chain/greenfield-storage-provider/pull/1131) feat: limit creating object and migrating bucket approval
+
+BUGFIX
+* [#1130](https://github.com/bnb-chain/greenfield-storage-provider/pull/1130) fix: defer returning err until all goroutines are done
+* [#1134](https://github.com/bnb-chain/greenfield-storage-provider/pull/1134) fix: readme
+* [#1139](https://github.com/bnb-chain/greenfield-storage-provider/pull/1139) fix: refactoring code for getObject and Universal apis
+* [#1140](https://github.com/bnb-chain/greenfield-storage-provider/pull/1140) fix: add replicate check permission
+* [#1142](https://github.com/bnb-chain/greenfield-storage-provider/pull/1142) fix: resumable queue bug
+* [#1145](https://github.com/bnb-chain/greenfield-storage-provider/pull/1145) fix: policy statement is empty
+* [#1146](https://github.com/bnb-chain/greenfield-storage-provider/pull/1146) fix: fix integrity hash check
+* [#1147](https://github.com/bnb-chain/greenfield-storage-provider/pull/1147) fix: fix uploader server read closed channel
+
+TEST
+* [#1143](https://github.com/bnb-chain/greenfield-storage-provider/pull/1143) test: add blocksyncer ut case
+
 ## v0.2.5
 
 BUGFIX

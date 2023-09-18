@@ -1266,6 +1266,9 @@ func SendAndConfirmTx(chainClient consensus.Consensus, sendTxFunc SendTxFunc) er
 			log.Errorw("failed to send tx", "txHash", txHash, "error", err)
 			continue
 		}
+		if txHash == "" { // No need to confirm due to tx has already on chain
+			return nil
+		}
 		_, err = chainClient.ConfirmTransaction(ctx, txHash)
 		if err != nil {
 			log.Errorw("failed to confirm tx", "txHash", txHash, "error", err)

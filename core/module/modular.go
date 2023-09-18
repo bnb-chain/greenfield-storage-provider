@@ -189,7 +189,6 @@ type Manager interface {
 	// send CreateUploadObject request to Manager ask if it's ok. Through this
 	// interface that SP implements the global upload object strategy.
 	HandleCreateResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
-
 	// HandleDoneResumableUploadObjectTask handles the result of resumable uploading object payload data to primary,
 	// Manager should generate ReplicatePieceTask for TaskExecutor to run.
 	HandleDoneResumableUploadObjectTask(ctx context.Context, task task.ResumableUploadObjectTask) error
@@ -220,6 +219,8 @@ type Manager interface {
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
+	// QueryTasksStats queries tasks stats from Manager server
+	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int)
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -278,8 +279,6 @@ type Signer interface {
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
-	// SignMigratePiece signs the GfSpMigratePieceTask for migrating piece
-	SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
 	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
 	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 	// SignSecondarySPMigrationBucket signs secondary sp bls for bucket migration
@@ -296,6 +295,8 @@ type Signer interface {
 	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
 	// UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to greenfield.
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
+	// SignMigrateGVG signs the GfSpMigrateGVGTask for migrating piece auth.
+	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

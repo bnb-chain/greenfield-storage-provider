@@ -1223,6 +1223,21 @@ func (mr *MockManagerMockRecorder) QueryBucketMigrate(ctx interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockManager)(nil).QueryBucketMigrate), ctx)
 }
 
+// QuerySPByOperatorAddress mocks base method.
+func (m *MockManager) QuerySPByOperatorAddress(ctx context.Context, operatorAddress string) (*types.StorageProvider, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySPByOperatorAddress", ctx, operatorAddress)
+	ret0, _ := ret[0].(*types.StorageProvider)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySPByOperatorAddress indicates an expected call of QuerySPByOperatorAddress.
+func (mr *MockManagerMockRecorder) QuerySPByOperatorAddress(ctx, operatorAddress interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPByOperatorAddress", reflect.TypeOf((*MockManager)(nil).QuerySPByOperatorAddress), ctx, operatorAddress)
+}
+
 // QuerySpExit mocks base method.
 func (m *MockManager) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
 	m.ctrl.T.Helper()
@@ -1251,6 +1266,25 @@ func (m *MockManager) QueryTasks(ctx context.Context, subKey task.TKey) ([]task.
 func (mr *MockManagerMockRecorder) QueryTasks(ctx, subKey interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockManager)(nil).QueryTasks), ctx, subKey)
+}
+
+// QueryTasksStats mocks base method.
+func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryTasksStats", ctx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(int)
+	ret4, _ := ret[4].(int)
+	ret5, _ := ret[5].(int)
+	return ret0, ret1, ret2, ret3, ret4, ret5
+}
+
+// QueryTasksStats indicates an expected call of QueryTasksStats.
+func (mr *MockManagerMockRecorder) QueryTasksStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasksStats", reflect.TypeOf((*MockManager)(nil).QueryTasksStats), ctx)
 }
 
 // ReleaseResource mocks base method.
@@ -1808,6 +1842,21 @@ func (m *MockSigner) SignMigrateBucketApproval(ctx context.Context, bucket *type
 func (mr *MockSignerMockRecorder) SignMigrateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateBucketApproval", reflect.TypeOf((*MockSigner)(nil).SignMigrateBucketApproval), ctx, bucket)
+}
+
+// SignMigrateGVG mocks base method.
+func (m *MockSigner) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignMigrateGVG", ctx, task)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignMigrateGVG indicates an expected call of SignMigrateGVG.
+func (mr *MockSignerMockRecorder) SignMigrateGVG(ctx, task interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateGVG", reflect.TypeOf((*MockSigner)(nil).SignMigrateGVG), ctx, task)
 }
 
 // SignMigratePiece mocks base method.

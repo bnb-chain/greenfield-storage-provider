@@ -174,12 +174,6 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SignerSuccessRecoveryTask).Inc()
 			metrics.ReqTime.WithLabelValues(SignerSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
-	case *gfspserver.GfSpSignRequest_GfspMigratePieceTask:
-		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigratePieceTask.Key().String())
-		signature, err = g.signer.SignMigratePiece(ctx, t.GfspMigratePieceTask)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign migrate piece task", "error", err)
-		}
 	case *gfspserver.GfSpSignRequest_CompleteMigrateBucket:
 		txHash, err = g.signer.CompleteMigrateBucket(ctx, t.CompleteMigrateBucket)
 		if err != nil {
@@ -219,6 +213,12 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		txHash, err = g.signer.UpdateSPPrice(ctx, t.SpStoragePrice)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update sp price", "error", err)
+		}
+	case *gfspserver.GfSpSignRequest_GfspMigrateGvgTask:
+		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigrateGvgTask.Key().String())
+		signature, err = g.signer.SignMigrateGVG(ctx, t.GfspMigrateGvgTask)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to sign migrate gvg task", "error", err)
 		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")

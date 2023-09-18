@@ -2,6 +2,7 @@ package approver
 
 import (
 	"context"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -14,12 +15,24 @@ import (
 )
 
 const (
-	DefaultBlockInterval = 3
-
+	DefaultBlockInterval          = 3
 	DefaultApprovalExpiredTimeout = int64(DefaultBlockInterval * 20)
 )
 
 var _ module.Approver = &ApprovalModular{}
+
+type managerTasksStats struct {
+	uploadTaskCount          uint32
+	replicateTaskCount       uint32
+	sealTaskCount            uint32
+	resumableUploadTaskCount uint32
+	maxUploadingCount        uint32
+	migrateGVGCount          uint32
+}
+
+func (s *managerTasksStats) totalUploadTasks() uint32 {
+	return s.uploadTaskCount + s.replicateTaskCount + s.sealTaskCount + s.resumableUploadTaskCount
+}
 
 type ApprovalModular struct {
 	baseApp     *gfspapp.GfSpBaseApp
@@ -35,6 +48,14 @@ type ApprovalModular struct {
 	// expired height equal to current block height + timeout height
 	bucketApprovalTimeoutHeight uint64
 	objectApprovalTimeoutHeight uint64
+
+	// the maximum number of GVGs migrating to current SP concurrently is allowed
+	migrateGVGLimit int
+
+	statsMutex sync.Mutex
+	tasksStats *managerTasksStats
+
+	spID uint32
 }
 
 func (a *ApprovalModular) Name() string {
@@ -49,6 +70,7 @@ func (a *ApprovalModular) Start(ctx context.Context) error {
 		return err
 	}
 	a.scope = scope
+	a.tasksStats = &managerTasksStats{}
 	go a.eventLoop(ctx)
 	return nil
 }
@@ -76,6 +98,7 @@ func (a *ApprovalModular) ReleaseResource(ctx context.Context, span rcmgr.Resour
 
 func (a *ApprovalModular) eventLoop(ctx context.Context) {
 	getCurrentBlockHeightTicker := time.NewTicker(time.Duration(DefaultBlockInterval) * time.Second)
+	updateManagerTasksStatsTicket := time.NewTicker(time.Duration(DefaultBlockInterval) * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -87,6 +110,20 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 				current = atomic.LoadUint64(&a.currentBlockHeight) + 1
 			}
 			a.SetCurrentBlockHeight(current)
+		case <-updateManagerTasksStatsTicket.C:
+			stats, err := a.baseApp.GfSpClient().GetTasksStats(context.Background())
+			if err == nil {
+				a.statsMutex.Lock()
+				a.tasksStats = &managerTasksStats{
+					stats.GetUploadCount(),
+					stats.GetReplicateCount(),
+					stats.GetSealCount(),
+					stats.GetResumableUploadCount(),
+					stats.GetMaxUploading(),
+					stats.GetMigrateGvgCount(),
+				}
+				a.statsMutex.Unlock()
+			}
 		}
 	}
 }
@@ -110,4 +147,28 @@ func (a *ApprovalModular) GetCurrentBlockHeight() uint64 {
 
 func (a *ApprovalModular) SetCurrentBlockHeight(height uint64) {
 	atomic.StoreUint64(&a.currentBlockHeight, height)
+}
+
+func (a *ApprovalModular) getSPID() (uint32, error) {
+	if a.spID != 0 {
+		return a.spID, nil
+	}
+	spInfo, err := a.baseApp.Consensus().QuerySP(context.Background(), a.baseApp.OperatorAddress())
+	if err != nil {
+		return 0, err
+	}
+	a.spID = spInfo.GetId()
+	return a.spID, nil
+}
+
+func (a *ApprovalModular) exceedCreateObjectLimit() bool {
+	a.statsMutex.Lock()
+	defer a.statsMutex.Unlock()
+	return a.tasksStats.totalUploadTasks() >= a.tasksStats.maxUploadingCount
+}
+
+func (a *ApprovalModular) exceedMigrateGVGLimit() bool {
+	a.statsMutex.Lock()
+	defer a.statsMutex.Unlock()
+	return a.tasksStats.migrateGVGCount >= uint32(a.migrateGVGLimit)
 }

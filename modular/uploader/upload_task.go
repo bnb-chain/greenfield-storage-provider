@@ -131,6 +131,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
 					"object_info", uploadObjectTask.GetObjectInfo(), "actual_integrity", hex.EncodeToString(integrity),
 					"expected_integrity", hex.EncodeToString(uploadObjectTask.GetObjectInfo().GetChecksums()[0]))
+				err = ErrInvalidIntegrity
 				return ErrInvalidIntegrity
 			}
 			integrityMeta := &corespdb.IntegrityMeta{
@@ -221,9 +222,11 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 		}
 		log.CtxDebugw(ctx, "finished to read data from stream", "info", task.Info(),
 			"read_size", readSize, "error", err)
-		if task.GetCompleted() {
-			err = u.baseApp.GfSpClient().ReportTask(ctx, task)
-		}
+		go func() {
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), task)
+			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+		}()
 	}()
 
 	for {
@@ -261,6 +264,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 				if !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
 					log.CtxErrorw(ctx, "invalid integrity hash", "object_info", task.GetObjectInfo(),
 						"actual", hex.EncodeToString(integrityHash), "expected", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
+					err = ErrInvalidIntegrity
 					return ErrInvalidIntegrity
 				}
 				integrityMeta.IntegrityChecksum = integrityHash

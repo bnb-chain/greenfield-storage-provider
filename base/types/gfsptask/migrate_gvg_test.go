@@ -458,6 +458,17 @@ func TestGfSpMigrateGVGTask_SetFinished(t *testing.T) {
 	m.SetFinished(true)
 }
 
+func TestGfSpMigrateGVGTask_GetSignBytes(t *testing.T) {
+	m := &GfSpMigrateGVGTask{
+		Task:     &GfSpTask{},
+		BucketId: 1,
+		SrcGvg:   mockGVG,
+		DestGvg:  mockGVG,
+		SrcSp:    mockSP,
+	}
+	m.GetSignBytes()
+}
+
 func TestGfSpMigratePieceTask_Key(t *testing.T) {
 	m := &GfSpMigratePieceTask{
 		Task:          &GfSpTask{},
@@ -465,13 +476,4 @@ func TestGfSpMigratePieceTask_Key(t *testing.T) {
 		StorageParams: mockStorageParams,
 	}
 	m.Key()
-}
-
-func TestGfSpMigratePieceTask_GetSignBytes(t *testing.T) {
-	m := &GfSpMigratePieceTask{
-		Task:          &GfSpTask{},
-		ObjectInfo:    mockObjectInfo,
-		StorageParams: mockStorageParams,
-	}
-	m.GetSignBytes()
 }
