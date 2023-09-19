@@ -54,9 +54,9 @@ var (
 	ErrReplyData              = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50037, "reply the downloaded data to client failed")
 	ErrTaskMsgExpired         = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50038, "the update time of the task has exceed the expire time")
 	ErrSecondaryMismatch      = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50039, "secondary sp mismatch")
-	ErrPrimaryMismatch        = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50040, "primary sp mismatch")
-	ErrNotCreatedState        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50041, "object has not been created state")
-	ErrNotSealedState         = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50041, "object has not been sealed state")
+	ErrPrimaryMismatch        = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50041, "primary sp mismatch")
+	ErrNotCreatedState        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50042, "object has not been created state")
+	ErrNotSealedState         = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50043, "object has not been sealed state")
 )
 
 func ErrEncodeResponseWithDetail(detail string) *gfsperrors.GfSpError {

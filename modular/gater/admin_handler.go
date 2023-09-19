@@ -634,6 +634,11 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	if chainObjectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_SEALED {
+		err = ErrNotSealedState
+		return
+	}
+
 	redundancyIdx := recoveryTask.EcIdx
 	maxRedundancyIndex := int32(params.GetRedundantParityChunkNum()+params.GetRedundantDataChunkNum()) - 1
 	if redundancyIdx < int32(RecoveryMinEcIndex) || redundancyIdx > maxRedundancyIndex {
@@ -706,7 +711,7 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		sspAddress = append(sspAddress, sp.OperatorAddress)
 	}
 
-	// if myself is secondary, the sender of the request can be both of  the primary SP or the secondary SP of the gvg
+	// if myself is secondary, the sender of the request can be both of the primary SP or the secondary SP of the gvg
 	if primarySp.OperatorAddress != signatureAddr.String() {
 		log.CtxDebug(ctx, "recovery request not come from primary sp", "secondary sp", signatureAddr.String())
 		// judge if the sender is not one of the secondary SP
