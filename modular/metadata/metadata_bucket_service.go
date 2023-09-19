@@ -247,7 +247,7 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 	resp *types.GfSpGetBucketMetaResponse, err error) {
 	var (
 		bucket          *model.Bucket
-		bucketRes       *types.Bucket
+		bucketRes       *types.VGFInfoBucket
 		streamRecord    *model.StreamRecord
 		streamRecordRes *paymenttypes.StreamRecord
 	)
@@ -261,8 +261,14 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 	bucket = &bucketFullMeta.Bucket
 	streamRecord = &bucketFullMeta.StreamRecord
 
+	family, err := r.baseApp.GfBsDB().ListVirtualGroupFamiliesByVgfIDs([]uint32{bucket.GlobalVirtualGroupFamilyID})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list vgf by vgf ids", "error", err)
+		return
+	}
+
 	if bucket != nil {
-		bucketRes = &types.Bucket{
+		bucketRes = &types.VGFInfoBucket{
 			BucketInfo: &storage_types.BucketInfo{
 				Owner:                      bucket.Owner.String(),
 				BucketName:                 bucket.BucketName,
@@ -283,6 +289,12 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			Vgf: &virtual_types.GlobalVirtualGroupFamily{
+				Id:                    family[0].GlobalVirtualGroupFamilyId,
+				PrimarySpId:           family[0].PrimarySpId,
+				GlobalVirtualGroupIds: family[0].GlobalVirtualGroupIds,
+				VirtualPaymentAddress: family[0].VirtualPaymentAddress.String(),
+			},
 		}
 	}
 

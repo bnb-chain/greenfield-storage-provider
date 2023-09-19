@@ -97,12 +97,25 @@ message VGFInfoBucket {
   greenfield.virtualgroup.GlobalVirtualGroupFamily vgf = 10;
 }
 
-// StreamRecordMeta is the structure for user bucket with related vgf info
-message StreamRecordMeta {
-  // stream_records defines stream payment records of a stream account
-  greenfield.payment.StreamRecord stream_record = 1;
+// PaymentAccount is the structure for user payment account info
+message PaymentAccount {
+  // address defines the address of payment account
+  string address = 1;
+  // owner defines the owner of this payment account
+  string owner = 2;
   // refundable defines the payment account is refundable or not
-  bool refundable = 2;
+  bool refundable = 3;
+  // update_at defines the update block height of this payment account
+  int64 update_at = 4;
+  // update_time defines the update time of this payment account
+  int64 update_time = 5;
+}
+
+message PaymentAccountMeta {
+  // payment_account defines payment account info
+  PaymentAccount payment_account = 1;
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 2;
 }
 
 // GfSpGetUserBucketsRequest is request type for the GfSpGetUserBuckets RPC method.
@@ -296,7 +309,7 @@ message GfSpGetBucketMetaRequest {
 // GfSpGetBucketMetaResponse is response type for the GfSpGetBucketMeta RPC method
 message GfSpGetBucketMetaResponse {
   // bucket defines the information of a bucket
-  Bucket bucket = 1;
+  VGFInfoBucket bucket = 1;
   // stream_record defines stream payment record of a stream account
   greenfield.payment.StreamRecord stream_record = 2;
 }
@@ -859,8 +872,8 @@ message GfSpListUserPaymentAccountsRequest {
 
 // GfSpListUserPaymentAccountsResponse is response type for the GfSpListUserPaymentAccounts RPC method
 message GfSpListUserPaymentAccountsResponse {
-  // stream_records defines stream payment records of a stream account
-  repeated StreamRecordMeta stream_records = 1;
+  // payment_accounts defines payment accounts info
+  repeated PaymentAccountMeta payment_accounts = 2;
 }
 
 // GfSpListGroupsByIDsRequest is request type for the GfSpListGroupsByIDs RPC method

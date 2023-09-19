@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.6-alpha.2
+
+BUGFIX
+* [#1151](https://github.com/bnb-chain/greenfield-storage-provider/pull/1151) fix: update new logic of metadata apis
+
 ## v0.2.6-alpha.1
 
 FEATURES

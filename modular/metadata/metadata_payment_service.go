@@ -132,38 +132,44 @@ func (r *MetadataModular) GfSpListPaymentAccountStreams(ctx context.Context, req
 // GfSpListUserPaymentAccounts list payment accounts by owner address
 func (r *MetadataModular) GfSpListUserPaymentAccounts(ctx context.Context, req *types.GfSpListUserPaymentAccountsRequest) (resp *types.GfSpListUserPaymentAccountsResponse, err error) {
 	var (
-		streamRecords []*model.StreamRecordPaymentAccount
-		res           []*types.StreamRecordMeta
+		accounts []*model.StreamRecordPaymentAccount
+		res      []*types.PaymentAccountMeta
 	)
 
 	ctx = log.Context(ctx, req)
 
-	streamRecords, err = r.baseApp.GfBsDB().ListUserPaymentAccounts(common.HexToAddress(req.AccountId))
+	accounts, err = r.baseApp.GfBsDB().ListUserPaymentAccounts(common.HexToAddress(req.AccountId))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list payment accounts by owner address", "error", err)
 		return
 	}
 
-	res = make([]*types.StreamRecordMeta, len(streamRecords))
-	for i, streamRecord := range streamRecords {
-		res[i] = &types.StreamRecordMeta{
+	res = make([]*types.PaymentAccountMeta, len(accounts))
+	for i, account := range accounts {
+		res[i] = &types.PaymentAccountMeta{
 			StreamRecord: &payment_types.StreamRecord{
-				Account:           streamRecord.Account.String(),
-				CrudTimestamp:     streamRecord.CrudTimestamp,
-				NetflowRate:       math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
-				StaticBalance:     math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
-				BufferBalance:     math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
-				LockBalance:       math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
-				Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
-				SettleTimestamp:   streamRecord.SettleTimestamp,
-				OutFlowCount:      streamRecord.OutFlowCount,
-				FrozenNetflowRate: math.NewIntFromBigInt(streamRecord.FrozenNetflowRate.Raw()),
+				Account:           account.Account.String(),
+				CrudTimestamp:     account.CrudTimestamp,
+				NetflowRate:       math.NewIntFromBigInt(account.NetflowRate.Raw()),
+				StaticBalance:     math.NewIntFromBigInt(account.StaticBalance.Raw()),
+				BufferBalance:     math.NewIntFromBigInt(account.BufferBalance.Raw()),
+				LockBalance:       math.NewIntFromBigInt(account.LockBalance.Raw()),
+				Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[account.Status]),
+				SettleTimestamp:   account.SettleTimestamp,
+				OutFlowCount:      account.OutFlowCount,
+				FrozenNetflowRate: math.NewIntFromBigInt(account.FrozenNetflowRate.Raw()),
 			},
-			Refundable: streamRecord.Refundable,
+			PaymentAccount: &types.PaymentAccount{
+				Address:    account.Addr.String(),
+				Owner:      account.Owner.String(),
+				Refundable: account.Refundable,
+				UpdateAt:   account.UpdateAt,
+				UpdateTime: account.UpdateTime,
+			},
 		}
 	}
 
-	resp = &types.GfSpListUserPaymentAccountsResponse{StreamRecords: res}
+	resp = &types.GfSpListUserPaymentAccountsResponse{PaymentAccounts: res}
 	log.CtxInfow(ctx, "succeed to list payment accounts by owner address")
 	return resp, nil
 }
