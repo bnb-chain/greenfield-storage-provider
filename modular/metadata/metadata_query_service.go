@@ -3,6 +3,7 @@ package metadata
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -13,10 +14,8 @@ func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *type
 	*types.GfSpQueryUploadProgressResponse, error) {
 	state, errDescription, err := r.baseApp.GfSpDB().GetUploadState(req.GetObjectId())
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &types.GfSpQueryUploadProgressResponse{
-				Err: ErrNoRecord,
-			}, nil
+		if strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) {
+			return &types.GfSpQueryUploadProgressResponse{Err: ErrNoRecord}, nil
 		}
 		return &types.GfSpQueryUploadProgressResponse{
 			Err: ErrGfSpDBWithDetail("GfSpQueryUploadProgress error:" + err.Error()),

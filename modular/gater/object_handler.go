@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
@@ -680,8 +680,12 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		taskState, errDescription, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+			if !strings.Contains(err.Error(), "no uploading record") {
+				return
+			}
 			taskState = int32(servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED)
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
+			err = nil
 		} else {
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 		}
