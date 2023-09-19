@@ -176,6 +176,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 
 	if err = s3util.CheckValidBucketName(requestBucketName); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to check bucket name", "bucket_name", requestBucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -313,17 +314,20 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
 	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
 	resp, err := g.baseApp.GfSpClient().GetObjectMeta(reqCtx.Context(), reqCtx.objectName, reqCtx.bucketName, true)
 	if err != nil {
 		log.Errorf("failed to get object meta", "error", err)
+
 		return
 	}
 
@@ -369,6 +373,7 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -432,29 +437,34 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
 	if objectName != "" {
 		if err = s3util.CheckValidObjectName(objectName); err != nil {
 			log.Errorw("failed to check object name", "object_name", objectName, "error", err)
+			err = ErrInvalidQuery
 			return
 		}
 	}
 
 	if ok := common.IsHexAddress(operator); !ok {
 		log.Errorw("failed to check operator", "operator", operator, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
 	if actionType == "" {
 		log.Errorw("failed to check action type", "action_type", actionType, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
 	action, err = util.StringToInt32(actionType)
 	if err != nil {
 		log.Errorw("failed to check action type", "action_type", actionType, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -877,6 +887,7 @@ func (g *GateModular) getPaymentByBucketNameHandler(w http.ResponseWriter, r *ht
 
 	if err = s3util.CheckValidBucketName(bucketName); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to check bucket name", "bucket-name", bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -926,6 +937,7 @@ func (g *GateModular) getBucketByBucketNameHandler(w http.ResponseWriter, r *htt
 	bucketName = reqCtx.bucketName
 
 	if err = s3util.CheckValidBucketName(bucketName); err != nil {
+		err = ErrInvalidQuery
 		log.CtxErrorw(reqCtx.Context(), "failed to check bucket name", "bucket-name", bucketName, "error", err)
 		return
 	}
@@ -1040,6 +1052,7 @@ func (g *GateModular) listDeletedObjectsByBlockNumberRangeHandler(w http.Respons
 
 	if ok := common.IsHexAddress(requestSpOperatorAddress); !ok {
 		log.Errorw("failed to check operator", "sp-operator-address", requestSpOperatorAddress, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -1241,6 +1254,7 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 
 	if ok = common.IsHexAddress(requestOperator); !ok {
 		log.Errorw("failed to check operator", "operator", requestOperator, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -2091,6 +2105,7 @@ func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	if ok := common.IsHexAddress(requestOperatorAddress); !ok {
 		log.Errorw("failed to check operator", "operator-address", requestOperatorAddress, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -2419,11 +2434,13 @@ func (g *GateModular) listObjectPoliciesHandler(w http.ResponseWriter, r *http.R
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
 	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -2534,7 +2551,7 @@ func (g *GateModular) listUserPaymentAccountsHandler(w http.ResponseWriter, r *h
 		err           error
 		respBytes     []byte
 		reqCtx        *RequestContext
-		streamRecords []*types.StreamRecordMeta
+		streamRecords []*types.PaymentAccountMeta
 	)
 	startTime := time.Now()
 	defer func() {
@@ -2564,7 +2581,7 @@ func (g *GateModular) listUserPaymentAccountsHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	grpcResponse := &types.GfSpListUserPaymentAccountsResponse{StreamRecords: streamRecords}
+	grpcResponse := &types.GfSpListUserPaymentAccountsResponse{PaymentAccounts: streamRecords}
 
 	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {
@@ -2911,7 +2928,7 @@ func processBucketsWithPaymentResponse(respBytes []byte, buckets []*types.GfSpGe
 // processPaymentResponse process the unhandled Uint id and several balance of payment xml unmarshal
 func processPaymentResponse(respBytes []byte, payments *types.GfSpListUserPaymentAccountsResponse) (respBytesProcessed []byte) {
 	respString := string(respBytes)
-	for _, payment := range payments.StreamRecords {
+	for _, payment := range payments.PaymentAccounts {
 		if payment != nil {
 			// iterate through each payment Uint value
 			respString = strings.Replace(respString, "<NetflowRate></NetflowRate>", "<NetflowRate>"+payment.StreamRecord.NetflowRate.String()+"</NetflowRate>", 1)

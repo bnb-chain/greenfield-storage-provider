@@ -100,7 +100,7 @@ func (b *BsDBImpl) ListUserPaymentAccounts(accountID common.Address) ([]*StreamR
 	}()
 	err = b.db.Table((&PaymentAccount{}).TableName()).
 		Select("*").
-		Joins("INNER JOIN stream_records ON stream_records.account = payment_accounts.addr").
+		Joins("LEFT JOIN stream_records ON stream_records.account = payment_accounts.addr").
 		Where(`payment_accounts.owner = ?`, accountID).
 		Order("stream_records.account").
 		Find(&payments).Error
