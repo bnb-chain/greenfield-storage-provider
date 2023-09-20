@@ -404,7 +404,6 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 		bucketIDsMap map[common.Hash]bool
 		tableNameMap map[common.Hash]string
 		gvgIDs       []uint32
-		query        string
 		err          error
 	)
 	startTime := time.Now()
@@ -443,16 +442,46 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 		tableNameMap[bucket.BucketID] = GetObjectsTableName(bucket.BucketName)
 	}
 
-	query = fmt.Sprintf("select * from ((select * from %s where local_virtual_group_id = %d and bucket_id = %s)", tableNameMap[localGroups[0].BucketID], localGroups[0].LocalVirtualGroupId, localGroups[0].BucketID.String())
-	if len(localGroups) > 1 {
-		for _, group := range localGroups[1:] {
-			subQuery := fmt.Sprintf(" UNION ALL (select * from %s where local_virtual_group_id = %d and bucket_id = %s)", tableNameMap[group.BucketID], group.LocalVirtualGroupId, group.BucketID.String())
-			query = query + subQuery
+	baseQuery := "(select * from %s where local_virtual_group_id = %d and bucket_id = %s)"
+	filterQuery := ") as combined where status = 'OBJECT_STATUS_SEALED' and object_id > %s and removed = false;"
+
+	allObjects := make([]*Object, 0) // All results will be concatenated here
+
+	for i := 0; i < len(localGroups); i += 1000 {
+		end := i + 1000
+		if end > len(localGroups) {
+			end = len(localGroups)
 		}
+		chunk := localGroups[i:end]
+
+		// Start the query with the first group
+		query := fmt.Sprintf(baseQuery, tableNameMap[chunk[0].BucketID], chunk[0].LocalVirtualGroupId, chunk[0].BucketID)
+
+		// Append other groups in this chunk
+		for _, group := range chunk[1:] {
+			subQuery := fmt.Sprintf(" UNION ALL "+baseQuery, tableNameMap[group.BucketID], group.LocalVirtualGroupId, group.BucketID)
+			query += subQuery
+		}
+
+		// Apply the filter
+		query += fmt.Sprintf(filterQuery, startAfter)
+		finalQuery := fmt.Sprintf("select * from( %s", query)
+		err = b.db.Table((&Object{}).TableName()).Raw(finalQuery).Find(&objects).Error
+		if err != nil {
+			// Handle error
+			break
+		}
+
+		// Concatenate this chunk's results to allObjects
+		allObjects = append(allObjects, objects...)
 	}
 
-	query = query + fmt.Sprintf(") as combined where status = 'OBJECT_STATUS_SEALED' and object_id > %s and  removed = false order by object_id limit %d;", startAfter.String(), limit)
-	err = b.db.Table((&Object{}).TableName()).Raw(query).Find(&objects).Error
-
-	return objects, buckets, err
+	// Sort allObjects by object_id
+	sort.Slice(allObjects, func(i, j int) bool {
+		return allObjects[i].ObjectID.Big().Uint64() < allObjects[j].ObjectID.Big().Uint64()
+	})
+	if limit < len(allObjects) {
+		allObjects = allObjects[:limit]
+	}
+	return allObjects, buckets, err
 }
