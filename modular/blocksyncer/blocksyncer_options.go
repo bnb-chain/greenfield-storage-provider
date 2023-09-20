@@ -17,6 +17,7 @@ import (
 	"github.com/forbole/juno/v4/common"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
+	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/node/remote"
@@ -24,6 +25,7 @@ import (
 	parserconfig "github.com/forbole/juno/v4/parser/config"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm/schema"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -165,6 +167,10 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	// Create workers
 	worker := parser.NewWorker(b.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
 	worker.SetIndexer(b.parserCtx.Indexer)
+
+	if b.syncBucketSize() != nil {
+		panic("syncBucketSize failed")
+	}
 
 	latestBlockHeight := mustGetLatestHeight(b.parserCtx)
 	Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(int64(latestBlockHeight))
@@ -504,4 +510,47 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 	}
 
 	return 0
+}
+
+func (b *BlockSyncerModular) syncBucketSize() error {
+	log.Infof("start sync bucket size")
+	type result struct {
+		BucketID common.Hash
+		Size     decimal.Decimal
+	}
+	for i := 0; i < 64; i++ {
+		tableName := "objects_"
+		if i < 10 {
+			tableName += "0"
+		}
+		tableName += fmt.Sprintf("%d", i)
+		var res []*result
+		err := db.Cast(b.parserCtx.Database).Db.Table(tableName).Select("bucket_id, SUM(payload_size) as size").Where("removed = ? and status = ?", false, "OBJECT_STATUS_SEALED").Group("bucket_id").Find(&res).Error
+		if err != nil {
+			log.Errorw("failed to query size ", "error", err)
+			return err
+		}
+		buckets := make([]*models.Bucket, 0, len(res))
+		for _, r := range res {
+			chargeSize := r.Size
+			if r.Size.Cmp(decimal.NewFromInt(128000)) == -1 {
+				chargeSize = decimal.NewFromInt(128000)
+			}
+			buckets = append(buckets, &models.Bucket{
+				BucketID:    r.BucketID,
+				StorageSize: r.Size,
+				ChargeSize:  chargeSize,
+			})
+		}
+		if len(buckets) == 0 {
+			continue
+		}
+		err = db.Cast(b.parserCtx.Database).BatchUpdateBucketSize(context.Background(), buckets)
+		if err != nil {
+			log.Errorw("failed to update size", "error", err)
+			return err
+		}
+	}
+	log.Infof("sync bucket size success")
+	return nil
 }
