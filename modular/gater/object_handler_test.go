@@ -1854,7 +1854,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
-				clientMock.EXPECT().GetEndpointBySpID(gomock.Any(), gomock.Any()).Return("a", nil).Times(1)
+				clientMock.EXPECT().GetEndpointBySpID(gomock.Any(), gomock.Any()).Return("https://another.sp.com", nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -1870,7 +1870,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				req.Header.Set("User-Agent", "Chrome")
 				return req
 			},
-			wantedResult:       "",
+			wantedResult:       "<a href=\"https://another.sp.com/download/mock-bucket-name/mock-object-name\">Found</a>.",
 			wantedHttpRespCode: 302,
 		},
 		{

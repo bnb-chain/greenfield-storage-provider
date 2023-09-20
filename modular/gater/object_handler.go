@@ -813,7 +813,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			return
 		}
 
-		redirectURL = spEndpoint + r.RequestURI
+		redirectURL = spEndpoint + r.URL.RequestURI()
 		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
 		http.Redirect(w, r, redirectURL, 302)
