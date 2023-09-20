@@ -20,6 +20,8 @@ modular reports an error, and in the `10` modular it is the `01` error.
 It sorts in reverse order starting from 99...
 * `99`: is used for GfSp Bass App code.
 * `98`: is used for GfSp Client code.
+* `97`: is used for TaskQueue code.
+* `96`: is used for Middleware code.
 
 ### System External Dependencies Code
 It sorts from 50...
