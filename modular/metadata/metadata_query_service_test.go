@@ -17,7 +17,6 @@ import (
 func TestMetadataModular_GfSpQueryUploadProgress_Success(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	a.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetUploadState(gomock.Any()).DoAndReturn(
@@ -33,7 +32,6 @@ func TestMetadataModular_GfSpQueryUploadProgress_Success(t *testing.T) {
 func TestMetadataModular_GfSpQueryUploadProgress_ErrRecordNotFound(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	a.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetUploadState(gomock.Any()).DoAndReturn(
@@ -49,7 +47,6 @@ func TestMetadataModular_GfSpQueryUploadProgress_ErrRecordNotFound(t *testing.T)
 func TestMetadataModular_GfSpQueryUploadProgress_Err(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	a.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetUploadState(gomock.Any()).DoAndReturn(
@@ -65,7 +62,6 @@ func TestMetadataModular_GfSpQueryUploadProgress_Err(t *testing.T) {
 func TestMetadataModular_GfSpQueryResumableUploadSegment_Success(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	a.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).DoAndReturn(
@@ -90,7 +86,6 @@ func TestMetadataModular_GfSpQueryResumableUploadSegment_Success(t *testing.T) {
 func TestMetadataModular_GfSpQueryResumableUploadSegment_ErrRecordNotFound(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	a.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).DoAndReturn(
@@ -106,7 +101,6 @@ func TestMetadataModular_GfSpQueryResumableUploadSegment_ErrRecordNotFound(t *te
 func TestMetadataModular_GfSpQueryResumableUploadSegment_Err(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	a.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).DoAndReturn(
