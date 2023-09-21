@@ -59,10 +59,6 @@ func (r *MetadataModular) GfSpGetGlobalVirtualGroupByGvgID(ctx context.Context, 
 	}
 
 	if gvg != nil {
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to parse global virtual group ids", "error", err)
-			return nil, err
-		}
 		res = &virtual_types.GlobalVirtualGroup{
 			Id:                    gvg.GlobalVirtualGroupId,
 			FamilyId:              gvg.FamilyId,
