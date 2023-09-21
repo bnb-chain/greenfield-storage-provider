@@ -462,3 +462,18 @@ func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.G
 	log.CtxInfow(ctx, "succeed to list buckets by bucket ids")
 	return resp, nil
 }
+
+// GfSpGetBucketSize get bucket total object size
+func (r *MetadataModular) GfSpGetBucketSize(ctx context.Context, req *types.GfSpGetBucketSizeRequest) (resp *types.GfSpGetBucketSizeResponse, err error) {
+	ctx = log.Context(ctx, req)
+
+	size, err := r.baseApp.GfBsDB().GetBucketSizeByID(req.BucketId)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket total object size", "error", err)
+		return
+	}
+
+	resp = &types.GfSpGetBucketSizeResponse{BucketSize: size.String()}
+	log.CtxInfow(ctx, "succeed to get bucket total object size")
+	return resp, nil
+}

@@ -645,6 +645,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: verifyMigrateGVGPermissionRouterName,
 		},
+		{
+			name:             "Get bucket total object size",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, GetBucketSizeQuery, BucketIDQuery),
+			shouldMatch:      true,
+			wantedRouterName: getBucketSizeRouterName,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

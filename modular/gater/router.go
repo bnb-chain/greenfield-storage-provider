@@ -71,6 +71,7 @@ const (
 	listGroupsByIDsRouterName                      = "ListGroupsByIDs"
 	getSPMigratingBucketNumberRouterName           = "GetSPMigratingBucketNumber"
 	verifyMigrateGVGPermissionRouterName           = "VerifyMigrateGVGPermission"
+	getBucketSizeRouterName                        = "GetBucketSize"
 )
 
 const (
@@ -278,6 +279,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// Verify the destination sp id of bucket migration & swap out
 		router.Path("/").Name(verifyMigrateGVGPermissionRouterName).Methods(http.MethodGet).Queries(VerifyMigrateGVGPermissionQuery, "").HandlerFunc(g.verifyMigrateGVGPermissionHandler)
+
+		// Verify the destination sp id of bucket migration & swap out
+		router.Path("/").Name(getBucketSizeRouterName).Methods(http.MethodGet).Queries(GetBucketSizeQuery, "").HandlerFunc(g.getBucketSizeHandler)
 	}
 
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)

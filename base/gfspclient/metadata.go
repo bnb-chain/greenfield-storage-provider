@@ -940,3 +940,23 @@ func (s *GfSpClient) VerifyMigrateGVGPermission(ctx context.Context, bucketID ui
 	}
 	return &resp.Effect, nil
 }
+
+// GetBucketSize get bucket total object size
+func (s *GfSpClient) GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error) {
+	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if err != nil {
+		return "", ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
+	}
+	defer conn.Close()
+
+	req := &types.GfSpGetBucketSizeRequest{
+		BucketId: bucketID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketSize(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get bucket total object size rpc", "error", err)
+		return "", ErrRPCUnknownWithDetail("failed to send get bucket total object size rpc, error: " + err.Error())
+	}
+	return resp.BucketSize, nil
+}

@@ -903,6 +903,19 @@ message GfSpVerifyMigrateGVGPermissionResponse {
   greenfield.permission.Effect effect = 1;
 }
 
+// GfSpGetBucketSizeRequest is request type for the GfSpGetBucketSize RPC method
+message GfSpGetBucketSizeRequest {
+  // bucket_id is the unique identification for bucket
+  uint64 bucket_id = 1;
+}
+
+// GfSpGetBucketSizeResponse is response type for the GfSpGetBucketSize RPC method
+message GfSpGetBucketSizeResponse {
+  // bucket_size define total objects of specific bucket
+  string bucket_size = 1;
+}
+
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -948,4 +961,5 @@ service GfSpMetadataService {
   rpc GfSpListGroupsByIDs(GfSpListGroupsByIDsRequest) returns (GfSpListGroupsByIDsResponse) {}
   rpc GfSpGetSPMigratingBucketNumber(GfSpGetSPMigratingBucketNumberRequest) returns (GfSpGetSPMigratingBucketNumberResponse) {}
   rpc GfSpVerifyMigrateGVGPermission(GfSpVerifyMigrateGVGPermissionRequest) returns (GfSpVerifyMigrateGVGPermissionResponse) {}
+  rpc GfSpGetBucketSize(GfSpGetBucketSizeRequest) returns (GfSpGetBucketSizeResponse) {}
 }
