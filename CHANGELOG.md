@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.6
+
+TEST
+* [#1157](https://github.com/bnb-chain/greenfield-storage-provider/pull/1157) test: add metadata api UT
+
 ## v0.2.6-alpha.2
 
 BUGFIX
