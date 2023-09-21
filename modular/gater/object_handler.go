@@ -405,6 +405,17 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
@@ -775,10 +786,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
