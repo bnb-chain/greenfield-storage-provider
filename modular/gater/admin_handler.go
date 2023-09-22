@@ -452,7 +452,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = g.checkReplicatePermission(reqCtx.Context(), receiveTask, signatureAddr.String())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to check the replicate permission", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to check the replicate permission", "object name", receiveTask.ObjectInfo.ObjectName, "error", err)
 		return
 	}
 
