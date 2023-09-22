@@ -1117,7 +1117,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "failed to verify authentication for getting public object",
+			wantedResult: "<Error><Code>999999</Code><Message>mock error</Message></Error>",
 		},
 		{
 			name: "new request returns error and unsupported sign type",

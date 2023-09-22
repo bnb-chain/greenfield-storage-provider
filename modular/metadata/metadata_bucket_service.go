@@ -120,7 +120,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 	ctx = log.Context(ctx, req)
 	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
-		return nil, err
+		return nil, ErrInvalidBucketName
 	}
 
 	bucket, err = r.baseApp.GfBsDB().GetBucketByName(req.BucketName, req.IncludePrivate)
@@ -266,6 +266,9 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 	bucketFullMeta, err := r.baseApp.GfBsDB().GetBucketMetaByName(req.GetBucketName(), req.GetIncludePrivate())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket meta by name", "error", err)
+		if systemerrors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchBucket
+		}
 		return
 	}
 	bucket = &bucketFullMeta.Bucket

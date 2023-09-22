@@ -3,12 +3,14 @@ package metadata
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/forbole/juno/v4/common"
+	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -178,12 +180,15 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 	ctx = log.Context(ctx, req)
 	if err = s3util.CheckValidObjectName(req.ObjectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", req.ObjectName, "error", err)
-		return nil, err
+		return nil, ErrInvalidParams
 	}
 
 	object, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object by object name", "error", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchBucket
+		}
 		return nil, err
 	}
 
