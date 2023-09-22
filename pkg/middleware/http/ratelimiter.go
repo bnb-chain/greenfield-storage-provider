@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"net/http"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 
 	slimiter "github.com/ulule/limiter/v3"
 	smemory "github.com/ulule/limiter/v3/drivers/store/memory"
@@ -214,12 +215,12 @@ func MakeLimitErrorResponse(w http.ResponseWriter, err error) {
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
-		log.Errorw("failed to marshal error response", "error", gfspErr.String())
+		log.Errorw("failed to marshal error response", "gfsp_error", gfspErr.String(), "error", err)
 	}
 	w.Header().Set("Content-Type", "application/xml")
 	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
 	if _, err = w.Write(xmlBody); err != nil {
-		log.Errorw("failed to write error response", "error", gfspErr.String())
+		log.Errorw("failed to write error response", "gfsp_error", gfspErr.String(), "error", err)
 	}
 }
 
