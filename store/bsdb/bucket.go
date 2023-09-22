@@ -2,8 +2,9 @@ package bsdb
 
 import (
 	"errors"
-	"github.com/shopspring/decimal"
 	"time"
+
+	"github.com/shopspring/decimal"
 
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
