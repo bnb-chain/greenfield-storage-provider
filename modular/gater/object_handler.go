@@ -422,7 +422,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
 		reqCtx.bucketName, reqCtx.objectName, permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
-		err = ErrConsensusWithDetail("failed to verify authentication for getting public object, error: " + err.Error())
 		return
 	}
 	if *permission == permissiontypes.EFFECT_ALLOW {

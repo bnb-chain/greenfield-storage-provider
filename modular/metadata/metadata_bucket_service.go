@@ -28,6 +28,16 @@ var (
 	ErrNoRecord          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
 	ErrNoSuchSP          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90004, "no such sp")
 	ErrExceedBlockHeight = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90005, "request block height exceed latest height")
+	// ErrInvalidParams defines invalid params
+	ErrInvalidParams = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90006, "invalid params")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90007, "invalid bucket name")
+	// ErrNoSuchBucket defines not existed bucket error
+	ErrNoSuchBucket = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90008, "the specified bucket does not exist")
+	// ErrNoSuchGroup defines not existed group error
+	ErrNoSuchGroup = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90009, "the specified group does not exist")
+	// ErrNoSuchObject defines not existed object error
+	ErrNoSuchObject = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90010, "the specified object does not exist")
 )
 
 var _ types.GfSpMetadataServiceServer = &MetadataModular{}

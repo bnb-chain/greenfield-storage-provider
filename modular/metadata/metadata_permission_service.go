@@ -23,19 +23,6 @@ import (
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
-var (
-	// ErrInvalidParams defines invalid params
-	ErrInvalidParams = errors.New("invalid params")
-	// ErrInvalidBucketName defines invalid bucket name
-	ErrInvalidBucketName = errors.New("invalid bucket name")
-	// ErrNoSuchBucket defines not existed bucket error
-	ErrNoSuchBucket = errors.New("the specified bucket does not exist")
-	// ErrNoSuchGroup defines not existed group error
-	ErrNoSuchGroup = errors.New("the specified group does not exist")
-	// ErrNoSuchObject defines not existed object error
-	ErrNoSuchObject = errors.New("the specified key does not exist")
-)
-
 // GfSpVerifyPermission Verify the input account’s permission to input items
 func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storagetypes.QueryVerifyPermissionRequest) (resp *storagetypes.QueryVerifyPermissionResponse, err error) {
 	var (
@@ -55,7 +42,7 @@ func (r *MetadataModular) GfSpVerifyPermission(ctx context.Context, req *storage
 	operator, err = sdk.AccAddressFromHexUnsafe(req.Operator)
 	if err != nil && err != sdk.ErrEmptyHexAddress {
 		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "req.Operator", operator.String(), "error", err)
-		return nil, err
+		return nil, ErrInvalidParams
 	}
 
 	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
@@ -249,7 +236,7 @@ func (r *MetadataModular) VerifyBucketPermission(ctx context.Context, bucketInfo
 	owner, err = sdk.AccAddressFromHexUnsafe(bucketInfo.Owner.String())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to creates an AccAddress from a HEX-encoded string", "bucketInfo.Owner.String()", bucketInfo.Owner.String(), "error", err)
-		return permtypes.EFFECT_DENY, err
+		return permtypes.EFFECT_DENY, ErrInvalidParams
 	}
 
 	// the owner has full permissions
