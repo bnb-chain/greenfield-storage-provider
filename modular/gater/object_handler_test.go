@@ -8,6 +8,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+
 	sdkmath "cosmossdk.io/math"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -1698,15 +1704,22 @@ func mockGetObjectByUniversalEndpointHandlerRoute(t *testing.T, g *GateModular) 
 		HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
 	router.Path("/download").Name(downloadObjectByUniversalEndpointName).Methods(http.MethodGet).
 		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.downloadObjectByUniversalEndpointHandler)
+
+	router.Path("/view/{bucket:[^/]*}/{object:.+}").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
+		HandlerFunc(g.viewObjectByUniversalEndpointHandler)
+	router.Path("/view").Name(viewObjectByUniversalEndpointName).Methods(http.MethodGet).
+		Queries(UniversalEndpointSpecialSuffixQuery, "{bucket:[^/]*}/{object:.+}").HandlerFunc(g.viewObjectByUniversalEndpointHandler)
 	return router
 }
 
 func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 	cases := []struct {
-		name         string
-		fn           func() *GateModular
-		request      func() *http.Request
-		wantedResult string
+		name                 string
+		fn                   func() *GateModular
+		request              func() *http.Request
+		wantedResult         string
+		wantedHttpRespCode   int
+		wantedResponseHeader map[string]string
 	}{
 		{
 			name: "failed to check bucket name",
@@ -1720,10 +1733,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, "mo", mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
@@ -1740,10 +1750,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, "")
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
@@ -1761,10 +1768,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
@@ -1787,10 +1791,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
@@ -1814,10 +1815,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
@@ -1843,10 +1841,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
@@ -1859,7 +1854,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
-				clientMock.EXPECT().GetEndpointBySpID(gomock.Any(), gomock.Any()).Return("a", nil).Times(1)
+				clientMock.EXPECT().GetEndpointBySpID(gomock.Any(), gomock.Any()).Return("https://another.sp.com", nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -1872,13 +1867,11 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "",
+			wantedResult:       "<a href=\"https://another.sp.com/download/mock-bucket-name/mock-object-name\">Found</a>.",
+			wantedHttpRespCode: 302,
 		},
 		{
 			name: "failed to check object meta",
@@ -1902,10 +1895,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
@@ -1933,13 +1923,691 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set("User-Agent", "Chrome")
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
 			wantedResult: "",
+		},
+
+		{
+			name: "download public object",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PUBLIC_READ}},
+					nil).Times(1)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // public file, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{
+						Id:          sdkmath.NewUint(1),
+						PayloadSize: 10,
+					}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					Id: sdkmath.NewUint(2)}, nil).Times(1)
+				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "",
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: ContentDispositionAttachmentValue + "; filename=\"" + mockObjectName + "\"",
+			},
+		},
+		{
+			name: "view public object",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PUBLIC_READ}},
+					nil).Times(1)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // public file, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{
+						Id:          sdkmath.NewUint(1),
+						PayloadSize: 10,
+					}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					Id: sdkmath.NewUint(2)}, nil).Times(1)
+				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "",
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: ContentDispositionInlineValue,
+			},
+		},
+		{
+			name: "view private object",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // public file, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "<!doctype html>",
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+			},
+		},
+
+		{
+			name: "view private object with expired ExpiryDateParam",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(-time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				queryParams.Add("signature", "sample_signature")
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "INTERNAL_ERROR", // INTERNAL_ERROR as there is ErrInvalidExpiryDateParam
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+			},
+		},
+
+		{
+			name: "view private object with bad ExpiryDateParam",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(-time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr+"_bad_format")
+				queryParams.Add("signature", "sample_signature")
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "INTERNAL_ERROR", // INTERNAL_ERROR as there is bad signature
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+			},
+		},
+
+		{
+			name: "view private object with bad signature",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(+time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				queryParams.Add("signature", "bad_signature")
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "INTERNAL_ERROR", // INTERNAL_ERROR as there is ErrInvalidExpiryDateParam
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+			},
+		},
+
+		{
+			name: "view private object with good signature but get error when verify permission",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{BucketName: mockBucketName}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName, ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, mockErr).Times(1)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(+time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+
+				// prepare sig
+				// create a test account information.
+				privateKey, _ := crypto.GenerateKey()
+				address := crypto.PubkeyToAddress(privateKey.PublicKey)
+				log.Infof("address is: " + address.Hex())
+				signedMsg := fmt.Sprintf(GnfdBuiltInDappSignedContentTemplate, "gnfd://"+mockBucketName+"/"+mockObjectName, validExpiryDateStr)
+				unSignedContentHash := accounts.TextHash([]byte(signedMsg)) // personal sign.
+				// sign data.
+				sig, _ := crypto.Sign(unSignedContentHash, privateKey)
+
+				queryParams.Add("signature", hexutil.Encode(sig))
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "NO_PERMISSION", // NO_PERMISSION as there is error occurs when verifying permission
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+			},
+		},
+
+		{
+			name: "view private object with good signature but no permission",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{BucketName: mockBucketName}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName, ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(+time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+
+				// prepare sig
+				// create a test account information.
+				privateKey, _ := crypto.GenerateKey()
+				address := crypto.PubkeyToAddress(privateKey.PublicKey)
+				log.Infof("address is: " + address.Hex())
+				signedMsg := fmt.Sprintf(GnfdBuiltInDappSignedContentTemplate, "gnfd://"+mockBucketName+"/"+mockObjectName, validExpiryDateStr)
+				unSignedContentHash := accounts.TextHash([]byte(signedMsg)) // personal sign.
+				// sign data.
+				sig, _ := crypto.Sign(unSignedContentHash, privateKey)
+
+				queryParams.Add("signature", hexutil.Encode(sig))
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "NO_PERMISSION", // NO_PERMISSION as there is error occurs when verifying permission
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+			},
+		},
+
+		{
+			name: "view private object with bad object name",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				var a = permissiontypes.EFFECT_ALLOW
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, "bad/./object.name")
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(-time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				queryParams.Add("signature", "sample_signature")
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "INTERNAL_ERROR", // INTERNAL_ERROR as there is ErrInvalidExpiryDateParam
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+			},
+		},
+		{
+			name: "redirect for pdf/xml suffix objects",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, "test.pdf")
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				log.Info("req.RequestURI is " + req.RequestURI)
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult:       "<a href=\"/download?objectPath=mock-bucket-name/test.pdf\">Found</a>.",
+			wantedHttpRespCode: 302,
+		},
+
+		{
+			name: "download for pdf/xml suffix objects",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view?objectPath=%s/%s", scheme, testDomain, mockBucketName, "test.xml")
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				log.Info("req.RequestURI is " + req.RequestURI)
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult:       "<!doctype html>",
+			wantedHttpRespCode: 200,
+		},
+
+		{
+			name: "download from non-browser",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/view?objectPath=%s/%s", scheme, testDomain, mockBucketName, "test.xml")
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				log.Info("req.RequestURI is " + req.RequestURI)
+				return req
+			},
+			wantedResult:       "Forbidden to access",
+			wantedHttpRespCode: 403,
+		},
+
+		{
+			name: "view private object with good signature and correct permission",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{BucketName: mockBucketName}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName, ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{
+						Id:          sdkmath.NewUint(1),
+						PayloadSize: 10,
+					}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					Id: sdkmath.NewUint(2)}, nil).Times(1)
+				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(+time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+
+				// prepare sig
+				// create a test account information.
+				privateKey, _ := crypto.GenerateKey()
+				address := crypto.PubkeyToAddress(privateKey.PublicKey)
+				log.Infof("address is: " + address.Hex())
+				signedMsg := fmt.Sprintf(GnfdBuiltInDappSignedContentTemplate, "gnfd://"+mockBucketName+"/"+mockObjectName, validExpiryDateStr)
+				unSignedContentHash := accounts.TextHash([]byte(signedMsg)) // personal sign.
+				// sign data.
+				sig, _ := crypto.Sign(unSignedContentHash, privateKey)
+
+				queryParams.Add("signature", hexutil.Encode(sig))
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "",
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: ContentDispositionInlineValue,
+			},
+		},
+
+		{
+			name: "view private object with but no enough quota",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Bucket{BucketInfo: &storagetypes.BucketInfo{BucketName: mockBucketName}}, nil).Times(1)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName, ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
+					nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+
+				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return(nil, downloader.ErrExceedBucketQuota).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
+					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{
+						Id:          sdkmath.NewUint(1),
+						PayloadSize: 10,
+					}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					Id: sdkmath.NewUint(2)}, nil).Times(1)
+				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+
+				return g
+			},
+			request: func() *http.Request {
+
+				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set("User-Agent", "Chrome")
+				validExpiryDateStr := time.Now().Add(+time.Hour * 60).Format(ExpiryDateFormat)
+				queryParams := req.URL.Query()
+				queryParams.Add(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+
+				// prepare sig
+				// create a test account information.
+				privateKey, _ := crypto.GenerateKey()
+				address := crypto.PubkeyToAddress(privateKey.PublicKey)
+				log.Infof("address is: " + address.Hex())
+				signedMsg := fmt.Sprintf(GnfdBuiltInDappSignedContentTemplate, "gnfd://"+mockBucketName+"/"+mockObjectName, validExpiryDateStr)
+				unSignedContentHash := accounts.TextHash([]byte(signedMsg)) // personal sign.
+				// sign data.
+				sig, _ := crypto.Sign(unSignedContentHash, privateKey)
+
+				queryParams.Add("signature", hexutil.Encode(sig))
+				req.URL.RawQuery = queryParams.Encode()
+				req.Header.Set("User-Agent", "Chrome")
+				return req
+			},
+			wantedResult: "NO_ENOUGH_QUOTA",
+			wantedResponseHeader: map[string]string{
+				ContentDispositionHeader: "",
+				ContentLengthHeader:      "",
+				ContentRangeHeader:       "",
+			},
 		},
 	}
 	for _, tt := range cases {
@@ -1948,6 +2616,15 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, tt.request())
 			assert.Contains(t, w.Body.String(), tt.wantedResult)
+			if tt.wantedResponseHeader != nil {
+				log.Info("tt.wantedResponseHeader is not nil")
+				for k, v := range tt.wantedResponseHeader {
+					assert.Equal(t, v, w.Header().Get(k))
+				}
+			}
+			if tt.wantedHttpRespCode != 0 {
+				assert.Equal(t, tt.wantedHttpRespCode, w.Code)
+			}
 		})
 	}
 }
