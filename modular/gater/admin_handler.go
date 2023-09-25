@@ -65,10 +65,10 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
+	// if err != nil {
+	// 	return
+	// }
 
 	approvalType := reqCtx.vars["action"]
 	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))

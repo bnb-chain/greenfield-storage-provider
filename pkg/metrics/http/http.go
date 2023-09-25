@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"net/http"
 	"strconv"
 )
@@ -11,19 +12,27 @@ type responseWriterDelegator struct {
 	written    bool
 	size       int
 	statusCode int
+	body       bytes.Buffer
 }
 
 func (wd *responseWriterDelegator) Header() http.Header {
 	return wd.w.Header()
 }
 
-func (wd *responseWriterDelegator) Write(bytes []byte) (int, error) {
+func (wd *responseWriterDelegator) Write(b []byte) (int, error) {
 	if wd.statusCode == 0 {
 		wd.statusCode = http.StatusOK
 	}
-	n, err := wd.w.Write(bytes)
+	// write response body to customized body
+	wd.body.Write(b)
+	// write response body to http.ResponseWriter
+	n, err := wd.w.Write(b)
 	wd.size += n
 	return n, err
+}
+
+func (wd *responseWriterDelegator) GetBody() []byte {
+	return wd.body.Bytes()
 }
 
 func (wd *responseWriterDelegator) WriteHeader(statusCode int) {

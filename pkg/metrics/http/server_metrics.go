@@ -1,12 +1,17 @@
 package http
 
 import (
+	"encoding/xml"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
+
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // ServerMetrics represents a collection of metrics to be registered on a
@@ -29,7 +34,7 @@ func NewServerMetrics(opts ...ServerMetricsOption) *ServerMetrics {
 			config.counterOpts.apply(prometheus.CounterOpts{
 				Name: "http_server_received_total_requests",
 				Help: "Tracks the total number of HTTP requests.",
-			}), []string{"handler_name", "method", "code"}),
+			}), []string{"handler_name", "method", "code", "error_code"}),
 		serverReqInflightGauge: prometheus.NewGaugeVec(
 			config.gaugeOpts.apply(prometheus.GaugeOpts{
 				Name: "http_server_inflight_requests",
@@ -39,18 +44,18 @@ func NewServerMetrics(opts ...ServerMetricsOption) *ServerMetrics {
 			config.summaryOpts.apply(prometheus.SummaryOpts{
 				Name: "http_request_size_bytes",
 				Help: "Tracks the size of HTTP requests.",
-			}), []string{"handler_name", "method", "code"}),
+			}), []string{"handler_name", "method", "code", "error_code"}),
 		serverRespSizeSummary: prometheus.NewSummaryVec(
 			config.summaryOpts.apply(prometheus.SummaryOpts{
 				Name: "http_response_size_bytes",
 				Help: "Tracks the size of HTTP responses.",
-			}), []string{"handler_name", "method", "code"}),
+			}), []string{"handler_name", "method", "code", "error_code"}),
 		serverReqDuration: prometheus.NewHistogramVec(
 			config.histogramOpts.apply(prometheus.HistogramOpts{
 				Name:    "http_request_duration_seconds",
 				Help:    "Tracks the latencies for HTTP requests.",
 				Buckets: prometheus.DefBuckets,
-			}), []string{"handler_name", "method", "code"}),
+			}), []string{"handler_name", "method", "code", "error_code"}),
 	}
 }
 
@@ -122,13 +127,32 @@ func (m *ServerMetrics) InstrumentationHandler(next http.Handler) http.Handler {
 		code := wd.Status()
 		handlerName := mux.CurrentRoute(r).GetName()
 
-		m.serverReqTotalCounter.WithLabelValues(handlerName, method, code).Inc()
+		var (
+			errorResp = &modelgateway.ErrorResponse{}
+			errorCode string
+		)
+		if code != strconv.Itoa(http.StatusOK) {
+			body := wd.GetBody()
+			err := xml.Unmarshal(body, errorResp)
+			if err != nil {
+				log.Infow("cannot parse gateway error response", "error", err)
+				errorCode = "-1" // unknown error code
+				goto METRICS
+			}
+			errorCode = strconv.Itoa(int(errorResp.Code))
+			log.Infow("print error response", "error code", errorCode, "error resp", errorResp)
+		} else {
+			errorCode = "0" // no error
+		}
+
+	METRICS:
+		m.serverReqTotalCounter.WithLabelValues(handlerName, method, code, errorCode).Inc()
 		gauge := m.serverReqInflightGauge.WithLabelValues(handlerName, method)
 		gauge.Inc()
 		defer gauge.Dec()
-		m.serverReqSizeSummary.WithLabelValues(handlerName, method, code).Observe(float64(computeApproximateRequestSize(r)))
-		m.serverRespSizeSummary.WithLabelValues(handlerName, method, code).Observe(float64(wd.size))
-		observer := m.serverReqDuration.WithLabelValues(handlerName, method, code)
+		m.serverReqSizeSummary.WithLabelValues(handlerName, method, code, errorCode).Observe(float64(computeApproximateRequestSize(r)))
+		m.serverRespSizeSummary.WithLabelValues(handlerName, method, code, errorCode).Observe(float64(wd.size))
+		observer := m.serverReqDuration.WithLabelValues(handlerName, method, code, errorCode)
 		observer.Observe(time.Since(now).Seconds())
 
 		var traceID string
