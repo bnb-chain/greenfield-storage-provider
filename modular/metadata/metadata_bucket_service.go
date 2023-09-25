@@ -2,7 +2,7 @@ package metadata
 
 import (
 	"context"
-	systemerrors "errors"
+	"errors"
 	"net/http"
 	"sync/atomic"
 
@@ -36,9 +36,7 @@ func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(coremodule.MetadataModularName, http.StatusInternalServerError, 95202, detail)
 }
 
-func (r *MetadataModular) GfSpGetUserBuckets(
-	ctx context.Context,
-	req *types.GfSpGetUserBucketsRequest) (
+func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfSpGetUserBucketsRequest) (
 	resp *types.GfSpGetUserBucketsResponse, err error) {
 	ctx = log.Context(ctx, req)
 	buckets, err := r.baseApp.GfBsDB().GetUserBuckets(common.HexToAddress(req.AccountId), req.GetIncludeRemoved())
@@ -149,7 +147,8 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 }
 
 // GfSpGetBucketByBucketID get buckets info by by a bucket id
-func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *types.GfSpGetBucketByBucketIDRequest) (resp *types.GfSpGetBucketByBucketIDResponse, err error) {
+func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *types.GfSpGetBucketByBucketIDRequest) (
+	resp *types.GfSpGetBucketByBucketIDResponse, err error) {
 	var (
 		bucket *model.Bucket
 		res    *types.Bucket
@@ -192,7 +191,8 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 }
 
 // GfSpGetUserBucketsCount get buckets count by a user address
-func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (resp *types.GfSpGetUserBucketsCountResponse, err error) {
+func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (
+	resp *types.GfSpGetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	count, err := r.baseApp.GfBsDB().GetUserBucketsCount(common.HexToAddress(req.AccountId), req.GetIncludeRemoved())
@@ -207,7 +207,8 @@ func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *type
 }
 
 // GfSpListExpiredBucketsBySp list expired bucket by sp
-func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *types.GfSpListExpiredBucketsBySpRequest) (resp *types.GfSpListExpiredBucketsBySpResponse, err error) {
+func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *types.GfSpListExpiredBucketsBySpRequest) (
+	resp *types.GfSpListExpiredBucketsBySpResponse, err error) {
 	ctx = log.Context(ctx, req)
 	buckets, err := r.baseApp.GfBsDB().ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpId(), req.GetLimit())
 	if err != nil {
@@ -241,9 +242,7 @@ func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *t
 }
 
 // GfSpGetBucketMeta get bucket metadata
-func (r *MetadataModular) GfSpGetBucketMeta(
-	ctx context.Context,
-	req *types.GfSpGetBucketMetaRequest) (
+func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSpGetBucketMetaRequest) (
 	resp *types.GfSpGetBucketMetaResponse, err error) {
 	var (
 		bucket          *model.Bucket
@@ -334,7 +333,7 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		req.GetBucketInfo().Id.Uint64(), req.YearMonth)
 	if err != nil {
 		// if the traffic table has not been created and initialized yet, return the chain info
-		if systemerrors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
 			var freeQuotaSize uint64
 			freeQuotaSize, err = r.baseApp.Consensus().QuerySPFreeQuota(ctx, r.baseApp.OperatorAddress())
 			if err != nil {
@@ -387,7 +386,7 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 			EndTimestampUs:   req.EndTimestampUs,
 			LimitNum:         int(req.MaxRecordNum),
 		})
-	if systemerrors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &types.GfSpListBucketReadRecordResponse{
 			NextStartTimestampUs: 0,
 		}, nil
@@ -422,7 +421,8 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 }
 
 // GfSpListBucketsByIDs list buckets by bucket ids
-func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.GfSpListBucketsByIDsRequest) (resp *types.GfSpListBucketsByIDsResponse, err error) {
+func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.GfSpListBucketsByIDsRequest) (
+	resp *types.GfSpListBucketsByIDsResponse, err error) {
 	var (
 		buckets    []*model.Bucket
 		ids        []common.Hash
