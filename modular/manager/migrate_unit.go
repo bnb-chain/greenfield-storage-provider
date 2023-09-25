@@ -22,6 +22,7 @@ type BasicGVGMigrateExecuteUnit struct {
 	DestSP               *sptypes.StorageProvider // self sp.
 	MigrateStatus        MigrateStatus
 	LastMigratedObjectID uint64
+	RetryTime            int
 }
 
 // SPExitGVGExecuteUnit is used to record sp exit gvg unit.

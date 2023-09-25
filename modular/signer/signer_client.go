@@ -711,7 +711,7 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
-		log.CtxDebugw(ctx, "succeed to broadcast start sp exit tx", "tx_hash", txHash, "seal_msg", msgSPExit)
+		log.CtxDebugw(ctx, "succeed to broadcast start sp exit tx", "tx_hash", txHash, "exit_msg", msgSPExit)
 		return txHash, nil
 	}
 
@@ -768,12 +768,65 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
-		log.CtxDebugw(ctx, "succeed to broadcast complete sp exit tx", "tx_hash", txHash, "seal_msg", msgCompleteSPExit)
+		log.CtxDebugw(ctx, "succeed to broadcast complete sp exit tx", "tx_hash", txHash, "complete_sp_exit_msg", msgCompleteSPExit)
 		return txHash, nil
 	}
 
 	ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to broadcast complete sp exit, error: %v", err))
 	return "", ErrCompleteSPExitOnChain
+}
+
+func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context, scope SignType,
+	msg *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	log.Infow("signer starts to reject migrate bucket", "scope", scope)
+	if msg == nil {
+		log.CtxError(ctx, "reject migrate bucket msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msgRejectMigrateBucket := storagetypes.NewMsgRejectMigrateBucket(km.GetAddr(), msg.GetBucketName())
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgRejectMigrateBucket}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrRejectMigrateBucketOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast reject migrate bucket tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast complete migrate bucket tx", "tx_hash", txHash, "reject_migrate_bucket_msg", msgRejectMigrateBucket)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast reject migrate bucket, error: %v", err))
+	return "", ErrRejectMigrateBucketOnChain
 }
 
 func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.GreenfieldClient) (uint64, error) {
