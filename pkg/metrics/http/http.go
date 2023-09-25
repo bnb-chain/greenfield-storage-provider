@@ -2,8 +2,12 @@ package http
 
 import (
 	"bytes"
+	"encoding/xml"
 	"net/http"
 	"strconv"
+
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // responseWriterDelegator implements http.ResponseWriter and extracts the statusCode.
@@ -23,8 +27,10 @@ func (wd *responseWriterDelegator) Write(b []byte) (int, error) {
 	if wd.statusCode == 0 {
 		wd.statusCode = http.StatusOK
 	}
-	// write response body to customized body
-	wd.body.Write(b)
+	if wd.statusCode != http.StatusOK {
+		// write response body to customized body which used for metrics
+		wd.body.Write(b)
+	}
 	// write response body to http.ResponseWriter
 	n, err := wd.w.Write(b)
 	wd.size += n
@@ -50,6 +56,27 @@ func (wd *responseWriterDelegator) StatusCode() int {
 
 func (wd *responseWriterDelegator) Status() string {
 	return strconv.Itoa(wd.StatusCode())
+}
+
+func (wd *responseWriterDelegator) GetSPErrorCode() string {
+	// get error response code if exists
+	var (
+		errorResp = &modelgateway.ErrorResponse{}
+		errorCode string
+	)
+	if wd.statusCode == http.StatusOK {
+		errorCode = "0" // no error
+	} else {
+		body := wd.GetBody()
+		err := xml.Unmarshal(body, errorResp)
+		if err != nil {
+			log.Errorw("cannot parse gateway error response", "error", err)
+			errorCode = "-1" // unknown error code
+			return errorCode
+		}
+		errorCode = strconv.Itoa(int(errorResp.Code))
+	}
+	return errorCode
 }
 
 // computeApproximateRequestSize compute HTTP request size
