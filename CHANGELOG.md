@@ -1,5 +1,19 @@
 # Changelog
 
+
+## v0.2.6-hf.1
+
+BUGFIX
+* [#1166](https://github.com/bnb-chain/greenfield-storage-provider/pull/1166) fix: delete group fix job
+* [#1160](https://github.com/bnb-chain/greenfield-storage-provider/pull/1160) fix: fix replication failed SP err recording issue
+* [#1159](https://github.com/bnb-chain/greenfield-storage-provider/pull/1159) fix: list objects by gvg sql bug
+* [#1165](https://github.com/bnb-chain/greenfield-storage-provider/pull/1165) fix: verify permission 500 code and update UT
+* [#1155](https://github.com/bnb-chain/greenfield-storage-provider/pull/1155) fix: fix manager duplicate entry when inserting upload progress
+* [#1158](https://github.com/bnb-chain/greenfield-storage-provider/pull/1158) fix: add xml response for rate limit error
+* [#1156](https://github.com/bnb-chain/greenfield-storage-provider/pull/1156) fix: recovery object status should be sealed
+* [#1154](https://github.com/bnb-chain/greenfield-storage-provider/pull/1154) fix: add ut for universal endpoint
+
+
 ## v0.2.6
 
 TEST
