@@ -405,13 +405,23 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
 	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
 		reqCtx.bucketName, reqCtx.objectName, permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
-		err = ErrConsensusWithDetail("failed to verify authentication for getting public object, error: " + err.Error())
 		return
 	}
 	if *permission == permissiontypes.EFFECT_ALLOW {
@@ -779,10 +789,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 

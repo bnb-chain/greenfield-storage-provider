@@ -28,6 +28,16 @@ var (
 	ErrNoRecord          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
 	ErrNoSuchSP          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90004, "no such sp")
 	ErrExceedBlockHeight = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90005, "request block height exceed latest height")
+	// ErrInvalidParams defines invalid params
+	ErrInvalidParams = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90006, "invalid params")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90007, "invalid bucket name")
+	// ErrNoSuchBucket defines not existed bucket error
+	ErrNoSuchBucket = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90008, "the specified bucket does not exist")
+	// ErrNoSuchGroup defines not existed group error
+	ErrNoSuchGroup = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90009, "the specified group does not exist")
+	// ErrNoSuchObject defines not existed object error
+	ErrNoSuchObject = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90010, "the specified object does not exist")
 )
 
 var _ types.GfSpMetadataServiceServer = &MetadataModular{}
@@ -108,7 +118,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 	ctx = log.Context(ctx, req)
 	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
-		return nil, err
+		return nil, ErrInvalidBucketName
 	}
 
 	bucket, err = r.baseApp.GfBsDB().GetBucketByName(req.BucketName, req.IncludePrivate)
@@ -255,6 +265,9 @@ func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSp
 	bucketFullMeta, err := r.baseApp.GfBsDB().GetBucketMetaByName(req.GetBucketName(), req.GetIncludePrivate())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket meta by name", "error", err)
+		if systemerrors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchBucket
+		}
 		return
 	}
 	bucket = &bucketFullMeta.Bucket
