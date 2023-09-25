@@ -25,7 +25,7 @@ var (
 var _ gfspserver.GfSpManageServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeginTaskRequest) (*gfspserver.GfSpBeginTaskResponse, error) {
-	if req.GetRequest() == nil {
+	if req == nil || req.GetRequest() == nil {
 		log.Error("failed to begin task due to pointer dangling")
 		return &gfspserver.GfSpBeginTaskResponse{Err: ErrUploadTaskDangling}, nil
 	}

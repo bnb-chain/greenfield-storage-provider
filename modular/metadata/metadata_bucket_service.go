@@ -2,7 +2,7 @@ package metadata
 
 import (
 	"context"
-	systemerrors "errors"
+	"errors"
 	"net/http"
 	"sync/atomic"
 
@@ -28,6 +28,16 @@ var (
 	ErrNoRecord          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90003, "no uploading record")
 	ErrNoSuchSP          = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90004, "no such sp")
 	ErrExceedBlockHeight = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90005, "request block height exceed latest height")
+	// ErrInvalidParams defines invalid params
+	ErrInvalidParams = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90006, "invalid params")
+	// ErrInvalidBucketName defines invalid bucket name
+	ErrInvalidBucketName = gfsperrors.Register(coremodule.MetadataModularName, http.StatusBadRequest, 90007, "invalid bucket name")
+	// ErrNoSuchBucket defines not existed bucket error
+	ErrNoSuchBucket = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90008, "the specified bucket does not exist")
+	// ErrNoSuchGroup defines not existed group error
+	ErrNoSuchGroup = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90009, "the specified group does not exist")
+	// ErrNoSuchObject defines not existed object error
+	ErrNoSuchObject = gfsperrors.Register(coremodule.MetadataModularName, http.StatusNotFound, 90010, "the specified object does not exist")
 )
 
 var _ types.GfSpMetadataServiceServer = &MetadataModular{}
@@ -36,9 +46,7 @@ func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(coremodule.MetadataModularName, http.StatusInternalServerError, 95202, detail)
 }
 
-func (r *MetadataModular) GfSpGetUserBuckets(
-	ctx context.Context,
-	req *types.GfSpGetUserBucketsRequest) (
+func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfSpGetUserBucketsRequest) (
 	resp *types.GfSpGetUserBucketsResponse, err error) {
 	ctx = log.Context(ctx, req)
 	buckets, err := r.baseApp.GfBsDB().GetUserBuckets(common.HexToAddress(req.AccountId), req.GetIncludeRemoved())
@@ -110,7 +118,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 	ctx = log.Context(ctx, req)
 	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
-		return nil, err
+		return nil, ErrInvalidBucketName
 	}
 
 	bucket, err = r.baseApp.GfBsDB().GetBucketByName(req.BucketName, req.IncludePrivate)
@@ -149,7 +157,8 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 }
 
 // GfSpGetBucketByBucketID get buckets info by by a bucket id
-func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *types.GfSpGetBucketByBucketIDRequest) (resp *types.GfSpGetBucketByBucketIDResponse, err error) {
+func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *types.GfSpGetBucketByBucketIDRequest) (
+	resp *types.GfSpGetBucketByBucketIDResponse, err error) {
 	var (
 		bucket *model.Bucket
 		res    *types.Bucket
@@ -192,7 +201,8 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 }
 
 // GfSpGetUserBucketsCount get buckets count by a user address
-func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (resp *types.GfSpGetUserBucketsCountResponse, err error) {
+func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (
+	resp *types.GfSpGetUserBucketsCountResponse, err error) {
 	ctx = log.Context(ctx, req)
 
 	count, err := r.baseApp.GfBsDB().GetUserBucketsCount(common.HexToAddress(req.AccountId), req.GetIncludeRemoved())
@@ -207,7 +217,8 @@ func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *type
 }
 
 // GfSpListExpiredBucketsBySp list expired bucket by sp
-func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *types.GfSpListExpiredBucketsBySpRequest) (resp *types.GfSpListExpiredBucketsBySpResponse, err error) {
+func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *types.GfSpListExpiredBucketsBySpRequest) (
+	resp *types.GfSpListExpiredBucketsBySpResponse, err error) {
 	ctx = log.Context(ctx, req)
 	buckets, err := r.baseApp.GfBsDB().ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpId(), req.GetLimit())
 	if err != nil {
@@ -241,9 +252,7 @@ func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *t
 }
 
 // GfSpGetBucketMeta get bucket metadata
-func (r *MetadataModular) GfSpGetBucketMeta(
-	ctx context.Context,
-	req *types.GfSpGetBucketMetaRequest) (
+func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSpGetBucketMetaRequest) (
 	resp *types.GfSpGetBucketMetaResponse, err error) {
 	var (
 		bucket          *model.Bucket
@@ -256,6 +265,9 @@ func (r *MetadataModular) GfSpGetBucketMeta(
 	bucketFullMeta, err := r.baseApp.GfBsDB().GetBucketMetaByName(req.GetBucketName(), req.GetIncludePrivate())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket meta by name", "error", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchBucket
+		}
 		return
 	}
 	bucket = &bucketFullMeta.Bucket
@@ -334,7 +346,7 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		req.GetBucketInfo().Id.Uint64(), req.YearMonth)
 	if err != nil {
 		// if the traffic table has not been created and initialized yet, return the chain info
-		if systemerrors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
 			var freeQuotaSize uint64
 			freeQuotaSize, err = r.baseApp.Consensus().QuerySPFreeQuota(ctx, r.baseApp.OperatorAddress())
 			if err != nil {
@@ -387,7 +399,7 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 			EndTimestampUs:   req.EndTimestampUs,
 			LimitNum:         int(req.MaxRecordNum),
 		})
-	if systemerrors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &types.GfSpListBucketReadRecordResponse{
 			NextStartTimestampUs: 0,
 		}, nil
@@ -422,7 +434,8 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 }
 
 // GfSpListBucketsByIDs list buckets by bucket ids
-func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.GfSpListBucketsByIDsRequest) (resp *types.GfSpListBucketsByIDsResponse, err error) {
+func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.GfSpListBucketsByIDsRequest) (
+	resp *types.GfSpListBucketsByIDsResponse, err error) {
 	var (
 		buckets    []*model.Bucket
 		ids        []common.Hash

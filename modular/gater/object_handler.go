@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
@@ -405,13 +405,23 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
 	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
 		reqCtx.bucketName, reqCtx.objectName, permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
-		err = ErrConsensusWithDetail("failed to verify authentication for getting public object, error: " + err.Error())
 		return
 	}
 	if *permission == permissiontypes.EFFECT_ALLOW {
@@ -680,8 +690,12 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		taskState, errDescription, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+			if !strings.Contains(err.Error(), "no uploading record") {
+				return
+			}
 			taskState = int32(servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED)
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
+			err = nil
 		} else {
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 		}
@@ -775,10 +789,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -813,7 +829,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			return
 		}
 
-		redirectURL = spEndpoint + r.RequestURI
+		redirectURL = spEndpoint + r.URL.RequestURI()
 		log.Debugw("getting redirect url:", "redirectURL", redirectURL)
 
 		http.Redirect(w, r, redirectURL, 302)
@@ -838,11 +854,13 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			expiry    string
 			signature string
 		)
-		splitPeriod := strings.Split(r.RequestURI, ".")
+		requestURI := r.URL.RequestURI()
+
+		splitPeriod := strings.Split(requestURI, ".")
 		splitSuffix := splitPeriod[len(splitPeriod)-1]
-		if !strings.Contains(r.RequestURI, objectSpecialSuffixUrlReplacement) &&
+		if !strings.Contains(requestURI, objectSpecialSuffixUrlReplacement) &&
 			(strings.EqualFold(splitSuffix, ObjectPdfSuffix) || strings.EqualFold(splitSuffix, ObjectXmlSuffix)) {
-			objectPathRequestURL := "/" + strings.Replace(r.RequestURI[1:], "/", objectSpecialSuffixUrlReplacement, 1)
+			objectPathRequestURL := "/" + strings.Replace(requestURI[1:], "/", objectSpecialSuffixUrlReplacement, 1)
 			redirectURL = spEndpoint + objectPathRequestURL
 			log.Debugw("getting redirect url for private object:", "redirectURL", redirectURL)
 			http.Redirect(w, r, redirectURL, 302)
@@ -907,6 +925,8 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
 				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
 				"greenfield_5600-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
+				"greenfield_920-1":     "{\n  \"envType\": \"pre-mainnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 920,\n  \"chainName\": \"greenfield pre-main-net\",\n  \"rpcUrls\": [\"https://greenfield-chain.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
+				"greenfield_1017-1":    "{\n  \"envType\": \"mainnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 1017,\n  \"chainName\": \"greenfield main-net\",\n  \"rpcUrls\": [\"https://greenfield-chain.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
 			}
 
 			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
