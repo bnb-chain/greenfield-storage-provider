@@ -265,7 +265,7 @@ func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSp
 	bucketFullMeta, err := r.baseApp.GfBsDB().GetBucketMetaByName(req.GetBucketName(), req.GetIncludePrivate())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket meta by name", "error", err)
-		if systemerrors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNoSuchBucket
 		}
 		return
