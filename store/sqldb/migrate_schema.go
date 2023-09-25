@@ -37,6 +37,7 @@ type MigrateGVGTable struct {
 	DestSPID                 uint32
 	LastMigratedObjectID     uint64
 	MigrateStatus            int `gorm:"index:migrate_status_index"`
+	RetryTime                int
 }
 
 // TableName is used to set MigrateGVGTable Schema's table name in database.

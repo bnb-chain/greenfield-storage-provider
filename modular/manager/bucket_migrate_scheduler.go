@@ -28,8 +28,9 @@ import (
 )
 
 const (
-	bucketCacheSize   = int(100)
-	bucketCacheExpire = 30 * time.Minute
+	bucketCacheSize        = int(100)
+	bucketCacheExpire      = 30 * time.Minute
+	migrateGVGTaskMaxRetry = int(5)
 )
 
 var _ vgmgr.GVGPickFilter = &PickDestGVGFilter{}
@@ -100,22 +101,22 @@ func CheckGVGMetaConsistent(chainMetaList []*virtualgrouptypes.GlobalVirtualGrou
 
 // BucketMigrateExecutePlan is used to manage bucket migrate process.
 type BucketMigrateExecutePlan struct {
-	manager    *ManageModular
-	scheduler  *BucketMigrateScheduler
-	bucketID   uint64
-	gvgUnitMap map[uint32]*BucketMigrateGVGExecuteUnit // gvgID -> BucketMigrateGVGExecuteUnit
-	stopSignal chan struct{}                           // stop schedule
-	finished   int                                     // used for count the number of successful migrate units
+	manager          *ManageModular
+	scheduler        *BucketMigrateScheduler
+	bucketID         uint64
+	gvgUnitMap       map[uint32]*BucketMigrateGVGExecuteUnit // gvgID -> BucketMigrateGVGExecuteUnit
+	stopSignal       chan struct{}                           // stop schedule
+	finishedGvgUnits map[uint32]struct{}                     // used for count the number of successful migrate units
 }
 
 func newBucketMigrateExecutePlan(manager *ManageModular, bucketID uint64, scheduler *BucketMigrateScheduler) *BucketMigrateExecutePlan {
 	executePlan := &BucketMigrateExecutePlan{
-		manager:    manager,
-		scheduler:  scheduler,
-		bucketID:   bucketID,
-		gvgUnitMap: make(map[uint32]*BucketMigrateGVGExecuteUnit),
-		stopSignal: make(chan struct{}),
-		finished:   0,
+		manager:          manager,
+		scheduler:        scheduler,
+		bucketID:         bucketID,
+		gvgUnitMap:       make(map[uint32]*BucketMigrateGVGExecuteUnit),
+		stopSignal:       make(chan struct{}),
+		finishedGvgUnits: make(map[uint32]struct{}),
 	}
 
 	return executePlan
@@ -152,6 +153,25 @@ func (plan *BucketMigrateExecutePlan) UpdateMigrateGVGLastMigratedObjectID(migra
 		return err
 	}
 	return nil
+}
+
+func (plan *BucketMigrateExecutePlan) UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error {
+	err := plan.manager.baseApp.GfSpDB().UpdateMigrateGVGRetryCount(migrateKey, retryTime)
+	if err != nil {
+		log.Errorw("failed to update migrate gvg retry time", "migrate_key", migrateKey, "error", err)
+		return err
+	}
+	return nil
+}
+
+// QueryMigrateGVG Query migrate GVG unit
+func (plan *BucketMigrateExecutePlan) QueryMigrateGVG(migrateKey string) (*spdb.MigrateGVGUnitMeta, error) {
+	gvgMeta, err := plan.manager.baseApp.GfSpDB().QueryMigrateGVGUnit(migrateKey)
+	if err != nil {
+		log.Errorw("failed to query migrate gvg", "migrate_key", migrateKey, "error", err)
+		return nil, err
+	}
+	return gvgMeta, nil
 }
 
 // send CompleteMigrateBucket to chain 1) empty bucket: gvgUnitMap is nil; 2) normal bucket
@@ -192,12 +212,27 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 	return nil
 }
 
+func (plan *BucketMigrateExecutePlan) sendRejectMigrateBucketTx() error {
+	var (
+		err error
+	)
+	bucket, err := plan.manager.baseApp.GfSpClient().GetBucketByBucketID(context.Background(), int64(plan.bucketID), true)
+	if err != nil {
+		return err
+	}
+
+	rejectMigrateBucket := &storagetypes.MsgRejectMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
+		BucketName: bucket.BucketInfo.GetBucketName()}
+
+	txHash, txErr := plan.manager.baseApp.GfSpClient().RejectMigrateBucket(context.Background(), rejectMigrateBucket)
+	log.Infow("send reject migrate bucket msg to chain", "msg", rejectMigrateBucket, "tx_hash", txHash, "error", txErr)
+	return nil
+}
+
 func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, migrateExecuteUnit *BucketMigrateGVGExecuteUnit, migrateStatus MigrateStatus) error {
-
-	plan.finished++
 	migrateExecuteUnit.MigrateStatus = migrateStatus
+	plan.finishedGvgUnits[migrateExecuteUnit.SrcGVG.GetId()] = struct{}{}
 
-	// update migrate gvg status
 	err := plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus))
 	if err != nil {
 		log.Errorw("update migrate gvg status", "migrate_key", migrateKey, "error", err)
@@ -205,12 +240,14 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 	}
 
 	// all migrate units success, send tx to chain
-	if plan.finished == len(plan.gvgUnitMap) {
+	if len(plan.finishedGvgUnits) == len(plan.gvgUnitMap) {
 		err := plan.sendCompleteMigrateBucketTx(migrateExecuteUnit)
 		if err != nil {
 			log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
 			return err
 		}
+		// wait for bucket status change onchain
+		time.Sleep(3 * time.Second)
 		err = plan.scheduler.doneMigrateBucket(migrateExecuteUnit.BucketID)
 		if err != nil {
 			log.Errorw("failed to done migrate bucket", "error", err, "bucket_id", migrateExecuteUnit.BucketID)
@@ -259,7 +296,6 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 				if migrateGVGUnit.MigrateStatus != WaitForMigrate {
 					continue
 				}
-
 				migrateGVGTask := &gfsptask.GfSpMigrateGVGTask{}
 				migrateGVGTask.InitMigrateGVGTask(plan.manager.baseApp.TaskPriority(migrateGVGTask),
 					plan.bucketID, migrateGVGUnit.SrcGVG, piecestore.PrimarySPRedundancyIndex,
@@ -267,7 +303,7 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 					plan.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					plan.manager.baseApp.TaskMaxRetry(migrateGVGTask))
 				migrateGVGTask.SetDestGvg(migrateGVGUnit.DestGVG)
-				err := plan.manager.migrateGVGQueuePush(migrateGVGTask)
+				err := plan.manager.migrateGVGQueuePush(migrateGVGTask) // put into queue
 				if err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
@@ -444,14 +480,15 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
-	if migrateBucketEvents.CancelEvents != nil {
+	if migrateBucketEvents.CancelEvents != nil || migrateBucketEvents.RejectEvents != nil {
 		log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
 		s.cancelMigrateBucket(migrateBucketEvents.CancelEvents.BucketId.Uint64())
 		log.Infow("succeed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
 	}
+
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
-		return nil
+		return nil // why
 	}
 	// 3. process Events
 	if migrateBucketEvents.Events != nil {
@@ -691,6 +728,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 			log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "EventMigrationBucket", event)
 			return nil, err
 		}
+		// Need to wait for tx confirmed on chain before checking bucket status.
 		err = s.doneMigrateBucket(event.BucketId.Uint64())
 		if err != nil {
 			log.Errorw("failed to done migrate bucket", "error", err, "EventMigrationBucket", event)
@@ -736,7 +774,7 @@ func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketM
 	for _, executePlan := range s.executePlanIDMap {
 		var plan gfspserver.GfSpBucketMigrate
 		plan.BucketId = executePlan.bucketID
-		plan.Finished = uint32(executePlan.finished)
+		plan.Finished = uint32(len(executePlan.finishedGvgUnits))
 		for _, unit := range executePlan.gvgUnitMap {
 			plan.GvgTask = append(plan.GvgTask, &gfspserver.GfSpMigrateGVG{
 				SrcGvgId:             unit.SrcGVG.GetId(),
@@ -777,6 +815,29 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 		}
 	} else {
 		migrateExecuteUnit.LastMigratedObjectID = task.GetLastMigratedObjectID()
+		// The report task from executor keeps track of the err when getting data from src SP, if a gvg's migration
+		// continuously fails(The LastMigratedObjectID stays still), it will send a tx to reject migration
+		if task.Error() != nil {
+			migrateGVGUnit, queryErr := executePlan.QueryMigrateGVG(migrateKey)
+			if queryErr != nil {
+				log.Errorw("failed to query migrate gvg unit", "error", queryErr)
+				return queryErr
+			}
+			if task.GetLastMigratedObjectID() == migrateGVGUnit.LastMigratedObjectID {
+				if migrateGVGUnit.RetryTime+1 >= migrateGVGTaskMaxRetry {
+					if err = executePlan.sendRejectMigrateBucketTx(); err != nil {
+						log.Errorw("failed to reject migrate bucket msg to chain", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
+						return err
+					}
+					return nil
+				}
+				if err = executePlan.UpdateMigrateGVGRetryCount(migrateKey, migrateGVGUnit.RetryTime+1); err != nil {
+					log.Errorw("failed to update migrate gvg retry count", "migrate_key", migrateKey, "error", err)
+					return err
+				}
+				return nil
+			}
+		}
 		err = executePlan.UpdateMigrateGVGLastMigratedObjectID(migrateKey, task.GetLastMigratedObjectID())
 		if err != nil {
 			log.Errorw("failed to update migrate gvg last migrate object id", "migrate_key", migrateKey, "error", err)

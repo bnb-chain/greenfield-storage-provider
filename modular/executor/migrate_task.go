@@ -52,9 +52,15 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		} else {
 			metrics.MigrateGVGCounter.WithLabelValues(migrateGVGFailedCounterLabel).Inc()
 		}
+		gvgTask.SetError(err)
 		log.CtxInfow(ctx, "finished to migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
 			"total_migrated_object_number", migratedObjectNumberInGVG, "last_migrated_object_id", lastMigratedObjectID, "error", err)
 	}()
+
+	if gvgTask == nil {
+		err = ErrDanglingPointer
+		return
+	}
 
 	for {
 		if bucketID == 0 { // sp exit task
