@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -9,10 +10,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+
 	slimiter "github.com/ulule/limiter/v3"
 	smemory "github.com/ulule/limiter/v3/drivers/store/memory"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+)
+
+const (
+	Middleware = "Middleware"
+)
+
+var (
+	ErrTooManyRequest = gfsperrors.Register(Middleware, http.StatusTooManyRequests, 960001, "too many requests, please try it again later")
 )
 
 type RateLimiterCell struct {
@@ -181,19 +192,36 @@ func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
 func Limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !limiter.Allow(context.Background(), r) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusTooManyRequests)
+			MakeLimitErrorResponse(w, ErrTooManyRequest)
 			return
 		}
-
 		if !limiter.HTTPAllow(context.Background(), r) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusTooManyRequests)
+			MakeLimitErrorResponse(w, ErrTooManyRequest)
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
+}
+
+func MakeLimitErrorResponse(w http.ResponseWriter, err error) {
+	gfspErr := gfsperrors.MakeGfSpError(err)
+	var xmlInfo = struct {
+		XMLName xml.Name `xml:"Error"`
+		Code    int32    `xml:"Code"`
+		Message string   `xml:"Message"`
+	}{
+		Code:    gfspErr.GetInnerCode(),
+		Message: gfspErr.GetDescription(),
+	}
+	xmlBody, err := xml.Marshal(&xmlInfo)
+	if err != nil {
+		log.Errorw("failed to marshal error response", "gfsp_error", gfspErr.String(), "error", err)
+	}
+	w.Header().Set("Content-Type", "application/xml")
+	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
+	if _, err = w.Write(xmlBody); err != nil {
+		log.Errorw("failed to write error response", "gfsp_error", gfspErr.String(), "error", err)
+	}
 }
 
 // GetIP gets a requests IP address by reading off the forwarded-for

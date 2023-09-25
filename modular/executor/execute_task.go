@@ -46,6 +46,7 @@ var (
 	ErrInvalidRedundancyIndex     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "invalid redundancy index")
 	ErrSetObjectIntegrity         = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45213, "failed to set object integrity into spdb")
 	ErrInvalidPieceChecksumLength = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45214, "invalid piece checksum length")
+	ErrRecoveryObjectStatus       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45215, "the recovered object has not been sealed state")
 )
 
 func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
@@ -377,6 +378,11 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		err = ErrDanglingPointer
+		return
+	}
+
+	if task.GetObjectInfo().ObjectStatus != storagetypes.OBJECT_STATUS_SEALED {
+		err = ErrRecoveryObjectStatus
 		return
 	}
 

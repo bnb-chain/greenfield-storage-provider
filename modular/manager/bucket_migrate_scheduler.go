@@ -974,7 +974,7 @@ func (c *BucketCache) removeElement(e *list.Element) {
 	if c.expiration > 0 {
 		for i, se := range c.ttlIndex {
 			if se == e {
-				//delete
+				// delete
 				copy(c.ttlIndex[i:], c.ttlIndex[i+1:])
 				c.ttlIndex[len(c.ttlIndex)-1] = nil
 				c.ttlIndex = c.ttlIndex[:len(c.ttlIndex)-1]
