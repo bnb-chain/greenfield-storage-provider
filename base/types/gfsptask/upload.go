@@ -341,7 +341,7 @@ func (m *GfSpReplicatePieceTask) InitReplicatePieceTask(object *storagetypes.Obj
 	m.SetPriority(priority)
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
-	m.SetNotAvailableSpIdx(-1)
+	m.NotAvailableSpIdx = -1
 }
 
 func (m *GfSpReplicatePieceTask) Key() coretask.TKey {
