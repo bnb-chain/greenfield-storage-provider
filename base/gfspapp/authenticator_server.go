@@ -28,7 +28,6 @@ func (g *GfSpBaseApp) GfSpVerifyAuthentication(ctx context.Context, req *gfspser
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, req.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, req.GetObjectName())
-	log.CtxDebugw(ctx, "begin to authenticate", "user", req.GetUserAccount(), "auth_type", req.GetAuthType())
 	startTime := time.Now()
 	allow, err := g.authenticator.VerifyAuthentication(ctx, coremodule.AuthOpType(req.GetAuthType()),
 		req.GetUserAccount(), req.GetBucketName(), req.GetObjectName())
@@ -39,8 +38,8 @@ func (g *GfSpBaseApp) GfSpVerifyAuthentication(ctx context.Context, req *gfspser
 		metrics.ReqCounter.WithLabelValues(AuthSuccess).Inc()
 		metrics.ReqTime.WithLabelValues(AuthSuccess).Observe(time.Since(startTime).Seconds())
 	}
-	log.CtxDebugw(ctx, "finish to authenticate", "user", req.GetUserAccount(), "auth_type", req.GetAuthType(),
-		"allow", allow, "error", err)
+	log.CtxDebugw(ctx, "succeed to authenticate", "user", req.GetUserAccount(), "auth_type", req.GetAuthType(),
+		"allow", allow, "cost", time.Since(startTime).Seconds(), "error", err)
 	return &gfspserver.GfSpAuthenticationResponse{
 		Err:     gfsperrors.MakeGfSpError(err),
 		Allowed: allow,

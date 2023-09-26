@@ -98,12 +98,12 @@ func (g *GfSpBaseApp) OnAskCreateBucketApproval(ctx context.Context, task task.A
 
 	err = g.approver.PreCreateBucketApproval(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre create bucket approval", "info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to pre create bucket approval", "task_info", task.Info(), "error", err)
 		return false, err
 	}
 	allow, err = g.approver.HandleCreateBucketApprovalTask(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to ask create bucket approval", "error", err)
+		log.CtxErrorw(ctx, "failed to ask create bucket approval", "task_info", task.Info(), "error", err)
 		return false, err
 	}
 	g.approver.PostCreateBucketApproval(ctx, task)
@@ -119,12 +119,12 @@ func (g *GfSpBaseApp) OnAskMigrateBucketApproval(ctx context.Context, task task.
 
 	err := g.approver.PreMigrateBucketApproval(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre migrate bucket approval", "info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to pre migrate bucket approval", "task_info", task.Info(), "error", err)
 		return false, err
 	}
 	allow, err := g.approver.HandleMigrateBucketApprovalTask(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to ask  migrate bucket approval", "error", err)
+		log.CtxErrorw(ctx, "failed to ask  migrate bucket approval", "task_info", task.Info(), "error", err)
 		return false, err
 	}
 	g.approver.PostMigrateBucketApproval(ctx, task)
@@ -150,16 +150,15 @@ func (g *GfSpBaseApp) OnAskCreateObjectApproval(ctx context.Context, task task.A
 
 	err = g.approver.PreCreateObjectApproval(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to pre create object approval", "info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to pre create object approval", "task_info", task.Info(), "error", err)
 		return false, err
 	}
 	allow, err = g.approver.HandleCreateObjectApprovalTask(ctx, task)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to ask create object approval", "error", err)
+		log.CtxErrorw(ctx, "failed to ask create object approval", "task_info", task.Info(), "error", err)
 		return false, err
 	}
 	g.approver.PostCreateObjectApproval(ctx, task)
-
 	log.CtxDebugw(ctx, "succeed to ask create object approval")
 	return allow, nil
 }
