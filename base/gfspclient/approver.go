@@ -7,15 +7,21 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (
 	bool, coretask.ApprovalCreateBucketTask, error) {
-	conn, connErr := s.ApproverConn(ctx)
+	options := DefaultClientOptions()
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
+	conn, connErr := s.Connection(ctx, s.approverEndpoint, options...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to connect approver, error: " + connErr.Error())
 	}
+	defer conn.Close()
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_CreateBucketApprovalTask{
 			CreateBucketApprovalTask: task.(*gfsptask.GfSpCreateBucketApprovalTask),
@@ -50,8 +56,8 @@ func (s *GfSpClient) AskMigrateBucketApproval(ctx context.Context, task coretask
 		}}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to ask create bucket approval", "error", err)
-		return false, nil, ErrRPCUnknownWithDetail("client failed to ask create bucket approval, error: " + err.Error())
+		log.CtxErrorw(ctx, "client failed to ask migrate bucket approval", "error", err)
+		return false, nil, ErrRPCUnknownWithDetail("client failed to ask migrate bucket approval, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		return false, nil, resp.GetErr()
@@ -67,11 +73,16 @@ func (s *GfSpClient) AskMigrateBucketApproval(ctx context.Context, task coretask
 
 func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) (
 	bool, coretask.ApprovalCreateObjectTask, error) {
-	conn, connErr := s.ApproverConn(ctx)
+	options := DefaultClientOptions()
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
+	conn, connErr := s.Connection(ctx, s.approverEndpoint, options...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to connect approver, error: " + connErr.Error())
 	}
+	defer conn.Close()
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask{
 			CreateObjectApprovalTask: task.(*gfsptask.GfSpCreateObjectApprovalTask),
