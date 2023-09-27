@@ -12,11 +12,21 @@ import (
 
 func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (
 	bool, coretask.ApprovalCreateBucketTask, error) {
-	startTime := time.Now()
+	var (
+		startTime   = time.Now()
+		connectCost float64
+		rpcCost     float64
+	)
 	defer func() {
-		log.Infow("succeed to ask create bucket approval", "cost", time.Since(startTime).Seconds())
+		log.Infow("succeed to ask create bucket approval",
+			"total_cost", time.Since(startTime).Seconds(), "connect_cost", connectCost, "rpc_cost", rpcCost)
+		if time.Since(startTime).Seconds() > 1 {
+			log.Infow("slow create bucket approval",
+				"total_cost", time.Since(startTime).Seconds(), "connect_cost", connectCost, "rpc_cost", rpcCost)
+		}
 	}()
 	conn, connErr := s.Connection(ctx, s.approverEndpoint)
+	connectCost = time.Since(startTime).Seconds()
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to connect approver, error: " + connErr.Error())
@@ -27,6 +37,7 @@ func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.
 			CreateBucketApprovalTask: task.(*gfsptask.GfSpCreateBucketApprovalTask),
 		}}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
+	rpcCost = time.Since(startTime).Seconds()
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask create bucket approval", "error", err)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to ask create bucket approval, error: " + err.Error())
@@ -73,11 +84,21 @@ func (s *GfSpClient) AskMigrateBucketApproval(ctx context.Context, task coretask
 
 func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) (
 	bool, coretask.ApprovalCreateObjectTask, error) {
-	startTime := time.Now()
+	var (
+		startTime   = time.Now()
+		connectCost float64
+		rpcCost     float64
+	)
 	defer func() {
-		log.Infow("succeed to ask create object approval", "cost", time.Since(startTime).Seconds())
+		log.Infow("succeed to ask create object approval",
+			"total_cost", time.Since(startTime).Seconds(), "connect_cost", connectCost, "rpc_cost", rpcCost)
+		if time.Since(startTime).Seconds() > 1 {
+			log.Infow("slow create object approval",
+				"total_cost", time.Since(startTime).Seconds(), "connect_cost", connectCost, "rpc_cost", rpcCost)
+		}
 	}()
 	conn, connErr := s.Connection(ctx, s.approverEndpoint)
+	connectCost = time.Since(startTime).Seconds()
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to connect approver, error: " + connErr.Error())
@@ -88,6 +109,7 @@ func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.
 			CreateObjectApprovalTask: task.(*gfsptask.GfSpCreateObjectApprovalTask),
 		}}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
+	rpcCost = time.Since(startTime).Seconds()
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask create object approval", "error", err)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to ask create object approval, error: " + err.Error())

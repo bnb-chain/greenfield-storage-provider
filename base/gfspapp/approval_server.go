@@ -24,6 +24,9 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 	startTime := time.Now()
 	defer func() {
 		log.Infow("succeed to ask approval", "cost", time.Since(startTime).Seconds())
+		if time.Since(startTime).Seconds() > 1 {
+			log.Infow("slow ask approval", "cost", time.Since(startTime).Seconds())
+		}
 	}()
 	if req == nil || req.GetRequest() == nil {
 		log.Error("failed to ask approval due to pointer dangling")
