@@ -77,6 +77,9 @@ func NewGfSpClient(approverEndpoint, managerEndpoint, downloaderEndpoint, receiv
 
 func (s *GfSpClient) Connection(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	options := append(DefaultClientOptions(), opts...)
+	if s.metrics {
+		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
+	}
 	return grpc.DialContext(ctx, address, options...)
 }
 

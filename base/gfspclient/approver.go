@@ -2,21 +2,21 @@ package gfspclient
 
 import (
 	"context"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
 )
 
 func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (
 	bool, coretask.ApprovalCreateBucketTask, error) {
-	options := DefaultClientOptions()
-	if s.metrics {
-		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
-	}
-	conn, connErr := s.Connection(ctx, s.approverEndpoint, options...)
+	startTime := time.Now()
+	defer func() {
+		log.Infow("succeed to ask create bucket approval", "cost", time.Since(startTime).Seconds())
+	}()
+	conn, connErr := s.Connection(ctx, s.approverEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to connect approver, error: " + connErr.Error())
@@ -73,11 +73,11 @@ func (s *GfSpClient) AskMigrateBucketApproval(ctx context.Context, task coretask
 
 func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) (
 	bool, coretask.ApprovalCreateObjectTask, error) {
-	options := DefaultClientOptions()
-	if s.metrics {
-		options = append(options, utilgrpc.GetDefaultClientInterceptor()...)
-	}
-	conn, connErr := s.Connection(ctx, s.approverEndpoint, options...)
+	startTime := time.Now()
+	defer func() {
+		log.Infow("succeed to ask create object approval", "cost", time.Since(startTime).Seconds())
+	}()
+	conn, connErr := s.Connection(ctx, s.approverEndpoint)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
 		return false, nil, ErrRPCUnknownWithDetail("client failed to connect approver, error: " + connErr.Error())
