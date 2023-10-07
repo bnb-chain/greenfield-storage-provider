@@ -190,6 +190,7 @@ func (s *GfSpClient) Close() error {
 
 func DefaultClientOptions() []grpc.DialOption {
 	var options []grpc.DialOption
+	options = append(options, grpc.WithBlock())
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxClientCallMsgSize)))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxClientCallMsgSize)))
