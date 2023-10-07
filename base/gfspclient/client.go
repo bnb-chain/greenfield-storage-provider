@@ -36,7 +36,7 @@ var (
 )
 
 func ErrRPCUnknownWithDetail(detail string) *gfsperrors.GfSpError {
-	return gfsperrors.Register(ClientCodeSpace, http.StatusNotFound, 98001, detail)
+	return gfsperrors.Register(ClientCodeSpace, http.StatusInternalServerError, 98001, detail)
 }
 
 type GfSpClient struct {
@@ -61,6 +61,7 @@ type GfSpClient struct {
 
 func NewGfSpClient(approverEndpoint, managerEndpoint, downloaderEndpoint, receiverEndpoint, metadataEndpoint,
 	uploaderEndpoint, p2pEndpoint, signerEndpoint, authenticatorEndpoint string, metrics bool) *GfSpClient {
+	grpc.EnableTracing = true
 	return &GfSpClient{
 		approverEndpoint:      approverEndpoint,
 		managerEndpoint:       managerEndpoint,
