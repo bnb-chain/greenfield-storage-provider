@@ -218,7 +218,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, fingerprint, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
-		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
+		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(reqCtx.Context(), task)
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
