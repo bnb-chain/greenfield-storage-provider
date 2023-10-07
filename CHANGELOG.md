@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.0
+This is the first official version for the main-net deployment.
+
 ## v0.2.6-hf.2
 BUGFIX
 * [#1171](https://github.com/bnb-chain/greenfield-storage-provider/pull/1171) fix: fix init the NotAvailableSpIdx
