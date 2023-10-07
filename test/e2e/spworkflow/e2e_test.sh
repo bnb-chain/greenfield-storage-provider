@@ -6,11 +6,11 @@ export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_TAG="v0.2.6-hf.1"
+GREENFIELD_TAG="v1.0.0"
 # greenfield cmd tag name: v0.1.0
 GREENFIELD_CMD_TAG="v0.1.0"
-# greenfield go sdk tag name: v0.2.6
-GREENFIELD_GO_SDK_TAG="v0.2.6"
+# greenfield go sdk tag name: v1.0.0
+GREENFIELD_GO_SDK_TAG="v1.0.0"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
