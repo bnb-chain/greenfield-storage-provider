@@ -18,7 +18,7 @@ import (
 )
 
 var verifyFuncs = []func(db *gorm.DB) error{verify1, verify2, verify3, verify4, verify5, verify6, verify7, verify8, verify9, verify10, verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify18, verify19, verify20, verify21, verify22, verify23, verify24, verify25, verify26, verify27,
-	verify28, verify29, verify30, verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40, verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48,
+	verify28, verify29, verify30, verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40, verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49,
 }
 
 func Verify() error {
@@ -487,6 +487,14 @@ func verify48(db *gorm.DB) error {
 	}
 	if p.Refundable {
 		return fmt.Errorf("failed to update Refundable")
+	}
+	return nil
+}
+
+func verify49(db *gorm.DB) error {
+	var event bsdb.EventRejectMigrateBucket
+	if err := db.Table((&bsdb.EventCompleteMigrationBucket{}).TableName()).Where("bucket_name = ?", "onkz").Find(&event).Error; err != nil {
+		return errors.New("event not found")
 	}
 	return nil
 }
