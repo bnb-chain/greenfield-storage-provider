@@ -480,11 +480,11 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
 	// 1. process CancelEvents
-	if migrateBucketEvents.CancelEvents != nil || migrateBucketEvents.RejectEvents != nil {
-		log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
-		s.cancelMigrateBucket(migrateBucketEvents.CancelEvents.BucketId.Uint64())
-		log.Infow("succeed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
-	}
+	//if migrateBucketEvents.CancelEvents != nil || migrateBucketEvents.RejectEvents != nil {
+	//	log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
+	//	s.cancelMigrateBucket(migrateBucketEvents.CancelEvents.BucketId.Uint64())
+	//	log.Infow("succeed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
+	//}
 
 	// 2. process CompleteEvents
 	if migrateBucketEvents.CompleteEvents != nil {
