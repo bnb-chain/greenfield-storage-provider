@@ -168,6 +168,8 @@ type MigrateDB interface {
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
 	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
 	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
+	// UpdateMigrateGVGRetryCount updates gvg unit retry time
+	UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error
 
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
