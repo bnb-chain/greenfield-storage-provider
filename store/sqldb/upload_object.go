@@ -24,6 +24,7 @@ func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {
 	return nil
 }
 
+// not being used now?
 func (s *SpDBImpl) DeleteUploadProgress(objectID uint64) error {
 	return s.db.Delete(&UploadObjectProgressTable{
 		ObjectID: objectID, // should be the primary key
