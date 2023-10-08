@@ -54,6 +54,8 @@ const (
 	EventCompleteMigrationTableName = "event_complete_migration_bucket"
 	// EventCancelMigrationTableName defines the name of event cancel migrate bucket table
 	EventCancelMigrationTableName = "event_cancel_migration_bucket"
+	// EventRejectMigrateTableName defines the name of event reject migrate bucket table
+	EventRejectMigrateTableName = "event_reject_migrate_bucket"
 	// EventStorageProviderExitTableName defines the name of event sp exit table
 	EventStorageProviderExitTableName = "event_sp_exit"
 	// EventCompleteStorageProviderExitTableName defines the name of event sp exit complete table

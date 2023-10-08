@@ -9,11 +9,12 @@ import (
 )
 
 // ListMigrateBucketEvents list migrate bucket events
-func (b *BsDBImpl) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error) {
+func (b *BsDBImpl) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, []*EventRejectMigrateBucket, error) {
 	var (
 		events         []*EventMigrationBucket
 		completeEvents []*EventCompleteMigrationBucket
 		cancelEvents   []*EventCancelMigrationBucket
+		rejectEvents   []*EventRejectMigrateBucket
 		err            error
 	)
 	startTime := time.Now()
@@ -32,7 +33,7 @@ func (b *BsDBImpl) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB
 		Scopes(filters...).
 		Find(&events).Error
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	err = b.db.Table((&EventCompleteMigrationBucket{}).TableName()).
@@ -40,7 +41,7 @@ func (b *BsDBImpl) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB
 		Scopes(filters...).
 		Find(&completeEvents).Error
 	if err != nil {
-		return events, nil, nil, err
+		return events, nil, nil, nil, err
 	}
 
 	err = b.db.Table((&EventCancelMigrationBucket{}).TableName()).
@@ -48,10 +49,18 @@ func (b *BsDBImpl) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB
 		Scopes(filters...).
 		Find(&cancelEvents).Error
 	if err != nil {
-		return events, nil, nil, err
+		return events, nil, nil, nil, err
 	}
 
-	return events, completeEvents, cancelEvents, err
+	err = b.db.Table((&EventRejectMigrateBucket{}).TableName()).
+		Select("*").
+		Scopes(filters...).
+		Find(&rejectEvents).Error
+	if err != nil {
+		return events, nil, nil, nil, err
+	}
+
+	return events, completeEvents, cancelEvents, rejectEvents, err
 }
 
 // GetMigrateBucketEventByBucketID get migrate bucket event by bucket id
