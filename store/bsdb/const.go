@@ -48,8 +48,6 @@ const (
 	GlobalVirtualGroupTableName = "global_virtual_groups"
 	// EventMigrationTableName defines the name of event migrate bucket table
 	EventMigrationTableName = "event_migration_bucket"
-	// EventRejectMigrationTableName defines the name of event reject migrate bucket table
-	EventRejectMigrateTableName = "event_reject_migration_bucket"
 	// EventCompleteMigrationTableName defines the name of event complete migrate bucket table
 	EventCompleteMigrationTableName = "event_complete_migration_bucket"
 	// EventCancelMigrationTableName defines the name of event cancel migrate bucket table
