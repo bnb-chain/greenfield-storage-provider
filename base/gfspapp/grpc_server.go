@@ -29,8 +29,8 @@ func (g *GfSpBaseApp) newRPCServer(options ...grpc.ServerOption) {
 	if g.EnableMetrics() {
 		options = append(options, utilgrpc.GetDefaultServerInterceptor()...)
 	}
-	grpc.EnableTracing = true
-	grpc.MaxConcurrentStreams(100000)
+	// grpc.EnableTracing = true
+	// grpc.MaxConcurrentStreams(100000)
 	g.server = grpc.NewServer(options...)
 	gfspserver.RegisterGfSpApprovalServiceServer(g.server, g)
 	gfspserver.RegisterGfSpAuthenticationServiceServer(g.server, g)
