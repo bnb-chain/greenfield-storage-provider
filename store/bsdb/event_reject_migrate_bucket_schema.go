@@ -1,8 +1,6 @@
 package bsdb
 
-import (
-	"github.com/forbole/juno/v4/common"
-)
+import "github.com/forbole/juno/v4/common"
 
 type EventRejectMigrateBucket struct {
 	ID         uint64         `gorm:"column:id;primaryKey"`
@@ -15,7 +13,6 @@ type EventRejectMigrateBucket struct {
 	CreateTime   int64       `gorm:"column:create_time"` // seconds
 }
 
-// TableName is used to set EventRejectMigrateBucket table name in database
 func (*EventRejectMigrateBucket) TableName() string {
 	return EventRejectMigrateTableName
 }
