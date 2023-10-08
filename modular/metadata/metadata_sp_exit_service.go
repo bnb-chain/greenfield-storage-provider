@@ -141,12 +141,15 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		events            []*model.EventMigrationBucket
 		completeEvents    []*model.EventCompleteMigrationBucket
 		cancelEvents      []*model.EventCancelMigrationBucket
+		rejectEvents      []*model.EventRejectMigrateBucket
 		spEvent           *storage_types.EventMigrationBucket
 		spCompleteEvent   *storage_types.EventCompleteMigrationBucket
 		spCancelEvent     *storage_types.EventCancelMigrationBucket
+		spRejectEvent     *storage_types.EventRejectMigrateBucket
 		eventsMap         map[common.Hash]*model.EventMigrationBucket
 		completeEventsMap map[common.Hash]*model.EventCompleteMigrationBucket
 		cancelEventsMap   map[common.Hash]*model.EventCancelMigrationBucket
+		rejectEventsMap   map[common.Hash]*model.EventRejectMigrateBucket
 		res               []*types.ListMigrateBucketEvents
 		filters           []func(*gorm.DB) *gorm.DB
 		latestBlock       int64
@@ -164,7 +167,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	}
 	log.Debugw("GfSpListMigrateBucketEvents", "sp-id", req.SpId, "block-id", req.BlockId)
 	filters = append(filters, model.CreateAtFilter(int64(req.BlockId)))
-	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.SpId, filters...)
+	events, completeEvents, cancelEvents, rejectEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.SpId, filters...)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
@@ -185,12 +188,19 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		cancelEventsMap[e.BucketID] = e
 	}
 
+	rejectEventsMap = make(map[common.Hash]*model.EventRejectMigrateBucket)
+	for _, e := range rejectEvents {
+		rejectEventsMap[e.BucketID] = e
+	}
+
 	res = make([]*types.ListMigrateBucketEvents, 0)
 	for _, event := range eventsMap {
 		complete := completeEventsMap[event.BucketID]
 		cancel := cancelEventsMap[event.BucketID]
+		reject := rejectEventsMap[event.BucketID]
 		spCompleteEvent = nil
 		spCancelEvent = nil
+		spRejectEvent = nil
 		spEvent = &storage_types.EventMigrationBucket{
 			Operator:       event.Operator.String(),
 			BucketName:     event.BucketName,
@@ -212,9 +222,17 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
 			}
 		}
+		if reject != nil && reject.CreateAt >= event.CreateAt && complete == nil {
+			spRejectEvent = &storage_types.EventRejectMigrateBucket{
+				Operator:   cancel.Operator.String(),
+				BucketName: cancel.BucketName,
+				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
+			}
+		}
 		if spCompleteEvent == nil {
 			res = append(res, &types.ListMigrateBucketEvents{
 				Events:         spEvent,
+				RejectEvents:   spRejectEvent,
 				CompleteEvents: spCompleteEvent,
 				CancelEvents:   spCancelEvent,
 			})
@@ -440,19 +458,22 @@ func (r *MetadataModular) GfSpGetSPMigratingBucketNumber(ctx context.Context, re
 		events            []*model.EventMigrationBucket
 		completeEvents    []*model.EventCompleteMigrationBucket
 		cancelEvents      []*model.EventCancelMigrationBucket
+		rejectEvents      []*model.EventRejectMigrateBucket
 		eventsMap         map[common.Hash]*model.EventMigrationBucket
 		completeEventsMap map[common.Hash]*model.EventCompleteMigrationBucket
 		cancelEventsMap   map[common.Hash]*model.EventCancelMigrationBucket
+		rejectEventsMap   map[common.Hash]*model.EventRejectMigrateBucket
 		cancelFlag        bool
 		completeFlag      bool
+		rejectFlag        bool
 		count             uint64
 	)
 
 	ctx = log.Context(ctx, req)
 
-	events, completeEvents, cancelEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.SpId)
+	events, completeEvents, cancelEvents, rejectEvents, err = r.baseApp.GfBsDB().ListMigrateBucketEvents(req.SpId)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to get the latest active migrating bucket by specific sp", "error", err)
+		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
 	}
 
@@ -471,18 +492,28 @@ func (r *MetadataModular) GfSpGetSPMigratingBucketNumber(ctx context.Context, re
 		cancelEventsMap[e.BucketID] = e
 	}
 
+	rejectEventsMap = make(map[common.Hash]*model.EventRejectMigrateBucket)
+	for _, e := range rejectEvents {
+		rejectEventsMap[e.BucketID] = e
+	}
+
 	for _, event := range eventsMap {
 		completeFlag = false
 		cancelFlag = false
+		rejectFlag = false
 		complete := completeEventsMap[event.BucketID]
 		cancel := cancelEventsMap[event.BucketID]
+		reject := rejectEventsMap[event.BucketID]
 		if complete != nil && complete.CreateAt >= event.CreateAt {
 			completeFlag = true
 		}
 		if cancel != nil && cancel.CreateAt >= event.CreateAt && complete == nil {
 			cancelFlag = true
 		}
-		if !completeFlag && !cancelFlag && event != nil {
+		if reject != nil && reject.CreateAt >= event.CreateAt && complete == nil {
+			rejectFlag = true
+		}
+		if !completeFlag && !cancelFlag && !rejectFlag && event != nil {
 			count++
 		}
 	}

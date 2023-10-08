@@ -219,7 +219,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success(t *testing.T) {
 		},
 	).Times(1)
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, error) {
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
 					&bsdb.EventMigrationBucket{
 						ID:             1,
@@ -255,6 +255,17 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success(t *testing.T) {
 						CreateTxHash: common.HexToHash("1"),
 						CreateTime:   1,
 					},
+				},
+				[]*bsdb.EventRejectMigrateBucket{
+					&bsdb.EventRejectMigrateBucket{
+						ID:           0,
+						BucketID:     common.HexToHash("1"),
+						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+						BucketName:   "",
+						CreateAt:     1,
+						CreateTxHash: common.HexToHash("1"),
+						CreateTime:   1,
+					},
 				}, nil
 		},
 	).Times(1)
@@ -277,7 +288,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success2(t *testing.T) {
 		},
 	).Times(1)
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, error) {
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
 					&bsdb.EventMigrationBucket{
 						ID:             1,
@@ -292,6 +303,17 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success2(t *testing.T) {
 				}, nil,
 				[]*bsdb.EventCancelMigrationBucket{
 					&bsdb.EventCancelMigrationBucket{
+						ID:           0,
+						BucketID:     common.HexToHash("1"),
+						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+						BucketName:   "",
+						CreateAt:     1,
+						CreateTxHash: common.HexToHash("1"),
+						CreateTime:   1,
+					},
+				},
+				[]*bsdb.EventRejectMigrateBucket{
+					&bsdb.EventRejectMigrateBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -322,8 +344,8 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Fail(t *testing.T) {
 		},
 	).Times(1)
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, error) {
-			return nil, nil, nil, ErrExceedRequest
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
+			return nil, nil, nil, nil, ErrExceedRequest
 		},
 	).Times(1)
 	_, err := a.GfSpListMigrateBucketEvents(context.Background(), &types.GfSpListMigrateBucketEventsRequest{
@@ -373,7 +395,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, error) {
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
 					&bsdb.EventMigrationBucket{
 						ID:             1,
@@ -409,6 +431,17 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success(t *testing.T) {
 						CreateTxHash: common.HexToHash("1"),
 						CreateTime:   1,
 					},
+				},
+				[]*bsdb.EventRejectMigrateBucket{
+					&bsdb.EventRejectMigrateBucket{
+						ID:           0,
+						BucketID:     common.HexToHash("1"),
+						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+						BucketName:   "",
+						CreateAt:     1,
+						CreateTxHash: common.HexToHash("1"),
+						CreateTime:   1,
+					},
 				}, nil
 		},
 	).Times(1)
@@ -425,7 +458,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, error) {
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
 					&bsdb.EventMigrationBucket{
 						ID:             1,
@@ -440,6 +473,17 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success2(t *testing.T) {
 				}, nil,
 				[]*bsdb.EventCancelMigrationBucket{
 					&bsdb.EventCancelMigrationBucket{
+						ID:           0,
+						BucketID:     common.HexToHash("1"),
+						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+						BucketName:   "",
+						CreateAt:     1,
+						CreateTxHash: common.HexToHash("1"),
+						CreateTime:   1,
+					},
+				},
+				[]*bsdb.EventRejectMigrateBucket{
+					&bsdb.EventRejectMigrateBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -464,7 +508,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success3(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, error) {
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
 				&bsdb.EventMigrationBucket{
 					ID:             1,
@@ -476,7 +520,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success3(t *testing.T) {
 					CreateTxHash:   common.HexToHash("1"),
 					CreateTime:     0,
 				},
-			}, nil, nil, nil
+			}, nil, nil, nil, nil
 		},
 	).Times(1)
 	count, err := a.GfSpGetSPMigratingBucketNumber(context.Background(), &types.GfSpGetSPMigratingBucketNumberRequest{
@@ -492,8 +536,8 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Fail(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, error) {
-			return nil, nil, nil, ErrExceedRequest
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
+			return nil, nil, nil, nil, ErrExceedRequest
 		},
 	).Times(1)
 	_, err := a.GfSpGetSPMigratingBucketNumber(context.Background(), &types.GfSpGetSPMigratingBucketNumberRequest{
