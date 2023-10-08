@@ -632,14 +632,14 @@ message GfSpListMigrateBucketEventsRequest {
 
 // ListMigrateBucketEvents is the combination of migrate bucket events
 message ListMigrateBucketEvents {
-  // events defines the migration bucket event
-  greenfield.storage.EventMigrationBucket events = 1;
-  // cancel_events defines the migration bucket event
-  greenfield.storage.EventCancelMigrationBucket cancel_events = 2;
-  // complete_events defines the complete migration bucket event
-  greenfield.storage.EventCompleteMigrationBucket complete_events = 3;
-  // reject_events defines the reject migration bucket event
-  greenfield.storage.EventRejectMigrateBucket reject_events = 4;
+  // event defines the migration bucket event
+  greenfield.storage.EventMigrationBucket event = 1;
+  // cancel_event defines the migration bucket event
+  greenfield.storage.EventCancelMigrationBucket cancel_event = 2;
+  // complete_event defines the complete migration bucket event
+  greenfield.storage.EventCompleteMigrationBucket complete_event = 3;
+  // reject_event defines the reject migration bucket event
+  greenfield.storage.EventRejectMigrateBucket reject_event = 4;
 }
 
 // GfSpListMigrateBucketEventsResponse is response type for the GfSpListMigrateBucketEvents RPC method
