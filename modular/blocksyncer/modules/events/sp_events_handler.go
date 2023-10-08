@@ -20,6 +20,7 @@ var (
 	EventMigrationBucket         = proto.MessageName(&storagetypes.EventMigrationBucket{})
 	EventCompleteMigrationBucket = proto.MessageName(&storagetypes.EventCompleteMigrationBucket{})
 	EventCancelMigrationBucket   = proto.MessageName(&storagetypes.EventCancelMigrationBucket{})
+	EventRejectMigrateBucket     = proto.MessageName(&storagetypes.EventRejectMigrateBucket{})
 
 	EventSwapOut         = proto.MessageName(&vgtypes.EventSwapOut{})
 	EventCompleteSwapOut = proto.MessageName(&vgtypes.EventCompleteSwapOut{})
@@ -38,6 +39,7 @@ var SpExitEvents = map[string]bool{
 	EventCancelSwapOut:           true,
 	EventSpExit:                  true,
 	EventCompleteSpExit:          true,
+	EventRejectMigrateBucket:     true,
 }
 
 func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
@@ -110,6 +112,13 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 			return nil, errors.New("complete swap out event assert error")
 		}
 		return m.handleCompleteSwapOut(ctx, block, txHash, completeSwapOut), nil
+	case EventRejectMigrateBucket:
+		rejectMigrationBucket, ok := typedEvent.(*storagetypes.EventRejectMigrateBucket)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventRejectMigrationBucket", event, typedEvent)
+			return nil, errors.New("reject migration bucket event assert error")
+		}
+		return m.handleRejectMigrateBucket(ctx, block, txHash, rejectMigrationBucket), nil
 	default:
 		return nil, nil
 	}
@@ -267,4 +276,22 @@ func (m *Module) handleCancelMigrationBucket(ctx context.Context, block *tmctype
 	return map[string][]interface{}{
 		k: v,
 	}
+}
+
+func (m *Module) handleRejectMigrateBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, migrationBucket *storagetypes.EventRejectMigrateBucket) map[string][]interface{} {
+	eventRejectMigrateBucketItem := &bsdb.EventRejectMigrateBucket{
+		BucketID:   common.BigToHash(migrationBucket.BucketId.BigInt()),
+		Operator:   common.HexToAddress(migrationBucket.Operator),
+		BucketName: migrationBucket.BucketName,
+
+		CreateAt:     block.Block.Height,
+		CreateTxHash: txHash,
+		CreateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	k, v := m.db.SaveEventRejectMigrationBucket(ctx, eventRejectMigrateBucketItem)
+	return map[string][]interface{}{
+		k: v,
+	}
+
 }
