@@ -231,10 +231,10 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		}
 		if spCompleteEvent == nil {
 			res = append(res, &types.ListMigrateBucketEvents{
-				Events:         spEvent,
-				RejectEvents:   spRejectEvent,
-				CompleteEvents: spCompleteEvent,
-				CancelEvents:   spCancelEvent,
+				Event:         spEvent,
+				RejectEvent:   spRejectEvent,
+				CompleteEvent: spCompleteEvent,
+				CancelEvent:   spCancelEvent,
 			})
 		}
 	}

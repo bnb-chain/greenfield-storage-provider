@@ -487,19 +487,19 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	//}
 
 	// 2. process CompleteEvents
-	if migrateBucketEvents.CompleteEvents != nil {
+	if migrateBucketEvents.CompleteEvent != nil {
 		return nil // why
 	}
 	// 3. process Events
-	if migrateBucketEvents.Events != nil {
-		executePlan, err := s.produceBucketMigrateExecutePlan(migrateBucketEvents.Events, false)
+	if migrateBucketEvents.Event != nil {
+		executePlan, err := s.produceBucketMigrateExecutePlan(migrateBucketEvents.Event, false)
 		if err != nil {
-			log.Errorw("failed to produce bucket migrate execute plan", "Events", migrateBucketEvents.Events, "error", err)
+			log.Errorw("failed to produce bucket migrate execute plan", "Events", migrateBucketEvents.Event, "error", err)
 			return err
 		}
 		if executePlan != nil {
 			if err = executePlan.Start(); err != nil {
-				log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Events, "executePlan", executePlan, "error", err)
+				log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Event, "executePlan", executePlan, "error", err)
 				return err
 			}
 			s.executePlanIDMap[executePlan.bucketID] = executePlan
@@ -865,12 +865,12 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 
 	for _, migrateBucketEvents := range migrationBucketEvents {
 		// if has CompleteEvents & CancelEvents, skip it
-		if migrateBucketEvents.CompleteEvents != nil || migrateBucketEvents.CancelEvents != nil {
+		if migrateBucketEvents.CompleteEvent != nil || migrateBucketEvents.CancelEvent != nil {
 			continue
 		}
-		if migrateBucketEvents.Events != nil {
-			migratingBucketIDs = append(migratingBucketIDs, migrateBucketEvents.Events.BucketId.Uint64())
-			migrationBucketEventsMap[migrateBucketEvents.Events.BucketId.Uint64()] = migrateBucketEvents
+		if migrateBucketEvents.Event != nil {
+			migratingBucketIDs = append(migratingBucketIDs, migrateBucketEvents.Event.BucketId.Uint64())
+			migrationBucketEventsMap[migrateBucketEvents.Event.BucketId.Uint64()] = migrateBucketEvents
 		}
 	}
 	log.Infow("load bucket migrate execute plans from db", "bucket_ids", migratingBucketIDs)
@@ -878,14 +878,14 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	for _, bucketID := range migratingBucketIDs {
 		bucketMigrateEvent := migrationBucketEventsMap[bucketID]
 
-		plan, err := s.produceBucketMigrateExecutePlan(bucketMigrateEvent.Events, true)
+		plan, err := s.produceBucketMigrateExecutePlan(bucketMigrateEvent.Event, true)
 		if err != nil {
 			return err
 		}
 		if plan != nil {
 			log.Debugw("bucket migrate scheduler load from db", "execute_plan", plan, "bucket_id", bucketID)
 			if err = plan.Start(); err != nil {
-				log.Errorw("failed to start bucket migrate execute plan", "events", bucketMigrateEvent.Events, "execute_plan", plan, "error", err)
+				log.Errorw("failed to start bucket migrate execute plan", "events", bucketMigrateEvent.Event, "execute_plan", plan, "error", err)
 				return err
 			}
 			s.executePlanIDMap[plan.bucketID] = plan
