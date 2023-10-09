@@ -8,6 +8,7 @@ import (
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -77,11 +78,7 @@ func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
 
 func MakeErrorResponse(w http.ResponseWriter, err error) {
 	gfspErr := gfsperrors.MakeGfSpError(err)
-	var xmlInfo = struct {
-		XMLName xml.Name `xml:"Error"`
-		Code    int32    `xml:"Code"`
-		Message string   `xml:"Message"`
-	}{
+	xmlInfo := modelgateway.ErrorResponse{
 		Code:    gfspErr.GetInnerCode(),
 		Message: gfspErr.GetDescription(),
 	}

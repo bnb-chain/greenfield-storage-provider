@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-
 	slimiter "github.com/ulule/limiter/v3"
 	smemory "github.com/ulule/limiter/v3/drivers/store/memory"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
@@ -205,11 +205,7 @@ func Limit(next http.Handler) http.Handler {
 
 func MakeLimitErrorResponse(w http.ResponseWriter, err error) {
 	gfspErr := gfsperrors.MakeGfSpError(err)
-	var xmlInfo = struct {
-		XMLName xml.Name `xml:"Error"`
-		Code    int32    `xml:"Code"`
-		Message string   `xml:"Message"`
-	}{
+	xmlInfo := modelgateway.ErrorResponse{
 		Code:    gfspErr.GetInnerCode(),
 		Message: gfspErr.GetDescription(),
 	}

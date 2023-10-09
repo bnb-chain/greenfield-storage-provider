@@ -10,6 +10,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
+const (
+	successCode      = "0"
+	unknownErrorCode = "-1"
+)
+
 // responseWriterDelegator implements http.ResponseWriter and extracts the statusCode.
 type responseWriterDelegator struct {
 	w          http.ResponseWriter
@@ -65,13 +70,13 @@ func (wd *responseWriterDelegator) GetSPErrorCode() string {
 		errorCode string
 	)
 	if wd.statusCode == http.StatusOK {
-		errorCode = "0" // no error
+		errorCode = successCode // no error
 	} else {
 		body := wd.GetBody()
 		err := xml.Unmarshal(body, errorResp)
 		if err != nil {
 			log.Errorw("cannot parse gateway error response", "error", err)
-			errorCode = "-1" // unknown error code
+			errorCode = unknownErrorCode // unknown error code
 			return errorCode
 		}
 		errorCode = strconv.Itoa(int(errorResp.Code))
