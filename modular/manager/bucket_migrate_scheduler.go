@@ -31,6 +31,7 @@ const (
 	bucketCacheSize        = int(100)
 	bucketCacheExpire      = 30 * time.Minute
 	migrateGVGTaskMaxRetry = int(5)
+	blockInterval          = 3 * time.Second
 )
 
 var _ vgmgr.GVGPickFilter = &PickDestGVGFilter{}
@@ -106,7 +107,7 @@ type BucketMigrateExecutePlan struct {
 	bucketID         uint64
 	gvgUnitMap       map[uint32]*BucketMigrateGVGExecuteUnit // gvgID -> BucketMigrateGVGExecuteUnit
 	stopSignal       chan struct{}                           // stop schedule
-	finishedGvgUnits map[uint32]struct{}                     // used for count the number of successful migrate units
+	finishedGvgUnits map[uint32]struct{}                     // used to count the number of successful migrate units
 }
 
 func newBucketMigrateExecutePlan(manager *ManageModular, bucketID uint64, scheduler *BucketMigrateScheduler) *BucketMigrateExecutePlan {
@@ -227,14 +228,13 @@ func (plan *BucketMigrateExecutePlan) rejectBucketMigration() error {
 }
 
 func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, migrateExecuteUnit *BucketMigrateGVGExecuteUnit, migrateStatus MigrateStatus) error {
-	migrateExecuteUnit.MigrateStatus = migrateStatus
-	plan.finishedGvgUnits[migrateExecuteUnit.SrcGVG.GetId()] = struct{}{}
-
 	err := plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus))
 	if err != nil {
 		log.Errorw("update migrate gvg status", "migrate_key", migrateKey, "error", err)
 		return err
 	}
+	migrateExecuteUnit.MigrateStatus = migrateStatus
+	plan.finishedGvgUnits[migrateExecuteUnit.SrcGVG.GetId()] = struct{}{}
 
 	// all migrate units success, send tx to chain
 	if len(plan.finishedGvgUnits) == len(plan.gvgUnitMap) {
@@ -244,7 +244,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 			return err
 		}
 		// wait for bucket status change onchain
-		time.Sleep(3 * time.Second)
+		time.Sleep(blockInterval)
 		err = plan.scheduler.doneMigrateBucket(migrateExecuteUnit.BucketID)
 		if err != nil {
 			log.Errorw("failed to done migrate bucket", "error", err, "bucket_id", migrateExecuteUnit.BucketID)
@@ -409,7 +409,7 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedS
 	if has {
 		value, ok := elem.(storagetypes.BucketInfo)
 		if !ok {
-			log.Debugw("failed to get bucketinfo from bucket cache", "key", key)
+			log.Debugw("failed to get bucketInfo from bucket cache", "key", key)
 			s.bucketCache.Delete(key)
 			err = QueryBucketInfoFromChainFunc()
 		} else {
@@ -476,27 +476,33 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
 }
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
-	// 1. process CancelEvents
-	//if migrateBucketEvents.CancelEvents != nil || migrateBucketEvents.RejectEvents != nil {
-	//	log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
-	//	s.cancelMigrateBucket(migrateBucketEvents.CancelEvents.BucketId.Uint64())
-	//	log.Infow("succeed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvents)
-	//}
+	// 1. process CancelEvents or RejectEvent
+	if migrateBucketEvents.CancelEvent != nil {
+		log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent)
+		s.cancelMigrateBucket(migrateBucketEvents.CancelEvent.BucketId.Uint64())
+		log.Infow("succeed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent)
+	}
 
-	// 2. process CompleteEvents
-	if migrateBucketEvents.CompleteEvents != nil {
+	// 2. process rejectEvents
+	if migrateBucketEvents.RejectEvent != nil {
+		log.Infow("begin to process reject events", "reject_event", migrateBucketEvents.RejectEvent)
+		s.cancelMigrateBucket(migrateBucketEvents.CancelEvent.BucketId.Uint64())
+		log.Infow("succeed to process reject events", "reject_event", migrateBucketEvents.RejectEvent)
+	}
+	// 3. process CompleteEvents
+	if migrateBucketEvents.CompleteEvent != nil {
 		return nil
 	}
-	// 3. process Events
-	if migrateBucketEvents.Events != nil {
-		executePlan, err := s.produceBucketMigrateExecutePlan(migrateBucketEvents.Events, false)
+	// 4. process Events
+	if migrateBucketEvents.Event != nil {
+		executePlan, err := s.produceBucketMigrateExecutePlan(migrateBucketEvents.Event, false)
 		if err != nil {
-			log.Errorw("failed to produce bucket migrate execute plan", "Events", migrateBucketEvents.Events, "error", err)
+			log.Errorw("failed to produce bucket migrate execute plan", "Events", migrateBucketEvents.Event, "error", err)
 			return err
 		}
 		if executePlan != nil {
 			if err = executePlan.Start(); err != nil {
-				log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Events, "executePlan", executePlan, "error", err)
+				log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Event, "executePlan", executePlan, "error", err)
 				return err
 			}
 			s.executePlanIDMap[executePlan.bucketID] = executePlan
@@ -753,7 +759,7 @@ func (s *BucketMigrateScheduler) getExecutePlanByBucketID(bucketID uint64) (*Buc
 	}
 }
 
-func (s *BucketMigrateScheduler) deleteExecutePlanByBucketID(bucketID uint64) error {
+func (s *BucketMigrateScheduler) deleteExecutePlanByBucketID(bucketID uint64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	_, ok := s.executePlanIDMap[bucketID]
@@ -762,7 +768,6 @@ func (s *BucketMigrateScheduler) deleteExecutePlanByBucketID(bucketID uint64) er
 	} else {
 		log.Debugw("failed to the delete execute plan from the map due to delete an nonexistent bucket", "bucket_id", bucketID)
 	}
-	return nil
 }
 
 func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketMigrateResponse, error) {
@@ -813,11 +818,15 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 		// The report task from executor keeps track of the err when acquiring data from the src SP, if a gvg's migration
 		// continuously fails(The LastMigratedObjectID stays still); it will send a tx to reject the migration
 		if task.Error() != nil {
+			log.Errorw("report migrate progress task", "migrate_key", migrateKey, "error", task.Error())
 			migrateGVGUnit, queryErr := executePlan.QueryMigrateGVG(migrateKey) // if it is the first object starts to fail ?
 			if queryErr != nil {
 				log.Errorw("failed to query migrate gvg unit", "error", queryErr)
 				return queryErr
 			}
+			log.Debugw("migrateGVGUnit", "migrate_key", migrateKey, "migrateGVGUnit", migrateGVGUnit)
+			log.Debugw("task.GetLastMigratedObjectID()", "migrate_key", migrateKey, "task.GetLastMigratedObjectID()", task.GetLastMigratedObjectID())
+
 			if task.GetLastMigratedObjectID() == migrateGVGUnit.LastMigratedObjectID {
 				if migrateGVGUnit.RetryTime+1 >= migrateGVGTaskMaxRetry {
 					if err = executePlan.rejectBucketMigration(); err != nil {
@@ -861,12 +870,12 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 
 	for _, migrateBucketEvents := range migrationBucketEvents {
 		// if has CompleteEvents & CancelEvents, skip it
-		if migrateBucketEvents.CompleteEvents != nil || migrateBucketEvents.CancelEvents != nil {
+		if migrateBucketEvents.CompleteEvent != nil || migrateBucketEvents.CancelEvent != nil {
 			continue
 		}
-		if migrateBucketEvents.Events != nil {
-			migratingBucketIDs = append(migratingBucketIDs, migrateBucketEvents.Events.BucketId.Uint64())
-			migrationBucketEventsMap[migrateBucketEvents.Events.BucketId.Uint64()] = migrateBucketEvents
+		if migrateBucketEvents.Event != nil {
+			migratingBucketIDs = append(migratingBucketIDs, migrateBucketEvents.Event.BucketId.Uint64())
+			migrationBucketEventsMap[migrateBucketEvents.Event.BucketId.Uint64()] = migrateBucketEvents
 		}
 	}
 	log.Infow("load bucket migrate execute plans from db", "bucket_ids", migratingBucketIDs)
@@ -874,14 +883,14 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	for _, bucketID := range migratingBucketIDs {
 		bucketMigrateEvent := migrationBucketEventsMap[bucketID]
 
-		plan, err := s.produceBucketMigrateExecutePlan(bucketMigrateEvent.Events, true)
+		plan, err := s.produceBucketMigrateExecutePlan(bucketMigrateEvent.Event, true)
 		if err != nil {
 			return err
 		}
 		if plan != nil {
 			log.Debugw("bucket migrate scheduler load from db", "execute_plan", plan, "bucket_id", bucketID)
 			if err = plan.Start(); err != nil {
-				log.Errorw("failed to start bucket migrate execute plan", "events", bucketMigrateEvent.Events, "execute_plan", plan, "error", err)
+				log.Errorw("failed to start bucket migrate execute plan", "events", bucketMigrateEvent.Event, "execute_plan", plan, "error", err)
 				return err
 			}
 			s.executePlanIDMap[plan.bucketID] = plan

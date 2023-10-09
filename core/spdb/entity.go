@@ -111,7 +111,7 @@ type MigrateGVGUnitMeta struct {
 	DestSPID                 uint32
 	LastMigratedObjectID     uint64
 	MigrateStatus            int // scheduler assign unit status.
-	RetryTime                int
+	RetryTime                int // todo what is the practice for DB migration?
 }
 
 // SwapOutMeta is used to record swap out meta.
