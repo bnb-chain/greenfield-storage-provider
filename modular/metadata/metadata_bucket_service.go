@@ -74,7 +74,7 @@ func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfS
 	res := make([]*types.VGFInfoBucket, 0)
 	for _, bucket := range buckets {
 		vgf := vgfMap[bucket.GlobalVirtualGroupFamilyID]
-		res = append(res, &types.VGFInfoBucket{
+		b := &types.VGFInfoBucket{
 			BucketInfo: &storage_types.BucketInfo{
 				Owner:                      bucket.Owner.String(),
 				BucketName:                 bucket.BucketName,
@@ -95,13 +95,16 @@ func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfS
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
-			Vgf: &virtual_types.GlobalVirtualGroupFamily{
+		}
+		if vgf != nil {
+			b.Vgf = &virtual_types.GlobalVirtualGroupFamily{
 				Id:                    vgf.GlobalVirtualGroupFamilyId,
 				PrimarySpId:           vgf.PrimarySpId,
 				GlobalVirtualGroupIds: vgf.GlobalVirtualGroupIds,
 				VirtualPaymentAddress: vgf.VirtualPaymentAddress.String(),
-			},
-		})
+			}
+		}
+		res = append(res, b)
 	}
 	resp = &types.GfSpGetUserBucketsResponse{Buckets: res}
 	log.CtxInfow(ctx, "succeed to get user buckets")

@@ -121,9 +121,6 @@ func (b *BsDBImpl) ListVirtualGroupFamiliesByVgfIDs(vgfIDs []uint32) ([]*GlobalV
 		Where("global_virtual_group_family_id in (?)", vgfIDs).
 		Scopes(filters...).
 		Find(&families).Error
-	if len(families) == 0 {
-		return nil, gorm.ErrRecordNotFound
-	}
 
 	return families, err
 }
