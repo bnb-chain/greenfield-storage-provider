@@ -29,7 +29,7 @@ var (
 type KeyToRateLimiterNameCell struct {
 	Key    string
 	Method string
-	Name   string
+	Names  []string
 }
 
 type RateLimiterCell struct {
@@ -60,14 +60,17 @@ type MemoryLimiterConfig struct {
 }
 
 type APILimiterConfig struct {
-	IPLimitCfg          IPLimitConfig
-	PathPattern         map[string]MemoryLimiterConfig
-	PathSequence        []string
-	APILimits           map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
-	HostPattern         map[string]MemoryLimiterConfig
-	HostSequence        []string
-	VirtualHostPattern  map[string]MemoryLimiterConfig
-	VirtualHostSequence []string
+	IPLimitCfg   IPLimitConfig
+	PathPattern  map[string][]MemoryLimiterConfig
+	PathSequence []string
+	APILimits    map[string][]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
+	HostPattern  map[string][]MemoryLimiterConfig
+	HostSequence []string
+}
+
+type rateLimiterWithName struct {
+	name        string
+	rateLimiter *slimiter.Limiter
 }
 
 type apiLimiter struct {
@@ -86,10 +89,10 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	limiter = &apiLimiter{
 		store: localStore,
 		cfg: APILimiterConfig{
-			APILimits:    make(map[string]MemoryLimiterConfig),
-			PathPattern:  make(map[string]MemoryLimiterConfig),
+			APILimits:    make(map[string][]MemoryLimiterConfig),
+			PathPattern:  make(map[string][]MemoryLimiterConfig),
 			PathSequence: cfg.PathSequence,
-			HostPattern:  make(map[string]MemoryLimiterConfig),
+			HostPattern:  make(map[string][]MemoryLimiterConfig),
 			HostSequence: cfg.HostSequence,
 			IPLimitCfg:   cfg.IPLimitCfg,
 		},
@@ -106,53 +109,72 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 		limiter.cfg.HostPattern[strings.ToLower(k)] = v
 	}
 
-	for k, v := range cfg.APILimits {
-		rate, err = slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", v.RateLimit, v.RatePeriod))
-		if err != nil {
-			return err
-		}
+	for k, vs := range cfg.APILimits {
+		for _, v := range vs {
+			rate, err = slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", v.RateLimit, v.RatePeriod))
+			if err != nil {
+				return err
+			}
 
-		limiter.limiterMap.Store(strings.ToLower(k), slimiter.New(localStore, rate))
+			limiter.limiterMap.Store(strings.ToLower(k), slimiter.New(localStore, rate))
+		}
 	}
 
 	return nil
 }
 
-func (a *apiLimiter) findLimiter(host, path, key string) (string, *slimiter.Limiter) {
+func (a *apiLimiter) findLimiter(host, path, key string) []rateLimiterWithName {
+	var result []rateLimiterWithName
 	newLimiter, ok := a.limiterMap.Load(key)
 	if ok {
-		return "", newLimiter.(*slimiter.Limiter)
+		result = append(result, rateLimiterWithName{
+			name:        "",
+			rateLimiter: newLimiter.(*slimiter.Limiter),
+		})
 	}
 
 	for i := 0; i < len(a.cfg.HostSequence); i++ {
 		hostPatternInSequence := a.cfg.HostSequence[i]
-		l := a.cfg.HostPattern[hostPatternInSequence]
+		ls := a.cfg.HostPattern[hostPatternInSequence]
 		if regexp.MustCompile(hostPatternInSequence).MatchString(host) {
-			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
-			if err != nil {
-				log.Errorw("failed to new rate from formatted", "err", err)
-				continue
+			for _, l := range ls {
+				rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
+				if err != nil {
+					log.Errorw("failed to new rate from formatted", "err", err)
+					continue
+				}
+				newLimiter = slimiter.New(a.store, rate)
+				result = append(result, rateLimiterWithName{
+					name:        l.Name,
+					rateLimiter: newLimiter.(*slimiter.Limiter),
+				})
 			}
-			newLimiter = slimiter.New(a.store, rate)
-			return l.Name, newLimiter.(*slimiter.Limiter)
 		}
 	}
+
+	//todo: distinguish virtual host path pattern
+	// if host.split("/")
 
 	for i := 0; i < len(a.cfg.PathPattern); i++ {
 		pathPatternInSequence := a.cfg.PathSequence[i]
-		l := a.cfg.PathPattern[pathPatternInSequence]
+		ls := a.cfg.PathPattern[pathPatternInSequence]
 		if regexp.MustCompile(pathPatternInSequence).MatchString(path) {
-			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
-			if err != nil {
-				log.Errorw("failed to new rate from formatted", "err", err)
-				continue
+			for _, l := range ls {
+				rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
+				if err != nil {
+					log.Errorw("failed to new rate from formatted", "err", err)
+					continue
+				}
+				newLimiter = slimiter.New(a.store, rate)
+				result = append(result, rateLimiterWithName{
+					name:        l.Name,
+					rateLimiter: newLimiter.(*slimiter.Limiter),
+				})
 			}
-			newLimiter = slimiter.New(a.store, rate)
-			return l.Name, newLimiter.(*slimiter.Limiter)
 		}
 	}
 
-	return "", nil
+	return result
 }
 
 func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
@@ -163,20 +185,21 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
 
 	// find multiple limiters with their own name keys, return a map
 
-	name, l := t.findLimiter(host, path, key)
-	if l == nil {
+	rateLimiterWithNames := t.findLimiter(host, path, key)
+	if rateLimiterWithNames == nil || len(rateLimiterWithNames) == 0 {
 		return true
 	}
 
 	// iterate through all map component, if any one reached limit, return false
+	for _, rateLimiterWName := range rateLimiterWithNames {
+		limiterCtx, err := t.store.Increment(ctx, rateLimiterWName.name, 1, rateLimiterWName.rateLimiter.Rate)
+		if err != nil {
+			return true
+		}
 
-	limiterCtx, err := t.store.Increment(ctx, name, 1, l.Rate)
-	if err != nil {
-		return true
-	}
-
-	if limiterCtx.Reached {
-		return false
+		if limiterCtx.Reached {
+			return false
+		}
 	}
 	return true
 }

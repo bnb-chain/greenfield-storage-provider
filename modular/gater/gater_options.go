@@ -50,43 +50,52 @@ func defaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 }
 
 func makeAPIRateLimitCfg(cfg mwhttp.RateLimiterConfig) *mwhttp.APILimiterConfig {
-	pathPatternMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	pathPatternMap := make(map[string][]mwhttp.MemoryLimiterConfig)
 	// todo: make dynamic array
 	pathSequence := make([]string, len(cfg.PathPattern))
 	for i, c := range cfg.PathPattern {
-		for _, v := range cfg.NameToLimit {
-			if strings.EqualFold(v.Name, c.Name) {
-				pathSequence[i] = c.Key
-				pathPatternMap[c.Key] = mwhttp.MemoryLimiterConfig{
-					Name:       v.Name,
-					RateLimit:  v.RateLimit,
-					RatePeriod: v.RatePeriod,
+		for _, name := range c.Names {
+			for _, v := range cfg.NameToLimit {
+				if strings.EqualFold(v.Name, name) {
+					pathSequence[i] = c.Key
+					limiterConfig := mwhttp.MemoryLimiterConfig{
+						Name:       v.Name,
+						RateLimit:  v.RateLimit,
+						RatePeriod: v.RatePeriod,
+					}
+					pathPatternMap[c.Key] = append(pathPatternMap[c.Key], limiterConfig)
 				}
 			}
 		}
 	}
-	patternMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	patternMap := make(map[string][]mwhttp.MemoryLimiterConfig)
 	hostSequence := make([]string, len(cfg.HostPattern))
 	for i, c := range cfg.HostPattern {
-		for _, v := range cfg.NameToLimit {
-			if strings.EqualFold(v.Name, c.Name) {
-				hostSequence[i] = c.Key
-				patternMap[c.Key] = mwhttp.MemoryLimiterConfig{
-					Name:       v.Name,
-					RateLimit:  v.RateLimit,
-					RatePeriod: v.RatePeriod,
+		for _, name := range c.Names {
+			for _, v := range cfg.NameToLimit {
+				if strings.EqualFold(v.Name, name) {
+					hostSequence[i] = c.Key
+					limiterConfig := mwhttp.MemoryLimiterConfig{
+						Name:       v.Name,
+						RateLimit:  v.RateLimit,
+						RatePeriod: v.RatePeriod,
+					}
+					patternMap[c.Key] = append(patternMap[c.Key], limiterConfig)
 				}
 			}
 		}
 	}
-	apiLimitsMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	apiLimitsMap := make(map[string][]mwhttp.MemoryLimiterConfig)
 	for _, c := range cfg.APILimits {
-		for _, v := range cfg.NameToLimit {
-			if strings.EqualFold(v.Name, c.Name) {
-				apiLimitsMap[c.Key] = mwhttp.MemoryLimiterConfig{
-					Name:       v.Name,
-					RateLimit:  v.RateLimit,
-					RatePeriod: v.RatePeriod,
+		for _, name := range c.Names {
+			for _, v := range cfg.NameToLimit {
+				if strings.EqualFold(v.Name, name) {
+					limiterConfig := mwhttp.MemoryLimiterConfig{
+						Name:       v.Name,
+						RateLimit:  v.RateLimit,
+						RatePeriod: v.RatePeriod,
+					}
+					apiLimitsMap[c.Key] = append(apiLimitsMap[c.Key], limiterConfig)
 				}
 			}
 		}
