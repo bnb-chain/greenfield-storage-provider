@@ -257,7 +257,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		m.baseApp.TaskMaxRetry(replicateTask))
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
-
+	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
 	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)

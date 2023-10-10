@@ -209,21 +209,29 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
 		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
 	txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
-	log.Infow("send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "error", txErr)
+	if txErr != nil {
+		log.Infow("failed to send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "err", txErr)
+		return txErr
+	}
+	log.Infow("send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash)
 	return nil
 }
 
 func (plan *BucketMigrateExecutePlan) rejectBucketMigration() error {
-	bucket, err := plan.manager.baseApp.GfSpClient().GetBucketByBucketID(context.Background(), int64(plan.bucketID), true)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	bucket, err := plan.manager.baseApp.GfSpClient().GetBucketByBucketID(ctx, int64(plan.bucketID), true)
 	if err != nil {
 		return err
 	}
 	rejectMigrateBucket := &storagetypes.MsgRejectMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
 		BucketName: bucket.BucketInfo.GetBucketName()}
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 	txHash, txErr := plan.manager.baseApp.GfSpClient().RejectMigrateBucket(ctx, rejectMigrateBucket)
-	log.Infow("send reject migrate bucket msg to chain", "msg", rejectMigrateBucket, "tx_hash", txHash, "error", txErr)
+	if txErr != nil {
+		log.Errorw("failed to send reject migrate bucket msg to chain", "msg", rejectMigrateBucket, "tx_hash", txHash, "err", txErr)
+		return txErr
+	}
+	log.Infow("send reject migrate bucket msg to chain", "msg", rejectMigrateBucket, "tx_hash", txHash)
 	return nil
 }
 
@@ -300,7 +308,7 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 					plan.manager.baseApp.TaskTimeout(migrateGVGTask, 0),
 					plan.manager.baseApp.TaskMaxRetry(migrateGVGTask))
 				migrateGVGTask.SetDestGvg(migrateGVGUnit.DestGVG)
-				err := plan.manager.migrateGVGQueuePush(migrateGVGTask) // put into queue
+				err := plan.manager.migrateGVGQueuePush(migrateGVGTask)
 				if err != nil {
 					log.Errorw("failed to push migrate gvg task to queue", "error", err)
 					time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
@@ -476,14 +484,14 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64) error {
 }
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
-	// 1. process CancelEvents or RejectEvent
+	// 1. process CancelEvents
 	if migrateBucketEvents.CancelEvent != nil {
 		log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent)
 		s.cancelMigrateBucket(migrateBucketEvents.CancelEvent.BucketId.Uint64())
 		log.Infow("succeed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent)
 	}
 
-	// 2. process rejectEvents
+	// 2. process RejectEvents
 	if migrateBucketEvents.RejectEvent != nil {
 		log.Infow("begin to process reject events", "reject_event", migrateBucketEvents.RejectEvent)
 		s.cancelMigrateBucket(migrateBucketEvents.CancelEvent.BucketId.Uint64())
@@ -731,7 +739,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 			log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "EventMigrationBucket", event)
 			return nil, err
 		}
-		// Need to wait for tx confirmed on chain before checking bucket status.
+		time.Sleep(blockInterval)
 		err = s.doneMigrateBucket(event.BucketId.Uint64())
 		if err != nil {
 			log.Errorw("failed to done migrate bucket", "error", err, "EventMigrationBucket", event)
@@ -819,7 +827,7 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 		// continuously fails(The LastMigratedObjectID stays still); it will send a tx to reject the migration
 		if task.Error() != nil {
 			log.Errorw("report migrate progress task", "migrate_key", migrateKey, "error", task.Error())
-			migrateGVGUnit, queryErr := executePlan.QueryMigrateGVG(migrateKey) // if it is the first object starts to fail ?
+			migrateGVGUnit, queryErr := executePlan.QueryMigrateGVG(migrateKey)
 			if queryErr != nil {
 				log.Errorw("failed to query migrate gvg unit", "error", queryErr)
 				return queryErr
