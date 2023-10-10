@@ -280,8 +280,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		router.Path("/").Name(verifyMigrateGVGPermissionRouterName).Methods(http.MethodGet).Queries(VerifyMigrateGVGPermissionQuery, "").HandlerFunc(g.verifyMigrateGVGPermissionHandler)
 	}
 
-	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
-
 	// bucket list router, path style
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
 
