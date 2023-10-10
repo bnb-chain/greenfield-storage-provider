@@ -20,12 +20,11 @@ func TestNewGateModularSuccess(t *testing.T) {
 
 func TestNewGateModularFailure(t *testing.T) {
 	app := &gfspapp.GfSpBaseApp{}
-	apiLimits := mwhttp.RateLimiterCell{
-		Key:        "test_api_limit",
-		RateLimit:  1,
-		RatePeriod: "A",
+	apiLimits := mwhttp.KeyToRateLimiterNameCell{
+		Key:  "test_api_limit",
+		Name: "ApiLimit",
 	}
-	apiList := make([]mwhttp.RateLimiterCell, 0)
+	apiList := make([]mwhttp.KeyToRateLimiterNameCell, 0)
 	apiList = append(apiList, apiLimits)
 	cfg := &gfspconfig.GfSpConfig{
 		APIRateLimiter: mwhttp.RateLimiterConfig{
@@ -38,28 +37,25 @@ func TestNewGateModularFailure(t *testing.T) {
 }
 
 func Test_makeAPIRateLimitCfg(t *testing.T) {
-	pathPattern := mwhttp.RateLimiterCell{
-		Key:        "test_path_pattern",
-		RateLimit:  1,
-		RatePeriod: "S",
+	pathPattern := mwhttp.KeyToRateLimiterNameCell{
+		Key:  "test_path_pattern",
+		Name: "PathPattern",
 	}
-	pathList := make([]mwhttp.RateLimiterCell, 0)
+	pathList := make([]mwhttp.KeyToRateLimiterNameCell, 0)
 	pathList = append(pathList, pathPattern)
 
-	hostPattern := mwhttp.RateLimiterCell{
-		Key:        "test_path_pattern",
-		RateLimit:  2,
-		RatePeriod: "M",
+	hostPattern := mwhttp.KeyToRateLimiterNameCell{
+		Key:  "test_path_pattern",
+		Name: "PathPattern",
 	}
-	hostList := make([]mwhttp.RateLimiterCell, 0)
+	hostList := make([]mwhttp.KeyToRateLimiterNameCell, 0)
 	hostList = append(hostList, hostPattern)
 
-	apiLimits := mwhttp.RateLimiterCell{
-		Key:        "test_api_limit",
-		RateLimit:  3,
-		RatePeriod: "H",
+	apiLimits := mwhttp.KeyToRateLimiterNameCell{
+		Key:  "test_api_limit",
+		Name: "ApiLimit",
 	}
-	apiList := make([]mwhttp.RateLimiterCell, 0)
+	apiList := make([]mwhttp.KeyToRateLimiterNameCell, 0)
 	apiList = append(apiList, apiLimits)
 	cfg := mwhttp.RateLimiterConfig{
 		PathPattern: pathList,

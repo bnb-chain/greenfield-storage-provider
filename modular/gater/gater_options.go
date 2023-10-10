@@ -6,6 +6,7 @@ import (
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	mwhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	"strings"
 )
 
 const (
@@ -49,33 +50,49 @@ func defaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 }
 
 func makeAPIRateLimitCfg(cfg mwhttp.RateLimiterConfig) *mwhttp.APILimiterConfig {
-	defaultMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	pathPatternMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	// todo: make dynamic array
 	pathSequence := make([]string, len(cfg.PathPattern))
 	for i, c := range cfg.PathPattern {
-		pathSequence[i] = c.Key
-		defaultMap[c.Key] = mwhttp.MemoryLimiterConfig{
-			RateLimit:  c.RateLimit,
-			RatePeriod: c.RatePeriod,
+		for _, v := range cfg.NameToLimit {
+			if strings.EqualFold(v.Name, c.Name) {
+				pathSequence[i] = c.Key
+				pathPatternMap[c.Key] = mwhttp.MemoryLimiterConfig{
+					Name:       v.Name,
+					RateLimit:  v.RateLimit,
+					RatePeriod: v.RatePeriod,
+				}
+			}
 		}
 	}
 	patternMap := make(map[string]mwhttp.MemoryLimiterConfig)
 	hostSequence := make([]string, len(cfg.HostPattern))
 	for i, c := range cfg.HostPattern {
-		hostSequence[i] = c.Key
-		patternMap[c.Key] = mwhttp.MemoryLimiterConfig{
-			RateLimit:  c.RateLimit,
-			RatePeriod: c.RatePeriod,
+		for _, v := range cfg.NameToLimit {
+			if strings.EqualFold(v.Name, c.Name) {
+				hostSequence[i] = c.Key
+				patternMap[c.Key] = mwhttp.MemoryLimiterConfig{
+					Name:       v.Name,
+					RateLimit:  v.RateLimit,
+					RatePeriod: v.RatePeriod,
+				}
+			}
 		}
 	}
 	apiLimitsMap := make(map[string]mwhttp.MemoryLimiterConfig)
 	for _, c := range cfg.APILimits {
-		apiLimitsMap[c.Key] = mwhttp.MemoryLimiterConfig{
-			RateLimit:  c.RateLimit,
-			RatePeriod: c.RatePeriod,
+		for _, v := range cfg.NameToLimit {
+			if strings.EqualFold(v.Name, c.Name) {
+				apiLimitsMap[c.Key] = mwhttp.MemoryLimiterConfig{
+					Name:       v.Name,
+					RateLimit:  v.RateLimit,
+					RatePeriod: v.RatePeriod,
+				}
+			}
 		}
 	}
 	return &mwhttp.APILimiterConfig{
-		PathPattern:  defaultMap,
+		PathPattern:  pathPatternMap,
 		PathSequence: pathSequence,
 		HostPattern:  patternMap,
 		HostSequence: hostSequence,

@@ -26,8 +26,14 @@ var (
 	ErrTooManyRequest = gfsperrors.Register(Middleware, http.StatusTooManyRequests, 960001, "too many requests, please try it again later")
 )
 
+type KeyToRateLimiterNameCell struct {
+	Key    string
+	Method string
+	Name   string
+}
+
 type RateLimiterCell struct {
-	Key        string
+	Name       string
 	RateLimit  int
 	RatePeriod string
 }
@@ -39,24 +45,29 @@ type IPLimitConfig struct {
 }
 
 type RateLimiterConfig struct {
-	IPLimitCfg  IPLimitConfig
-	PathPattern []RateLimiterCell `comment:"optional"`
-	HostPattern []RateLimiterCell `comment:"optional"`
-	APILimits   []RateLimiterCell `comment:"optional"`
+	IPLimitCfg             IPLimitConfig
+	PathPattern            []KeyToRateLimiterNameCell `comment:"optional"`
+	HostPattern            []KeyToRateLimiterNameCell `comment:"optional"`
+	APILimits              []KeyToRateLimiterNameCell `comment:"optional"`
+	VirtualHostPathPattern []KeyToRateLimiterNameCell `comment:"optional"`
+	NameToLimit            []RateLimiterCell          `comment:"optional"`
 }
 
 type MemoryLimiterConfig struct {
+	Name       string // limiter name
 	RateLimit  int    // rate
 	RatePeriod string // per period
 }
 
 type APILimiterConfig struct {
-	IPLimitCfg   IPLimitConfig
-	PathPattern  map[string]MemoryLimiterConfig
-	PathSequence []string
-	APILimits    map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
-	HostPattern  map[string]MemoryLimiterConfig
-	HostSequence []string
+	IPLimitCfg          IPLimitConfig
+	PathPattern         map[string]MemoryLimiterConfig
+	PathSequence        []string
+	APILimits           map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
+	HostPattern         map[string]MemoryLimiterConfig
+	HostSequence        []string
+	VirtualHostPattern  map[string]MemoryLimiterConfig
+	VirtualHostSequence []string
 }
 
 type apiLimiter struct {
@@ -107,15 +118,15 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	return nil
 }
 
-func (a *apiLimiter) findLimiter(host, path, key string) *slimiter.Limiter {
+func (a *apiLimiter) findLimiter(host, path, key string) (string, *slimiter.Limiter) {
 	newLimiter, ok := a.limiterMap.Load(key)
 	if ok {
-		return newLimiter.(*slimiter.Limiter)
+		return "", newLimiter.(*slimiter.Limiter)
 	}
 
 	for i := 0; i < len(a.cfg.HostSequence); i++ {
 		hostPatternInSequence := a.cfg.HostSequence[i]
-		l := a.cfg.PathPattern[hostPatternInSequence]
+		l := a.cfg.HostPattern[hostPatternInSequence]
 		if regexp.MustCompile(hostPatternInSequence).MatchString(host) {
 			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
 			if err != nil {
@@ -123,7 +134,7 @@ func (a *apiLimiter) findLimiter(host, path, key string) *slimiter.Limiter {
 				continue
 			}
 			newLimiter = slimiter.New(a.store, rate)
-			return newLimiter.(*slimiter.Limiter)
+			return l.Name, newLimiter.(*slimiter.Limiter)
 		}
 	}
 
@@ -137,11 +148,11 @@ func (a *apiLimiter) findLimiter(host, path, key string) *slimiter.Limiter {
 				continue
 			}
 			newLimiter = slimiter.New(a.store, rate)
-			return newLimiter.(*slimiter.Limiter)
+			return l.Name, newLimiter.(*slimiter.Limiter)
 		}
 	}
 
-	return nil
+	return "", nil
 }
 
 func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
@@ -150,12 +161,16 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
 	key := host + "-" + path
 	key = strings.ToLower(key)
 
-	l := t.findLimiter(host, path, key)
+	// find multiple limiters with their own name keys, return a map
+
+	name, l := t.findLimiter(host, path, key)
 	if l == nil {
 		return true
 	}
 
-	limiterCtx, err := t.store.Increment(ctx, key, 1, l.Rate)
+	// iterate through all map component, if any one reached limit, return false
+
+	limiterCtx, err := t.store.Increment(ctx, name, 1, l.Rate)
 	if err != nil {
 		return true
 	}
