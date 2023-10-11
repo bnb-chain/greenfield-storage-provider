@@ -7,6 +7,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -29,7 +30,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
@@ -121,7 +122,7 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {

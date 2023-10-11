@@ -16,6 +16,7 @@ import (
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -51,7 +52,7 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to request nonce", "req_info", reqCtx.String())
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
@@ -107,7 +108,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKey", "req_info", reqCtx.String())
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {

@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield/types/common"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -31,7 +32,7 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 		if err != nil {
 			reqCtx.SetError(err)
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
 			reqCtx.SetHTTPCode(http.StatusOK)
 		}
@@ -116,7 +117,7 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			reqCtx.SetError(err)
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
 			reqCtx.SetHTTPCode(http.StatusOK)
 		}
@@ -213,7 +214,7 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 		if err != nil {
 			reqCtx.SetError(err)
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
 			reqCtx.SetHTTPCode(http.StatusOK)
 		}
@@ -257,7 +258,7 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			reqCtx.SetError(err)
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 		} else {
 			reqCtx.SetHTTPCode(http.StatusOK)
 		}

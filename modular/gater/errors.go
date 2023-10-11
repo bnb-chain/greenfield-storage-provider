@@ -1,15 +1,12 @@
 package gater
 
 import (
-	"encoding/xml"
 	"net/http"
 	"strconv"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 var (
@@ -74,21 +71,4 @@ func ErrNotifySwapOutWithDetail(detail string) *gfsperrors.GfSpError {
 
 func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 55001, detail)
-}
-
-func MakeErrorResponse(w http.ResponseWriter, err error) {
-	gfspErr := gfsperrors.MakeGfSpError(err)
-	xmlInfo := modelgateway.ErrorResponse{
-		Code:    gfspErr.GetInnerCode(),
-		Message: gfspErr.GetDescription(),
-	}
-	xmlBody, err := xml.Marshal(&xmlInfo)
-	if err != nil {
-		log.Errorw("failed to marshal error response", "error", gfspErr.String())
-	}
-	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
-	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
-	if _, err = w.Write(xmlBody); err != nil {
-		log.Errorw("failed to write error response", "error", gfspErr.String())
-	}
 }

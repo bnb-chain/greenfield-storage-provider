@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"encoding/xml"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -192,32 +191,15 @@ func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
 func Limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !limiter.Allow(context.Background(), r) {
-			MakeLimitErrorResponse(w, ErrTooManyRequest)
+			modelgateway.MakeErrorResponse(w, ErrTooManyRequest)
 			return
 		}
 		if !limiter.HTTPAllow(context.Background(), r) {
-			MakeLimitErrorResponse(w, ErrTooManyRequest)
+			modelgateway.MakeErrorResponse(w, ErrTooManyRequest)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func MakeLimitErrorResponse(w http.ResponseWriter, err error) {
-	gfspErr := gfsperrors.MakeGfSpError(err)
-	xmlInfo := modelgateway.ErrorResponse{
-		Code:    gfspErr.GetInnerCode(),
-		Message: gfspErr.GetDescription(),
-	}
-	xmlBody, err := xml.Marshal(&xmlInfo)
-	if err != nil {
-		log.Errorw("failed to marshal error response", "gfsp_error", gfspErr.String(), "error", err)
-	}
-	w.Header().Set("Content-Type", "application/xml")
-	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
-	if _, err = w.Write(xmlBody); err != nil {
-		log.Errorw("failed to write error response", "gfsp_error", gfspErr.String(), "error", err)
-	}
 }
 
 // GetIP gets a requests IP address by reading off the forwarded-for
