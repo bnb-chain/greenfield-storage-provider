@@ -63,6 +63,10 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			metrics.ReqTime.WithLabelValues(GatewaySuccessGetApproval).Observe(time.Since(startTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+
+		if time.Since(startTime).Seconds() > 1 {
+			log.Infow("slow handle object approval request", "total_cost", time.Since(startTime).Seconds())
+		}
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)

@@ -42,12 +42,12 @@ func Verify(pk *PublicKey, signature, msg []byte) (bool, error) {
 func VerifyEddsaSignature(pubKey string, sig, message []byte) error {
 	pk, err := ParsePk(pubKey)
 	if err != nil {
-		log.Errorf("fail to parse public key, pubKey=%s, err=%s", pubKey, err.Error())
+		log.Errorf("failed to parse public key, pubKey=%s, err=%s", pubKey, err.Error())
 		return err
 	}
 	valid, err := Verify(pk, sig, message)
 	if err != nil {
-		log.Errorf("fail to Verify signature, sig=%s, message=%s, err=%s", sig, message, err.Error())
+		log.Errorf("failed to Verify signature, sig=%s, message=%s, err=%s", sig, message, err.Error())
 		return err
 	}
 	if !valid {
