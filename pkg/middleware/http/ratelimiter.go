@@ -32,12 +32,6 @@ type KeyToRateLimiterNameCell struct {
 	Names  []string
 }
 
-type RateLimiterCell struct {
-	Name       string
-	RateLimit  int
-	RatePeriod string
-}
-
 type IPLimitConfig struct {
 	On         bool   `comment:"optional"`
 	RateLimit  int    `comment:"optional"`
@@ -45,12 +39,11 @@ type IPLimitConfig struct {
 }
 
 type RateLimiterConfig struct {
-	IPLimitCfg             IPLimitConfig
-	PathPattern            []KeyToRateLimiterNameCell `comment:"optional"`
-	HostPattern            []KeyToRateLimiterNameCell `comment:"optional"`
-	APILimits              []KeyToRateLimiterNameCell `comment:"optional"`
-	VirtualHostPathPattern []KeyToRateLimiterNameCell `comment:"optional"`
-	NameToLimit            []RateLimiterCell          `comment:"optional"`
+	IPLimitCfg  IPLimitConfig
+	PathPattern []KeyToRateLimiterNameCell `comment:"optional"`
+	HostPattern []KeyToRateLimiterNameCell `comment:"optional"`
+	APILimits   []KeyToRateLimiterNameCell `comment:"optional"`
+	NameToLimit []MemoryLimiterConfig      `comment:"optional"`
 }
 
 type MemoryLimiterConfig struct {
@@ -152,8 +145,12 @@ func (a *apiLimiter) findLimiter(host, path, key string, virtualHost bool) []rat
 		}
 	}
 
-	if virtualHost && strings.Index(host, ".") >= 0 {
-		bucketName := host[:strings.Index(host, ".")]
+	// letters before first dot index is the bucket name for sp virtual host style
+	firstDotIndex := strings.Index(host, ".")
+
+	// if it is virtual host style, we need to add the bucket name from host to path for complete path to match pattern
+	if virtualHost && firstDotIndex >= 0 {
+		bucketName := host[:firstDotIndex]
 		path = "/" + bucketName + path
 	}
 	for i := 0; i < len(a.cfg.PathPattern); i++ {
@@ -192,7 +189,7 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request, domain string) 
 	}
 
 	rateLimiterWithNames := t.findLimiter(host, path, key, virtualHost)
-	if rateLimiterWithNames == nil || len(rateLimiterWithNames) == 0 {
+	if len(rateLimiterWithNames) == 0 {
 		return true
 	}
 
