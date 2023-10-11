@@ -123,7 +123,7 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	return nil
 }
 
-func (a *apiLimiter) findLimiter(host, path, key string) []rateLimiterWithName {
+func (a *apiLimiter) findLimiter(host, path, key string, virtualHost bool) []rateLimiterWithName {
 	var result []rateLimiterWithName
 	newLimiter, ok := a.limiterMap.Load(key)
 	if ok {
@@ -152,9 +152,10 @@ func (a *apiLimiter) findLimiter(host, path, key string) []rateLimiterWithName {
 		}
 	}
 
-	//todo: distinguish virtual host path pattern
-	// if host.split("/")
-
+	if virtualHost && strings.Index(host, ".") >= 0 {
+		bucketName := host[:strings.Index(host, ".")]
+		path = "/" + bucketName + path
+	}
 	for i := 0; i < len(a.cfg.PathPattern); i++ {
 		pathPatternInSequence := a.cfg.PathSequence[i]
 		ls := a.cfg.PathPattern[pathPatternInSequence]
@@ -177,15 +178,20 @@ func (a *apiLimiter) findLimiter(host, path, key string) []rateLimiterWithName {
 	return result
 }
 
-func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
+func (t *apiLimiter) Allow(ctx context.Context, r *http.Request, domain string) bool {
 	path := strings.ToLower(r.RequestURI)
 	host := r.Host
 	key := host + "-" + path
 	key = strings.ToLower(key)
 
-	// find multiple limiters with their own name keys, return a map
+	var virtualHost bool
+	if !strings.EqualFold(domain, r.Host) {
+		virtualHost = true
+	} else {
+		return false
+	}
 
-	rateLimiterWithNames := t.findLimiter(host, path, key)
+	rateLimiterWithNames := t.findLimiter(host, path, key, virtualHost)
 	if rateLimiterWithNames == nil || len(rateLimiterWithNames) == 0 {
 		return true
 	}
@@ -227,18 +233,20 @@ func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
 	return true
 }
 
-func Limit(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !limiter.Allow(context.Background(), r) {
-			MakeLimitErrorResponse(w, ErrTooManyRequest)
-			return
-		}
-		if !limiter.HTTPAllow(context.Background(), r) {
-			MakeLimitErrorResponse(w, ErrTooManyRequest)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+func Limit(domain string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !limiter.Allow(context.Background(), r, domain) {
+				MakeLimitErrorResponse(w, ErrTooManyRequest)
+				return
+			}
+			if !limiter.HTTPAllow(context.Background(), r) {
+				MakeLimitErrorResponse(w, ErrTooManyRequest)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func MakeLimitErrorResponse(w http.ResponseWriter, err error) {

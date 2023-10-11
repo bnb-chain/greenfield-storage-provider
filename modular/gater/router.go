@@ -289,5 +289,5 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	http.Handle("/", router)
 
 	router.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-	router.Use(mwhttp.Limit)
+	router.Use(mwhttp.Limit(g.domain))
 }
