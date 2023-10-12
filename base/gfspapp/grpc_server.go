@@ -3,8 +3,10 @@ package gfspapp
 import (
 	"context"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -21,6 +23,11 @@ func DefaultGrpcServerOptions() []grpc.ServerOption {
 	var options []grpc.ServerOption
 	options = append(options, grpc.MaxRecvMsgSize(MaxServerCallMsgSize))
 	options = append(options, grpc.MaxSendMsgSize(MaxServerCallMsgSize))
+	var kasp = keepalive.ServerParameters{
+		Time:    5 * time.Second, // Ping the client if it is idle for 5 seconds to ensure the connection is still active
+		Timeout: 1 * time.Second, // Wait 1 second for the ping ack before assuming the connection is dead
+	}
+	options = append(options, grpc.KeepaliveParams(kasp))
 	return options
 }
 

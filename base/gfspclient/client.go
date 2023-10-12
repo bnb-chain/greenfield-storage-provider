@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 )
 
 const (
@@ -194,5 +194,11 @@ func DefaultClientOptions() []grpc.DialOption {
 	options = append(options, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxClientCallMsgSize)))
 	options = append(options, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(MaxClientCallMsgSize)))
+	var kacp = keepalive.ClientParameters{
+		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+		Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+		PermitWithoutStream: true,             // send pings even without active streams
+	}
+	options = append(options, grpc.WithKeepaliveParams(kacp))
 	return options
 }
