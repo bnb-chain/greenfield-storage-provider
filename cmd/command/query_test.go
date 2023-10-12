@@ -6,6 +6,10 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/mock/gomock"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
@@ -14,9 +18,6 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
-	"go.uber.org/mock/gomock"
 )
 
 func TestListModules(t *testing.T) {
