@@ -393,6 +393,11 @@ func (s *resourceScope) ReserveForChild(st corercmgr.ScopeStat) error {
 func (s *resourceScope) ReleaseResources(st corercmgr.ScopeStat) {
 	s.Lock()
 	defer s.Unlock()
+	s.ReleaseResourcesWithoutLock(st)
+}
+
+// ReleaseResourcesWithoutLock explicitly releases resource by ScopeStat.
+func (s *resourceScope) ReleaseResourcesWithoutLock(st corercmgr.ScopeStat) {
 	if s.done {
 		return
 	}
@@ -494,7 +499,7 @@ func (s *resourceScope) ReserveResources(st *corercmgr.ScopeStat) error {
 		}
 	}
 	if err != nil {
-		s.ReleaseResources(*st)
+		s.ReleaseResourcesWithoutLock(*st)
 		return err
 	}
 	return nil

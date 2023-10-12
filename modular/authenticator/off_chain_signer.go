@@ -47,7 +47,7 @@ func VerifyEddsaSignature(pubKey string, sig, message []byte) error {
 	}
 	valid, err := Verify(pk, sig, message)
 	if err != nil {
-		log.Errorf("failed to Verify signature, sig=%s, message=%s, err=%s", sig, message, err.Error())
+		log.Errorf("failed to verify signature, sig=%s, message=%s, err=%s", sig, message, err.Error())
 		return err
 	}
 	if !valid {
