@@ -108,7 +108,6 @@ func (g *GateModular) checkSPAndBucketStatus(ctx context.Context, bucketName str
 			"bucket_id", bucketInfo.Id.String())
 		return ErrBucketUnavailable
 	}
-	log.Info("sp and bucket status is right")
 	return nil
 }
 
