@@ -185,7 +185,7 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request, domain string) 
 	if !strings.EqualFold(domain, r.Host) {
 		virtualHost = true
 	} else {
-		return false
+		virtualHost = false
 	}
 
 	rateLimiterWithNames := t.findLimiter(host, path, key, virtualHost)
