@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/command/bs_data_migration"
 	"os"
 
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/command"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/command/bs_data_migration"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/approver"
