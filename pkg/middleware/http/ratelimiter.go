@@ -179,6 +179,8 @@ func (a *apiLimiter) findLimiter(host, path, key string, virtualHost bool, metho
 					rateLimiter: newLimiter.(*slimiter.Limiter),
 				})
 			}
+			// we only need to include the rate limiters of the first matching pattern
+			break
 		}
 	}
 
