@@ -18,7 +18,7 @@ import (
 )
 
 var verifyFuncs = []func(db *gorm.DB) error{verify1, verify2, verify3, verify4, verify5, verify6, verify7, verify8, verify9, verify10, verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify18, verify19, verify20, verify21, verify22, verify23, verify24, verify25, verify26, verify27,
-	verify28, verify29, verify30, verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40, verify41, verify42,
+	verify28, verify29, verify30, verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40, verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48,
 }
 
 func Verify() error {
@@ -431,6 +431,62 @@ func verify42(db *gorm.DB) error {
 	}
 	if sp.ReadPrice.Raw().Cmp(big.NewInt(1000.0)) == 0 || sp.StorePrice.Raw().Cmp(big.NewInt(100000)) == 0 {
 		return errors.New("price error")
+	}
+	return nil
+}
+
+func verify43(db *gorm.DB) error {
+	var g models.Group
+	if err := db.Table(bsdb.GroupTableName).Where("group_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000016")).Find(&g).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func verify44(db *gorm.DB) error {
+	return nil
+}
+
+func verify45(db *gorm.DB) error {
+	var g models.Group
+	if err := db.Table(bsdb.GroupTableName).Where("group_id = ? and account_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000016"), common.HexToAddress("0x5870Af236E63beaEbbFa364f78FC7c8e70F0811f")).Find(&g).Error; err != nil {
+		return err
+	}
+	if g.ExpirationTime != 1356998399 {
+		return fmt.Errorf("member expiration time is error :%d", g.ExpirationTime)
+	}
+	return nil
+}
+
+func verify46(db *gorm.DB) error {
+	var g models.Group
+	if err := db.Table(bsdb.GroupTableName).Where("group_id = ? and account_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000016"), common.HexToAddress("0x5870AF236E63BEAEBBFA364F78FC7C8E70F0811F")).Find(&g).Error; err != nil {
+		return err
+	}
+	if !g.Removed {
+		return errors.New("member is not removed")
+	}
+	return nil
+}
+
+func verify47(db *gorm.DB) error {
+	var p models.PaymentAccount
+	if err := db.Table((&models.PaymentAccount{}).TableName()).Where("addr = ?", common.HexToAddress("0x68bd245Df652435321989b999F9F70Cd31281b66")).Find(&p).Error; err != nil {
+		return err
+	}
+	if !p.Refundable {
+		return fmt.Errorf("failed to update Refundable")
+	}
+	return nil
+}
+
+func verify48(db *gorm.DB) error {
+	var p models.PaymentAccount
+	if err := db.Table((&models.PaymentAccount{}).TableName()).Where("addr = ?", common.HexToAddress("0x68bd245Df652435321989b999F9F70Cd31281b66")).Find(&p).Error; err != nil {
+		return err
+	}
+	if p.Refundable {
+		return fmt.Errorf("failed to update Refundable")
 	}
 	return nil
 }
