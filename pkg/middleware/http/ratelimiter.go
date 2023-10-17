@@ -193,18 +193,16 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request, domain string) 
 		return true
 	}
 
-	// iterate through all map component, if any one reached limit, return false
+	allow := true
+	// iterate through all map component, if any one reached limit, record false and continue, so all counters get increased
 	for _, rateLimiterWName := range rateLimiterWithNames {
-		limiterCtx, err := t.store.Increment(ctx, rateLimiterWName.name, 1, rateLimiterWName.rateLimiter.Rate)
-		if err != nil {
-			return true
-		}
+		limiterCtx, _ := t.store.Increment(ctx, rateLimiterWName.name, 1, rateLimiterWName.rateLimiter.Rate)
 
 		if limiterCtx.Reached {
-			return false
+			allow = false
 		}
 	}
-	return true
+	return allow
 }
 
 func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
