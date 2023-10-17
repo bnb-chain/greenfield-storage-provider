@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/command/bs_data_migration"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -124,6 +125,8 @@ func init() {
 		command.CompleteSwapOutCmd, // only for debugging
 		// update quota
 		command.SetQuotaCmd,
+		// block syncer
+		bs_data_migration.BsDataMigrationCmd,
 	}
 	registerModular()
 }
