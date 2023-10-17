@@ -83,7 +83,7 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to query sp by operator address",
@@ -162,7 +162,7 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to basic check bucket approval msg",

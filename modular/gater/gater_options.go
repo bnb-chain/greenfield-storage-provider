@@ -58,8 +58,10 @@ func makeAPIRateLimitCfg(cfg mwhttp.RateLimiterConfig) *mwhttp.APILimiterConfig 
 		for _, name := range c.Names {
 			for _, v := range cfg.NameToLimit {
 				if strings.EqualFold(v.Name, name) {
-					pathSequence[i] = c.Key
-					pathPatternMap[c.Key] = append(pathPatternMap[c.Key], v)
+					// pass in method info along with path
+					pathWithMethod := c.Method + "-" + c.Key
+					pathSequence[i] = pathWithMethod
+					pathPatternMap[pathWithMethod] = append(pathPatternMap[pathWithMethod], v)
 				}
 			}
 		}

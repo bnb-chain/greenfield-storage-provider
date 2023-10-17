@@ -10,16 +10,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-
 	slimiter "github.com/ulule/limiter/v3"
 	smemory "github.com/ulule/limiter/v3/drivers/store/memory"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
-	Middleware = "Middleware"
+	Middleware      = "Middleware"
+	MethodSeparator = "-"
 )
 
 var (
@@ -116,7 +116,7 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	return nil
 }
 
-func (a *apiLimiter) findLimiter(host, path, key string, virtualHost bool) []rateLimiterWithName {
+func (a *apiLimiter) findLimiter(host, path, key string, virtualHost bool, method string) []rateLimiterWithName {
 	var result []rateLimiterWithName
 	newLimiter, ok := a.limiterMap.Load(key)
 	if ok {
@@ -155,8 +155,18 @@ func (a *apiLimiter) findLimiter(host, path, key string, virtualHost bool) []rat
 	}
 	for i := 0; i < len(a.cfg.PathPattern); i++ {
 		pathPatternInSequence := a.cfg.PathSequence[i]
-		ls := a.cfg.PathPattern[pathPatternInSequence]
-		if regexp.MustCompile(pathPatternInSequence).MatchString(path) {
+		// get limiters match pattern
+		ls := a.cfg.PathPattern[strings.ToLower(pathPatternInSequence)]
+		methodSeparatorIndex := strings.Index(pathPatternInSequence, MethodSeparator)
+		// if methodSeparatorIndex not exist or methodSeparatorIndex is last character, pathPatternInSequence is invalid and shall be ignored
+		if methodSeparatorIndex < 0 || methodSeparatorIndex == len(pathPatternInSequence)-1 {
+			continue
+		}
+		pathMethod := pathPatternInSequence[:methodSeparatorIndex]
+		pathPattern := pathPatternInSequence[methodSeparatorIndex+1:]
+
+		// to find a limiter, the request path and request method shall both match the pathPatternInSequence
+		if regexp.MustCompile(pathPattern).MatchString(path) && strings.EqualFold(pathMethod, method) {
 			for _, l := range ls {
 				rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
 				if err != nil {
@@ -188,7 +198,7 @@ func (t *apiLimiter) Allow(ctx context.Context, r *http.Request, domain string) 
 		virtualHost = false
 	}
 
-	rateLimiterWithNames := t.findLimiter(host, path, key, virtualHost)
+	rateLimiterWithNames := t.findLimiter(host, path, key, virtualHost, r.Method)
 	if len(rateLimiterWithNames) == 0 {
 		return true
 	}
