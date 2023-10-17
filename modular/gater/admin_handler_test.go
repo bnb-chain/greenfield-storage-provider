@@ -385,7 +385,7 @@ func TestGateModular_getApprovalHandlerMigrateBucketApproval(t *testing.T) {
 				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to basic check migrate bucket approval msg",
@@ -577,7 +577,7 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to basic check migrate bucket approval msg",
@@ -1248,7 +1248,7 @@ func TestGateModular_getReplicateHandlerHandler(t *testing.T) {
 				req.Header.Set(GnfdReceiveMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to unmarshal receive header",
@@ -1266,7 +1266,7 @@ func TestGateModular_getReplicateHandlerHandler(t *testing.T) {
 				req.Header.Set(GnfdRecoveryMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to verify receive task",
@@ -1327,7 +1327,7 @@ func TestGateModular_getRecoverDataHandler(t *testing.T) {
 				req.Header.Set(GnfdRecoveryMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to unmarshal recovery msg header",
@@ -1345,7 +1345,7 @@ func TestGateModular_getRecoverDataHandler(t *testing.T) {
 				req.Header.Set(GnfdRecoveryMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to get recover task address",
