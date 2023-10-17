@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/command/bs_data_migration"
 	"os"
 
 	"github.com/urfave/cli/v2"
