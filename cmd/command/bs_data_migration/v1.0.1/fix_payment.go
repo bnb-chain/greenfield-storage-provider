@@ -1,4 +1,4 @@
-package fix_v1_0_0
+package v1_0_1
 
 import (
 	"encoding/json"

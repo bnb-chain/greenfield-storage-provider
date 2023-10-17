@@ -9,7 +9,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	fixv101 "github.com/bnb-chain/greenfield-storage-provider/cmd/command/bs_data_migration/fix-v1.0.0"
+	fixv101 "github.com/bnb-chain/greenfield-storage-provider/cmd/command/bs_data_migration/v1.0.1"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"

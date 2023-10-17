@@ -1,24 +1,22 @@
 # Introduction
 
-The files in this directory are used to fix data problems caused by blocksyncer bugs
+The files in this directory are used to migrate block syncer data, usually required by a certain new feature or a bug fixing.
 
 ## Folder
-The name of the folder represents the sp version of the repair script you need to run
+The name of the folder represents the sp version of the repair scripts that the SP maintainer needs to run.
 
-### Explame
-Current sp version: v1.0.0
+## migration command
 
-You need to run the job under the folder fix-v1.0.0 to fix the data and subsequently update to the next version (if the next version exists).
+All migration cmds under bs_data_migration folder should be idempotent.
 
-Before upgrading the version, you must run the repair script first, otherwise the block processed in the current version will appear wrong data
+### Example
+The folder v1.0.1 contains a fix_payment job. This job was introduced in sp version v1.0.1. 
+When SP maintainer upgrades the SP version to v1.0.1, he/she should execute the jobs defined in the folder v1.0.1.
 
+The detailed job execution cmds could be found in migration_cmd_list.md.
 
 ## How to execute
-1. Determine the current sp version and find the corresponding script
-2. On pod, run: gndf-sp migration-config {{config.toml}} -j {{job_name}}
-
-config.toml is the configuration file path
-
-job_name is the name of the script that needs to be run for this version, and there may be several.
-
-In the job_name file in the fix folder, we give the name of the script that needs to be run for each version
+1. Determine the target sp version and find the corresponding cmds in migration_cmd_list.md file
+2. In SP running time (it could be a k8s container or a linux where the SP services are running on), you can run: `gndf-sp migration-config {{config.toml}} -j {{job_name}}`
+   - config.toml is the configuration file path. 
+   - job_name is the name of the script that needs to be run for this version.
