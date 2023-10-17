@@ -215,8 +215,10 @@ type TaskConfig struct {
 type MonitorConfig struct {
 	DisableMetrics     bool   `comment:"required"`
 	DisablePProf       bool   `comment:"required"`
+	DisableProbe       bool   `comment:"required"`
 	MetricsHTTPAddress string `comment:"required"`
 	PProfHTTPAddress   string `comment:"required"`
+	ProbeHTTPAddress   string `comment:"required"`
 }
 
 type RcmgrConfig struct {

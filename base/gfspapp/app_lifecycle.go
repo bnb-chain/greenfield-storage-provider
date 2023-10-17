@@ -32,11 +32,13 @@ func (g *GfSpBaseApp) StartServices(ctx context.Context) corelifecycle.Lifecycle
 func (g *GfSpBaseApp) startServices(ctx context.Context) {
 	for i, service := range g.services {
 		if err := service.Start(ctx); err != nil {
+			g.GetProbe().Unready(err)
 			log.Errorw("failed to start service", "service_name", service.Name(), "error", err)
 			g.services = g.services[:i]
 			g.appCancel()
 			break
 		} else {
+			g.GetProbe().Ready()
 			log.Infow("succeed to start service", "service_name", service.Name())
 		}
 	}

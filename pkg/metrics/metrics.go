@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
@@ -109,4 +110,13 @@ func (NilMetrics) Stop(ctx context.Context) error {
 // Enabled is a no-op
 func (NilMetrics) Enabled() bool {
 	return false
+}
+
+var mu sync.Mutex
+
+// AddMetrics can be used in external functions to add metrics to MetricsItems.
+func AddMetrics(cs prometheus.Collector) {
+	mu.Lock()
+	defer mu.Unlock()
+	MetricsItems = append(MetricsItems, cs)
 }
