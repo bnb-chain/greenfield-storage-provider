@@ -293,6 +293,7 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		DestSPID:             meta.DestSPID,
 		LastMigratedObjectID: meta.LastMigratedObjectID,
 		MigrateStatus:        meta.MigrateStatus,
+		RetryTime:            meta.RetryTime,
 	}
 	result = s.db.First(queryReturn, "migrate_key = ?", meta.MigrateGVGKey)
 	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
