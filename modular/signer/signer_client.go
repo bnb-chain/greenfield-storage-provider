@@ -820,7 +820,7 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
-		log.CtxDebugw(ctx, "succeed to broadcast complete migrate bucket tx", "tx_hash", txHash, "reject_migrate_bucket_msg", msgRejectMigrateBucket)
+		log.CtxDebugw(ctx, "succeed to broadcast reject migrate bucket tx", "tx_hash", txHash, "reject_migrate_bucket_msg", msgRejectMigrateBucket)
 		return txHash, nil
 	}
 

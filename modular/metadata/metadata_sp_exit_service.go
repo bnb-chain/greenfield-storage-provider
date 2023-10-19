@@ -224,9 +224,9 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		}
 		if reject != nil && reject.CreateAt >= event.CreateAt && complete == nil {
 			spRejectEvent = &storage_types.EventRejectMigrateBucket{
-				Operator:   cancel.Operator.String(),
-				BucketName: cancel.BucketName,
-				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
+				Operator:   reject.Operator.String(),
+				BucketName: reject.BucketName,
+				BucketId:   math.NewUintFromBigInt(reject.BucketID.Big()),
 			}
 		}
 		if spCompleteEvent == nil {

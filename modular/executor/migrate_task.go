@@ -185,7 +185,6 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, gvgTask coretask
 			"object_name", object.GetObjectInfo().GetObjectName(), "error", err)
 		return err
 	}
-	//return fmt.Errorf("mock error")
 	return err
 }
 
