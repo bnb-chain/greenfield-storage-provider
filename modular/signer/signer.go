@@ -32,7 +32,7 @@ var (
 	ErrSPExitOnChain                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
 	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
 	ErrUpdateSPPriceOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120012, "send update sp price failed")
-	ErrRejectMigrateBucketOnChain   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket  failed")
+	ErrRejectMigrateBucketOnChain   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket failed")
 )
 
 var _ module.Signer = &SignModular{}
