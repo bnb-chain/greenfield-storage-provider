@@ -17,5 +17,5 @@ type EventCancelMigrationBucket struct {
 
 // TableName is used to set EventCancelMigrationTableName table name in database
 func (*EventCancelMigrationBucket) TableName() string {
-	return EventRejectMigrateTableName
+	return EventCancelMigrationTableName
 }
