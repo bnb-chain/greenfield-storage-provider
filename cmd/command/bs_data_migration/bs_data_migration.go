@@ -65,7 +65,14 @@ func bsDataMigrationAction(ctx *cli.Context) error {
 		password = cfg.BsDB.Passwd
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&multiStatements=true&loc=Local&interpolateParams=true", username, password, cfg.BsDB.Address, cfg.BsDB.Database)
+	dbAddress := cfg.BlockSyncer.BsDBWriteAddress
+	if dbAddress == "" {
+		dbAddress = cfg.BsDB.Address
+	}
+	if dbAddress == "" {
+		return fmt.Errorf("bs db config error")
+	}
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&multiStatements=true&loc=Local&interpolateParams=true", username, password, dbAddress, cfg.BsDB.Database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Errorw("failed to connect db", "error", err)
