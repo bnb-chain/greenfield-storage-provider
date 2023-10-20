@@ -620,6 +620,8 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 
 	if task.GetRecovered() {
 		m.recoveryQueue.PopByKey(task.Key())
+		delete(m.recoveryTaskMap, task.GetObjectInfo().ObjectName)
+		m.recovereySucceedList = append(m.recovereySucceedList, task.GetObjectInfo().ObjectName)
 		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
 		return nil
 	}
@@ -640,6 +642,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		return err
 	}
 
+	m.recoveryTaskMap[task.GetObjectInfo().ObjectName] = task.GetObjectInfo().ObjectName
 	return nil
 }
 
@@ -655,6 +658,8 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 		err := m.recoveryQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 	} else {
+		m.recoveryFailedList = append(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName)
+		delete(m.recoveryTaskMap, handleTask.GetObjectInfo().ObjectName)
 		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
 	}
 	return nil

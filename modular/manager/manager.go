@@ -99,6 +99,10 @@ type ManageModular struct {
 	loadSealTimeout      int64
 
 	gvgPreferSPList []uint32
+
+	recovereySucceedList []string
+	recoveryFailedList   []string
+	recoveryTaskMap      map[string]string
 }
 
 func (m *ManageModular) Name() string {
@@ -795,6 +799,9 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	resumableUploadCount int,
 	maxUploadCount int,
 	migrateGVGCount int,
+	recoveryProcessCount int,
+	recoverySucceedList []string,
+	recoveryFailedList []string,
 ) {
 	uploadTasks = m.uploadQueue.Len()
 	replicateCount = m.replicateQueue.Len()
@@ -802,5 +809,8 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	resumableUploadCount = m.resumableUploadQueue.Len()
 	maxUploadCount = m.maxUploadObjectNumber
 	migrateGVGCount = m.migrateGVGQueue.Len()
+	recoveryProcessCount = len(m.recoveryTaskMap)
+	recoverySucceedList = m.recovereySucceedList
+	recoveryFailedList = m.recoveryFailedList
 	return
 }

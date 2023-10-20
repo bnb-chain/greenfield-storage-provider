@@ -88,6 +88,9 @@ message TasksStats {
   uint32 resumable_upload_count = 4;
   uint32 max_uploading = 5;
   uint32 migrate_gvg_count = 6;
+  uint32 recovery_process_count = 7;
+  repeated string recovery_succeed_list = 8;
+  repeated string recovery_failed_list = 9;
 }
 
 service GfSpManageService {
