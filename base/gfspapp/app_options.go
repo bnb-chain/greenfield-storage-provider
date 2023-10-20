@@ -256,6 +256,12 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 				return
 			}
 			app.gfSpDB = db
+
+			collector, err := db.RegisterStdDBStats()
+			if err != nil {
+				log.Errorw("failed to register db stats metrics", "error", err)
+			}
+			metrics.AddDBStats(collector)
 		})
 	}
 	return nil

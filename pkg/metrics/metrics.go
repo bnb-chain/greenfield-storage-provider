@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
@@ -59,13 +60,16 @@ func (m *Metrics) Stop(ctx context.Context) error {
 	return nil
 }
 
-// Enabled returns whether starts prometheus metrics
-func (m *Metrics) Enabled() bool {
-	return false
-}
-
 func (m *Metrics) RegisterMetricItems(cs ...prometheus.Collector) {
 	m.registry.MustRegister(cs...)
+}
+
+var mu sync.Mutex
+
+func AddDBStats(cs prometheus.Collector) {
+	mu.Lock()
+	defer mu.Unlock()
+	MetricsItems = append(MetricsItems, cs)
 }
 
 func (m *Metrics) serve() {
@@ -86,27 +90,4 @@ func (m *Metrics) ReserveResource(ctx context.Context, state *corercmgr.ScopeSta
 }
 func (m *Metrics) ReleaseResource(ctx context.Context, scope corercmgr.ResourceScopeSpan) {
 	scope.Done()
-}
-
-// NilMetrics is a no-op Metrics
-type NilMetrics struct{}
-
-// Name is a no-op
-func (NilMetrics) Name() string {
-	return ""
-}
-
-// Start is a no-op
-func (NilMetrics) Start(ctx context.Context) error {
-	return nil
-}
-
-// Stop is a no-op
-func (NilMetrics) Stop(ctx context.Context) error {
-	return nil
-}
-
-// Enabled is a no-op
-func (NilMetrics) Enabled() bool {
-	return false
 }
