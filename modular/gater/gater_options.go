@@ -1,6 +1,8 @@
 package gater
 
 import (
+	"strings"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -49,33 +51,47 @@ func defaultGaterOptions(gater *GateModular, cfg *gfspconfig.GfSpConfig) error {
 }
 
 func makeAPIRateLimitCfg(cfg mwhttp.RateLimiterConfig) *mwhttp.APILimiterConfig {
-	defaultMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	pathPatternMap := make(map[string][]mwhttp.MemoryLimiterConfig)
 	pathSequence := make([]string, len(cfg.PathPattern))
+	// for each name inside all PathPattern, try match with NameToLimit and get its pairing RateLimit and RatePeriod
 	for i, c := range cfg.PathPattern {
-		pathSequence[i] = c.Key
-		defaultMap[c.Key] = mwhttp.MemoryLimiterConfig{
-			RateLimit:  c.RateLimit,
-			RatePeriod: c.RatePeriod,
+		for _, name := range c.Names {
+			for _, v := range cfg.NameToLimit {
+				if strings.EqualFold(v.Name, name) {
+					// pass in method info along with path
+					pathWithMethod := c.Method + "-" + c.Key
+					pathSequence[i] = pathWithMethod
+					pathPatternMap[pathWithMethod] = append(pathPatternMap[pathWithMethod], v)
+				}
+			}
 		}
 	}
-	patternMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	patternMap := make(map[string][]mwhttp.MemoryLimiterConfig)
 	hostSequence := make([]string, len(cfg.HostPattern))
+	// for each name inside all HostPattern, try match with NameToLimit and get its pairing RateLimit and RatePeriod
 	for i, c := range cfg.HostPattern {
-		hostSequence[i] = c.Key
-		patternMap[c.Key] = mwhttp.MemoryLimiterConfig{
-			RateLimit:  c.RateLimit,
-			RatePeriod: c.RatePeriod,
+		for _, name := range c.Names {
+			for _, v := range cfg.NameToLimit {
+				if strings.EqualFold(v.Name, name) {
+					hostSequence[i] = c.Key
+					patternMap[c.Key] = append(patternMap[c.Key], v)
+				}
+			}
 		}
 	}
-	apiLimitsMap := make(map[string]mwhttp.MemoryLimiterConfig)
+	apiLimitsMap := make(map[string][]mwhttp.MemoryLimiterConfig)
+	// for each name inside all APILimits, try match with NameToLimit and get its pairing RateLimit and RatePeriod
 	for _, c := range cfg.APILimits {
-		apiLimitsMap[c.Key] = mwhttp.MemoryLimiterConfig{
-			RateLimit:  c.RateLimit,
-			RatePeriod: c.RatePeriod,
+		for _, name := range c.Names {
+			for _, v := range cfg.NameToLimit {
+				if strings.EqualFold(v.Name, name) {
+					apiLimitsMap[c.Key] = append(apiLimitsMap[c.Key], v)
+				}
+			}
 		}
 	}
 	return &mwhttp.APILimiterConfig{
-		PathPattern:  defaultMap,
+		PathPattern:  pathPatternMap,
 		PathSequence: pathSequence,
 		HostPattern:  patternMap,
 		HostSequence: hostSequence,
