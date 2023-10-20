@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.1
+
+FEATURES
+* [#1181](https://github.com/bnb-chain/greenfield-storage-provider/pull/1181) feat: api rate limiter refactor
+* [#1188](https://github.com/bnb-chain/greenfield-storage-provider/pull/1188) feat:blocksyncer fix data command
+
+BIGFIX
+* [#1186](https://github.com/bnb-chain/greenfield-storage-provider/pull/1186) fix:batch delete group member
+* [#1187](https://github.com/bnb-chain/greenfield-storage-provider/pull/1187) fix:payment refundable update
+
 ## v1.0.0
 This is the first official version for the main-net deployment.
 
