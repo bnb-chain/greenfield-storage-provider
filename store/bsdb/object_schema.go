@@ -50,7 +50,7 @@ type Object struct {
 	// UpdateTime defines the time when the object updated
 	UpdateTime int64 `gorm:"update_time"`
 	// UpdateAt defines the block number when the object updated
-	UpdateAt int64 `gorm:"update_at"`
+	UpdateAt int64 `gorm:"update_at;index:idx_update_at"`
 	// DeleteAt defines the block number when the object deleted
 	DeleteAt int64 `gorm:"delete_at"`
 	// DeleteReason defines the deleted reason of object
