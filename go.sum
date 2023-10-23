@@ -192,8 +192,8 @@ github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e2
 github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e210/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
 github.com/bnb-chain/greenfield-iavl v0.20.1 h1:y3L64GU99otNp27/xLVBTDbv4eroR6CzoYz0rbaVotM=
 github.com/bnb-chain/greenfield-iavl v0.20.1/go.mod h1:oLksTs8dfh7DYIKBro7hbRQ+ewls7ghJ27pIXlbEXyI=
-github.com/bnb-chain/juno/v4 v4.0.0-20231017055033-3e9021c290f5 h1:RPp/w4kQUtsJE+/hG2+EQ7w24K/h1Ck+FLioq19zemw=
-github.com/bnb-chain/juno/v4 v4.0.0-20231017055033-3e9021c290f5/go.mod h1:OC/1A0E4Mp5H/25T9HX05DvfSmMGJr0lSeMUR56yD6k=
+github.com/bnb-chain/juno/v4 v4.0.0-20231023093717-390aca87c874 h1:sSECHsaQ2A5fY5XP5MbQ/RNar+qzfgzStv15Zw2FD2g=
+github.com/bnb-chain/juno/v4 v4.0.0-20231023093717-390aca87c874/go.mod h1:OC/1A0E4Mp5H/25T9HX05DvfSmMGJr0lSeMUR56yD6k=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
