@@ -65,7 +65,9 @@ func (g *GfSpBaseApp) GfSpDownloadPiece(ctx context.Context, req *gfspserver.GfS
 	*gfspserver.GfSpDownloadPieceResponse, error) {
 	downloadPieceTask := req.GetDownloadPieceTask()
 	startTime := time.Now()
-	defer metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_server_total_time").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_server_total_time").Observe(time.Since(startTime).Seconds())
+	}()
 	if downloadPieceTask == nil {
 		log.Error("failed to download piece due to task pointer dangling")
 		return &gfspserver.GfSpDownloadPieceResponse{Err: ErrDownloadTaskDangling}, nil
@@ -120,7 +122,9 @@ func (g *GfSpBaseApp) OnDownloadPieceTask(ctx context.Context, downloadPieceTask
 func (g *GfSpBaseApp) GfSpGetChallengeInfo(ctx context.Context, req *gfspserver.GfSpGetChallengeInfoRequest) (
 	*gfspserver.GfSpGetChallengeInfoResponse, error) {
 	startTime := time.Now()
-	defer metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_server_total_time").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_server_total_time").Observe(time.Since(startTime).Seconds())
+	}()
 	challengePieceTask := req.GetChallengePieceTask()
 	if challengePieceTask == nil {
 		log.CtxError(ctx, "failed to challenge piece due to task pointer dangling")

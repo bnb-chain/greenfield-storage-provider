@@ -11,7 +11,7 @@ run:
 linters:
   disable-all: true
   enable:
-    - goconst
+    #- goconst
     - goimports
     - gosimple
     - govet

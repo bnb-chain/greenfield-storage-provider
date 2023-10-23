@@ -15,7 +15,9 @@ import (
 func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string,
 	opts ...grpc.DialOption) (bool, error) {
 	startTime := time.Now()
-	defer metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
+	}()
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_create_conn_time").Observe(time.Since(startTime).Seconds())
 	if connErr != nil {
