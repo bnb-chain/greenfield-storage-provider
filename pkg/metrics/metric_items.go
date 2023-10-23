@@ -1,8 +1,11 @@
 package metrics
 
 import (
+	"regexp"
+
 	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 
 	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 )
@@ -84,6 +87,11 @@ var MetricsItems = []prometheus.Collector{
 	MigrateGVGCounter,
 	MigrateObjectTimeHistogram,
 	MigrateObjectCounter,
+
+	// golang runtime and process metrics
+	collectors.NewGoCollector(collectors.WithGoCollectorRuntimeMetrics(collectors.GoRuntimeMetricsRule{
+		Matcher: regexp.MustCompile("/.*")})),
+	collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 }
 
 // basic metrics items
