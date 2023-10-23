@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -17,12 +15,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 const (
 	GfSpCliUserName = "gfsp-cli"
+	queryCommands   = "QUERY COMMANDS"
 )
 
 var endpointFlag = &cli.StringFlag{
@@ -60,7 +61,7 @@ var ListModulesCmd = &cli.Command{
 	Action:      listModulesAction,
 	Name:        "list.modules",
 	Usage:       "List the modules in greenfield storage provider",
-	Category:    "QUERY COMMANDS",
+	Category:    queryCommands,
 	Description: `The list command output the services in greenfield storage provider.`,
 }
 
@@ -68,7 +69,7 @@ var ListErrorsCmd = &cli.Command{
 	Action:      listErrorsAction,
 	Name:        "list.errors",
 	Usage:       "List the predefine errors in greenfield storage provider",
-	Category:    "QUERY COMMANDS",
+	Category:    queryCommands,
 	Description: `The list command output the services in greenfield storage provider.`,
 }
 
@@ -80,23 +81,21 @@ var GetObjectCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		objectIDFlag,
 	},
-	Category: "QUERY COMMANDS",
-	Description: `The get.object command send rpc request to downloader 
-server to get object payload data`,
+	Category:    queryCommands,
+	Description: `The get.object command send rpc request to downloader server to get object payload data.`,
 }
 
 var QueryTaskCmd = &cli.Command{
 	Action:   CW.queryTasksAction,
 	Name:     "query.task",
 	Usage:    "Query running tasks in modules by task sub key",
-	Category: "QUERY COMMANDS",
+	Category: queryCommands,
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		endpointFlag,
 		keyFlag,
 	},
-	Description: `Query running tasks in modules by task sub key, 
-show the tasks that task key contains the inout key detail info`,
+	Description: `Query running tasks in modules by task sub key, show the tasks that task key contains the inout key detail info`,
 }
 
 var ChallengePieceCmd = &cli.Command{
@@ -109,9 +108,8 @@ var ChallengePieceCmd = &cli.Command{
 		redundancyIdxFlag,
 		segmentIdxFlag,
 	},
-	Category: "QUERY COMMANDS",
-	Description: `The challenge.piece command send rpc request to downloader 
-get integrity meta and check the piece checksums.`,
+	Category:    queryCommands,
+	Description: `The challenge.piece command send rpc request to downloader, get integrity meta and check the piece checksums.`,
 }
 
 var GetSegmentIntegrityCmd = &cli.Command{
@@ -122,9 +120,8 @@ var GetSegmentIntegrityCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		objectIDFlag,
 	},
-	Category: "QUERY COMMANDS",
-	Description: `The get.segment.integrity command send rpc request to spdb 
-get integrity hash and signature.`,
+	Category:    queryCommands,
+	Description: `The get.segment.integrity command send rpc request to spdb, get integrity hash and signature.`,
 }
 
 var QueryBucketMigrateCmd = &cli.Command{
@@ -135,9 +132,8 @@ var QueryBucketMigrateCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		endpointFlag,
 	},
-	Category: "QUERY COMMANDS",
-	Description: `The query.bucket.migrate command send rpc request to manager 
-get plan and status.`,
+	Category:    queryCommands,
+	Description: `The query.bucket.migrate command send rpc request to manager get plan and status.`,
 }
 
 var QuerySPExitCmd = &cli.Command{
@@ -148,9 +144,8 @@ var QuerySPExitCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		endpointFlag,
 	},
-	Category: "QUERY COMMANDS",
-	Description: `The query.sp.exit command send rpc request to manager 
-get sp exit swap plan and migrate gvg task status.`,
+	Category:    queryCommands,
+	Description: `The query.sp.exit command send rpc request to manager, get sp exit swap plan and migrate gvg task status.`,
 }
 
 func listModulesAction(ctx *cli.Context) error {

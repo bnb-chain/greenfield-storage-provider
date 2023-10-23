@@ -15,12 +15,11 @@ const (
 
 // ConfigDumpCmd is used to dump default config.toml template.
 var ConfigDumpCmd = &cli.Command{
-	Action:   dumpConfigAction,
-	Name:     "config.dump",
-	Usage:    "Dump default configuration to the './config.toml' file for editing",
-	Category: "CONFIG COMMANDS",
-	Description: `The config.dump command writes default configuration 
-values to ./config.toml file for editing.`,
+	Action:      dumpConfigAction,
+	Name:        "config.dump",
+	Usage:       "Dump default configuration to the './config.toml' file for editing",
+	Category:    "CONFIG COMMANDS",
+	Description: `The config.dump command writes default configuration values to ./config.toml file for editing.`,
 }
 
 // dumpConfigAction is the dump.config command action.

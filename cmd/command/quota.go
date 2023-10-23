@@ -20,16 +20,13 @@ var SetQuotaCmd = &cli.Command{
 	Action: updateFreeQuotaAction,
 	Name:   "update.quota",
 	Usage:  "Update the free quota of the SP",
-
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		freeQuotaFlag,
 	},
-
 	Category: "QUOTA COMMANDS",
-	Description: `The update.quota command is used to update the free quota of the SP on greenfield chain, 
-				it will send a txn to the chain to finish the updating ", 
-  `,
+	Description: `The update.quota command is used to update the free quota of the SP on greenfield chain, it will ` +
+		`send a txn to the chain to finish the updating.`,
 }
 
 func updateFreeQuotaAction(ctx *cli.Context) error {

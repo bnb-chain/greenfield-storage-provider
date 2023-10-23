@@ -24,6 +24,7 @@ const (
 	DefaultMaxSegmentPieceSize     = 16 * 1024 * 1024
 	DefaultRedundantDataChunkNum   = 4
 	DefaultRedundantParityChunkNum = 2
+	debugCommands                  = "DEBUG COMMANDS"
 )
 
 var fileFlag = &cli.StringFlag{
@@ -39,10 +40,9 @@ var DebugCreateBucketApprovalCmd = &cli.Command{
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 	},
-	Category: "DEBUG COMMANDS",
-	Description: `The debug.create.bucket.approval command create a random 
-CreateBucketApproval request and send it to approver for debugging and testing
-the approver on Dev Env.`,
+	Category: debugCommands,
+	Description: `The debug.create.bucket.approval command create a random CreateBucketApproval request and send it ` +
+		`to approver for debugging and testing the approver on Dev Env.`,
 }
 
 var DebugCreateObjectApprovalCmd = &cli.Command{
@@ -52,10 +52,9 @@ var DebugCreateObjectApprovalCmd = &cli.Command{
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 	},
-	Category: "DEBUG COMMANDS",
-	Description: `The debug.create.object.approval command create a random 
-CreateObjectApproval request and send it to approver for debugging and testing
-the approver on Dev Env.`,
+	Category: debugCommands,
+	Description: `The debug.create.object.approval command create a random CreateObjectApproval request and send it ` +
+		`to approver for debugging and testing the approver on Dev Env.`,
 }
 
 var DebugReplicateApprovalCmd = &cli.Command{
@@ -66,10 +65,9 @@ var DebugReplicateApprovalCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		numberFlag,
 	},
-	Category: "DEBUG COMMANDS",
-	Description: `The debug.ask.replicate.approval command create a random 
-ObjectInfo and send it to p2p node for debugging and testing p2p protocol 
-network on Dev Env.`,
+	Category: debugCommands,
+	Description: `The debug.ask.replicate.approval command create a random ObjectInfo and send it to p2p node for ` +
+		`debugging and testing p2p protocol network on Dev Env.`,
 }
 
 var DebugPutObjectCmd = &cli.Command{
@@ -80,9 +78,9 @@ var DebugPutObjectCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		fileFlag,
 	},
-	Category: "DEBUG COMMANDS",
-	Description: `The debug.put.object command create a random ObjectInfo 
-and send it to uploader for debugging and testing upload primary sp on Dev Env.`,
+	Category: debugCommands,
+	Description: `The debug.put.object command create a random ObjectInfo and send it to uploader for debugging and ` +
+		`testing upload primary sp on Dev Env.`,
 }
 
 // createBucketApproval is the debug.create.bucket.approval command action.

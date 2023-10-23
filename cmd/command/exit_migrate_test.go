@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/mock/gomock"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 )
 
 func TestSPExit(t *testing.T) {
