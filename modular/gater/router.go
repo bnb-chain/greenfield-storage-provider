@@ -18,6 +18,7 @@ const (
 	queryResumeOffsetName                          = "QueryResumeOffsetName"
 	getObjectRouterName                            = "GetObject"
 	getChallengeInfoRouterName                     = "GetChallengeInfo"
+	getChallengeInfoV2RouterName                   = "GetChallengeInfoV2"
 	replicateObjectPieceRouterName                 = "ReplicateObjectPiece"
 	getUserBucketsRouterName                       = "GetUserBuckets"
 	listObjectsByBucketRouterName                  = "ListObjectsByBucketName"
@@ -104,6 +105,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// get challenge info
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
+	router.Path(GetChallengeInfoV2Path).Name(getChallengeInfoV2RouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoV2Handler)
 
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)

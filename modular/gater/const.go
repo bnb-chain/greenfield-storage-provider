@@ -198,6 +198,8 @@ const (
 	OffChainAuthViewQuery = "view"
 	// GetChallengeInfoPath defines get challenge info path style suffix
 	GetChallengeInfoPath = "/greenfield/admin/v1/challenge"
+	// GetChallengeInfoV2Path defines get challenge info path style suffix
+	GetChallengeInfoV2Path = "/greenfield/admin/v2/challenge"
 	// ReplicateObjectPiecePath defines replicate-object path style
 	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
 	// RecoverObjectPiecePath defines recovery-object path style
