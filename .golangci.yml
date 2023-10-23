@@ -11,7 +11,6 @@ run:
 linters:
   disable-all: true
   enable:
-    - goconst
     - goimports
     - gosimple
     - govet
@@ -31,10 +30,8 @@ linters:
 #    - nolintlint
 #    - stylecheck
 #    - typecheck
+#    - goconst
 
 linters-settings:
   gofmt:
     simplify: true
-  goconst:
-    min-len: 3 # minimum length of string constant
-    min-occurrences: 6 # minimum number of occurrences

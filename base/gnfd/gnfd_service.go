@@ -198,7 +198,9 @@ func (g *Gnfd) ListSPs(ctx context.Context) (spInfos []*sptypes.StorageProvider,
 // QuerySP returns the sp info.
 func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.StorageProvider, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_sp").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("query_sp").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.StorageProviderByOperatorAddress(ctx, &sptypes.QueryStorageProviderByOperatorAddressRequest{
 		OperatorAddress: operatorAddress,
@@ -213,7 +215,9 @@ func (g *Gnfd) QuerySP(ctx context.Context, operatorAddress string) (*sptypes.St
 // QuerySPFreeQuota returns the sp free quota
 func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (uint64, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_sp_quota").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("query_sp_quota").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.QuerySpStoragePrice(ctx, &sptypes.QuerySpStoragePriceRequest{
 		SpAddr: operatorAddress,
@@ -228,7 +232,9 @@ func (g *Gnfd) QuerySPFreeQuota(ctx context.Context, operatorAddress string) (ui
 // QuerySPPrice returns the sp price info
 func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptypes.SpStoragePrice, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_sp_price").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("query_sp_price").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.QuerySpStoragePrice(ctx, &sptypes.QuerySpStoragePriceRequest{
 		SpAddr: operatorAddress,
@@ -243,7 +249,9 @@ func (g *Gnfd) QuerySPPrice(ctx context.Context, operatorAddress string) (sptype
 // QuerySPByID returns the sp info.
 func (g *Gnfd) QuerySPByID(ctx context.Context, spID uint32) (*sptypes.StorageProvider, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_sp_by_id").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("query_sp_by_id").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.StorageProvider(ctx, &sptypes.QueryStorageProviderRequest{
 		Id: spID,
@@ -292,7 +300,9 @@ func (g *Gnfd) ListBondedValidators(ctx context.Context) (validators []stakingty
 // TODO: improve it by metadata indexer.
 func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("list_virtual_group_family").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	var vgfs []*virtualgrouptypes.GlobalVirtualGroupFamily
 	var nextKey []byte
@@ -324,7 +334,9 @@ func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*vi
 // QueryVirtualGroupFamily returns the virtual group family.
 func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virtualgrouptypes.GlobalVirtualGroupFamily, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_virtual_group_family").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("query_virtual_group_family").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamily(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamilyRequest{
 		FamilyId: vgfID,
@@ -339,7 +351,9 @@ func (g *Gnfd) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*virt
 // ListGlobalVirtualGroupsByFamilyID returns gvg list by family.
 func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint32) ([]*virtualgrouptypes.GlobalVirtualGroup, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("list_virtual_group_by_family_id").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("list_virtual_group_by_family_id").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupByFamilyID(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupByFamilyIDRequest{
 		GlobalVirtualGroupFamilyId: vgfID,
@@ -354,7 +368,9 @@ func (g *Gnfd) ListGlobalVirtualGroupsByFamilyID(ctx context.Context, vgfID uint
 // QueryGlobalVirtualGroup returns the global virtual group info.
 func (g *Gnfd) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virtualgrouptypes.GlobalVirtualGroup, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_global_virtual_group").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("query_global_virtual_group").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroup(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupRequest{
 		GlobalVirtualGroupId: gvgID,
@@ -369,7 +385,9 @@ func (g *Gnfd) QueryGlobalVirtualGroup(ctx context.Context, gvgID uint32) (*virt
 // AvailableGlobalVirtualGroupFamilies submits a list global virtual group families Id to chain and return the filtered list of families which are able to server create bucket request.
 func (g *Gnfd) AvailableGlobalVirtualGroupFamilies(ctx context.Context, globalVirtualGroupFamiliesIDs []uint32) ([]uint32, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("available_global_virtual_families").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("available_global_virtual_families").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.AvailableGlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.AvailableGlobalVirtualGroupFamiliesRequest{
 		GlobalVirtualGroupFamilyIds: globalVirtualGroupFamiliesIDs,
@@ -384,7 +402,9 @@ func (g *Gnfd) AvailableGlobalVirtualGroupFamilies(ctx context.Context, globalVi
 // QueryVirtualGroupParams return virtual group params.
 func (g *Gnfd) QueryVirtualGroupParams(ctx context.Context) (*virtualgrouptypes.Params, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("query_virtual_group_params").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("query_virtual_group_params").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VirtualGroupQueryClient.Params(ctx, &virtualgrouptypes.QueryParamsRequest{})
 	if err != nil {
@@ -810,7 +830,9 @@ func (g *Gnfd) VerifyPutObjectPermission(ctx context.Context, account, bucket, o
 // ConfirmTransaction is used to confirm whether the transaction is on the chain.
 func (g *Gnfd) ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error) {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("confirm_transaction").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("confirm_transaction").Observe(time.Since(startTime).Seconds())
+	}()
 	client := g.getCurrentClient().GnfdClient()
 	for i := 0; i < ConfirmBlockNumber; i++ {
 		txResponse, err := client.GetTx(ctx, &tx.GetTxRequest{Hash: txHash})
@@ -833,7 +855,9 @@ func (g *Gnfd) ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxRe
 // WaitForNextBlock is used to chain generate a new block.
 func (g *Gnfd) WaitForNextBlock(ctx context.Context) error {
 	startTime := time.Now()
-	defer metrics.GnfdChainTime.WithLabelValues("wait_for_next_block").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.GnfdChainTime.WithLabelValues("wait_for_next_block").Observe(time.Since(startTime).Seconds())
+	}()
 	var (
 		err               error
 		height            int64
