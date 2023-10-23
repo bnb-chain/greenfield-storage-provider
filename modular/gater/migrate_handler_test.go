@@ -61,7 +61,7 @@ func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
 				req.Header.Set(GnfdMigrateSwapOutMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to unmarshal migrate swap out msg",
@@ -83,7 +83,7 @@ func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
 				req.Header.Set(GnfdMigrateSwapOutMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to notify migrate swap out",
@@ -194,7 +194,7 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to unmarshal migrate piece msg",
@@ -217,7 +217,7 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 				req.Header.Set(GnfdMigrateGVGMsgHeader, makeMockMigrateGVGTaskHeader(t, true))
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to get migrate piece object info due to gvg expire time",
@@ -553,7 +553,7 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to unmarshal migration bucket approval msg",
@@ -575,7 +575,7 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to sign secondary sp migration bucket",
@@ -668,7 +668,7 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to unmarshal swap out approval msg",
@@ -690,7 +690,7 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "gnfd msg encoding error",
+			wantedResult: "gnfd msg decoding error",
 		},
 		{
 			name: "failed to basic check approval msg",

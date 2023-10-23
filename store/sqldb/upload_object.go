@@ -23,6 +23,7 @@ func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {
 	}
 	return nil
 }
+
 func (s *SpDBImpl) DeleteUploadProgress(objectID uint64) error {
 	return s.db.Delete(&UploadObjectProgressTable{
 		ObjectID: objectID, // should be the primary key
@@ -61,7 +62,8 @@ func (s *SpDBImpl) GetUploadState(objectID uint64) (storetypes.TaskState, string
 	queryReturn := &UploadObjectProgressTable{}
 	result := s.db.First(queryReturn, "object_id = ?", objectID)
 	if result.Error != nil {
-		return storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED, "failed to query upload table", fmt.Errorf("failed to query upload table: %s", result.Error)
+		return storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED, "failed to query upload table", fmt.Errorf(
+			"failed to query upload table: %s", result.Error)
 	}
 	return storetypes.TaskState(queryReturn.TaskState), queryReturn.ErrorDescription, nil
 }

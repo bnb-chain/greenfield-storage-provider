@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.0.1
+
+FEATURES
+* [#1181](https://github.com/bnb-chain/greenfield-storage-provider/pull/1181) feat: api rate limiter refactor
+* [#1188](https://github.com/bnb-chain/greenfield-storage-provider/pull/1188) feat:blocksyncer fix data command
+
+BIGFIX
+* [#1186](https://github.com/bnb-chain/greenfield-storage-provider/pull/1186) fix:batch delete group member
+* [#1187](https://github.com/bnb-chain/greenfield-storage-provider/pull/1187) fix:payment refundable update
+
+## v1.0.0
+This is the first official version for the main-net deployment.
+
+## v0.2.6-hf.2
+BUGFIX
+* [#1171](https://github.com/bnb-chain/greenfield-storage-provider/pull/1171) fix: fix init the NotAvailableSpIdx
+
+## v0.2.6-hf.1
+
+BUGFIX
+* [#1166](https://github.com/bnb-chain/greenfield-storage-provider/pull/1166) fix: delete group fix job
+* [#1160](https://github.com/bnb-chain/greenfield-storage-provider/pull/1160) fix: fix replication failed SP err recording issue
+* [#1159](https://github.com/bnb-chain/greenfield-storage-provider/pull/1159) fix: list objects by gvg sql bug
+* [#1165](https://github.com/bnb-chain/greenfield-storage-provider/pull/1165) fix: verify permission 500 code and update UT
+* [#1155](https://github.com/bnb-chain/greenfield-storage-provider/pull/1155) fix: fix manager duplicate entry when inserting upload progress
+* [#1158](https://github.com/bnb-chain/greenfield-storage-provider/pull/1158) fix: add xml response for rate limit error
+* [#1156](https://github.com/bnb-chain/greenfield-storage-provider/pull/1156) fix: recovery object status should be sealed
+* [#1154](https://github.com/bnb-chain/greenfield-storage-provider/pull/1154) fix: add ut for universal endpoint
+
+
 ## v0.2.6
 
 TEST

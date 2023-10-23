@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
@@ -21,6 +20,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
@@ -406,13 +406,23 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
 	reqCtx, reqCtxErr = NewRequestContext(r, g)
 
+	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+
 	// check the object permission whether allow public read.
 	verifyObjectPermissionTime := time.Now()
 	var permission *permissiontypes.Effect
 	if permission, err = g.baseApp.GfSpClient().VerifyPermission(reqCtx.Context(), sdk.AccAddress{}.String(),
 		reqCtx.bucketName, reqCtx.objectName, permissiontypes.ACTION_GET_OBJECT); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication for getting public object", "error", err)
-		err = ErrConsensusWithDetail("failed to verify authentication for getting public object, error: " + err.Error())
 		return
 	}
 	if *permission == permissiontypes.EFFECT_ALLOW {
@@ -681,8 +691,12 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		taskState, errDescription, err = g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to get uploading job state", "error", err)
+			if !strings.Contains(err.Error(), "no uploading record") {
+				return
+			}
 			taskState = int32(servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED)
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
+			err = nil
 		} else {
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 		}
@@ -776,10 +790,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	if err = s3util.CheckValidBucketName(reqCtx.bucketName); err != nil {
 		log.Errorw("failed to check bucket name", "bucket_name", reqCtx.bucketName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 	if err = s3util.CheckValidObjectName(reqCtx.objectName); err != nil {
 		log.Errorw("failed to check object name", "object_name", reqCtx.objectName, "error", err)
+		err = ErrInvalidQuery
 		return
 	}
 

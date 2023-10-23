@@ -19,6 +19,7 @@ import (
 const (
 	maxRecoveryRetry = 3
 	MaxRecoveryTime  = 50
+	recoveryCommands = "RECOVERY COMMANDS"
 )
 
 var bucketFlag = &cli.StringFlag{
@@ -47,34 +48,28 @@ var RecoverObjectCmd = &cli.Command{
 	Name:      "recover.object",
 	Usage:     "Generate recover piece data tasks to recover the object data",
 	ArgsUsage: "[filePath]...  OBJECT-URL",
-
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		bucketFlag,
 		objectFlag,
 		objectListFlag,
 	},
-
-	Category: "RECOVERY COMMANDS",
-	Description: `The recover.object command is used to recover the object  data on the primarySP or the secondary SP", 
-  `,
+	Category:    recoveryCommands,
+	Description: `The recover.object command is used to recover the object data on the primarySP or the secondary SP.`,
 }
 
 var RecoverPieceCmd = &cli.Command{
 	Action: recoverPieceAction,
 	Name:   "recover.piece",
 	Usage:  "Generate recover piece data task to recover the object piece",
-
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		bucketFlag,
 		objectFlag,
 		segmentIdxFlag,
 	},
-
-	Category: "RECOVERY COMMANDS",
-	Description: `The recover.piece command is used to recover the object piece data on the primarySP or the secondary SP", 
-  `,
+	Category:    recoveryCommands,
+	Description: `The recover.piece command is used to recover the object piece data on the primarySP or the secondary SP.`,
 }
 
 func recoverObjectAction(ctx *cli.Context) error {

@@ -176,8 +176,8 @@ github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816/go.mod h1:+zsy
 github.com/bits-and-blooms/bitset v1.2.0 h1:Kn4yilvwNtMACtf1eYDlG8H77R07mZSPbMjLyS07ChA=
 github.com/bits-and-blooms/bitset v1.2.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edYb8uY+O0FJTyyDA=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
-github.com/bnb-chain/greenfield v0.2.6 h1:U40wmSBQR4Wd0HiVCu/J6zqoLS4YUrvNgyuX71kgK3U=
-github.com/bnb-chain/greenfield v0.2.6/go.mod h1:8kGVzKu3BEbpotk2Lmp/OzPh+nhbMsuUJueZtn0he4s=
+github.com/bnb-chain/greenfield v1.0.0 h1:eg8jFKfbM8ZBKYJ40MZvZtJMtbIcM17tnd7OvAoMC7g=
+github.com/bnb-chain/greenfield v1.0.0/go.mod h1:HAUcv20wBECrbyvVvtoAgvpeedr6plgz3m75FJ7Xxdg=
 github.com/bnb-chain/greenfield-cometbft v0.0.3 h1:tv8NMy3bzX/1urqXGQIIAZSLy83loiI+dG0VKeyh1CY=
 github.com/bnb-chain/greenfield-cometbft v0.0.3/go.mod h1:f35mk/r5ab6yvzlqEWZt68LfUje68sYgMpVlt2CUYMk=
 github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1 h1:XcWulGacHVRiSCx90Q8Y//ajOrLNBQWR/KDB89dy3cU=
@@ -192,8 +192,8 @@ github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e2
 github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e210/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
 github.com/bnb-chain/greenfield-iavl v0.20.1 h1:y3L64GU99otNp27/xLVBTDbv4eroR6CzoYz0rbaVotM=
 github.com/bnb-chain/greenfield-iavl v0.20.1/go.mod h1:oLksTs8dfh7DYIKBro7hbRQ+ewls7ghJ27pIXlbEXyI=
-github.com/bnb-chain/juno/v4 v4.0.0-20230906082730-4142709dba59 h1:yDTMNOR1CbHZmHIfGmpZTl2WxE2k3XdBc8SRV4Y3/1w=
-github.com/bnb-chain/juno/v4 v4.0.0-20230906082730-4142709dba59/go.mod h1:OC/1A0E4Mp5H/25T9HX05DvfSmMGJr0lSeMUR56yD6k=
+github.com/bnb-chain/juno/v4 v4.0.0-20231017055033-3e9021c290f5 h1:RPp/w4kQUtsJE+/hG2+EQ7w24K/h1Ck+FLioq19zemw=
+github.com/bnb-chain/juno/v4 v4.0.0-20231017055033-3e9021c290f5/go.mod h1:OC/1A0E4Mp5H/25T9HX05DvfSmMGJr0lSeMUR56yD6k=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=

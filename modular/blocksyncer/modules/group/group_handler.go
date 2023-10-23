@@ -3,6 +3,7 @@ package group
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -194,19 +195,19 @@ func (m *Module) handleUpdateGroupMember(ctx context.Context, block *tmctypes.Re
 		res[k] = v
 	}
 
-	for _, memberToDelete := range membersToDelete {
+	if len(membersToDelete) > 0 {
 		groupItem := &models.Group{
-			Owner:     common.HexToAddress(updateGroupMember.Owner),
-			GroupID:   common.BigToHash(updateGroupMember.GroupId.BigInt()),
-			GroupName: updateGroupMember.GroupName,
-			AccountID: common.HexToAddress(memberToDelete),
-			Operator:  common.HexToAddress(updateGroupMember.Operator),
+			Operator: common.HexToAddress(updateGroupMember.Operator),
 
 			UpdateAt:   block.Block.Height,
 			UpdateTime: block.Block.Time.UTC().Unix(),
 			Removed:    true,
 		}
-		k, v := m.db.UpdateGroupToSQL(ctx, groupItem)
+		accountIDs := make([]common.Address, 0, len(membersToDelete))
+		for _, memberToDelete := range membersToDelete {
+			accountIDs = append(accountIDs, common.HexToAddress(memberToDelete))
+		}
+		k, v := m.db.BatchDeleteGroupMemberToSQL(ctx, groupItem, common.BigToHash(updateGroupMember.GroupId.BigInt()), accountIDs)
 		res[k] = v
 	}
 
@@ -228,18 +229,14 @@ func (m *Module) handleUpdateGroupMember(ctx context.Context, block *tmctypes.Re
 func (m *Module) handleRenewGroupMember(ctx context.Context, block *tmctypes.ResultBlock, renewGroupMember *storagetypes.EventRenewGroupMember) map[string][]interface{} {
 	res := map[string][]interface{}{}
 	for _, e := range renewGroupMember.Members {
-		item := &models.Group{
-			GroupID:   common.BigToHash(renewGroupMember.GroupId.BigInt()),
-			AccountID: common.HexToAddress(e.Member),
-
-			UpdateAt:   block.Block.Height,
-			UpdateTime: block.Block.Time.UTC().Unix(),
-		}
+		expirationTime := int64(0)
 		if e.ExpirationTime != nil {
-			item.ExpirationTime = e.ExpirationTime.Unix()
+			expirationTime = e.ExpirationTime.Unix()
 		}
-		k, v := m.db.UpdateGroupToSQL(ctx, item)
+		k := fmt.Sprintf("Update `groups` set expiration_time = ?, update_at = ?,update_time = ? where account_id = %s and group_id = ?", e.Member)
+		v := []interface{}{expirationTime, block.Block.Height, block.Block.Time.UTC().Unix(), common.BigToHash(renewGroupMember.GroupId.BigInt())}
 		res[k] = v
 	}
+
 	return res
 }

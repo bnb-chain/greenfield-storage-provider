@@ -21,7 +21,7 @@ var _ gfspserver.GfSpApprovalServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpAskApprovalRequest) (
 	*gfspserver.GfSpAskApprovalResponse, error) {
-	if req.GetRequest() == nil {
+	if req == nil || req.GetRequest() == nil {
 		log.Error("failed to ask approval due to pointer dangling")
 		return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalTaskDangling}, nil
 	}

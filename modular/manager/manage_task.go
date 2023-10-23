@@ -89,8 +89,13 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 		return err
 	}
 	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
-		log.CtxErrorw(ctx, "failed to create upload object progress", "task_info", task.Info(), "error", err)
-		return ErrGfSpDBWithDetail("failed to create upload object progress, task_info: " + task.Info() + ", error: " + err.Error())
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			log.Infow("insert upload progress with duplicate entry", "task_info", task.Info())
+			return nil
+		} else {
+			log.CtxErrorw(ctx, "failed to create upload object progress", "task_info", task.Info(), "error", err)
+			return ErrGfSpDBWithDetail("failed to create upload object progress, task_info: " + task.Info() + ", error: " + err.Error())
+		}
 	}
 	return nil
 }
@@ -137,7 +142,6 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	if err != nil {
 		return err
 	}
-
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),

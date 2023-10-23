@@ -45,6 +45,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	if r.receiveQueue.Has(task.Key()) {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_check_has_time").Observe(time.Since(checkHasTime).Seconds())
 		log.CtxErrorw(ctx, "has repeat receive task", "task", task)
+		err = ErrRepeatedTask
 		return ErrRepeatedTask
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_check_has_time").Observe(time.Since(checkHasTime).Seconds())
@@ -60,6 +61,7 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 	checksum := hash.GenerateChecksum(data)
 	if !bytes.Equal(checksum, task.GetPieceChecksum()) {
 		log.CtxErrorw(ctx, "failed to compare checksum", "task", task, "actual_checksum", checksum, "expected_checksum", task.GetPieceChecksum())
+		err = ErrInvalidDataChecksum
 		return ErrInvalidDataChecksum
 	}
 

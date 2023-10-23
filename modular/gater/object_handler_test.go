@@ -1123,7 +1123,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "failed to verify authentication for getting public object",
+			wantedResult: "<Error><Code>999999</Code><Message>mock error</Message></Error>",
 		},
 		{
 			name: "new request returns error and unsupported sign type",
@@ -1447,6 +1447,48 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 			},
 			wantedResult: "",
 		},
+		{
+			name: "failed to check bucket name",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s.%s/%s", scheme, invalidBucketName, testDomain, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "<Error><Code>50010</Code><Message>invalid request params for query</Message></Error>",
+		},
+		{
+			name: "failed to check object name",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s.%s/%s", scheme, mockBucketName, testDomain, invalidObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "<Error><Code>50010</Code><Message>invalid request params for query</Message></Error>",
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1748,7 +1790,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				return g
 			},
 			request: func() *http.Request {
-				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, "")
+				path := fmt.Sprintf("%s%s/download/%s/%s", scheme, testDomain, mockBucketName, invalidObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				req.Header.Set("User-Agent", "Chrome")
 				return req

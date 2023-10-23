@@ -184,7 +184,10 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	var replicateErr error
 	for {
 		select {
-		case replicateErr = <-errChan:
+		case err = <-errChan:
+			if replicateErr == nil {
+				replicateErr = err
+			}
 			cancel()
 		case <-quitChan:
 			if replicateErr != nil {

@@ -1714,7 +1714,7 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	grpcResponse := &types.GfSpListObjectsInGVGResponse{Objects: objects}
+	grpcResponse := &types.GfSpListObjectsInGVGAndBucketResponse{Objects: objects}
 
 	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {

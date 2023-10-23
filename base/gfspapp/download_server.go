@@ -177,6 +177,10 @@ func (g *GfSpBaseApp) OnChallengePieceTask(ctx context.Context, challengePieceTa
 }
 
 func (g *GfSpBaseApp) GfSpReimburseQuota(ctx context.Context, fixRequest *gfspserver.GfSpReimburseQuotaRequest) (*gfspserver.GfSpReimburseQuotaResponse, error) {
+	if fixRequest == nil {
+		log.CtxError(ctx, "failed to reimburse quota due to task pointer dangling")
+		return &gfspserver.GfSpReimburseQuotaResponse{Err: ErrDownloadTaskDangling}, nil
+	}
 	err := g.GfSpDB().UpdateExtraQuota(fixRequest.GetBucketId(), fixRequest.GetExtraQuota(), fixRequest.YearMonth)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reimburse extra quota", "error", err, "bucketID:", fixRequest.GetBucketId())
