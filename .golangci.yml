@@ -19,6 +19,7 @@ linters:
     - staticcheck
     - unconvert
     - unused
+#    - goconst
 #    - errcheck
 #    - depguard
 #    - dogsled

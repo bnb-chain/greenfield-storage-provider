@@ -27,30 +27,6 @@ func TestErrConsensusWithDetail(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestMakeErrorResponse(t *testing.T) {
-	cases := []struct {
-		name string
-		w    http.ResponseWriter
-		err  error
-	}{
-		{
-			name: "no error",
-			w:    mockResponseWriter{},
-			err:  mockErr,
-		},
-		{
-			name: "failed to write error response",
-			w:    mockResponseWriter{name: "1"},
-			err:  mockErr,
-		},
-	}
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			MakeErrorResponse(tt.w, tt.err)
-		})
-	}
-}
-
 type mockResponseWriter struct{ name string }
 
 func (mockResponseWriter) Header() http.Header { return map[string][]string{} }

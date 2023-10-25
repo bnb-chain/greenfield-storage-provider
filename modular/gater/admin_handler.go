@@ -15,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -50,7 +51,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetApproval).Inc()
@@ -258,7 +259,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetChallengeInfo).Inc()
@@ -395,7 +396,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(receivePieceStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureReplicatePiece).Inc()
@@ -565,7 +566,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
