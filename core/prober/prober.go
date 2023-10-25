@@ -14,6 +14,8 @@ package prober
 //	           but you don’t want to send it requests either. Kubernetes provides readiness probes to detect
 //	           and mitigate these situations. A pod with containers reporting that they are not ready
 //	           does not receive traffic through Kubernetes Services.
+//
+//go:generate mockgen -source=./prober.go -destination=./prober_mock.go -package=prober
 type Prober interface {
 	Healthy()
 	Unhealthy(err error)
