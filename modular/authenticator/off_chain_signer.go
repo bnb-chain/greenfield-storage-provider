@@ -51,7 +51,7 @@ func VerifyEddsaSignature(pubKey string, sig, message []byte) error {
 		return err
 	}
 	if !valid {
-		return errors.New("invalid signature")
+		return ErrBadSignature
 	}
 	return nil
 }
