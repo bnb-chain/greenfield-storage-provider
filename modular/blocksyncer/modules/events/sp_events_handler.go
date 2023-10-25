@@ -115,7 +115,7 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 	case EventRejectMigrateBucket:
 		rejectMigrationBucket, ok := typedEvent.(*storagetypes.EventRejectMigrateBucket)
 		if !ok {
-			log.Errorw("type assert error", "type", "EventRejectMigrationBucket", event, typedEvent)
+			log.Errorw("type assert error", "type", "EventRejectMigrationBucket", "event", typedEvent)
 			return nil, errors.New("reject migration bucket event assert error")
 		}
 		return m.handleRejectMigrateBucket(ctx, block, txHash, rejectMigrationBucket), nil

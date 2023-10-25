@@ -833,8 +833,6 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 				return queryErr
 			}
 			log.Debugw("migrateGVGUnit", "migrate_key", migrateKey, "migrateGVGUnit", migrateGVGUnit)
-			log.Debugw("task.GetLastMigratedObjectID()", "migrate_key", migrateKey, "task.GetLastMigratedObjectID()", task.GetLastMigratedObjectID())
-
 			if task.GetLastMigratedObjectID() == migrateGVGUnit.LastMigratedObjectID {
 				if migrateGVGUnit.RetryTime+1 >= migrateGVGTaskMaxRetry {
 					if err = executePlan.rejectBucketMigration(); err != nil {
@@ -877,8 +875,8 @@ func (s *BucketMigrateScheduler) loadBucketMigrateExecutePlansFromDB() error {
 	}
 
 	for _, migrateBucketEvents := range migrationBucketEvents {
-		// if has CompleteEvents & CancelEvents, skip it
-		if migrateBucketEvents.CompleteEvent != nil || migrateBucketEvents.CancelEvent != nil {
+		// if it has CompleteEvents & CancelEvents, skip it
+		if migrateBucketEvents.CompleteEvent != nil || migrateBucketEvents.CancelEvent != nil || migrateBucketEvents.RejectEvent != nil {
 			continue
 		}
 		if migrateBucketEvents.Event != nil {
