@@ -159,7 +159,6 @@ func (g *GfSpBaseApp) OnAskCreateObjectApproval(ctx context.Context, task task.A
 		return false, err
 	}
 	g.approver.PostCreateObjectApproval(ctx, task)
-
 	log.CtxDebugw(ctx, "succeed to ask create object approval")
 	return allow, nil
 }

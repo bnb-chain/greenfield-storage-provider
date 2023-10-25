@@ -383,8 +383,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
+		reqCtx.Cancel()
 		if err != nil {
-			log.CtxDebugw(reqCtx.Context(), "get object error")
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
@@ -400,7 +400,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			metrics.ReqTime.WithLabelValues(GatewaySuccessGetObject).Observe(time.Since(getObjectStartTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
-		reqCtx.Cancel()
 	}()
 
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.

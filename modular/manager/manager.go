@@ -128,10 +128,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		return err
 	}
 	m.scope = scope
-	err = m.LoadTaskFromDB()
-	if err != nil {
-		return err
-	}
 
 	if err = m.LoadTaskFromDB(); err != nil {
 		return err
