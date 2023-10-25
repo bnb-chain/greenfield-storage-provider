@@ -3,11 +3,13 @@ package command
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/urfave/cli/v2"
 
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
+
+const migrateCommands = "MIGRATE COMMANDS"
 
 var spOperatorAddressFlag = &cli.StringFlag{
 	Name:     "operatorAddress",
@@ -18,9 +20,9 @@ var spOperatorAddressFlag = &cli.StringFlag{
 var SPExitCmd = &cli.Command{
 	Name:  "sp.exit",
 	Usage: "Used for sp exits from the Greenfield storage network",
-	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
-		to exit from Greenfield storage network`,
-	Category: "MIGRATE COMMANDS",
+	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared ` +
+		`to exit from Greenfield storage network.`,
+	Category: migrateCommands,
 	Action:   CW.spExit,
 	Flags: []cli.Flag{
 		spOperatorAddressFlag,
@@ -62,9 +64,9 @@ var swapOutGVGIDList = &cli.StringFlag{
 var CompleteSPExitCmd = &cli.Command{
 	Name:  "sp.complete.exit",
 	Usage: "Only used in debugging scenarios, online use not allowed. Used for sp complete exits from the Greenfield storage network.",
-	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
-		to complete exit from Greenfield storage network`,
-	Category: "MIGRATE COMMANDS",
+	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared ` +
+		`to complete exit from Greenfield storage network.`,
+	Category: migrateCommands,
 	Action:   CW.completeSPExit,
 	Flags: []cli.Flag{
 		spOperatorAddressFlag,
@@ -93,9 +95,9 @@ func (w *CMDWrapper) completeSPExit(ctx *cli.Context) error {
 var CompleteSwapOutCmd = &cli.Command{
 	Name:  "sp.complete.swapout",
 	Usage: "Only used in debugging scenarios, online use not allowed. Used for swap out from the Greenfield storage network.",
-	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared
-		to swap out from Greenfield storage network`,
-	Category: "MIGRATE COMMANDS",
+	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared ` +
+		`to swap out from Greenfield storage network.`,
+	Category: migrateCommands,
 	Action:   CW.completeSwapOut,
 	Flags: []cli.Flag{
 		spOperatorAddressFlag,

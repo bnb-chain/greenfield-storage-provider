@@ -5,15 +5,16 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/mock/gomock"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
-	"go.uber.org/mock/gomock"
 )
 
 func TestCreateBucketApproval(t *testing.T) {

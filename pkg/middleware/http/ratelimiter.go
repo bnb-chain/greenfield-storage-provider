@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"encoding/xml"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -10,26 +9,27 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	slimiter "github.com/ulule/limiter/v3"
 	smemory "github.com/ulule/limiter/v3/drivers/store/memory"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 const (
-	Middleware = "Middleware"
+	Middleware      = "Middleware"
+	MethodSeparator = "-"
 )
 
 var (
 	ErrTooManyRequest = gfsperrors.Register(Middleware, http.StatusTooManyRequests, 960001, "too many requests, please try it again later")
 )
 
-type RateLimiterCell struct {
-	Key        string
-	RateLimit  int
-	RatePeriod string
+type KeyToRateLimiterNameCell struct {
+	Key    string
+	Method string
+	Names  []string
 }
 
 type IPLimitConfig struct {
@@ -40,23 +40,30 @@ type IPLimitConfig struct {
 
 type RateLimiterConfig struct {
 	IPLimitCfg  IPLimitConfig
-	PathPattern []RateLimiterCell `comment:"optional"`
-	HostPattern []RateLimiterCell `comment:"optional"`
-	APILimits   []RateLimiterCell `comment:"optional"`
+	PathPattern []KeyToRateLimiterNameCell `comment:"optional"`
+	HostPattern []KeyToRateLimiterNameCell `comment:"optional"`
+	APILimits   []KeyToRateLimiterNameCell `comment:"optional"`
+	NameToLimit []MemoryLimiterConfig      `comment:"optional"`
 }
 
 type MemoryLimiterConfig struct {
+	Name       string // limiter name
 	RateLimit  int    // rate
 	RatePeriod string // per period
 }
 
 type APILimiterConfig struct {
 	IPLimitCfg   IPLimitConfig
-	PathPattern  map[string]MemoryLimiterConfig
+	PathPattern  map[string][]MemoryLimiterConfig
 	PathSequence []string
-	APILimits    map[string]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
-	HostPattern  map[string]MemoryLimiterConfig
+	APILimits    map[string][]MemoryLimiterConfig // routePrefix-apiName  =>  limit config
+	HostPattern  map[string][]MemoryLimiterConfig
 	HostSequence []string
+}
+
+type rateLimiterWithName struct {
+	name        string
+	rateLimiter *slimiter.Limiter
 }
 
 type apiLimiter struct {
@@ -75,10 +82,10 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 	limiter = &apiLimiter{
 		store: localStore,
 		cfg: APILimiterConfig{
-			APILimits:    make(map[string]MemoryLimiterConfig),
-			PathPattern:  make(map[string]MemoryLimiterConfig),
+			APILimits:    make(map[string][]MemoryLimiterConfig),
+			PathPattern:  make(map[string][]MemoryLimiterConfig),
 			PathSequence: cfg.PathSequence,
-			HostPattern:  make(map[string]MemoryLimiterConfig),
+			HostPattern:  make(map[string][]MemoryLimiterConfig),
 			HostSequence: cfg.HostSequence,
 			IPLimitCfg:   cfg.IPLimitCfg,
 		},
@@ -95,75 +102,119 @@ func NewAPILimiter(cfg *APILimiterConfig) error {
 		limiter.cfg.HostPattern[strings.ToLower(k)] = v
 	}
 
-	for k, v := range cfg.APILimits {
-		rate, err = slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", v.RateLimit, v.RatePeriod))
-		if err != nil {
-			return err
-		}
+	for k, vs := range cfg.APILimits {
+		for _, v := range vs {
+			rate, err = slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", v.RateLimit, v.RatePeriod))
+			if err != nil {
+				return err
+			}
 
-		limiter.limiterMap.Store(strings.ToLower(k), slimiter.New(localStore, rate))
+			limiter.limiterMap.Store(strings.ToLower(k), slimiter.New(localStore, rate))
+		}
 	}
 
 	return nil
 }
 
-func (a *apiLimiter) findLimiter(host, path, key string) *slimiter.Limiter {
+func (a *apiLimiter) findLimiter(host, path, key string, virtualHost bool, method string) []rateLimiterWithName {
+	var result []rateLimiterWithName
 	newLimiter, ok := a.limiterMap.Load(key)
 	if ok {
-		return newLimiter.(*slimiter.Limiter)
+		result = append(result, rateLimiterWithName{
+			name:        "",
+			rateLimiter: newLimiter.(*slimiter.Limiter),
+		})
 	}
 
 	for i := 0; i < len(a.cfg.HostSequence); i++ {
 		hostPatternInSequence := a.cfg.HostSequence[i]
-		l := a.cfg.PathPattern[hostPatternInSequence]
+		ls := a.cfg.HostPattern[hostPatternInSequence]
 		if regexp.MustCompile(hostPatternInSequence).MatchString(host) {
-			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
-			if err != nil {
-				log.Errorw("failed to new rate from formatted", "err", err)
-				continue
+			for _, l := range ls {
+				rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
+				if err != nil {
+					log.Errorw("failed to new rate from formatted", "err", err)
+					continue
+				}
+				newLimiter = slimiter.New(a.store, rate)
+				result = append(result, rateLimiterWithName{
+					name:        l.Name,
+					rateLimiter: newLimiter.(*slimiter.Limiter),
+				})
 			}
-			newLimiter = slimiter.New(a.store, rate)
-			return newLimiter.(*slimiter.Limiter)
 		}
 	}
 
+	// letters before first dot index is the bucket name for sp virtual host style
+	firstDotIndex := strings.Index(host, ".")
+
+	// if it is virtual host style, we need to add the bucket name from host to path for complete path to match pattern
+	if virtualHost && firstDotIndex >= 0 {
+		bucketName := host[:firstDotIndex]
+		path = "/" + bucketName + path
+	}
 	for i := 0; i < len(a.cfg.PathPattern); i++ {
 		pathPatternInSequence := a.cfg.PathSequence[i]
-		l := a.cfg.PathPattern[pathPatternInSequence]
-		if regexp.MustCompile(pathPatternInSequence).MatchString(path) {
-			rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
-			if err != nil {
-				log.Errorw("failed to new rate from formatted", "err", err)
-				continue
+		// get limiters match pattern
+		ls := a.cfg.PathPattern[strings.ToLower(pathPatternInSequence)]
+		methodSeparatorIndex := strings.Index(pathPatternInSequence, MethodSeparator)
+		// if methodSeparatorIndex not exist or methodSeparatorIndex is last character, pathPatternInSequence is invalid and shall be ignored
+		if methodSeparatorIndex < 0 || methodSeparatorIndex == len(pathPatternInSequence)-1 {
+			continue
+		}
+		pathMethod := pathPatternInSequence[:methodSeparatorIndex]
+		pathPattern := pathPatternInSequence[methodSeparatorIndex+1:]
+
+		// to find a limiter, the request path and request method shall both match the pathPatternInSequence
+		if regexp.MustCompile(pathPattern).MatchString(path) && strings.EqualFold(pathMethod, method) {
+			for _, l := range ls {
+				rate, err := slimiter.NewRateFromFormatted(fmt.Sprintf("%d-%s", l.RateLimit, l.RatePeriod))
+				if err != nil {
+					log.Errorw("failed to new rate from formatted", "err", err)
+					continue
+				}
+				newLimiter = slimiter.New(a.store, rate)
+				result = append(result, rateLimiterWithName{
+					name:        l.Name,
+					rateLimiter: newLimiter.(*slimiter.Limiter),
+				})
 			}
-			newLimiter = slimiter.New(a.store, rate)
-			return newLimiter.(*slimiter.Limiter)
+			// we only need to include the rate limiters of the first matching pattern
+			break
 		}
 	}
 
-	return nil
+	return result
 }
 
-func (t *apiLimiter) Allow(ctx context.Context, r *http.Request) bool {
+func (t *apiLimiter) Allow(ctx context.Context, r *http.Request, domain string) bool {
 	path := strings.ToLower(r.RequestURI)
 	host := r.Host
 	key := host + "-" + path
 	key = strings.ToLower(key)
 
-	l := t.findLimiter(host, path, key)
-	if l == nil {
+	var virtualHost bool
+	if !strings.EqualFold(domain, r.Host) {
+		virtualHost = true
+	} else {
+		virtualHost = false
+	}
+
+	rateLimiterWithNames := t.findLimiter(host, path, key, virtualHost, r.Method)
+	if len(rateLimiterWithNames) == 0 {
 		return true
 	}
 
-	limiterCtx, err := t.store.Increment(ctx, key, 1, l.Rate)
-	if err != nil {
-		return true
-	}
+	allow := true
+	// iterate through all map component, if any one reached limit, record false and continue, so all counters get increased
+	for _, rateLimiterWName := range rateLimiterWithNames {
+		limiterCtx, _ := t.store.Increment(ctx, rateLimiterWName.name, 1, rateLimiterWName.rateLimiter.Rate)
 
-	if limiterCtx.Reached {
-		return false
+		if limiterCtx.Reached {
+			allow = false
+		}
 	}
-	return true
+	return allow
 }
 
 func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
@@ -189,38 +240,19 @@ func (t *apiLimiter) HTTPAllow(ctx context.Context, r *http.Request) bool {
 	return true
 }
 
-func Limit(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !limiter.Allow(context.Background(), r) {
-			MakeLimitErrorResponse(w, ErrTooManyRequest)
-			return
-		}
-		if !limiter.HTTPAllow(context.Background(), r) {
-			MakeLimitErrorResponse(w, ErrTooManyRequest)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-func MakeLimitErrorResponse(w http.ResponseWriter, err error) {
-	gfspErr := gfsperrors.MakeGfSpError(err)
-	var xmlInfo = struct {
-		XMLName xml.Name `xml:"Error"`
-		Code    int32    `xml:"Code"`
-		Message string   `xml:"Message"`
-	}{
-		Code:    gfspErr.GetInnerCode(),
-		Message: gfspErr.GetDescription(),
-	}
-	xmlBody, err := xml.Marshal(&xmlInfo)
-	if err != nil {
-		log.Errorw("failed to marshal error response", "gfsp_error", gfspErr.String(), "error", err)
-	}
-	w.Header().Set("Content-Type", "application/xml")
-	w.WriteHeader(int(gfspErr.GetHttpStatusCode()))
-	if _, err = w.Write(xmlBody); err != nil {
-		log.Errorw("failed to write error response", "gfsp_error", gfspErr.String(), "error", err)
+func Limit(domain string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !limiter.Allow(context.Background(), r, domain) {
+				modelgateway.MakeErrorResponse(w, ErrTooManyRequest)
+				return
+			}
+			if !limiter.HTTPAllow(context.Background(), r) {
+				modelgateway.MakeErrorResponse(w, ErrTooManyRequest)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 

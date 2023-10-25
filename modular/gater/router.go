@@ -280,8 +280,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		router.Path("/").Name(verifyMigrateGVGPermissionRouterName).Methods(http.MethodGet).Queries(VerifyMigrateGVGPermissionQuery, "").HandlerFunc(g.verifyMigrateGVGPermissionHandler)
 	}
 
-	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
-
 	// bucket list router, path style
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
 
@@ -289,5 +287,5 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	http.Handle("/", router)
 
 	router.NotFoundHandler = http.HandlerFunc(g.notFoundHandler)
-	router.Use(mwhttp.Limit)
+	router.Use(mwhttp.Limit(g.domain))
 }
