@@ -1269,7 +1269,7 @@ func (mr *MockManagerMockRecorder) QueryTasks(ctx, subKey interface{}) *gomock.C
 }
 
 // QueryTasksStats mocks base method.
-func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int) {
+func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string, []string) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryTasksStats", ctx)
 	ret0, _ := ret[0].(int)
@@ -1278,7 +1278,10 @@ func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, 
 	ret3, _ := ret[3].(int)
 	ret4, _ := ret[4].(int)
 	ret5, _ := ret[5].(int)
-	return ret0, ret1, ret2, ret3, ret4, ret5
+	ret6, _ := ret[6].(int)
+	ret7, _ := ret[7].([]string)
+	ret8, _ := ret[8].([]string)
+	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7, ret8
 }
 
 // QueryTasksStats indicates an expected call of QueryTasksStats.
