@@ -220,11 +220,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign migrate gvg task", "error", err)
 		}
-	case *gfspserver.GfSpSignRequest_GfspMigrateBucketStatus:
-		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigrateBucketStatus.Key().String())
-		signature, err = g.signer.SignMigrateBucket(ctx, t.GfspMigrateBucketStatus)
+	case *gfspserver.GfSpSignRequest_GfspBucketMigrateInfo:
+		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspBucketMigrateInfo.Key().String())
+		signature, err = g.signer.SignMigrateBucket(ctx, t.GfspBucketMigrateInfo)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign migrate bucket task", "task", t, "error", err)
+			log.CtxErrorw(ctx, "failed to sign bucket migration task", "task", t, "error", err)
 		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")

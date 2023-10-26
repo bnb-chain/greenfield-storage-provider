@@ -75,7 +75,10 @@ func (s *GfSpClient) RecoupQuota(ctx context.Context, bucketID, extraQuota uint6
 		log.CtxErrorw(ctx, "client failed to recoup the extra quota", "error", err)
 		return ErrRPCUnknownWithDetail("client failed to recoup extra quota, error: " + err.Error())
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
 }
 
 func (s *GfSpClient) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, deductQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
@@ -96,7 +99,10 @@ func (s *GfSpClient) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, 
 		log.CtxErrorw(ctx, "client failed to deduct the quota for bucket migrate", "request", req, "error", err)
 		return ErrRPCUnknownWithDetail("client failed to deduct the quota for bucket migrate, error: " + err.Error())
 	}
-	return resp.GetErr()
+	if resp.GetErr() != nil {
+		return resp.GetErr()
+	}
+	return nil
 }
 
 func (s *GfSpClient) GetChallengeInfo(ctx context.Context, challengePieceTask coretask.ChallengePieceTask, opts ...grpc.DialOption) (

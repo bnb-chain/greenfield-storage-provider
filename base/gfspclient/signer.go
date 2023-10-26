@@ -508,8 +508,8 @@ func (s *GfSpClient) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpB
 		return nil, ErrRPCUnknownWithDetail("client failed to connect to signer, error: " + err.Error())
 	}
 	req := &gfspserver.GfSpSignRequest{
-		Request: &gfspserver.GfSpSignRequest_GfspMigrateBucketStatus{
-			GfspMigrateBucketStatus: task,
+		Request: &gfspserver.GfSpSignRequest_GfspBucketMigrateInfo{
+			GfspBucketMigrateInfo: task,
 		},
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
