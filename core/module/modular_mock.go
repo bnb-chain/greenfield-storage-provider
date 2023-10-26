@@ -1853,7 +1853,7 @@ func (mr *MockSignerMockRecorder) SignCreateObjectApproval(ctx, task interface{}
 }
 
 // SignMigrateBucket mocks base method.
-func (m *MockSigner) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationStatus) ([]byte, error) {
+func (m *MockSigner) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignMigrateBucket", ctx, task)
 	ret0, _ := ret[0].([]byte)

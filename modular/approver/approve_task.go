@@ -263,7 +263,7 @@ func (a *ApprovalModular) migrateBucketQuotaCheck(ctx context.Context, task core
 		return false, ErrSignerWithDetail("failed to query sp info, error: " + err.Error())
 	}
 
-	queryMsg := &gfsptask.GfSpBucketMigrationStatus{BucketId: bucketInfo.Id.Uint64()}
+	queryMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketInfo.Id.Uint64()}
 	queryMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
 	signature, err = a.baseApp.GfSpClient().SignMigrateBucket(context.Background(), queryMsg)
 	if err != nil {

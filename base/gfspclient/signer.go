@@ -501,7 +501,7 @@ func (s *GfSpClient) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigr
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationStatus) ([]byte, error) {
+func (s *GfSpClient) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		log.Errorw("client failed to connect to signer", "error", err)

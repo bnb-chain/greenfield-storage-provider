@@ -103,32 +103,34 @@ func (g *GateModular) checkMigratePieceAuth(reqCtx *RequestContext, migrateGVGHe
 	return false, nil
 }
 
-// checkMigrateBucketQuotaAuth parse migrateBucketMsgHeader to GfSpBucketMigrationStatus and check if request has permission
+// checkMigrateBucketQuotaAuth parse migrateBucketMsgHeader to GfSpBucketMigrationInfo and check if request has permission
 // only used by preMigrateBucketHandler and postMigrateBucketHandler
-func (g *GateModular) checkMigrateBucketQuotaAuth(reqCtx *RequestContext, migrateBucketMsgHeader string) (bool, *gfsptask.GfSpBucketMigrationStatus, error) {
-	allow, migrateBucketStatus, sp, err := g.verifySignatureAndSP(reqCtx, migrateBucketMsgHeader)
+func (g *GateModular) checkMigrateBucketQuotaAuth(reqCtx *RequestContext, migrateBucketMsgHeader string) (bool, *gfsptask.GfSpBucketMigrationInfo, error) {
+	allow, bucketMigrationInfo, sp, err := g.verifySignatureAndSP(reqCtx, migrateBucketMsgHeader)
 	if !allow {
-		return allow, migrateBucketStatus, err
+		return allow, bucketMigrationInfo, err
 	}
 
-	effect, err := g.baseApp.GfSpClient().VerifyMigrateGVGPermission(reqCtx.Context(), migrateBucketStatus.GetBucketId(), 0 /*not used*/, sp.GetId())
+	effect, err := g.baseApp.GfSpClient().VerifyMigrateGVGPermission(reqCtx.Context(), bucketMigrationInfo.GetBucketId(), 0 /*not used*/, sp.GetId())
 	if effect == nil || err != nil {
-		// metadate serive support cancel & completion migrate bucket
-		if strings.Contains(err.Error(), "the bucket is not in migration status") {
-			return true, migrateBucketStatus, nil
+		if err != nil {
+			// metadate serive support cancel & completion migrate bucket
+			if strings.Contains(err.Error(), "the bucket is not in migration status") {
+				return true, bucketMigrationInfo, nil
+			}
 		}
-		log.Errorw("failed to verify migrate gvg permission", "bucket_migration", migrateBucketStatus,
+		log.Errorw("failed to verify migrate gvg permission", "bucket_migration_info", bucketMigrationInfo,
 			"dest_sp", sp.GetId(), "effect", effect, "error", err)
-		return false, migrateBucketStatus, err
+		return false, bucketMigrationInfo, err
 	}
 	if *effect == permissiontypes.EFFECT_ALLOW {
-		return true, migrateBucketStatus, nil
+		return true, bucketMigrationInfo, nil
 	}
-	return false, migrateBucketStatus, nil
+	return false, bucketMigrationInfo, nil
 }
 
-// verifySignatureAndSP parse migrateBucketMsgHeader to GfSpBucketMigrationStatus and check if request has permission
-func (g *GateModular) verifySignatureAndSP(reqCtx *RequestContext, migrateBucketMsgHeader string) (bool, *gfsptask.GfSpBucketMigrationStatus, *sptypes.StorageProvider, error) {
+// verifySignatureAndSP parse migrateBucketMsgHeader to GfSpBucketMigrationInfo and check if request has permission
+func (g *GateModular) verifySignatureAndSP(reqCtx *RequestContext, migrateBucketMsgHeader string) (bool, *gfsptask.GfSpBucketMigrationInfo, *sptypes.StorageProvider, error) {
 	var (
 		err              error
 		migrateBucketMsg []byte
@@ -137,29 +139,29 @@ func (g *GateModular) verifySignatureAndSP(reqCtx *RequestContext, migrateBucket
 	migrateBucketMsg, err = hex.DecodeString(migrateBucketMsgHeader)
 	if err != nil {
 		log.Errorw("failed to parse migrate gvg header", "migrate_gvg_header", migrateBucketMsg, "error", err)
-		return false, &gfsptask.GfSpBucketMigrationStatus{}, sp, ErrDecodeMsg
+		return false, &gfsptask.GfSpBucketMigrationInfo{}, sp, ErrDecodeMsg
 	}
-	migrateBucketStatus := gfsptask.GfSpBucketMigrationStatus{}
-	if err = json.Unmarshal(migrateBucketMsg, &migrateBucketStatus); err != nil {
+	bucketMigrationInfo := gfsptask.GfSpBucketMigrationInfo{}
+	if err = json.Unmarshal(migrateBucketMsg, &bucketMigrationInfo); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal post migrate bucket msg", "error", err)
 		err = ErrDecodeMsg
-		return false, &migrateBucketStatus, sp, err
+		return false, &bucketMigrationInfo, sp, err
 	}
-	if migrateBucketStatus.GetExpireTime() < time.Now().Unix() {
-		log.Errorw("failed to check migrate gvg expire time", "bucket_migration", migrateBucketStatus)
-		return false, &migrateBucketStatus, sp, ErrNoPermission
+	if bucketMigrationInfo.GetExpireTime() < time.Now().Unix() {
+		log.Errorw("failed to check migrate gvg expire time", "bucket_migration_info", bucketMigrationInfo)
+		return false, &bucketMigrationInfo, sp, ErrNoPermission
 	}
-	destSPAddr, err := reqCtx.verifyTaskSignature(migrateBucketStatus.GetSignBytes(), migrateBucketStatus.GetSignature())
+	destSPAddr, err := reqCtx.verifyTaskSignature(bucketMigrationInfo.GetSignBytes(), bucketMigrationInfo.GetSignature())
 	if err != nil {
-		log.Errorw("failed to verify task signature", "bucket_migration", migrateBucketStatus, "error", err)
-		return false, &migrateBucketStatus, sp, err
+		log.Errorw("failed to verify task signature", "bucket_migration_info", bucketMigrationInfo, "error", err)
+		return false, &bucketMigrationInfo, sp, err
 	}
 	sp, err = g.spCachePool.QuerySPByAddress(destSPAddr.String())
 	if err != nil {
-		log.Errorw("failed to query sp", "bucket_migration", migrateBucketStatus, "dest_sp_addr", destSPAddr.String(), "error", err)
-		return false, &migrateBucketStatus, sp, err
+		log.Errorw("failed to query sp", "bucket_migration_info", bucketMigrationInfo, "dest_sp_addr", destSPAddr.String(), "error", err)
+		return false, &bucketMigrationInfo, sp, err
 	}
-	return true, &migrateBucketStatus, sp, nil
+	return true, &bucketMigrationInfo, sp, nil
 }
 
 // migratePieceHandler handles migrate piece request between SPs which is used in SP exiting case.
@@ -368,7 +370,7 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 		err                 error
 		reqCtx              *RequestContext
 		bucketID            uint64
-		migrateBucketStatus *gfsptask.GfSpBucketMigrationStatus
+		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
 	)
 
@@ -385,17 +387,17 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	if allowMigrate, migrateBucketStatus, _, err = g.verifySignatureAndSP(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "migrate_bucket", migrateBucketStatus, "error", err)
+	if allowMigrate, bucketMigrationInfo, _, err = g.verifySignatureAndSP(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "bucket_migration_info", bucketMigrationInfo, "error", err)
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_bucket", migrateBucketStatus)
+		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "bucket_migration_info", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}
 
-	bucketID = migrateBucketStatus.GetBucketId()
+	bucketID = bucketMigrationInfo.GetBucketId()
 
 	quota, err := g.baseApp.GfSpClient().GetLatestBucketReadQuota(
 		reqCtx.Context(), bucketID)
@@ -426,7 +428,7 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 		reqCtx              *RequestContext
 		bucketID            uint64
 		bucketSize          uint64
-		migrateBucketStatus *gfsptask.GfSpBucketMigrationStatus
+		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
 	)
 
@@ -443,17 +445,17 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	if allowMigrate, migrateBucketStatus, err = g.checkMigrateBucketQuotaAuth(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "migrate_bucket", migrateBucketStatus, "error", err)
+	if allowMigrate, bucketMigrationInfo, err = g.checkMigrateBucketQuotaAuth(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "migrate_bucket", bucketMigrationInfo, "error", err)
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_bucket", migrateBucketStatus)
+		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_bucket", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}
 
-	bucketID = migrateBucketStatus.GetBucketId()
+	bucketID = bucketMigrationInfo.GetBucketId()
 
 	// get bucket quota and check, lock quota
 	bucketSize, err = g.getBucketTotalSize(reqCtx.Context(), bucketID)
@@ -506,7 +508,7 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 		reqCtx              *RequestContext
 		bucketID            uint64
 		bucketSize          uint64
-		migrateBucketStatus *gfsptask.GfSpBucketMigrationStatus
+		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
 	)
 
@@ -523,17 +525,17 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	if allowMigrate, migrateBucketStatus, err = g.checkMigrateBucketQuotaAuth(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "migrate_bucket", migrateBucketStatus, "error", err)
+	if allowMigrate, bucketMigrationInfo, err = g.checkMigrateBucketQuotaAuth(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "migrate_bucket", bucketMigrationInfo, "error", err)
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_bucket", migrateBucketStatus)
+		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_bucket", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}
 
-	bucketID = migrateBucketStatus.GetBucketId()
+	bucketID = bucketMigrationInfo.GetBucketId()
 
 	quota, err := g.baseApp.GfSpClient().GetLatestBucketReadQuota(
 		reqCtx.Context(), bucketID)
@@ -549,7 +551,7 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if migrateBucketStatus.GetFinished() {
+	if bucketMigrationInfo.GetFinished() {
 		bz, err := quota.Marshal()
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to marshal", "bucket_id",
@@ -563,13 +565,13 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 		if err != nil {
 			return
 		}
-		migratedBytes := migrateBucketStatus.GetMigratedBytesSize()
+		migratedBytes := bucketMigrationInfo.GetMigratedBytesSize()
 		extraQuota := bucketSize - migratedBytes
 		if migratedBytes > bucketSize {
 			log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
 			return
 		}
-		quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), migrateBucketStatus.GetBucketId(), extraQuota, quota.GetMonth())
+		quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), bucketMigrationInfo.GetBucketId(), extraQuota, quota.GetMonth())
 		// no need to return the db error to user
 		if quotaUpdateErr != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
@@ -580,7 +582,7 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 
 	log.CtxInfow(reqCtx.Context(), "succeed to post bucket migrate", "bucket_id",
-		bucketID, "quota", quota, "postMigrateBucket", migrateBucketStatus)
+		bucketID, "quota", quota, "postMigrateBucket", bucketMigrationInfo)
 }
 
 // sufficientQuotaForBucketMigrationHandler check if the source SP node has sufficient quota for bucket migration at approval phase
@@ -590,7 +592,7 @@ func (g *GateModular) sufficientQuotaForBucketMigrationHandler(w http.ResponseWr
 		reqCtx              *RequestContext
 		bucketID            uint64
 		bucketSize          uint64
-		migrateBucketStatus *gfsptask.GfSpBucketMigrationStatus
+		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
 	)
 
@@ -607,17 +609,17 @@ func (g *GateModular) sufficientQuotaForBucketMigrationHandler(w http.ResponseWr
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
-	if allowMigrate, migrateBucketStatus, _, err = g.verifySignatureAndSP(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "migrate_bucket", migrateBucketStatus, "error", err)
+	if allowMigrate, bucketMigrationInfo, _, err = g.verifySignatureAndSP(reqCtx, r.Header.Get(GnfdMigrateBucketMsgHeader)); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to check migrate bucket auth", "migrate_bucket", bucketMigrationInfo, "error", err)
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_bucket", migrateBucketStatus)
+		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "migrate_bucket", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}
 
-	bucketID = migrateBucketStatus.GetBucketId()
+	bucketID = bucketMigrationInfo.GetBucketId()
 
 	quota, err := g.baseApp.GfSpClient().GetLatestBucketReadQuota(
 		reqCtx.Context(), bucketID)

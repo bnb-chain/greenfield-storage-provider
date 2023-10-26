@@ -40,7 +40,6 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		srcGvgID                  = gvgTask.GetSrcGvg().GetId()
 		bucketID                  = gvgTask.GetBucketID()
 		lastMigratedObjectID      = gvgTask.GetLastMigratedObjectID()
-		migratedBytesSize         = gvgTask.GetMigratedBytesSize()
 		objectList                []*metadatatypes.ObjectDetails
 		err                       error
 		migratedObjectNumberInGVG = 0
@@ -98,7 +97,6 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		if len(objectList) < int(queryLimit) { // it indicates that gvg all objects have been migrated.
 			gvgTask.SetLastMigratedObjectID(lastMigratedObjectID)
 			gvgTask.SetFinished(true)
-			gvgTask.SetMigratedBytesSize(migratedBytesSize)
 			return
 		}
 	}

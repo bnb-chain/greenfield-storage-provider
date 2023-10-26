@@ -1522,7 +1522,7 @@ func (mr *MockGfSpClientAPIMockRecorder) PickVirtualGroupFamilyID(ctx, task inte
 }
 
 // PostMigrateBucket mocks base method.
-func (m *MockGfSpClientAPI) PostMigrateBucket(ctx context.Context, srcSPEndpoint string, postMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockGfSpClientAPI) PostMigrateBucket(ctx context.Context, srcSPEndpoint string, postMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PostMigrateBucket", ctx, srcSPEndpoint, postMsg)
 	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
@@ -1537,7 +1537,7 @@ func (mr *MockGfSpClientAPIMockRecorder) PostMigrateBucket(ctx, srcSPEndpoint, p
 }
 
 // PreMigrateBucket mocks base method.
-func (m *MockGfSpClientAPI) PreMigrateBucket(ctx context.Context, srcSPEndpoint string, preMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockGfSpClientAPI) PreMigrateBucket(ctx context.Context, srcSPEndpoint string, preMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PreMigrateBucket", ctx, srcSPEndpoint, preMsg)
 	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
@@ -1572,7 +1572,7 @@ func (mr *MockGfSpClientAPIMockRecorder) QueryBucketMigrate(ctx, endpoint interf
 }
 
 // QueryLatestBucketQuota mocks base method.
-func (m *MockGfSpClientAPI) QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockGfSpClientAPI) QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryLatestBucketQuota", ctx, endpoint, queryMsg)
 	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
@@ -1622,7 +1622,7 @@ func (mr *MockGfSpClientAPIMockRecorder) QuerySPExit(ctx, endpoint interface{}, 
 }
 
 // QuerySPHasEnoughQuotaForMigrateBucket mocks base method.
-func (m *MockGfSpClientAPI) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) error {
+func (m *MockGfSpClientAPI) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySPHasEnoughQuotaForMigrateBucket", ctx, srcSPEndpoint, queryMsg)
 	ret0, _ := ret[0].(error)
@@ -1816,7 +1816,7 @@ func (mr *MockGfSpClientAPIMockRecorder) SignCreateObjectApproval(ctx, object in
 }
 
 // SignMigrateBucket mocks base method.
-func (m *MockGfSpClientAPI) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationStatus) ([]byte, error) {
+func (m *MockGfSpClientAPI) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignMigrateBucket", ctx, task)
 	ret0, _ := ret[0].([]byte)
@@ -2582,7 +2582,7 @@ func (mr *MockGaterAPIMockRecorder) NotifyDestSPMigrateSwapOut(ctx, destEndpoint
 }
 
 // PostMigrateBucket mocks base method.
-func (m *MockGaterAPI) PostMigrateBucket(ctx context.Context, srcSPEndpoint string, postMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockGaterAPI) PostMigrateBucket(ctx context.Context, srcSPEndpoint string, postMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PostMigrateBucket", ctx, srcSPEndpoint, postMsg)
 	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
@@ -2597,7 +2597,7 @@ func (mr *MockGaterAPIMockRecorder) PostMigrateBucket(ctx, srcSPEndpoint, postMs
 }
 
 // PreMigrateBucket mocks base method.
-func (m *MockGaterAPI) PreMigrateBucket(ctx context.Context, srcSPEndpoint string, preMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockGaterAPI) PreMigrateBucket(ctx context.Context, srcSPEndpoint string, preMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PreMigrateBucket", ctx, srcSPEndpoint, preMsg)
 	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
@@ -2612,7 +2612,7 @@ func (mr *MockGaterAPIMockRecorder) PreMigrateBucket(ctx, srcSPEndpoint, preMsg 
 }
 
 // QueryLatestBucketQuota mocks base method.
-func (m *MockGaterAPI) QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockGaterAPI) QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryLatestBucketQuota", ctx, endpoint, queryMsg)
 	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
@@ -2627,7 +2627,7 @@ func (mr *MockGaterAPIMockRecorder) QueryLatestBucketQuota(ctx, endpoint, queryM
 }
 
 // QuerySPHasEnoughQuotaForMigrateBucket mocks base method.
-func (m *MockGaterAPI) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) error {
+func (m *MockGaterAPI) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuerySPHasEnoughQuotaForMigrateBucket", ctx, srcSPEndpoint, queryMsg)
 	ret0, _ := ret[0].(error)
@@ -4158,7 +4158,7 @@ func (mr *MockSignerAPIMockRecorder) SignCreateObjectApproval(ctx, object interf
 }
 
 // SignMigrateBucket mocks base method.
-func (m *MockSignerAPI) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationStatus) ([]byte, error) {
+func (m *MockSignerAPI) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignMigrateBucket", ctx, task)
 	ret0, _ := ret[0].([]byte)

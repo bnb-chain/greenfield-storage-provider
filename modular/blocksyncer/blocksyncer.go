@@ -35,7 +35,9 @@ const (
 	// DefaultCheckDiffPeriod defines check interval of block height diff
 	DefaultCheckDiffPeriod = 1
 	// MaxHeightGapFactor defines the gap coefficient between the block height in the Map and the processed block height
-	MaxHeightGapFactor = 4
+	MaxHeightGapFactor    = 4
+	ObjectsNumberOfShards = 64
+	MinChargeSize         = 128000
 )
 
 type MigrateDBKey struct{}

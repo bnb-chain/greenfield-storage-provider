@@ -207,14 +207,14 @@ func (g *GfSpMigratePieceTask) Key() coretask.TKey {
 		g.GetSegmentIdx(), g.GetRedundancyIdx())
 }
 
-// ======================= GfSpBucketMigrationStatus =====================================
+// ======================= GfSpBucketMigrationInfo =====================================
 
-func (m *GfSpBucketMigrationStatus) Key() coretask.TKey {
+func (m *GfSpBucketMigrationInfo) Key() coretask.TKey {
 	return GfSpMigrateBucketTaskKey(m.GetBucketId())
 }
 
-func (m *GfSpBucketMigrationStatus) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpBucketMigrationStatus{
+func (m *GfSpBucketMigrationInfo) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpBucketMigrationInfo{
 		BucketId:          m.GetBucketId(),
 		Finished:          m.GetFinished(),
 		MigratedBytesSize: m.GetMigratedBytesSize(),
@@ -222,11 +222,11 @@ func (m *GfSpBucketMigrationStatus) GetSignBytes() []byte {
 	}))
 }
 
-func (m *GfSpBucketMigrationStatus) SetSignature(signature []byte) {
+func (m *GfSpBucketMigrationInfo) SetSignature(signature []byte) {
 	m.Signature = signature
 }
 
-func (m *GfSpBucketMigrationStatus) Info() string {
+func (m *GfSpBucketMigrationInfo) Info() string {
 	return fmt.Sprintf(
 		"key[%s],   bucket_id[%d], migrated_bytes_size[%d], finished[%t].",
 		m.Key(), m.GetBucketId(), m.GetMigratedBytesSize(), m.GetFinished())

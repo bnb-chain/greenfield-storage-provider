@@ -198,7 +198,7 @@ message GfSpMigratePieceTask {
   bool is_bucket_migrate = 7;
 }
 
-message GfSpBucketMigrationStatus {
+message GfSpBucketMigrationInfo {
   uint64 bucket_id = 1;
   // whether the migrate bucket succeed
   bool finished = 2;

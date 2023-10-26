@@ -73,10 +73,10 @@ type GaterAPI interface {
 	NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoint string, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
 	GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (*virtualgrouptypes.MsgSwapOut, error)
-	QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error)
-	PreMigrateBucket(ctx context.Context, srcSPEndpoint string, preMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error)
-	PostMigrateBucket(ctx context.Context, srcSPEndpoint string, postMsg *gfsptask.GfSpBucketMigrationStatus) (gfsptask.GfSpBucketQuotaInfo, error)
-	QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationStatus) error
+	QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error)
+	PreMigrateBucket(ctx context.Context, srcSPEndpoint string, preMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error)
+	PostMigrateBucket(ctx context.Context, srcSPEndpoint string, postMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error)
+	QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) error
 }
 
 // ManagerAPI for mock use
@@ -187,7 +187,7 @@ type SignerAPI interface {
 	SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
 	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
 	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
-	SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationStatus) ([]byte, error)
+	SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 }
 
 // UploaderAPI for mock use

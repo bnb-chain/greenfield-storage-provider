@@ -689,7 +689,7 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 
 	//  if cancel migrate bucket, migrated recoup quota
 	if cancelTask {
-		postMsg := &gfsptask.GfSpBucketMigrationStatus{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
+		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
 		log.CtxInfow(ctx, "start to cancel migrate task and send post migrate bucket to src sp", "post_msg", postMsg, "task", task)
 		err = m.bucketMigrateScheduler.PostMigrateBucket(postMsg)
 		if err != nil {

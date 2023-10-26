@@ -518,7 +518,7 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 		BucketID common.Hash
 		Size     decimal.Decimal
 	}
-	for i := 0; i < 64; i++ {
+	for i := 0; i < ObjectsNumberOfShards; i++ {
 		tableName := "objects_"
 		if i < 10 {
 			tableName += "0"
@@ -533,8 +533,8 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 		buckets := make([]*models.Bucket, 0, len(res))
 		for _, r := range res {
 			chargeSize := r.Size
-			if r.Size.Cmp(decimal.NewFromInt(128000)) == -1 {
-				chargeSize = decimal.NewFromInt(128000)
+			if r.Size.Cmp(decimal.NewFromInt(MinChargeSize)) == -1 {
+				chargeSize = decimal.NewFromInt(MinChargeSize)
 			}
 			buckets = append(buckets, &models.Bucket{
 				BucketID:    r.BucketID,
