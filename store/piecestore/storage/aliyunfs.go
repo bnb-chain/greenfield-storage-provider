@@ -113,7 +113,7 @@ func (sc *SessionCache) newAliyunfsSession(cfg ObjectStorageConfig) (*session.Se
 		Region:           aws.String(key.region),
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(!disableSSL),
-		S3ForcePathStyle: aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(false),
 		Credentials:      creds,
 		HTTPClient:       getHTTPClient(cfg.TLSInsecureSkipVerify),
 	}
