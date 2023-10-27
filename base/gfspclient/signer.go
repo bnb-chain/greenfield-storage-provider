@@ -514,7 +514,7 @@ func (s *GfSpClient) RejectMigrateBucket(ctx context.Context, rejectMigrateBucke
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to sign reject migrate bucket", "error", err)
+		log.CtxErrorw(ctx, "client failed to sign reject migrate bucket", "msg", rejectMigrateBucket, "error", err)
 		return "", ErrRPCUnknownWithDetail("client failed to sign reject migrate bucket, error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
