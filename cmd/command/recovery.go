@@ -104,9 +104,9 @@ func recoverObjectAction(ctx *cli.Context) error {
 	for range taskCheckTicker.C {
 		stats, _ := client.GetTasksStats(context.Background())
 		if stats.GetRecoveryProcessCount() > 0 {
-			log.Infof("Processing recovery tasks, update every 5 seconds. Waiting Tasks Number: %d. Recovered: %s. Failed: %s", stats.GetRecoveryProcessCount(), stats.GetRecoverySucceedList(), stats.GetRecoveryFailedList())
+			fmt.Printf("Processing recovery tasks, update every 5 seconds. \n Waiting Tasks Number: %d \n Recovered: %s \n Failed: %s\n\n", stats.GetRecoveryProcessCount(), stats.GetRecoverySucceedList(), stats.GetRecoveryFailedList())
 		} else {
-			log.Infof("Finished process all recovery objects task on background. Recovered: %s. Failed: %s \n", stats.GetRecoverySucceedList(), stats.GetRecoveryFailedList())
+			fmt.Printf("Finished process all recovery objects task on background. \n Recovered: %s \n Failed: %s \n", stats.GetRecoverySucceedList(), stats.GetRecoveryFailedList())
 			break
 		}
 	}
