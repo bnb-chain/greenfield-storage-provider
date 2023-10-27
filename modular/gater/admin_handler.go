@@ -400,7 +400,7 @@ func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.R
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetChallengeInfo).Inc()
