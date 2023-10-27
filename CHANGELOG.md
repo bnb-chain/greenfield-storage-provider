@@ -1,12 +1,23 @@
 # Changelog
 
+## v1.0.2
+This release contains 2 bugfixes and 1 feature.
+
+FEATURES
+* [#1200](https://github.com/bnb-chain/greenfield-storage-provider/pull/1200) feat: add index to update at
+
+BUGFIXES
+* [#1189](https://github.com/bnb-chain/greenfield-storage-provider/pull/1189) fix: add challenge v2 api to avoid piece hash http header too large
+* [#1195](https://github.com/bnb-chain/greenfield-storage-provider/pull/1195) fix:bs job connect db bug
+
+
 ## v1.0.1
 
 FEATURES
 * [#1181](https://github.com/bnb-chain/greenfield-storage-provider/pull/1181) feat: api rate limiter refactor
 * [#1188](https://github.com/bnb-chain/greenfield-storage-provider/pull/1188) feat:blocksyncer fix data command
 
-BIGFIX
+BUGFIXES
 * [#1186](https://github.com/bnb-chain/greenfield-storage-provider/pull/1186) fix:batch delete group member
 * [#1187](https://github.com/bnb-chain/greenfield-storage-provider/pull/1187) fix:payment refundable update
 
