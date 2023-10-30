@@ -111,9 +111,12 @@ func TestRequestNonceHandler(t *testing.T) {
 				currentPublicKey := ""
 				expiryDate := time.Now().UnixMilli()
 				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
-				mockedClient.EXPECT().GetAuthNonce(gomock.Any(), gomock.Any(), gomock.Any()).Return(currentNonce, nextNonce, currentPublicKey, expiryDate, nil).Times(1)
+				mockedClient.EXPECT().GetAuthNonce(gomock.Any(), SampleUserAccount, SampleDAppDomain).Return(currentNonce, nextNonce, currentPublicKey, expiryDate, nil).Times(1)
 
 				req := httptest.NewRequest(http.MethodGet, "/auth/request_nonce", nil)
+
+				req.Header.Set(GnfdUserAddressHeader, SampleUserAccount)
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, SampleDAppDomain)
 				w := httptest.NewRecorder()
 
 				expectedBody := msgToString(currentNonce, nextNonce, currentPublicKey, expiryDate)
@@ -131,8 +134,10 @@ func TestRequestNonceHandler(t *testing.T) {
 			name: "case 2/no nonce returned",
 			f: func(t *testing.T, c *gomock.Controller) *Body {
 				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
-				mockedClient.EXPECT().GetAuthNonce(gomock.Any(), gomock.Any(), gomock.Any()).Return(int32(0), int32(0), "", int64(0), gorm.ErrInvalidDB).Times(1)
+				mockedClient.EXPECT().GetAuthNonce(gomock.Any(), SampleUserAccount, SampleDAppDomain).Return(int32(0), int32(0), "", int64(0), gorm.ErrInvalidDB).Times(1)
 				req := httptest.NewRequest(http.MethodGet, "/auth/request_nonce", nil)
+				req.Header.Set(GnfdUserAddressHeader, SampleUserAccount)
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, SampleDAppDomain)
 				w := httptest.NewRecorder()
 				return &Body{
 					fields: fields{
@@ -141,6 +146,41 @@ func TestRequestNonceHandler(t *testing.T) {
 					args:           args{w: w, r: req},
 					wantRespBody:   nil,
 					wantRespStatus: http.StatusInternalServerError,
+				}
+			},
+		},
+		{
+			name: "case 3/empty domain",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				req := httptest.NewRequest(http.MethodGet, "/auth/request_nonce", nil)
+				req.Header.Set(GnfdUserAddressHeader, SampleUserAccount)
+				w := httptest.NewRecorder()
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   nil,
+					wantRespStatus: http.StatusBadRequest,
+				}
+			},
+		},
+		{
+			name: "case 4/bad account address",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				req := httptest.NewRequest(http.MethodGet, "/auth/request_nonce", nil)
+				req.Header.Set(GnfdUserAddressHeader, "bad address")
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, SampleDAppDomain)
+				w := httptest.NewRecorder()
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   nil,
+					wantRespStatus: http.StatusBadRequest,
 				}
 			},
 		},
