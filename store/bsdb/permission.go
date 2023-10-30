@@ -129,9 +129,9 @@ func (p Permission) Eval(action permtypes.ActionType, blockTime time.Time, opts 
 }
 
 // ListObjectPolicies list policies by object info
-func (b *BsDBImpl) ListObjectPolicies(objectID common.Hash, actionType permtypes.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+func (b *BsDBImpl) ListObjectPolicies(objectID common.Hash, actionType permtypes.ActionType, startAfter common.Hash, limit int) ([]*PermissionWithStatement, error) {
 	var (
-		permissions  []*Permission
+		permissions  []*PermissionWithStatement
 		actionValues []int
 		now          int64
 		err          error

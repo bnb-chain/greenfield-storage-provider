@@ -734,10 +734,10 @@ func (mr *MockMetadataMockRecorder) ListMigrateBucketEvents(spID interface{}, fi
 }
 
 // ListObjectPolicies mocks base method.
-func (m *MockMetadata) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+func (m *MockMetadata) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*PermissionWithStatement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListObjectPolicies", objectID, actionType, startAfter, limit)
-	ret0, _ := ret[0].([]*Permission)
+	ret0, _ := ret[0].([]*PermissionWithStatement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1676,10 +1676,10 @@ func (mr *MockBSDBMockRecorder) ListMigrateBucketEvents(spID interface{}, filter
 }
 
 // ListObjectPolicies mocks base method.
-func (m *MockBSDB) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+func (m *MockBSDB) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*PermissionWithStatement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListObjectPolicies", objectID, actionType, startAfter, limit)
-	ret0, _ := ret[0].([]*Permission)
+	ret0, _ := ret[0].([]*PermissionWithStatement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
