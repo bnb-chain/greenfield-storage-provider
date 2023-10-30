@@ -75,7 +75,7 @@ type ManageModular struct {
 	migrateGVGQueueMux   sync.Mutex
 
 	// src sp used TODO: these should be persisted
-	migratingBuckets map[uint64]bool
+	migratingBuckets map[uint64]struct{}
 
 	maxUploadObjectNumber int
 
@@ -131,7 +131,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 
-	m.migratingBuckets = make(map[uint64]bool)
+	m.migratingBuckets = make(map[uint64]struct{})
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -798,6 +798,7 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 
 	m.migrateGVGQueue.PopByKey(task.Key())
 	task.SetUpdateTime(time.Now().Unix())
+	// When both conditions are met, the task should be pushed into the queue
 	if !task.GetFinished() && push {
 		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
 			log.Errorw("failed to push gvg task queue", "task", task, "error", pushErr)

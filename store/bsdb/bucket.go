@@ -112,7 +112,7 @@ func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, 
 	return bucket, err
 }
 
-// GetBucketSizeByID get buckets size by a bucket id
+// GetBucketSizeByID get bucket size by a bucket id
 func (b *BsDBImpl) GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error) {
 	var (
 		size         decimal.Decimal

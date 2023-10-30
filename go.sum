@@ -196,6 +196,8 @@ github.com/bnb-chain/juno/v4 v4.0.0-20230921022336-06a9e87ef18f h1:D8XbXyRHjDW3K
 github.com/bnb-chain/juno/v4 v4.0.0-20230921022336-06a9e87ef18f/go.mod h1:68RWZ1MX71nOi7MhYHMdrV7QQS2NXax4MIqLbj3U+T0=
 github.com/bnb-chain/juno/v4 v4.0.0-20231023111452-7cd108f48b21 h1:mRSILqMoZkmJBhBm5QgBKC4FerkVptLOgknorZd63ik=
 github.com/bnb-chain/juno/v4 v4.0.0-20231023111452-7cd108f48b21/go.mod h1:OC/1A0E4Mp5H/25T9HX05DvfSmMGJr0lSeMUR56yD6k=
+github.com/bnb-chain/juno/v4 v4.0.0-20231027060606-82070b5da95a h1:fEv/SCzaoumMqfY6OcP4ksXR2L0D8DPbIXPfXdXiODg=
+github.com/bnb-chain/juno/v4 v4.0.0-20231027060606-82070b5da95a/go.mod h1:68RWZ1MX71nOi7MhYHMdrV7QQS2NXax4MIqLbj3U+T0=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=

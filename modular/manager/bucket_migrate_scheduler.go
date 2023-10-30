@@ -108,9 +108,10 @@ type BucketMigrateExecutePlan struct {
 	gvgUnitMap map[uint32]*BucketMigrateGVGExecuteUnit // gvgID -> BucketMigrateGVGExecuteUnit
 	stopSignal chan struct{}                           // stop schedule
 	finished   int                                     // used for count the number of successful migrate units
+	srcSP      *sptypes.StorageProvider
 }
 
-func newBucketMigrateExecutePlan(manager *ManageModular, bucketID uint64, scheduler *BucketMigrateScheduler) *BucketMigrateExecutePlan {
+func newBucketMigrateExecutePlan(manager *ManageModular, bucketID uint64, scheduler *BucketMigrateScheduler, srcSp *sptypes.StorageProvider) *BucketMigrateExecutePlan {
 	executePlan := &BucketMigrateExecutePlan{
 		manager:    manager,
 		scheduler:  scheduler,
@@ -118,6 +119,7 @@ func newBucketMigrateExecutePlan(manager *ManageModular, bucketID uint64, schedu
 		gvgUnitMap: make(map[uint32]*BucketMigrateGVGExecuteUnit),
 		stopSignal: make(chan struct{}),
 		finished:   0,
+		srcSP:      srcSp,
 	}
 
 	return executePlan
@@ -206,7 +208,7 @@ func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(migrateExecuteUni
 	// query src sp, bucket migrate quota
 	queryMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID}
 	queryMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
-	signature, err = plan.manager.baseApp.GfSpClient().SignMigrateBucket(context.Background(), queryMsg)
+	signature, err = plan.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), queryMsg)
 	if err != nil {
 		log.Errorw("failed to sign migrate bucket", "bucket_migration_info", queryMsg, "error", err)
 		return err
@@ -270,7 +272,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 			return err
 		}
 		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
-		err = plan.manager.bucketMigrateScheduler.PostMigrateBucket(postMsg)
+		err = plan.manager.bucketMigrateScheduler.PostMigrateBucket(postMsg, plan.srcSP)
 		if err != nil {
 			log.Errorw("failed to post migrate bucket", "msg", postMsg, "error", err)
 		}
@@ -605,19 +607,18 @@ func (s *BucketMigrateScheduler) pickGlobalVirtualGroupForBucketMigrate(filter *
 }
 
 // PostMigrateBucket is used to pick a suitable gvg for replicating object.
-func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketMigrationInfo) error {
+func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketMigrationInfo, srcSPInfo *sptypes.StorageProvider) error {
 	var (
 		signature []byte
 		err       error
 	)
-	srcSPInfo, err := util.GetBucketPrimarySPInfoByBucketID(context.Background(), s.manager.baseApp.Consensus(), postMsg.GetBucketId())
-	if err != nil {
-		log.Debugw("failed to query bucket src sp by bucket id", "bucket_id", postMsg.GetBucketId(), "error", err)
-		return err
+
+	if srcSPInfo == nil {
+		srcSPInfo = s.getSPInfoByBucketID(postMsg.GetBucketId())
 	}
 
 	postMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
-	signature, err = s.manager.baseApp.GfSpClient().SignMigrateBucket(context.Background(), postMsg)
+	signature, err = s.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), postMsg)
 	if err != nil {
 		log.Errorw("failed to sign migrate bucket", "bucket_migration", postMsg, "error", err)
 		return err
@@ -635,22 +636,17 @@ func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketM
 }
 
 // PreMigrateBucket is used to pick a suitable gvg for replicating object.
-func (s *BucketMigrateScheduler) PreMigrateBucket(bucketID uint64) error {
+func (s *BucketMigrateScheduler) PreMigrateBucket(bucketID uint64, srcSPInfo *sptypes.StorageProvider) error {
 	var (
 		signature []byte
 		err       error
 	)
 
 	log.Debugw("start to pre migrate bucket", "bucket_id", bucketID)
-	srcSPInfo, err := util.GetBucketPrimarySPInfoByBucketID(context.Background(), s.manager.baseApp.Consensus(), bucketID)
-	if err != nil {
-		log.Debugw("failed to query bucket src sp by bucket id", "bucket_id", bucketID, "error", err)
-		return err
-	}
 
 	preMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID, Finished: false}
 	preMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
-	signature, err = s.manager.baseApp.GfSpClient().SignMigrateBucket(context.Background(), preMsg)
+	signature, err = s.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), preMsg)
 	if err != nil {
 		log.Errorw("failed to sign migrate bucket", "bucket_migration", preMsg, "error", err)
 		return err
@@ -715,21 +711,30 @@ func (s *BucketMigrateScheduler) createGlobalVirtualGroupForBucketMigrate(vgfID 
 	})
 }
 
-func (s *BucketMigrateScheduler) getSrcSPAndDestSPFromMigrateEvent(event *storagetypes.EventMigrationBucket) (srcSP, destSP *sptypes.StorageProvider, err error) {
-	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), event.BucketId.Uint64())
+func (s *BucketMigrateScheduler) getSPInfoByBucketID(bucketID uint64) *sptypes.StorageProvider {
+	bucketInfo, err := s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketID)
 	if err != nil {
-		return nil, nil, err
+		return nil
 	}
 	bucketSPID, err := util.GetBucketPrimarySPID(context.Background(), s.manager.baseApp.Consensus(), bucketInfo)
 	if err != nil {
+		return nil
+	}
+
+	spInfo, err := s.manager.virtualGroupManager.QuerySPByID(bucketSPID)
+	if err != nil {
+		log.Errorw("failed to query sp", "error", err, "sp_id", bucketSPID)
+		return nil
+	}
+	return spInfo
+}
+
+func (s *BucketMigrateScheduler) getSrcSPAndDestSPFromMigrateEvent(event *storagetypes.EventMigrationBucket) (srcSP, destSP *sptypes.StorageProvider, err error) {
+	srcSP = s.getSPInfoByBucketID(event.BucketId.Uint64())
+	if srcSP == nil {
 		return nil, nil, err
 	}
 
-	srcSP, err = s.manager.virtualGroupManager.QuerySPByID(bucketSPID)
-	if err != nil {
-		log.Errorw("failed to query sp", "error", err, "migration_bucket_events", event)
-		return nil, nil, err
-	}
 	destSP, err = s.manager.virtualGroupManager.QuerySPByID(event.DstPrimarySpId)
 	if err != nil {
 		log.Errorw("failed to query sp", "error", err, "migration_bucket_events", event)
@@ -761,12 +766,11 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	}
 
 	// 2) new bucket migrate execute plan
-	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64(), s)
 	bucketID := event.BucketId.Uint64()
 
-	log.Debugw("produce bucket migrate execute plan", "bucketID", plan.bucketID, "migration_bucket_events", event)
+	log.Debugw("produce bucket migrate execute plan", "bucketID", bucketID, "migration_bucket_events", event)
 	// query metadata service to get primary sp's gvg list.
-	primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), plan.bucketID)
+	primarySPGVGList, err = s.manager.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(context.Background(), bucketID)
 	if err != nil {
 		log.Errorw("failed to list gvg ", "error", err, "migration_bucket_events", event)
 		return nil, errors.New("failed to list gvg")
@@ -776,6 +780,8 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	if err != nil {
 		return nil, err
 	}
+
+	plan = newBucketMigrateExecutePlan(s.manager, event.BucketId.Uint64(), s, srcSP)
 	conflictChecker := NewSPConflictChecker(plan, srcSP, destSP, bucketID)
 
 	if buildMetaByDB {
@@ -827,7 +833,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 
 	// lock quota
 	if !buildMetaByDB {
-		err = plan.manager.bucketMigrateScheduler.PreMigrateBucket(bucketID)
+		err = plan.manager.bucketMigrateScheduler.PreMigrateBucket(bucketID, plan.srcSP)
 		if err != nil {
 			log.Errorw("failed to pre migrate bucket(lock src sp quota)", "bucket_id", bucketID, "error", err)
 			return nil, err

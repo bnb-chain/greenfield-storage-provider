@@ -374,8 +374,7 @@ func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth strin
 	return err
 }
 
-// GetLatestBucketTraffic return the latest bucket traffic info by the year and month info
-// year_month is the query bucket quota's month, like "2023-03"
+// GetLatestBucketTraffic return the latest bucket traffic info of the bucket
 func (s *SpDBImpl) GetLatestBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTraffic, err error) {
 	var queryReturn BucketTrafficTable
 
@@ -392,9 +391,9 @@ func (s *SpDBImpl) GetLatestBucketTraffic(bucketID uint64) (traffic *corespdb.Bu
 			time.Since(startTime).Seconds())
 	}()
 
-	queryErr := s.db.Where("bucket_id = ?", bucketID).Order("month DESC").Limit(1).Find(&queryReturn).Error
-	if queryErr != nil {
-		return nil, queryErr
+	err = s.db.Where("bucket_id = ?", bucketID).Order("month DESC").Limit(1).Find(&queryReturn).Error
+	if err != nil {
+		return nil, err
 	}
 
 	return &corespdb.BucketTraffic{
@@ -440,13 +439,13 @@ func (s *SpDBImpl) UpdateBucketTraffic(bucketID uint64, update *corespdb.BucketT
 	if needInsert {
 		result = s.db.Create(updateRecord)
 		if result.Error != nil || result.RowsAffected != 1 {
-			return fmt.Errorf("failed to insert record in subscribe progress table: %s", result.Error)
+			return fmt.Errorf("failed to insert record in bucket traffic table: %s", result.Error)
 		}
 	} else { // update
 		result = s.db.Model(&BucketTrafficTable{}).
 			Where("bucket_id = ? and month = ?", bucketID, update.YearMonth).Updates(updateRecord)
 		if result.Error != nil {
-			return fmt.Errorf("failed to update record in subscribe progress table: %s", result.Error)
+			return fmt.Errorf("failed to update record in bucket traffic table: %s", result.Error)
 		}
 	}
 	return nil

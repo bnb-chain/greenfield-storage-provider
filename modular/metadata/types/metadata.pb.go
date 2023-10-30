@@ -2139,7 +2139,7 @@ func (m *GfSpGetBucketReadQuotaResponse) GetFreeQuotaConsumeSize() uint64 {
 	return 0
 }
 
-// GfSpGetBucketReadQuotaRequest is request type for the GfSpGetBucketReadQuota RPC method.
+// GfSpGetLatestBucketReadQuotaRequest is request type for the GfSpGetLatestBucketReadQuota RPC method.
 type GfSpGetLatestBucketReadQuotaRequest struct {
 	// bucket id from the greenfield chain
 	BucketId uint64 `protobuf:"varint,1,opt,name=bucket_id,json=bucketId,proto3" json:"bucket_id,omitempty"`
@@ -2185,7 +2185,7 @@ func (m *GfSpGetLatestBucketReadQuotaRequest) GetBucketId() uint64 {
 	return 0
 }
 
-// GfSpGetBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuota RPC method.
+// GfSpGetLatestBucketReadQuotaResponse is response type for the GfSpGetLatestBucketReadQuota RPC method.
 type GfSpGetLatestBucketReadQuotaResponse struct {
 	Err   *gfsperrors.GfSpError         `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
 	Quota *gfsptask.GfSpBucketQuotaInfo `protobuf:"bytes,2,opt,name=quota,proto3" json:"quota,omitempty"`

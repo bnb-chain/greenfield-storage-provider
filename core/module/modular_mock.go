@@ -1822,6 +1822,21 @@ func (mr *MockSignerMockRecorder) SealObject(ctx, object interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSigner)(nil).SealObject), ctx, object)
 }
 
+// SignBucketMigrationInfo mocks base method.
+func (m *MockSigner) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignBucketMigrationInfo", ctx, task)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignBucketMigrationInfo indicates an expected call of SignBucketMigrationInfo.
+func (mr *MockSignerMockRecorder) SignBucketMigrationInfo(ctx, task interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignBucketMigrationInfo", reflect.TypeOf((*MockSigner)(nil).SignBucketMigrationInfo), ctx, task)
+}
+
 // SignCreateBucketApproval mocks base method.
 func (m *MockSigner) SignCreateBucketApproval(ctx context.Context, bucket *types0.MsgCreateBucket) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -1850,21 +1865,6 @@ func (m *MockSigner) SignCreateObjectApproval(ctx context.Context, task *types0.
 func (mr *MockSignerMockRecorder) SignCreateObjectApproval(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignCreateObjectApproval", reflect.TypeOf((*MockSigner)(nil).SignCreateObjectApproval), ctx, task)
-}
-
-// SignMigrateBucket mocks base method.
-func (m *MockSigner) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SignMigrateBucket", ctx, task)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SignMigrateBucket indicates an expected call of SignMigrateBucket.
-func (mr *MockSignerMockRecorder) SignMigrateBucket(ctx, task interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateBucket", reflect.TypeOf((*MockSigner)(nil).SignMigrateBucket), ctx, task)
 }
 
 // SignMigrateBucketApproval mocks base method.

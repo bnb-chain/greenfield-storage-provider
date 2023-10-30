@@ -18,7 +18,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"github.com/bnb-chain/greenfield/types/s3util"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
@@ -562,6 +561,6 @@ func (r *MetadataModular) GfSpGetBucketSize(ctx context.Context, req *types.GfSp
 	}
 
 	resp = &types.GfSpGetBucketSizeResponse{BucketSize: size.String()}
-	log.CtxInfow(ctx, "succeed to get bucket total object size")
+	log.CtxInfow(ctx, "succeed to get bucket total object size", "bucket_size", size)
 	return resp, nil
 }

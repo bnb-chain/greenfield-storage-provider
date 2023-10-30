@@ -348,13 +348,13 @@ message GfSpGetBucketReadQuotaResponse {
   uint64 free_quota_consume_size = 5;
 }
 
-// GfSpGetBucketReadQuotaRequest is request type for the GfSpGetBucketReadQuota RPC method.
+// GfSpGetLatestBucketReadQuotaRequest is request type for the GfSpGetLatestBucketReadQuota RPC method.
 message GfSpGetLatestBucketReadQuotaRequest {
   // bucket id from the greenfield chain
   uint64 bucket_id = 1;
 }
 
-// GfSpGetBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuota RPC method.
+// GfSpGetLatestBucketReadQuotaResponse is response type for the GfSpGetLatestBucketReadQuota RPC method.
 message GfSpGetLatestBucketReadQuotaResponse {
   base.types.gfsperrors.GfSpError err = 1;
   base.types.gfsptask.GfSpBucketQuotaInfo quota = 2;

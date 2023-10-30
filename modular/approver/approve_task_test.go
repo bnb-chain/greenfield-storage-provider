@@ -15,6 +15,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 
+	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield/types/common"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
@@ -324,7 +325,9 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskSuccess2(t *testing.T) {
 	a.baseApp.SetGfSpClient(m1)
 	m1.EXPECT().SignMigrateBucketApproval(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
 	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	m1.EXPECT().SignMigrateBucket(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	m1.EXPECT().SignBucketMigrationInfo(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	m1.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
+		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).Times(1)
 
 	m.EXPECT().Push(gomock.Any()).Return(nil).AnyTimes()
 	// mock consensus
@@ -371,7 +374,9 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskFailure2(t *testing.T) {
 	a.baseApp.SetGfSpClient(m1)
 	m1.EXPECT().SignMigrateBucketApproval(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
 	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	m1.EXPECT().SignMigrateBucket(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
+	m1.EXPECT().SignBucketMigrationInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
+	m1.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
+		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).Times(1)
 
 	// mock consensus
 	mockedConsensus := consensus.NewMockConsensus(ctrl)

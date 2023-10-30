@@ -501,7 +501,7 @@ func (s *GfSpClient) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigr
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
+func (s *GfSpClient) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	conn, err := s.SignerConn(ctx)
 	if err != nil {
 		log.Errorw("client failed to connect to signer", "error", err)
@@ -514,8 +514,8 @@ func (s *GfSpClient) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpB
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to sign migrate gvg", "migrate_gvg", task, "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to sign migrate gvg, migrate_gvg: " + task.Info() + ", error: " + err.Error())
+		log.CtxErrorw(ctx, "client failed to sign bucket migrate info", "bucket_migration_info", task, "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to sign bucket migrate info, bucket migration info: " + task.Info() + ", error: " + err.Error())
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()

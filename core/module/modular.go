@@ -303,8 +303,8 @@ type Signer interface {
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 	// SignMigrateGVG signs the GfSpMigrateGVGTask for migrating piece auth.
 	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
-	// SignMigrateBucket signs the GfSpBucketMigrationInfo for migrating bucket communication auth.
-	SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
+	// SignBucketMigrationInfo signs the GfSpBucketMigrationInfo for migrating bucket communication auth.
+	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

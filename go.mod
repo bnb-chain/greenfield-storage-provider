@@ -49,9 +49,8 @@ require (
 	google.golang.org/grpc v1.56.1
 	gorm.io/driver/mysql v1.4.6
 	gorm.io/gorm v1.24.5
+	github.com/shopspring/decimal v1.3.1
 )
-
-require github.com/shopspring/decimal v1.3.1
 
 require (
 	cosmossdk.io/api v0.4.0 // indirect
@@ -304,7 +303,7 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.6
 	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20230921022336-06a9e87ef18f
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20231027060606-82070b5da95a
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

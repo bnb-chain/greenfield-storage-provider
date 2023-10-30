@@ -291,7 +291,7 @@ func (*NilModular) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSp
 func (*NilModular) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
-func (*NilModular) SignMigrateBucket(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
+func (*NilModular) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	return nil, ErrNilModular
 }
 

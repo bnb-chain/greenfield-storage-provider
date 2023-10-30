@@ -219,7 +219,7 @@ func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoin
 	return nil
 }
 
-// QueryLatestBucketQuota is used to query src sp's bucket quota before send CompleteMigrateBucket Tx
+// QueryLatestBucketQuota is used to query src sp bucket quota before send CompleteMigrateBucket Tx
 func (s *GfSpClient) QueryLatestBucketQuota(ctx context.Context, endpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	req, err := http.NewRequest(http.MethodGet, endpoint+MigrateQueryBucketQuotaPath, nil)
 	if err != nil {
@@ -332,7 +332,7 @@ func (s *GfSpClient) PostMigrateBucket(ctx context.Context, srcSPEndpoint string
 	return quotaResult, nil
 }
 
-// QuerySPHasEnoughQuotaForMigrateBucket is used to query src sp's bucket quota at approval phase
+// QuerySPHasEnoughQuotaForMigrateBucket is used to query src sp bucket quota at approval phase
 func (s *GfSpClient) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, srcSPEndpoint string, queryMsg *gfsptask.GfSpBucketMigrationInfo) error {
 	req, err := http.NewRequest(http.MethodGet, srcSPEndpoint+MigrateQueryBucketQuotaHasEnoughQuotaPath, nil)
 	if err != nil {
@@ -358,12 +358,21 @@ func (s *GfSpClient) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, 
 			bucketID, resp.StatusCode, srcSPEndpoint)
 	}
 
-	signedMsg := resp.Header.Get(GnfdSignedApprovalMsgHeader)
+	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	if err != nil {
+		return err
+	}
 
-	if signedMsg == "true" {
+	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
+	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+		return err
+	}
+
+	if quotaResult.GetAllowMigrate() {
 		return nil
 	} else {
-		return fmt.Errorf("failed to check src sp has enough bucket quota, bucket(%d), status_code(%d), endpoint(%s)", bucketID, resp.StatusCode, srcSPEndpoint)
+		return fmt.Errorf("failed to check src sp has enough bucket quota, bucket(%d), status_code(%d), endpoint(%s), quota(%s)",
+			bucketID, resp.StatusCode, srcSPEndpoint, quotaResult.String())
 	}
 }
 

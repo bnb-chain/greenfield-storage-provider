@@ -191,25 +191,24 @@ func (e *ExecuteModular) doObjectMigrationRetry(ctx context.Context, gvgTask cor
 	)
 	for retry := 0; retry < e.maxObjectMigrationRetry; retry++ {
 		// when cancel migrate bucket, the dest sp event may be slower than src sp, so we retry this migration
-		err = e.doObjectMigration(ctx, gvgTask, bucketID, object)
-		if err == nil {
-			// 1) no error case
-			return nil
-		} else {
-			// 2) error happens, but will skip error
+		if err = e.doObjectMigration(ctx, gvgTask, bucketID, object); err != nil {
+			// 1) error happens, but will skip error
 			if e.isSkipFailedToMigrateObject(ctx, object) {
 				log.CtxErrorw(ctx, "failed to do migration gvg task and the error will skip", "gvg_id", srcGvgID,
 					"bucket_id", bucketID, "object_info", object,
 					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "retry", retry, "error", err)
 				return nil
 			} else {
-				// 3) error happens, sleep and will retry
+				// 2) error happens, sleep and will retry
 				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
 					"bucket_id", bucketID, "object_info", object,
 					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "retry", retry, "error", err)
 				time.Sleep(time.Duration(e.objectMigrationRetryTimeout) * time.Second)
 				continue
 			}
+		} else {
+			// 3) no error case
+			return nil
 		}
 	}
 	return err

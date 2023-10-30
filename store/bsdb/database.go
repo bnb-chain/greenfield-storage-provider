@@ -129,7 +129,7 @@ type Metadata interface {
 	GetEventMigrationBucketByBucketID(bucketID common.Hash) (*EventMigrationBucket, error)
 	//GetEventSwapOutByGvgID get swap out event by gvg id
 	GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error)
-	// GetBucketSizeByID get buckets size info by by a bucket id
+	// GetBucketSizeByID get bucket size info by a bucket id
 	GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error)
 }
 

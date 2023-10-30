@@ -3,10 +3,7 @@ package util
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math"
-
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
@@ -88,23 +85,4 @@ func GetBucketPrimarySPID(ctx context.Context, chainClient consensus.Consensus, 
 		return 0, err
 	}
 	return resp.GetPrimarySpId(), nil
-}
-
-// GetBucketPrimarySPInfoByBucketID return bucket sp info by vgf id
-func GetBucketPrimarySPInfoByBucketID(ctx context.Context, chainClient consensus.Consensus, bucketID uint64) (*sptypes.StorageProvider, error) {
-	bucketInfo, err := chainClient.QueryBucketInfoById(ctx, bucketID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query bucket info, error: " + err.Error())
-	}
-
-	globalVGF, err := chainClient.QueryVirtualGroupFamily(ctx, bucketInfo.GetGlobalVirtualGroupFamilyId())
-	if err != nil {
-		return nil, fmt.Errorf("failed to query virtual group family, error: " + err.Error())
-	}
-	spInfo, err := chainClient.QuerySPByID(ctx, globalVGF.GetId())
-	if err != nil {
-		return nil, fmt.Errorf("failed to query sp info, error: " + err.Error())
-	}
-
-	return spInfo, nil
 }
