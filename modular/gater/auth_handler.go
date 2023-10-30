@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 
@@ -66,6 +67,21 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 
 	account := reqCtx.request.Header.Get(GnfdUserAddressHeader)
 	domain := reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+
+	// validate account header
+	if ok := common.IsHexAddress(account); !ok {
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	// validate domain header
+	if domain == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check GnfdOffChainAuthAppDomainHeader header")
+		err = ErrInvalidDomainHeader
+		return
+	}
+
 	ctx := log.Context(context.Background(), account, domain)
 	currentNonce, nextNonce, currentPublicKey, expiryDate, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, account, domain)
 
