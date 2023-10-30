@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -495,7 +497,16 @@ func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
-	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	task := qTask.(task.RecoveryPieceTask)
+
+	GcConditionMet := task.ExceedRetry()
+	if GcConditionMet {
+		if !slices.Contains(m.recoveryFailedList, task.GetObjectInfo().ObjectName) {
+			m.recoveryFailedList = append(m.recoveryFailedList, task.GetObjectInfo().ObjectName)
+		}
+		delete(m.recoveryTaskMap, task.Key().String())
+	}
+	return GcConditionMet
 }
 
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {

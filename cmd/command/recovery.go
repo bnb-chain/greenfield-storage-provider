@@ -23,7 +23,8 @@ const (
 	MaxRecoveryTime     = 50
 	recoveryCommands    = "RECOVERY COMMANDS"
 	MaxRecoveryJob      = 1000
-	RecoveryJobSyncTime = 5 * time.Second
+	FullQueueWaitTime   = 5 * time.Second
+	RecoveryJobSyncTime = 30 * time.Second
 )
 
 var bucketFlag = &cli.StringFlag{
@@ -104,7 +105,7 @@ func recoverObjectAction(ctx *cli.Context) error {
 	for range taskCheckTicker.C {
 		stats, _ := client.GetTasksStats(context.Background())
 		if stats.GetRecoveryProcessCount() > 0 {
-			fmt.Printf("Processing recovery tasks, update every 5 seconds. \n Waiting Tasks Number: %d \n Failed: %s\n\n", stats.GetRecoveryProcessCount(), stats.GetRecoveryFailedList())
+			fmt.Printf("Processing recovery tasks, update every 30 seconds. \n Waiting Tasks Number: %d \n Failed: %s\n\n", stats.GetRecoveryProcessCount(), stats.GetRecoveryFailedList())
 		} else {
 			fmt.Printf("Finished process all recovery objects task on background. \n Failed: %s \n", stats.GetRecoveryFailedList())
 			break
@@ -124,7 +125,7 @@ func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpCon
 	processingCount = stats.GetRecoveryProcessCount()
 	for processingCount >= MaxRecoveryJob {
 		log.Infof("Recovery object job waiting as there are already %d recovery job in queue.", MaxRecoveryJob)
-		time.Sleep(RecoveryJobSyncTime)
+		time.Sleep(FullQueueWaitTime)
 		stats, _ := client.GetTasksStats(context.Background())
 		processingCount = stats.GetRecoveryProcessCount()
 	}
