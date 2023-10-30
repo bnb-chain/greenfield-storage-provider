@@ -29,7 +29,6 @@ type managerTasksStats struct {
 	maxUploadingCount        uint32
 	migrateGVGCount          uint32
 	recoveryProcessCount     uint32
-	recoverySucceedList      []string
 	recoveryFailedList       []string
 }
 
@@ -125,7 +124,6 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 					stats.GetMaxUploading(),
 					stats.GetMigrateGvgCount(),
 					stats.GetRecoveryProcessCount(),
-					stats.GetRecoverySucceedList(),
 					stats.GetRecoveryFailedList(),
 				}
 				a.statsMutex.Unlock()

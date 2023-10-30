@@ -66,8 +66,8 @@ func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.Msg
 	return ErrNilModular
 }
 
-func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string, []string) {
-	return 0, 0, 0, 0, 0, 0, 0, nil, nil
+func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string) {
+	return 0, 0, 0, 0, 0, 0, 0, nil
 }
 
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {

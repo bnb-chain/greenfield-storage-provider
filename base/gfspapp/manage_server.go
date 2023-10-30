@@ -334,7 +334,7 @@ func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspser
 
 func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfSpQueryTasksStatsRequest) (
 	*gfspserver.GfSpQueryTasksStatsResponse, error) {
-	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount, recoveryCount, recoverySucceedList, recoveryFailedList := g.manager.QueryTasksStats(ctx)
+	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount, recoveryCount, recoveryFailedList := g.manager.QueryTasksStats(ctx)
 	stats := &gfspserver.TasksStats{
 		UploadCount:          uint32(uploadTaskCount),
 		ReplicateCount:       uint32(replicateTaskCount),
@@ -343,7 +343,6 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 		MaxUploading:         uint32(maxUploadingNumber),
 		MigrateGvgCount:      uint32(migrateGVGCount),
 		RecoveryProcessCount: uint32(recoveryCount),
-		RecoverySucceedList:  recoverySucceedList,
 		RecoveryFailedList:   recoveryFailedList,
 	}
 	return &gfspserver.GfSpQueryTasksStatsResponse{

@@ -100,9 +100,8 @@ type ManageModular struct {
 
 	gvgPreferSPList []uint32
 
-	recovereySucceedList []string
-	recoveryFailedList   []string
-	recoveryTaskMap      map[string]string
+	recoveryFailedList []string
+	recoveryTaskMap    map[string]string
 }
 
 func (m *ManageModular) Name() string {
@@ -800,7 +799,6 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	maxUploadCount int,
 	migrateGVGCount int,
 	recoveryProcessCount int,
-	recoverySucceedList []string,
 	recoveryFailedList []string,
 ) {
 	uploadTasks = m.uploadQueue.Len()
@@ -810,7 +808,11 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	maxUploadCount = m.maxUploadObjectNumber
 	migrateGVGCount = m.migrateGVGQueue.Len()
 	recoveryProcessCount = len(m.recoveryTaskMap)
-	recoverySucceedList = m.recovereySucceedList
 	recoveryFailedList = m.recoveryFailedList
+
+	// if recoveryProcessCount is empty, the recoveryFailedList shall be cleared for next job
+	if recoveryProcessCount == 0 {
+		m.recoveryFailedList = m.recoveryFailedList[:0]
+	}
 	return
 }
