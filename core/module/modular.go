@@ -221,6 +221,10 @@ type Manager interface {
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 	// QueryTasksStats queries tasks stats from Manager server
 	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string)
+	// NotifyPreMigrateBucket is used to notify src sp pre migrate bucket.
+	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
+	// NotifyPostMigrateBucket is used to notify src sp post migrate bucket.
+	NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
 }
@@ -299,6 +303,8 @@ type Signer interface {
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 	// SignMigrateGVG signs the GfSpMigrateGVGTask for migrating piece auth.
 	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
+	// SignBucketMigrationInfo signs the GfSpBucketMigrationInfo for migrating bucket communication auth.
+	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

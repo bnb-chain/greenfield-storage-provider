@@ -170,6 +170,15 @@ func (s *SignModular) SignMigrateGVG(ctx context.Context, mp *gfsptask.GfSpMigra
 	return sig, nil
 }
 
+func (s *SignModular) SignBucketMigrationInfo(ctx context.Context, mp *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
+	sig, err := s.client.Sign(SignOperator, mp.GetSignBytes())
+	if err != nil {
+		log.Errorw("failed to sign bucket migration info", "error", err)
+		return nil, err
+	}
+	return sig, nil
+}
+
 func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
 }

@@ -197,6 +197,48 @@ func (s *GfSpClient) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats,
 	return resp.GetStats(), nil
 }
 
+func (s *GfSpClient) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+	}
+	req := &gfspserver.GfSpNotifyPreMigrateBucketRequest{
+		BucketId: bucketID,
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPreMigrate(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to notify pre migrate bucket", "request", req, "error", err)
+		return ErrRPCUnknownWithDetail("client failed to notify pre migrate bucket, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to notify pre migrate bucket", "request", req, "error", resp.GetErr())
+		return resp.GetErr()
+	}
+	return nil
+}
+
+func (s *GfSpClient) NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+	}
+	req := &gfspserver.GfSpNotifyPostMigrateBucketRequest{
+		BucketId: bucketID,
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPostMigrate(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to notify post migrate bucket", "request", req, "error", err)
+		return ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to notify post migrate bucket", "request", req, "error", resp.GetErr())
+		return resp.GetErr()
+	}
+	return nil
+}
+
 func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
@@ -18,6 +19,10 @@ var (
 	ErrDanglingPointer     = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
 	ErrExceedBucketNumber  = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
 	ErrExceedApprovalLimit = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10003, "SP is too busy to approve the request, please come back later")
+)
+
+const (
+	SigExpireTimeSecond = 60 * 60
 )
 
 func ErrSignerWithDetail(detail string) *gfsperrors.GfSpError {
@@ -149,6 +154,12 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		return true, nil
 	}
 
+	// check src sp has enough quota
+	success, err := a.migrateBucketQuotaCheck(ctx, task)
+	if err != nil {
+		return success, err
+	}
+
 	// begin to sign the new approval task
 	currentHeight = a.GetCurrentBlockHeight()
 	task.SetExpiredHeight(currentHeight + a.bucketApprovalTimeoutHeight)
@@ -226,4 +237,43 @@ func (a *ApprovalModular) QueryTasks(ctx context.Context, subKey coretask.TKey) 
 	bucketApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.bucketQueue, subKey)
 	objectApprovalTasks, _ := taskqueue.ScanTQueueBySubKey(a.objectQueue, subKey)
 	return append(bucketApprovalTasks, objectApprovalTasks...), nil
+}
+
+func (a *ApprovalModular) migrateBucketQuotaCheck(ctx context.Context, task coretask.ApprovalMigrateBucketTask) (bool, error) {
+	var (
+		signature []byte
+		err       error
+	)
+	msgMigrateBucket := task.GetMigrateBucketInfo()
+	log.CtxDebugw(ctx, "start to check migrate bucket bucket info", "migrate_bucket_info", msgMigrateBucket)
+	bucketMeta, _, err := a.baseApp.GfSpClient().GetBucketMeta(ctx, msgMigrateBucket.GetBucketName(), true)
+	if err != nil {
+		return false, err
+	}
+	bucketID := bucketMeta.GetBucketInfo().Id.Uint64()
+	spID := bucketMeta.GetVgf().GetPrimarySpId()
+
+	srcSP, err := a.baseApp.Consensus().QuerySPByID(ctx, spID)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query sp info", "sp_id", spID, "error", err)
+		return false, ErrSignerWithDetail("failed to query sp info, error: " + err.Error())
+	}
+
+	queryMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID}
+	queryMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
+	signature, err = a.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), queryMsg)
+	if err != nil {
+		log.Errorw("failed to sign migrate bucket", "migrate_bucket_info", queryMsg, "error", err)
+		return false, err
+	} else {
+		queryMsg.SetSignature(signature)
+	}
+	err = a.baseApp.GfSpClient().QuerySPHasEnoughQuotaForMigrateBucket(ctx, srcSP.GetEndpoint(), queryMsg)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to check src SP migrate bucket quota", "src_sp", srcSP, "bucket_id", bucketID, "error", err)
+		return false, ErrSignerWithDetail("failed to check src SP migrate bucket quota, error: " + err.Error())
+	}
+
+	log.CtxDebugw(ctx, "succeed to check migrate bucket info", "migrate_bucket_info", msgMigrateBucket)
+	return true, nil
 }

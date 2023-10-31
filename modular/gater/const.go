@@ -137,6 +137,8 @@ const (
 	GetSPInfoQuery = "query-sp"
 	// VerifyMigrateGVGPermissionQuery defines verify the destination sp id of bucket migration & swap out, which is used to route request
 	VerifyMigrateGVGPermissionQuery = "gvg-permission"
+	// GetBucketSizeQuery defines get bucket total object size, which is used to route request
+	GetBucketSizeQuery = "bucket-size"
 	// GetUserGroupsQuery defines get groups info by a user address, which is used to route request
 	GetUserGroupsQuery = "user-groups"
 	// GetUserOwnedGroupsQuery defines retrieve groups where the user is the owner, which is used to route request
@@ -284,6 +286,16 @@ const (
 	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
 	// SwapOutApprovalPath defines get swap out approval path.
 	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
+	// MigrateQueryBucketQuotaPath defines query bucket quota from src sp
+	MigrateQueryBucketQuotaPath = "/greenfield/migrate/v1/migrate-query-bucket-quota"
+	// MigrateQueryBucketQuotaHasEnoughQuotaPath defines query bucket quota from src sp
+	MigrateQueryBucketQuotaHasEnoughQuotaPath = "/greenfield/migrate/v1/migrate-query-bucket-has-enough-quota"
+	// PreMigrateBucketPath defines pre migrate bucket, can lock quota for migrate bucket
+	PreMigrateBucketPath = "/greenfield/migrate/v1/pre-migrate-bucket"
+	// PostMigrateBucketPath defines notifying the source sp about the completion of migration bucket
+	PostMigrateBucketPath = "/greenfield/migrate/v1/post-migrate-bucket"
+	// GnfdMigrateBucketMsgHeader defines migrate bucket msg header
+	GnfdMigrateBucketMsgHeader = "X-Gnfd-Migrate-Bucket-Msg"
 	// ObjectXmlSuffix defines the object has xml suffix
 	ObjectXmlSuffix = "xml"
 	// ObjectPdfSuffix defines the object has pdf suffix

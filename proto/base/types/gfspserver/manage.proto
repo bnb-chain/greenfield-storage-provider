@@ -75,6 +75,24 @@ message GfSpNotifyMigrateSwapOutResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
+message GfSpNotifyPreMigrateBucketRequest {
+  // bucket_id is the id of the bucket
+  uint64 bucket_id = 1;
+}
+
+message GfSpNotifyPreMigrateBucketResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
+message GfSpNotifyPostMigrateBucketRequest {
+  // bucket_id is the id of the bucket
+  uint64 bucket_id = 1;
+}
+
+message GfSpNotifyPostMigrateBucketResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+}
+
 message GfSpQueryTasksStatsRequest {}
 
 message GfSpQueryTasksStatsResponse {
@@ -105,5 +123,7 @@ service GfSpManageService {
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
   rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
   rpc GfSpQueryTasksStats(GfSpQueryTasksStatsRequest) returns (GfSpQueryTasksStatsResponse) {}
+  rpc GfSpNotifyPreMigrate(GfSpNotifyPreMigrateBucketRequest) returns (GfSpNotifyPreMigrateBucketResponse) {}
+  rpc GfSpNotifyPostMigrate(GfSpNotifyPostMigrateBucketRequest) returns (GfSpNotifyPostMigrateBucketResponse) {}
   rpc GfSpResetRecoveryFailedList(GfSpResetRecoveryFailedListRequest) returns (GfSpResetRecoveryFailedListResponse) {}
 }

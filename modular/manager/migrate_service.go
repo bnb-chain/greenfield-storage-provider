@@ -42,3 +42,25 @@ func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtu
 
 	return m.spExitScheduler.AddSwapOutToTaskRunner(swapOut)
 }
+
+// NotifyPreMigrateBucket is used to notify record bucket is migrating
+func (m *ManageModular) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error {
+	_, exists := m.migratingBuckets[bucketID]
+	if exists {
+		return fmt.Errorf("bucket already migrating")
+	} else {
+		m.migratingBuckets[bucketID] = struct{}{}
+	}
+	return nil
+}
+
+// NotifyPostMigrateBucket is used to notify src sp confirm that only one Post migrate bucket is allowed.
+func (m *ManageModular) NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error {
+	_, exists := m.migratingBuckets[bucketID]
+	if exists {
+		delete(m.migratingBuckets, bucketID)
+	} else {
+		return fmt.Errorf("bucket doesn't exit in migratingBuckets")
+	}
+	return nil
+}

@@ -158,6 +158,8 @@ func (*NullTask) GetBucketID() uint64                               { return 0 }
 func (*NullTask) SetBucketID(uint64)                                {}
 func (*NullTask) GetLastMigratedObjectID() uint64                   { return 0 }
 func (*NullTask) SetLastMigratedObjectID(uint64)                    {}
+func (*NullTask) GetMigratedBytesSize() uint64                      { return 0 }
+func (*NullTask) SetMigratedBytesSize(uint64)                       {}
 func (*NullTask) GetFinished() bool                                 { return false }
 func (*NullTask) SetFinished(bool)                                  {}
 func (*NullTask) GetNotAvailableSpIdx() int32                       { return 0 }

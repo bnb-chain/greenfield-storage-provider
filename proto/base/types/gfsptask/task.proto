@@ -185,6 +185,7 @@ message GfSpMigrateGVGTask {
   bool finished = 8;
   int64 expire_time = 9;
   bytes signature = 10;
+  uint64 migrated_bytes_size = 11;
 }
 
 message GfSpMigratePieceTask {
@@ -195,4 +196,32 @@ message GfSpMigratePieceTask {
   uint32 segment_idx = 5;
   int32 redundancy_idx = 6;
   bool is_bucket_migrate = 7;
+}
+
+message GfSpBucketMigrationInfo {
+  uint64 bucket_id = 1;
+  // whether the migrate bucket succeed
+  bool finished = 2;
+  // total migrated bytes
+  uint64 migrated_bytes_size = 3;
+  greenfield.sp.StorageProvider dest_sp = 4;
+  greenfield.sp.StorageProvider src_sp = 5;
+  int64 expire_time = 6;
+  bytes signature = 7;
+}
+
+message GfSpBucketQuotaInfo {
+  uint64 bucket_id = 1;
+  string month = 2;
+  string bucket_name = 3;
+  // the consumed chargedQuota of this month
+  uint64 read_consumed_size = 4;
+  // the consumed free quota size of this month
+  uint64 free_quota_consumed_size = 5;
+  // the remained free quota
+  uint64 free_quota_size = 6;
+  // the greenfield chain bucket charged quota
+  uint64 charged_quota_size = 7;
+  // used to check if the src sp has enough quota to execute bucket migration
+  bool allow_migrate = 8;
 }
