@@ -88,6 +88,14 @@ message TasksStats {
   uint32 resumable_upload_count = 4;
   uint32 max_uploading = 5;
   uint32 migrate_gvg_count = 6;
+  uint32 recovery_process_count = 7;
+  repeated string recovery_failed_list = 8;
+}
+
+message GfSpResetRecoveryFailedListRequest {}
+
+message GfSpResetRecoveryFailedListResponse {
+  repeated string recovery_failed_list = 1;
 }
 
 service GfSpManageService {
@@ -97,4 +105,5 @@ service GfSpManageService {
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
   rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
   rpc GfSpQueryTasksStats(GfSpQueryTasksStatsRequest) returns (GfSpQueryTasksStatsResponse) {}
+  rpc GfSpResetRecoveryFailedList(GfSpResetRecoveryFailedListRequest) returns (GfSpResetRecoveryFailedListResponse) {}
 }

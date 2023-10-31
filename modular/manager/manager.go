@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -99,6 +101,9 @@ type ManageModular struct {
 	loadSealTimeout      int64
 
 	gvgPreferSPList []uint32
+
+	recoveryFailedList []string
+	recoveryTaskMap    map[string]string
 }
 
 func (m *ManageModular) Name() string {
@@ -492,7 +497,16 @@ func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
-	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	task := qTask.(task.RecoveryPieceTask)
+
+	GcConditionMet := task.ExceedRetry()
+	if GcConditionMet {
+		if !slices.Contains(m.recoveryFailedList, task.GetObjectInfo().ObjectName) {
+			m.recoveryFailedList = append(m.recoveryFailedList, task.GetObjectInfo().ObjectName)
+		}
+		delete(m.recoveryTaskMap, task.Key().String())
+	}
+	return GcConditionMet
 }
 
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
@@ -795,6 +809,8 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	resumableUploadCount int,
 	maxUploadCount int,
 	migrateGVGCount int,
+	recoveryProcessCount int,
+	recoveryFailedList []string,
 ) {
 	uploadTasks = m.uploadQueue.Len()
 	replicateCount = m.replicateQueue.Len()
@@ -802,5 +818,12 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	resumableUploadCount = m.resumableUploadQueue.Len()
 	maxUploadCount = m.maxUploadObjectNumber
 	migrateGVGCount = m.migrateGVGQueue.Len()
+	recoveryProcessCount = len(m.recoveryTaskMap)
+	recoveryFailedList = m.recoveryFailedList
 	return
+}
+
+func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
+	m.recoveryFailedList = m.recoveryFailedList[:0]
+	return m.recoveryFailedList
 }

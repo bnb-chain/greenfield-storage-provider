@@ -9,11 +9,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"cosmossdk.io/math"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -27,7 +27,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 var (
@@ -620,6 +620,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 
 	if task.GetRecovered() {
 		m.recoveryQueue.PopByKey(task.Key())
+		delete(m.recoveryTaskMap, task.Key().String())
 		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
 		return nil
 	}
@@ -640,6 +641,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		return err
 	}
 
+	m.recoveryTaskMap[task.Key().String()] = task.Key().String()
 	return nil
 }
 
@@ -655,6 +657,10 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 		err := m.recoveryQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 	} else {
+		if !slices.Contains(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName) {
+			m.recoveryFailedList = append(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName)
+		}
+		delete(m.recoveryTaskMap, handleTask.Key().String())
 		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
 	}
 	return nil

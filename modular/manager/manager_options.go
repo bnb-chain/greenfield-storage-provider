@@ -241,6 +241,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.subscribeBucketMigrateEventInterval = cfg.Manager.SubscribeBucketMigrateEventIntervalMillisecond
 	}
 	manager.gvgPreferSPList = cfg.Manager.GVGPreferSPList
+	manager.recoveryTaskMap = make(map[string]string)
 
 	return nil
 }
