@@ -39,6 +39,7 @@ type GfSpBaseApp struct {
 	pieceOp    piecestore.PieceOp
 	rcmgr      corercmgr.ResourceManager
 	chain      consensus.Consensus
+	httpProbe  coreprober.Prober
 
 	approver      module.Approver
 	authenticator module.Authenticator
@@ -53,7 +54,6 @@ type GfSpBaseApp struct {
 	metrics       module.Modular
 	pprof         module.Modular
 	probeSvr      module.Modular
-	httpProbe     coreprober.Prober
 
 	appCtx    context.Context
 	appCancel context.CancelFunc

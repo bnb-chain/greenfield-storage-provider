@@ -93,12 +93,3 @@ func AddMetrics(cs prometheus.Collector) {
 	defer mu.Unlock()
 	MetricsItems = append(MetricsItems, cs)
 }
-
-var mu sync.Mutex
-
-// AddMetrics can be used in external functions to add metrics to MetricsItems.
-func AddMetrics(cs prometheus.Collector) {
-	mu.Lock()
-	defer mu.Unlock()
-	MetricsItems = append(MetricsItems, cs)
-}

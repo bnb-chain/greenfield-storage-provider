@@ -23,7 +23,7 @@ func NewHTTPProbe() *HTTPProbe {
 
 // HealthyHandler returns an HTTP Handler which responds health checks.
 func (p *HTTPProbe) HealthyHandler() http.HandlerFunc {
-	return p.handler(p.isHealthy)
+	return p.handler(p.IsHealthy)
 }
 
 // ReadyHandler returns an HTTP handler which responds readiness checks.
@@ -49,8 +49,8 @@ func (p *HTTPProbe) IsReady() bool {
 	return value > 0
 }
 
-// isHealthy returns true if component is healthy.
-func (p *HTTPProbe) isHealthy() bool {
+// IsHealthy returns true if component is healthy.
+func (p *HTTPProbe) IsHealthy() bool {
 	value := p.healthy.Load()
 	return value > 0
 }
