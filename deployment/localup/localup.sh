@@ -135,8 +135,8 @@ function make_config() {
     sed -i -e "s/MaxExecuteNumber = .*/MaxExecuteNumber = 1/g" config.toml
 
     # metrics and pprof
-    sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
-    sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
+    #sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
+    #sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
     metrics_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 367))
     sed -i -e "s/MetricsHTTPAddress = '.*'/MetricsHTTPAddress = '${metrics_address}'/g" config.toml
     pprof_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 368))
