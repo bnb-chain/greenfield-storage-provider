@@ -132,6 +132,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+	log.Debugw("UploadObjectTask info", "task", task)
 	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
 }
 
@@ -359,6 +360,17 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 
 func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask task.ReplicatePieceTask) error {
 	if handleTask.GetNotAvailableSpIdx() != -1 {
+		objectInfo, queryErr := m.baseApp.Consensus().QueryObjectInfoByID(ctx, util.Uint64ToString(handleTask.GetObjectInfo().Id.Uint64()))
+		if queryErr != nil {
+			log.Errorw("failed to query object info", "object", handleTask.GetObjectInfo(), "error", queryErr)
+			return queryErr
+		}
+		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+			log.CtxInfow(ctx, "object already sealed, abort replicate task", "object_info", objectInfo)
+			m.replicateQueue.PopByKey(handleTask.Key())
+			return nil
+		}
+
 		gvgID := handleTask.GetGlobalVirtualGroupId()
 		gvg, err := m.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
 		if err != nil {
