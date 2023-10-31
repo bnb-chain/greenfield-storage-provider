@@ -31,13 +31,16 @@ func newCustomS3Retryer(maxRetries int, minRetryDelay time.Duration) *customS3Re
 // ShouldRetry overrides built-in DefaultRetryer of SDK, adding custom retry
 // logics that are not included in the SDK.
 func (c *customS3Retryer) ShouldRetry(r *request.Request) bool {
-	shouldRetry := errHasCode(r.Error, "InternalError") || errHasCode(r.Error, "RequestTimeTooSkewed") || errHasCode(r.Error, "SlowDown") || strings.Contains(r.Error.Error(), "connection reset") || strings.Contains(r.Error.Error(), "connection timed out")
+	shouldRetry := errHasCode(r.Error, "InternalError") || errHasCode(r.Error, "RequestTimeTooSkewed") ||
+		errHasCode(r.Error, "SlowDown") || strings.Contains(r.Error.Error(), "connection reset") ||
+		strings.Contains(r.Error.Error(), "connection timed out")
 	if !shouldRetry {
 		shouldRetry = c.DefaultRetryer.ShouldRetry(r)
 	}
 
 	// Errors related to tokens
-	if errHasCode(r.Error, "ExpiredToken") || errHasCode(r.Error, "ExpiredTokenException") || errHasCode(r.Error, "InvalidToken") {
+	if errHasCode(r.Error, "ExpiredToken") || errHasCode(r.Error, "ExpiredTokenException") ||
+		errHasCode(r.Error, "InvalidToken") {
 		return false
 	}
 
