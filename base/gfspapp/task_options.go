@@ -16,9 +16,9 @@ const (
 	// MaxUploadTime defines the max timeout to upload object.
 	MaxUploadTime int64 = 300
 	// MinReplicateTime defines the min timeout to replicate object.
-	MinReplicateTime int64 = 90
+	MinReplicateTime int64 = 1
 	// MaxReplicateTime defines the max timeout to replicate object.
-	MaxReplicateTime int64 = 500
+	MaxReplicateTime int64 = 1
 	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on greenfield.
 	MinReceiveTime int64 = 90
 	// MaxReceiveTime defines the max timeout to confirm the received piece whether is sealed on greenfield.
