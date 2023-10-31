@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/prober"
 )
 
 func TestGfSpBaseApp_startServicesSuccess(t *testing.T) {
@@ -17,7 +18,11 @@ func TestGfSpBaseApp_startServicesSuccess(t *testing.T) {
 		return nil
 	}).AnyTimes()
 	m.EXPECT().Name().Return("mock").AnyTimes()
+	m1 := prober.NewMockProber(ctrl)
+	m1.EXPECT().Ready().Return().AnyTimes()
+
 	g := &GfSpBaseApp{}
+	g.SetProbe(m1)
 	g.RegisterServices(m)
 	g.startServices(context.TODO())
 }
@@ -29,8 +34,12 @@ func TestGfSpBaseApp_startServicesFailure(t *testing.T) {
 		return errors.New("mock error")
 	}).AnyTimes()
 	m.EXPECT().Name().Return("mock").AnyTimes()
+
+	m1 := prober.NewMockProber(ctrl)
+	m1.EXPECT().Unready(gomock.Any()).Return().AnyTimes()
 	ctx, cancel := context.WithCancel(context.TODO())
 	g := &GfSpBaseApp{appCtx: ctx, appCancel: cancel}
+	g.SetProbe(m1)
 	g.RegisterServices(m)
 	g.startServices(context.TODO())
 }
