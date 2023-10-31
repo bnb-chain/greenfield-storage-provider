@@ -220,7 +220,7 @@ type Manager interface {
 	// HandleMigrateGVGTask handles MigrateGVGTask, the request from TaskExecutor.
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 	// QueryTasksStats queries tasks stats from Manager server
-	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int)
+	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string)
 	// NotifyPreMigrateBucket is used to notify src sp pre migrate bucket.
 	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
 	// NotifyPostMigrateBucket is used to notify src sp post migrate bucket.
