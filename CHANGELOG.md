@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.3
+This release contains 1 bugfix.
+
+BUGFIXES
+* [#1214](https://github.com/bnb-chain/greenfield-storage-provider/pull/1214) fix: abort replication task if an object sealed
+
+
 ## v1.0.2
 This release contains 2 bugfixes and 1 feature.
 
