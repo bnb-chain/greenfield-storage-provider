@@ -70,6 +70,10 @@ func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, 
 	return 0, 0, 0, 0, 0, 0, 0, nil
 }
 
+func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
+	return nil
+}
+
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
 }

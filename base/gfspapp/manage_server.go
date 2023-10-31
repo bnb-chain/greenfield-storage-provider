@@ -349,3 +349,11 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 		Stats: stats,
 	}, nil
 }
+
+func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspserver.GfSpResetRecoveryFailedListRequest) (
+	*gfspserver.GfSpResetRecoveryFailedListResponse, error) {
+	recoveryFailedList := g.manager.ResetRecoveryFailedList(ctx)
+	return &gfspserver.GfSpResetRecoveryFailedListResponse{
+		RecoveryFailedList: recoveryFailedList,
+	}, nil
+}

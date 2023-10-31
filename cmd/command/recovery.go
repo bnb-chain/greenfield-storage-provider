@@ -112,6 +112,8 @@ func recoverObjectAction(ctx *cli.Context) error {
 		}
 	}
 
+	// reset recovery failed list at the end of job
+	client.ResetRecoveryFailedList(context.Background())
 	return nil
 }
 

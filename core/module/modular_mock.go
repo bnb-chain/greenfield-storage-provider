@@ -1283,6 +1283,14 @@ func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, 
 	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7
 }
 
+// ResetRecoveryFailedList mocks base method.
+func (m *MockManager) ResetRecoveryFailedList(ctx context.Context) ([]string) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetRecoveryFailedList", ctx)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
 // QueryTasksStats indicates an expected call of QueryTasksStats.
 func (mr *MockManagerMockRecorder) QueryTasksStats(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()

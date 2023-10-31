@@ -92,6 +92,12 @@ message TasksStats {
   repeated string recovery_failed_list = 8;
 }
 
+message GfSpResetRecoveryFailedListRequest {}
+
+message GfSpResetRecoveryFailedListResponse {
+  repeated string recovery_failed_list = 1;
+}
+
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
@@ -99,4 +105,5 @@ service GfSpManageService {
   rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
   rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
   rpc GfSpQueryTasksStats(GfSpQueryTasksStatsRequest) returns (GfSpQueryTasksStatsResponse) {}
+  rpc GfSpResetRecoveryFailedList(GfSpResetRecoveryFailedListRequest) returns (GfSpResetRecoveryFailedListResponse) {}
 }

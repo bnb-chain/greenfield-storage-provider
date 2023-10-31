@@ -221,6 +221,8 @@ type Manager interface {
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 	// QueryTasksStats queries tasks stats from Manager server
 	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string)
+	// ResetRecoveryFailedList reset failed list for recovery
+	ResetRecoveryFailedList(ctx context.Context) []string
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

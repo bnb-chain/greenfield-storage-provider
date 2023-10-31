@@ -820,10 +820,10 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	migrateGVGCount = m.migrateGVGQueue.Len()
 	recoveryProcessCount = len(m.recoveryTaskMap)
 	recoveryFailedList = m.recoveryFailedList
-
-	// if recoveryProcessCount is empty, the recoveryFailedList shall be cleared for next job
-	if recoveryProcessCount == 0 {
-		m.recoveryFailedList = m.recoveryFailedList[:0]
-	}
 	return
+}
+
+func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
+	m.recoveryFailedList = m.recoveryFailedList[:0]
+	return m.recoveryFailedList
 }
