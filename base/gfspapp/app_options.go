@@ -255,7 +255,6 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 				log.Panicw("failed to new spdb", "error", err)
 				return
 			}
-			app.gfSpDB = db
 
 			collector, err := db.RegisterStdDBStats()
 			if err != nil {
@@ -263,6 +262,8 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 				return
 			}
 			metrics.AddMetrics(collector)
+
+			app.gfSpDB = db
 		})
 	}
 	return nil

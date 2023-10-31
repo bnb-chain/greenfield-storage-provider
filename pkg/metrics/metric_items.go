@@ -11,10 +11,14 @@ import (
 )
 
 var MetricsItems = []prometheus.Collector{
-	// Grpc metrics category
+	// gRPC and HTTP metrics category
 	DefaultGRPCServerMetrics,
 	DefaultGRPCClientMetrics,
 	DefaultHTTPServerMetrics,
+
+	// golang runtime and process metrics
+	GolangRuntimeMetrics,
+	ProcessMetrics,
 
 	// task queue metrics category
 	QueueSizeGauge,
@@ -87,11 +91,6 @@ var MetricsItems = []prometheus.Collector{
 	MigrateGVGCounter,
 	MigrateObjectTimeHistogram,
 	MigrateObjectCounter,
-
-	// golang runtime and process metrics
-	collectors.NewGoCollector(collectors.WithGoCollectorRuntimeMetrics(collectors.GoRuntimeMetricsRule{
-		Matcher: regexp.MustCompile("/.*")})),
-	collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 }
 
 // basic metrics items
@@ -103,6 +102,12 @@ var (
 		openmetrics.WithClientStreamSendHistogram(), openmetrics.WithClientStreamRecvHistogram())
 	// DefaultHTTPServerMetrics defines default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
+
+	// GolangRuntimeMetrics defines some runtime metrics about golang
+	GolangRuntimeMetrics = collectors.NewGoCollector(collectors.WithGoCollectorRuntimeMetrics(
+		collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile("/.*")}))
+	// ProcessMetrics defines some metrics about current sp process
+	ProcessMetrics = collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})
 
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
