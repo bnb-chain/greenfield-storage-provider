@@ -132,6 +132,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+	log.Debugw("UploadObjectTask info", "task", task)
 	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
 }
 
