@@ -72,7 +72,7 @@ func TestUserOffChainAuthSignature(t *testing.T) {
 	require.NoError(t, err)
 
 	err = VerifyEddsaSignature(userEddsaPublicKeyStr, sig, []byte("This msg doesn't match with the sig"))
-	assert.Equal(t, "invalid signature", err.Error())
+	assert.Equal(t, ErrBadSignature, err)
 }
 
 // TestUseUserPublicKeyToVerifyUserOffChainAuthSignature
@@ -105,7 +105,7 @@ func TestUseUserPublicKeyToVerifyUserOffChainAuthSignature(t *testing.T) {
 	require.NoError(t, err)
 
 	err = VerifyEddsaSignature(userEddsaPublicKeyStr, sig, []byte("This msg doesn't match with the sig"))
-	assert.Equal(t, "invalid signature", err.Error())
+	assert.Equal(t, ErrBadSignature, err)
 }
 
 func TestErrorCases(t *testing.T) {

@@ -166,7 +166,6 @@ func (b *BsDBImpl) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, li
 		AND buckets.status = 'BUCKET_STATUS_CREATED' 
 		AND buckets.create_time < ? 
 		AND buckets.removed = false
-		ORDER BY buckets.create_at
 		LIMIT ?`,
 		primarySpID, createAt, limit).
 		Find(&buckets).Error

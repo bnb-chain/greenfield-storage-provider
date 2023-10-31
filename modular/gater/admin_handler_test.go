@@ -831,6 +831,7 @@ func mockGetChallengeInfoRoute(t *testing.T, g *GateModular) *mux.Router {
 	t.Helper()
 	router := mux.NewRouter().SkipClean(true)
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
+	router.Path(GetChallengeInfoV2Path).Name(getChallengeInfoV2RouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoV2Handler)
 	return router
 }
 
@@ -1196,6 +1197,372 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				req.Header.Set(GnfdRedundancyIndexHeader, "1")
+				req.Header.Set(GnfdPieceIndexHeader, "2")
+				return req
+			},
+			wantedResult: "",
+		},
+		{
+			name: "new request context error v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "failed to parse object id v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "test")
+				return req
+			},
+			wantedResult: "invalid request header",
+		},
+		{
+			name: "No such object V2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(nil,
+					errors.New("No such object")).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				return req
+			},
+			wantedResult: "no such object",
+		},
+		{
+			name: "failed to get object info from consensus v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(nil,
+					mockErr).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				return req
+			},
+			wantedResult: "failed to get object info from consensus",
+		},
+		{
+			name: "failed to verify authentication v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, mockErr)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "no permission v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to get bucket info from consensus v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				return req
+			},
+			wantedResult: "failed to get bucket info from consensus",
+		},
+		{
+			name: "failed to parse segment index v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				req.Header.Set(GnfdRedundancyIndexHeader, "test")
+				return req
+			},
+			wantedResult: "invalid request header",
+		},
+		{
+			name: "failed to parse segment index v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				req.Header.Set(GnfdRedundancyIndexHeader, "0")
+				req.Header.Set(GnfdPieceIndexHeader, "test")
+				return req
+			},
+			wantedResult: "invalid request header",
+		},
+		{
+			name: "failed to get storage params v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName}, nil).Times(1)
+				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil, mockErr)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				req.Header.Set(GnfdRedundancyIndexHeader, "0")
+				req.Header.Set(GnfdPieceIndexHeader, "2")
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "redundancy index is less than 0 and failed to get challenge info v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+				clientMock.EXPECT().GetChallengeInfo(gomock.Any(), gomock.Any()).Return(nil, nil, nil, mockErr).
+					Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName}, nil).Times(1)
+				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().SegmentPieceSize(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdObjectIDHeader, "1")
+				req.Header.Set(GnfdRedundancyIndexHeader, "-1")
+				req.Header.Set(GnfdPieceIndexHeader, "2")
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "redundancy index is greater than 0 and success v2",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil)
+				clientMock.EXPECT().GetChallengeInfo(gomock.Any(), gomock.Any()).Return([]byte("mockIntegrityHash"),
+					[][]byte{[]byte("mockChecksums")}, []byte("mockData"), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName}, nil).Times(1)
+				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
+					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+
+				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
+				g.baseApp.SetPieceOp(pieceOpMock)
+				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
 				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)

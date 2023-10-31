@@ -35,7 +35,7 @@ func (a *ApprovalModular) HandleCreateBucketApprovalTask(ctx context.Context, ta
 		currentHeight uint64
 	)
 	if task == nil || task.GetCreateBucketInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre create bucket approval due to pointer nil")
+		log.CtxErrorw(ctx, "failed to create bucket approval due to pointer nil")
 		return false, ErrDanglingPointer
 	}
 	defer func() {
@@ -132,7 +132,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		currentHeight uint64
 	)
 	if task == nil || task.GetMigrateBucketInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre migrate bucket approval due to pointer nil")
+		log.CtxErrorw(ctx, "failed to migrate bucket approval due to pointer nil")
 		return false, ErrDanglingPointer
 	}
 	defer func() {
@@ -179,7 +179,7 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 		currentHeight uint64
 	)
 	if task == nil || task.GetCreateObjectInfo() == nil {
-		log.CtxErrorw(ctx, "failed to pre create object approval due to pointer nil")
+		log.CtxErrorw(ctx, "failed to create object approval due to pointer nil")
 		return false, ErrDanglingPointer
 	}
 	defer func() {
@@ -208,8 +208,8 @@ func (a *ApprovalModular) HandleCreateObjectApprovalTask(ctx context.Context, ta
 	task.SetExpiredHeight(currentHeight + a.objectApprovalTimeoutHeight)
 	startSignApproval := time.Now()
 	signature, err = a.baseApp.GfSpClient().SignCreateObjectApproval(ctx, task.GetCreateObjectInfo())
-	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_bucket_cost").Observe(time.Since(startSignApproval).Seconds())
-	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_bucket_end").Observe(time.Since(startQueryQueue).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startSignApproval).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startQueryQueue).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign create object approval", "error", err)
 		return false, err

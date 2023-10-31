@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -73,7 +74,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 				log.CtxErrorw(ctx, "failed to check and renew gvg task signature", "gvg_task", gvgTask, "error", err)
 				return
 			}
-			if err = e.doObjectMigration(ctx, gvgTask, bucketID, object); err != nil && !e.enableSkipFailedToMigrateObject {
+			if err = e.doObjectMigration(ctx, gvgTask, bucketID, object); err != nil && !e.isSkipFailedToMigrateObject(ctx, object) {
 				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
 					"bucket_id", bucketID, "object_info", object,
 					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "error", err)
@@ -414,4 +415,23 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	log.Infow("succeed to compute and set object integrity", "object_id", objectID,
 		"object_name", objectInfo.GetObjectName())
 	return nil
+}
+
+// isSkipFailedToMigrateObject incorrect migration can be an expected error, errors will be ignored.
+// such as: 1) deletion of objects during migration, or 2) the enableSkipFailedToMigrateObject parameter being set.
+func (e *ExecuteModular) isSkipFailedToMigrateObject(ctx context.Context, objectDetails *metadatatypes.ObjectDetails) bool {
+	if e.enableSkipFailedToMigrateObject {
+		return true
+	}
+	// if the object do not exist on chain, should ignore the error
+	objectInfo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, objectDetails.GetObject().GetObjectInfo().GetBucketName(), objectDetails.GetObject().GetObjectInfo().GetObjectName())
+	if err != nil {
+		if strings.Contains(err.Error(), "No such object") {
+			log.CtxErrorw(ctx, "failed to get object info from consensus, the object may be deleted", "object", objectInfo, "error", err)
+			return true
+		}
+		return false
+	}
+
+	return false
 }

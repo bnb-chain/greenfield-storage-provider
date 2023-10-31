@@ -273,6 +273,14 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: getChallengeInfoRouterName,
 		},
 		{
+			name:             "Challenge router v2",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path),
+			shouldMatch:      true,
+			wantedRouterName: getChallengeInfoV2RouterName,
+		},
+		{
 			name:             "Replicate router",
 			router:           gwRouter,
 			method:           http.MethodPut,

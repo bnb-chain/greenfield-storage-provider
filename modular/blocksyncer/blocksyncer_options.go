@@ -155,7 +155,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	if migrateDB, ok := migrateDBAny.(bool); ok && migrateDB {
 		err := b.initDB(true)
 		if err != nil {
-			log.Errorw("fail to init DB", "error", err)
+			log.Errorw("failed to init DB", "error", err)
 			return
 		}
 	}
