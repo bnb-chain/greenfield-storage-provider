@@ -14,11 +14,12 @@ import (
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -342,7 +343,7 @@ func veritySecondarySpBlsSignature(secondarySp *sptypes.StorageProvider, signatu
 		return err
 	}
 	if !sig.Verify(publicKey, sigDoc) {
-		return fmt.Errorf("sp %d bls signature verification failed", secondarySp.Id)
+		return fmt.Errorf("failed to verify SP[%d] bls signature", secondarySp.Id)
 	}
 	return nil
 }
