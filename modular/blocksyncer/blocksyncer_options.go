@@ -545,10 +545,23 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 		if len(buckets) == 0 {
 			continue
 		}
-		err = db.Cast(b.parserCtx.Database).BatchUpdateBucketSize(context.Background(), buckets)
-		if err != nil {
-			log.Errorw("failed to update size", "error", err)
-			return err
+		offset := 0
+		step := 1000
+		for {
+			left := offset
+			right := offset + step
+			if left >= len(buckets) {
+				break
+			}
+			if right > len(buckets) {
+				right = len(buckets)
+			}
+			err = db.Cast(b.parserCtx.Database).BatchUpdateBucketSize(context.Background(), buckets[left:right])
+			if err != nil {
+				log.Errorw("failed to update size", "error", err)
+				return err
+			}
+			offset = right
 		}
 	}
 	log.Info("sync bucket size success")
