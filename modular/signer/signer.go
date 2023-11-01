@@ -114,7 +114,7 @@ func (s *SignModular) SignSecondarySealBls(ctx context.Context, objectID uint64,
 	if err != nil {
 		return nil, err
 	}
-	log.Debugw("bls signature", "len", len(sig), "object_id", objectID, "gvg_id", gvgId, "signDoc", "pub key", hex.EncodeToString(s.client.blsKm.PubKey().Bytes()), hex.EncodeToString(msg[:]), "sig", hex.EncodeToString(sig))
+	log.Debugw("bls signature", "len", len(sig), "object_id", objectID, "gvg_id", gvgId, "sign_doc", hex.EncodeToString(msg[:]), "pub_key", hex.EncodeToString(s.client.blsKm.PubKey().Bytes()), "sig", hex.EncodeToString(sig))
 	return sig, nil
 }
 

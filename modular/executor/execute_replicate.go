@@ -138,7 +138,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 				err = veritySecondarySpBlsSignature(e.getSpByID(gvg.GetSecondarySpIds()[rIdx]), signature, msg[:])
 				if err != nil {
 					rTask.SetNotAvailableSpIdx(int32(rIdx))
-					log.CtxErrorw(ctx, "verify secondary SP bls signature failed", "SP id:", gvg.GetSecondarySpIds()[rIdx], "err:", err.Error())
+					log.CtxErrorw(ctx, "verify secondary SP bls signature failed", "secondary_sp_id", gvg.GetSecondarySpIds()[rIdx], "error", err.Error())
 					return ErrInvalidSecondaryBlsSignature
 				}
 				secondarySignatures[rIdx] = signature
