@@ -30,6 +30,11 @@ type Permission struct {
 	Removed bool `gorm:"removed"`
 }
 
+type PermissionWithStatement struct {
+	Permission
+	Statement
+}
+
 // TableName is used to set Permission table name in database
 func (p *Permission) TableName() string {
 	return PermissionTableName

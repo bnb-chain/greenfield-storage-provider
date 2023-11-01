@@ -446,7 +446,7 @@ func (r *MetadataModular) GfSpListObjectPolicies(ctx context.Context, req *types
 		object      *bsdb.Object
 		limit       int
 		policies    []*types.Policy
-		permissions []*bsdb.Permission
+		permissions []*bsdb.PermissionWithStatement
 	)
 
 	ctx = log.Context(ctx, req)
@@ -485,7 +485,12 @@ func (r *MetadataModular) GfSpListObjectPolicies(ctx context.Context, req *types
 			ResourceId:      perm.ResourceID.String(),
 			CreateTimestamp: perm.CreateTimestamp,
 			UpdateTimestamp: perm.UpdateTimestamp,
-			ExpirationTime:  perm.ExpirationTime,
+			ExpirationTime:  perm.Permission.ExpirationTime,
+		}
+		if perm.Permission.ExpirationTime == 0 {
+			if perm.Statement.ExpirationTime != 0 && perm.Statement.ExpirationTime >= time.Now().Unix() {
+				policies[i].ExpirationTime = perm.Statement.ExpirationTime
+			}
 		}
 	}
 
