@@ -2,12 +2,13 @@ package metadata
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"errors"
-	"github.com/forbole/juno/v4/common"
-	"gorm.io/gorm"
 	"net/http"
 	"sync/atomic"
+
+	"cosmossdk.io/math"
+	"github.com/forbole/juno/v4/common"
+	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"

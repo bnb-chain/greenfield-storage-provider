@@ -2,14 +2,15 @@ package metadata
 
 import (
 	"context"
+	"math/big"
+	"testing"
+
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/forbole/juno/v4/common"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"math/big"
-	"testing"
 )
 
 func TestGfSpPrimarySpIncomeDetails_Success(t *testing.T) {
