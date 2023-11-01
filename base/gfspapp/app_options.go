@@ -541,7 +541,7 @@ func DefaultGfSpPProfOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 
 func DefaultGfSpProbeOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Monitor.DisableProbe {
-		log.Info("disable probe function")
+		log.Info("disable sp probe")
 		app.probeSvr = &coremodule.NullModular{}
 	} else {
 		if cfg.Monitor.ProbeHTTPAddress == "" {
