@@ -756,7 +756,7 @@ message GfSpPrimarySpIncomeDetailsResponse {
   // current_timestamp defines the timestamp when the query happens
   int64 current_timestamp = 1;
   // primary_sp_income_details defines a list of PrimarySpIncomeDetails
-  repeated PrimarySpIncomeDetail primary_sp_income_details=2;
+  repeated PrimarySpIncomeDetail primary_sp_income_details = 2;
 }
 
 message PrimarySpIncomeDetail {
@@ -765,7 +765,7 @@ message PrimarySpIncomeDetail {
   // stream_record defines stream payment record of a stream account
   greenfield.payment.StreamRecord stream_record = 2;
   // income for this primary sp
-  bytes income = 3[
+  bytes income = 3 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
@@ -785,7 +785,7 @@ message GfSpSecondarySpIncomeDetailsResponse {
   // current_timestamp defines the timestamp when the query happens
   int64 current_timestamp = 1;
   // secondary_sp_income_details defines a list of SecondarySpIncomeDetail
-  repeated SecondarySpIncomeDetail secondary_sp_income_details=2;
+  repeated SecondarySpIncomeDetail secondary_sp_income_details = 2;
 }
 
 message SecondarySpIncomeDetail {
@@ -794,7 +794,7 @@ message SecondarySpIncomeDetail {
   // stream_record defines stream payment record of a stream account
   greenfield.payment.StreamRecord stream_record = 2;
   // income for this secondary sp
-  bytes income = 3[
+  bytes income = 3 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
