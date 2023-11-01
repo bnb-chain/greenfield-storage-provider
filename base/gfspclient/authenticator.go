@@ -77,6 +77,7 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRPCUnknownWithDetail("client failed to connect authenticator, error: " + connErr.Error())
 	}
+	defer conn.Close()
 	req := &gfspserver.UpdateUserPublicKeyRequest{
 		AccountId:     account,
 		Domain:        domain,
@@ -105,6 +106,7 @@ func (s *GfSpClient) VerifyGNFD1EddsaSignature(ctx context.Context, account stri
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRPCUnknownWithDetail("client failed to connect authenticator, error: " + connErr.Error())
 	}
+	defer conn.Close()
 	req := &gfspserver.VerifyGNFD1EddsaSignatureRequest{
 		AccountId:     account,
 		Domain:        domain,

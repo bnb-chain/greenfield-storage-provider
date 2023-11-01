@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -49,6 +51,17 @@ func NewSpDB(config *config.SQLDBConfig) (*SpDBImpl, error) {
 		return nil, err
 	}
 	return &SpDBImpl{db: db}, err
+}
+
+// RegisterStdDBStats registers std lib sql DB
+func (s *SpDBImpl) RegisterStdDBStats() (prometheus.Collector, error) {
+	db, err := s.db.DB()
+	if err != nil {
+		log.Errorw("failed to get std lib db struct")
+		return nil, err
+	}
+	collector := collectors.NewDBStatsCollector(db, "spdb")
+	return collector, nil
 }
 
 // InitDB init a db instance

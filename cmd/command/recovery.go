@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -12,14 +13,18 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 const (
-	maxRecoveryRetry = 3
-	MaxRecoveryTime  = 50
-	recoveryCommands = "RECOVERY COMMANDS"
+	maxRecoveryRetry    = 3
+	MaxRecoveryTime     = 50
+	recoveryCommands    = "RECOVERY COMMANDS"
+	MaxRecoveryJob      = 1000
+	FullQueueWaitTime   = 5 * time.Second
+	RecoveryJobSyncTime = 30 * time.Second
 )
 
 var bucketFlag = &cli.StringFlag{
@@ -31,23 +36,23 @@ var bucketFlag = &cli.StringFlag{
 
 var objectFlag = &cli.StringFlag{
 	Name:     "object",
-	Usage:    "The object name",
+	Usage:    "The object name. If there is space inside name, use double quote around the name (except when used in k8s job config). If you use --objectList flag, --object flag will be ignored. ",
 	Aliases:  []string{"o"},
 	Required: false,
 }
 
-var objectListFlag = &cli.BoolFlag{
+var objectListFlag = &cli.StringFlag{
 	Name:     "objectList",
-	Usage:    "if it is an single object or list",
+	Usage:    "The object name list, shall be in the format of object1//object2//object3. If there is space inside name, use double quote around the name (except when used in k8s job config).",
 	Aliases:  []string{"l"},
 	Required: false,
 }
 
 var RecoverObjectCmd = &cli.Command{
-	Action:    recoverObjectAction,
-	Name:      "recover.object",
-	Usage:     "Generate recover piece data tasks to recover the object data",
-	ArgsUsage: "[filePath]...  OBJECT-URL",
+	Action: recoverObjectAction,
+	Name:   "recover.object",
+	Usage:  "Generate recover piece data tasks to recover the object data",
+
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		bucketFlag,
@@ -85,22 +90,48 @@ func recoverObjectAction(ctx *cli.Context) error {
 	}
 
 	if ctx.IsSet(objectListFlag.Name) {
-		if ctx.NArg() < 1 {
-			return fmt.Errorf("args number error")
-		}
-		argNum := ctx.NArg()
-		for i := 0; i < argNum-1; i++ {
-			recoverObject(bucketName, ctx.Args().Get(i), cfg, client)
+		objectNames := ctx.String(objectListFlag.Name)
+		objectNameList := strings.Split(objectNames, "//")
+		for _, objectName := range objectNameList {
+			recoverObject(bucketName, objectName, cfg, client)
 		}
 	} else {
 		objectName := ctx.String(objectFlag.Name)
 		recoverObject(bucketName, objectName, cfg, client)
 	}
+
+	taskCheckTicker := time.NewTicker(RecoveryJobSyncTime)
+
+	for range taskCheckTicker.C {
+		stats, _ := client.GetTasksStats(context.Background())
+		if stats.GetRecoveryProcessCount() > 0 {
+			fmt.Printf("Processing recovery tasks, update every 30 seconds. \n Waiting Tasks Number: %d \n Failed: %s\n\n", stats.GetRecoveryProcessCount(), stats.GetRecoveryFailedList())
+		} else {
+			fmt.Printf("Finished process all recovery objects task on background. \n Failed: %s \n", stats.GetRecoveryFailedList())
+			break
+		}
+	}
+
+	// reset recovery failed list at the end of job
+	client.ResetRecoveryFailedList(context.Background())
 	return nil
 }
 
 func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpConfig, client *gfspclient.GfSpClient) error {
-	var replicateIdx int
+	var (
+		replicateIdx    int
+		processingCount uint32
+	)
+
+	stats, _ := client.GetTasksStats(context.Background())
+	processingCount = stats.GetRecoveryProcessCount()
+	for processingCount >= MaxRecoveryJob {
+		log.Infof("Recovery object job waiting as there are already %d recovery job in queue.", MaxRecoveryJob)
+		time.Sleep(FullQueueWaitTime)
+		stats, _ := client.GetTasksStats(context.Background())
+		processingCount = stats.GetRecoveryProcessCount()
+	}
+
 	bucketInfo, objectInfo, storageParams, err := getChainInfo(bucketName, objectName, cfg)
 	if err != nil {
 		return err
@@ -113,13 +144,14 @@ func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpCon
 
 	maxSegmentSize := storageParams.GetMaxSegmentSize()
 	segmentCount := segmentPieceCount(objectInfo.PayloadSize, maxSegmentSize)
+
 	// recovery primary SP
 	if replicateIdx == -1 {
 		fmt.Printf("begin to recover the object of the primary SP: %s \n", objectName)
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoverPieceTask{}
 			task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(-1), maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
-			client.ReportTask(context.Background(), task)
+			err = client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
 	} else {
@@ -128,13 +160,17 @@ func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpCon
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoverPieceTask{}
 			task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
-			client.ReportTask(context.Background(), task)
+			err = client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
 	}
-	// TODO support query recovery task status command
-	fmt.Printf("succeed to gerate recovery object %s task on background \n", objectName)
-	return nil
+
+	if err != nil {
+		fmt.Printf("failed to generate recovery object %s task on background \n, error: %s", objectName, err.Error())
+	} else {
+		fmt.Printf("succeed to generate recovery object %s task on background \n", objectName)
+	}
+	return err
 }
 
 func recoverPieceAction(ctx *cli.Context) error {

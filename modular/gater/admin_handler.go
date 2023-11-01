@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
 	"io"
 	"net/http"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -50,7 +52,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetApproval).Inc()
@@ -218,7 +220,7 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 		task.InitApprovalCreateObjectTask(reqCtx.Account(), &createObjectApproval, fingerprint, g.baseApp.TaskPriority(task))
 		var approvedTask coretask.ApprovalCreateObjectTask
 		startAskCreateObjectApproval := time.Now()
-		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(r.Context(), task)
+		authenticated, approvedTask, err = g.baseApp.GfSpClient().AskCreateObjectApproval(reqCtx.Context(), task)
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
@@ -258,7 +260,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetChallengeInfo).Inc()
@@ -377,6 +379,169 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	log.CtxDebug(reqCtx.Context(), "succeed to get challenge info")
 }
 
+// getChallengeInfoV2Handler handles get challenge piece info request. Currently, only
+// greenfield validator can challenge piece whether is stored correctly. The challenge
+// piece info includes: the challenged piece data, all piece hashes and the integrity hash.
+// The challenger can verify the info whether are correct by comparing with the greenfield info.
+// The difference between the v2 interface and the old interface(getChallengeInfoHandler) is the
+// format of the returned results, which is intended to avoid the limitation of http header size.
+func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		integrity     []byte
+		checksums     [][]byte
+		data          []byte
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailureGetChallengeInfo).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailureGetChallengeInfo).Observe(time.Since(startTime).Seconds())
+		} else {
+			reqCtx.SetHTTPCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessGetChallengeInfo).Inc()
+			metrics.ReqTime.WithLabelValues(GatewaySuccessGetChallengeInfo).Observe(time.Since(startTime).Seconds())
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_total_time").Observe(time.Since(startTime).Seconds())
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+	_, err = util.StringToUint64(reqCtx.request.Header.Get(GnfdObjectIDHeader))
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse object id", "object_id",
+			reqCtx.request.Header.Get(GnfdObjectIDHeader))
+		err = ErrInvalidHeader
+		return
+	}
+
+	getObjectTime := time.Now()
+	objectInfo, err := g.baseApp.Consensus().QueryObjectInfoByID(reqCtx.Context(),
+		reqCtx.request.Header.Get(GnfdObjectIDHeader))
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_object_time").Observe(time.Since(getObjectTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus",
+			"object_id", reqCtx.request.Header.Get(GnfdObjectIDHeader), "error", err)
+		if strings.Contains(err.Error(), "No such object") {
+			err = ErrNoSuchObject
+		} else {
+			err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		}
+		return
+	}
+	authTime := time.Now()
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypeGetChallengePieceInfo, reqCtx.Account(), objectInfo.GetBucketName(),
+		objectInfo.GetObjectName())
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_auth_time").Observe(time.Since(authTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "failed to get challenge info due to no permission")
+		err = ErrNoPermission
+		return
+	}
+
+	getBucketTime := time.Now()
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), objectInfo.GetBucketName())
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_bucket_time").Observe(time.Since(getBucketTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
+		return
+	}
+	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse redundancy index", "redundancy_idx",
+			reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
+		err = ErrInvalidHeader
+		return
+	}
+	segmentIdx, err := util.StringToUint32(reqCtx.request.Header.Get(GnfdPieceIndexHeader))
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to parse segment index", "segment_idx",
+			reqCtx.request.Header.Get(GnfdPieceIndexHeader))
+		err = ErrInvalidHeader
+		return
+	}
+	getParamTime := time.Now()
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_param_time").Observe(time.Since(getParamTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
+		return
+	}
+	var pieceSize uint64
+	if redundancyIdx < 0 {
+		pieceSize = uint64(g.baseApp.PieceOp().SegmentPieceSize(objectInfo.GetPayloadSize(),
+			segmentIdx, params.VersionedParams.GetMaxSegmentSize()))
+	} else {
+		pieceSize = uint64(g.baseApp.PieceOp().ECPieceSize(objectInfo.GetPayloadSize(),
+			segmentIdx, params.VersionedParams.GetMaxSegmentSize(),
+			params.VersionedParams.GetRedundantDataChunkNum()))
+	}
+	task := &gfsptask.GfSpChallengePieceTask{}
+	task.InitChallengePieceTask(objectInfo, bucketInfo, params, g.baseApp.TaskPriority(task), reqCtx.Account(),
+		redundancyIdx, segmentIdx, g.baseApp.TaskTimeout(task, pieceSize), g.baseApp.TaskMaxRetry(task))
+	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
+	getChallengeInfoTime := time.Now()
+	integrity, checksums, data, err = g.baseApp.GfSpClient().GetChallengeInfo(reqCtx.Context(), task)
+	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_info_time").Observe(time.Since(getChallengeInfoTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get challenge info", "error", err)
+		return
+	}
+
+	var xmlInfo = struct {
+		XMLName         xml.Name `xml:"GetChallengeInfo"`
+		Version         string   `xml:"version,attr"`
+		ObjectID        string   `xml:"ObjectID"`
+		RedundancyIndex string   `xml:"RedundancyIndex"`
+		PieceIndex      string   `xml:"PieceIndex"`
+		IntegrityHash   string   `xml:"IntegrityHash"`
+		PieceHash       string   `xml:"PieceHash"`
+		PieceData       string   `xml:"PieceData"`
+	}{
+		Version:         GnfdResponseXMLVersion,
+		ObjectID:        reqCtx.request.Header.Get(GnfdObjectIDHeader),
+		RedundancyIndex: reqCtx.request.Header.Get(GnfdRedundancyIndexHeader),
+		PieceIndex:      reqCtx.request.Header.Get(GnfdPieceIndexHeader),
+		IntegrityHash:   hex.EncodeToString(integrity),
+		PieceHash:       util.BytesSliceToString(checksums),
+		PieceData:       hex.EncodeToString(data),
+	}
+	xmlBody, err := xml.Marshal(&xmlInfo)
+	if err != nil {
+		log.Errorw("failed to marshal xml", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	_, err = w.Write(xmlBody)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reply data", "error", err)
+		err = ErrReplyData
+		return
+	}
+	metrics.ReqPieceSize.WithLabelValues(GatewayChallengePieceSize).Observe(float64(len(data)))
+	log.CtxDebug(reqCtx.Context(), "succeed to get challenge info")
+}
+
 // replicateHandler handles the replicate piece from primary SP request. The Primary
 // replicates the piece data one by one, and will ask the integrity hash and the
 // signature to seal object on greenfield.
@@ -395,7 +560,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(receivePieceStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureReplicatePiece).Inc()
@@ -565,7 +730,7 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {

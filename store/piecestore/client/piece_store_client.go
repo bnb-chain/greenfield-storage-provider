@@ -71,7 +71,7 @@ func (client *StoreClient) GetPiece(ctx context.Context, key string, offset, lim
 
 	rc, err := client.ps.Get(ctx, key, offset, limit)
 	if err != nil {
-		log.Errorw("failed to get piece data from piece store", "error", err)
+		log.Errorw("failed to get piece data from piece store", "piece_key", key, "error", err)
 		return nil, err
 	}
 	buf := &bytes.Buffer{}

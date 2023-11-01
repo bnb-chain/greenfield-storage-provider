@@ -179,6 +179,10 @@ func (m *GfSpMigrateGVGTask) SetLastMigratedObjectID(lastMigratedObjectID uint64
 	m.LastMigratedObjectId = lastMigratedObjectID
 }
 
+func (m *GfSpMigrateGVGTask) SetMigratedBytesSize(migratedBytesSize uint64) {
+	m.MigratedBytesSize = migratedBytesSize
+}
+
 func (m *GfSpMigrateGVGTask) SetFinished(finished bool) {
 	m.Finished = finished
 }
@@ -201,4 +205,29 @@ func (m *GfSpMigrateGVGTask) SetSignature(signature []byte) {
 func (g *GfSpMigratePieceTask) Key() coretask.TKey {
 	return GfSpMigratePieceTaskKey(g.GetObjectInfo().GetObjectName(), g.GetObjectInfo().Id.String(),
 		g.GetSegmentIdx(), g.GetRedundancyIdx())
+}
+
+// ======================= GfSpBucketMigrationInfo =====================================
+
+func (m *GfSpBucketMigrationInfo) Key() coretask.TKey {
+	return GfSpMigrateBucketTaskKey(m.GetBucketId())
+}
+
+func (m *GfSpBucketMigrationInfo) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpBucketMigrationInfo{
+		BucketId:          m.GetBucketId(),
+		Finished:          m.GetFinished(),
+		MigratedBytesSize: m.GetMigratedBytesSize(),
+		ExpireTime:        m.GetExpireTime(),
+	}))
+}
+
+func (m *GfSpBucketMigrationInfo) SetSignature(signature []byte) {
+	m.Signature = signature
+}
+
+func (m *GfSpBucketMigrationInfo) Info() string {
+	return fmt.Sprintf(
+		"key[%s],   bucket_id[%d], migrated_bytes_size[%d], finished[%t].",
+		m.Key(), m.GetBucketId(), m.GetMigratedBytesSize(), m.GetFinished())
 }

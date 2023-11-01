@@ -83,6 +83,38 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: migratePieceRouterName,
 		},
 		{
+			name:             "Pre bucket migrate",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, PreMigrateBucketPath),
+			shouldMatch:      true,
+			wantedRouterName: PreMigrateBucketRouterName,
+		},
+		{
+			name:             "Post bucket migrate",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, PostMigrateBucketPath),
+			shouldMatch:      true,
+			wantedRouterName: PostMigrateBucketRouterName,
+		},
+		{
+			name:             "Query bucket quota",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, MigrateQueryBucketQuotaPath),
+			shouldMatch:      true,
+			wantedRouterName: queryBucketQuotaRouterName,
+		},
+		{
+			name:             "Query bucket enough quota",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, MigrateQueryBucketQuotaHasEnoughQuotaPath),
+			shouldMatch:      true,
+			wantedRouterName: queryBucketEnoughQuotaRouterName,
+		},
+		{
 			name:             "Get secondary migrate bucket approval",
 			router:           gwRouter,
 			method:           http.MethodGet,
@@ -271,6 +303,14 @@ func TestRouters(t *testing.T) {
 			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoPath),
 			shouldMatch:      true,
 			wantedRouterName: getChallengeInfoRouterName,
+		},
+		{
+			name:             "Challenge router v2",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s%s", scheme, testDomain, GetChallengeInfoV2Path),
+			shouldMatch:      true,
+			wantedRouterName: getChallengeInfoV2RouterName,
 		},
 		{
 			name:             "Replicate router",
@@ -644,6 +684,14 @@ func TestRouters(t *testing.T) {
 			url:              fmt.Sprintf("%s%s/?%s&%s&%s&%s", scheme, testDomain, VerifyMigrateGVGPermissionQuery, BucketIDQuery, GvgIDQuery, SpIDQuery),
 			shouldMatch:      true,
 			wantedRouterName: verifyMigrateGVGPermissionRouterName,
+		},
+		{
+			name:             "Get bucket total object size",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, GetBucketSizeQuery, BucketIDQuery),
+			shouldMatch:      true,
+			wantedRouterName: getBucketSizeRouterName,
 		},
 	}
 	for _, tt := range cases {

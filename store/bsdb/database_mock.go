@@ -9,6 +9,7 @@ import (
 
 	types "github.com/bnb-chain/greenfield/x/permission/types"
 	common "github.com/forbole/juno/v4/common"
+	decimal "github.com/shopspring/decimal"
 	gomock "go.uber.org/mock/gomock"
 	gorm "gorm.io/gorm"
 )
@@ -79,6 +80,21 @@ func (m *MockMetadata) GetBucketMetaByName(bucketName string, includePrivate boo
 func (mr *MockMetadataMockRecorder) GetBucketMetaByName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketMetaByName), bucketName, includePrivate)
+}
+
+// GetBucketSizeByID mocks base method.
+func (m *MockMetadata) GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketSizeByID", bucketID)
+	ret0, _ := ret[0].(decimal.Decimal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketSizeByID indicates an expected call of GetBucketSizeByID.
+func (mr *MockMetadataMockRecorder) GetBucketSizeByID(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSizeByID", reflect.TypeOf((*MockMetadata)(nil).GetBucketSizeByID), bucketID)
 }
 
 // GetDefaultCharacterSet mocks base method.
@@ -735,10 +751,10 @@ func (mr *MockMetadataMockRecorder) ListMigrateBucketEvents(spID interface{}, fi
 }
 
 // ListObjectPolicies mocks base method.
-func (m *MockMetadata) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+func (m *MockMetadata) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*PermissionWithStatement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListObjectPolicies", objectID, actionType, startAfter, limit)
-	ret0, _ := ret[0].([]*Permission)
+	ret0, _ := ret[0].([]*PermissionWithStatement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1022,6 +1038,21 @@ func (m *MockBSDB) GetBucketMetaByName(bucketName string, includePrivate bool) (
 func (mr *MockBSDBMockRecorder) GetBucketMetaByName(bucketName, includePrivate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketMetaByName), bucketName, includePrivate)
+}
+
+// GetBucketSizeByID mocks base method.
+func (m *MockBSDB) GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketSizeByID", bucketID)
+	ret0, _ := ret[0].(decimal.Decimal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketSizeByID indicates an expected call of GetBucketSizeByID.
+func (mr *MockBSDBMockRecorder) GetBucketSizeByID(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSizeByID", reflect.TypeOf((*MockBSDB)(nil).GetBucketSizeByID), bucketID)
 }
 
 // GetDefaultCharacterSet mocks base method.
@@ -1678,10 +1709,10 @@ func (mr *MockBSDBMockRecorder) ListMigrateBucketEvents(spID interface{}, filter
 }
 
 // ListObjectPolicies mocks base method.
-func (m *MockBSDB) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error) {
+func (m *MockBSDB) ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*PermissionWithStatement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListObjectPolicies", objectID, actionType, startAfter, limit)
-	ret0, _ := ret[0].([]*Permission)
+	ret0, _ := ret[0].([]*PermissionWithStatement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

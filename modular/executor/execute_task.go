@@ -441,7 +441,7 @@ func (e *ExecuteModular) recoverByPrimarySP(ctx context.Context, task coretask.R
 
 	pieceData, err = e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 	if err != nil {
-		log.CtxDebugw(ctx, "fail to recovery secondary SP data from secondary SPs")
+		log.CtxDebugw(ctx, "failed to recover secondary SP data from secondary SPs")
 		return err
 	}
 	// compare integrity hash
@@ -705,16 +705,16 @@ func (e *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, object
 	return secondaryEndpointList, secondaryCount, nil
 }
 
-func (g *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
-	bucketMeta, _, err := g.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
+func (e *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
+	bucketMeta, _, err := e.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
 	if err != nil {
 		return "", err
 	}
-	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketMeta.GetBucketInfo())
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, e.baseApp.Consensus(), bucketMeta.GetBucketInfo())
 	if err != nil {
 		return "", err
 	}
-	spList, err := g.baseApp.Consensus().ListSPs(ctx)
+	spList, err := e.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return "", err
 	}

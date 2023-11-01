@@ -374,6 +374,83 @@ func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth strin
 	return err
 }
 
+// GetLatestBucketTraffic return the latest bucket traffic info of the bucket
+func (s *SpDBImpl) GetLatestBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTraffic, err error) {
+	var queryReturn BucketTrafficTable
+
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetBucketTraffic).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureGetBucketTraffic).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetBucketTraffic).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessGetBucketTraffic).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	err = s.db.Where("bucket_id = ?", bucketID).Order("month DESC").Limit(1).Find(&queryReturn).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &corespdb.BucketTraffic{
+		BucketID:              queryReturn.BucketID,
+		YearMonth:             queryReturn.Month,
+		FreeQuotaSize:         queryReturn.FreeQuotaSize,
+		FreeQuotaConsumedSize: queryReturn.FreeQuotaConsumedSize,
+		BucketName:            queryReturn.BucketName,
+		ReadConsumedSize:      queryReturn.ReadConsumedSize,
+		ChargedQuotaSize:      queryReturn.ChargedQuotaSize,
+		ModifyTime:            queryReturn.ModifiedTime.Unix(),
+	}, nil
+}
+
+// UpdateBucketTraffic update the bucket traffic in traffic db with the new traffic
+func (s *SpDBImpl) UpdateBucketTraffic(bucketID uint64, update *corespdb.BucketTraffic) (err error) {
+	var (
+		result      *gorm.DB
+		queryReturn BucketTrafficTable
+		needInsert  = false
+	)
+
+	result = s.db.Where("bucket_id = ? and month = ?", bucketID, update.YearMonth).First(&queryReturn)
+
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	updateRecord := &BucketTrafficTable{
+		BucketID:              update.BucketID,
+		Month:                 update.YearMonth,
+		FreeQuotaSize:         update.FreeQuotaSize,
+		FreeQuotaConsumedSize: update.FreeQuotaConsumedSize,
+		BucketName:            update.BucketName,
+		ReadConsumedSize:      update.ReadConsumedSize,
+		ChargedQuotaSize:      update.ChargedQuotaSize,
+		ModifiedTime:          time.Now(),
+	}
+
+	if needInsert {
+		result = s.db.Create(updateRecord)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in bucket traffic table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&BucketTrafficTable{}).
+			Where("bucket_id = ? and month = ?", bucketID, update.YearMonth).Updates(updateRecord)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in bucket traffic table: %s", result.Error)
+		}
+	}
+	return nil
+}
+
 // GetReadRecord return record list by time range
 func (s *SpDBImpl) GetReadRecord(timeRange *corespdb.TrafficTimeRange) (records []*corespdb.ReadRecord, err error) {
 	var (

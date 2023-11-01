@@ -281,6 +281,21 @@ func (mr *MockSPDBMockRecorder) GetGCMetasToGC(limit any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCMetasToGC", reflect.TypeOf((*MockSPDB)(nil).GetGCMetasToGC), limit)
 }
 
+// GetLatestBucketTraffic mocks base method.
+func (m *MockSPDB) GetLatestBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLatestBucketTraffic", bucketID)
+	ret0, _ := ret[0].(*BucketTraffic)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestBucketTraffic indicates an expected call of GetLatestBucketTraffic.
+func (mr *MockSPDBMockRecorder) GetLatestBucketTraffic(bucketID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetLatestBucketTraffic), bucketID)
+}
+
 // GetObjectIntegrity mocks base method.
 func (m *MockSPDB) GetObjectIntegrity(objectID uint64, redundancyIndex int32) (*IntegrityMeta, error) {
 	m.ctrl.T.Helper()
@@ -732,6 +747,20 @@ func (m *MockSPDB) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) erro
 func (mr *MockSPDBMockRecorder) UpdateBucketMigrateSubscribeProgress(blockHeight any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrateSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateBucketMigrateSubscribeProgress), blockHeight)
+}
+
+// UpdateBucketTraffic mocks base method.
+func (m *MockSPDB) UpdateBucketTraffic(bucketID uint64, update *BucketTraffic) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBucketTraffic", bucketID, update)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateBucketTraffic indicates an expected call of UpdateBucketTraffic.
+func (mr *MockSPDBMockRecorder) UpdateBucketTraffic(bucketID, update any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).UpdateBucketTraffic), bucketID, update)
 }
 
 // UpdateExtraQuota mocks base method.
@@ -1326,6 +1355,21 @@ func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID, yearMonth any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
+// GetLatestBucketTraffic mocks base method.
+func (m *MockTrafficDB) GetLatestBucketTraffic(bucketID uint64) (*BucketTraffic, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLatestBucketTraffic", bucketID)
+	ret0, _ := ret[0].(*BucketTraffic)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestBucketTraffic indicates an expected call of GetLatestBucketTraffic.
+func (mr *MockTrafficDBMockRecorder) GetLatestBucketTraffic(bucketID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetLatestBucketTraffic), bucketID)
+}
+
 // GetObjectReadRecord mocks base method.
 func (m *MockTrafficDB) GetObjectReadRecord(objectID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	m.ctrl.T.Helper()
@@ -1383,6 +1427,20 @@ func (m *MockTrafficDB) InitBucketTraffic(record *ReadRecord, quota *BucketQuota
 func (mr *MockTrafficDBMockRecorder) InitBucketTraffic(record, quota any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).InitBucketTraffic), record, quota)
+}
+
+// UpdateBucketTraffic mocks base method.
+func (m *MockTrafficDB) UpdateBucketTraffic(bucketID uint64, update *BucketTraffic) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBucketTraffic", bucketID, update)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateBucketTraffic indicates an expected call of UpdateBucketTraffic.
+func (mr *MockTrafficDBMockRecorder) UpdateBucketTraffic(bucketID, update any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).UpdateBucketTraffic), bucketID, update)
 }
 
 // UpdateExtraQuota mocks base method.

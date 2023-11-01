@@ -9,11 +9,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"cosmossdk.io/math"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -27,7 +27,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 var (
@@ -132,6 +132,7 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessUpload).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
+	log.Debugw("UploadObjectTask info", "task", task)
 	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
 }
 
@@ -359,6 +360,17 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 
 func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask task.ReplicatePieceTask) error {
 	if handleTask.GetNotAvailableSpIdx() != -1 {
+		objectInfo, queryErr := m.baseApp.Consensus().QueryObjectInfoByID(ctx, util.Uint64ToString(handleTask.GetObjectInfo().Id.Uint64()))
+		if queryErr != nil {
+			log.Errorw("failed to query object info", "object", handleTask.GetObjectInfo(), "error", queryErr)
+			return queryErr
+		}
+		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+			log.CtxInfow(ctx, "object already sealed, abort replicate task", "object_info", objectInfo)
+			m.replicateQueue.PopByKey(handleTask.Key())
+			return nil
+		}
+
 		gvgID := handleTask.GetGlobalVirtualGroupId()
 		gvg, err := m.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
 		if err != nil {
@@ -620,6 +632,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 
 	if task.GetRecovered() {
 		m.recoveryQueue.PopByKey(task.Key())
+		delete(m.recoveryTaskMap, task.Key().String())
 		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
 		return nil
 	}
@@ -640,6 +653,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		return err
 	}
 
+	m.recoveryTaskMap[task.Key().String()] = task.Key().String()
 	return nil
 }
 
@@ -655,6 +669,10 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 		err := m.recoveryQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 	} else {
+		if !slices.Contains(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName) {
+			m.recoveryFailedList = append(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName)
+		}
+		delete(m.recoveryTaskMap, handleTask.Key().String())
 		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
 	}
 	return nil
@@ -679,6 +697,17 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 	if pushErr != nil {
 		log.CtxErrorw(ctx, "failed to push task to migrate gvg queue", "task", task, "error", pushErr)
 		return pushErr
+	}
+
+	//  if cancel migrate bucket, migrated recoup quota
+	if cancelTask {
+		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
+		log.CtxInfow(ctx, "start to cancel migrate task and send post migrate bucket to src sp", "post_msg", postMsg, "task", task)
+		err = m.bucketMigrateScheduler.PostMigrateBucket(postMsg, nil)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to post migrate bucket", "msg", postMsg, "error", err)
+		}
+		return err
 	}
 
 	if task.GetBucketID() != 0 {

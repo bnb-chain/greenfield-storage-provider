@@ -29,11 +29,11 @@ const (
 
 var (
 	ErrFailedPickVGF = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540001,
-		"failed to pick virtual group family, need creating global virtual group")
+		"failed to pick virtual group family, need to create global virtual group")
 	ErrFailedPickGVG = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540002,
-		"failed to pick global virtual group, need staking more storage size")
+		"failed to pick global virtual group, need to stake more storage size")
 	ErrStaledMetadata = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540003,
-		"metadata is staled, need forcing refresh metadata")
+		"metadata is staled, need to force refresh metadata")
 	ErrFailedPickDestSP = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540004,
 		"failed to pick dest sp")
 )

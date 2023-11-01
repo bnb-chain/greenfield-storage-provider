@@ -7,14 +7,15 @@ import (
 	"math/big"
 	"time"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/models"
+	"github.com/shopspring/decimal"
 	"github.com/spaolacci/murmur3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var verifyFuncs = []func(db *gorm.DB) error{verify1, verify2, verify3, verify4, verify5, verify6, verify7, verify8, verify9, verify10, verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify18, verify19, verify20, verify21, verify22, verify23, verify24, verify25, verify26, verify27,
@@ -179,6 +180,16 @@ func verify12(db *gorm.DB) error {
 	}
 	if o.Status != "OBJECT_STATUS_SEALED" {
 		return errors.New("object status error")
+	}
+	var b models.Bucket
+	if err := db.Table("buckets").Where("bucket_name =?", "cxz").Find(&b).Error; err != nil {
+		return err
+	}
+	if !b.StorageSize.Equal(decimal.NewFromInt(int64(o.PayloadSize))) {
+		return fmt.Errorf("StorageSize: %s error", b.StorageSize.String())
+	}
+	if !b.ChargeSize.Equal(decimal.NewFromInt(128000)) {
+		return fmt.Errorf("ChargeSize: %s error", b.ChargeSize.String())
 	}
 	return nil
 }

@@ -90,5 +90,4 @@ func (p *PProf) registerProfiler(r *mux.Router) {
 	r.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
 	r.Handle("/debug/pprof/block", pprof.Handler("block"))
 	r.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
-
 }

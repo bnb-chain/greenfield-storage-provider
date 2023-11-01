@@ -31,9 +31,11 @@ type ExecuteModular struct {
 	askReplicateApprovalTimeout  int64
 	askReplicateApprovalExFactor float64
 
-	listenSealTimeoutHeight int
-	listenSealRetryTimeout  int
-	maxListenSealRetry      int
+	listenSealTimeoutHeight     int
+	listenSealRetryTimeout      int
+	maxListenSealRetry          int
+	maxObjectMigrationRetry     int
+	objectMigrationRetryTimeout int
 
 	statisticsOutputInterval   int
 	doingReplicatePieceTaskCnt int64

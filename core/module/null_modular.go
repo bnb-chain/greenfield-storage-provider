@@ -65,9 +65,19 @@ func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateB
 func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.MsgSwapOut) error {
 	return ErrNilModular
 }
+func (*NullModular) NotifyPreMigrateBucket(context.Context, uint64) error {
+	return ErrNilModular
+}
+func (*NullModular) NotifyPostMigrateBucket(context.Context, uint64) error {
+	return ErrNilModular
+}
 
-func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int) {
-	return 0, 0, 0, 0, 0, 0
+func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string) {
+	return 0, 0, 0, 0, 0, 0, 0, nil
+}
+
+func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
+	return nil
 }
 
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
@@ -282,6 +292,9 @@ func (*NilModular) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSp
 	return "", ErrNilModular
 }
 func (*NilModular) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
+	return nil, ErrNilModular
+}
+func (*NilModular) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	return nil, ErrNilModular
 }
 

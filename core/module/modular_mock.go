@@ -1197,6 +1197,34 @@ func (mr *MockManagerMockRecorder) NotifyMigrateSwapOut(ctx, swapOut any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyMigrateSwapOut", reflect.TypeOf((*MockManager)(nil).NotifyMigrateSwapOut), ctx, swapOut)
 }
 
+// NotifyPostMigrateBucket mocks base method.
+func (m *MockManager) NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NotifyPostMigrateBucket indicates an expected call of NotifyPostMigrateBucket.
+func (mr *MockManagerMockRecorder) NotifyPostMigrateBucket(ctx, bucketID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockManager)(nil).NotifyPostMigrateBucket), ctx, bucketID)
+}
+
+// NotifyPreMigrateBucket mocks base method.
+func (m *MockManager) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NotifyPreMigrateBucket", ctx, bucketID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NotifyPreMigrateBucket indicates an expected call of NotifyPreMigrateBucket.
+func (mr *MockManagerMockRecorder) NotifyPreMigrateBucket(ctx, bucketID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucket", reflect.TypeOf((*MockManager)(nil).NotifyPreMigrateBucket), ctx, bucketID)
+}
+
 // PickVirtualGroupFamily mocks base method.
 func (m *MockManager) PickVirtualGroupFamily(ctx context.Context, task task.ApprovalCreateBucketTask) (uint32, error) {
 	m.ctrl.T.Helper()
@@ -1258,7 +1286,7 @@ func (mr *MockManagerMockRecorder) QueryTasks(ctx, subKey any) *gomock.Call {
 }
 
 // QueryTasksStats mocks base method.
-func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int) {
+func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryTasksStats", ctx)
 	ret0, _ := ret[0].(int)
@@ -1267,7 +1295,9 @@ func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, 
 	ret3, _ := ret[3].(int)
 	ret4, _ := ret[4].(int)
 	ret5, _ := ret[5].(int)
-	return ret0, ret1, ret2, ret3, ret4, ret5
+	ret6, _ := ret[6].(int)
+	ret7, _ := ret[7].([]string)
+	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7
 }
 
 // QueryTasksStats indicates an expected call of QueryTasksStats.
@@ -1301,6 +1331,20 @@ func (m *MockManager) ReserveResource(ctx context.Context, state *rcmgr.ScopeSta
 func (mr *MockManagerMockRecorder) ReserveResource(ctx, state any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReserveResource", reflect.TypeOf((*MockManager)(nil).ReserveResource), ctx, state)
+}
+
+// ResetRecoveryFailedList mocks base method.
+func (m *MockManager) ResetRecoveryFailedList(ctx context.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetRecoveryFailedList", ctx)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// ResetRecoveryFailedList indicates an expected call of ResetRecoveryFailedList.
+func (mr *MockManagerMockRecorder) ResetRecoveryFailedList(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetRecoveryFailedList", reflect.TypeOf((*MockManager)(nil).ResetRecoveryFailedList), ctx)
 }
 
 // Start mocks base method.
@@ -1801,6 +1845,21 @@ func (m *MockSigner) SealObject(ctx context.Context, object *types0.MsgSealObjec
 func (mr *MockSignerMockRecorder) SealObject(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSigner)(nil).SealObject), ctx, object)
+}
+
+// SignBucketMigrationInfo mocks base method.
+func (m *MockSigner) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignBucketMigrationInfo", ctx, task)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignBucketMigrationInfo indicates an expected call of SignBucketMigrationInfo.
+func (mr *MockSignerMockRecorder) SignBucketMigrationInfo(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignBucketMigrationInfo", reflect.TypeOf((*MockSigner)(nil).SignBucketMigrationInfo), ctx, task)
 }
 
 // SignCreateBucketApproval mocks base method.

@@ -3,6 +3,7 @@ package bsdb
 import (
 	"github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/forbole/juno/v4/common"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
 
@@ -113,7 +114,7 @@ type Metadata interface {
 	// GetUserOwnedGroups retrieve groups where the user is the owner
 	GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
 	// ListObjectPolicies list policies by object info
-	ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error)
+	ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*PermissionWithStatement, error)
 	// GetGroupMembersCount get the count of group members
 	GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, error)
 	// ListVirtualGroupFamiliesByVgfIDs list virtual group families by vgf ids
@@ -128,6 +129,8 @@ type Metadata interface {
 	GetEventMigrationBucketByBucketID(bucketID common.Hash) (*EventMigrationBucket, error)
 	//GetEventSwapOutByGvgID get swap out event by gvg id
 	GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error)
+	// GetBucketSizeByID get bucket size info by a bucket id
+	GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error)
 }
 
 // BSDB contains all the methods required by block syncer database
