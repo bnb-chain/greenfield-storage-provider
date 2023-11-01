@@ -108,11 +108,11 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 			if err != nil {
 				continue
 			}
-			e.mutex.RLock()
+			e.mutex.Lock()
 			for _, sp := range sps {
 				e.spMap[sp.Id] = sp
 			}
-			e.mutex.RUnlock()
+			e.mutex.Unlock()
 		}
 	}
 }
