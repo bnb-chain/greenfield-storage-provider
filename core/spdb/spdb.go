@@ -69,8 +69,8 @@ type SignatureDB interface {
 	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
 	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
 	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
-	// ListObjectsByBlockNumberRange list object in range
-	ListObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*IntegrityMeta, error)
+	// ListIntegrityMetaByObjectIDRange list object in range
+	ListIntegrityMetaByObjectIDRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*IntegrityMeta, error)
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
@@ -86,8 +86,8 @@ type SignatureDB interface {
 	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
 	// DeleteAllReplicatePieceChecksumOptimized deletes all piece hashes.
 	DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error
-	// ListReplicatePieceChecksumByBlockNumberRange list object in range
-	ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, objectID uint64, redundancyIdx int32, pieceCount uint32) ([]*GCPieceMeta, error)
+	// ListReplicatePieceChecksumByObjectIDRange list object in range
+	ListReplicatePieceChecksumByObjectIDRange(startObjectID int64, endObjectID int64) ([]*GCPieceMeta, error)
 }
 
 // TrafficDB defines a series of traffic interfaces.

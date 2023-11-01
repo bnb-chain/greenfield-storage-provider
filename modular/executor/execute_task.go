@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -25,8 +27,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/forbole/juno/v4/common"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 )
@@ -64,6 +68,155 @@ func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
 
 func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 45211, detail)
+}
+
+type GCChecker struct {
+	e *ExecuteModular
+}
+
+// NewGCChecker returns a family conflicted checker instance.
+func NewGCChecker(e *ExecuteModular) *GCChecker {
+	return &GCChecker{
+		e: e,
+	}
+}
+
+// deleteObjectPiecesAndIntegrityMetaByObjectInfo used by gcZombiePiece
+func (gc *GCChecker) deleteObjectPiecesAndIntegrityMeta(ctx context.Context, integrityMeta *corespdb.IntegrityMeta) error {
+	objID := integrityMeta.ObjectID
+	redundancyIdx := integrityMeta.RedundancyIndex
+	maxSegment := len(integrityMeta.PieceChecksumList)
+
+	// delete object pieces
+	for segmentIdx := uint32(0); segmentIdx <= uint32(maxSegment); segmentIdx++ {
+		gc.deletePiece(ctx, objID, segmentIdx, redundancyIdx)
+	}
+
+	// delete integrity meta
+	_ = gc.e.baseApp.GfSpDB().DeleteObjectIntegrity(objID, redundancyIdx)
+	log.CtxDebugw(ctx, "succeed to delete all object segment and integrity meta", "object_id", objID, "integrity_meta", integrityMeta)
+
+	return nil
+}
+
+func (gc *GCChecker) deleteObjectSegments(ctx context.Context, objectInfo *storagetypes.ObjectInfo) error {
+	var (
+		storageParams *storagetypes.Params
+		err           error
+	)
+	if storageParams, err = gc.e.baseApp.Consensus().QueryStorageParamsByTimestamp(
+		context.Background(), objectInfo.GetCreateAt()); err != nil {
+		log.Errorw("failed to query storage params", "error", err)
+		return errors.New("failed to query storage params")
+	}
+	segmentCount := gc.e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
+		storageParams.VersionedParams.GetMaxSegmentSize())
+	for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
+		pieceKey := gc.e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
+		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+		deleteErr := gc.e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+		log.CtxDebugw(ctx, "succeed to delete the primary sp segment", "object_info", objectInfo,
+			"piece_key", pieceKey, "error", deleteErr)
+	}
+	return nil
+}
+
+// deletePiece delete single piece if meta data or chain has object info
+func (gc *GCChecker) deletePiece(ctx context.Context, objID uint64, segmentIdx uint32, redundancyIdx int32) {
+	var pieceKey string
+	// TODO -1 means REDUNDANCY_EC_TYPE
+	if redundancyIdx != piecestore.PrimarySPRedundancyIndex {
+		pieceKey = gc.e.baseApp.PieceOp().ECPieceKey(objID, segmentIdx, uint32(redundancyIdx))
+	} else {
+		pieceKey = gc.e.baseApp.PieceOp().SegmentPieceKey(objID, segmentIdx)
+	}
+	deleteErr := gc.e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+	log.CtxDebugw(ctx, "succeed to delete the sp piece", "object_id", objID,
+		"piece_key", pieceKey, "error", deleteErr)
+}
+
+// deletePieceAndPieceChecksum delete single piece and it's corresponding piece checksum
+func (gc *GCChecker) deletePieceAndPieceChecksum(ctx context.Context, piece *spdb.GCPieceMeta) error {
+	objID := piece.ObjectID
+	segmentIdx := piece.SegmentIndex
+	redundancyIdx := piece.RedundancyIndex
+	log.CtxInfow(ctx, "start to delete piece and piece checksum", "object_id", objID, "segmentIdx", segmentIdx, "redundancyIdx", redundancyIdx)
+
+	gc.deletePiece(ctx, piece.ObjectID, piece.SegmentIndex, piece.RedundancyIndex)
+	err := gc.e.baseApp.GfSpDB().DeleteReplicatePieceChecksum(objID, segmentIdx, redundancyIdx)
+	if err != nil {
+		log.Debugf("failed to delete replicate piece checksum", "object_id", objID)
+		return err
+	}
+	log.CtxDebugw(ctx, "succeed to delete and piece checksum", "object_id", objID, "piece_meta", piece, "error", err)
+	return nil
+}
+
+// isAllowGCCheck
+func (gc *GCChecker) isAllowGCCheck(objectInfo *storagetypes.ObjectInfo, bucketInfo *metadatatypes.Bucket) bool {
+	// object not in sealed status
+	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
+		log.Infow("the object isn't sealed, do not need to gc check")
+		return false
+	}
+	// bucket migrating
+	if bucketInfo.GetBucketInfo().GetBucketStatus() == storagetypes.BUCKET_STATUS_MIGRATING {
+		log.Infow("bucket is migrating, do not need to gc check")
+		return false
+	}
+	log.Infow("the object is sealed and the bucket is not migrating, the object can gc", "object", objectInfo, "bucket", bucketInfo)
+	return true
+}
+
+func (gc *GCChecker) getGvgAndSpId(ctx context.Context, objectInfo *storagetypes.ObjectInfo) (*metadatatypes.Bucket, *virtualgrouptypes.GlobalVirtualGroup, uint32, error) {
+	bucketInfo, err := gc.e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
+	if err != nil || bucketInfo == nil {
+		log.Errorw("failed to get bucket by bucket name", "error", err)
+		return nil, nil, 0, err
+	}
+
+	// piece
+	gvg, err := gc.e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
+	if err != nil {
+		log.Errorw("failed to get global virtual group", "error", err)
+		return bucketInfo, nil, 0, err
+	}
+
+	// gvg
+	spID, err := gc.e.getSPID()
+	if err != nil {
+		log.Errorw("failed to get sp id", "error", err)
+		return bucketInfo, gvg, 0, err
+	}
+
+	return bucketInfo, gvg, spID, nil
+}
+
+// checkGVGMatchSP only return ErrInvalidRedundancyIndex means the piece was dislocation
+func (gc *GCChecker) checkGVGMatchSP(ctx context.Context, objectInfo *storagetypes.ObjectInfo, redundancyIndex int32) error {
+	bucketInfo, gvg, spID, err := gc.getGvgAndSpId(ctx, objectInfo)
+	if err != nil {
+		return err
+	}
+
+	if !gc.isAllowGCCheck(objectInfo, bucketInfo) {
+		return nil
+	}
+
+	if redundancyIndex == piecestore.PrimarySPRedundancyIndex {
+		if gvg.GetPrimarySpId() != spID {
+			log.CtxInfow(ctx, "the piece isn't in correct location, will be delete",
+				"object_info", objectInfo, "redundancy_index", redundancyIndex, "gvg", gvg, "sp_id", spID)
+			return ErrInvalidRedundancyIndex
+		}
+	} else {
+		if gvg.GetSecondarySpIds()[redundancyIndex] != spID {
+			log.CtxInfow(ctx, "the piece isn't in correct location, will be delete",
+				"object_info", objectInfo, "redundancy_index", redundancyIndex, "gvg", gvg, "sp_id", spID)
+			return ErrInvalidRedundancyIndex
+		}
+	}
+	return nil
 }
 
 func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask.SealObjectTask) {
@@ -355,49 +508,8 @@ func (e *ExecuteModular) HandleGCZombiePieceTask(ctx context.Context, task coret
 	var (
 		err                             error
 		waitingVerifyGCIntegrityObjects []*corespdb.IntegrityMeta
-		responseEndBlockID              uint64
-		gcObjectNumber                  int
-		tryAgainLater                   bool
-		taskIsCanceled                  bool
-		hasNoObject                     bool
-		isSucceed                       bool
 	)
 
-	reportProgress := func() bool {
-		reportErr := e.ReportTask(ctx, task)
-		log.CtxDebugw(ctx, "gc zombie piece task report progress", "task_info", task.Info(), "error", reportErr)
-		return errors.Is(reportErr, manager.ErrCanceledTask)
-	}
-
-	defer func() {
-		if err == nil && (isSucceed || hasNoObject) { // succeed
-			reportProgress()
-		} else { // failed
-			task.SetError(err)
-			reportProgress()
-		}
-		log.CtxDebugw(ctx, "gc zombie piece task", "task_info", task.Info(), "is_succeed", isSucceed,
-			"response_end_block_id", responseEndBlockID, "waiting_gc_object_number", len(waitingVerifyGCIntegrityObjects),
-			"has_gc_object_number", gcObjectNumber, "try_again_later", tryAgainLater,
-			"task_is_canceled", taskIsCanceled, "has_no_object", hasNoObject, "error", err)
-	}()
-
-	// verify zombie piece from IntegrityMetaTable
-	if e.gcZombiePieceFromIntegrityMeta(ctx, task) != nil {
-		return
-	}
-
-	// verify and delete zombie piece via piece hash
-	if e.gcZombiePieceFromPieceHash(ctx, task) != nil {
-		return
-	}
-	isSucceed = true
-}
-
-func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask) {
-	var (
-		err error
-	)
 	reportProgress := func() bool {
 		reportErr := e.ReportTask(ctx, task)
 		log.CtxDebugw(ctx, "gc zombie piece task report progress", "task_info", task.Info(), "error", reportErr)
@@ -411,35 +523,72 @@ func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCM
 			task.SetError(err)
 			reportProgress()
 		}
-		log.CtxDebugw(ctx, "gc meta task", "task_info", task.Info(), "error", err)
+		log.CtxDebugw(ctx, "gc zombie piece task", "task_info", task.Info(),
+			"waiting_gc_object_number", len(waitingVerifyGCIntegrityObjects), "error", err)
+	}()
+
+	// verify zombie piece via IntegrityMetaTable
+	if err = e.gcZombiePieceFromIntegrityMeta(ctx, task); err != nil {
+		log.CtxErrorw(ctx, "failed to gc zombie piece from integrity meta", "task_info", task.Info(), "error", err)
+		return
+	}
+	// verify and delete zombie piece via piece hash
+	if err = e.gcZombiePieceFromPieceHash(ctx, task); err != nil {
+		log.CtxErrorw(ctx, "failed to gc zombie piece from piece hash", "task_info", task.Info(), "error", err)
+		return
+	}
+}
+
+func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask) {
+	var (
+		err error
+	)
+	reportProgress := func() bool {
+		reportErr := e.ReportTask(ctx, task)
+		log.CtxDebugw(ctx, "gc meta task report progress", "task_info", task.Info(), "error", reportErr)
+		return errors.Is(reportErr, manager.ErrCanceledTask)
+	}
+
+	defer func() {
+		if err == nil { // succeed
+			reportProgress()
+		} else { // failed
+			task.SetError(err)
+			reportProgress()
+		}
+		log.CtxDebugw(ctx, "succeed to run gc meta task", "task_info", task.Info(), "error", err)
 	}()
 
 	go e.gcMetaBucketTraffic(ctx, task)
 	go e.gcMetaReadRecord(ctx, task)
-	log.CtxInfow(ctx, "succeed to run gc meta", "task", task)
 }
 
 func (e *ExecuteModular) gcMetaBucketTraffic(ctx context.Context, task coretask.GCMetaTask) error {
 	// TODO list buckets when large dataset
 	now := time.Now()
-	daysAgo := now.Add(-time.Duration(e.bucketTrafficKeepLatestDays*24) * time.Hour)
+	daysAgo := now.Add(-time.Duration(e.bucketTrafficKeepLatestDay) * time.Hour * 24)
+	yearMonth := sqldb.TimeToYearMonth(daysAgo)
 
-	err := e.baseApp.GfSpDB().DeleteAllBucketTrafficExpired(daysAgo.String())
+	err := e.baseApp.GfSpDB().DeleteAllBucketTrafficExpired(yearMonth)
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to delete expired bucket traffic", "error", err)
 		return err
 	}
 
+	log.CtxInfow(ctx, "succeed to delete bucket traffic", "task", task, "days_ago", daysAgo, "year_month", yearMonth)
 	return nil
 }
 
 func (e *ExecuteModular) gcMetaReadRecord(ctx context.Context, task coretask.GCMetaTask) error {
 	now := time.Now()
-	daysAgo := now.Add(-time.Duration(e.readRecordKeepLatestDays*24) * time.Hour)
+	daysAgo := now.Add(-time.Duration(e.readRecordKeepLatestDay) * time.Hour * 24)
 
-	err := e.baseApp.GfSpDB().DeleteAllReadRecordExpired(uint64(daysAgo.Unix()))
+	err := e.baseApp.GfSpDB().DeleteAllReadRecordExpired(uint64(daysAgo.UnixMicro()))
 	if err != nil {
+		log.CtxErrorw(ctx, "failed to delete expired read record", "error", err)
 		return err
 	}
+	log.CtxInfow(ctx, "succeed to delete read record", "task", task, "daysAgo", daysAgo)
 	return nil
 }
 
@@ -499,12 +648,11 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 		// can delete, verify
 		for _, obj := range objects {
 			objectInfo := obj.GetObject().GetObjectInfo()
-			if e.verifyObjectLocationInfo(ctx, objectInfo) == ErrInvalidIntegrity {
-				e.deleteObjectPieces(ctx, objectInfo)
+			if e.gcChecker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
+				e.gcChecker.deleteObjectSegments(ctx, objectInfo)
 				log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)
 			}
 		}
-
 	}
 
 }
@@ -885,46 +1033,48 @@ func (e *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketN
 
 func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, task coretask.GCZombiePieceTask) error {
 	var (
-		err                             error
-		waitingVerifyGCIntegrityObjects []*corespdb.IntegrityMeta
+		err                            error
+		waitingVerifyGCIntegrityPieces []*corespdb.IntegrityMeta
+		objInfoFromMetaData            *storagetypes.ObjectInfo
+		objInfoFromChain               *storagetypes.ObjectInfo
 	)
 
-	if waitingVerifyGCIntegrityObjects, err = e.baseApp.GfSpDB().ListObjectsByBlockNumberRange(int64(task.GetStartObjectId()), int64(task.GetEndObjectId()), true); err != nil {
+	if waitingVerifyGCIntegrityPieces, err = e.baseApp.GfSpDB().ListIntegrityMetaByObjectIDRange(int64(task.GetStartObjectId()), int64(task.GetEndObjectId()), true); err != nil {
 		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
-		return errors.New("xx")
+		return err
 	}
 
-	if len(waitingVerifyGCIntegrityObjects) == 0 {
-		log.Error("no waiting gc objects")
+	if len(waitingVerifyGCIntegrityPieces) == 0 {
+		log.CtxInfow(ctx, "no waiting gc objects", "task_info", task.Info())
 		return nil
 	}
 
-	for _, integrityObject := range waitingVerifyGCIntegrityObjects {
+	for _, integrityObject := range waitingVerifyGCIntegrityPieces {
+		log.CtxDebugw(ctx, "gc zombie current waiting verify gc integrity meta piece", "integrity_meta", integrityObject)
 		// error
 		objID := integrityObject.ObjectID
-		// object info
-		gcObjectInfo, err := e.baseApp.GfSpClient().GetObjectByID(ctx, objID)
-		if err != nil {
-			log.Errorf("failed to get object meta", "error", err)
-			// could delete, has integrity hash, do not have object info
-			// chain check verify check chain
-			objectInfo, err := e.baseApp.Consensus().QueryObjectInfoByID(ctx, strconv.FormatUint(objID, 10))
-			if err != nil {
-				// gvg  primary sp should has integrity meta
-				// TODO: refine
-				if e.verifyObjectLocationInfo(ctx, objectInfo) == ErrInvalidIntegrity {
-					e.deleteObjectPiecesAndIntegrityMeta(ctx, objectInfo)
+		// If metadata service has object info, use objInfoFromMetaData, otherwise query from chain
+		if objInfoFromMetaData, err = e.baseApp.GfSpClient().GetObjectByID(ctx, objID); err != nil {
+			log.Errorf("failed to get object meta from meta data service, will check from chain", "error", err)
+			if strings.Contains(err.Error(), "no such object from metadata") {
+				// could delete, has integrity hash, do not have object info, chain check verify check chain
+				if objInfoFromChain, err = e.baseApp.Consensus().QueryObjectInfoByID(ctx, strconv.FormatUint(objID, 10)); err != nil {
+					if strings.Contains(err.Error(), "No such object") {
+						// 1) This object does not exist on the chain
+						e.gcChecker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject)
+					}
+				} else {
+					// 2) query metadata error, but chain has the object info, gvg  primary sp should has integrity meta
+					if e.gcChecker.checkGVGMatchSP(ctx, objInfoFromChain, integrityObject.RedundancyIndex) == ErrInvalidRedundancyIndex {
+						e.gcChecker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject)
+					}
+					continue
 				}
-				continue
 			}
-
-			// delete
-			e.deleteObjectPiecesAndIntegrityMeta(ctx, objectInfo)
-			return errors.New("xx")
 		} else {
-			// check integrity meta & chain info
-			if e.verifyObjectLocationInfo(ctx, gcObjectInfo) == ErrInvalidIntegrity {
-				e.deleteObjectPiecesAndIntegrityMeta(ctx, gcObjectInfo)
+			// check integrity meta & object info
+			if e.gcChecker.checkGVGMatchSP(ctx, objInfoFromMetaData, integrityObject.RedundancyIndex) == ErrInvalidRedundancyIndex {
+				e.gcChecker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject)
 			}
 		}
 	}
@@ -933,174 +1083,56 @@ func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, tas
 
 func (e *ExecuteModular) gcZombiePieceFromPieceHash(ctx context.Context, task coretask.GCZombiePieceTask) error {
 	var (
-		err                   error
-		waitingVerifyGCPieces []*spdb.GCPieceMeta
+		err                    error
+		waitingVerifyGCPieces  []*spdb.GCPieceMeta
+		objectInfoFromMetadata *storagetypes.ObjectInfo
+		objInfoFromChain       *storagetypes.ObjectInfo
 	)
+	log.CtxDebugw(ctx, "start to gc zombie piece from piece hash", "task_info", task.Info())
 
-	if waitingVerifyGCPieces, err = e.baseApp.GfSpDB().ListReplicatePieceChecksumByBlockNumberRange(int64(task.GetStartObjectId()), int64(task.GetEndObjectId()), 0, 0, 0); err != nil {
+	// replicate piece must be secondary sp
+	if waitingVerifyGCPieces, err = e.baseApp.GfSpDB().ListReplicatePieceChecksumByObjectIDRange(
+		int64(task.GetStartObjectId()), int64(task.GetEndObjectId())); err != nil {
 		log.CtxErrorw(ctx, "failed to query replicate piece checksum", "task_info", task.Info(), "error", err)
-		return errors.New("failed to query replicate piece checksum")
+		return err
 	}
 
 	if len(waitingVerifyGCPieces) == 0 {
-		log.Error("no waiting gc pieces")
+		log.CtxErrorw(ctx, "no waiting gc pieces", "task_info", task.Info())
 		return nil
 	}
 
 	for _, piece := range waitingVerifyGCPieces {
+		log.CtxDebugw(ctx, "gc zombie current waiting verify gc meta piece", "piece", piece)
 		// error
 		// migrating
 		// sealed ? timeout ?
 		objID := piece.ObjectID
 		// object info
-		objectInfo, err := e.baseApp.GfSpClient().GetObjectByID(ctx, objID)
-		if err != nil {
-			// delete ?
-			log.Infof("failed to get object meta, the zombie piece should be deleted", "error", err)
-			e.deletePieceAndPieceHash(ctx, objectInfo, piece.SegmentIndex, piece.RedundancyIndex)
-			continue
-		}
-
-		if e.verifyPieceLocationInfo(ctx, objectInfo, piece) == ErrSecondaryMismatch {
-			// delete piece
-			// delete piece hash checksum
-			//task.SetError(ErrSecondaryMismatch)
-			err = e.baseApp.GfSpDB().DeleteObjectIntegrity(objID, piece.RedundancyIndex)
-			if err != nil {
-				log.CtxError(ctx, "failed to delete integrity")
+		if objectInfoFromMetadata, err = e.baseApp.GfSpClient().GetObjectByID(ctx, objID); err != nil {
+			// check from chain delete ?
+			if strings.Contains(err.Error(), "no such object from metadata") {
+				log.Infof("failed to get object meta, the zombie piece should be deleted", "error", err)
+				if objInfoFromChain, err = e.baseApp.Consensus().QueryObjectInfoByID(ctx, strconv.FormatUint(objID, 10)); err != nil {
+					if strings.Contains(err.Error(), "No such object") {
+						// 1) This object does not exist on the chain
+						e.gcChecker.deletePieceAndPieceChecksum(ctx, piece)
+					}
+				} else {
+					// 2) query metadata error, but chain has the object info, gvg  primary sp should has integrity meta
+					// TODO: refine
+					if e.gcChecker.checkGVGMatchSP(ctx, objInfoFromChain, piece.RedundancyIndex) == ErrInvalidRedundancyIndex {
+						e.gcChecker.deletePieceAndPieceChecksum(ctx, piece)
+					}
+				}
 			}
-			e.deletePieceAndPieceHash(ctx, objectInfo, piece.SegmentIndex, piece.RedundancyIndex)
+		} else {
+			if e.gcChecker.checkGVGMatchSP(ctx, objectInfoFromMetadata, piece.RedundancyIndex) == ErrInvalidRedundancyIndex {
+				//task.SetError(ErrSecondaryMismatch)
+				// ignore error
+				e.gcChecker.deletePieceAndPieceChecksum(ctx, piece)
+			}
 		}
-	}
-	return nil
-}
-
-func (e *ExecuteModular) deletePiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo, segmentIdx uint32, redundancyIdx int32) {
-	var pieceKey string
-	objID := objectInfo.Id.Uint64()
-	if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-		pieceKey = e.baseApp.PieceOp().ECPieceKey(objID, segmentIdx, uint32(redundancyIdx))
-	} else {
-		pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objID, segmentIdx)
-	}
-	// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-	deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-	log.CtxDebugw(ctx, "delete the primary sp pieces", "object_info", objectInfo,
-		"piece_key", pieceKey, "error", deleteErr)
-}
-
-func (e *ExecuteModular) deletePieceAndPieceHash(ctx context.Context, objectInfo *storagetypes.ObjectInfo, segmentIdx uint32, redundancyIdx int32) error {
-	log.CtxInfow(ctx, "delete piece and piece hash", "object_info", objectInfo, "segmentIdx", segmentIdx, "redundancyIdx", redundancyIdx)
-	e.deletePiece(ctx, objectInfo, segmentIdx, redundancyIdx)
-
-	err := e.baseApp.GfSpDB().DeleteReplicatePieceChecksum(objectInfo.Id.Uint64(), segmentIdx, redundancyIdx)
-	if err != nil {
-		log.Debugf("failed to delete replicate piece checksum", "object", objectInfo)
-		return err
-	}
-	return nil
-}
-
-func (e *ExecuteModular) deleteObjectPiecesAndIntegrityMeta(ctx context.Context, objectInfo *storagetypes.ObjectInfo) error {
-	var (
-		storageParams *storagetypes.Params
-		err           error
-	)
-	if storageParams, err = e.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		context.Background(), objectInfo.GetCreateAt()); err != nil {
-		log.Errorw("failed to query storage params", "error", err)
-		return errors.New("failed to query storage params")
-	}
-	segmentCount := e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
-		storageParams.VersionedParams.GetMaxSegmentSize())
-	for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
-		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-		deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-		log.CtxDebugw(ctx, "delete the primary sp pieces", "object_info", objectInfo,
-			"piece_key", pieceKey, "error", deleteErr)
-	}
-	return nil
-}
-
-func (e *ExecuteModular) deleteObjectPieces(ctx context.Context, objectInfo *storagetypes.ObjectInfo) error {
-	var (
-		storageParams *storagetypes.Params
-		err           error
-	)
-	if storageParams, err = e.baseApp.Consensus().QueryStorageParamsByTimestamp(
-		context.Background(), objectInfo.GetCreateAt()); err != nil {
-		log.Errorw("failed to query storage params", "error", err)
-		return errors.New("failed to query storage params")
-	}
-	segmentCount := e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(),
-		storageParams.VersionedParams.GetMaxSegmentSize())
-	for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-		pieceKey := e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
-		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-		deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-		log.CtxDebugw(ctx, "delete the primary sp pieces", "object_info", objectInfo,
-			"piece_key", pieceKey, "error", deleteErr)
-	}
-	return nil
-}
-
-func (e *ExecuteModular) verifyObjectLocationInfo(ctx context.Context, objectInfo *storagetypes.ObjectInfo) error {
-	// gvg  primary sp should has integrity meta
-	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
-	if err != nil || bucketInfo == nil {
-		log.Errorw("failed to get bucket by bucket name", "error", err)
-		return errors.New("xx")
-	}
-	gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
-	if err != nil {
-		log.Errorw("failed to get global virtual group", "error", err)
-		return errors.New("xx")
-	}
-	spID, err := e.getSPID()
-	if err != nil {
-		log.Errorw("failed to get sp id", "error", err)
-		return errors.New("xx")
-	}
-	if gvg.GetPrimarySpId() != spID {
-		// delete
-		return ErrInvalidIntegrity
-	}
-
-	return nil
-}
-
-func (e *ExecuteModular) verifyPieceLocationInfo(ctx context.Context, objectInfo *storagetypes.ObjectInfo, piece *spdb.GCPieceMeta) error {
-	// bucket migrating
-	bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
-	if err != nil || bucketInfo == nil {
-		log.Errorw("failed to get bucket by bucket name", "error", err)
-		return errors.New("xx")
-	}
-	if bucketInfo.GetBucketInfo().GetBucketStatus() == storagetypes.BUCKET_STATUS_MIGRATING {
-		log.Errorw("bucket is migrating, do not need to delete piece", "error", err)
-		return nil
-	}
-	// piece
-	gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
-	if err != nil {
-		log.Errorw("failed to get global virtual group", "error", err)
-		return errors.New("xx")
-	}
-
-	// gvg
-	gvg.GetSecondarySpIds()
-	spID, err := e.getSPID()
-	if err != nil {
-		log.Errorw("failed to get sp id", "error", err)
-		return errors.New("xx")
-	}
-
-	if gvg.GetSecondarySpIds()[piece.SegmentIndex] != spID {
-		// delete TODO error code
-		log.CtxErrorw(ctx, "failed to confirm receive task, secondary sp mismatch", "expect",
-			gvg.GetSecondarySpIds()[int(piece.RedundancyIndex)], "current", e.baseApp.OperatorAddress())
-		return ErrSecondaryMismatch
 	}
 	return nil
 }

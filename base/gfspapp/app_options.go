@@ -310,7 +310,6 @@ func defaultGfSpDB(cfg *config.SQLDBConfig) {
 	if cfg.MaxOpenConns == 0 {
 		cfg.MaxOpenConns = sqldb.DefaultMaxOpenConns
 	}
-	cfg.EnableTracePutEvent = sqldb.DefaultEnableTracePutEvent
 	if cfg.User == "" {
 		cfg.User = "root"
 	}
@@ -323,6 +322,7 @@ func defaultGfSpDB(cfg *config.SQLDBConfig) {
 	if cfg.Database == "" {
 		cfg.Database = "storage_provider_db"
 	}
+	cfg.EnableTracePutEvent = sqldb.DefaultEnableTracePutEvent
 }
 
 var bsdbOnce = sync.Once{}

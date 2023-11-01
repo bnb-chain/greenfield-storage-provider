@@ -85,10 +85,14 @@ type ManageModular struct {
 	gcObjectBlockInterval uint64
 	gcSafeBlockDistance   uint64
 
-	gcZombiePieceTimeInterval      int
-	gcZombiePieceObjectID          uint64
-	gcZombiePieceObjectIDInterval  uint64
-	gcZombiePieceSafeBlockDistance uint64
+	gcZombiePieceEnabled              bool
+	gcZombiePieceTimeInterval         int
+	gcZombiePieceObjectID             uint64
+	gcZombiePieceObjectIDInterval     uint64
+	gcZombiePieceSafeObjectIDDistance uint64
+
+	gcMetaEnabled      bool
+	gcMetaTimeInterval int
 
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
@@ -199,7 +203,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	m.syncConsensusInfo(ctx)
 	gcObjectTicker := time.NewTicker(time.Duration(m.gcObjectTimeInterval) * time.Second)
 	gcZombiePieceTicker := time.NewTicker(time.Duration(m.gcZombiePieceTimeInterval) * time.Second)
-	gcMetaTicker := time.NewTicker(time.Duration(m.gcZombiePieceTimeInterval) * time.Second)
+	gcMetaTicker := time.NewTicker(time.Duration(m.gcMetaTimeInterval) * time.Second)
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
@@ -248,6 +252,9 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			log.CtxErrorw(ctx, "generate a gc object task", "task_info", task.Info(), "error", err)
 		case <-gcZombiePieceTicker.C:
+			if !m.gcZombiePieceEnabled {
+				continue
+			}
 			start := m.gcZombiePieceObjectID
 			end := m.gcZombiePieceObjectID + m.gcZombiePieceObjectIDInterval
 			currentBlockHeight, err := m.baseApp.Consensus().CurrentHeight(ctx)
@@ -255,12 +262,12 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				log.CtxErrorw(ctx, "failed to get current block height for gc object and try again later", "error", err)
 				continue
 			}
-			// TODO max objectID ?
-			if end+m.gcZombiePieceSafeBlockDistance > currentBlockHeight {
-				log.CtxErrorw(ctx, "current block number less safe distance and try again later",
-					"start_gc_block_height", start,
-					"end_gc_block_height", end,
-					"safe_distance", m.gcSafeBlockDistance,
+			// TODO how to get current max objectID, we use currentBlockHeight as max object id, max object id always smaller than currentBlockHeight
+			if end+m.gcZombiePieceSafeObjectIDDistance > currentBlockHeight {
+				log.CtxErrorw(ctx, "current object id number less safe distance and try again later",
+					"start_gc_object_id", start,
+					"end_gc_object_id", end,
+					"safe_object_id_distance", m.gcZombiePieceSafeObjectIDDistance,
 					"current_block_height", currentBlockHeight)
 				// from 0 again later
 				m.gcZombiePieceObjectID = 0
@@ -273,16 +280,21 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
 				continue
 			}
+			m.gcZombiePieceObjectID = end + 1
+			log.CtxDebugw(ctx, "succeed to push gc zombie task to queue", "task_info", task.Info())
 		case <-gcMetaTicker.C:
+			if !m.gcMetaEnabled {
+				continue
+			}
 			var err error
 			task := &gfsptask.GfSpGCMetaTask{}
 			task.InitGCMetaTask(m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task, 0))
 			err = m.gcMetaQueue.Push(task)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
+				log.CtxErrorw(ctx, "failed to push gc meta task", "error", err)
 				continue
 			}
-
+			log.CtxDebugw(ctx, "succeed to push gc meta task to queue", "task_info", task.Info())
 		case <-discontinueBucketTicker.C:
 			if !m.discontinueBucketEnabled {
 				continue
@@ -292,27 +304,6 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 		}
 	}
 }
-
-// TODO record deletion bucket id ?
-//func (m *ManageModular) generateGCMetaTask(ctx context.Context) {
-//	var err error
-//	// bucket_traffic
-//	now := time.Now().Unix()
-//	task := &gfsptask.GfSpGCMetaTask{}
-//	task.InitGCMetaTask(m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task, 0), uint64(now), gfsptask.GfSpGCMetaTaskType_META_TASK_BUCKET_TRAFFIC)
-//	err = m.gcMetaQueue.Push(task)
-//	if err != nil {
-//		log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
-//	}
-//	// read_record
-//	// TODO config ?
-//	task = &gfsptask.GfSpGCMetaTask{}
-//	task.InitGCMetaTask(m.baseApp.TaskPriority(task), m.baseApp.TaskTimeout(task, 0), uint64(now), gfsptask.GfSpGCMetaTaskType_META_TASK_BUCKET_TRAFFIC_READ_RECORD)
-//	err = m.gcMetaQueue.Push(task)
-//	if err != nil {
-//		log.CtxErrorw(ctx, "failed to push gc zombie piece task", "error", err)
-//	}
-//}
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
 	createAt := time.Now().AddDate(0, 0, -m.discontinueBucketKeepAliveDays)

@@ -40,6 +40,8 @@ var (
 	ErrNotifyMigrateSwapOut = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60006, "failed to notify swap out start")
 )
 
+const BucketMigrationGCWaitTime = 10 * time.Second
+
 func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 65201, detail)
 }
@@ -608,50 +610,47 @@ func (m *ManageModular) HandleGCObjectTask(ctx context.Context, gcTask task.GCOb
 
 func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, gcZombiePieceTask task.GCZombiePieceTask) error {
 	if gcZombiePieceTask == nil {
-		log.CtxErrorw(ctx, "failed to handle gc object due to task pointer dangling")
+		log.CtxErrorw(ctx, "failed to handle gc zombie due to task pointer dangling")
 		return ErrDanglingTask
 	}
-	if !m.gcObjectQueue.Has(gcZombiePieceTask.Key()) {
-		log.CtxErrorw(ctx, "task is not in the gc queue", "task_info", gcZombiePieceTask.Info())
+	if !m.gcZombieQueue.Has(gcZombiePieceTask.Key()) {
+		log.CtxErrorw(ctx, "failed to handle due to task is not in the gc zombie queue", "task_info", gcZombiePieceTask.Info())
 		return ErrCanceledTask
 	}
 	if gcZombiePieceTask.Error() == nil {
-		log.CtxInfow(ctx, "succeed to finish the gc object task", "task_info", gcZombiePieceTask.Info())
-		m.gcObjectQueue.PopByKey(gcZombiePieceTask.Key())
-		m.baseApp.GfSpDB().DeleteGCObjectProgress(gcZombiePieceTask.Key().String())
+		log.CtxInfow(ctx, "succeed to finish the gc zombie task", "task_info", gcZombiePieceTask.Info())
+		m.gcZombieQueue.PopByKey(gcZombiePieceTask.Key())
 		return nil
 	}
 	gcZombiePieceTask.SetUpdateTime(time.Now().Unix())
-	oldTask := m.gcObjectQueue.PopByKey(gcZombiePieceTask.Key())
+	oldTask := m.gcZombieQueue.PopByKey(gcZombiePieceTask.Key())
 	if oldTask != nil {
-		if oldTask.(task.GCObjectTask).GetCurrentBlockNumber() > gcZombiePieceTask.GetCurrentBlockNumber() ||
-			(oldTask.(task.GCObjectTask).GetCurrentBlockNumber() == gcZombiePieceTask.GetCurrentBlockNumber() &&
-				oldTask.(task.GCObjectTask).GetLastDeletedObjectId() > gcZombiePieceTask.GetLastDeletedObjectId()) {
-			log.CtxErrorw(ctx, "the reported gc object task is expired", "report_info", gcZombiePieceTask.Info(),
+		if oldTask.ExceedRetry() {
+			log.CtxErrorw(ctx, "the reported gc zombie task is expired", "task_info", gcZombiePieceTask.Info(),
 				"current_info", oldTask.Info())
 			return ErrCanceledTask
 		}
 	} else {
-		log.CtxErrorw(ctx, "the reported gc object task is canceled", "report_info", gcZombiePieceTask.Info())
+		log.CtxErrorw(ctx, "the reported gc zombie task is canceled", "task_info", gcZombiePieceTask.Info())
 		return ErrCanceledTask
 	}
-	err := m.gcObjectQueue.Push(gcZombiePieceTask)
-	log.CtxInfow(ctx, "push gc object task to queue again", "from", oldTask, "to", gcZombiePieceTask, "error", err)
+	err := m.gcZombieQueue.Push(gcZombiePieceTask)
+	log.CtxInfow(ctx, "succeed to push gc object task to queue again", "from", oldTask, "to", gcZombiePieceTask, "error", err)
 	// TODO GC Zombie piece progress
 	return nil
 }
 
 func (m *ManageModular) HandleGCMetaTask(ctx context.Context, gcMetaTask task.GCMetaTask) error {
 	if gcMetaTask == nil {
-		log.CtxError(ctx, "failed to handle gc bucket migration due to gcMetaTask pointer dangling")
+		log.CtxError(ctx, "failed to handle gc meta task due to gc meta task pointer dangling")
 		return ErrDanglingTask
 	}
 	if !m.gcMetaQueue.Has(gcMetaTask.Key()) {
-		log.CtxErrorw(ctx, "gcMetaTask is not in the gc bucket migration queue", "task_info", gcMetaTask.Info())
+		log.CtxErrorw(ctx, "failed to handle gc meta task due to task is not in the gc meta queue", "task_info", gcMetaTask.Info())
 		return ErrCanceledTask
 	}
 	if gcMetaTask.Error() == nil {
-		log.CtxInfow(ctx, "succeed to finish the gc object gcMetaTask", "task_info", gcMetaTask.Info())
+		log.CtxInfow(ctx, "succeed to finish the gc meta task", "task_info", gcMetaTask.Info())
 		m.gcMetaQueue.PopByKey(gcMetaTask.Key())
 		return nil
 	}
@@ -660,49 +659,32 @@ func (m *ManageModular) HandleGCMetaTask(ctx context.Context, gcMetaTask task.GC
 	oldTask := m.gcMetaQueue.PopByKey(gcMetaTask.Key())
 	if oldTask != nil {
 		if oldTask.ExceedRetry() {
-			log.CtxErrorw(ctx, "the reported gc object gcMetaTask is expired", "report_info", gcMetaTask.Info(),
+			log.CtxErrorw(ctx, "the reported gc meta task is expired", "report_info", gcMetaTask.Info(),
 				"current_info", oldTask.Info())
 			return ErrCanceledTask
 		}
 	} else {
-		log.CtxErrorw(ctx, "the reported gc object gcMetaTask is canceled", "report_info", gcMetaTask.Info())
+		log.CtxErrorw(ctx, "the reported gc meta task is canceled", "report_info", gcMetaTask.Info())
 		return ErrCanceledTask
 	}
 	err := m.gcMetaQueue.Push(gcMetaTask)
-	log.CtxInfow(ctx, "push gcMetaTask to queue again", "from", oldTask, "to", gcMetaTask, "error", err)
+	log.CtxInfow(ctx, "succeed to push gc meta task to queue again", "from", oldTask, "to", gcMetaTask, "error", err)
 	return nil
 }
 
-func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucketMigrationTask task.GCBucketMigrationTask) error {
-	if gcBucketMigrationTask == nil {
-		log.CtxError(ctx, "failed to handle gc bucket migration due to gcBucketMigrationTask pointer dangling")
-		return ErrDanglingTask
+func (m *ManageModular) GenerateGCBucketMigrationTask(ctx context.Context, bucketID, bucketSize uint64) {
+	// src sp should wait meta data
+	<-time.After(BucketMigrationGCWaitTime)
+
+	// success generate gc task, gc for bucket migration src sp
+	gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}
+	gcBucketMigrationTask.InitGCBucketMigrationTask(m.baseApp.TaskPriority(gcBucketMigrationTask), bucketID,
+		m.baseApp.TaskTimeout(gcBucketMigrationTask, bucketSize), m.baseApp.TaskMaxRetry(gcBucketMigrationTask))
+	err := m.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to begin gc bucket migration task", "info", gcBucketMigrationTask.Info(), "error", err)
 	}
-	if !m.gcBucketMigrationQueue.Has(gcBucketMigrationTask.Key()) {
-		log.CtxErrorw(ctx, "gcBucketMigrationTask is not in the gc bucket migration queue", "task_info", gcBucketMigrationTask.Info())
-		return ErrCanceledTask
-	}
-	if gcBucketMigrationTask.Error() == nil {
-		log.CtxInfow(ctx, "succeed to finish the gc object gcBucketMigrationTask", "task_info", gcBucketMigrationTask.Info())
-		m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
-		return nil
-	}
-	gcBucketMigrationTask.SetUpdateTime(time.Now().Unix())
-	gcBucketMigrationTask.SetError(nil)
-	oldTask := m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
-	if oldTask != nil {
-		if oldTask.ExceedRetry() {
-			log.CtxErrorw(ctx, "the reported gc object gcBucketMigrationTask is expired", "report_info", gcBucketMigrationTask.Info(),
-				"current_info", oldTask.Info())
-			return ErrCanceledTask
-		}
-	} else {
-		log.CtxErrorw(ctx, "the reported gc object gcBucketMigrationTask is canceled", "report_info", gcBucketMigrationTask.Info())
-		return ErrCanceledTask
-	}
-	err := m.gcBucketMigrationQueue.Push(gcBucketMigrationTask)
-	log.CtxInfow(ctx, "push gcBucketMigrationTask to queue again", "from", oldTask, "to", gcBucketMigrationTask, "error", err)
-	return nil
+	log.CtxInfow(ctx, "succeed to generate bucket migration gc task and push to queue", "bucket_id", bucketID, "gcBucketMigrationTask", gcBucketMigrationTask)
 }
 
 func (m *ManageModular) HandleCreateGCBucketMigrationTask(ctx context.Context, task task.GCBucketMigrationTask) error {
@@ -718,6 +700,38 @@ func (m *ManageModular) HandleCreateGCBucketMigrationTask(ctx context.Context, t
 		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
+	return nil
+}
+
+func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucketMigrationTask task.GCBucketMigrationTask) error {
+	if gcBucketMigrationTask == nil {
+		log.CtxError(ctx, "failed to handle gc bucket migration due to gc bucket migration task pointer dangling")
+		return ErrDanglingTask
+	}
+	if !m.gcBucketMigrationQueue.Has(gcBucketMigrationTask.Key()) {
+		log.CtxErrorw(ctx, "failed to handle gc bucket migration task due to task is not in the gc bucket migration queue", "task_info", gcBucketMigrationTask.Info())
+		return ErrCanceledTask
+	}
+	if gcBucketMigrationTask.Error() == nil {
+		log.CtxInfow(ctx, "succeed to finish the gc bucket migration task", "task_info", gcBucketMigrationTask.Info())
+		m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+		return nil
+	}
+	gcBucketMigrationTask.SetUpdateTime(time.Now().Unix())
+	gcBucketMigrationTask.SetError(nil)
+	oldTask := m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+	if oldTask != nil {
+		if oldTask.ExceedRetry() {
+			log.CtxErrorw(ctx, "the reported gc object gc bucket migration task is expired", "report_info", gcBucketMigrationTask.Info(),
+				"current_info", oldTask.Info())
+			return ErrCanceledTask
+		}
+	} else {
+		log.CtxErrorw(ctx, "the reported gc object gc bucket migration task is canceled", "report_info", gcBucketMigrationTask.Info())
+		return ErrCanceledTask
+	}
+	err := m.gcBucketMigrationQueue.Push(gcBucketMigrationTask)
+	log.CtxInfow(ctx, "succeed to push gc bucket migration task to queue again", "from", oldTask, "to", gcBucketMigrationTask, "error", err)
 	return nil
 }
 

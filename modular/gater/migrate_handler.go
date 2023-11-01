@@ -117,7 +117,7 @@ func (g *GateModular) checkMigrateBucketQuotaAuth(reqCtx *RequestContext, migrat
 			// metadata service support cancel & completion migrate bucket
 			return true, bucketMigrationInfo, nil
 		}
-		log.Errorw("failed to verify migrate gvg permission", "bucket_migration_info", bucketMigrationInfo,
+		log.Errorw("failed to verify migrate bucket permission", "bucket_migration_info", bucketMigrationInfo,
 			"dest_sp", sp.GetId(), "effect", effect, "error", err)
 		return false, bucketMigrationInfo, err
 	}
@@ -134,7 +134,7 @@ func (g *GateModular) verifySignatureAndSP(reqCtx *RequestContext, migrateBucket
 	)
 	migrateBucketMsg, err = hex.DecodeString(migrateBucketMsgHeader)
 	if err != nil {
-		log.Errorw("failed to parse migrate gvg header", "migrate_gvg_header", migrateBucketMsg, "error", err)
+		log.Errorw("failed to parse migrate bucket msg header", "migrate_bucket_header", migrateBucketMsg, "error", err)
 		return false, &gfsptask.GfSpBucketMigrationInfo{}, sp, ErrDecodeMsg
 	}
 	bucketMigrationInfo := gfsptask.GfSpBucketMigrationInfo{}
@@ -144,7 +144,7 @@ func (g *GateModular) verifySignatureAndSP(reqCtx *RequestContext, migrateBucket
 		return false, &bucketMigrationInfo, sp, err
 	}
 	if bucketMigrationInfo.GetExpireTime() < time.Now().Unix() {
-		log.Errorw("failed to check migrate gvg expire time", "bucket_migration_info", bucketMigrationInfo)
+		log.Errorw("failed to check migrate bucket expire time", "bucket_migration_info", bucketMigrationInfo)
 		return false, &bucketMigrationInfo, sp, ErrNoPermission
 	}
 	destSPAddr, err := reqCtx.verifyTaskSignature(bucketMigrationInfo.GetSignBytes(), bucketMigrationInfo.GetSignature())
@@ -388,7 +388,7 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "bucket_migration_info", bucketMigrationInfo)
+		log.CtxErrorw(reqCtx.Context(), "no permission to get latest bucket quota", "bucket_migration_info", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}
@@ -445,7 +445,7 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "bucket_migration_info", bucketMigrationInfo)
+		log.CtxErrorw(reqCtx.Context(), "no permission to pre migrate bucket", "bucket_migration_info", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}
@@ -525,7 +525,7 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "bucket_migration_info", bucketMigrationInfo)
+		log.CtxErrorw(reqCtx.Context(), "no permission to post migrate bucket", "bucket_migration_info", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}
@@ -611,7 +611,7 @@ func (g *GateModular) sufficientQuotaForBucketMigrationHandler(w http.ResponseWr
 		return
 	}
 	if !allowMigrate {
-		log.CtxErrorw(reqCtx.Context(), "no permission to migrate piece", "bucket_migration_info", bucketMigrationInfo)
+		log.CtxErrorw(reqCtx.Context(), "no permission to check source sp has enough quota", "bucket_migration_info", bucketMigrationInfo)
 		err = ErrNoPermission
 		return
 	}

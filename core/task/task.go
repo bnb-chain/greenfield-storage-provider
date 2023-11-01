@@ -494,37 +494,8 @@ type GCObjectTask interface {
 // the piece data meta is not on chain but the pieces has been store in piece store.
 type GCZombiePieceTask interface {
 	GCTask
-	// GetGCZombiePieceStatus returns the status of collecting zombie pieces, returns
-	// the last deleted object id and the number that has been deleted.
-	//GetGCZombiePieceStatus() (uint64, uint64)
-	// SetGCZombiePieceStatus sets the status of collecting zombie pieces, param
-	// stands the last deleted object id and the has been deleted pieces number.
-	//SetGCZombiePieceStatus(uint64, uint64)
-
 	// InitGCZombiePieceTask inits InitGCObjectTask.
 	InitGCZombiePieceTask(priority TPriority, start, end uint64, timeout int64)
-	// SetStartBlockNumber sets start block number for collecting object.
-	SetStartBlockNumber(uint64)
-	// GetStartBlockNumber returns start block number for collecting object.
-	GetStartBlockNumber() uint64
-	// SetEndBlockNumber sets end block number for collecting object.
-	SetEndBlockNumber(uint64)
-	// GetEndBlockNumber returns end block number for collecting object.
-	GetEndBlockNumber() uint64
-	// SetCurrentBlockNumber sets the collecting block number.
-	SetCurrentBlockNumber(uint64)
-	// GetCurrentBlockNumber returns the collecting block number.
-	GetCurrentBlockNumber() uint64
-	// GetLastDeletedObjectId returns the last deleted ObjectID.
-	GetLastDeletedObjectId() uint64
-	// SetLastDeletedObjectId sets the last deleted ObjectID.
-	SetLastDeletedObjectId(uint64)
-	// GetGCObjectProgress returns the progress of collecting object, returns the
-	// deleting block number and the last deleted object id.
-	GetGCObjectProgress() (uint64, uint64)
-	// SetGCObjectProgress sets the progress of collecting object, params stand
-	// the deleting block number and the last deleted object id.
-	SetGCObjectProgress(uint64, uint64)
 	// SetStartObjectID sets start block number for collecting object.
 	SetStartObjectID(uint64)
 	// GetStartObjectId returns start block number for collecting object.

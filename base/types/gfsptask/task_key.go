@@ -108,8 +108,9 @@ func GfSpGCObjectTaskKey(start, end uint64, time int64) task.TKey {
 		"start"+fmt.Sprint(start), "end"+fmt.Sprint(end), "time"+fmt.Sprint(time)))
 }
 
-func GfSpGCZombiePieceTaskKey(time int64) task.TKey {
-	return task.TKey(KeyPrefixGfSpGCZombiePieceTask + CombineKey("time"+fmt.Sprint(time)))
+func GfSpGCZombiePieceTaskKey(start, end uint64, time int64) task.TKey {
+	return task.TKey(KeyPrefixGfSpGCZombiePieceTask + CombineKey(
+		"start"+fmt.Sprint(start), "end"+fmt.Sprint(end), "time"+fmt.Sprint(time)))
 }
 
 func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {

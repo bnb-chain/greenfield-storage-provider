@@ -453,9 +453,9 @@ func (s *SpDBImpl) UpdateBucketTraffic(bucketID uint64, update *corespdb.BucketT
 
 // DeleteAllBucketTrafficExpired update the bucket traffic in traffic db with the new traffic
 func (s *SpDBImpl) DeleteAllBucketTrafficExpired(yearMonth string) (err error) {
-	result := s.db.Where("YearMonth < ?", yearMonth).Delete(&BucketTrafficTable{})
+	result := s.db.Where("month < ?", yearMonth).Delete(&BucketTrafficTable{})
 	if result.Error != nil {
-		return fmt.Errorf("failed to delete bucket traffic record in subscribe progress table: %s, yearMonth:%s", result.Error, yearMonth)
+		return fmt.Errorf("failed to delete bucket traffic record in bucket traffic table: %s, year_month:%s", result.Error, yearMonth)
 	}
 	return nil
 }
@@ -640,11 +640,11 @@ func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *corespdb.Tra
 	return records, nil
 }
 
-// DeleteAllReadRecordExpired update the bucket traffic in traffic db with the new traffic
+// DeleteAllReadRecordExpired delete all read record before ts(ts is UnixMicro)
 func (s *SpDBImpl) DeleteAllReadRecordExpired(ts uint64) (err error) {
-	result := s.db.Where("read_timestamp_us < ?", ts).Delete(&corespdb.ReadRecord{})
+	result := s.db.Where("read_timestamp_us < ?", ts).Delete(&ReadRecordTable{})
 	if result.Error != nil {
-		return fmt.Errorf("failed to delete read record in subscribe progress table: %s, yearMonth:%d", result.Error, ts)
+		return fmt.Errorf("failed to delete read record in read record table: %s, ts:%d", result.Error, ts)
 	}
 	return nil
 }

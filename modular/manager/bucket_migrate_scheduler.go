@@ -689,22 +689,11 @@ func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketM
 		return err
 	}
 	log.Debugw("succeed to post migrate bucket quota", "src_sp", srcSPInfo, "postMsg", postMsg, "error", err)
-	// TODO gc for dest sp
+	// if bucket migration failed, gc for dest sp
 	if !postMsg.GetFinished() {
-		// list objects and delete generate a task ?
+		// generate a gc bucket migration task(list objects and delete)
 		go func() {
-			// src sp should wait meta data
-			<-time.After(10 * time.Second)
-
-			// success generate gc task, gc for bucket migration src sp
-			gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}
-			gcBucketMigrationTask.InitGCBucketMigrationTask(s.manager.baseApp.TaskPriority(gcBucketMigrationTask), bucketID,
-				s.manager.baseApp.TaskTimeout(gcBucketMigrationTask, postMsg.GetMigratedBytesSize()), s.manager.baseApp.TaskMaxRetry(gcBucketMigrationTask))
-			err = s.manager.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to begin gc bucket migration task", "info", gcBucketMigrationTask.Info(), "error", err)
-			}
-			log.Infow("succeed to generate gc bucket migration task", "task", gcBucketMigrationTask)
+			s.manager.GenerateGCBucketMigrationTask(ctx, bucketID, postMsg.GetMigratedBytesSize())
 		}()
 	}
 	return nil
@@ -718,7 +707,6 @@ func (s *BucketMigrateScheduler) PreMigrateBucket(bucketID uint64, srcSPInfo *sp
 	)
 
 	log.Debugw("start to pre migrate bucket", "bucket_id", bucketID)
-
 	preMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID, Finished: false}
 	preMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
 	signature, err = s.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), preMsg)

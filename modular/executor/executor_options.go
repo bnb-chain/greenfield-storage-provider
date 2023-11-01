@@ -42,6 +42,10 @@ const (
 	// DefaultSleepInterval defines the sleep interval when failed to ask task
 	// it is millisecond level
 	DefaultSleepInterval = 100
+	// DefaultExecutorBucketTrafficKeepTimeDay defines the default max keep bucket traffic time for gc meta bucket traffic.
+	DefaultExecutorBucketTrafficKeepTimeDay uint64 = 30 * 6
+	// DefaultExecutorReadRecordKeepTimeDay defines the default max keep read record time for gc meta read record.
+	DefaultExecutorReadRecordKeepTimeDay uint64 = 30
 )
 
 const (
@@ -117,9 +121,18 @@ func defaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig
 		cfg.Executor.MaxObjectMigrationRetry = DefaultExecutorMaxObjectMigrationRetry
 	}
 
+	if cfg.Executor.BucketTrafficKeepTimeDay == 0 {
+		cfg.Executor.BucketTrafficKeepTimeDay = DefaultExecutorBucketTrafficKeepTimeDay
+	}
+	if cfg.Executor.ReadRecordKeepTimeDay == 0 {
+		cfg.Executor.ReadRecordKeepTimeDay = DefaultExecutorReadRecordKeepTimeDay
+	}
+
 	executor.maxListenSealRetry = cfg.Executor.MaxListenSealRetry
 	executor.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	executor.enableSkipFailedToMigrateObject = cfg.Executor.EnableSkipFailedToMigrateObject
 	executor.objectMigrationRetryTimeout = cfg.Executor.ObjectMigrationRetryTimeout
 	executor.maxObjectMigrationRetry = cfg.Executor.MaxObjectMigrationRetry
+	executor.bucketTrafficKeepLatestDay = cfg.Executor.BucketTrafficKeepTimeDay
+	executor.readRecordKeepLatestDay = cfg.Executor.ReadRecordKeepTimeDay
 }

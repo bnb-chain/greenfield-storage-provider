@@ -58,6 +58,11 @@ const (
 	SPDBSuccessDelAllReplicatePieceChecksum = "del_all_replicate_piece_checksum_success"
 	// SPDBFailureDelAllReplicatePieceChecksum defines the metrics label of unsuccessfully del all replicate piece checksum
 	SPDBFailureDelAllReplicatePieceChecksum = "del_all_replicate_piece_checksum_failure"
+
+	// SPDBSuccessListReplicatePieceChecksumByObjectID defines the metrics label of successfully list replicate piece checksum by object id
+	SPDBSuccessListReplicatePieceChecksumByObjectID = "list_replicate_piece_checksum_by_object_id_success"
+	// SPDBFailureListReplicatePieceChecksumByObjectID defines the metrics label of unsuccessfully list replicate piece checksum by object id
+	SPDBFailureListReplicatePieceChecksumByObjectID = "list_replicate_piece_checksum_by_object_id_failure"
 )
 
 // GetObjectIntegrity returns the integrity hash info
@@ -213,8 +218,8 @@ func (a ByRedundancyIndexAndObjectID) Less(i, j int) bool {
 }
 func (a ByRedundancyIndexAndObjectID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
-// ListObjectsByBlockNumberRange list objects info by a block number range
-func (s *SpDBImpl) ListObjectsByBlockNumberRange(startObjectID int64, endObjectID int64, includePrivate bool) ([]*corespdb.IntegrityMeta, error) {
+// ListIntegrityMetaByObjectIDRange list objects info by a block number range
+func (s *SpDBImpl) ListIntegrityMetaByObjectIDRange(startObjectID int64, endObjectID int64, includePrivate bool) ([]*corespdb.IntegrityMeta, error) {
 	var (
 		totalObjects []*corespdb.IntegrityMeta
 		objects      []*corespdb.IntegrityMeta
@@ -239,22 +244,22 @@ func (s *SpDBImpl) ListObjectsByBlockNumberRange(startObjectID int64, endObjectI
 				Select("*").
 				Where("object_id >= ? and object_id <= ?", startObjectID, endObjectID).
 				Limit(ListObjectsDefaultSize).
-				Order("update_at,object_id asc").
+				Order("object_id,redundancy_index asc").
 				Find(&objects).Error
 			totalObjects = append(totalObjects, objects...)
 		}
 	} else {
 		for i := 0; i < IntegrityMetasNumberOfShards; i++ {
-			objectTableName := GetIntegrityMetasTableNameByShardNumber(i)
-			joins := fmt.Sprintf("right join buckets on buckets.bucket_id = %s.bucket_id", objectTableName)
-			order := fmt.Sprintf("%s.update_at, %s.object_id asc", objectTableName, objectTableName)
-			where := fmt.Sprintf("%s.update_at >= ? and %s.update_at <= ? and "+
+			integrityMetasTableName := GetIntegrityMetasTableNameByShardNumber(i)
+			joins := fmt.Sprintf("right join buckets on buckets.bucket_id = %s.bucket_id", integrityMetasTableName)
+			order := fmt.Sprintf("%s.object_id, %s.redundancy_index asc", integrityMetasTableName, integrityMetasTableName)
+			where := fmt.Sprintf("%s.object_id >= ? and %s.object_id <= ? and "+
 				"((%s.visibility='VISIBILITY_TYPE_PUBLIC_READ') or "+
 				"(%s.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
-				objectTableName, objectTableName, objectTableName, objectTableName)
+				integrityMetasTableName, integrityMetasTableName, integrityMetasTableName, integrityMetasTableName)
 
-			err = s.db.Table(objectTableName).
-				Select(objectTableName+".*").
+			err = s.db.Table(integrityMetasTableName).
+				Select(integrityMetasTableName+".*").
 				Joins(joins).
 				Where(where, startObjectID, endObjectID).
 				Limit(ListObjectsDefaultSize).
@@ -531,8 +536,8 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 	return err
 }
 
-// ListReplicatePieceChecksumByBlockNumberRange gets all replicate piece checksums for a given objectID and redundancyIdx.
-func (s *SpDBImpl) ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, objectID uint64, redundancyIdx int32, pieceCount uint32) ([]*corespdb.GCPieceMeta, error) {
+// ListReplicatePieceChecksumByObjectIDRange gets all replicate piece checksums for a given objectID and redundancyIdx.
+func (s *SpDBImpl) ListReplicatePieceChecksumByObjectIDRange(startObjectID int64, endObjectID int64) ([]*corespdb.GCPieceMeta, error) {
 	var (
 		err          error
 		queryReturns []PieceHashTable
@@ -540,19 +545,19 @@ func (s *SpDBImpl) ListReplicatePieceChecksumByBlockNumberRange(startBlockNumber
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetAllReplicatePieceChecksum).Inc()
-			metrics.SPDBTime.WithLabelValues(SPDBFailureGetAllReplicatePieceChecksum).Observe(
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureListReplicatePieceChecksumByObjectID).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureListReplicatePieceChecksumByObjectID).Observe(
 				time.Since(startTime).Seconds())
 			return
 		}
-		metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetAllReplicatePieceChecksum).Inc()
-		metrics.SPDBTime.WithLabelValues(SPDBSuccessGetAllReplicatePieceChecksum).Observe(
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessListReplicatePieceChecksumByObjectID).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessListReplicatePieceChecksumByObjectID).Observe(
 			time.Since(startTime).Seconds())
 	}()
 
 	if err = s.db.Model(&PieceHashTable{}).
-		Where("object_id >= ? and object_id <= ?", startBlockNumber, endBlockNumber).
-		Limit(int(pieceCount)).
+		Where("object_id >= ? and object_id <= ?", startObjectID, endObjectID).
+		Limit(ListObjectsDefaultSize).
 		Find(&queryReturns).Error; err != nil {
 		return nil, err
 	}

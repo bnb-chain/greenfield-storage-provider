@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -83,18 +82,7 @@ func (m *ManageModular) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfs
 
 	if bmInfo.GetFinished() {
 		go func() {
-			// src sp should wait meta data
-			<-time.After(10 * time.Second)
-
-			// success generate gc task, gc for bucket migration src sp
-			gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}
-			gcBucketMigrationTask.InitGCBucketMigrationTask(m.baseApp.TaskPriority(gcBucketMigrationTask), bucketID,
-				m.baseApp.TaskTimeout(gcBucketMigrationTask, bucketSize), m.baseApp.TaskMaxRetry(gcBucketMigrationTask))
-			err = m.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to begin gc bucket migration task", "info", gcBucketMigrationTask.Info(), "error", err)
-			}
-			log.CtxInfow(ctx, "succeed to push bucket migration gc task to queue", "bucket_migration_info", bmInfo, "gcBucketMigrationTask", gcBucketMigrationTask)
+			m.GenerateGCBucketMigrationTask(ctx, bucketID, bucketSize)
 		}()
 	}
 

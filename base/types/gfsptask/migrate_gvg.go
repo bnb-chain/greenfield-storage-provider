@@ -247,8 +247,8 @@ func (m *GfSpGCBucketMigrationTask) InitGCBucketMigrationTask(priority coretask.
 	m.SetUpdateTime(time.Now().Unix())
 }
 
-func (g *GfSpGCBucketMigrationTask) Key() coretask.TKey {
-	return GfSpGCBucketMigrationTaskKey(1)
+func (m *GfSpGCBucketMigrationTask) Key() coretask.TKey {
+	return GfSpGCBucketMigrationTaskKey(m.BucketId)
 }
 
 func (m *GfSpGCBucketMigrationTask) Type() coretask.TType {

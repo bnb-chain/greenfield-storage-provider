@@ -155,9 +155,9 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	}
 
 	// check src sp has enough quota
-	success, err := a.migrateBucketQuotaCheck(ctx, task)
-	if err != nil {
-		return success, err
+	allow, err := a.migrateBucketQuotaCheck(ctx, task)
+	if err != nil || !allow {
+		return allow, err
 	}
 
 	// begin to sign the new approval task
@@ -244,9 +244,9 @@ func (a *ApprovalModular) migrateBucketQuotaCheck(ctx context.Context, task core
 		signature []byte
 		err       error
 	)
-	msgMigrateBucket := task.GetMigrateBucketInfo()
-	log.CtxDebugw(ctx, "start to check migrate bucket bucket info", "migrate_bucket_info", msgMigrateBucket)
-	bucketMeta, _, err := a.baseApp.GfSpClient().GetBucketMeta(ctx, msgMigrateBucket.GetBucketName(), true)
+	migrateBucketMsg := task.GetMigrateBucketInfo()
+	log.CtxDebugw(ctx, "start to check source sp whether has enough quota to execute bucket migration", "migrate_bucket_msg", migrateBucketMsg)
+	bucketMeta, _, err := a.baseApp.GfSpClient().GetBucketMeta(ctx, migrateBucketMsg.GetBucketName(), true)
 	if err != nil {
 		return false, err
 	}
@@ -259,21 +259,21 @@ func (a *ApprovalModular) migrateBucketQuotaCheck(ctx context.Context, task core
 		return false, ErrSignerWithDetail("failed to query sp info, error: " + err.Error())
 	}
 
-	queryMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID}
-	queryMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
-	signature, err = a.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), queryMsg)
+	bucketMigrationInfo := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID}
+	bucketMigrationInfo.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
+	signature, err = a.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), bucketMigrationInfo)
 	if err != nil {
-		log.Errorw("failed to sign migrate bucket", "migrate_bucket_info", queryMsg, "error", err)
+		log.Errorw("failed to sign migrate bucket", "bucket_migration_info", bucketMigrationInfo, "error", err)
 		return false, err
 	} else {
-		queryMsg.SetSignature(signature)
+		bucketMigrationInfo.SetSignature(signature)
 	}
-	err = a.baseApp.GfSpClient().QuerySPHasEnoughQuotaForMigrateBucket(ctx, srcSP.GetEndpoint(), queryMsg)
+	err = a.baseApp.GfSpClient().QuerySPHasEnoughQuotaForMigrateBucket(ctx, srcSP.GetEndpoint(), bucketMigrationInfo)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to check src SP migrate bucket quota", "src_sp", srcSP, "bucket_id", bucketID, "error", err)
 		return false, ErrSignerWithDetail("failed to check src SP migrate bucket quota, error: " + err.Error())
 	}
 
-	log.CtxDebugw(ctx, "succeed to check migrate bucket info", "migrate_bucket_info", msgMigrateBucket)
+	log.CtxDebugw(ctx, "succeed to check bucket source sp quota for bucket migration", "migrate_bucket_msg", migrateBucketMsg)
 	return true, nil
 }
