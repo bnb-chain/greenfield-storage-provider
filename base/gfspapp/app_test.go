@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
+	"github.com/bnb-chain/greenfield-storage-provider/core/prober"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 )
@@ -166,6 +167,10 @@ func TestGfSpBaseApp_StartAndCloseSuccess(t *testing.T) {
 	chain.EXPECT().Close().DoAndReturn(func() error { return nil }).AnyTimes()
 	g.chain = chain
 
+	mockProbe := prober.NewMockProber(ctrl)
+	mockProbe.EXPECT().Healthy().AnyTimes()
+	g.httpProbe = mockProbe
+
 	g.server = grpc.NewServer()
 	ctx, cancel := context.WithTimeout(context.Background(), 1)
 	err := g.Start(ctx)
@@ -176,6 +181,12 @@ func TestGfSpBaseApp_StartAndCloseSuccess(t *testing.T) {
 func TestGfSpBaseApp_StartFailure(t *testing.T) {
 	t.Log("Failure case description: missing port in address")
 	g := setup(t)
+	ctrl := gomock.NewController(t)
+	mockProbe := prober.NewMockProber(ctrl)
+	mockProbe.EXPECT().Healthy().AnyTimes()
+	mockProbe.EXPECT().Unhealthy(gomock.Any()).AnyTimes()
+	g.httpProbe = mockProbe
+
 	err := g.Start(context.TODO())
 	assert.Equal(t, err.Error(), "listen tcp: address mockGRPCAddress: missing port in address")
 }

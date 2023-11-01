@@ -196,3 +196,17 @@ func (s *GfSpClient) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats,
 	}
 	return resp.GetStats(), nil
 }
+
+func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpResetRecoveryFailedList(ctx, &gfspserver.GfSpResetRecoveryFailedListRequest{})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to reset manager's recovery failed list", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to reset manager's recovery failed list, error: " + err.Error())
+	}
+	return resp.GetRecoveryFailedList(), nil
+}

@@ -334,7 +334,7 @@ func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspser
 
 func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfSpQueryTasksStatsRequest) (
 	*gfspserver.GfSpQueryTasksStatsResponse, error) {
-	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount := g.manager.QueryTasksStats(ctx)
+	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount, recoveryCount, recoveryFailedList := g.manager.QueryTasksStats(ctx)
 	stats := &gfspserver.TasksStats{
 		UploadCount:          uint32(uploadTaskCount),
 		ReplicateCount:       uint32(replicateTaskCount),
@@ -342,8 +342,18 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 		ResumableUploadCount: uint32(resumeUploadTaskCount),
 		MaxUploading:         uint32(maxUploadingNumber),
 		MigrateGvgCount:      uint32(migrateGVGCount),
+		RecoveryProcessCount: uint32(recoveryCount),
+		RecoveryFailedList:   recoveryFailedList,
 	}
 	return &gfspserver.GfSpQueryTasksStatsResponse{
 		Stats: stats,
+	}, nil
+}
+
+func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspserver.GfSpResetRecoveryFailedListRequest) (
+	*gfspserver.GfSpResetRecoveryFailedListResponse, error) {
+	recoveryFailedList := g.manager.ResetRecoveryFailedList(ctx)
+	return &gfspserver.GfSpResetRecoveryFailedListResponse{
+		RecoveryFailedList: recoveryFailedList,
 	}, nil
 }

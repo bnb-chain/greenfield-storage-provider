@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/probe"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
@@ -45,6 +46,8 @@ const (
 	DefaultMetricsAddress = "localhost:24367"
 	// DefaultPProfAddress defines the default pprof service address.
 	DefaultPProfAddress = "localhost:24368"
+	// DefaultProbeAddress defines the default probe service address.
+	DefaultProbeAddress = "localhost:24369"
 
 	// DefaultChainID defines the default greenfield chainID.
 	DefaultChainID = "greenfield_9000-121"
@@ -536,6 +539,24 @@ func DefaultGfSpPProfOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error 
 	return nil
 }
 
+func DefaultGfSpProbeOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Monitor.DisableProbe {
+		log.Info("disable probe function")
+		app.probeSvr = &coremodule.NullModular{}
+	} else {
+		if cfg.Monitor.ProbeHTTPAddress == "" {
+			cfg.Monitor.ProbeHTTPAddress = DefaultProbeAddress
+		}
+		httpProbe := probe.NewHTTPProbe()
+		statusProber := probe.Combine(httpProbe, probe.NewInstrumentation())
+		app.httpProbe = statusProber
+
+		app.probeSvr = probe.NewProbe(cfg.Monitor.ProbeHTTPAddress, httpProbe)
+		app.RegisterServices(app.probeSvr)
+	}
+	return nil
+}
+
 var gfspBaseAppDefaultOptions = []Option{
 	DefaultStaticOption,
 	DefaultGfSpClientOption,
@@ -549,6 +570,7 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultGfSpModuleOption,
 	DefaultGfSpMetricOption,
 	DefaultGfSpPProfOption,
+	DefaultGfSpProbeOption,
 }
 
 func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfSpBaseApp, error) {

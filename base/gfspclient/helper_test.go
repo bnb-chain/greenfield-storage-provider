@@ -343,6 +343,15 @@ func (s mockManagerServer) GfSpQueryTasksStats(ctx context.Context, req *gfspser
 	}, nil
 }
 
+func (s mockManagerServer) GfSpResetRecoveryFailedList(ctx context.Context, req *gfspserver.GfSpResetRecoveryFailedListRequest) (*gfspserver.GfSpResetRecoveryFailedListResponse, error) {
+	if req == nil {
+		return nil, mockRPCErr
+	}
+	return &gfspserver.GfSpResetRecoveryFailedListResponse{
+		RecoveryFailedList: nil,
+	}, nil
+}
+
 type mockP2PServer struct{}
 
 func (mockP2PServer) GfSpAskSecondaryReplicatePieceApproval(ctx context.Context, req *gfspserver.GfSpAskSecondaryReplicatePieceApprovalRequest) (

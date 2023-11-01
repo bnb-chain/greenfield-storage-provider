@@ -11,8 +11,10 @@ import (
 	corelifecycle "github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
+	coreprober "github.com/bnb-chain/greenfield-storage-provider/core/prober"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
@@ -37,6 +39,7 @@ type GfSpBaseApp struct {
 	pieceOp    piecestore.PieceOp
 	rcmgr      corercmgr.ResourceManager
 	chain      consensus.Consensus
+	httpProbe  coreprober.Prober
 
 	approver      module.Approver
 	authenticator module.Authenticator
@@ -50,6 +53,7 @@ type GfSpBaseApp struct {
 	uploader      module.Uploader
 	metrics       module.Modular
 	pprof         module.Modular
+	probeSvr      module.Modular
 
 	appCtx    context.Context
 	appCancel context.CancelFunc
@@ -187,10 +191,23 @@ func (g *GfSpBaseApp) SetResourceManager(rcmgr corercmgr.ResourceManager) {
 	g.rcmgr = rcmgr
 }
 
+// GetProbe returns the http probe.
+func (g *GfSpBaseApp) GetProbe() coreprober.Prober {
+	return g.httpProbe
+}
+
+// SetProbe sets the http probe.
+func (g *GfSpBaseApp) SetProbe(prober coreprober.Prober) {
+	g.httpProbe = prober
+}
+
 // Start the GfSpBaseApp and blocks the progress until signal.
 func (g *GfSpBaseApp) Start(ctx context.Context) error {
+	g.httpProbe.Healthy()
 	err := g.StartRPCServer(ctx)
 	if err != nil {
+		log.Errorw("failed to start rpc server", "error", err)
+		g.httpProbe.Unhealthy(err)
 		return err
 	}
 	g.Signals(syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP).StartServices(ctx).Wait(ctx)
