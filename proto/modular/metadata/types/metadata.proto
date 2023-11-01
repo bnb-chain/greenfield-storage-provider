@@ -38,6 +38,8 @@ message Bucket {
   int64 update_at = 8;
   // update_time defines the block number when the object updated
   int64 update_time = 9;
+  // storage_size defines the size of bucket
+  string storage_size = 10;
 }
 
 // Object is the structure for user object
@@ -96,6 +98,8 @@ message VGFInfoBucket {
   int64 update_time = 9;
   // vgf defines the vgf info
   greenfield.virtualgroup.GlobalVirtualGroupFamily vgf = 10;
+  // storage_size defines the size of bucket
+  string storage_size = 11;
 }
 
 // PaymentAccount is the structure for user payment account info
