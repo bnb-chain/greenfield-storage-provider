@@ -769,9 +769,7 @@ message PrimarySpIncomeDetail {
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
-  ]; //  "(current_time_stamp-crud_timestamp)*netflow_rate  + static_balance"
-
-
+  ];
 }
 
 // GfSpSecondarySpIncomeDetailsRequest is request type for the GfSpSecondarySpIncomeDetails RPC method
@@ -798,7 +796,7 @@ message SecondarySpIncomeDetail {
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
-  ]; //  "((current_time_stamp-crud_timestamp)*netflow_rate + static_balance)/ 6"
+  ];
 }
 
 message Status {
