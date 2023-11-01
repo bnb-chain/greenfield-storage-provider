@@ -234,7 +234,7 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		return nil
 	}
 	for _, v := range cfg.Server {
-		if v == coremodule.BlockSyncerModularName || v == coremodule.SignModularName {
+		if v == coremodule.BlockSyncerModularName || v == coremodule.SignModularName || v == coremodule.GateModularName {
 			log.Infof("[%s] module doesn't need sp db", v)
 			continue
 		}
