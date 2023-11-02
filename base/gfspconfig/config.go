@@ -251,4 +251,5 @@ type ManagerConfig struct {
 	SubscribeSwapOutExitEventIntervalMillisecond   uint     `comment:"optional"`
 	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`
 	GVGPreferSPList                                []uint32 `comment:"optional"`
+	SPBlackList                                    []uint32 `comment:"optional"`
 }

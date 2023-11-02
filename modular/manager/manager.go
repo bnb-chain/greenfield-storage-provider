@@ -104,6 +104,7 @@ type ManageModular struct {
 	loadSealTimeout      int64
 
 	gvgPreferSPList []uint32
+	spBlackList     []uint32
 
 	recoveryFailedList []string
 	recoveryTaskMap    map[string]string
