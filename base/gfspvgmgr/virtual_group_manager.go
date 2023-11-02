@@ -355,6 +355,8 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFam
 	if err != nil {
 		return nil, err
 	}
+	vgm.mutex.RLock()
+	defer vgm.mutex.RUnlock()
 	return vgm.vgfManager.pickVirtualGroupFamily(filter)
 }
 
