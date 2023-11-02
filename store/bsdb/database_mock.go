@@ -762,7 +762,7 @@ func (mr *MockMetadataMockRecorder) ListLvgByGvgID(gvgIDs any) *gomock.Call {
 }
 
 // ListMigrateBucketEvents mocks base method.
-func (m *MockMetadata) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error) {
+func (m *MockMetadata) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, []*EventRejectMigrateBucket, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{spID}
 	for _, a := range filters {
@@ -772,8 +772,9 @@ func (m *MockMetadata) ListMigrateBucketEvents(spID uint32, filters ...func(*gor
 	ret0, _ := ret[0].([]*EventMigrationBucket)
 	ret1, _ := ret[1].([]*EventCompleteMigrationBucket)
 	ret2, _ := ret[2].([]*EventCancelMigrationBucket)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret3, _ := ret[3].([]*EventRejectMigrateBucket)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
 }
 
 // ListMigrateBucketEvents indicates an expected call of ListMigrateBucketEvents.
@@ -1749,7 +1750,7 @@ func (mr *MockBSDBMockRecorder) ListLvgByGvgID(gvgIDs any) *gomock.Call {
 }
 
 // ListMigrateBucketEvents mocks base method.
-func (m *MockBSDB) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error) {
+func (m *MockBSDB) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, []*EventRejectMigrateBucket, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{spID}
 	for _, a := range filters {
@@ -1759,8 +1760,9 @@ func (m *MockBSDB) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB
 	ret0, _ := ret[0].([]*EventMigrationBucket)
 	ret1, _ := ret[1].([]*EventCompleteMigrationBucket)
 	ret2, _ := ret[2].([]*EventCancelMigrationBucket)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret3, _ := ret[3].([]*EventRejectMigrateBucket)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
 }
 
 // ListMigrateBucketEvents indicates an expected call of ListMigrateBucketEvents.

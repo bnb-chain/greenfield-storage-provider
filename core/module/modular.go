@@ -305,6 +305,8 @@ type Signer interface {
 	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
 	// SignBucketMigrationInfo signs the GfSpBucketMigrationInfo for migrating bucket communication auth.
 	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
+	// RejectMigrateBucket rejects the bucket migration by dest SP.
+	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

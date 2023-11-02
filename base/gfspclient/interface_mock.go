@@ -1699,6 +1699,21 @@ func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).RecoupQuota), varargs...)
 }
 
+// RejectMigrateBucket mocks base method.
+func (m *MockGfSpClientAPI) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *types3.MsgRejectMigrateBucket) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RejectMigrateBucket", ctx, rejectMigrateBucket)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RejectMigrateBucket indicates an expected call of RejectMigrateBucket.
+func (mr *MockGfSpClientAPIMockRecorder) RejectMigrateBucket(ctx, rejectMigrateBucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).RejectMigrateBucket), ctx, rejectMigrateBucket)
+}
+
 // RejectUnSealObject mocks base method.
 func (m *MockGfSpClientAPI) RejectUnSealObject(ctx context.Context, object *types3.MsgRejectSealObject) (string, error) {
 	m.ctrl.T.Helper()
@@ -4168,6 +4183,21 @@ func (m *MockSignerAPI) DiscontinueBucket(ctx context.Context, bucket *types3.Ms
 func (mr *MockSignerAPIMockRecorder) DiscontinueBucket(ctx, bucket any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DiscontinueBucket", reflect.TypeOf((*MockSignerAPI)(nil).DiscontinueBucket), ctx, bucket)
+}
+
+// RejectMigrateBucket mocks base method.
+func (m *MockSignerAPI) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *types3.MsgRejectMigrateBucket) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RejectMigrateBucket", ctx, rejectMigrateBucket)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RejectMigrateBucket indicates an expected call of RejectMigrateBucket.
+func (mr *MockSignerAPIMockRecorder) RejectMigrateBucket(ctx, rejectMigrateBucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectMigrateBucket", reflect.TypeOf((*MockSignerAPI)(nil).RejectMigrateBucket), ctx, rejectMigrateBucket)
 }
 
 // RejectUnSealObject mocks base method.

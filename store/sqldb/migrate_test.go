@@ -532,6 +532,7 @@ func TestSpDBImpl_InsertMigrateGVGUnitSuccess(t *testing.T) {
 		DestSPID:                 7,
 		LastMigratedObjectID:     8,
 		MigrateStatus:            9,
+		RetryTime:                10,
 	}
 	m := &MigrateGVGTable{
 		MigrateKey:               meta.MigrateGVGKey,
@@ -545,11 +546,12 @@ func TestSpDBImpl_InsertMigrateGVGUnitSuccess(t *testing.T) {
 		DestSPID:                 meta.DestSPID,
 		LastMigratedObjectID:     meta.LastMigratedObjectID,
 		MigrateStatus:            meta.MigrateStatus,
+		RetryTime:                meta.RetryTime,
 	}
 	mock.ExpectQuery(mockMigrateGVGQuerySQL).WithArgs(meta.MigrateGVGKey).WillReturnError(gorm.ErrRecordNotFound)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `migrate_gvg` (`migrate_key`,`swap_out_key`,`global_virtual_group_id`,`dest_global_virtual_group_id`,`virtual_group_family_id`,`bucket_id`,`redundancy_index`,`src_sp_id`,`dest_sp_id`,`last_migrated_object_id`,`migrate_status`) VALUES (?,?,?,?,?,?,?,?,?,?,?)").
-		WithArgs(m.MigrateKey, m.SwapOutKey, m.GlobalVirtualGroupID, m.DestGlobalVirtualGroupID, m.VirtualGroupFamilyID, m.BucketID, m.RedundancyIndex, m.SrcSPID, m.DestSPID, m.LastMigratedObjectID, m.MigrateStatus).
+	mock.ExpectExec("INSERT INTO `migrate_gvg` (`migrate_key`,`swap_out_key`,`global_virtual_group_id`,`dest_global_virtual_group_id`,`virtual_group_family_id`,`bucket_id`,`redundancy_index`,`src_sp_id`,`dest_sp_id`,`last_migrated_object_id`,`migrate_status`,`retry_time`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").
+		WithArgs(m.MigrateKey, m.SwapOutKey, m.GlobalVirtualGroupID, m.DestGlobalVirtualGroupID, m.VirtualGroupFamilyID, m.BucketID, m.RedundancyIndex, m.SrcSPID, m.DestSPID, m.LastMigratedObjectID, m.MigrateStatus, m.RetryTime).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.InsertMigrateGVGUnit(meta)

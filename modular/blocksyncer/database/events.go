@@ -13,6 +13,11 @@ func (db *DB) SaveEventMigrationBucket(ctx context.Context, eventMigrationBucket
 	return stat.SQL.String(), stat.Vars
 }
 
+func (db *DB) SaveEventRejectMigrationBucket(ctx context.Context, eventRejectMigrationBucket *bsdb.EventRejectMigrateBucket) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&bsdb.EventRejectMigrateBucket{}).TableName()).Create(eventRejectMigrationBucket).Statement
+	return stat.SQL.String(), stat.Vars
+}
+
 func (db *DB) SaveEventCompleteMigrationBucket(ctx context.Context, eventCompleteMigrationBucket *bsdb.EventCompleteMigrationBucket) (string, []interface{}) {
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&bsdb.EventCompleteMigrationBucket{}).TableName()).Create(eventCompleteMigrationBucket).Statement
 	return stat.SQL.String(), stat.Vars
