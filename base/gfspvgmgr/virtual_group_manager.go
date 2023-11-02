@@ -472,7 +472,7 @@ func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 		if err != nil {
 			continue
 		}
-		if len(aliveSP)-len(vgm.freezeSPPool.GetFreezeSPIDs()) <= int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum())+1 {
+		if len(aliveSP)-len(vgm.freezeSPPool.GetFreezeSPIDs()) < int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) {
 			vgm.freezeSPPool.ReleaseAllSP()
 		}
 	}
