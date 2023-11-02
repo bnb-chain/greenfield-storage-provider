@@ -97,10 +97,10 @@ func (f *ExcludeIDFilter) Apply(id uint32) bool {
 type VirtualGroupManager interface {
 	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 	// new VGF will be automatically created on the chain) in get create bucket approval workflow.
-	PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error)
+	PickVirtualGroupFamily(excludeSPsFilter ExcludeFilter) (*VirtualGroupFamilyMeta, error)
 	// PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
 	// new GVG will be created by primary SP) in replicate/seal object workflow.
-	PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error)
+	PickGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter ExcludeFilter) (*GlobalVirtualGroupMeta, error)
 	// PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
 	// new GVG will be created by primary SP) in replicate/seal object workflow.
 	PickGlobalVirtualGroupForBucketMigrate(filter GVGPickFilter) (*GlobalVirtualGroupMeta, error)
@@ -123,3 +123,11 @@ type VirtualGroupManager interface {
 type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)
 
 type IDSet = map[uint32]struct{}
+
+func NewIDSetFromList(list []uint32) IDSet {
+	set := make(map[uint32]struct{}, 0)
+	for _, v := range list {
+		set[v] = struct{}{}
+	}
+	return set
+}

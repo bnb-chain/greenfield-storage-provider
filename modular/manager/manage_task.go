@@ -774,15 +774,18 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 		err error
 		vgf *vgmgr.VirtualGroupFamilyMeta
 	)
-
-	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+	excludeSPs := make(map[uint32]struct{}, 0)
+	for _, v := range m.spBlackList {
+		excludeSPs[v] = struct{}{}
+	}
+	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(vgmgr.NewExcludeIDFilter(excludeSPs)); err != nil {
 		// create a new gvg, and retry pick.
 		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
 			return 0, err
 		}
 		m.virtualGroupManager.ForceRefreshMeta()
-		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(vgmgr.NewExcludeIDFilter(excludeSPs)); err != nil {
 			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
 			return 0, err
 		}
@@ -865,14 +868,14 @@ func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32
 		gvg *vgmgr.GlobalVirtualGroupMeta
 	)
 
-	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(m.gvgBlackList)); err != nil {
 		// create a new gvg, and retry pick.
 		if err = m.createGlobalVirtualGroup(vgfID, param); err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}
 		m.virtualGroupManager.ForceRefreshMeta()
-		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(m.gvgBlackList)); err != nil {
 			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}

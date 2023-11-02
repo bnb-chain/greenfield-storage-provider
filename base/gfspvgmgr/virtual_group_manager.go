@@ -82,7 +82,7 @@ func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	return 0, fmt.Errorf("failed to pick weighted random index")
 }
 
-func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter, excludeSPsFilter vgmgr.ExcludeFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
 	var (
 		picker   FreeStorageSizeWeightPicker
 		familyID uint32
@@ -90,7 +90,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 	)
 	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	for id, f := range vgfm.vgfIDToVgf {
-		if filter.Check(id) {
+		if filter.Check(id) && !excludeSPsFilter.Apply(id) {
 			picker.addVirtualGroupFamily(f)
 		}
 	}
@@ -101,7 +101,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 	return vgfm.vgfIDToVgf[familyID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -113,6 +113,9 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filt
 	}
 	for _, g := range vgfm.vgfIDToVgf[vgfID].GVGMap {
 		if filter != nil && filter.Apply(g.ID) {
+			continue
+		}
+		if excludeGVGsFilter != nil && excludeGVGsFilter.Apply(g.ID) {
 			continue
 		}
 		picker.addGlobalVirtualGroup(g)
@@ -348,22 +351,22 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 
 // PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 // new VGF will be automatically created on the chain) in get create bucket approval workflow.
-func (vgm *virtualGroupManager) PickVirtualGroupFamily() (*vgmgr.VirtualGroupFamilyMeta, error) {
+func (vgm *virtualGroupManager) PickVirtualGroupFamily(excludeSPsFilter vgmgr.ExcludeFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
 	filter, err := vgm.genVgfFilter()
 	if err != nil {
 		return nil, err
 	}
-	return vgm.vgfManager.pickVirtualGroupFamily(filter)
+	return vgm.vgfManager.pickVirtualGroupFamily(filter, excludeSPsFilter)
 }
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
 // new GVG will be created by primary SP) in replicate/seal object workflow.
-func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)))
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter)
 }
 
 // PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
@@ -380,10 +383,10 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vg
 
 // PickMigrateDestGlobalVirtualGroup picks a global virtual group(If failed to pick,
 // new GVG will be created by primary SP) in replicate/seal object workflow.
-func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)))
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter)
 }
 
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
