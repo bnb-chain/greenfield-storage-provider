@@ -99,6 +99,8 @@ type ManageModular struct {
 	loadSealTimeout      int64
 
 	gvgPreferSPList []uint32
+	spBlackList     []uint32
+	gvgBlackList    vgmgr.IDSet
 }
 
 func (m *ManageModular) Name() string {
@@ -135,6 +137,20 @@ func (m *ManageModular) Start(ctx context.Context) error {
 
 	if err = m.LoadTaskFromDB(); err != nil {
 		return err
+	}
+	m.gvgBlackList = make(map[uint32]struct{}, 0)
+
+	if len(m.spBlackList) > 0 {
+		for _, sspID := range m.spBlackList {
+			sspJoinGVGs, err := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
+			if err != nil {
+				log.Errorw("failed to list GVGs by secondary sp", "spID", sspID, "error", err)
+				return err
+			}
+			for _, gvg := range sspJoinGVGs {
+				m.gvgBlackList[gvg.Id] = struct{}{}
+			}
+		}
 	}
 
 	go m.delayStartMigrateScheduler()

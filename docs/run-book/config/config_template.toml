@@ -351,3 +351,5 @@ SubscribeSwapOutExitEventIntervalSec = 0
 SubscribeBucketMigrateEventIntervalSec = 0
 # optional
 GVGPreferSPList = []
+# optional
+SPBlackList = []
