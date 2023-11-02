@@ -43,6 +43,10 @@ func TestExecuteModular_StartSuccess(t *testing.T) {
 	m.EXPECT().OpenService(gomock.Any()).DoAndReturn(func(svc string) (corercmgr.ResourceScope, error) {
 		return m1, nil
 	}).Times(1)
+	m2 := consensus.NewMockConsensus(ctrl)
+	e.baseApp.SetConsensus(m2)
+	m2.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
+		{Id: 1, Endpoint: "endpoint"}}, nil).Times(1)
 	err := e.Start(context.TODO())
 	assert.Nil(t, err)
 }

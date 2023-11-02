@@ -6,16 +6,20 @@ import (
 	"sync"
 	"time"
 
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (
@@ -122,13 +126,26 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	}
 	doneReplicate := func(ctx context.Context) error {
 		log.Debug("start to done replicate")
-		for rIdx, sp := range rTask.GetSecondaryEndpoints() {
-			log.Debugw("start to done replicate", "sp", sp)
-			signature, innerErr := e.doneReplicatePiece(ctx, rTask, sp, int32(rIdx))
+		var gvg *virtualgrouptypes.GlobalVirtualGroup
+		gvg, err = e.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, rTask.GetGlobalVirtualGroupId())
+		if err != nil {
+			return ErrConsensusWithDetail("QueryGVGInfo error: " + err.Error())
+		}
+		for rIdx, spEp := range rTask.GetSecondaryEndpoints() {
+			log.Debugw("start to done replicate", "sp", spEp)
+			signature, innerErr := e.doneReplicatePiece(ctx, rTask, spEp, int32(rIdx))
 			if innerErr == nil {
+				msg := storagetypes.NewSecondarySpSealObjectSignDoc(e.baseApp.ChainID(), gvg.Id, rTask.GetObjectInfo().Id, storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:])).GetBlsSignHash()
+				err = veritySecondarySpBlsSignature(e.getSpByID(gvg.GetSecondarySpIds()[rIdx]), signature, msg[:])
+				if err != nil {
+					rTask.SetNotAvailableSpIdx(int32(rIdx))
+					log.CtxErrorw(ctx, "failed to verify secondary SP bls signature", "secondary_sp_id", gvg.GetSecondarySpIds()[rIdx], "error", err.Error())
+					return ErrInvalidSecondaryBlsSignature
+				}
 				secondarySignatures[rIdx] = signature
 				metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessDoneReplicatePiece).Inc()
 			} else {
+				rTask.SetNotAvailableSpIdx(int32(rIdx))
 				metrics.ExecutorCounter.WithLabelValues(ExecutorFailureDoneReplicatePiece).Inc()
 				return innerErr
 			}
@@ -316,19 +333,17 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	return signature, nil
 }
 
-/*
-func veritySignature(ctx context.Context, objectID uint64, gvgId uint32, integrity []byte, expectedIntegrity []byte, signature []byte, blsPubKey bls.PublicKey) error {
-	if !bytes.Equal(expectedIntegrity, integrity) {
-		log.CtxErrorw(ctx, "replicate sp invalid integrity", "integrity", hex.EncodeToString(integrity),
-			"expect", hex.EncodeToString(expectedIntegrity))
-		return ErrInvalidIntegrity
-	}
-	originMsgHash := storagetypes.NewSecondarySpSealObjectSignDoc(sdkmath.NewUint(objectID), gvgId, integrity).GetBlsSignHash()
-	err := types.VerifyBlsSignature(blsPubKey, originMsgHash, signature)
+func veritySecondarySpBlsSignature(secondarySp *sptypes.StorageProvider, signature, sigDoc []byte) error {
+	publicKey, err := bls.PublicKeyFromBytes(secondarySp.BlsKey)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to verify signature", "error", err)
 		return err
+	}
+	sig, err := bls.SignatureFromBytes(signature)
+	if err != nil {
+		return err
+	}
+	if !sig.Verify(publicKey, sigDoc) {
+		return fmt.Errorf("failed to verify SP[%d] bls signature", secondarySp.Id)
 	}
 	return nil
 }
-*/
