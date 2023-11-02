@@ -242,5 +242,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	}
 	manager.gvgPreferSPList = cfg.Manager.GVGPreferSPList
 
+	manager.spBlackList = cfg.Manager.SPBlackList
+
 	return nil
 }

@@ -553,7 +553,7 @@ func calculateStakingSizeStrategy(manager *ManageModular) (denom string, amount 
 		return "", sdkmath.ZeroInt(), err
 	}
 
-	gvgMeta, err := manager.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, manager.gvgPreferSPList))
+	gvgMeta, err := manager.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, manager.gvgPreferSPList), vgmgr.NewExcludeIDFilter(gfspvgmgr.NewIDSetFromList(manager.spBlackList)))
 	if err != nil {
 		return "", sdkmath.ZeroInt(), err
 	}

@@ -56,6 +56,32 @@ func (p *PickVGFFilter) Check(vgfID uint32) bool {
 	return ok
 }
 
+type PickVGFByGVGFilter struct {
+	BlackListSPs map[uint32]struct{}
+}
+
+func NewPickVGFByGVGFilter(blackListSPs []uint32) *PickVGFByGVGFilter {
+	idSet := make(map[uint32]struct{})
+	for _, id := range blackListSPs {
+		idSet[id] = struct{}{}
+	}
+	return &PickVGFByGVGFilter{BlackListSPs: idSet}
+}
+
+// Check checks if a family has at least 1 valid GVG(gvg doest not contain blacklist Sp)
+func (p *PickVGFByGVGFilter) Check(gvgs map[uint32]*GlobalVirtualGroupMeta) bool {
+	validCount := len(gvgs)
+	for _, gvg := range gvgs {
+		for _, sspID := range gvg.SecondarySPIDs {
+			if _, ok := p.BlackListSPs[sspID]; ok {
+				validCount--
+				break
+			}
+		}
+	}
+	return validCount > 0
+}
+
 // GVGPickFilter is used to check sp pick condition.
 type GVGPickFilter interface {
 	// CheckFamily returns true when match pick request condition.
@@ -97,10 +123,10 @@ func (f *ExcludeIDFilter) Apply(id uint32) bool {
 type VirtualGroupManager interface {
 	// PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 	// new VGF will be automatically created on the chain) in get create bucket approval workflow.
-	PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error)
+	PickVirtualGroupFamily(filterByGvgList *PickVGFByGVGFilter) (*VirtualGroupFamilyMeta, error)
 	// PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
 	// new GVG will be created by primary SP) in replicate/seal object workflow.
-	PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error)
+	PickGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter ExcludeFilter) (*GlobalVirtualGroupMeta, error)
 	// PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
 	// new GVG will be created by primary SP) in replicate/seal object workflow.
 	PickGlobalVirtualGroupForBucketMigrate(filter GVGPickFilter) (*GlobalVirtualGroupMeta, error)
@@ -108,7 +134,7 @@ type VirtualGroupManager interface {
 	// if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 	ForceRefreshMeta() error
 	// GenerateGlobalVirtualGroupMeta is used to generate a new global virtual group meta, the caller need send a tx to chain.
-	GenerateGlobalVirtualGroupMeta(genPolicy GenerateGVGSecondarySPsPolicy) (*GlobalVirtualGroupMeta, error)
+	GenerateGlobalVirtualGroupMeta(genPolicy GenerateGVGSecondarySPsPolicy, excludeSPsFilter ExcludeFilter) (*GlobalVirtualGroupMeta, error)
 	// PickSPByFilter picks sp which is match pick filter condition.
 	PickSPByFilter(filter SPPickFilter) (*sptypes.StorageProvider, error)
 	// QuerySPByID returns sp proto.

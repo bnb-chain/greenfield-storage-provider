@@ -154,6 +154,7 @@ function make_config() {
     sed -i -e "s/SubscribeBucketMigrateEventIntervalMillisecond = .*/SubscribeBucketMigrateEventIntervalMillisecond = 20/g" config.toml
     sed -i -e "s/GVGPreferSPList = \[\]/GVGPreferSPList = \[1,2,3,4,5,6,7,8\]/g" config.toml
 
+
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null
     index=$(($index+1))
