@@ -197,3 +197,61 @@ func TestQuerySPExit(t *testing.T) {
 	// clear temp config file
 	os.Remove(DefaultConfigFile)
 }
+
+func TestGetPrimarySPIncome(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	CW.config = &gfspconfig.GfSpConfig{}
+	mockDBAPI := spdb.NewMockSPDB(ctrl)
+	CW.spDBAPI = mockDBAPI
+	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
+	CW.grpcAPI = mockGRPCAPI
+	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
+	CW.chainAPI = mockConsensusAPI
+
+	o1 := mockGRPCAPI.EXPECT().PrimarySpIncomeDetails(gomock.Any(), gomock.Any()).Return(int64(0), nil, nil)
+	gomock.InOrder(o1)
+
+	app := cli.NewApp()
+	app.Commands = []*cli.Command{
+		QueryPrimarySPIncomeCmd,
+	}
+	err := ConfigDumpCmd.Action(&cli.Context{})
+	assert.Equal(t, nil, err)
+	_, err = os.Stat(DefaultConfigFile)
+	assert.Equal(t, nil, err)
+
+	err = app.Run([]string{"./gnfd-sp", "query.primary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
+	assert.Nil(t, err)
+	// clear temp config file
+	os.Remove(DefaultConfigFile)
+}
+
+func TestGetSecondarySPIncome(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	CW.config = &gfspconfig.GfSpConfig{}
+	mockDBAPI := spdb.NewMockSPDB(ctrl)
+	CW.spDBAPI = mockDBAPI
+	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
+	CW.grpcAPI = mockGRPCAPI
+	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
+	CW.chainAPI = mockConsensusAPI
+
+	o1 := mockGRPCAPI.EXPECT().SecondarySpIncomeDetails(gomock.Any(), gomock.Any()).Return(int64(0), nil, nil)
+	gomock.InOrder(o1)
+
+	app := cli.NewApp()
+	app.Commands = []*cli.Command{
+		QuerySecondarySPIncomeCmd,
+	}
+	err := ConfigDumpCmd.Action(&cli.Context{})
+	assert.Equal(t, nil, err)
+	_, err = os.Stat(DefaultConfigFile)
+	assert.Equal(t, nil, err)
+
+	err = app.Run([]string{"./gnfd-sp", "query.secondary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
+	assert.Nil(t, err)
+	// clear temp config file
+	os.Remove(DefaultConfigFile)
+}

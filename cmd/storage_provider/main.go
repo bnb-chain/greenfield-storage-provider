@@ -109,6 +109,10 @@ func init() {
 		// query sp exit and bucket migrate status
 		command.QueryBucketMigrateCmd,
 		command.QuerySPExitCmd,
+
+		// query primary and secondary SP income details
+		command.QueryPrimarySPIncomeCmd,
+		command.QuerySecondarySPIncomeCmd,
 		// p2p category commands
 		command.P2PCreateKeysCmd,
 		// debug commands

@@ -745,6 +745,60 @@ message GfSpGetSPInfoResponse {
   greenfield.sp.StorageProvider storage_provider = 1;
 }
 
+// GfSpPrimarySpIncomeDetailsRequest is request type for the GfSpPrimarySpIncomeDetails RPC method
+message GfSpPrimarySpIncomeDetailsRequest {
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 1;
+}
+
+// GfSpPrimarySpIncomeDetailsResponse is response type for the GfSpPrimarySpIncomeDetails RPC method
+message GfSpPrimarySpIncomeDetailsResponse {
+  // current_timestamp defines the timestamp when the query happens
+  int64 current_timestamp = 1;
+  // primary_sp_income_details defines a list of PrimarySpIncomeDetails
+  repeated PrimarySpIncomeDetail primary_sp_income_details = 2;
+}
+
+message PrimarySpIncomeDetail {
+  // vgf_id is the unique identification for vgf
+  uint32 vgf_id = 1;
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 2;
+  // income for this primary sp
+  bytes income = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// GfSpSecondarySpIncomeDetailsRequest is request type for the GfSpSecondarySpIncomeDetails RPC method
+message GfSpSecondarySpIncomeDetailsRequest {
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 1;
+}
+
+// GfSpSecondarySpIncomeDetailsResponse is response type for the GfSpSecondarySpIncomeDetails RPC method
+message GfSpSecondarySpIncomeDetailsResponse {
+  // current_timestamp defines the timestamp when the query happens
+  int64 current_timestamp = 1;
+  // secondary_sp_income_details defines a list of SecondarySpIncomeDetail
+  repeated SecondarySpIncomeDetail secondary_sp_income_details = 2;
+}
+
+message SecondarySpIncomeDetail {
+  // gvg_id is the unique identification for gvg
+  uint32 gvg_id = 1;
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 2;
+  // income for this secondary sp
+  bytes income = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
 message Status {
   StorageProviderInfo storage_provider_info = 1;
   BlockSyncerInfo block_syncer_info = 2;
@@ -992,4 +1046,6 @@ service GfSpMetadataService {
   rpc GfSpGetSPMigratingBucketNumber(GfSpGetSPMigratingBucketNumberRequest) returns (GfSpGetSPMigratingBucketNumberResponse) {}
   rpc GfSpVerifyMigrateGVGPermission(GfSpVerifyMigrateGVGPermissionRequest) returns (GfSpVerifyMigrateGVGPermissionResponse) {}
   rpc GfSpGetBucketSize(GfSpGetBucketSizeRequest) returns (GfSpGetBucketSizeResponse) {}
+  rpc GfSpPrimarySpIncomeDetails(GfSpPrimarySpIncomeDetailsRequest) returns (GfSpPrimarySpIncomeDetailsResponse) {}
+  rpc GfSpSecondarySpIncomeDetails(GfSpSecondarySpIncomeDetailsRequest) returns (GfSpSecondarySpIncomeDetailsResponse) {}
 }

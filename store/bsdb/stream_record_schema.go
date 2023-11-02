@@ -33,3 +33,15 @@ type StreamRecord struct {
 func (s *StreamRecord) TableName() string {
 	return StreamRecordTableName
 }
+
+// PrimarySpIncomeMeta is the structure for primary sp income details
+type PrimarySpIncomeMeta struct {
+	GlobalVirtualGroupFamilyId uint32 `gorm:"column:global_virtual_group_family_id"`
+	StreamRecord
+}
+
+// SecondarySpIncomeMeta is the structure for primary sp income details
+type SecondarySpIncomeMeta struct {
+	GlobalVirtualGroupId uint32 `gorm:"column:global_virtual_group_id;index:idx_gvg_id"`
+	StreamRecord
+}
