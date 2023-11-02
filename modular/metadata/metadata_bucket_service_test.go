@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/forbole/juno/v4/common"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -77,6 +78,7 @@ func TestMetadataModular_GfSpGetUserBuckets2(t *testing.T) {
 				UpdateAt:                   0,
 				UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 				UpdateTime:                 0,
+				StorageSize:                decimal.New(100, 2),
 			}}, nil
 		},
 	).Times(1)
@@ -135,6 +137,7 @@ func TestMetadataModular_GfSpGetUserBuckets_Failed(t *testing.T) {
 				UpdateAt:                   0,
 				UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 				UpdateTime:                 0,
+				StorageSize:                decimal.New(100, 2),
 			}}, nil
 		},
 	).Times(1)
@@ -213,6 +216,7 @@ func TestMetadataModular_GfSpGetBucketByBucketName_Success2(t *testing.T) {
 				UpdateAt:                   0,
 				UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 				UpdateTime:                 0,
+				StorageSize:                decimal.New(100, 2),
 			}, nil
 		},
 	).Times(1)
@@ -295,6 +299,7 @@ func TestMetadataModular_GfSpGetBucketByBucketID_Success2(t *testing.T) {
 				UpdateAt:                   0,
 				UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 				UpdateTime:                 0,
+				StorageSize:                decimal.New(100, 2),
 			}, nil
 		},
 	).Times(1)
@@ -387,6 +392,7 @@ func TestMetadataModular_GfSpListExpiredBucketsBySp_Success(t *testing.T) {
 				UpdateAt:                   0,
 				UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 				UpdateTime:                 0,
+				StorageSize:                decimal.New(100, 2),
 			}}, nil
 		},
 	).Times(1)
@@ -450,6 +456,7 @@ func TestMetadataModular_GfSpGetBucketMeta_Success(t *testing.T) {
 					UpdateAt:                   0,
 					UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 					UpdateTime:                 0,
+					StorageSize:                decimal.New(100, 2),
 				},
 				StreamRecord: bsdb.StreamRecord{
 					ID:                0,
@@ -543,6 +550,7 @@ func TestMetadataModular_GfSpListBucketsByIDs_Success(t *testing.T) {
 				UpdateAt:                   0,
 				UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 				UpdateTime:                 0,
+				StorageSize:                decimal.New(100, 2),
 			}}, nil
 		},
 	).Times(1)

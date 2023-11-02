@@ -129,6 +129,10 @@ type Metadata interface {
 	GetEventMigrationBucketByBucketID(bucketID common.Hash) (*EventMigrationBucket, error)
 	//GetEventSwapOutByGvgID get swap out event by gvg id
 	GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error)
+	// GetPrimarySPStreamRecordBySpID return primary SP's stream records
+	GetPrimarySPStreamRecordBySpID(spID uint32) ([]*PrimarySpIncomeMeta, error)
+	// GetSecondarySPStreamRecordBySpID return secondary SP's stream records
+	GetSecondarySPStreamRecordBySpID(spID uint32) ([]*SecondarySpIncomeMeta, error)
 	// GetBucketSizeByID get bucket size info by a bucket id
 	GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error)
 }

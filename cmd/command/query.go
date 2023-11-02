@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/urfave/cli/v2"
 
@@ -42,6 +44,12 @@ var keyFlag = &cli.StringFlag{
 var objectIDFlag = &cli.StringFlag{
 	Name:     "object.id",
 	Usage:    "The ID key of Object",
+	Required: true,
+}
+
+var spIDFlag = &cli.StringFlag{
+	Name:     "sp.id",
+	Usage:    "The ID of a SP",
 	Required: true,
 }
 
@@ -146,6 +154,30 @@ var QuerySPExitCmd = &cli.Command{
 	},
 	Category:    queryCommands,
 	Description: `The query.sp.exit command send rpc request to manager, get sp exit swap plan and migrate gvg task status.`,
+}
+
+var QueryPrimarySPIncomeCmd = &cli.Command{
+	Action: CW.getPrimarySPIncomeAction,
+	Name:   "query.primary.sp.income",
+	Usage:  "Query primary sp income details",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		spIDFlag,
+	},
+	Category:    queryCommands,
+	Description: `The query.primary.sp.income command send rpc request to metadata, get the primary sp incomes details for the current timestamp`,
+}
+
+var QuerySecondarySPIncomeCmd = &cli.Command{
+	Action: CW.getSecondarySPIncomeAction,
+	Name:   "query.secondary.sp.income",
+	Usage:  "Query secondary sp income details",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		spIDFlag,
+	},
+	Category:    queryCommands,
+	Description: `The query.secondary.sp.income command send rpc request to metadata, get the secondary sp incomes details for the current timestamp`,
 }
 
 func listModulesAction(ctx *cli.Context) error {
@@ -390,5 +422,62 @@ func (w *CMDWrapper) getSPExitAction(ctx *cli.Context) error {
 		return err
 	}
 	fmt.Println(info)
+	return nil
+}
+
+func (w *CMDWrapper) getPrimarySPIncomeAction(ctx *cli.Context) error {
+	err := w.init(ctx)
+	if err != nil {
+		return err
+	}
+	if ctx.IsSet(utils.ConfigFileFlag.Name) {
+		cfg := &gfspconfig.GfSpConfig{}
+		err := utils.LoadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
+		if err != nil {
+			log.Errorw("failed to load config file", "error", err)
+			return err
+		}
+	}
+	spID := ctx.Int(spIDFlag.Name)
+
+	currentTimestamp, info, err := w.grpcAPI.PrimarySpIncomeDetails(context.Background(), uint32(spID))
+	if err != nil {
+		return err
+	}
+	details, _ := json.Marshal(info)
+
+	fmt.Println("querying primary sp income details for sp ", spID)
+	fmt.Println("query timestamp", currentTimestamp, time.Unix(currentTimestamp, 0))
+	fmt.Println("query results:", string(details[:]))
+	return nil
+}
+
+func (w *CMDWrapper) getSecondarySPIncomeAction(ctx *cli.Context) error {
+	err := w.init(ctx)
+	if err != nil {
+		return err
+	}
+	if ctx.IsSet(utils.ConfigFileFlag.Name) {
+		cfg := &gfspconfig.GfSpConfig{}
+		err := utils.LoadConfig(ctx.String(utils.ConfigFileFlag.Name), cfg)
+		if err != nil {
+			log.Errorw("failed to load config file", "error", err)
+			return err
+		}
+	}
+	spID := ctx.Int(spIDFlag.Name)
+
+	currentTimestamp, info, err := w.grpcAPI.SecondarySpIncomeDetails(context.Background(), uint32(spID))
+	if err != nil {
+		return err
+	}
+	details, _ := json.Marshal(info)
+
+	if err != nil {
+		return err
+	}
+	fmt.Println("querying secondary sp income details for sp ", spID)
+	fmt.Println("query timestamp", currentTimestamp, time.Unix(currentTimestamp, 0))
+	fmt.Println("query results:", string(details[:]))
 	return nil
 }

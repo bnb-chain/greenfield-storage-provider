@@ -141,6 +141,8 @@ type MetadataAPI interface {
 	ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error)
 	GetSPMigratingBucketNumber(ctx context.Context, spID uint32, opts ...grpc.DialOption) (uint64, error)
 	VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*permission_types.Effect, error)
+	PrimarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.PrimarySpIncomeDetail, error)
+	SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error)
 	GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error)
 }
 

@@ -97,6 +97,7 @@ func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfS
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
 		}
 		if vgf != nil {
 			b.Vgf = &virtual_types.GlobalVirtualGroupFamily{
@@ -154,6 +155,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
 		}
 	}
 	resp = &types.GfSpGetBucketByBucketNameResponse{Bucket: res}
@@ -198,6 +200,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
 		}
 	}
 	resp = &types.GfSpGetBucketByBucketIDResponse{Bucket: res}
@@ -312,6 +315,7 @@ func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSp
 				GlobalVirtualGroupIds: family[0].GlobalVirtualGroupIds,
 				VirtualPaymentAddress: family[0].VirtualPaymentAddress.String(),
 			},
+			StorageSize: bucket.StorageSize.String(),
 		}
 	}
 
@@ -543,6 +547,7 @@ func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.G
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
 		}
 	}
 	resp = &types.GfSpListBucketsByIDsResponse{Buckets: bucketsMap}

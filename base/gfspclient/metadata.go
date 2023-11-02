@@ -973,6 +973,44 @@ func (s *GfSpClient) VerifyMigrateGVGPermission(ctx context.Context, bucketID ui
 	return &resp.Effect, nil
 }
 
+// PrimarySpIncomeDetails return the primary sp income for the current timestamp
+func (s *GfSpClient) PrimarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.PrimarySpIncomeDetail, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return 0, nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
+	}
+	defer conn.Close()
+	req := &types.GfSpPrimarySpIncomeDetailsRequest{
+		SpId: spID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpPrimarySpIncomeDetails(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get primary sp income details", "error", err)
+		return 0, nil, ErrRPCUnknownWithDetail("client failed to get primary sp income details: " + err.Error())
+	}
+	return resp.CurrentTimestamp, resp.PrimarySpIncomeDetails, nil
+}
+
+// SecondarySpIncomeDetails return the secondary sp income for the current timestamp
+func (s *GfSpClient) SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return 0, nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + connErr.Error())
+	}
+	defer conn.Close()
+	req := &types.GfSpSecondarySpIncomeDetailsRequest{
+		SpId: spID,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpSecondarySpIncomeDetails(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get secondary sp income details", "error", err)
+		return 0, nil, ErrRPCUnknownWithDetail("client failed to get secondary sp income details: " + err.Error())
+	}
+	return resp.CurrentTimestamp, resp.SecondarySpIncomeDetails, nil
+}
+
 // GetBucketSize get bucket total object size
 func (s *GfSpClient) GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)

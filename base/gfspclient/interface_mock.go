@@ -1555,6 +1555,27 @@ func (mr *MockGfSpClientAPIMockRecorder) PreMigrateBucket(ctx, srcSPEndpoint, pr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).PreMigrateBucket), ctx, srcSPEndpoint, preMsg)
 }
 
+// PrimarySpIncomeDetails mocks base method.
+func (m *MockGfSpClientAPI) PrimarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.PrimarySpIncomeDetail, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, spID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PrimarySpIncomeDetails", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].([]*types.PrimarySpIncomeDetail)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// PrimarySpIncomeDetails indicates an expected call of PrimarySpIncomeDetails.
+func (mr *MockGfSpClientAPIMockRecorder) PrimarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, spID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrimarySpIncomeDetails", reflect.TypeOf((*MockGfSpClientAPI)(nil).PrimarySpIncomeDetails), varargs...)
+}
+
 // QueryBucketMigrate mocks base method.
 func (m *MockGfSpClientAPI) QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
@@ -1802,6 +1823,27 @@ func (m *MockGfSpClientAPI) SealObject(ctx context.Context, object *types3.MsgSe
 func (mr *MockGfSpClientAPIMockRecorder) SealObject(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).SealObject), ctx, object)
+}
+
+// SecondarySpIncomeDetails mocks base method.
+func (m *MockGfSpClientAPI) SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, spID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SecondarySpIncomeDetails", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].([]*types.SecondarySpIncomeDetail)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// SecondarySpIncomeDetails indicates an expected call of SecondarySpIncomeDetails.
+func (mr *MockGfSpClientAPIMockRecorder) SecondarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, spID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecondarySpIncomeDetails", reflect.TypeOf((*MockGfSpClientAPI)(nil).SecondarySpIncomeDetails), varargs...)
 }
 
 // SignBucketMigrationInfo mocks base method.
@@ -3743,6 +3785,48 @@ func (mr *MockMetadataAPIMockRecorder) ListVirtualGroupFamiliesSpID(ctx, spID an
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesSpID", reflect.TypeOf((*MockMetadataAPI)(nil).ListVirtualGroupFamiliesSpID), varargs...)
+}
+
+// PrimarySpIncomeDetails mocks base method.
+func (m *MockMetadataAPI) PrimarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.PrimarySpIncomeDetail, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, spID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PrimarySpIncomeDetails", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].([]*types.PrimarySpIncomeDetail)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// PrimarySpIncomeDetails indicates an expected call of PrimarySpIncomeDetails.
+func (mr *MockMetadataAPIMockRecorder) PrimarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, spID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrimarySpIncomeDetails", reflect.TypeOf((*MockMetadataAPI)(nil).PrimarySpIncomeDetails), varargs...)
+}
+
+// SecondarySpIncomeDetails mocks base method.
+func (m *MockMetadataAPI) SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, spID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SecondarySpIncomeDetails", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].([]*types.SecondarySpIncomeDetail)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// SecondarySpIncomeDetails indicates an expected call of SecondarySpIncomeDetails.
+func (mr *MockMetadataAPIMockRecorder) SecondarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, spID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecondarySpIncomeDetails", reflect.TypeOf((*MockMetadataAPI)(nil).SecondarySpIncomeDetails), varargs...)
 }
 
 // VerifyMigrateGVGPermission mocks base method.
