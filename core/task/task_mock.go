@@ -10568,6 +10568,20 @@ func (mr *MockMigrateGVGTaskMockRecorder) GetMaxRetry() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxRetry", reflect.TypeOf((*MockMigrateGVGTask)(nil).GetMaxRetry))
 }
 
+// GetMigratedBytesSize mocks base method.
+func (m *MockMigrateGVGTask) GetMigratedBytesSize() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMigratedBytesSize")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetMigratedBytesSize indicates an expected call of GetMigratedBytesSize.
+func (mr *MockMigrateGVGTaskMockRecorder) GetMigratedBytesSize() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigratedBytesSize", reflect.TypeOf((*MockMigrateGVGTask)(nil).GetMigratedBytesSize))
+}
+
 // GetPriority mocks base method.
 func (m *MockMigrateGVGTask) GetPriority() TPriority {
 	m.ctrl.T.Helper()
@@ -10852,6 +10866,18 @@ func (m *MockMigrateGVGTask) SetMaxRetry(arg0 int64) {
 func (mr *MockMigrateGVGTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetMaxRetry), arg0)
+}
+
+// SetMigratedBytesSize mocks base method.
+func (m *MockMigrateGVGTask) SetMigratedBytesSize(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMigratedBytesSize", arg0)
+}
+
+// SetMigratedBytesSize indicates an expected call of SetMigratedBytesSize.
+func (mr *MockMigrateGVGTaskMockRecorder) SetMigratedBytesSize(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMigratedBytesSize", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetMigratedBytesSize), arg0)
 }
 
 // SetPriority mocks base method.

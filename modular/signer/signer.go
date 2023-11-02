@@ -33,6 +33,7 @@ var (
 	ErrSPExitOnChain                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
 	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
 	ErrUpdateSPPriceOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120012, "send update sp price failed")
+	ErrRejectMigrateBucketOnChain   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -220,4 +221,8 @@ func (s *SignModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgS
 
 func (s *SignModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
 	return s.client.CompleteSPExit(ctx, SignOperator, completeSPExit)
+}
+
+func (s *SignModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	return s.client.RejectMigrateBucket(ctx, SignOperator, rejectMigrateBucket)
 }

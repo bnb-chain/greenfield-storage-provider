@@ -293,6 +293,7 @@ func (s *SpDBImpl) InsertMigrateGVGUnit(meta *spdb.MigrateGVGUnitMeta) error {
 		DestSPID:             meta.DestSPID,
 		LastMigratedObjectID: meta.LastMigratedObjectID,
 		MigrateStatus:        meta.MigrateStatus,
+		RetryTime:            meta.RetryTime,
 	}
 	result = s.db.First(queryReturn, "migrate_key = ?", meta.MigrateGVGKey)
 	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -353,6 +354,15 @@ func (s *SpDBImpl) UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, la
 	return nil
 }
 
+func (s *SpDBImpl) UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error {
+	if result := s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", migrateKey).Updates(&MigrateGVGTable{
+		RetryTime: retryTime,
+	}); result.Error != nil {
+		return fmt.Errorf("failed to update migrate gvg retry time: %s", result.Error)
+	}
+	return nil
+}
+
 func (s *SpDBImpl) QueryMigrateGVGUnit(migrateKey string) (*spdb.MigrateGVGUnitMeta, error) {
 	var (
 		result      *gorm.DB
@@ -373,6 +383,7 @@ func (s *SpDBImpl) QueryMigrateGVGUnit(migrateKey string) (*spdb.MigrateGVGUnitM
 		DestSPID:                 queryReturn.DestSPID,
 		LastMigratedObjectID:     queryReturn.LastMigratedObjectID,
 		MigrateStatus:            queryReturn.MigrateStatus,
+		RetryTime:                queryReturn.RetryTime,
 	}, nil
 }
 

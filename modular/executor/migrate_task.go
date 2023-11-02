@@ -53,9 +53,15 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		} else {
 			metrics.MigrateGVGCounter.WithLabelValues(migrateGVGFailedCounterLabel).Inc()
 		}
+		gvgTask.SetError(err)
 		log.CtxInfow(ctx, "finished to migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
 			"total_migrated_object_number", migratedObjectNumberInGVG, "last_migrated_object_id", lastMigratedObjectID, "error", err)
 	}()
+
+	if gvgTask == nil {
+		err = ErrDanglingPointer
+		return
+	}
 
 	for {
 		if bucketID == 0 { // sp exit task
@@ -85,7 +91,7 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 					"current_migrated_object_number", migratedObjectNumberInGVG,
 					"last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
 				gvgTask.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
-				if err = e.ReportTask(ctx, gvgTask); err != nil {
+				if err = e.ReportTask(ctx, gvgTask); err != nil { // report task is already automatically triggered.
 					log.CtxErrorw(ctx, "failed to report migrate gvg task progress", "task_info", gvgTask, "error", err)
 					return
 				}
@@ -181,7 +187,7 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, gvgTask coretask
 			"object_name", object.GetObjectInfo().GetObjectName(), "error", err)
 		return err
 	}
-	return nil
+	return err
 }
 
 func (e *ExecuteModular) doObjectMigrationRetry(ctx context.Context, gvgTask coretask.MigrateGVGTask, bucketID uint64, object *metadatatypes.ObjectDetails) error {

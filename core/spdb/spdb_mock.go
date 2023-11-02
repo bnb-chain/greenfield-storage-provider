@@ -805,6 +805,20 @@ func (mr *MockSPDBMockRecorder) UpdateIntegrityChecksum(integrity any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateIntegrityChecksum), integrity)
 }
 
+// UpdateMigrateGVGRetryCount mocks base method.
+func (m *MockSPDB) UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMigrateGVGRetryCount", migrateKey, retryTime)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMigrateGVGRetryCount indicates an expected call of UpdateMigrateGVGRetryCount.
+func (mr *MockSPDBMockRecorder) UpdateMigrateGVGRetryCount(migrateKey, retryTime any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGRetryCount", reflect.TypeOf((*MockSPDB)(nil).UpdateMigrateGVGRetryCount), migrateKey, retryTime)
+}
+
 // UpdateMigrateGVGUnitLastMigrateObjectID mocks base method.
 func (m *MockSPDB) UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error {
 	m.ctrl.T.Helper()
@@ -1854,6 +1868,20 @@ func (m *MockMigrateDB) UpdateBucketMigrateSubscribeProgress(blockHeight uint64)
 func (mr *MockMigrateDBMockRecorder) UpdateBucketMigrateSubscribeProgress(blockHeight any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrateSubscribeProgress", reflect.TypeOf((*MockMigrateDB)(nil).UpdateBucketMigrateSubscribeProgress), blockHeight)
+}
+
+// UpdateMigrateGVGRetryCount mocks base method.
+func (m *MockMigrateDB) UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMigrateGVGRetryCount", migrateKey, retryTime)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMigrateGVGRetryCount indicates an expected call of UpdateMigrateGVGRetryCount.
+func (mr *MockMigrateDBMockRecorder) UpdateMigrateGVGRetryCount(migrateKey, retryTime any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGRetryCount", reflect.TypeOf((*MockMigrateDB)(nil).UpdateMigrateGVGRetryCount), migrateKey, retryTime)
 }
 
 // UpdateMigrateGVGUnitLastMigrateObjectID mocks base method.

@@ -1206,7 +1206,7 @@ func (m *MockManager) NotifyPostMigrateBucket(ctx context.Context, bucketID uint
 }
 
 // NotifyPostMigrateBucket indicates an expected call of NotifyPostMigrateBucket.
-func (mr *MockManagerMockRecorder) NotifyPostMigrateBucket(ctx, bucketID interface{}) *gomock.Call {
+func (mr *MockManagerMockRecorder) NotifyPostMigrateBucket(ctx, bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockManager)(nil).NotifyPostMigrateBucket), ctx, bucketID)
 }
@@ -1220,7 +1220,7 @@ func (m *MockManager) NotifyPreMigrateBucket(ctx context.Context, bucketID uint6
 }
 
 // NotifyPreMigrateBucket indicates an expected call of NotifyPreMigrateBucket.
-func (mr *MockManagerMockRecorder) NotifyPreMigrateBucket(ctx, bucketID interface{}) *gomock.Call {
+func (mr *MockManagerMockRecorder) NotifyPreMigrateBucket(ctx, bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucket", reflect.TypeOf((*MockManager)(nil).NotifyPreMigrateBucket), ctx, bucketID)
 }
@@ -1300,14 +1300,6 @@ func (m *MockManager) QueryTasksStats(ctx context.Context) (int, int, int, int, 
 	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7
 }
 
-// ResetRecoveryFailedList mocks base method.
-func (m *MockManager) ResetRecoveryFailedList(ctx context.Context) []string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ResetRecoveryFailedList", ctx)
-	ret0, _ := ret[0].([]string)
-	return ret0
-}
-
 // QueryTasksStats indicates an expected call of QueryTasksStats.
 func (mr *MockManagerMockRecorder) QueryTasksStats(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
@@ -1339,6 +1331,20 @@ func (m *MockManager) ReserveResource(ctx context.Context, state *rcmgr.ScopeSta
 func (mr *MockManagerMockRecorder) ReserveResource(ctx, state any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReserveResource", reflect.TypeOf((*MockManager)(nil).ReserveResource), ctx, state)
+}
+
+// ResetRecoveryFailedList mocks base method.
+func (m *MockManager) ResetRecoveryFailedList(ctx context.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetRecoveryFailedList", ctx)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// ResetRecoveryFailedList indicates an expected call of ResetRecoveryFailedList.
+func (mr *MockManagerMockRecorder) ResetRecoveryFailedList(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetRecoveryFailedList", reflect.TypeOf((*MockManager)(nil).ResetRecoveryFailedList), ctx)
 }
 
 // Start mocks base method.
@@ -1754,6 +1760,21 @@ func (mr *MockSignerMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockSigner)(nil).Name))
 }
 
+// RejectMigrateBucket mocks base method.
+func (m *MockSigner) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *types0.MsgRejectMigrateBucket) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RejectMigrateBucket", ctx, rejectMigrateBucket)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RejectMigrateBucket indicates an expected call of RejectMigrateBucket.
+func (mr *MockSignerMockRecorder) RejectMigrateBucket(ctx, rejectMigrateBucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectMigrateBucket", reflect.TypeOf((*MockSigner)(nil).RejectMigrateBucket), ctx, rejectMigrateBucket)
+}
+
 // RejectUnSealObject mocks base method.
 func (m *MockSigner) RejectUnSealObject(ctx context.Context, object *types0.MsgRejectSealObject) (string, error) {
 	m.ctrl.T.Helper()
@@ -1836,7 +1857,7 @@ func (m *MockSigner) SignBucketMigrationInfo(ctx context.Context, task *gfsptask
 }
 
 // SignBucketMigrationInfo indicates an expected call of SignBucketMigrationInfo.
-func (mr *MockSignerMockRecorder) SignBucketMigrationInfo(ctx, task interface{}) *gomock.Call {
+func (mr *MockSignerMockRecorder) SignBucketMigrationInfo(ctx, task any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignBucketMigrationInfo", reflect.TypeOf((*MockSigner)(nil).SignBucketMigrationInfo), ctx, task)
 }
