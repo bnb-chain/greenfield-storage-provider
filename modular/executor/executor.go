@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"sync"
 	"sync/atomic"
 	"time"
+
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -49,7 +52,9 @@ type ExecuteModular struct {
 
 	enableSkipFailedToMigrateObject bool // only for debugging, and online config can only be false
 
-	spID uint32
+	spID  uint32
+	spMap map[uint32]*sptypes.StorageProvider
+	mutex sync.RWMutex
 }
 
 func (e *ExecuteModular) Name() string {
@@ -62,6 +67,14 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 		return err
 	}
 	e.scope = scope
+	sps, err := e.baseApp.Consensus().ListSPs(ctx)
+	if err != nil {
+		return err
+	}
+	e.spMap = make(map[uint32]*sptypes.StorageProvider)
+	for _, sp := range sps {
+		e.spMap[sp.Id] = sp
+	}
 	go e.eventLoop(ctx)
 	return nil
 }
@@ -85,14 +98,31 @@ func (e *ExecuteModular) eventLoop(ctx context.Context) {
 	}
 
 	statisticsTicker := time.NewTicker(time.Duration(e.statisticsOutputInterval) * time.Second)
+	updateSpTicker := time.NewTicker(3 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-statisticsTicker.C:
 			log.CtxInfo(ctx, e.Statistics())
+		case <-updateSpTicker.C:
+			sps, err := e.baseApp.Consensus().ListSPs(ctx)
+			if err != nil {
+				continue
+			}
+			e.mutex.Lock()
+			for _, sp := range sps {
+				e.spMap[sp.Id] = sp
+			}
+			e.mutex.Unlock()
 		}
 	}
+}
+
+func (e *ExecuteModular) getSpByID(id uint32) *sptypes.StorageProvider {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.spMap[id]
 }
 
 func (e *ExecuteModular) omitError(err error) bool {
