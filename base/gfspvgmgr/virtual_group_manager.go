@@ -96,13 +96,13 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 	)
 	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	for id, f := range vgfm.vgfIDToVgf {
-		if !vgfm.healthChecker.isVGFHealthy(f) {
-			continue
-		}
 		if filter != nil && !filter.Check(id) {
 			continue
 		}
 		if !filterByGvgList.Check(f.GVGMap) {
+			continue
+		}
+		if !vgfm.healthChecker.isVGFHealthy(f) {
 			continue
 		}
 		picker.addVirtualGroupFamily(f)

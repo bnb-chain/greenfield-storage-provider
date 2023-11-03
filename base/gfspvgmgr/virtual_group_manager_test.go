@@ -101,8 +101,7 @@ func Test_pickVirtualGroupFamilySuccess(t *testing.T) {
 		FamilyID: 1,
 	}
 	vgfm := &virtualGroupFamilyManager{vgfIDToVgf: map[uint32]*corevgmgr.VirtualGroupFamilyMeta{
-		1: {FamilyUsedStorageSize: 1, FamilyStakingStorageSize: 100, GVGMap: gvg}}}
-		1: {FamilyUsedStorageSize: 1, FamilyStakingStorageSize: 100}}, healthChecker: NewHealthChecker()}
+		1: {FamilyUsedStorageSize: 1, FamilyStakingStorageSize: 100, GVGMap: gvg}}, healthChecker: NewHealthChecker()}
 	filter := corevgmgr.NewPickVGFFilter([]uint32{1, 2})
 	result, err := vgfm.pickVirtualGroupFamily(filter, corevgmgr.NewPickVGFByGVGFilter([]uint32{2, 3}))
 	assert.Nil(t, err)
