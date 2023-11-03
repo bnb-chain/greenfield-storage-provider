@@ -213,7 +213,6 @@ func (sm *spManager) pickSPByFilter(filter vgmgr.SPPickFilter, healthChecker *He
 		if !destSP.IsInService() {
 			continue
 		}
-
 		if healthChecker != nil && !healthChecker.isSPHealthy(destSP.GetId()) {
 			continue
 		}
@@ -518,7 +517,7 @@ type HealthChecker struct {
 func NewHealthChecker(chainClient consensus.Consensus) *HealthChecker {
 	sps := make(map[uint32]*sptypes.StorageProvider)
 	unhealthySPs := make(map[uint32]*sptypes.StorageProvider)
-	return &HealthChecker{sps: sps, unhealthySPs: unhealthySPs}
+	return &HealthChecker{sps: sps, unhealthySPs: unhealthySPs, chainClient: chainClient}
 }
 
 func (checker *HealthChecker) addSP(sp *sptypes.StorageProvider) {
