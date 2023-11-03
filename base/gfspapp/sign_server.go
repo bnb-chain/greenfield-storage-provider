@@ -162,6 +162,11 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureCreateGVG).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureCreateGVG).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessCreateGVG).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessCreateGVG).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_GfspRecoverPieceTask:
 		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspRecoverPieceTask.Key().String())

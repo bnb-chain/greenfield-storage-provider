@@ -127,6 +127,8 @@ const (
 	SignerFailureReceiveTask           = "signer_receive_task_failure"
 	SignerSuccessReplicateApproval     = "signer_secondary_approval_success"
 	SignerFailureReplicateApproval     = "signer_secondary_approval_failure"
+	SignerSuccessCreateGVG             = "signer_create_gvg_success"
+	SignerFailureCreateGVG             = "signer_create_gvg_failure"
 	SignerSuccessRecoveryTask          = "signer_recovery_task_success"
 	SignerFailureRecoveryTask          = "signer_recovery_task_failure"
 
