@@ -45,8 +45,7 @@ var (
 
 // virtualGroupFamilyManager is built by metadata data source.
 type virtualGroupFamilyManager struct {
-	vgfIDToVgf    map[uint32]*vgmgr.VirtualGroupFamilyMeta // is used to pick VGF
-	healthChecker *HealthChecker
+	vgfIDToVgf map[uint32]*vgmgr.VirtualGroupFamilyMeta // is used to pick VGF
 }
 
 // FreeStorageSizeWeightPicker is used to pick index by storage usage,
@@ -88,7 +87,7 @@ func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	return 0, fmt.Errorf("failed to pick weighted random index")
 }
 
-func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter, filterByGvgList *vgmgr.PickVGFByGVGFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter, filterByGvgList *vgmgr.PickVGFByGVGFilter, healthChecker *HealthChecker) (*vgmgr.VirtualGroupFamilyMeta, error) {
 	var (
 		picker   FreeStorageSizeWeightPicker
 		familyID uint32
@@ -102,7 +101,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 		if !filterByGvgList.Check(f.GVGMap) {
 			continue
 		}
-		if !vgfm.healthChecker.isVGFHealthy(f) {
+		if healthChecker != nil && !healthChecker.isVGFHealthy(f) {
 			continue
 		}
 		picker.addVirtualGroupFamily(f)
@@ -115,7 +114,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 	return vgfm.vgfIDToVgf[familyID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter, excludeGVGsFilter vgmgr.ExcludeFilter, healthChecker *HealthChecker) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -132,7 +131,7 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filt
 		if excludeGVGsFilter != nil && excludeGVGsFilter.Apply(g.ID) {
 			continue
 		}
-		if !vgfm.healthChecker.isGVGHealthy(g) {
+		if healthChecker != nil && !healthChecker.isGVGHealthy(g) {
 			continue
 		}
 		picker.addGlobalVirtualGroup(g)
@@ -178,12 +177,11 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vg
 }
 
 type spManager struct {
-	selfSP        *sptypes.StorageProvider
-	otherSPs      []*sptypes.StorageProvider
-	healthChecker *HealthChecker
+	selfSP   *sptypes.StorageProvider
+	otherSPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy, filter, excludeSPsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy, filter, excludeSPsFilter vgmgr.ExcludeFilter, healthChecker *HealthChecker) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	for _, sp := range sm.otherSPs {
 		if !sp.IsInService() {
 			continue
@@ -194,7 +192,7 @@ func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSeconda
 		if excludeSPsFilter != nil && excludeSPsFilter.Apply(sp.Id) {
 			continue
 		}
-		if !sm.healthChecker.isSPHealthy(sp.GetId()) {
+		if healthChecker != nil && !healthChecker.isSPHealthy(sp.GetId()) {
 			continue
 		}
 		genPolicy.AddCandidateSP(sp.GetId())
@@ -211,13 +209,13 @@ func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSeconda
 	}, nil
 }
 
-func (sm *spManager) pickSPByFilter(filter vgmgr.SPPickFilter) (*sptypes.StorageProvider, error) {
+func (sm *spManager) pickSPByFilter(filter vgmgr.SPPickFilter, healthChecker *HealthChecker) (*sptypes.StorageProvider, error) {
 	for _, destSP := range sm.otherSPs {
 		if !destSP.IsInService() {
 			continue
 		}
 
-		if !sm.healthChecker.isSPHealthy(destSP.GetId()) {
+		if healthChecker != nil && !healthChecker.isSPHealthy(destSP.GetId()) {
 			continue
 		}
 		if pickSucceed := filter.Check(destSP.GetId()); pickSucceed {
@@ -309,7 +307,9 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 	}
 	for _, sp := range spList {
 		spMap[sp.Id] = sp
-		vgm.healthChecker.addSP(sp)
+		if vgm.healthChecker != nil {
+			vgm.healthChecker.addSP(sp)
+		}
 	}
 	for i, sp := range spList {
 		if strings.EqualFold(vgm.selfOperatorAddress, sp.OperatorAddress) {
@@ -319,9 +319,8 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		}
 	}
 	spm = &spManager{
-		selfSP:        selfSP,
-		otherSPs:      otherSPList,
-		healthChecker: vgm.healthChecker,
+		selfSP:   selfSP,
+		otherSPs: otherSPList,
 	}
 	// log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
 
@@ -337,8 +336,7 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 	// log.Infow("query virtual group params", "params", vgParams)
 
 	vgfm = &virtualGroupFamilyManager{
-		vgfIDToVgf:    make(map[uint32]*vgmgr.VirtualGroupFamilyMeta),
-		healthChecker: vgm.healthChecker,
+		vgfIDToVgf: make(map[uint32]*vgmgr.VirtualGroupFamilyMeta),
 	}
 	if vgfList, err = vgm.chainClient.ListVirtualGroupFamilies(context.Background(), spID); err != nil {
 		log.Errorw("failed to list virtual group family", "error", err)
@@ -392,7 +390,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily(filterByGvgList *vgmgr.Pi
 	}
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickVirtualGroupFamily(filter, filterByGvgList)
+	return vgm.vgfManager.pickVirtualGroupFamily(filter, filterByGvgList, vgm.healthChecker)
 }
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
@@ -400,7 +398,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily(filterByGvgList *vgmgr.Pi
 func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter, vgm.healthChecker)
 }
 
 // PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
@@ -420,7 +418,7 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vg
 func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter, vgm.healthChecker)
 }
 
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
@@ -437,14 +435,14 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy, excludeSPsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.generateVirtualGroupMeta(genPolicy, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeSPIDs()), excludeSPsFilter)
+	return vgm.spManager.generateVirtualGroupMeta(genPolicy, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeSPIDs()), excludeSPsFilter, vgm.healthChecker)
 }
 
 // PickSPByFilter is used to pick sp by filter check.
 func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.SPPickFilter) (*sptypes.StorageProvider, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.pickSPByFilter(filter)
+	return vgm.spManager.pickSPByFilter(filter, vgm.healthChecker)
 }
 
 // QuerySPByID return sp info by sp id.
