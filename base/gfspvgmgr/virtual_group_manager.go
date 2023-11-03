@@ -28,7 +28,6 @@ const (
 	DefaultInitialGVGStakingStorageSize = uint64(8) * 1024 * 1024 * 1024 * 1024 // 8TB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
 	defaultSPCheckTimeout               = 3 * time.Second
 	defaultSPHealthCheckerInterval      = 5 * time.Second
-	defaultMinAvailableSPThreshold      = 7
 	httpStatusPath                      = "/status"
 )
 
@@ -256,7 +255,7 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 		selfOperatorAddress: selfOperatorAddress,
 		chainClient:         chainClient,
 		freezeSPPool:        NewFreezeSPPool(),
-		healthChecker:       NewHealthChecker(),
+		healthChecker:       NewHealthChecker(chainClient),
 	}
 	vgm.refreshMeta()
 	go func() {
@@ -512,9 +511,11 @@ type HealthChecker struct {
 
 	sps          map[uint32]*sptypes.StorageProvider // all sps,  id -> StorageProvider
 	unhealthySPs map[uint32]*sptypes.StorageProvider
+
+	chainClient consensus.Consensus // query VG params from chain
 }
 
-func NewHealthChecker() *HealthChecker {
+func NewHealthChecker(chainClient consensus.Consensus) *HealthChecker {
 	sps := make(map[uint32]*sptypes.StorageProvider)
 	unhealthySPs := make(map[uint32]*sptypes.StorageProvider)
 	return &HealthChecker{sps: sps, unhealthySPs: unhealthySPs}
@@ -524,6 +525,9 @@ func (checker *HealthChecker) addSP(sp *sptypes.StorageProvider) {
 	checker.mutex.Lock()
 	defer checker.mutex.Unlock()
 
+	if !sp.IsInService() {
+		return
+	}
 	if _, exists := checker.sps[sp.GetId()]; !exists {
 		checker.sps[sp.GetId()] = sp
 	}
@@ -567,7 +571,7 @@ func (checker *HealthChecker) isGVGHealthy(gvg *vgmgr.GlobalVirtualGroupMeta) bo
 	return true
 }
 
-// isVGFHealthy vgf healthy means at least one sp is healthy
+// isVGFHealthy vgf healthy means at least one gvg is healthy
 func (checker *HealthChecker) isVGFHealthy(vgf *vgmgr.VirtualGroupFamilyMeta) bool {
 	checker.mutex.RLock()
 	defer checker.mutex.RUnlock()
@@ -607,8 +611,13 @@ func (checker *HealthChecker) checkAllSPHealth() {
 		}
 	}
 
+	params, err := checker.chainClient.QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix())
+	if err != nil {
+		return
+	}
+
 	// Only when more than defaultMinAvailableSPThreshold valid sp, the check is valid
-	if len(spTemp)-unhealthyCnt >= defaultMinAvailableSPThreshold {
+	if len(spTemp)-unhealthyCnt >= 1+int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) {
 		checker.mutex.Lock()
 		checker.sps = spTemp
 		checker.unhealthySPs = unhealthyTemp
