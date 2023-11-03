@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/slices"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -774,15 +775,14 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 		err error
 		vgf *vgmgr.VirtualGroupFamilyMeta
 	)
-
-	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(vgmgr.NewPickVGFByGVGFilter(m.spBlackList)); err != nil {
 		// create a new gvg, and retry pick.
 		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
 			return 0, err
 		}
 		m.virtualGroupManager.ForceRefreshMeta()
-		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(); err != nil {
+		if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(vgmgr.NewPickVGFByGVGFilter(m.spBlackList)); err != nil {
 			log.CtxErrorw(ctx, "failed to pick vgf", "task_info", task.Info(), "error", err)
 			return 0, err
 		}
@@ -838,7 +838,7 @@ func (m *ManageModular) createGlobalVirtualGroup(vgfID uint32, params *storagety
 			return err
 		}
 	}
-	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, m.gvgPreferSPList))
+	gvgMeta, err := m.virtualGroupManager.GenerateGlobalVirtualGroupMeta(NewGenerateGVGSecondarySPsPolicyByPrefer(params, m.gvgPreferSPList), vgmgr.NewExcludeIDFilter(gfspvgmgr.NewIDSetFromList(m.spBlackList)))
 	if err != nil {
 		return err
 	}
@@ -865,14 +865,14 @@ func (m *ManageModular) pickGlobalVirtualGroup(ctx context.Context, vgfID uint32
 		gvg *vgmgr.GlobalVirtualGroupMeta
 	)
 
-	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+	if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(m.gvgBlackList)); err != nil {
 		// create a new gvg, and retry pick.
 		if err = m.createGlobalVirtualGroup(vgfID, param); err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}
 		m.virtualGroupManager.ForceRefreshMeta()
-		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID); err != nil {
+		if gvg, err = m.virtualGroupManager.PickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(m.gvgBlackList)); err != nil {
 			log.CtxErrorw(ctx, "failed to pick gvg", "vgf_id", vgfID, "error", err)
 			return gvg, err
 		}
