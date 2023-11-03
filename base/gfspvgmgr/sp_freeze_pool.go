@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	DefaultFreezingPeriodForSP = 5 * time.Minute
+	DefaultFreezingPeriodForSP = 10 * time.Minute
 	ReleaseSPJobInterval       = 1 * time.Minute
 )
 
@@ -63,6 +63,13 @@ func (s *FreezeSPPool) ReleaseSP() {
 		if time.Now().Unix() > stats.FreezeUntil {
 			s.Delete(k)
 		}
+		return true
+	})
+}
+
+func (s *FreezeSPPool) ReleaseAllSP() {
+	s.Range(func(k interface{}, v interface{}) bool {
+		s.Delete(k)
 		return true
 	})
 }

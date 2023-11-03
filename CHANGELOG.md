@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.4
+This release contains 1 bugfix.
+
+BUGFIXES
+* [#1231](https://github.com/bnb-chain/greenfield-storage-provider/pull/1231) fix: fix: add config sp blacklist
+
 ## v1.0.3
 This release contains 1 bugfix.
 
