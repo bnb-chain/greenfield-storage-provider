@@ -183,58 +183,113 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 		txHash, err = g.signer.CompleteMigrateBucket(ctx, t.CompleteMigrateBucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete migrate bucket", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteMigrateBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureCompleteMigrateBucket).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessCompleteMigrateBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteMigrateBucket).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SignSecondarySpMigrationBucket:
 		signature, err = g.signer.SignSecondarySPMigrationBucket(ctx, t.SignSecondarySpMigrationBucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign secondary sp bls migration bucket", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureSecondarySPMigrationBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureSecondarySPMigrationBucket).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessSecondarySPMigrationBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessSecondarySPMigrationBucket).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SwapOut:
 		txHash, err = g.signer.SwapOut(ctx, t.SwapOut)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign swap out", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureSwapOut).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureSwapOut).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessSwapOut).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessSwapOut).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SignSwapOut:
 		signature, err = g.signer.SignSwapOut(ctx, t.SignSwapOut)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign swap out approval", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureSignSwapOut).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureSignSwapOut).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessSignSwapOut).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessSignSwapOut).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CompleteSwapOut:
 		txHash, err = g.signer.CompleteSwapOut(ctx, t.CompleteSwapOut)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete swap out", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteSwapOut).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureCompleteSwapOut).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessCompleteSwapOut).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteSwapOut).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SpExit:
 		txHash, err = g.signer.SPExit(ctx, t.SpExit)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign sp exit", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureSPExit).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureSPExit).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessSPExit).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessSPExit).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CompleteSpExit:
 		txHash, err = g.signer.CompleteSPExit(ctx, t.CompleteSpExit)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete sp exit", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteSPExit).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureCompleteSPExit).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessCompleteSPExit).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteSPExit).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SpStoragePrice:
 		txHash, err = g.signer.UpdateSPPrice(ctx, t.SpStoragePrice)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update sp price", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureSPStoragePrice).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureSPStoragePrice).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessSPStoragePrice).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessSPStoragePrice).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_GfspMigrateGvgTask:
 		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspMigrateGvgTask.Key().String())
 		signature, err = g.signer.SignMigrateGVG(ctx, t.GfspMigrateGvgTask)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign migrate gvg task", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureMigrateGVGTask).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureMigrateGVGTask).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessMigrateGVGTask).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessMigrateGVGTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_GfspBucketMigrateInfo:
 		ctx = log.WithValue(ctx, log.CtxKeyTask, t.GfspBucketMigrateInfo.Key().String())
 		signature, err = g.signer.SignBucketMigrationInfo(ctx, t.GfspBucketMigrateInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign bucket migration task", "task", t, "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureGfSpBucketMigrateInfo).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureGfSpBucketMigrateInfo).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessGfSpBucketMigrateInfo).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessGfSpBucketMigrateInfo).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_RejectMigrateBucket:
 		txHash, err = g.signer.RejectMigrateBucket(ctx, t.RejectMigrateBucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign reject migrate bucket", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureRejectMigrateBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureRejectMigrateBucket).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessRejectMigrateBucket).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessRejectMigrateBucket).Observe(time.Since(startTime).Seconds())
 		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")

@@ -71,6 +71,8 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	sealErr := e.sealObject(ctx, task, sealMsg)
 	metrics.PerfPutObjectTime.WithLabelValues("background_seal_object_cost").Observe(time.Since(sealTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("background_task_seal_object_end").Observe(time.Since(startReplicateTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("replicate_object_total_time_from_uploading_to_sealing").Observe(time.Since(
+		time.Unix(task.GetObjectInfo().GetCreateAt(), 0)).Seconds())
 	if sealErr == nil {
 		task.SetSealed(true)
 	}
