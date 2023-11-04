@@ -291,9 +291,13 @@ DisableMetrics = false
 # required
 DisablePProf = false
 # required
+DisableProbe = false
+# required
 MetricsHTTPAddress = ''
 # required
 PProfHTTPAddress = ''
+# required
+ProbeHTTPAddress = ''
 
 # optional
 [Rcmgr]
