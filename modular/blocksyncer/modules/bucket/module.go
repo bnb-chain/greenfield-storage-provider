@@ -3,6 +3,8 @@ package bucket
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 
 	"gorm.io/gorm/schema"
@@ -39,10 +41,10 @@ func (m *Module) Name() string {
 
 // PrepareTables implements
 func (m *Module) PrepareTables() error {
-	return m.db.PrepareTables(context.TODO(), []schema.Tabler{&models.Bucket{}})
+	return m.db.PrepareTables(context.TODO(), []schema.Tabler{&models.Bucket{}, &bsdb.DataMigrationRecord{}})
 }
 
 // AutoMigrate implements
 func (m *Module) AutoMigrate() error {
-	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{&models.Bucket{}})
+	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{&models.Bucket{}, &bsdb.DataMigrationRecord{}})
 }

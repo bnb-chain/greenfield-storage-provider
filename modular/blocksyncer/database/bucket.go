@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/forbole/juno/v4/common"
@@ -40,6 +41,25 @@ func (db *DB) BatchUpdateBucketSize(ctx context.Context, buckets []*models.Bucke
 		Columns:   []clause.Column{{Name: "bucket_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"storage_size", "charge_size"}),
 	}).Create(buckets).Error
+}
+
+func (db *DB) GetDataMigrationRecord(ctx context.Context, processKey string) (*bsdb.DataMigrationRecord, error) {
+	var (
+		dataRecord *bsdb.DataMigrationRecord
+		err        error
+	)
+	err = db.Db.Take(&dataRecord, "process_key = ?", processKey).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return dataRecord, err
+}
+
+func (db *DB) UpdateDataMigrationRecord(ctx context.Context, processKey string, isCompleted bool) error {
+	return db.Db.Table((&bsdb.DataMigrationRecord{}).TableName()).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "process_key"}},
+		DoUpdates: clause.AssignmentColumns([]string{"is_completed"}),
+	}).Create(&bsdb.DataMigrationRecord{ProcessKey: processKey, IsCompleted: isCompleted}).Error
 }
 
 func (db *DB) UpdateStorageSizeToSQL(ctx context.Context, objectID common.Hash, bucketName, operation string) (string, []interface{}) {

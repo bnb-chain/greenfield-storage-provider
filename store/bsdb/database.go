@@ -135,6 +135,8 @@ type Metadata interface {
 	GetSecondarySPStreamRecordBySpID(spID uint32) ([]*SecondarySpIncomeMeta, error)
 	// GetBucketSizeByID get bucket size info by a bucket id
 	GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error)
+	// GetDataMigrationRecordByProcessKey  get the record of data migration by the given process key
+	GetDataMigrationRecordByProcessKey(processKey string) (*DataMigrationRecord, error)
 }
 
 // BSDB contains all the methods required by block syncer database
