@@ -249,12 +249,18 @@ type virtualGroupManager struct {
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
-func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus) (vgmgr.VirtualGroupManager, error) {
+func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus, enableHealthyChecker bool) (vgmgr.VirtualGroupManager, error) {
+	var healthChecker *HealthChecker
+	if enableHealthyChecker {
+		healthChecker = NewHealthChecker(chainClient)
+	} else {
+		healthChecker = nil
+	}
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
 		chainClient:         chainClient,
 		freezeSPPool:        NewFreezeSPPool(),
-		healthChecker:       NewHealthChecker(chainClient),
+		healthChecker:       healthChecker,
 	}
 	vgm.refreshMeta()
 	go func() {
@@ -266,7 +272,9 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 		}
 	}()
 	go vgm.releaseSPAndGVGLoop()
-	go vgm.healthChecker.Start()
+	if vgm.healthChecker != nil {
+		go vgm.healthChecker.Start()
+	}
 	return vgm, nil
 }
 
@@ -506,8 +514,7 @@ func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 }
 
 type HealthChecker struct {
-	mutex sync.RWMutex
-
+	mutex        sync.RWMutex                        // The mutex is used to guard sps and unhealthySPs
 	sps          map[uint32]*sptypes.StorageProvider // all sps,  id -> StorageProvider
 	unhealthySPs map[uint32]*sptypes.StorageProvider
 
@@ -538,13 +545,13 @@ func (checker *HealthChecker) isSPHealthy(spID uint32) bool {
 
 	if sp, exists := checker.sps[spID]; exists {
 		if _, unhealthyExists := checker.unhealthySPs[spID]; unhealthyExists {
-			log.CtxDebugw(context.Background(), "the sp is treated as unhealthy", "sp", sp)
+			log.CtxErrorw(context.Background(), "the sp is treated as unhealthy", "sp", sp)
 			return false
 		} else {
 			return true
 		}
 	}
-	log.CtxDebugw(context.Background(), "the sp isn't exist in sps map, is treated as unhealthy", "sps", checker.sps)
+	log.CtxErrorw(context.Background(), "the sp isn't exist in sps map, is treated as unhealthy", "sps", checker.sps)
 	return false
 }
 
@@ -553,16 +560,10 @@ func (checker *HealthChecker) isGVGHealthy(gvg *vgmgr.GlobalVirtualGroupMeta) bo
 	checker.mutex.RLock()
 	defer checker.mutex.RUnlock()
 
-	// gvg primary sp
-	if !checker.isSPHealthy(gvg.PrimarySPID) {
-		log.CtxDebugw(context.Background(), "the gvg is treated as unhealthy", "gvg", gvg)
-		return false
-	}
-
 	// gvg secondary sp
 	for _, spID := range gvg.SecondarySPIDs {
 		if !checker.isSPHealthy(spID) {
-			log.CtxDebugw(context.Background(), "the gvg is treated as unhealthy", "gvg", gvg)
+			log.CtxErrorw(context.Background(), "the gvg is treated as unhealthy", "gvg", gvg)
 			return false
 		}
 	}
@@ -588,7 +589,7 @@ func (checker *HealthChecker) isVGFHealthy(vgf *vgmgr.VirtualGroupFamilyMeta) bo
 		}
 	}
 	if healthyCount == 0 {
-		log.CtxDebugw(context.Background(), "the vgf is treated as unhealthy", "vgf", vgf)
+		log.CtxErrorw(context.Background(), "the vgf is treated as unhealthy", "vgf", vgf)
 	}
 	return healthyCount > 0
 }
@@ -612,6 +613,16 @@ func (checker *HealthChecker) checkAllSPHealth() {
 
 	params, err := checker.chainClient.QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix())
 	if err != nil {
+		log.Errorw("failed to query storage params from chain", "error", err)
+		return
+	}
+	if unhealthyCnt == 0 {
+		// only update checker.sps and return, this is fast-path.
+		checker.mutex.Lock()
+		checker.sps = spTemp
+		checker.mutex.Unlock()
+		log.Infow("there is no unhealthy sp, only update sps", "unhealthy_sps", checker.unhealthySPs,
+			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
 		return
 	}
 
@@ -621,10 +632,13 @@ func (checker *HealthChecker) checkAllSPHealth() {
 		checker.sps = spTemp
 		checker.unhealthySPs = unhealthyTemp
 		checker.mutex.Unlock()
-		log.Debugw("succeed to place these sp into unhealthy status", "unhealthy_sps", checker.unhealthySPs,
+		log.Infow("succeed to place these sp into unhealthy status", "unhealthy_sps", checker.unhealthySPs,
+			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
+	} else {
+		log.Errorw("the current checker determines that most SPs are abnormal", "unhealthy_sps", checker.unhealthySPs,
 			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
 	}
-	log.Debugw("succeed to check all sp health status", "unhealthy_sps", checker.unhealthySPs, "all_sps", checker.sps)
+	log.Infow("succeed to check all sp health status", "unhealthy_sps", checker.unhealthySPs, "all_sps", checker.sps)
 }
 
 func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {

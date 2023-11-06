@@ -181,6 +181,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	}
 
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
+	manager.enableHealthyChecker = cfg.Manager.EnableHealthyChecker
 	manager.loadTaskLimitToReplicate = cfg.Parallel.GlobalReplicatePieceParallel
 	manager.loadTaskLimitToSeal = cfg.Parallel.GlobalSealObjectParallel
 	manager.loadTaskLimitToGC = cfg.Parallel.GlobalGCObjectParallel
@@ -222,7 +223,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 
-	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus()); err != nil {
+	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus(), manager.enableHealthyChecker); err != nil {
 		return err
 	}
 	if cfg.Manager.SubscribeSPExitEventIntervalMillisecond == 0 {

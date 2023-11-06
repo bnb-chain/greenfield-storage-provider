@@ -105,10 +105,11 @@ type ManageModular struct {
 
 	gvgPreferSPList []uint32
 
-	recoveryFailedList []string
-	recoveryTaskMap    map[string]string
-	spBlackList        []uint32
-	gvgBlackList       vgmgr.IDSet
+	recoveryFailedList   []string
+	recoveryTaskMap      map[string]string
+	spBlackList          []uint32
+	gvgBlackList         vgmgr.IDSet
+	enableHealthyChecker bool
 }
 
 func (m *ManageModular) Name() string {
