@@ -517,7 +517,7 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 
 func (b *BlockSyncerModular) syncBucketSize() error {
 	dataMigrateKey := bsdb.ProcessKeyUpdateBucketSize
-	record, err := b.baseApp.GfBsDB().GetDataMigrationRecordByProcessKey(dataMigrateKey)
+	record, err := db.Cast(b.parserCtx.Database).GetDataMigrationRecord(context.Background(), dataMigrateKey)
 	if err != nil {
 		panic("failed to get the data migration record for " + dataMigrateKey)
 	}
