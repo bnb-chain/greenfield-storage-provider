@@ -81,6 +81,8 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
+	metrics.PerfPutObjectTime.WithLabelValues("seal_object_total_time_from_uploading_to_sealing").Observe(time.Since(
+		time.Unix(task.GetObjectInfo().GetCreateAt(), 0)).Seconds())
 	task.AppendLog("executor-end-handle-seal-task")
 	log.CtxDebugw(ctx, "finished to handle seal object task", "error", task.Error())
 }
