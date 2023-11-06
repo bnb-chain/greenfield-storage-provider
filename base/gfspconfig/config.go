@@ -247,6 +247,7 @@ type MetadataConfig struct {
 
 type ManagerConfig struct {
 	EnableLoadTask                                 bool     `comment:"optional"`
+	EnableHealthyChecker                           bool     `comment:"optional"`
 	SubscribeSPExitEventIntervalMillisecond        uint     `comment:"optional"`
 	SubscribeSwapOutExitEventIntervalMillisecond   uint     `comment:"optional"`
 	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`

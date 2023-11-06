@@ -146,6 +146,6 @@ type VirtualGroupManager interface {
 }
 
 // NewVirtualGroupManager is the virtual group manager init api.
-type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus) (VirtualGroupManager, error)
+type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus, enableHealthyChecker bool) (VirtualGroupManager, error)
 
 type IDSet = map[uint32]struct{}

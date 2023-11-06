@@ -348,6 +348,8 @@ RatePeriod = ''
 # optional
 EnableLoadTask = false
 # optional
+EnableHealthyChecker = true
+# optional
 SubscribeSPExitEventIntervalSec = 0
 # optional
 SubscribeSwapOutExitEventIntervalSec = 0
