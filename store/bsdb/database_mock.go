@@ -101,6 +101,21 @@ func (mr *MockMetadataMockRecorder) GetBucketSizeByID(bucketID any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSizeByID", reflect.TypeOf((*MockMetadata)(nil).GetBucketSizeByID), bucketID)
 }
 
+// GetDataMigrationRecordByProcessKey mocks base method.
+func (m *MockMetadata) GetDataMigrationRecordByProcessKey(processKey string) (*DataMigrationRecord, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataMigrationRecordByProcessKey", processKey)
+	ret0, _ := ret[0].(*DataMigrationRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDataMigrationRecordByProcessKey indicates an expected call of GetDataMigrationRecordByProcessKey.
+func (mr *MockMetadataMockRecorder) GetDataMigrationRecordByProcessKey(processKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataMigrationRecordByProcessKey", reflect.TypeOf((*MockMetadata)(nil).GetDataMigrationRecordByProcessKey), processKey)
+}
+
 // GetDefaultCharacterSet mocks base method.
 func (m *MockMetadata) GetDefaultCharacterSet() (string, error) {
 	m.ctrl.T.Helper()
@@ -1087,6 +1102,21 @@ func (m *MockBSDB) GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error) {
 func (mr *MockBSDBMockRecorder) GetBucketSizeByID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSizeByID", reflect.TypeOf((*MockBSDB)(nil).GetBucketSizeByID), bucketID)
+}
+
+// GetDataMigrationRecordByProcessKey mocks base method.
+func (m *MockBSDB) GetDataMigrationRecordByProcessKey(processKey string) (*DataMigrationRecord, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataMigrationRecordByProcessKey", processKey)
+	ret0, _ := ret[0].(*DataMigrationRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDataMigrationRecordByProcessKey indicates an expected call of GetDataMigrationRecordByProcessKey.
+func (mr *MockBSDBMockRecorder) GetDataMigrationRecordByProcessKey(processKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataMigrationRecordByProcessKey", reflect.TypeOf((*MockBSDB)(nil).GetDataMigrationRecordByProcessKey), processKey)
 }
 
 // GetDefaultCharacterSet mocks base method.
