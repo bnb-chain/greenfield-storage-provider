@@ -23,9 +23,10 @@ import (
 )
 
 var (
-	RtyAttem = retry.Attempts(uint(5))
-	RtyDelay = retry.Delay(time.Millisecond * 500)
-	RtyErr   = retry.LastErrorOnly(true)
+	RtyAttNum = uint(3)
+	RtyAttem  = retry.Attempts(RtyAttNum)
+	RtyDelay  = retry.Delay(time.Millisecond * 500)
+	RtyErr    = retry.LastErrorOnly(true)
 
 	replicateTimeOut = 10 * time.Second
 )
@@ -262,7 +263,7 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 		RtyDelay,
 		RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err, "attempt", n, "max_attempts", RtyAttem)
+			log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err, "attempt", n, "max_attempts", RtyAttNum)
 		})); err != nil {
 		log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err)
 		return err
