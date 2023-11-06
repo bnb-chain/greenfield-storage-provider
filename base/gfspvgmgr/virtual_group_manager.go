@@ -552,7 +552,7 @@ func (checker *HealthChecker) isSPHealthy(spID uint32) bool {
 		}
 	}
 	log.CtxErrorw(context.Background(), "the sp isn't exist in sps map, is treated as unhealthy", "sps", checker.sps)
-	return false
+	return true
 }
 
 // isGVGHealthy GVG healthy means gvg primary sp & secondary sps is healthy
