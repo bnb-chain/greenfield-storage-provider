@@ -26,6 +26,8 @@ var (
 	RtyAttem = retry.Attempts(uint(5))
 	RtyDelay = retry.Delay(time.Millisecond * 500)
 	RtyErr   = retry.LastErrorOnly(true)
+
+	replicateTimeOut = 10 * time.Second
 )
 
 func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
@@ -250,11 +252,19 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
+
 	if err = retry.Do(func() error {
-		return e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctx, spEndpoint, receive, data)
-	}, retry.Context(ctx), RtyAttem, RtyDelay, RtyErr); err != nil {
-		log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx,
-			"redundancy_idx", redundancyIdx, "error", err)
+		// timeout for single piece replication
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)
+		defer cancel()
+		return e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctxWithTimeout, spEndpoint, receive, data)
+	}, RtyAttem,
+		RtyDelay,
+		RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err, "attempt", n, "max_attempts", RtyAttem)
+		})); err != nil {
+		log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err)
 		return err
 	}
 	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_cost").Observe(time.Since(replicateOnePieceTime).Seconds())
@@ -302,7 +312,9 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	receive.SetSignature(taskSignature)
 	doneReplicateTime := time.Now()
 	if err = retry.Do(func() error {
-		signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctx, spEndpoint, receive)
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)
+		defer cancel()
+		signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctxWithTimeout, spEndpoint, receive)
 		return err
 	}, retry.Context(ctx), RtyAttem, RtyDelay, RtyErr); err != nil {
 		log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint,
