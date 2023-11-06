@@ -151,6 +151,11 @@ func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 	return nil
 }
 
+func (b *BlockSyncerModular) dataMigration(ctx context.Context) {
+	// update bucket size after the bucket_size column is added
+	b.syncBucketSize()
+}
+
 // serve start BlockSyncer rpc service
 func (b *BlockSyncerModular) serve(ctx context.Context) {
 	migrateDBAny := ctx.Value(MigrateDBKey{})
@@ -168,9 +173,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	worker := parser.NewWorker(b.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
 	worker.SetIndexer(b.parserCtx.Indexer)
 
-	if b.syncBucketSize() != nil {
-		panic("syncBucketSize failed")
-	}
+	b.dataMigration(ctx)
 
 	latestBlockHeight := mustGetLatestHeight(b.parserCtx)
 	Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(int64(latestBlockHeight))
@@ -513,6 +516,16 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 }
 
 func (b *BlockSyncerModular) syncBucketSize() error {
+	dataMigrateKey := bsdb.ProcessKeyUpdateBucketSize
+	record, err := b.baseApp.GfBsDB().GetDataMigrationRecordByProcessKey(dataMigrateKey)
+	if err != nil {
+		panic("failed to get the data migration record for " + dataMigrateKey)
+	}
+	if record != nil && record.IsCompleted == true {
+		log.Infof(dataMigrateKey + "has already been completed. Skip it now.")
+		return nil
+	}
+
 	log.Infof("start sync bucket size")
 	type result struct {
 		BucketID    common.Hash
@@ -580,5 +593,10 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 		}
 	}
 	log.Info("sync bucket size success")
+	err = db.Cast(b.parserCtx.Database).UpdateDataMigrationRecord(context.Background(), dataMigrateKey, true)
+	if err != nil {
+		log.Errorw("failed to UpdateDataMigrationRecord", "error", err, "dataMigrateKey", dataMigrateKey)
+		return err
+	}
 	return nil
 }

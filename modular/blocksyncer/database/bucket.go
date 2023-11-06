@@ -42,6 +42,13 @@ func (db *DB) BatchUpdateBucketSize(ctx context.Context, buckets []*models.Bucke
 	}).Create(buckets).Error
 }
 
+func (db *DB) UpdateDataMigrationRecord(ctx context.Context, processKey string, isCompleted bool) error {
+	return db.Db.Table((&bsdb.DataMigrationRecord{}).TableName()).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "process_key"}},
+		DoUpdates: clause.AssignmentColumns([]string{"is_completed"}),
+	}).Create(&bsdb.DataMigrationRecord{ProcessKey: processKey, IsCompleted: isCompleted}).Error
+}
+
 func (db *DB) UpdateStorageSizeToSQL(ctx context.Context, objectID common.Hash, bucketName, operation string) (string, []interface{}) {
 	tableName := bsdb.GetObjectsTableName(bucketName)
 	sql := `UPDATE buckets SET storage_size = storage_size %s CONVERT((SELECT payload_size FROM %s WHERE object_id = ?), DECIMAL(65,0)) WHERE bucket_name = ?`
