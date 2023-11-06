@@ -548,10 +548,11 @@ func (checker *HealthChecker) isSPHealthy(spID uint32) bool {
 			log.CtxErrorw(context.Background(), "the sp is treated as unhealthy", "sp", sp)
 			return false
 		} else {
+			log.CtxErrorw(context.Background(), "the sp isn't exist in unhealthy sp map, is treated as healthy", "sp", sp)
 			return true
 		}
 	}
-	log.CtxErrorw(context.Background(), "the sp isn't exist in sps map, is treated as unhealthy", "sps", checker.sps)
+	log.CtxInfow(context.Background(), "the sp isn't exist in sps map, is treated as healthy", "sps", checker.sps)
 	return true
 }
 
