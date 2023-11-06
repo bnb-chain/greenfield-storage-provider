@@ -515,8 +515,9 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 func (b *BlockSyncerModular) syncBucketSize() error {
 	log.Infof("start sync bucket size")
 	type result struct {
-		BucketID common.Hash
-		Size     decimal.Decimal
+		BucketID    common.Hash
+		StorageSize decimal.Decimal
+		ChargeSize  decimal.Decimal
 	}
 	for i := 0; i < ObjectsNumberOfShards; i++ {
 		tableName := "objects_"
@@ -525,21 +526,35 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 		}
 		tableName += fmt.Sprintf("%d", i)
 		var res []*result
-		err := db.Cast(b.parserCtx.Database).Db.Table(tableName).Select("bucket_id, SUM(payload_size) as size").Where("removed = ? and status = ?", false, "OBJECT_STATUS_SEALED").Group("bucket_id").Find(&res).Error
+		/*
+			SELECT A.bucket_id AS bucket_id,
+			       SUM(A.payload_size) AS storage_size,
+			       SUM(CASE
+			               WHEN (CAST((A.payload_size)AS DECIMAL(65, 0)) < 128000) THEN CAST(128000 AS DECIMAL(65, 0))
+			               ELSE CAST((A.payload_size) AS DECIMAL(65, 0))
+			           END) AS charge_size
+			FROM
+			  (SELECT bucket_id,
+			          payload_size
+			   FROM objects_00
+			   WHERE removed = FALSE
+			     AND `status` = 'OBJECT_STATUS_SEALED'
+				) AS A
+			GROUP BY bucket_id
+		*/
+		sql := "select A.bucket_id as bucket_id ,SUM(A.payload_size) as storage_size, SUM(CASE WHEN (CAST((A.payload_size)AS DECIMAL(65,0)) < 128000) THEN CAST(128000 AS DECIMAL(65,0)) ELSE CAST((A.payload_size) AS DECIMAL(65,0)) END) AS charge_size from (select bucket_id, payload_size from " + tableName + " WHERE removed = ? and status = ?) as A group by bucket_id"
+		log.Infof("sql:%s", sql)
+		err := db.Cast(b.parserCtx.Database).Db.Raw(sql, false, "OBJECT_STATUS_SEALED").Scan(&res).Error
 		if err != nil {
 			log.Errorw("failed to query size ", "error", err)
 			return err
 		}
 		buckets := make([]*models.Bucket, 0, len(res))
 		for _, r := range res {
-			chargeSize := r.Size
-			if r.Size.Cmp(decimal.NewFromInt(MinChargeSize)) == -1 {
-				chargeSize = decimal.NewFromInt(MinChargeSize)
-			}
 			buckets = append(buckets, &models.Bucket{
 				BucketID:    r.BucketID,
-				StorageSize: r.Size,
-				ChargeSize:  chargeSize,
+				StorageSize: r.StorageSize,
+				ChargeSize:  r.ChargeSize,
 			})
 		}
 		if len(buckets) == 0 {
