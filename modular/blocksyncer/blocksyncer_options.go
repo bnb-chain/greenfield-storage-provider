@@ -521,7 +521,7 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 	if err != nil {
 		panic("failed to get the data migration record for " + dataMigrateKey)
 	}
-	if record != nil && record.IsCompleted == true {
+	if record != nil && record.IsCompleted {
 		log.Infof(dataMigrateKey + "has already been completed. Skip it now.")
 		return nil
 	}

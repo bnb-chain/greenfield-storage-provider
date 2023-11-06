@@ -2,6 +2,7 @@ package bucket
 
 import (
 	"context"
+
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"

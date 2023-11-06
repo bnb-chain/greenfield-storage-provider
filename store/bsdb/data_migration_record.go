@@ -2,8 +2,9 @@ package bsdb
 
 import (
 	"errors"
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // GetDataMigrationRecordByProcessKey get the record of data migration by the given process key
