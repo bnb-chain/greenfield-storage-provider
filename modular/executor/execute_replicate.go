@@ -263,9 +263,9 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 		RtyDelay,
 		RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err, "attempt", n, "max_attempts", RtyAttNum)
+			log.CtxErrorw(ctx, "failed to replicate piece", "sp_endpoint", spEndpoint, "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err, "attempt", n, "max_attempts", RtyAttNum)
 		})); err != nil {
-		log.CtxErrorw(ctx, "failed to replicate piece", "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err)
+		log.CtxErrorw(ctx, "failed to replicate piece", "sp_endpoint", spEndpoint, "segment_idx", segmentIdx, "redundancy_idx", redundancyIdx, "error", err)
 		return err
 	}
 	metrics.PerfPutObjectTime.WithLabelValues("background_replicate_one_piece_cost").Observe(time.Since(replicateOnePieceTime).Seconds())
@@ -317,9 +317,13 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 		defer cancel()
 		signature, err = e.baseApp.GfSpClient().DoneReplicatePieceToSecondary(ctxWithTimeout, spEndpoint, receive)
 		return err
-	}, retry.Context(ctx), RtyAttem, RtyDelay, RtyErr); err != nil {
-		log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint,
-			"redundancy_idx", redundancyIdx, "error", err)
+	}, RtyAttem,
+		RtyDelay,
+		RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint, "redundancy_idx", redundancyIdx, "error", err, "attempt", n, "max_attempts", RtyAttNum)
+		})); err != nil {
+		log.CtxErrorw(ctx, "failed to done replicate piece", "endpoint", spEndpoint, "redundancy_idx", redundancyIdx, "error", err)
 		return nil, err
 	}
 	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_cost").Observe(time.Since(doneReplicateTime).Seconds())
