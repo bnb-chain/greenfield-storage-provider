@@ -90,7 +90,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 	)
 	picker.freeStorageSizeWeightMap = make(map[uint32]float64)
 	for id, f := range vgfm.vgfIDToVgf {
-		if !filter.Check(id) {
+		if filter != nil && !filter.Check(id) {
 			continue
 		}
 		if !filterByGvgList.Check(f.GVGMap) {
@@ -98,6 +98,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 		}
 		picker.addVirtualGroupFamily(f)
 	}
+
 	if familyID, err = picker.pickIndex(); err != nil {
 		log.Errorw("failed to pick vgf", "error", err)
 		return nil, ErrFailedPickVGF
@@ -140,7 +141,7 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroupForBucketMigrate(vg
 	)
 
 	for vgfID, vgf := range vgfm.vgfIDToVgf {
-		if !vgfFilter.Check(vgfID) {
+		if vgfFilter != nil && !vgfFilter.Check(vgfID) {
 			continue
 		}
 		if !gvgFilter.CheckFamily(vgfID) {
@@ -359,12 +360,12 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 // PickVirtualGroupFamily pick a virtual group family(If failed to pick,
 // new VGF will be automatically created on the chain) in get create bucket approval workflow.
 func (vgm *virtualGroupManager) PickVirtualGroupFamily(filterByGvgList *vgmgr.PickVGFByGVGFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
-	vgm.mutex.RLock()
-	defer vgm.mutex.RUnlock()
 	filter, err := vgm.genVgfFilter()
 	if err != nil {
 		return nil, err
 	}
+	vgm.mutex.RLock()
+	defer vgm.mutex.RUnlock()
 	return vgm.vgfManager.pickVirtualGroupFamily(filter, filterByGvgList)
 }
 
@@ -400,8 +401,8 @@ func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32, 
 // if pick func returns ErrStaledMetadata, the caller need force refresh from metadata and retry pick.
 // TODO: in the future background thread can pre-allocate gvg and reduce impact on foreground thread.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
-	// sleep 4 seconds for waiting a new block
-	time.Sleep(4 * time.Second)
+	// sleep 5 seconds for waiting a new block
+	time.Sleep(5 * time.Second)
 	vgm.refreshMeta()
 	return nil
 }
@@ -433,18 +434,22 @@ func (vgm *virtualGroupManager) QuerySPByID(spID uint32) (*sptypes.StorageProvid
 }
 
 func (vgm *virtualGroupManager) genVgfFilter() (*vgmgr.PickVGFFilter, error) {
-	vgfIDS := make([]uint32, len(vgm.vgfManager.vgfIDToVgf))
-	if len(vgfIDS) == 0 {
+	vgm.mutex.RLock()
+	vgfIDs := make([]uint32, len(vgm.vgfManager.vgfIDToVgf))
+	if len(vgfIDs) == 0 {
+		vgm.mutex.RUnlock()
 		return nil, ErrFailedPickVGF
 	}
 	i := 0
 	for k := range vgm.vgfManager.vgfIDToVgf {
-		vgfIDS[i] = k
+		vgfIDs[i] = k
 		i++
 	}
-	availableVgfIDs, err := vgm.chainClient.AvailableGlobalVirtualGroupFamilies(context.Background(), vgfIDS)
+	vgm.mutex.RUnlock()
+	availableVgfIDs, err := vgm.chainClient.AvailableGlobalVirtualGroupFamilies(context.Background(), vgfIDs)
 	if err != nil {
-		return nil, err
+		log.Errorw("failed to get available virtual group families", "error", err)
+		return nil, nil
 	}
 	return vgmgr.NewPickVGFFilter(availableVgfIDs), nil
 }
