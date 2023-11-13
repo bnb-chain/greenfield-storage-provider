@@ -558,9 +558,6 @@ func (checker *HealthChecker) isSPHealthy(spID uint32) bool {
 
 // isGVGHealthy GVG healthy means gvg primary sp & secondary sps is healthy
 func (checker *HealthChecker) isGVGHealthy(gvg *vgmgr.GlobalVirtualGroupMeta) bool {
-	checker.mutex.RLock()
-	defer checker.mutex.RUnlock()
-
 	// gvg secondary sp
 	for _, spID := range gvg.SecondarySPIDs {
 		if !checker.isSPHealthy(spID) {
@@ -574,9 +571,6 @@ func (checker *HealthChecker) isGVGHealthy(gvg *vgmgr.GlobalVirtualGroupMeta) bo
 
 // isVGFHealthy vgf healthy means at least one gvg is healthy
 func (checker *HealthChecker) isVGFHealthy(vgf *vgmgr.VirtualGroupFamilyMeta) bool {
-	checker.mutex.RLock()
-	defer checker.mutex.RUnlock()
-
 	gvgs := vgf.GVGMap
 	if len(gvgs) == 0 {
 		// vgf has no gvg treated as healthy
@@ -663,17 +657,17 @@ func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.CtxErrorw(context.Background(), "failed to connect to sp", "endpoint", endpoint, "error", err)
+		log.CtxErrorw(context.Background(), "failed to connect to sp", "sp", sp, "error", err)
 		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.CtxErrorw(context.Background(), "failed to check sp healthy", "http_status_code", resp.StatusCode, "resp_body", resp.Body)
+		log.CtxErrorw(context.Background(), "failed to check sp healthy", "sp", sp, "http_status_code", resp.StatusCode, "resp_body", resp.Body)
 		return false
 	}
 
-	log.CtxInfow(context.Background(), "succeed to check the sp healthy", "endpoint", endpoint)
+	log.CtxInfow(context.Background(), "succeed to check the sp healthy", "sp", sp)
 	return true
 }
 
