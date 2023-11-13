@@ -657,17 +657,17 @@ func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.CtxErrorw(context.Background(), "failed to connect to sp", "endpoint", endpoint, "error", err)
+		log.CtxErrorw(context.Background(), "failed to connect to sp", "sp", sp, "error", err)
 		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.CtxErrorw(context.Background(), "failed to check sp healthy", "http_status_code", resp.StatusCode, "resp_body", resp.Body)
+		log.CtxErrorw(context.Background(), "failed to check sp healthy", "sp", sp, "http_status_code", resp.StatusCode, "resp_body", resp.Body)
 		return false
 	}
 
-	log.CtxInfow(context.Background(), "succeed to check the sp healthy", "endpoint", endpoint)
+	log.CtxInfow(context.Background(), "succeed to check the sp healthy", "sp", sp)
 	return true
 }
 
