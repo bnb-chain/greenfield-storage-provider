@@ -558,9 +558,6 @@ func (checker *HealthChecker) isSPHealthy(spID uint32) bool {
 
 // isGVGHealthy GVG healthy means gvg primary sp & secondary sps is healthy
 func (checker *HealthChecker) isGVGHealthy(gvg *vgmgr.GlobalVirtualGroupMeta) bool {
-	checker.mutex.RLock()
-	defer checker.mutex.RUnlock()
-
 	// gvg secondary sp
 	for _, spID := range gvg.SecondarySPIDs {
 		if !checker.isSPHealthy(spID) {
@@ -574,9 +571,6 @@ func (checker *HealthChecker) isGVGHealthy(gvg *vgmgr.GlobalVirtualGroupMeta) bo
 
 // isVGFHealthy vgf healthy means at least one gvg is healthy
 func (checker *HealthChecker) isVGFHealthy(vgf *vgmgr.VirtualGroupFamilyMeta) bool {
-	checker.mutex.RLock()
-	defer checker.mutex.RUnlock()
-
 	gvgs := vgf.GVGMap
 	if len(gvgs) == 0 {
 		// vgf has no gvg treated as healthy
