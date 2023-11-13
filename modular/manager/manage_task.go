@@ -776,6 +776,7 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 		vgf *vgmgr.VirtualGroupFamilyMeta
 	)
 	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(vgmgr.NewPickVGFByGVGFilter(m.spBlackList)); err != nil {
+		log.CtxErrorw(ctx, "failed to pick virtual group family", "task_info", task.Info(), "error", err)
 		// create a new gvg, and retry pick.
 		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)
