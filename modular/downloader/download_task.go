@@ -43,7 +43,7 @@ func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
 }
 
 func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
-	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85201, detail)
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85001, detail)
 }
 
 func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask) error {
