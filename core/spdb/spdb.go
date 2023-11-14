@@ -97,6 +97,10 @@ type TrafficDB interface {
 	GetBucketTraffic(bucketID uint64, yearMonth string) (*BucketTraffic, error)
 	// UpdateExtraQuota update the read consumed quota and free consumed quota in traffic db with the extra quota
 	UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth string) error
+	// GetLatestBucketTraffic return latest bucket traffic info
+	GetLatestBucketTraffic(bucketID uint64) (*BucketTraffic, error)
+	// UpdateBucketTraffic update bucket traffic info
+	UpdateBucketTraffic(bucketID uint64, update *BucketTraffic) (err error)
 	// GetReadRecord return record list by time range.
 	GetReadRecord(timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 	// GetBucketReadRecord return bucket record list by time range.
@@ -168,6 +172,8 @@ type MigrateDB interface {
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
 	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
 	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
+	// UpdateMigrateGVGRetryCount updates gvg unit retry time
+	UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error
 
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)

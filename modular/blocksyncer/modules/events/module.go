@@ -44,6 +44,7 @@ func (m *Module) PrepareTables() error {
 		&bsdb.EventCancelMigrationBucket{},
 		&bsdb.EventStorageProviderExit{},
 		&bsdb.EventCompleteStorageProviderExit{},
+		&bsdb.EventRejectMigrateBucket{},
 	})
 }
 
@@ -53,5 +54,7 @@ func (m *Module) AutoMigrate() error {
 		&bsdb.EventMigrationBucket{},
 		&bsdb.EventCompleteMigrationBucket{},
 		&bsdb.EventStorageProviderExit{},
-		&bsdb.EventCompleteStorageProviderExit{}})
+		&bsdb.EventCompleteStorageProviderExit{},
+		&bsdb.EventRejectMigrateBucket{},
+	})
 }

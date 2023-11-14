@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/probe"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/config"
 	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
@@ -45,6 +46,8 @@ const (
 	DefaultMetricsAddress = "localhost:24367"
 	// DefaultPProfAddress defines the default pprof service address.
 	DefaultPProfAddress = "localhost:24368"
+	// DefaultProbeAddress defines the default probe service address.
+	DefaultProbeAddress = "localhost:24369"
 
 	// DefaultChainID defines the default greenfield chainID.
 	DefaultChainID = "greenfield_9000-121"
@@ -100,32 +103,56 @@ const (
 	ReceiverSuccessDoneReplicatePiece = "receiver_done_replicate_piece_success"
 	ReceiverFailureDoneReplicatePiece = "receiver_done_replicate_piece_failure"
 
-	SignerSuccess                      = "signer_success"
-	SignerFailure                      = "signer_failure"
-	SignerSuccessBucketApproval        = "signer_bucket_approval_success"
-	SignerFailureBucketApproval        = "signer_bucket_approval_failure"
-	SignerSuccessMigrateBucketApproval = "signer_bucket_approval_success"
-	SignerFailureMigrateBucketApproval = "signer_bucket_approval_failure"
-	SignerSuccessObjectApproval        = "signer_object_approval_success"
-	SignerFailureObjectApproval        = "signer_object_approval_failure"
-	SignerSuccessSealObject            = "signer_seal_object_success"
-	SignerFailureSealObject            = "signer_seal_object_failure"
-	SignerSuccessRejectUnSealObject    = "signer_reject_unseal_object_success"
-	SignerFailureRejectUnSealObject    = "signer_reject_unseal_object_failure"
-	SignerSuccessDiscontinueBucket     = "signer_discontinue_bucket_success"
-	SignerFailureDiscontinueBucket     = "signer_discontinue_bucket_failure"
-	SignerSuccessIntegrityHash         = "signer_integrity_hash_success"
-	SignerFailureIntegrityHash         = "signer_integrity_hash_failure"
-	SignerSuccessPing                  = "signer_ping_success"
-	SignerFailurePing                  = "signer_ping_failure"
-	SignerSuccessPong                  = "signer_pong_success"
-	SignerFailurePong                  = "signer_pong_failure"
-	SignerSuccessReceiveTask           = "signer_receive_task_success"
-	SignerFailureReceiveTask           = "signer_receive_task_failure"
-	SignerSuccessReplicateApproval     = "signer_secondary_approval_success"
-	SignerFailureReplicateApproval     = "signer_secondary_approval_failure"
-	SignerSuccessRecoveryTask          = "signer_recovery_task_success"
-	SignerFailureRecoveryTask          = "signer_recovery_task_failure"
+	SignerSuccess                           = "signer_success"
+	SignerFailure                           = "signer_failure"
+	SignerSuccessBucketApproval             = "signer_bucket_approval_success"
+	SignerFailureBucketApproval             = "signer_bucket_approval_failure"
+	SignerSuccessMigrateBucketApproval      = "signer_migrate_bucket_approval_success"
+	SignerFailureMigrateBucketApproval      = "signer_migrate_bucket_approval_failure"
+	SignerSuccessObjectApproval             = "signer_object_approval_success"
+	SignerFailureObjectApproval             = "signer_object_approval_failure"
+	SignerSuccessSealObject                 = "signer_seal_object_success"
+	SignerFailureSealObject                 = "signer_seal_object_failure"
+	SignerSuccessRejectUnSealObject         = "signer_reject_unseal_object_success"
+	SignerFailureRejectUnSealObject         = "signer_reject_unseal_object_failure"
+	SignerSuccessDiscontinueBucket          = "signer_discontinue_bucket_success"
+	SignerFailureDiscontinueBucket          = "signer_discontinue_bucket_failure"
+	SignerSuccessIntegrityHash              = "signer_integrity_hash_success"
+	SignerFailureIntegrityHash              = "signer_integrity_hash_failure"
+	SignerSuccessPing                       = "signer_ping_success"
+	SignerFailurePing                       = "signer_ping_failure"
+	SignerSuccessPong                       = "signer_pong_success"
+	SignerFailurePong                       = "signer_pong_failure"
+	SignerSuccessReceiveTask                = "signer_receive_task_success"
+	SignerFailureReceiveTask                = "signer_receive_task_failure"
+	SignerSuccessReplicateApproval          = "signer_secondary_approval_success"
+	SignerFailureReplicateApproval          = "signer_secondary_approval_failure"
+	SignerSuccessCreateGVG                  = "signer_create_gvg_success"
+	SignerFailureCreateGVG                  = "signer_create_gvg_failure"
+	SignerSuccessRecoveryTask               = "signer_recovery_task_success"
+	SignerFailureRecoveryTask               = "signer_recovery_task_failure"
+	SignerSuccessCompleteMigrateBucket      = "signer_complete_migration_bucket_success"
+	SignerFailureCompleteMigrateBucket      = "signer_complete_migration_bucket_failure"
+	SignerSuccessSecondarySPMigrationBucket = "signer_secondary_sp_migration_bucket_success"
+	SignerFailureSecondarySPMigrationBucket = "signer_secondary_sp_migration_bucket_failure"
+	SignerSuccessSwapOut                    = "signer_swap_out_success"
+	SignerFailureSwapOut                    = "signer_swap_out_failure"
+	SignerSuccessSignSwapOut                = "signer_sign_swap_out_success"
+	SignerFailureSignSwapOut                = "signer_sign_swap_out_failure"
+	SignerSuccessCompleteSwapOut            = "signer_complete_swap_out_success"
+	SignerFailureCompleteSwapOut            = "signer_complete_swap_out_failure"
+	SignerSuccessSPExit                     = "signer_sp_exit_success"
+	SignerFailureSPExit                     = "signer_sp_exit_failure"
+	SignerSuccessCompleteSPExit             = "signer_complete_sp_exit_success"
+	SignerFailureCompleteSPExit             = "signer_complete_sp_exit_failure"
+	SignerSuccessSPStoragePrice             = "signer_sp_storage_price_success"
+	SignerFailureSPStoragePrice             = "signer_sp_storage_price_failure"
+	SignerSuccessMigrateGVGTask             = "signer_migrate_gvg_task_success"
+	SignerFailureMigrateGVGTask             = "signer_migrate_gvg_task_failure"
+	SignerSuccessGfSpBucketMigrateInfo      = "signer_gfsp_bucket_migrate_info_success"
+	SignerFailureGfSpBucketMigrateInfo      = "signer_gfsp_bucket_migrate_info_failure"
+	SignerSuccessRejectMigrateBucket        = "signer_reject_migrate_bucket_success"
+	SignerFailureRejectMigrateBucket        = "signer_reject_migrate_bucket_failure"
 
 	UploaderSuccessPutObject = "uploader_put_object_success"
 	UploaderFailurePutObject = "uploader_put_object_failure"
@@ -231,7 +258,7 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 		return nil
 	}
 	for _, v := range cfg.Server {
-		if v == coremodule.BlockSyncerModularName || v == coremodule.SignModularName {
+		if v == coremodule.BlockSyncerModularName || v == coremodule.SignModularName || v == coremodule.GateModularName {
 			log.Infof("[%s] module doesn't need sp db", v)
 			continue
 		}
@@ -255,6 +282,14 @@ func DefaultGfSpDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 				log.Panicw("failed to new spdb", "error", err)
 				return
 			}
+
+			collector, err := db.RegisterStdDBStats()
+			if err != nil {
+				log.Errorw("failed to register db stats metrics", "error", err)
+				return
+			}
+			metrics.AddMetrics(collector)
+
 			app.gfSpDB = db
 		})
 	}
@@ -502,25 +537,47 @@ func DefaultGfSpModuleOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error
 
 func DefaultGfSpMetricOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Monitor.DisableMetrics {
+		log.Info("disable sp metrics")
 		app.metrics = &coremodule.NullModular{}
+	} else {
+		if cfg.Monitor.MetricsHTTPAddress == "" {
+			cfg.Monitor.MetricsHTTPAddress = DefaultMetricsAddress
+		}
+		app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHTTPAddress)
+		app.RegisterServices(app.metrics)
 	}
-	if cfg.Monitor.MetricsHTTPAddress == "" {
-		cfg.Monitor.MetricsHTTPAddress = DefaultMetricsAddress
-	}
-	app.metrics = metrics.NewMetrics(cfg.Monitor.MetricsHTTPAddress)
-	app.RegisterServices(app.metrics)
 	return nil
 }
 
 func DefaultGfSpPProfOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	if cfg.Monitor.DisablePProf {
+		log.Info("disable sp pprof")
 		app.pprof = &coremodule.NullModular{}
+	} else {
+		if cfg.Monitor.PProfHTTPAddress == "" {
+			cfg.Monitor.PProfHTTPAddress = DefaultPProfAddress
+		}
+		app.pprof = pprof.NewPProf(cfg.Monitor.PProfHTTPAddress)
+		app.RegisterServices(app.pprof)
 	}
-	if cfg.Monitor.PProfHTTPAddress == "" {
-		cfg.Monitor.PProfHTTPAddress = DefaultPProfAddress
+	return nil
+}
+
+func DefaultGfSpProbeOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
+	if cfg.Monitor.DisableProbe {
+		log.Info("disable sp probe")
+		app.probeSvr = &coremodule.NullModular{}
+	} else {
+		if cfg.Monitor.ProbeHTTPAddress == "" {
+			cfg.Monitor.ProbeHTTPAddress = DefaultProbeAddress
+		}
+		httpProbe := probe.NewHTTPProbe()
+		statusProber := probe.Combine(httpProbe, probe.NewInstrumentation())
+		app.httpProbe = statusProber
+
+		app.probeSvr = probe.NewProbe(cfg.Monitor.ProbeHTTPAddress, httpProbe)
+		app.RegisterServices(app.probeSvr)
 	}
-	app.pprof = pprof.NewPProf(cfg.Monitor.PProfHTTPAddress)
-	app.RegisterServices(app.pprof)
 	return nil
 }
 
@@ -537,6 +594,7 @@ var gfspBaseAppDefaultOptions = []Option{
 	DefaultGfSpModuleOption,
 	DefaultGfSpMetricOption,
 	DefaultGfSpPProfOption,
+	DefaultGfSpProbeOption,
 }
 
 func NewGfSpBaseApp(cfg *gfspconfig.GfSpConfig, opts ...gfspconfig.Option) (*GfSpBaseApp, error) {

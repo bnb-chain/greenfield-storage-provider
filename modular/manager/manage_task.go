@@ -9,13 +9,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-
 	"cosmossdk.io/math"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/slices"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -28,7 +26,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 var (
@@ -259,7 +259,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 		m.baseApp.TaskMaxRetry(replicateTask))
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
-
+	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
 	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
@@ -633,6 +633,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 
 	if task.GetRecovered() {
 		m.recoveryQueue.PopByKey(task.Key())
+		delete(m.recoveryTaskMap, task.Key().String())
 		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
 		return nil
 	}
@@ -653,6 +654,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		return err
 	}
 
+	m.recoveryTaskMap[task.Key().String()] = task.Key().String()
 	return nil
 }
 
@@ -668,6 +670,10 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 		err := m.recoveryQueue.Push(handleTask)
 		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
 	} else {
+		if !slices.Contains(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName) {
+			m.recoveryFailedList = append(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName)
+		}
+		delete(m.recoveryTaskMap, handleTask.Key().String())
 		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
 	}
 	return nil
@@ -692,6 +698,17 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 	if pushErr != nil {
 		log.CtxErrorw(ctx, "failed to push task to migrate gvg queue", "task", task, "error", pushErr)
 		return pushErr
+	}
+
+	//  if cancel migrate bucket, migrated recoup quota
+	if cancelTask {
+		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
+		log.CtxInfow(ctx, "start to cancel migrate task and send post migrate bucket to src sp", "post_msg", postMsg, "task", task)
+		err = m.bucketMigrateScheduler.PostMigrateBucket(postMsg, nil)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to post migrate bucket", "msg", postMsg, "error", err)
+		}
+		return err
 	}
 
 	if task.GetBucketID() != 0 {
@@ -759,6 +776,7 @@ func (m *ManageModular) PickVirtualGroupFamily(ctx context.Context, task task.Ap
 		vgf *vgmgr.VirtualGroupFamilyMeta
 	)
 	if vgf, err = m.virtualGroupManager.PickVirtualGroupFamily(vgmgr.NewPickVGFByGVGFilter(m.spBlackList)); err != nil {
+		log.CtxErrorw(ctx, "failed to pick virtual group family", "task_info", task.Info(), "error", err)
 		// create a new gvg, and retry pick.
 		if err = m.createGlobalVirtualGroup(0, nil); err != nil {
 			log.CtxErrorw(ctx, "failed to create global virtual group", "task_info", task.Info(), "error", err)

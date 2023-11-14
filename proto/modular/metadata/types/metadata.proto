@@ -2,6 +2,7 @@ syntax = "proto3";
 package modular.metadata.types;
 
 import "base/types/gfsperrors/error.proto";
+import "base/types/gfsptask/task.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "greenfield/payment/stream_record.proto";
@@ -37,6 +38,8 @@ message Bucket {
   int64 update_at = 8;
   // update_time defines the block number when the object updated
   int64 update_time = 9;
+  // storage_size defines the size of bucket
+  string storage_size = 10;
 }
 
 // Object is the structure for user object
@@ -95,6 +98,8 @@ message VGFInfoBucket {
   int64 update_time = 9;
   // vgf defines the vgf info
   greenfield.virtualgroup.GlobalVirtualGroupFamily vgf = 10;
+  // storage_size defines the size of bucket
+  string storage_size = 11;
 }
 
 // PaymentAccount is the structure for user payment account info
@@ -345,6 +350,18 @@ message GfSpGetBucketReadQuotaResponse {
   uint64 consumed_size = 4;
   // free_quota_consume_siz is currently consumed size
   uint64 free_quota_consume_size = 5;
+}
+
+// GfSpGetLatestBucketReadQuotaRequest is request type for the GfSpGetLatestBucketReadQuota RPC method.
+message GfSpGetLatestBucketReadQuotaRequest {
+  // bucket id from the greenfield chain
+  uint64 bucket_id = 1;
+}
+
+// GfSpGetLatestBucketReadQuotaResponse is response type for the GfSpGetLatestBucketReadQuota RPC method.
+message GfSpGetLatestBucketReadQuotaResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  base.types.gfsptask.GfSpBucketQuotaInfo quota = 2;
 }
 
 // ListBucketReadRecordRequest is request type for the ListBucketReadRecord RPC method.
@@ -632,12 +649,14 @@ message GfSpListMigrateBucketEventsRequest {
 
 // ListMigrateBucketEvents is the combination of migrate bucket events
 message ListMigrateBucketEvents {
-  // events defines the migration bucket event
-  greenfield.storage.EventMigrationBucket events = 1;
-  // cancel_events defines the migration bucket event
-  greenfield.storage.EventCancelMigrationBucket cancel_events = 2;
-  // complete_events defines the complete migration bucket event
-  greenfield.storage.EventCompleteMigrationBucket complete_events = 3;
+  // event defines the migration bucket event
+  greenfield.storage.EventMigrationBucket event = 1;
+  // cancel_event defines the migration bucket event
+  greenfield.storage.EventCancelMigrationBucket cancel_event = 2;
+  // complete_event defines the complete migration bucket event
+  greenfield.storage.EventCompleteMigrationBucket complete_event = 3;
+  // reject_event defines the reject migration bucket event
+  greenfield.storage.EventRejectMigrateBucket reject_event = 4;
 }
 
 // GfSpListMigrateBucketEventsResponse is response type for the GfSpListMigrateBucketEvents RPC method
@@ -726,6 +745,60 @@ message GfSpGetSPInfoRequest {
 message GfSpGetSPInfoResponse {
   // sp defines the meta info of storage provider
   greenfield.sp.StorageProvider storage_provider = 1;
+}
+
+// GfSpPrimarySpIncomeDetailsRequest is request type for the GfSpPrimarySpIncomeDetails RPC method
+message GfSpPrimarySpIncomeDetailsRequest {
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 1;
+}
+
+// GfSpPrimarySpIncomeDetailsResponse is response type for the GfSpPrimarySpIncomeDetails RPC method
+message GfSpPrimarySpIncomeDetailsResponse {
+  // current_timestamp defines the timestamp when the query happens
+  int64 current_timestamp = 1;
+  // primary_sp_income_details defines a list of PrimarySpIncomeDetails
+  repeated PrimarySpIncomeDetail primary_sp_income_details = 2;
+}
+
+message PrimarySpIncomeDetail {
+  // vgf_id is the unique identification for vgf
+  uint32 vgf_id = 1;
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 2;
+  // income for this primary sp
+  bytes income = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// GfSpSecondarySpIncomeDetailsRequest is request type for the GfSpSecondarySpIncomeDetails RPC method
+message GfSpSecondarySpIncomeDetailsRequest {
+  // sp_id is the unique identification for sp
+  uint32 sp_id = 1;
+}
+
+// GfSpSecondarySpIncomeDetailsResponse is response type for the GfSpSecondarySpIncomeDetails RPC method
+message GfSpSecondarySpIncomeDetailsResponse {
+  // current_timestamp defines the timestamp when the query happens
+  int64 current_timestamp = 1;
+  // secondary_sp_income_details defines a list of SecondarySpIncomeDetail
+  repeated SecondarySpIncomeDetail secondary_sp_income_details = 2;
+}
+
+message SecondarySpIncomeDetail {
+  // gvg_id is the unique identification for gvg
+  uint32 gvg_id = 1;
+  // stream_record defines stream payment record of a stream account
+  greenfield.payment.StreamRecord stream_record = 2;
+  // income for this secondary sp
+  bytes income = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message Status {
@@ -916,6 +989,18 @@ message GfSpVerifyMigrateGVGPermissionResponse {
   greenfield.permission.Effect effect = 1;
 }
 
+// GfSpGetBucketSizeRequest is request type for the GfSpGetBucketSize RPC method
+message GfSpGetBucketSizeRequest {
+  // bucket_id is the unique identification for bucket
+  uint64 bucket_id = 1;
+}
+
+// GfSpGetBucketSizeResponse is response type for the GfSpGetBucketSize RPC method
+message GfSpGetBucketSizeResponse {
+  // bucket_size define total objects of specific bucket
+  string bucket_size = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -931,6 +1016,7 @@ service GfSpMetadataService {
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
   rpc GfSpGetEndpointBySpID(GfSpGetEndpointBySpIDRequest) returns (GfSpGetEndpointBySpIDResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
+  rpc GfSpGetLatestBucketReadQuota(GfSpGetLatestBucketReadQuotaRequest) returns (GfSpGetLatestBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}
   rpc GfSpQueryResumableUploadSegment(GfSpQueryResumableUploadSegmentRequest) returns (GfSpQueryResumableUploadSegmentResponse) {}
@@ -961,4 +1047,7 @@ service GfSpMetadataService {
   rpc GfSpListGroupsByIDs(GfSpListGroupsByIDsRequest) returns (GfSpListGroupsByIDsResponse) {}
   rpc GfSpGetSPMigratingBucketNumber(GfSpGetSPMigratingBucketNumberRequest) returns (GfSpGetSPMigratingBucketNumberResponse) {}
   rpc GfSpVerifyMigrateGVGPermission(GfSpVerifyMigrateGVGPermissionRequest) returns (GfSpVerifyMigrateGVGPermissionResponse) {}
+  rpc GfSpGetBucketSize(GfSpGetBucketSizeRequest) returns (GfSpGetBucketSizeResponse) {}
+  rpc GfSpPrimarySpIncomeDetails(GfSpPrimarySpIncomeDetailsRequest) returns (GfSpPrimarySpIncomeDetailsResponse) {}
+  rpc GfSpSecondarySpIncomeDetails(GfSpSecondarySpIncomeDetailsRequest) returns (GfSpSecondarySpIncomeDetailsResponse) {}
 }

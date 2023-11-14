@@ -26,7 +26,6 @@ var storageMap = map[string]StorageFn{
 	B2Store:       newB2Store,
 	MinioStore:    newMinioStore,
 	LdfsStore:     newLdfsStore,
-	AliyunfsStore: newAliyunfsStore,
 	DiskFileStore: newDiskFileStore,
 	MemoryStore:   newMemoryStore,
 }

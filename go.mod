@@ -10,7 +10,7 @@ require (
 	github.com/aliyun/credentials-go v1.3.0
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v1.0.0
+	github.com/bnb-chain/greenfield v1.0.2-0.20231018075145-ccc5951ffaca
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230906132736-eb2f0efea228
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.2
@@ -34,6 +34,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8
 	github.com/pkg/sftp v1.13.5
 	github.com/prometheus/client_golang v1.15.0
+	github.com/shopspring/decimal v1.3.1
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stretchr/testify v1.8.4
 	github.com/ulule/limiter/v3 v3.11.1
@@ -281,7 +282,7 @@ require (
 	golang.org/x/text v0.10.0 // indirect
 	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -297,12 +298,12 @@ replace (
 	cosmossdk.io/api => github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230816082903-b48770f5e210
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e210
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.23.0
-	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.3
+	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.0-20231030090949-99ef7dbd1e62
 	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.6
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v1.0.2-0.20231101023808-a3c24a58eca0
 	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1
-	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20231023111452-7cd108f48b21
+	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20231027060606-82070b5da95a
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

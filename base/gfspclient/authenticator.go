@@ -15,7 +15,9 @@ import (
 func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string,
 	opts ...grpc.DialOption) (bool, error) {
 	startTime := time.Now()
-	defer metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
+	}()
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
 	metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_create_conn_time").Observe(time.Since(startTime).Seconds())
 	if connErr != nil {
@@ -75,6 +77,7 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRPCUnknownWithDetail("client failed to connect authenticator, error: " + connErr.Error())
 	}
+	defer conn.Close()
 	req := &gfspserver.UpdateUserPublicKeyRequest{
 		AccountId:     account,
 		Domain:        domain,
@@ -103,6 +106,7 @@ func (s *GfSpClient) VerifyGNFD1EddsaSignature(ctx context.Context, account stri
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
 		return false, ErrRPCUnknownWithDetail("client failed to connect authenticator, error: " + connErr.Error())
 	}
+	defer conn.Close()
 	req := &gfspserver.VerifyGNFD1EddsaSignatureRequest{
 		AccountId:     account,
 		Domain:        domain,

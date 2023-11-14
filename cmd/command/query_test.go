@@ -6,6 +6,10 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/mock/gomock"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
@@ -14,9 +18,6 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
-	"go.uber.org/mock/gomock"
 )
 
 func TestListModules(t *testing.T) {
@@ -192,6 +193,64 @@ func TestQuerySPExit(t *testing.T) {
 	assert.Equal(t, nil, err)
 
 	err = app.Run([]string{"./gnfd-sp", "query.sp.exit", "--config", DefaultConfigFile, "--endpoint", "localhost:2012"})
+	assert.Nil(t, err)
+	// clear temp config file
+	os.Remove(DefaultConfigFile)
+}
+
+func TestGetPrimarySPIncome(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	CW.config = &gfspconfig.GfSpConfig{}
+	mockDBAPI := spdb.NewMockSPDB(ctrl)
+	CW.spDBAPI = mockDBAPI
+	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
+	CW.grpcAPI = mockGRPCAPI
+	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
+	CW.chainAPI = mockConsensusAPI
+
+	o1 := mockGRPCAPI.EXPECT().PrimarySpIncomeDetails(gomock.Any(), gomock.Any()).Return(int64(0), nil, nil)
+	gomock.InOrder(o1)
+
+	app := cli.NewApp()
+	app.Commands = []*cli.Command{
+		QueryPrimarySPIncomeCmd,
+	}
+	err := ConfigDumpCmd.Action(&cli.Context{})
+	assert.Equal(t, nil, err)
+	_, err = os.Stat(DefaultConfigFile)
+	assert.Equal(t, nil, err)
+
+	err = app.Run([]string{"./gnfd-sp", "query.primary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
+	assert.Nil(t, err)
+	// clear temp config file
+	os.Remove(DefaultConfigFile)
+}
+
+func TestGetSecondarySPIncome(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	CW.config = &gfspconfig.GfSpConfig{}
+	mockDBAPI := spdb.NewMockSPDB(ctrl)
+	CW.spDBAPI = mockDBAPI
+	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
+	CW.grpcAPI = mockGRPCAPI
+	mockConsensusAPI := consensus.NewMockConsensus(ctrl)
+	CW.chainAPI = mockConsensusAPI
+
+	o1 := mockGRPCAPI.EXPECT().SecondarySpIncomeDetails(gomock.Any(), gomock.Any()).Return(int64(0), nil, nil)
+	gomock.InOrder(o1)
+
+	app := cli.NewApp()
+	app.Commands = []*cli.Command{
+		QuerySecondarySPIncomeCmd,
+	}
+	err := ConfigDumpCmd.Action(&cli.Context{})
+	assert.Equal(t, nil, err)
+	_, err = os.Stat(DefaultConfigFile)
+	assert.Equal(t, nil, err)
+
+	err = app.Run([]string{"./gnfd-sp", "query.secondary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
 	assert.Nil(t, err)
 	// clear temp config file
 	os.Remove(DefaultConfigFile)

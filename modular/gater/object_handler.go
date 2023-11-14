@@ -15,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -44,7 +45,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(uploadPrimaryStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailurePutObject).Inc()
@@ -174,7 +175,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(uploadPrimaryStartTime).Seconds())
 		} else {
@@ -299,7 +300,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
@@ -382,11 +383,11 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 	)
 	getObjectStartTime := time.Now()
 	defer func() {
+		reqCtx.Cancel()
 		if err != nil {
-			log.CtxDebugw(reqCtx.Context(), "get object error")
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(getObjectStartTime).Seconds())
 			metrics.ReqCounter.WithLabelValues(GatewayFailureGetObject).Inc()
@@ -399,7 +400,6 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			metrics.ReqTime.WithLabelValues(GatewaySuccessGetObject).Observe(time.Since(getObjectStartTime).Seconds())
 		}
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
-		reqCtx.Cancel()
 	}()
 
 	// GNFD1-ECDSA or GNFD1-EDDSA authentication, by checking the headers.
@@ -653,7 +653,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-			MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
@@ -770,7 +770,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			} else {
 				reqCtx.SetError(gfsperrors.MakeGfSpError(err))
 				reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
-				MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+				modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 				metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 				metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 			}

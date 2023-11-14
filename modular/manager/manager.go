@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -72,6 +74,9 @@ type ManageModular struct {
 	migrateGVGQueue      taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueueMux   sync.Mutex
 
+	// src sp used TODO: these should be persisted
+	migratingBuckets map[uint64]struct{}
+
 	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
@@ -99,8 +104,12 @@ type ManageModular struct {
 	loadSealTimeout      int64
 
 	gvgPreferSPList []uint32
-	spBlackList     []uint32
-	gvgBlackList    vgmgr.IDSet
+
+	recoveryFailedList   []string
+	recoveryTaskMap      map[string]string
+	spBlackList          []uint32
+	gvgBlackList         vgmgr.IDSet
+	enableHealthyChecker bool
 }
 
 func (m *ManageModular) Name() string {
@@ -125,15 +134,13 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.migrateGVGQueue.SetRetireTaskStrategy(m.GCMigrateGVGQueue)
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 
+	m.migratingBuckets = make(map[uint64]struct{})
+
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
 	}
 	m.scope = scope
-	err = m.LoadTaskFromDB()
-	if err != nil {
-		return err
-	}
 
 	if err = m.LoadTaskFromDB(); err != nil {
 		return err
@@ -512,7 +519,16 @@ func (m *ManageModular) GCReceiveQueue(qTask task.Task) bool {
 }
 
 func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
-	return qTask.ExceedRetry() || qTask.ExceedTimeout()
+	task := qTask.(task.RecoveryPieceTask)
+
+	GcConditionMet := task.ExceedRetry()
+	if GcConditionMet {
+		if !slices.Contains(m.recoveryFailedList, task.GetObjectInfo().ObjectName) {
+			m.recoveryFailedList = append(m.recoveryFailedList, task.GetObjectInfo().ObjectName)
+		}
+		delete(m.recoveryTaskMap, task.Key().String())
+	}
+	return GcConditionMet
 }
 
 func (m *ManageModular) GCMigrateGVGQueue(qTask task.Task) bool {
@@ -799,12 +815,14 @@ func (m *ManageModular) migrateGVGQueuePopByLimitAndPushAgain(task task.MigrateG
 
 	m.migrateGVGQueue.PopByKey(task.Key())
 	task.SetUpdateTime(time.Now().Unix())
-	if !task.GetFinished() || push {
+	// When both conditions are met, the task should be pushed into the queue
+	if !task.GetFinished() && push {
 		if pushErr = m.migrateGVGQueue.Push(task); pushErr != nil {
 			log.Errorw("failed to push gvg task queue", "task", task, "error", pushErr)
 		}
+		log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
 	}
-	log.Debugw("succeed to push gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
+	log.Debugw("succeed to pop gvg task queue", "task", task, "queue", m.migrateGVGQueue, "push", push, "error", pushErr)
 
 	return pushErr
 }
@@ -815,6 +833,8 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	resumableUploadCount int,
 	maxUploadCount int,
 	migrateGVGCount int,
+	recoveryProcessCount int,
+	recoveryFailedList []string,
 ) {
 	uploadTasks = m.uploadQueue.Len()
 	replicateCount = m.replicateQueue.Len()
@@ -822,5 +842,12 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	resumableUploadCount = m.resumableUploadQueue.Len()
 	maxUploadCount = m.maxUploadObjectNumber
 	migrateGVGCount = m.migrateGVGQueue.Len()
+	recoveryProcessCount = len(m.recoveryTaskMap)
+	recoveryFailedList = m.recoveryFailedList
 	return
+}
+
+func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
+	m.recoveryFailedList = m.recoveryFailedList[:0]
+	return m.recoveryFailedList
 }

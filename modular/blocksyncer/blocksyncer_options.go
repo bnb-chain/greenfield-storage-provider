@@ -17,6 +17,7 @@ import (
 	"github.com/forbole/juno/v4/common"
 	databaseconfig "github.com/forbole/juno/v4/database/config"
 	loggingconfig "github.com/forbole/juno/v4/log/config"
+	"github.com/forbole/juno/v4/models"
 	"github.com/forbole/juno/v4/modules"
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/node/remote"
@@ -24,6 +25,7 @@ import (
 	parserconfig "github.com/forbole/juno/v4/parser/config"
 	"github.com/forbole/juno/v4/types"
 	"github.com/forbole/juno/v4/types/config"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm/schema"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -149,13 +151,18 @@ func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 	return nil
 }
 
+func (b *BlockSyncerModular) dataMigration(ctx context.Context) {
+	// update bucket size after the bucket_size column is added
+	b.syncBucketSize()
+}
+
 // serve start BlockSyncer rpc service
 func (b *BlockSyncerModular) serve(ctx context.Context) {
 	migrateDBAny := ctx.Value(MigrateDBKey{})
 	if migrateDB, ok := migrateDBAny.(bool); ok && migrateDB {
 		err := b.initDB(true)
 		if err != nil {
-			log.Errorw("fail to init DB", "error", err)
+			log.Errorw("failed to init DB", "error", err)
 			return
 		}
 	}
@@ -165,6 +172,8 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	// Create workers
 	worker := parser.NewWorker(b.parserCtx, exportQueue, 0, config.Cfg.Parser.ConcurrentSync)
 	worker.SetIndexer(b.parserCtx.Indexer)
+
+	b.dataMigration(ctx)
 
 	latestBlockHeight := mustGetLatestHeight(b.parserCtx)
 	Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(int64(latestBlockHeight))
@@ -504,4 +513,90 @@ func mustGetLatestHeight(ctx *parser.Context) uint64 {
 	}
 
 	return 0
+}
+
+func (b *BlockSyncerModular) syncBucketSize() error {
+	dataMigrateKey := bsdb.ProcessKeyUpdateBucketSize
+	record, err := db.Cast(b.parserCtx.Database).GetDataMigrationRecord(context.Background(), dataMigrateKey)
+	if err != nil {
+		panic("failed to get the data migration record for " + dataMigrateKey)
+	}
+	if record != nil && record.IsCompleted {
+		log.Infof(dataMigrateKey + "has already been completed. Skip it now.")
+		return nil
+	}
+
+	log.Infof("start sync bucket size")
+	type result struct {
+		BucketID    common.Hash
+		StorageSize decimal.Decimal
+		ChargeSize  decimal.Decimal
+	}
+	for i := 0; i < ObjectsNumberOfShards; i++ {
+		tableName := "objects_"
+		if i < 10 {
+			tableName += "0"
+		}
+		tableName += fmt.Sprintf("%d", i)
+		var res []*result
+		/*
+			SELECT A.bucket_id AS bucket_id,
+			       SUM(A.payload_size) AS storage_size,
+			       SUM(CASE
+			               WHEN (CAST((A.payload_size)AS DECIMAL(65, 0)) < 128000) THEN CAST(128000 AS DECIMAL(65, 0))
+			               ELSE CAST((A.payload_size) AS DECIMAL(65, 0))
+			           END) AS charge_size
+			FROM
+			  (SELECT bucket_id,
+			          payload_size
+			   FROM objects_00
+			   WHERE removed = FALSE
+			     AND `status` = 'OBJECT_STATUS_SEALED'
+				) AS A
+			GROUP BY bucket_id
+		*/
+		sql := "select A.bucket_id as bucket_id ,SUM(A.payload_size) as storage_size, SUM(CASE WHEN (CAST((A.payload_size)AS DECIMAL(65,0)) < 128000) THEN CAST(128000 AS DECIMAL(65,0)) ELSE CAST((A.payload_size) AS DECIMAL(65,0)) END) AS charge_size from (select bucket_id, payload_size from " + tableName + " WHERE removed = ? and status = ?) as A group by bucket_id"
+		log.Infof("sql:%s", sql)
+		err := db.Cast(b.parserCtx.Database).Db.Raw(sql, false, "OBJECT_STATUS_SEALED").Scan(&res).Error
+		if err != nil {
+			log.Errorw("failed to query size ", "error", err)
+			return err
+		}
+		buckets := make([]*models.Bucket, 0, len(res))
+		for _, r := range res {
+			buckets = append(buckets, &models.Bucket{
+				BucketID:    r.BucketID,
+				StorageSize: r.StorageSize,
+				ChargeSize:  r.ChargeSize,
+			})
+		}
+		if len(buckets) == 0 {
+			continue
+		}
+		offset := 0
+		step := 1000
+		for {
+			left := offset
+			right := offset + step
+			if left >= len(buckets) {
+				break
+			}
+			if right > len(buckets) {
+				right = len(buckets)
+			}
+			err = db.Cast(b.parserCtx.Database).BatchUpdateBucketSize(context.Background(), buckets[left:right])
+			if err != nil {
+				log.Errorw("failed to update size", "error", err)
+				return err
+			}
+			offset = right
+		}
+	}
+	log.Info("sync bucket size success")
+	err = db.Cast(b.parserCtx.Database).UpdateDataMigrationRecord(context.Background(), dataMigrateKey, true)
+	if err != nil {
+		log.Errorw("failed to UpdateDataMigrationRecord", "error", err, "dataMigrateKey", dataMigrateKey)
+		return err
+	}
+	return nil
 }

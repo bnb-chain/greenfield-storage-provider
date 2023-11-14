@@ -2,14 +2,17 @@ package gfspapp
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 )
 
 var (
@@ -65,7 +68,9 @@ func (g *GfSpBaseApp) GfSpDownloadPiece(ctx context.Context, req *gfspserver.GfS
 	*gfspserver.GfSpDownloadPieceResponse, error) {
 	downloadPieceTask := req.GetDownloadPieceTask()
 	startTime := time.Now()
-	defer metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_server_total_time").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_server_total_time").Observe(time.Since(startTime).Seconds())
+	}()
 	if downloadPieceTask == nil {
 		log.Error("failed to download piece due to task pointer dangling")
 		return &gfspserver.GfSpDownloadPieceResponse{Err: ErrDownloadTaskDangling}, nil
@@ -120,7 +125,9 @@ func (g *GfSpBaseApp) OnDownloadPieceTask(ctx context.Context, downloadPieceTask
 func (g *GfSpBaseApp) GfSpGetChallengeInfo(ctx context.Context, req *gfspserver.GfSpGetChallengeInfoRequest) (
 	*gfspserver.GfSpGetChallengeInfoResponse, error) {
 	startTime := time.Now()
-	defer metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_server_total_time").Observe(time.Since(startTime).Seconds())
+	defer func() {
+		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_server_total_time").Observe(time.Since(startTime).Seconds())
+	}()
 	challengePieceTask := req.GetChallengePieceTask()
 	if challengePieceTask == nil {
 		log.CtxError(ctx, "failed to challenge piece due to task pointer dangling")
@@ -189,5 +196,33 @@ func (g *GfSpBaseApp) GfSpReimburseQuota(ctx context.Context, fixRequest *gfspse
 	log.CtxDebugw(ctx, "succeed to reimburse extra quota", "bucketID:", fixRequest.GetBucketId(), "extra quota:", fixRequest.ExtraQuota)
 	return &gfspserver.GfSpReimburseQuotaResponse{
 		Err: gfsperrors.MakeGfSpError(err),
+	}, nil
+}
+
+func (g *GfSpBaseApp) GfSpDeductQuotaForBucketMigrate(ctx context.Context, deductQuotaRequest *gfspserver.GfSpDeductQuotaForBucketMigrateRequest) (*gfspserver.GfSpDeductQuotaForBucketMigrateResponse, error) {
+	// ReadRecord for bucket migration
+	readRecord := &spdb.ReadRecord{
+		BucketID:        deductQuotaRequest.GetBucketId(),
+		ReadSize:        deductQuotaRequest.GetDeductQuota(),
+		ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
+	}
+
+	if dbErr := g.GfSpDB().CheckQuotaAndAddReadRecord(
+		readRecord,
+		&spdb.BucketQuota{
+			ChargedQuotaSize: deductQuotaRequest.GetDeductQuota(),
+		},
+	); dbErr != nil {
+		log.CtxErrorw(ctx, "failed to check bucket quota", "error", dbErr)
+		if errors.Is(dbErr, sqldb.ErrCheckQuotaEnough) {
+			return &gfspserver.GfSpDeductQuotaForBucketMigrateResponse{
+				Err: gfsperrors.MakeGfSpError(dbErr),
+			}, nil
+		}
+		// ignore the access db error, it is the system's inner error, will be let the request go.
+	}
+	log.CtxDebugw(ctx, "succeed to deduct quota for bucket migrate", "bucket_id", deductQuotaRequest.GetBucketId(), "deduct_quota", deductQuotaRequest.GetDeductQuota())
+	return &gfspserver.GfSpDeductQuotaForBucketMigrateResponse{
+		Err: gfsperrors.MakeGfSpError(nil),
 	}, nil
 }

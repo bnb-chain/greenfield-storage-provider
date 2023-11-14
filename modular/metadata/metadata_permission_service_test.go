@@ -1585,19 +1585,31 @@ func TestMetadataModularGfSpListObjectPolicies_Success(t *testing.T) {
 		},
 	).Times(1)
 	m.EXPECT().ListObjectPolicies(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Hash, permission_types.ActionType, common.Hash, int) ([]*bsdb.Permission, error) {
-			return []*bsdb.Permission{
-				&bsdb.Permission{
-					ID:              2,
-					PrincipalType:   2,
-					PrincipalValue:  "3",
-					ResourceType:    "RESOURCE_TYPE_OBJECT",
-					ResourceID:      common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-					PolicyID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
-					CreateTimestamp: time.Now().Unix(),
-					UpdateTimestamp: time.Now().Unix(),
-					ExpirationTime:  time.Now().Unix() + 100000,
-					Removed:         false,
+		func(common.Hash, permission_types.ActionType, common.Hash, int) ([]*bsdb.PermissionWithStatement, error) {
+			return []*bsdb.PermissionWithStatement{
+				&bsdb.PermissionWithStatement{
+					Permission: bsdb.Permission{
+						ID:              2,
+						PrincipalType:   2,
+						PrincipalValue:  "3",
+						ResourceType:    "RESOURCE_TYPE_OBJECT",
+						ResourceID:      common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+						PolicyID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
+						CreateTimestamp: time.Now().Unix(),
+						UpdateTimestamp: time.Now().Unix(),
+						ExpirationTime:  time.Now().Unix() + 100000,
+						Removed:         false,
+					},
+					Statement: bsdb.Statement{
+						ID:             2,
+						PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
+						Effect:         "EFFECT_ALLOW",
+						ActionValue:    64,
+						Resources:      nil,
+						ExpirationTime: time.Now().Unix() + 100000,
+						LimitSize:      1,
+						Removed:        false,
+					},
 				},
 			}, nil
 		},
@@ -1652,19 +1664,31 @@ func TestMetadataModularGfSpListObjectPolicies_Success2(t *testing.T) {
 		},
 	).Times(1)
 	m.EXPECT().ListObjectPolicies(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Hash, permission_types.ActionType, common.Hash, int) ([]*bsdb.Permission, error) {
-			return []*bsdb.Permission{
-				&bsdb.Permission{
-					ID:              2,
-					PrincipalType:   2,
-					PrincipalValue:  "3",
-					ResourceType:    "RESOURCE_TYPE_OBJECT",
-					ResourceID:      common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-					PolicyID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
-					CreateTimestamp: time.Now().Unix(),
-					UpdateTimestamp: time.Now().Unix(),
-					ExpirationTime:  time.Now().Unix() + 100000,
-					Removed:         false,
+		func(common.Hash, permission_types.ActionType, common.Hash, int) ([]*bsdb.PermissionWithStatement, error) {
+			return []*bsdb.PermissionWithStatement{
+				&bsdb.PermissionWithStatement{
+					Permission: bsdb.Permission{
+						ID:              2,
+						PrincipalType:   2,
+						PrincipalValue:  "3",
+						ResourceType:    "RESOURCE_TYPE_OBJECT",
+						ResourceID:      common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+						PolicyID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
+						CreateTimestamp: time.Now().Unix(),
+						UpdateTimestamp: time.Now().Unix(),
+						ExpirationTime:  time.Now().Unix() + 100000,
+						Removed:         false,
+					},
+					Statement: bsdb.Statement{
+						ID:             2,
+						PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
+						Effect:         "EFFECT_ALLOW",
+						ActionValue:    64,
+						Resources:      nil,
+						ExpirationTime: time.Now().Unix() + 100000,
+						LimitSize:      1,
+						Removed:        false,
+					},
 				},
 			}, nil
 		},

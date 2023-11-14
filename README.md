@@ -436,9 +436,13 @@ DisableMetrics = false
 # required
 DisablePProf = false
 # required
+DisableProbe = false
+# required
 MetricsHTTPAddress = ''
 # required
 PProfHTTPAddress = ''
+# required
+ProbeHTTPAddress = ''
 
 [Rcmgr]
 # optional
@@ -573,8 +577,8 @@ SubscribeSwapOutExitEventIntervalSec = 0
 SubscribeBucketMigrateEventIntervalSec = 0
 # optional
 GVGPreferSPList = []
-
-
+# optional
+SPBlackList = []
 ```
 
 ## App info

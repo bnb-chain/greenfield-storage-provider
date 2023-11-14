@@ -11,11 +11,13 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/bnb-chain/greenfield/types/s3util"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
@@ -74,7 +76,7 @@ func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfS
 	res := make([]*types.VGFInfoBucket, 0)
 	for _, bucket := range buckets {
 		vgf := vgfMap[bucket.GlobalVirtualGroupFamilyID]
-		res = append(res, &types.VGFInfoBucket{
+		b := &types.VGFInfoBucket{
 			BucketInfo: &storage_types.BucketInfo{
 				Owner:                      bucket.Owner.String(),
 				BucketName:                 bucket.BucketName,
@@ -95,13 +97,17 @@ func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfS
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
-			Vgf: &virtual_types.GlobalVirtualGroupFamily{
+			StorageSize:  bucket.StorageSize.String(),
+		}
+		if vgf != nil {
+			b.Vgf = &virtual_types.GlobalVirtualGroupFamily{
 				Id:                    vgf.GlobalVirtualGroupFamilyId,
 				PrimarySpId:           vgf.PrimarySpId,
 				GlobalVirtualGroupIds: vgf.GlobalVirtualGroupIds,
 				VirtualPaymentAddress: vgf.VirtualPaymentAddress.String(),
-			},
-		})
+			}
+		}
+		res = append(res, b)
 	}
 	resp = &types.GfSpGetUserBucketsResponse{Buckets: res}
 	log.CtxInfow(ctx, "succeed to get user buckets")
@@ -149,6 +155,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
 		}
 	}
 	resp = &types.GfSpGetBucketByBucketNameResponse{Bucket: res}
@@ -193,6 +200,7 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
 		}
 	}
 	resp = &types.GfSpGetBucketByBucketIDResponse{Bucket: res}
@@ -307,6 +315,7 @@ func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSp
 				GlobalVirtualGroupIds: family[0].GlobalVirtualGroupIds,
 				VirtualPaymentAddress: family[0].VirtualPaymentAddress.String(),
 			},
+			StorageSize: bucket.StorageSize.String(),
 		}
 	}
 
@@ -377,6 +386,63 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		SpFreeQuotaSize:      bucketTraffic.FreeQuotaSize,
 		ConsumedSize:         bucketTraffic.ReadConsumedSize,
 		FreeQuotaConsumeSize: bucketTraffic.FreeQuotaConsumedSize,
+	}, nil
+}
+
+func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
+	ctx context.Context,
+	req *types.GfSpGetLatestBucketReadQuotaRequest) (
+	*types.GfSpGetLatestBucketReadQuotaResponse, error) {
+
+	defer atomic.AddInt64(&r.retrievingRequest, -1)
+	if atomic.AddInt64(&r.retrievingRequest, 1) >
+		atomic.LoadInt64(&r.maxMetadataRequest) {
+		return nil, ErrExceedRequest
+	}
+	bucketTraffic, err := r.baseApp.GfSpDB().GetLatestBucketTraffic(
+		req.GetBucketId())
+	if err != nil {
+		// if the traffic table has not been created and initialized yet, return the chain info
+		if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffic == nil {
+			var freeQuotaSize uint64
+			freeQuotaSize, err = r.baseApp.Consensus().QuerySPFreeQuota(ctx, r.baseApp.OperatorAddress())
+			if err != nil {
+				log.Errorw("failed to get free quota on chain",
+					"bucket_id", req.GetBucketId(), "error", err)
+				freeQuotaSize = 0
+			}
+			quota := &gfsptask.GfSpBucketQuotaInfo{
+				BucketName:            bucketTraffic.BucketName,
+				BucketId:              bucketTraffic.BucketID,
+				Month:                 bucketTraffic.YearMonth,
+				ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
+				FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
+				FreeQuotaSize:         freeQuotaSize,
+				ChargedQuotaSize:      bucketTraffic.ChargedQuotaSize,
+			}
+
+			return &types.GfSpGetLatestBucketReadQuotaResponse{
+				Quota: quota,
+			}, nil
+		} else {
+			log.Errorw("failed to get bucket traffic",
+				"bucket_id", req.GetBucketId(), "error", err)
+			return &types.GfSpGetLatestBucketReadQuotaResponse{Err: ErrGfSpDBWithDetail("failed to get bucket traffic" +
+				", bucket_id: " + util.Uint64ToString(req.GetBucketId()) + ", error: " + err.Error())}, nil
+		}
+	}
+	// if the traffic table has been created, return the db info from meta service
+	quota := &gfsptask.GfSpBucketQuotaInfo{
+		BucketName:            bucketTraffic.BucketName,
+		BucketId:              bucketTraffic.BucketID,
+		Month:                 bucketTraffic.YearMonth,
+		ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
+		FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
+		FreeQuotaSize:         bucketTraffic.FreeQuotaSize,
+		ChargedQuotaSize:      bucketTraffic.ChargedQuotaSize,
+	}
+	return &types.GfSpGetLatestBucketReadQuotaResponse{
+		Quota: quota,
 	}, nil
 }
 
@@ -481,9 +547,25 @@ func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.G
 			UpdateTxHash: bucket.UpdateTxHash.String(),
 			UpdateAt:     bucket.UpdateAt,
 			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
 		}
 	}
 	resp = &types.GfSpListBucketsByIDsResponse{Buckets: bucketsMap}
 	log.CtxInfow(ctx, "succeed to list buckets by bucket ids")
+	return resp, nil
+}
+
+// GfSpGetBucketSize get bucket total object size
+func (r *MetadataModular) GfSpGetBucketSize(ctx context.Context, req *types.GfSpGetBucketSizeRequest) (resp *types.GfSpGetBucketSizeResponse, err error) {
+	ctx = log.Context(ctx, req)
+
+	size, err := r.baseApp.GfBsDB().GetBucketSizeByID(req.BucketId)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket total object size", "error", err)
+		return
+	}
+
+	resp = &types.GfSpGetBucketSizeResponse{BucketSize: size.String()}
+	log.CtxInfow(ctx, "succeed to get bucket total object size", "bucket_size", size)
 	return resp, nil
 }

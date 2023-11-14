@@ -31,6 +31,11 @@ const (
 	// DefaultExecutorMaxListenSealRetry defines the default max retry number for listening
 	// object.
 	DefaultExecutorMaxListenSealRetry int = 3
+	// DefaultExecutorObjectMigrationRetryTimeout defines the sleep time when object migration
+	// fail, until retry DefaultExecutorMaxObjectMigrationRetry times, the task is set error.
+	DefaultExecutorObjectMigrationRetryTimeout int = 2
+	// DefaultExecutorMaxObjectMigrationRetry defines the default max retry number for object migration.
+	DefaultExecutorMaxObjectMigrationRetry int = 5
 	// DefaultStatisticsOutputInterval defines the default interval for output statistics info,
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
@@ -104,7 +109,17 @@ func defaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig
 	if cfg.Executor.MaxListenSealRetry == 0 {
 		cfg.Executor.MaxListenSealRetry = DefaultExecutorMaxListenSealRetry
 	}
+
+	if cfg.Executor.ObjectMigrationRetryTimeout == 0 {
+		cfg.Executor.ObjectMigrationRetryTimeout = DefaultExecutorObjectMigrationRetryTimeout
+	}
+	if cfg.Executor.MaxObjectMigrationRetry == 0 {
+		cfg.Executor.MaxObjectMigrationRetry = DefaultExecutorMaxObjectMigrationRetry
+	}
+
 	executor.maxListenSealRetry = cfg.Executor.MaxListenSealRetry
 	executor.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	executor.enableSkipFailedToMigrateObject = cfg.Executor.EnableSkipFailedToMigrateObject
+	executor.objectMigrationRetryTimeout = cfg.Executor.ObjectMigrationRetryTimeout
+	executor.maxObjectMigrationRetry = cfg.Executor.MaxObjectMigrationRetry
 }

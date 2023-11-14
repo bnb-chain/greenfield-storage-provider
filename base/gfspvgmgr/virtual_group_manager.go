@@ -2,6 +2,7 @@ package gfspvgmgr
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -25,15 +26,18 @@ const (
 	RefreshMetaInterval                 = 2 * time.Second
 	MaxStorageUsageRatio                = 0.95
 	DefaultInitialGVGStakingStorageSize = uint64(8) * 1024 * 1024 * 1024 * 1024 // 8TB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
+	defaultSPCheckTimeout               = 3 * time.Second
+	defaultSPHealthCheckerInterval      = 5 * time.Second
+	httpStatusPath                      = "/status"
 )
 
 var (
 	ErrFailedPickVGF = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540001,
-		"failed to pick virtual group family, need creating global virtual group")
+		"failed to pick virtual group family, need to create global virtual group")
 	ErrFailedPickGVG = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540002,
-		"failed to pick global virtual group, need staking more storage size")
+		"failed to pick global virtual group, need to stake more storage size")
 	ErrStaledMetadata = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540003,
-		"metadata is staled, need forcing refresh metadata")
+		"metadata is staled, need to force refresh metadata")
 	ErrFailedPickDestSP = gfsperrors.Register(VirtualGroupManagerSpace, http.StatusInternalServerError, 540004,
 		"failed to pick dest sp")
 )
@@ -82,7 +86,7 @@ func (picker *FreeStorageSizeWeightPicker) pickIndex() (uint32, error) {
 	return 0, fmt.Errorf("failed to pick weighted random index")
 }
 
-func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter, filterByGvgList *vgmgr.PickVGFByGVGFilter) (*vgmgr.VirtualGroupFamilyMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.PickVGFFilter, filterByGvgList *vgmgr.PickVGFByGVGFilter, healthChecker *HealthChecker) (*vgmgr.VirtualGroupFamilyMeta, error) {
 	var (
 		picker   FreeStorageSizeWeightPicker
 		familyID uint32
@@ -96,6 +100,9 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 		if !filterByGvgList.Check(f.GVGMap) {
 			continue
 		}
+		if healthChecker != nil && !healthChecker.isVGFHealthy(f) {
+			continue
+		}
 		picker.addVirtualGroupFamily(f)
 	}
 
@@ -106,7 +113,7 @@ func (vgfm *virtualGroupFamilyManager) pickVirtualGroupFamily(filter *vgmgr.Pick
 	return vgfm.vgfIDToVgf[familyID], nil
 }
 
-func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filter, excludeGVGsFilter vgmgr.ExcludeFilter, healthChecker *HealthChecker) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	var (
 		picker               FreeStorageSizeWeightPicker
 		globalVirtualGroupID uint32
@@ -121,6 +128,9 @@ func (vgfm *virtualGroupFamilyManager) pickGlobalVirtualGroup(vgfID uint32, filt
 			continue
 		}
 		if excludeGVGsFilter != nil && excludeGVGsFilter.Apply(g.ID) {
+			continue
+		}
+		if healthChecker != nil && !healthChecker.isGVGHealthy(g) {
 			continue
 		}
 		picker.addGlobalVirtualGroup(g)
@@ -170,7 +180,7 @@ type spManager struct {
 	otherSPs []*sptypes.StorageProvider
 }
 
-func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy, filter, excludeSPsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
+func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy, filter, excludeSPsFilter vgmgr.ExcludeFilter, healthChecker *HealthChecker) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	for _, sp := range sm.otherSPs {
 		if !sp.IsInService() {
 			continue
@@ -179,6 +189,9 @@ func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSeconda
 			continue
 		}
 		if excludeSPsFilter != nil && excludeSPsFilter.Apply(sp.Id) {
+			continue
+		}
+		if healthChecker != nil && !healthChecker.isSPHealthy(sp.GetId()) {
 			continue
 		}
 		genPolicy.AddCandidateSP(sp.GetId())
@@ -195,9 +208,12 @@ func (sm *spManager) generateVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSeconda
 	}, nil
 }
 
-func (sm *spManager) pickSPByFilter(filter vgmgr.SPPickFilter) (*sptypes.StorageProvider, error) {
+func (sm *spManager) pickSPByFilter(filter vgmgr.SPPickFilter, healthChecker *HealthChecker) (*sptypes.StorageProvider, error) {
 	for _, destSP := range sm.otherSPs {
 		if !destSP.IsInService() {
+			continue
+		}
+		if healthChecker != nil && !healthChecker.isSPHealthy(destSP.GetId()) {
 			continue
 		}
 		if pickSucceed := filter.Check(destSP.GetId()); pickSucceed {
@@ -229,14 +245,22 @@ type virtualGroupManager struct {
 	vgParams            *virtualgrouptypes.Params
 	vgfManager          *virtualGroupFamilyManager
 	freezeSPPool        *FreezeSPPool
+	healthChecker       *HealthChecker
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
-func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus) (vgmgr.VirtualGroupManager, error) {
+func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus, enableHealthyChecker bool) (vgmgr.VirtualGroupManager, error) {
+	var healthChecker *HealthChecker
+	if enableHealthyChecker {
+		healthChecker = NewHealthChecker(chainClient)
+	} else {
+		healthChecker = nil
+	}
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
 		chainClient:         chainClient,
 		freezeSPPool:        NewFreezeSPPool(),
+		healthChecker:       healthChecker,
 	}
 	vgm.refreshMeta()
 	go func() {
@@ -248,6 +272,9 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 		}
 	}()
 	go vgm.releaseSPAndGVGLoop()
+	if vgm.healthChecker != nil {
+		go vgm.healthChecker.Start()
+	}
 	return vgm, nil
 }
 
@@ -286,6 +313,9 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 	}
 	for _, sp := range spList {
 		spMap[sp.Id] = sp
+		if vgm.healthChecker != nil {
+			vgm.healthChecker.addSP(sp)
+		}
 	}
 	for i, sp := range spList {
 		if strings.EqualFold(vgm.selfOperatorAddress, sp.OperatorAddress) {
@@ -366,7 +396,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily(filterByGvgList *vgmgr.Pi
 	}
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickVirtualGroupFamily(filter, filterByGvgList)
+	return vgm.vgfManager.pickVirtualGroupFamily(filter, filterByGvgList, vgm.healthChecker)
 }
 
 // PickGlobalVirtualGroup picks a global virtual group(If failed to pick,
@@ -374,7 +404,7 @@ func (vgm *virtualGroupManager) PickVirtualGroupFamily(filterByGvgList *vgmgr.Pi
 func (vgm *virtualGroupManager) PickGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter, vgm.healthChecker)
 }
 
 // PickGlobalVirtualGroupForBucketMigrate picks a global virtual group(If failed to pick,
@@ -394,7 +424,7 @@ func (vgm *virtualGroupManager) PickGlobalVirtualGroupForBucketMigrate(filter vg
 func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter)
+	return vgm.vgfManager.pickGlobalVirtualGroup(vgfID, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeGVGsInFamily(vgfID)), excludeGVGsFilter, vgm.healthChecker)
 }
 
 // ForceRefreshMeta is used to query metadata service and refresh the virtual group manager meta.
@@ -411,14 +441,14 @@ func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 func (vgm *virtualGroupManager) GenerateGlobalVirtualGroupMeta(genPolicy vgmgr.GenerateGVGSecondarySPsPolicy, excludeSPsFilter vgmgr.ExcludeFilter) (*vgmgr.GlobalVirtualGroupMeta, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.generateVirtualGroupMeta(genPolicy, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeSPIDs()), excludeSPsFilter)
+	return vgm.spManager.generateVirtualGroupMeta(genPolicy, vgmgr.NewExcludeIDFilter(vgm.freezeSPPool.GetFreezeSPIDs()), excludeSPsFilter, vgm.healthChecker)
 }
 
 // PickSPByFilter is used to pick sp by filter check.
 func (vgm *virtualGroupManager) PickSPByFilter(filter vgmgr.SPPickFilter) (*sptypes.StorageProvider, error) {
 	vgm.mutex.RLock()
 	defer vgm.mutex.RUnlock()
-	return vgm.spManager.pickSPByFilter(filter)
+	return vgm.spManager.pickSPByFilter(filter, vgm.healthChecker)
 }
 
 // QuerySPByID return sp info by sp id.
@@ -481,4 +511,173 @@ func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 			vgm.freezeSPPool.ReleaseAllSP()
 		}
 	}
+}
+
+type HealthChecker struct {
+	mutex        sync.RWMutex                        // The mutex is used to guard sps and unhealthySPs
+	sps          map[uint32]*sptypes.StorageProvider // all sps,  id -> StorageProvider
+	unhealthySPs map[uint32]*sptypes.StorageProvider
+
+	chainClient consensus.Consensus // query VG params from chain
+}
+
+func NewHealthChecker(chainClient consensus.Consensus) *HealthChecker {
+	sps := make(map[uint32]*sptypes.StorageProvider)
+	unhealthySPs := make(map[uint32]*sptypes.StorageProvider)
+	return &HealthChecker{sps: sps, unhealthySPs: unhealthySPs, chainClient: chainClient}
+}
+
+func (checker *HealthChecker) addSP(sp *sptypes.StorageProvider) {
+	checker.mutex.Lock()
+	defer checker.mutex.Unlock()
+
+	if !sp.IsInService() {
+		return
+	}
+	if _, exists := checker.sps[sp.GetId()]; !exists {
+		checker.sps[sp.GetId()] = sp
+	}
+}
+
+func (checker *HealthChecker) isSPHealthy(spID uint32) bool {
+	checker.mutex.RLock()
+	defer checker.mutex.RUnlock()
+
+	if sp, exists := checker.sps[spID]; exists {
+		if _, unhealthyExists := checker.unhealthySPs[spID]; unhealthyExists {
+			log.CtxErrorw(context.Background(), "the sp is treated as unhealthy", "sp", sp)
+			return false
+		} else {
+			log.CtxInfow(context.Background(), "the sp isn't exist in unhealthy sp map, is treated as healthy", "sp", sp)
+			return true
+		}
+	}
+	log.CtxInfow(context.Background(), "the sp isn't exist in sps map, is treated as healthy", "sps", checker.sps, "unhealthy_sps", checker.unhealthySPs)
+	return true
+}
+
+// isGVGHealthy GVG healthy means gvg primary sp & secondary sps is healthy
+func (checker *HealthChecker) isGVGHealthy(gvg *vgmgr.GlobalVirtualGroupMeta) bool {
+	// gvg secondary sp
+	for _, spID := range gvg.SecondarySPIDs {
+		if !checker.isSPHealthy(spID) {
+			log.CtxErrorw(context.Background(), "the gvg is treated as unhealthy", "gvg", gvg)
+			return false
+		}
+	}
+
+	return true
+}
+
+// isVGFHealthy vgf healthy means at least one gvg is healthy
+func (checker *HealthChecker) isVGFHealthy(vgf *vgmgr.VirtualGroupFamilyMeta) bool {
+	gvgs := vgf.GVGMap
+	if len(gvgs) == 0 {
+		// vgf has no gvg treated as healthy
+		return true
+	}
+
+	healthyCount := len(gvgs)
+	for _, gvg := range gvgs {
+		if !checker.isGVGHealthy(gvg) {
+			healthyCount--
+		}
+	}
+	if healthyCount == 0 {
+		log.CtxErrorw(context.Background(), "the vgf is treated as unhealthy", "vgf", vgf)
+	}
+	return healthyCount > 0
+}
+
+func (checker *HealthChecker) checkAllSPHealth() {
+	spTemp := make(map[uint32]*sptypes.StorageProvider)
+	unhealthyTemp := make(map[uint32]*sptypes.StorageProvider)
+	checker.mutex.RLock()
+	for key, value := range checker.sps {
+		spTemp[key] = value
+	}
+	checker.mutex.RUnlock()
+
+	unhealthyCnt := 0
+	for _, sp := range spTemp {
+		if !checker.checkSPHealth(sp) {
+			unhealthyCnt++
+			unhealthyTemp[sp.GetId()] = sp
+		}
+	}
+
+	params, err := checker.chainClient.QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix())
+	if err != nil {
+		log.Errorw("failed to query storage params from chain", "error", err)
+		return
+	}
+	if unhealthyCnt == 0 {
+		// only update checker.sps and return, this is fast-path.
+		checker.mutex.Lock()
+		checker.sps = spTemp
+		checker.mutex.Unlock()
+		log.Infow("there is no unhealthy sp, only update sps", "unhealthy_sps", checker.unhealthySPs,
+			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
+		return
+	}
+
+	// Only when more than defaultMinAvailableSPThreshold valid sp, the check is valid
+	if len(spTemp)-unhealthyCnt >= 1+int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) {
+		checker.mutex.Lock()
+		checker.sps = spTemp
+		checker.unhealthySPs = unhealthyTemp
+		checker.mutex.Unlock()
+		log.Infow("succeed to place these sp into unhealthy status", "unhealthy_sps", checker.unhealthySPs,
+			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
+	} else {
+		log.Errorw("the current checker determines that most SPs are abnormal", "unhealthy_sps", checker.unhealthySPs,
+			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
+	}
+	log.Infow("succeed to check all sp health status", "unhealthy_sps", checker.unhealthySPs, "all_sps", checker.sps)
+}
+
+func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), defaultSPCheckTimeout)
+	defer cancel()
+	endpoint := sp.GetEndpoint()
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+		},
+		Timeout: defaultSPCheckTimeout * time.Second,
+	}
+
+	// Create an HTTP request to test the validity of the endpoint
+	urlToCheck := fmt.Sprintf("%s%s", endpoint, httpStatusPath)
+	req, err := http.NewRequestWithContext(ctxTimeout, http.MethodGet, urlToCheck, nil)
+	if err != nil {
+		return false
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.CtxErrorw(context.Background(), "failed to connect to sp", "sp", sp, "error", err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.CtxErrorw(context.Background(), "failed to check sp healthy", "sp", sp, "http_status_code", resp.StatusCode, "resp_body", resp.Body)
+		return false
+	}
+
+	log.CtxInfow(context.Background(), "succeed to check the sp healthy", "sp", sp)
+	return true
+}
+
+func (checker *HealthChecker) Start() {
+	go func() {
+		healthCheckerTicker := time.NewTicker(defaultSPHealthCheckerInterval)
+		for range healthCheckerTicker.C {
+			log.Debug("start to sp health checker")
+			checker.checkAllSPHealth()
+			log.Debug("finished to sp health checker")
+		}
+	}()
 }

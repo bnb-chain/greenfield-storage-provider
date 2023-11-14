@@ -2,6 +2,7 @@ package signer
 
 import (
 	"context"
+	"encoding/hex"
 	"net/http"
 
 	sdkmath "cosmossdk.io/math"
@@ -32,6 +33,7 @@ var (
 	ErrSPExitOnChain                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
 	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
 	ErrUpdateSPPriceOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120012, "send update sp price failed")
+	ErrRejectMigrateBucketOnChain   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -113,7 +115,7 @@ func (s *SignModular) SignSecondarySealBls(ctx context.Context, objectID uint64,
 	if err != nil {
 		return nil, err
 	}
-	// log.Debugw("bls signature length", "len", len(sig), "object_id", objectID, "gvg_id", gvgId, "checksums", checksums)
+	log.Debugw("bls signature", "len", len(sig), "object_id", objectID, "gvg_id", gvgId, "sign_doc", hex.EncodeToString(msg[:]), "pub_key", hex.EncodeToString(s.client.blsKm.PubKey().Bytes()), "sig", hex.EncodeToString(sig))
 	return sig, nil
 }
 
@@ -170,6 +172,15 @@ func (s *SignModular) SignMigrateGVG(ctx context.Context, mp *gfsptask.GfSpMigra
 	return sig, nil
 }
 
+func (s *SignModular) SignBucketMigrationInfo(ctx context.Context, mp *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
+	sig, err := s.client.Sign(SignOperator, mp.GetSignBytes())
+	if err != nil {
+		log.Errorw("failed to sign bucket migration info", "error", err)
+		return nil, err
+	}
+	return sig, nil
+}
+
 func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
 }
@@ -210,4 +221,8 @@ func (s *SignModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgS
 
 func (s *SignModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
 	return s.client.CompleteSPExit(ctx, SignOperator, completeSPExit)
+}
+
+func (s *SignModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	return s.client.RejectMigrateBucket(ctx, SignOperator, rejectMigrateBucket)
 }

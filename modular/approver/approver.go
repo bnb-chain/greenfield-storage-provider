@@ -28,6 +28,8 @@ type managerTasksStats struct {
 	resumableUploadTaskCount uint32
 	maxUploadingCount        uint32
 	migrateGVGCount          uint32
+	recoveryProcessCount     uint32
+	recoveryFailedList       []string
 }
 
 func (s *managerTasksStats) totalUploadTasks() uint32 {
@@ -121,6 +123,8 @@ func (a *ApprovalModular) eventLoop(ctx context.Context) {
 					stats.GetResumableUploadCount(),
 					stats.GetMaxUploading(),
 					stats.GetMigrateGvgCount(),
+					stats.GetRecoveryProcessCount(),
+					stats.GetRecoveryFailedList(),
 				}
 				a.statsMutex.Unlock()
 			}

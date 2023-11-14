@@ -568,6 +568,10 @@ type MigrateGVGTask interface {
 	GetLastMigratedObjectID() uint64
 	// SetLastMigratedObjectID sets the last migrated objectID
 	SetLastMigratedObjectID(uint64)
+	// GetMigratedBytesSize returns the total migrate object bytes size
+	GetMigratedBytesSize() uint64
+	// SetMigratedBytesSize sets the total migrate object bytes size
+	SetMigratedBytesSize(uint64)
 	// GetFinished returns the task whether finished
 	GetFinished() bool
 	// SetFinished sets the migrated gvg task status when finished

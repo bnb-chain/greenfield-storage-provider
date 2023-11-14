@@ -1,8 +1,18 @@
 package http
 
 import (
+	"bytes"
+	"encoding/xml"
 	"net/http"
 	"strconv"
+
+	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+)
+
+const (
+	successCode      = "0"
+	unknownErrorCode = "-1"
 )
 
 // responseWriterDelegator implements http.ResponseWriter and extracts the statusCode.
@@ -11,19 +21,29 @@ type responseWriterDelegator struct {
 	written    bool
 	size       int
 	statusCode int
+	body       bytes.Buffer
 }
 
 func (wd *responseWriterDelegator) Header() http.Header {
 	return wd.w.Header()
 }
 
-func (wd *responseWriterDelegator) Write(bytes []byte) (int, error) {
+func (wd *responseWriterDelegator) Write(b []byte) (int, error) {
 	if wd.statusCode == 0 {
 		wd.statusCode = http.StatusOK
 	}
-	n, err := wd.w.Write(bytes)
+	if wd.statusCode != http.StatusOK {
+		// write response body to customized body which used for metrics
+		wd.body.Write(b)
+	}
+	// write response body to http.ResponseWriter
+	n, err := wd.w.Write(b)
 	wd.size += n
 	return n, err
+}
+
+func (wd *responseWriterDelegator) GetBody() []byte {
+	return wd.body.Bytes()
 }
 
 func (wd *responseWriterDelegator) WriteHeader(statusCode int) {
@@ -41,6 +61,27 @@ func (wd *responseWriterDelegator) StatusCode() int {
 
 func (wd *responseWriterDelegator) Status() string {
 	return strconv.Itoa(wd.StatusCode())
+}
+
+func (wd *responseWriterDelegator) GetSPErrorCode() string {
+	// get error response code if exists
+	var (
+		errorResp = &modelgateway.ErrorResponse{}
+		errorCode string
+	)
+	if wd.statusCode == http.StatusOK {
+		errorCode = successCode // no error
+	} else {
+		body := wd.GetBody()
+		err := xml.Unmarshal(body, errorResp)
+		if err != nil {
+			log.Errorw("cannot parse gateway error response", "error", err)
+			errorCode = unknownErrorCode // unknown error code
+			return errorCode
+		}
+		errorCode = strconv.Itoa(int(errorResp.Code))
+	}
+	return errorCode
 }
 
 // computeApproximateRequestSize compute HTTP request size

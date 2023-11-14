@@ -1,17 +1,24 @@
 package metrics
 
 import (
+	"regexp"
+
 	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 
 	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
 )
 
 var MetricsItems = []prometheus.Collector{
-	// Grpc metrics category
+	// gRPC and HTTP metrics category
 	DefaultGRPCServerMetrics,
 	DefaultGRPCClientMetrics,
 	DefaultHTTPServerMetrics,
+
+	// golang runtime and process metrics
+	GolangRuntimeMetrics,
+	ProcessMetrics,
 
 	// task queue metrics category
 	QueueSizeGauge,
@@ -95,6 +102,12 @@ var (
 		openmetrics.WithClientStreamSendHistogram(), openmetrics.WithClientStreamRecvHistogram())
 	// DefaultHTTPServerMetrics defines default HTTP server metrics
 	DefaultHTTPServerMetrics = metricshttp.NewServerMetrics()
+
+	// GolangRuntimeMetrics defines some runtime metrics about golang
+	GolangRuntimeMetrics = collectors.NewGoCollector(collectors.WithGoCollectorRuntimeMetrics(
+		collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile("/.*")}))
+	// ProcessMetrics defines some metrics about current sp process
+	ProcessMetrics = collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})
 
 	// task queue metrics
 	QueueSizeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{

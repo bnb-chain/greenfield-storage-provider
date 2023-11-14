@@ -45,6 +45,10 @@ const (
 	getUserBucketsCountRouterName                  = "GetUserBucketsCount"
 	listExpiredBucketsBySpRouterName               = "ListExpiredBucketsBySp"
 	notifyMigrateSwapOutRouterName                 = "NotifyMigrateSwapOut"
+	queryBucketQuotaRouterName                     = "QueryBucketQuota"
+	queryBucketEnoughQuotaRouterName               = "QueryBucketEnoughQuota"
+	PreMigrateBucketRouterName                     = "PreMigrateBucket"
+	PostMigrateBucketRouterName                    = "PostMigrateBucket"
 	migratePieceRouterName                         = "MigratePiece"
 	migrationBucketApprovalName                    = "MigrationBucketApproval"
 	swapOutApprovalName                            = "SwapOutApproval"
@@ -72,6 +76,7 @@ const (
 	listGroupsByIDsRouterName                      = "ListGroupsByIDs"
 	getSPMigratingBucketNumberRouterName           = "GetSPMigratingBucketNumber"
 	verifyMigrateGVGPermissionRouterName           = "VerifyMigrateGVGPermission"
+	getBucketSizeRouterName                        = "GetBucketSize"
 )
 
 const (
@@ -106,6 +111,15 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// get challenge info
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)
 	router.Path(GetChallengeInfoV2Path).Name(getChallengeInfoV2RouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoV2Handler)
+
+	// dest sp query latest bucket quota from src sp
+	router.Path(MigrateQueryBucketQuotaPath).Name(queryBucketQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.getLatestBucketQuotaHandler)
+	// dest sp query whether src sp has enough quota for bucket migration
+	router.Path(MigrateQueryBucketQuotaHasEnoughQuotaPath).Name(queryBucketEnoughQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.sufficientQuotaForBucketMigrationHandler)
+	// dest sp notify src sp to pre migrate bucket
+	router.Path(PreMigrateBucketPath).Name(PreMigrateBucketRouterName).Methods(http.MethodGet).HandlerFunc(g.preMigrateBucketHandler)
+	// dest sp notify src sp to post migrate bucket
+	router.Path(PostMigrateBucketPath).Name(PostMigrateBucketRouterName).Methods(http.MethodGet).HandlerFunc(g.postMigrateBucketHandler)
 
 	// replicate piece to receiver
 	router.Path(ReplicateObjectPiecePath).Name(replicateObjectPieceRouterName).Methods(http.MethodPut).HandlerFunc(g.replicateHandler)
@@ -280,9 +294,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// Verify the destination sp id of bucket migration & swap out
 		router.Path("/").Name(verifyMigrateGVGPermissionRouterName).Methods(http.MethodGet).Queries(VerifyMigrateGVGPermissionQuery, "").HandlerFunc(g.verifyMigrateGVGPermissionHandler)
-	}
 
-	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
+		// Verify the destination sp id of bucket migration & swap out
+		router.Path("/").Name(getBucketSizeRouterName).Methods(http.MethodGet).Queries(GetBucketSizeQuery, "").HandlerFunc(g.getBucketSizeHandler)
+	}
 
 	// bucket list router, path style
 	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)

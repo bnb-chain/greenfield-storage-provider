@@ -500,3 +500,47 @@ func (s *GfSpClient) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigr
 	}
 	return resp.GetSignature(), nil
 }
+
+func (s *GfSpClient) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("client failed to connect to signer", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect to signer, error: " + err.Error())
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_GfspBucketMigrateInfo{
+			GfspBucketMigrateInfo: task,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign bucket migrate info", "bucket_migration_info", task, "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to sign bucket migrate info, bucket migration info: " + task.Info() + ", error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
+}
+
+func (s *GfSpClient) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: " + err.Error())
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_RejectMigrateBucket{
+			RejectMigrateBucket: rejectMigrateBucket,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign reject migrate bucket", "msg", rejectMigrateBucket, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to sign reject migrate bucket, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}

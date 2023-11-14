@@ -146,6 +146,8 @@ type ExecutorConfig struct {
 	ListenSealTimeoutHeight         int     `comment:"optional"`
 	ListenSealRetryTimeout          int     `comment:"optional"`
 	MaxListenSealRetry              int     `comment:"optional"`
+	MaxObjectMigrationRetry         int     `comment:"optional"`
+	ObjectMigrationRetryTimeout     int     `comment:"optional"`
 	EnableSkipFailedToMigrateObject bool    `comment:"optional"`
 }
 
@@ -215,8 +217,10 @@ type TaskConfig struct {
 type MonitorConfig struct {
 	DisableMetrics     bool   `comment:"required"`
 	DisablePProf       bool   `comment:"required"`
+	DisableProbe       bool   `comment:"required"`
 	MetricsHTTPAddress string `comment:"required"`
 	PProfHTTPAddress   string `comment:"required"`
+	ProbeHTTPAddress   string `comment:"required"`
 }
 
 type RcmgrConfig struct {
@@ -243,6 +247,7 @@ type MetadataConfig struct {
 
 type ManagerConfig struct {
 	EnableLoadTask                                 bool     `comment:"optional"`
+	EnableHealthyChecker                           bool     `comment:"optional"`
 	SubscribeSPExitEventIntervalMillisecond        uint     `comment:"optional"`
 	SubscribeSwapOutExitEventIntervalMillisecond   uint     `comment:"optional"`
 	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`

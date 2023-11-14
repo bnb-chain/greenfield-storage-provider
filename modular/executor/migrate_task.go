@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
@@ -52,9 +53,15 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 		} else {
 			metrics.MigrateGVGCounter.WithLabelValues(migrateGVGFailedCounterLabel).Inc()
 		}
+		gvgTask.SetError(err)
 		log.CtxInfow(ctx, "finished to migrate gvg task", "gvg_id", srcGvgID, "bucket_id", bucketID,
 			"total_migrated_object_number", migratedObjectNumberInGVG, "last_migrated_object_id", lastMigratedObjectID, "error", err)
 	}()
+
+	if gvgTask == nil {
+		err = ErrDanglingPointer
+		return
+	}
 
 	for {
 		if bucketID == 0 { // sp exit task
@@ -73,24 +80,25 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 				log.CtxErrorw(ctx, "failed to check and renew gvg task signature", "gvg_task", gvgTask, "error", err)
 				return
 			}
-			if err = e.doObjectMigration(ctx, gvgTask, bucketID, object); err != nil && !e.enableSkipFailedToMigrateObject {
-				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
-					"bucket_id", bucketID, "object_info", object,
-					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "error", err)
+
+			if err = e.doObjectMigrationRetry(ctx, gvgTask, bucketID, object); err != nil {
+				log.CtxErrorw(ctx, "failed to do object migration", "gvg_task", gvgTask, "object", object, "error", err)
 				return
 			}
+
 			if (index+1)%reportProgressPerN == 0 || index == len(objectList)-1 {
 				log.Infow("migrate gvg report task", "gvg_id", srcGvgID, "bucket_id", bucketID,
 					"current_migrated_object_number", migratedObjectNumberInGVG,
 					"last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
 				gvgTask.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
-				if err = e.ReportTask(ctx, gvgTask); err != nil {
+				if err = e.ReportTask(ctx, gvgTask); err != nil { // report task is already automatically triggered.
 					log.CtxErrorw(ctx, "failed to report migrate gvg task progress", "task_info", gvgTask, "error", err)
 					return
 				}
 			}
 			lastMigratedObjectID = object.GetObject().GetObjectInfo().Id.Uint64()
 			migratedObjectNumberInGVG++
+			gvgTask.SetMigratedBytesSize(gvgTask.GetMigratedBytesSize() + object.GetObject().GetObjectInfo().GetPayloadSize())
 		}
 		if len(objectList) < int(queryLimit) { // it indicates that gvg all objects have been migrated.
 			gvgTask.SetLastMigratedObjectID(lastMigratedObjectID)
@@ -179,7 +187,37 @@ func (e *ExecuteModular) doObjectMigration(ctx context.Context, gvgTask coretask
 			"object_name", object.GetObjectInfo().GetObjectName(), "error", err)
 		return err
 	}
-	return nil
+	return err
+}
+
+func (e *ExecuteModular) doObjectMigrationRetry(ctx context.Context, gvgTask coretask.MigrateGVGTask, bucketID uint64, object *metadatatypes.ObjectDetails) error {
+	var (
+		srcGvgID = gvgTask.GetSrcGvg().GetId()
+		err      error
+	)
+	for retry := 0; retry < e.maxObjectMigrationRetry; retry++ {
+		// when cancel migrate bucket, the dest sp event may be slower than src sp, so we retry this migration
+		if err = e.doObjectMigration(ctx, gvgTask, bucketID, object); err != nil {
+			// 1) error happens, but will skip error
+			if e.isSkipFailedToMigrateObject(ctx, object) {
+				log.CtxErrorw(ctx, "failed to do migration gvg task and the error will skip", "gvg_id", srcGvgID,
+					"bucket_id", bucketID, "object_info", object,
+					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "retry", retry, "error", err)
+				return nil
+			} else {
+				// 2) error happens, sleep and will retry
+				log.CtxErrorw(ctx, "failed to do migration gvg task", "gvg_id", srcGvgID,
+					"bucket_id", bucketID, "object_info", object,
+					"enable_skip_failed_to_migrate_object", e.enableSkipFailedToMigrateObject, "retry", retry, "error", err)
+				time.Sleep(time.Duration(e.objectMigrationRetryTimeout) * time.Second)
+				continue
+			}
+		} else {
+			// 3) no error case
+			return nil
+		}
+	}
+	return err
 }
 
 func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,
@@ -414,4 +452,23 @@ func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.Objec
 	log.Infow("succeed to compute and set object integrity", "object_id", objectID,
 		"object_name", objectInfo.GetObjectName())
 	return nil
+}
+
+// isSkipFailedToMigrateObject incorrect migration can be an expected error, errors will be ignored.
+// such as: 1) deletion of objects during migration, or 2) the enableSkipFailedToMigrateObject parameter being set.
+func (e *ExecuteModular) isSkipFailedToMigrateObject(ctx context.Context, objectDetails *metadatatypes.ObjectDetails) bool {
+	if e.enableSkipFailedToMigrateObject {
+		return true
+	}
+	// if the object do not exist on chain, should ignore the error
+	objectInfo, err := e.baseApp.Consensus().QueryObjectInfo(ctx, objectDetails.GetObject().GetObjectInfo().GetBucketName(), objectDetails.GetObject().GetObjectInfo().GetObjectName())
+	if err != nil {
+		if strings.Contains(err.Error(), "No such object") {
+			log.CtxErrorw(ctx, "failed to get object info from consensus, the object may be deleted", "object", objectInfo, "error", err)
+			return true
+		}
+		return false
+	}
+
+	return false
 }

@@ -3,6 +3,7 @@ package bsdb
 import (
 	"github.com/bnb-chain/greenfield/x/permission/types"
 	"github.com/forbole/juno/v4/common"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
 
@@ -87,7 +88,7 @@ type Metadata interface {
 	// GetLvgByBucketAndLvgID get global virtual group by lvg id and bucket id
 	GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*LocalVirtualGroup, error)
 	// ListMigrateBucketEvents list migrate bucket events
-	ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, error)
+	ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, []*EventRejectMigrateBucket, error)
 	// GetMigrateBucketEventByBucketID get migrate bucket event by bucket id
 	GetMigrateBucketEventByBucketID(bucketID common.Hash) (*EventCompleteMigrationBucket, error)
 	// ListSwapOutEvents list swap out events
@@ -113,7 +114,7 @@ type Metadata interface {
 	// GetUserOwnedGroups retrieve groups where the user is the owner
 	GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
 	// ListObjectPolicies list policies by object info
-	ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*Permission, error)
+	ListObjectPolicies(objectID common.Hash, actionType types.ActionType, startAfter common.Hash, limit int) ([]*PermissionWithStatement, error)
 	// GetGroupMembersCount get the count of group members
 	GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, error)
 	// ListVirtualGroupFamiliesByVgfIDs list virtual group families by vgf ids
@@ -128,6 +129,14 @@ type Metadata interface {
 	GetEventMigrationBucketByBucketID(bucketID common.Hash) (*EventMigrationBucket, error)
 	//GetEventSwapOutByGvgID get swap out event by gvg id
 	GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error)
+	// GetPrimarySPStreamRecordBySpID return primary SP's stream records
+	GetPrimarySPStreamRecordBySpID(spID uint32) ([]*PrimarySpIncomeMeta, error)
+	// GetSecondarySPStreamRecordBySpID return secondary SP's stream records
+	GetSecondarySPStreamRecordBySpID(spID uint32) ([]*SecondarySpIncomeMeta, error)
+	// GetBucketSizeByID get bucket size info by a bucket id
+	GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error)
+	// GetDataMigrationRecordByProcessKey  get the record of data migration by the given process key
+	GetDataMigrationRecordByProcessKey(processKey string) (*DataMigrationRecord, error)
 }
 
 // BSDB contains all the methods required by block syncer database

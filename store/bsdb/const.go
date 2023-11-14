@@ -38,6 +38,8 @@ const (
 	GroupTableName = "groups"
 	// MasterDBTableName defines the name of master db table
 	MasterDBTableName = "master_db"
+	// DataMigrationRecordTableName defines the name of data migration record table
+	DataMigrationRecordTableName = "data_migration_record"
 	// PrefixTreeTableName defines the name of prefix tree node table
 	PrefixTreeTableName = "slash_prefix_tree_nodes"
 	// GlobalVirtualGroupFamilyTableName defines the name of global virtual group family table
@@ -52,6 +54,8 @@ const (
 	EventCompleteMigrationTableName = "event_complete_migration_bucket"
 	// EventCancelMigrationTableName defines the name of event cancel migrate bucket table
 	EventCancelMigrationTableName = "event_cancel_migration_bucket"
+	// EventRejectMigrateTableName defines the name of event reject migrate bucket table
+	EventRejectMigrateTableName = "event_reject_migrate_bucket"
 	// EventStorageProviderExitTableName defines the name of event sp exit table
 	EventStorageProviderExitTableName = "event_sp_exit"
 	// EventCompleteStorageProviderExitTableName defines the name of event sp exit complete table

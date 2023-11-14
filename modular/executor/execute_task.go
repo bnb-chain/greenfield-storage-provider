@@ -28,25 +28,26 @@ import (
 )
 
 var (
-	ErrDanglingPointer            = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 40001, "OoooH.... request lost")
-	ErrInsufficientApproval       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40002, "insufficient approvals from p2p")
-	ErrUnsealed                   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 40003, "seal object on chain failed")
-	ErrExhaustedApproval          = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40004, "approvals exhausted")
-	ErrInvalidIntegrity           = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40005, "secondary integrity hash verification failed")
-	ErrSecondaryMismatch          = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40006, "secondary sp mismatch")
-	ErrReplicateIdsOutOfBounds    = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
-	ErrRecoveryRedundancyType     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
-	ErrRecoveryPieceNotEnough     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "failed to get enough piece data to recovery")
-	ErrRecoveryDecode             = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
-	ErrRecoveryPieceChecksum      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
-	ErrRecoveryPieceLength        = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45207, "get secondary piece data length error")
-	ErrPrimaryNotFound            = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recovering")
-	ErrRecoveryPieceIndex         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
-	ErrMigratedPieceChecksum      = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
-	ErrInvalidRedundancyIndex     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "invalid redundancy index")
-	ErrSetObjectIntegrity         = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45213, "failed to set object integrity into spdb")
-	ErrInvalidPieceChecksumLength = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45214, "invalid piece checksum length")
-	ErrRecoveryObjectStatus       = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45215, "the recovered object has not been sealed state")
+	ErrDanglingPointer              = gfsperrors.Register(module.ExecuteModularName, http.StatusBadRequest, 40001, "OoooH.... request lost")
+	ErrInsufficientApproval         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40002, "insufficient approvals from p2p")
+	ErrUnsealed                     = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 40003, "seal object on chain failed")
+	ErrExhaustedApproval            = gfsperrors.Register(module.ExecuteModularName, http.StatusNotFound, 40004, "approvals exhausted")
+	ErrInvalidIntegrity             = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40005, "secondary integrity hash verification failed")
+	ErrSecondaryMismatch            = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40006, "secondary sp mismatch")
+	ErrReplicateIdsOutOfBounds      = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 40007, "replicate idx out of bounds")
+	ErrRecoveryRedundancyType       = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45202, "recovery only support EC redundancy type")
+	ErrRecoveryPieceNotEnough       = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45203, "failed to get enough piece data to recovery")
+	ErrRecoveryDecode               = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45204, "EC decode error")
+	ErrRecoveryPieceChecksum        = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45206, "recovery checksum not correct")
+	ErrRecoveryPieceLength          = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45207, "get secondary piece data length error")
+	ErrPrimaryNotFound              = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45208, "primary sp endpoint not found when recovering")
+	ErrRecoveryPieceIndex           = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45209, "recovery piece index invalid")
+	ErrMigratedPieceChecksum        = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45210, "migrate piece checksum is not correct")
+	ErrInvalidRedundancyIndex       = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45212, "invalid redundancy index")
+	ErrSetObjectIntegrity           = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45213, "failed to set object integrity into spdb")
+	ErrInvalidPieceChecksumLength   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45214, "invalid piece checksum length")
+	ErrRecoveryObjectStatus         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45215, "the recovered object has not been sealed state")
+	ErrInvalidSecondaryBlsSignature = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45216, "primary receive invalid bls signature from secondary SP")
 )
 
 func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
@@ -80,6 +81,8 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
 	task.SetError(e.sealObject(ctx, task, sealMsg))
+	metrics.PerfPutObjectTime.WithLabelValues("seal_object_total_time_from_uploading_to_sealing").Observe(time.Since(
+		time.Unix(task.GetObjectInfo().GetCreateAt(), 0)).Seconds())
 	task.AppendLog("executor-end-handle-seal-task")
 	log.CtxDebugw(ctx, "finished to handle seal object task", "error", task.Error())
 }
@@ -441,7 +444,7 @@ func (e *ExecuteModular) recoverByPrimarySP(ctx context.Context, task coretask.R
 
 	pieceData, err = e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 	if err != nil {
-		log.CtxDebugw(ctx, "fail to recovery secondary SP data from secondary SPs")
+		log.CtxDebugw(ctx, "failed to recover secondary SP data from secondary SPs")
 		return err
 	}
 	// compare integrity hash
@@ -705,16 +708,16 @@ func (e *ExecuteModular) getObjectSecondaryEndpoints(ctx context.Context, object
 	return secondaryEndpointList, secondaryCount, nil
 }
 
-func (g *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
-	bucketMeta, _, err := g.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
+func (e *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketName string) (string, error) {
+	bucketMeta, _, err := e.baseApp.GfSpClient().GetBucketMeta(ctx, bucketName, true)
 	if err != nil {
 		return "", err
 	}
-	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketMeta.GetBucketInfo())
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, e.baseApp.Consensus(), bucketMeta.GetBucketInfo())
 	if err != nil {
 		return "", err
 	}
-	spList, err := g.baseApp.Consensus().ListSPs(ctx)
+	spList, err := e.baseApp.Consensus().ListSPs(ctx)
 	if err != nil {
 		return "", err
 	}

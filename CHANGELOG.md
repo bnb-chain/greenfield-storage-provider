@@ -1,5 +1,39 @@
 # Changelog
 
+## V1.1.0
+
+FEATURES
+* [#1240](https://github.com/bnb-chain/greenfield-storage-provider/pull/1240) feat: add a DataMigrationRecord table to save the process record for data migration tasks
+* [#1218](https://github.com/bnb-chain/greenfield-storage-provider/pull/1218) feat: add sp health for pick sp
+* [#1237](https://github.com/bnb-chain/greenfield-storage-provider/pull/1237) feat: signer module adds metrics for each rpc interface
+* [#1227](https://github.com/bnb-chain/greenfield-storage-provider/pull/1227) feat: add reject bucket migration
+* [#1224](https://github.com/bnb-chain/greenfield-storage-provider/pull/1224) feat: add gnfd cmd to query sq incomes
+* [#1223](https://github.com/bnb-chain/greenfield-storage-provider/pull/1223) feat: update storage size for bucket apis
+* [#1118](https://github.com/bnb-chain/greenfield-storage-provider/pull/1118) feat: Quota improvement for bucket migration
+* [#1201](https://github.com/bnb-chain/greenfield-storage-provider/pull/1201) feat: sp adds http probe to improve service stability
+* [#1207](https://github.com/bnb-chain/greenfield-storage-provider/pull/1207) feat: update recover object command for k8s job
+* [#1197](https://github.com/bnb-chain/greenfield-storage-provider/pull/1197) feat: add golang runtime metrics, process metrics and std lib db metrics
+* [#1167](https://github.com/bnb-chain/greenfield-storage-provider/pull/1167) feat: add error code in http metrics to help locate problems
+
+BUGFIXES
+* [#1245](https://github.com/bnb-chain/greenfield-storage-provider/pull/1245) fix: fix sp healthy checker dead lock bug
+* [#1228](https://github.com/bnb-chain/greenfield-storage-provider/pull/1228) fix: primary sp should check received ssp signature before sealing
+* [#1229](https://github.com/bnb-chain/greenfield-storage-provider/pull/1229) fix: sp should resume picking VGF regardless of RPC error
+* [#1198](https://github.com/bnb-chain/greenfield-storage-provider/pull/1198) fix: refine the error msg for ErrInvalidExpiryDate header and parameter
+* [#1222](https://github.com/bnb-chain/greenfield-storage-provider/pull/1222) fix: bucket size write DB failed
+* [#1221](https://github.com/bnb-chain/greenfield-storage-provider/pull/1221) fix: gateway module remove dependency on spdb
+* [#1220](https://github.com/bnb-chain/greenfield-storage-provider/pull/1220) fix: fix metrics and pprof disable bug
+* [#1213](https://github.com/bnb-chain/greenfield-storage-provider/pull/1213) fix: update expiration new logic UT
+* [#1215](https://github.com/bnb-chain/greenfield-storage-provider/pull/1215) fix: delete aliyunfs code
+* [#1170](https://github.com/bnb-chain/greenfield-storage-provider/pull/1170) fix: skip error when object is deleted
+* [#1212](https://github.com/bnb-chain/greenfield-storage-provider/pull/1212) fix: return 400 when getting invalid header for getNonceAPI
+* [#1203](https://github.com/bnb-chain/greenfield-storage-provider/pull/1203) fix: error code when invalid signature
+* [#1184](https://github.com/bnb-chain/greenfield-storage-provider/pull/1184) fix: fix resource leak
+* [#1204](https://github.com/bnb-chain/greenfield-storage-provider/pull/1204) fix: remove the order by clause for discontinuing function
+* [#1199](https://github.com/bnb-chain/greenfield-storage-provider/pull/1199) fix: fix time.Since called in defer, it should be used in defer func
+* [#1183](https://github.com/bnb-chain/greenfield-storage-provider/pull/1183) fix: adjust sp command description
+* [#1180](https://github.com/bnb-chain/greenfield-storage-provider/pull/1180) fix: replace record not found with empty array
+
 ## v1.0.5
 This release contains 2 bugfix.
 

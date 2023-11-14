@@ -2,6 +2,7 @@ package bsdb
 
 import (
 	"github.com/forbole/juno/v4/common"
+	"github.com/shopspring/decimal"
 )
 
 // Bucket is the structure for user bucket
@@ -42,6 +43,10 @@ type Bucket struct {
 	DeleteAt int64 `gorm:"delete_at"`
 	// DeleteReason defines the deleted reason of bucket
 	DeleteReason string `gorm:"delete_reason"`
+	// StorageSize storage size of bucket
+	StorageSize decimal.Decimal `gorm:"column:storage_size;type:DECIMAL(65, 0);not null"`
+	// ChargeSize charge size of bucket
+	ChargeSize decimal.Decimal `gorm:"column:charge_size;type:DECIMAL(65, 0);not null"`
 	// UpdateAt defines the block number when the bucket update.
 	UpdateAt int64 `gorm:"column:update_at"`
 	// UpdateTxHash defines the update transaction hash of bucket

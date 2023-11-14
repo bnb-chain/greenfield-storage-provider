@@ -135,12 +135,15 @@ function make_config() {
     sed -i -e "s/MaxExecuteNumber = .*/MaxExecuteNumber = 1/g" config.toml
 
     # metrics and pprof
-    sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
-    sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
+    #sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
+    #sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
+    #sed -i -e "s/DisableProbe = false/DisableProbe = true/" config.toml
     metrics_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 367))
     sed -i -e "s/MetricsHTTPAddress = '.*'/MetricsHTTPAddress = '${metrics_address}'/g" config.toml
     pprof_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 368))
     sed -i -e "s/PProfHTTPAddress = '.*'/PProfHTTPAddress = '${pprof_address}'/g" config.toml
+    probe_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 369))
+    sed -i -e "s/ProbeHTTPAddress = '.*'/ProbeHTTPAddress = '${probe_address}'/g" config.toml
 
     # blocksyncer
     sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\]/g" config.toml
@@ -153,7 +156,6 @@ function make_config() {
     sed -i -e "s/SubscribeSwapOutExitEventIntervalMillisecond = .*/SubscribeSwapOutExitEventIntervalMillisecond = 100/g" config.toml
     sed -i -e "s/SubscribeBucketMigrateEventIntervalMillisecond = .*/SubscribeBucketMigrateEventIntervalMillisecond = 20/g" config.toml
     sed -i -e "s/GVGPreferSPList = \[\]/GVGPreferSPList = \[1,2,3,4,5,6,7,8\]/g" config.toml
-
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null
