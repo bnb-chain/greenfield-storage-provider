@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	SPExitProgressKey        = "sp_exit_progress"
-	SwapOutProgressKey       = "swap_out_progress"
-	BucketMigrateProgressKey = "bucket_migrate_progress"
+	SPExitProgressKey          = "sp_exit_progress"
+	SwapOutProgressKey         = "swap_out_progress"
+	BucketMigrateProgressKey   = "bucket_migrate_progress"
+	BucketMigrateGCProgressKey = "bucket_migrate_gc_progress"
 )
 
 // UpdateSPExitSubscribeProgress is used to update progress.
@@ -151,6 +152,41 @@ func (s *SpDBImpl) UpdateBucketMigrateSubscribeProgress(blockHeight uint64) erro
 	} else { // update
 		result = s.db.Model(&MigrateSubscribeProgressTable{}).
 			Where("event_name = ?", BucketMigrateProgressKey).Updates(updateRecord)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in subscribe progress table: %s", result.Error)
+		}
+	}
+	return nil
+}
+
+func (s *SpDBImpl) UpdateBucketMigrateGCSubscribeProgress(blockHeight uint64) error {
+	var (
+		result       *gorm.DB
+		queryReturn  *MigrateSubscribeProgressTable
+		updateRecord *MigrateSubscribeProgressTable
+		needInsert   = false
+	)
+	queryReturn = &MigrateSubscribeProgressTable{}
+	result = s.db.First(queryReturn, "event_name = ?", BucketMigrateGCProgressKey)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+	updateRecord = &MigrateSubscribeProgressTable{
+		EventName:                 BucketMigrateGCProgressKey,
+		LastSubscribedBlockHeight: blockHeight,
+	}
+
+	if needInsert {
+		result = s.db.Create(updateRecord)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in subscribe progress table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&MigrateSubscribeProgressTable{}).
+			Where("event_name = ?", BucketMigrateGCProgressKey).Updates(updateRecord)
 		if result.Error != nil {
 			return fmt.Errorf("failed to update record in subscribe progress table: %s", result.Error)
 		}
@@ -415,6 +451,249 @@ func (s *SpDBImpl) DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error {
 	result := s.db.Where("bucket_id = ?", bucketID).Find(&results).Delete(&results)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete migrate gvg table: %s", result.Error)
+	}
+	return nil
+}
+
+func (s *SpDBImpl) UpdateBucketMigrationProgress(bucketID uint64, migrateState int) error {
+	var (
+		result              *gorm.DB
+		insertMigrateBucket *MigrateBucketProgressTable
+		queryReturn         *MigrateBucketProgressTable
+		needInsert          bool
+	)
+	queryReturn = &MigrateBucketProgressTable{}
+	insertMigrateBucket = &MigrateBucketProgressTable{
+		BucketID:       bucketID,
+		MigrationState: migrateState,
+	}
+	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if needInsert {
+		result = s.db.Create(insertMigrateBucket)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in migrate bucket table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&MigrateBucketProgressTable{}).
+			Where("bucket_id = ?", bucketID).Updates(insertMigrateBucket)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in migrate bucket table: %s", result.Error)
+		}
+	}
+
+	return nil
+}
+
+func (s *SpDBImpl) QueryMigrateBucketState(bucketID uint64) (int, error) {
+	var (
+		result              *gorm.DB
+		insertMigrateBucket *MigrateBucketProgressTable
+		queryReturn         *MigrateBucketProgressTable
+		needInsert          bool
+		state               = 0
+	)
+	queryReturn = &MigrateBucketProgressTable{}
+	insertMigrateBucket = &MigrateBucketProgressTable{
+		BucketID:       bucketID,
+		MigrationState: state,
+	}
+	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return state, result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if needInsert {
+		result = s.db.Create(insertMigrateBucket)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return 0, fmt.Errorf("failed to insert record in migrate bucket table: %s", result.Error)
+		}
+	} else {
+		state = queryReturn.MigrationState
+	}
+
+	return state, nil
+}
+
+func (s *SpDBImpl) ListBucketMigrationToConfirm() ([]*spdb.MigrateBucketProgressMeta, error) {
+	var queryReturns []MigrateBucketProgressTable
+	migrationStates := []int{11, 13}
+	result := s.db.Where("migration_state IN (?)", migrationStates).Find(&queryReturns)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to list bucket migration progress table: %s", result.Error)
+	}
+	returns := make([]*spdb.MigrateBucketProgressMeta, 0)
+	for _, queryReturn := range queryReturns {
+		returns = append(returns, &spdb.MigrateBucketProgressMeta{
+			BucketID:              queryReturn.BucketID,
+			SubscribedBlockHeight: queryReturn.SubscribedBlockHeight,
+			MigrationState:        queryReturn.MigrationState,
+		})
+	}
+	return returns, nil
+}
+
+func (s *SpDBImpl) UpdateBucketMigrationPreDeductedQuota(bucketID uint64, deductedQuota uint64, state int) error {
+	var (
+		result              *gorm.DB
+		insertMigrateBucket *MigrateBucketProgressTable
+		queryReturn         *MigrateBucketProgressTable
+		needInsert          bool
+	)
+	queryReturn = &MigrateBucketProgressTable{}
+	insertMigrateBucket = &MigrateBucketProgressTable{
+		BucketID:         bucketID,
+		MigrationState:   state,
+		PreDeductedQuota: deductedQuota,
+	}
+	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if needInsert {
+		result = s.db.Create(insertMigrateBucket)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in migrate bucket table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&MigrateBucketProgressTable{}).
+			Where("bucket_id = ?", bucketID).Updates(insertMigrateBucket)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in migrate bucket table: %s", result.Error)
+		}
+	}
+
+	return nil
+}
+
+func (s *SpDBImpl) UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error {
+	var (
+		result              *gorm.DB
+		insertMigrateBucket *MigrateBucketProgressTable
+		queryReturn         *MigrateBucketProgressTable
+		needInsert          bool
+	)
+	queryReturn = &MigrateBucketProgressTable{}
+	insertMigrateBucket = &MigrateBucketProgressTable{
+		BucketID:    bucketID,
+		RecoupQuota: recoupQuota,
+	}
+	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if needInsert {
+		result = s.db.Create(insertMigrateBucket)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in migrate bucket table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&MigrateBucketProgressTable{}).
+			Where("bucket_id = ?", bucketID).Updates(insertMigrateBucket)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in migrate bucket table: %s", result.Error)
+		}
+	}
+
+	return nil
+}
+
+func (s *SpDBImpl) UpdateBucketMigrationGCProgress(bucketID uint64, lastGCObjectID uint64, lastGCGvgID uint64) error {
+	var (
+		result              *gorm.DB
+		insertMigrateBucket *MigrateBucketProgressTable
+		queryReturn         *MigrateBucketProgressTable
+		needInsert          bool
+	)
+	queryReturn = &MigrateBucketProgressTable{}
+	insertMigrateBucket = &MigrateBucketProgressTable{
+		BucketID:       bucketID,
+		LastGCGvgID:    lastGCGvgID,
+		LastGCObjectID: lastGCObjectID,
+	}
+	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if needInsert {
+		result = s.db.Create(insertMigrateBucket)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in migrate bucket table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&MigrateBucketProgressTable{}).
+			Where("bucket_id = ?", bucketID).Updates(insertMigrateBucket)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in migrate bucket table: %s", result.Error)
+		}
+	}
+
+	return nil
+}
+
+func (s *SpDBImpl) UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error {
+	var (
+		result              *gorm.DB
+		insertMigrateBucket *MigrateBucketProgressTable
+		queryReturn         *MigrateBucketProgressTable
+		needInsert          bool
+	)
+	queryReturn = &MigrateBucketProgressTable{}
+	insertMigrateBucket = &MigrateBucketProgressTable{
+		BucketID:         bucketID,
+		GvgUnits:         gvgUnits,
+		GvgUnitsFinished: gvgUnitsFinished,
+	}
+	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+	if result.Error != nil {
+		needInsert = errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if needInsert {
+		result = s.db.Create(insertMigrateBucket)
+		if result.Error != nil || result.RowsAffected != 1 {
+			return fmt.Errorf("failed to insert record in migrate bucket table: %s", result.Error)
+		}
+	} else { // update
+		result = s.db.Model(&MigrateBucketProgressTable{}).
+			Where("bucket_id = ?", bucketID).Updates(insertMigrateBucket)
+		if result.Error != nil {
+			return fmt.Errorf("failed to update record in migrate bucket table: %s", result.Error)
+		}
+	}
+
+	return nil
+}
+
+func (s *SpDBImpl) DeleteMigrateBucket(bucketID uint64) error {
+	var results []MigrateBucketProgressTable
+	result := s.db.Where("bucket_id = ?", bucketID).Find(&results).Delete(&results)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete migrate bucket table: %s", result.Error)
 	}
 	return nil
 }

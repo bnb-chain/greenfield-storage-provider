@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 
@@ -327,7 +328,7 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskSuccess2(t *testing.T) {
 	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	m1.EXPECT().SignBucketMigrationInfo(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	m1.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
-		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).Times(1)
+		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).AnyTimes()
 
 	m.EXPECT().Push(gomock.Any()).Return(nil).AnyTimes()
 	// mock consensus
@@ -342,6 +343,9 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskSuccess2(t *testing.T) {
 	}, nil).AnyTimes()
 	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	a.baseApp.SetConsensus(mockedConsensus)
+	mockedSPDB := spdb.NewMockSPDB(ctrl)
+	mockedSPDB.EXPECT().QueryMigrateBucketState(gomock.Any()).Return(0, nil).Times(1)
+	a.baseApp.SetGfSpDB(mockedSPDB)
 	req := &gfsptask.GfSpMigrateBucketApprovalTask{
 		Task: &gfsptask.GfSpTask{},
 		MigrateBucketInfo: &storagetypes.MsgMigrateBucket{
@@ -390,6 +394,10 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskFailure2(t *testing.T) {
 	}, nil).AnyTimes()
 	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	a.baseApp.SetConsensus(mockedConsensus)
+
+	mockedSPDB := spdb.NewMockSPDB(ctrl)
+	mockedSPDB.EXPECT().QueryMigrateBucketState(gomock.Any()).Return(0, nil).Times(1)
+	a.baseApp.SetGfSpDB(mockedSPDB)
 
 	req := &gfsptask.GfSpMigrateBucketApprovalTask{
 		Task: &gfsptask.GfSpTask{},

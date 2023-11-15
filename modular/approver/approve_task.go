@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -135,6 +137,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		err           error
 		signature     []byte
 		currentHeight uint64
+		state         int
 	)
 	if task == nil || task.GetMigrateBucketInfo() == nil {
 		log.CtxErrorw(ctx, "failed to migrate bucket approval due to pointer nil")
@@ -152,6 +155,23 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		_ = a.bucketQueue.Push(shadowTask)
 		log.CtxErrorw(ctx, "repeated migrate bucket approval task is returned")
 		return true, nil
+	}
+
+	migrateBucketMsg := task.GetMigrateBucketInfo()
+	bucketMeta, _, err := a.baseApp.GfSpClient().GetBucketMeta(ctx, migrateBucketMsg.GetBucketName(), true)
+	if err != nil {
+		return false, err
+	}
+	bucketID := bucketMeta.GetBucketInfo().Id.Uint64()
+
+	// if migrating gc , reject
+	if state, err = a.baseApp.GfSpDB().QueryMigrateBucketState(bucketID); err != nil {
+		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
+		return false, err
+	}
+	if state == int(manager.SrcSPGCDoing) {
+		log.CtxInfow(ctx, "the bucket has already notified", "bucket_id", bucketID)
+		return false, fmt.Errorf("the bucket is gcing")
 	}
 
 	// check src sp has enough quota

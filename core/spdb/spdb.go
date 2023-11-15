@@ -171,6 +171,8 @@ type MigrateDB interface {
 	QuerySwapOutSubscribeProgress() (uint64, error)
 	// UpdateBucketMigrateSubscribeProgress includes insert and update.
 	UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error
+	// UpdateBucketMigrateGCSubscribeProgress includes insert and update.
+	UpdateBucketMigrateGCSubscribeProgress(blockHeight uint64) error
 	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
 	QueryBucketMigrateSubscribeProgress() (uint64, error)
 
@@ -201,4 +203,18 @@ type MigrateDB interface {
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
 	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
+
+	// UpdateBucketMigrationProgress update MigrateBucketTable migrate state.
+	UpdateBucketMigrationProgress(bucketID uint64, migrateState int) error
+	// QueryMigrateBucketState returns the migrate state.
+	QueryMigrateBucketState(bucketID uint64) (int, error)
+	// ListBucketMigrationToConfirm returns the migrate bucket id to be confirmed.
+	ListBucketMigrationToConfirm() ([]*MigrateBucketProgressMeta, error)
+	// UpdateBucketMigrationPreDeductedQuota update MigrateBucketTable migrate state.
+	UpdateBucketMigrationPreDeductedQuota(bucketID uint64, deductedQuota uint64, state int) error
+	UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error
+	UpdateBucketMigrationGCProgress(bucketID uint64, lastGCObjectID uint64, lastGCGvgID uint64) error
+	UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error
+	// DeleteMigrateBucket delete the bucket migrate status
+	DeleteMigrateBucket(bucketID uint64) error
 }

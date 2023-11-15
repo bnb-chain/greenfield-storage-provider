@@ -88,8 +88,8 @@ type ManagerAPI interface {
 	PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error)
-	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
-	NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error
+	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error)
+	NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error)
 }
 
 // MetadataAPI for mock sue
@@ -127,6 +127,7 @@ type MetadataAPI interface {
 	ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
 	ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
 	ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListMigrateBucketEvents, error)
+	ListCompleteMigrationBucketEvents(ctx context.Context, blockID uint64, srcSpID uint32, opts ...grpc.DialOption) ([]*storagetypes.EventCompleteMigrationBucket, error)
 	ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListSwapOutEvents, error)
 	ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error)
 	GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*storagetypes.ObjectInfo, error)

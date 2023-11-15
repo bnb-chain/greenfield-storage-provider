@@ -348,14 +348,14 @@ func (s mockManagerServer) GfSpQueryTasksStats(ctx context.Context, req *gfspser
 	}, nil
 }
 
-func (s mockManagerServer) GfSpNotifyPreMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
+func (s mockManagerServer) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifPreMigrateBucketRequest) (*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
 	if req == nil {
 		return nil, mockRPCErr
 	}
 	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{}, nil
 }
 
-func (s mockManagerServer) GfSpNotifyPostMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
+func (s mockManagerServer) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
 	if req == nil {
 		return nil, mockRPCErr
 	}

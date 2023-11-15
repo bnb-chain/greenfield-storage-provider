@@ -65,11 +65,12 @@ func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateB
 func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.MsgSwapOut) error {
 	return ErrNilModular
 }
-func (*NullModular) NotifyPreMigrateBucket(context.Context, uint64) error {
-	return ErrNilModular
+func (*NullModular) NotifyPreMigrateBucketAndDeductQuota(context.Context, uint64) (gfsptask.GfSpBucketQuotaInfo, error) {
+	return gfsptask.GfSpBucketQuotaInfo{}, ErrNilModular
 }
-func (*NullModular) NotifyPostMigrateBucket(context.Context, *gfsptask.GfSpBucketMigrationInfo) error {
-	return ErrNilModular
+
+func (*NullModular) NotifyPostMigrateBucketAndRecoupQuota(context.Context, *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
+	return gfsptask.GfSpBucketQuotaInfo{}, ErrNilModular
 }
 
 func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string) {

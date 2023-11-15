@@ -360,22 +360,30 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 	}, nil
 }
 
-func (g *GfSpBaseApp) GfSpNotifyPreMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (
+func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifPreMigrateBucketRequest) (
 	*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
-	if err := g.manager.NotifyPreMigrateBucket(ctx, req.GetBucketId()); err != nil {
+	var (
+		quota gfsptask.GfSpBucketQuotaInfo
+		err   error
+	)
+	if quota, err = g.manager.NotifyPreMigrateBucketAndDeductQuota(ctx, req.GetBucketId()); err != nil {
 		return nil, err
 	}
 
-	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{}, nil
+	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{Quota: &quota}, nil
 }
 
-func (g *GfSpBaseApp) GfSpNotifyPostMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (
+func (g *GfSpBaseApp) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (
 	*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
-	if err := g.manager.NotifyPostMigrateBucket(ctx, req.GetBucketMigrationInfo()); err != nil {
+	var (
+		quota gfsptask.GfSpBucketQuotaInfo
+		err   error
+	)
+	if quota, err = g.manager.NotifyPostMigrateBucketAndRecoupQuota(ctx, req.GetBucketMigrationInfo()); err != nil {
 		return nil, err
 	}
 
-	return &gfspserver.GfSpNotifyPostMigrateBucketResponse{}, nil
+	return &gfspserver.GfSpNotifyPostMigrateBucketResponse{Quota: &quota}, nil
 }
 
 func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspserver.GfSpResetRecoveryFailedListRequest) (

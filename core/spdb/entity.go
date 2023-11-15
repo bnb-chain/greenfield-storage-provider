@@ -130,3 +130,10 @@ type SwapOutMeta struct {
 	SwapOutMsg    *virtualgrouptypes.MsgSwapOut
 	CompletedGVGs []uint32
 }
+
+// MigrateBucketProgressMeta is used to record migrate bucket progress meta.
+type MigrateBucketProgressMeta struct {
+	BucketID              uint64 // as primary key
+	SubscribedBlockHeight uint64
+	MigrationState        int
+}

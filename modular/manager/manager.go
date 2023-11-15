@@ -75,9 +75,6 @@ type ManageModular struct {
 	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueueMux     sync.Mutex
 
-	// src sp used TODO: these should be persisted
-	migratingBuckets map[uint64]struct{}
-
 	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
@@ -153,8 +150,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 	m.gcBucketMigrationQueue.SetRetireTaskStrategy(m.ResetGCBucketMigrationQueue)
 	m.gcBucketMigrationQueue.SetFilterTaskStrategy(m.FilterGCTask)
-
-	m.migratingBuckets = make(map[uint64]struct{})
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {

@@ -165,6 +165,10 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to migrate gvg table", "error", err)
 		return nil, err
 	}
+	if err = db.AutoMigrate(&MigrateBucketProgressTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to migrate bucket table", "error", err)
+		return nil, err
+	}
 	return db, nil
 }
 

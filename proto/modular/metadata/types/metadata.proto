@@ -665,6 +665,20 @@ message GfSpListMigrateBucketEventsResponse {
   repeated ListMigrateBucketEvents events = 1;
 }
 
+// GfSpListMigrateBucketEventsRequest is request type for the GfSpListMigrateBucketEvents RPC method
+message GfSpListCompleteMigrationBucketEventsRequest {
+  // block_id is the unique identification for block
+  uint64 block_id = 1;
+  // src_sp_id is the unique identification for sp
+  uint32 src_sp_id = 2;
+}
+
+// GfSpListCompleteMigrationBucketResponse is response type for the GfSpListCompleteMigrationBucketEvents RPC method
+message GfSpListCompleteMigrationBucketEventsResponse {
+  // complete_event defines the complete migration bucket event
+  repeated greenfield.storage.EventCompleteMigrationBucket complete_events = 1;
+}
+
 // GfSpListSwapOutEventsRequest is request type for the GfSpListSwapOutEvents RPC method
 message GfSpListSwapOutEventsRequest {
   // block_id is the unique identification for block
@@ -1044,6 +1058,7 @@ service GfSpMetadataService {
   rpc GfSpListGlobalVirtualGroupsBySecondarySP(GfSpListGlobalVirtualGroupsBySecondarySPRequest) returns (GfSpListGlobalVirtualGroupsBySecondarySPResponse) {}
   rpc GfSpListGlobalVirtualGroupsByBucket(GfSpListGlobalVirtualGroupsByBucketRequest) returns (GfSpListGlobalVirtualGroupsByBucketResponse) {}
   rpc GfSpListMigrateBucketEvents(GfSpListMigrateBucketEventsRequest) returns (GfSpListMigrateBucketEventsResponse) {}
+  rpc GfSpListCompleteMigrationBucketEvents(GfSpListCompleteMigrationBucketEventsRequest) returns (GfSpListCompleteMigrationBucketEventsResponse) {}
   rpc GfSpListSwapOutEvents(GfSpListSwapOutEventsRequest) returns (GfSpListSwapOutEventsResponse) {}
   rpc GfSpListSpExitEvents(GfSpListSpExitEventsRequest) returns (GfSpListSpExitEventsResponse) {}
   rpc GfSpGetSPInfo(GfSpGetSPInfoRequest) returns (GfSpGetSPInfoResponse) {}

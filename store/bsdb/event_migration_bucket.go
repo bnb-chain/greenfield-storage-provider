@@ -63,6 +63,34 @@ func (b *BsDBImpl) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB
 	return events, completeEvents, cancelEvents, rejectEvents, err
 }
 
+// ListCompleteMigrationBucket list migrate bucket events
+func (b *BsDBImpl) ListCompleteMigrationBucket(srcSpID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventCompleteMigrationBucket, error) {
+	var (
+		completeEvents []*EventCompleteMigrationBucket
+		err            error
+	)
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	err = b.db.Table((&EventCompleteMigrationBucket{}).TableName()).
+		Select("*").
+		Where("src_primary_sp_id = ?", srcSpID).
+		Scopes(filters...).
+		Find(&completeEvents).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return completeEvents, err
+}
+
 // GetMigrateBucketEventByBucketID get migrate bucket event by bucket id
 func (b *BsDBImpl) GetMigrateBucketEventByBucketID(bucketID common.Hash) (*EventCompleteMigrationBucket, error) {
 	var (

@@ -1211,32 +1211,34 @@ func (mr *MockManagerMockRecorder) NotifyMigrateSwapOut(ctx, swapOut interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyMigrateSwapOut", reflect.TypeOf((*MockManager)(nil).NotifyMigrateSwapOut), ctx, swapOut)
 }
 
-// NotifyPostMigrateBucket mocks base method.
-func (m *MockManager) NotifyPostMigrateBucket(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) error {
+// NotifyPostMigrateBucketAndRecoupQuota mocks base method.
+func (m *MockManager) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bmStatus)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "NotifyPostMigrateBucketAndRecoupQuota", ctx, bmStatus)
+	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// NotifyPostMigrateBucket indicates an expected call of NotifyPostMigrateBucket.
-func (mr *MockManagerMockRecorder) NotifyPostMigrateBucket(ctx, bmStatus interface{}) *gomock.Call {
+// NotifyPostMigrateBucketAndRecoupQuota indicates an expected call of NotifyPostMigrateBucketAndRecoupQuota.
+func (mr *MockManagerMockRecorder) NotifyPostMigrateBucketAndRecoupQuota(ctx, bmStatus interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockManager)(nil).NotifyPostMigrateBucket), ctx, bmStatus)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucketAndRecoupQuota", reflect.TypeOf((*MockManager)(nil).NotifyPostMigrateBucketAndRecoupQuota), ctx, bmStatus)
 }
 
-// NotifyPreMigrateBucket mocks base method.
-func (m *MockManager) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error {
+// NotifyPreMigrateBucketAndDeductQuota mocks base method.
+func (m *MockManager) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPreMigrateBucket", ctx, bucketID)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "NotifyPreMigrateBucketAndDeductQuota", ctx, bucketID)
+	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// NotifyPreMigrateBucket indicates an expected call of NotifyPreMigrateBucket.
-func (mr *MockManagerMockRecorder) NotifyPreMigrateBucket(ctx, bucketID interface{}) *gomock.Call {
+// NotifyPreMigrateBucketAndDeductQuota indicates an expected call of NotifyPreMigrateBucketAndDeductQuota.
+func (mr *MockManagerMockRecorder) NotifyPreMigrateBucketAndDeductQuota(ctx, bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucket", reflect.TypeOf((*MockManager)(nil).NotifyPreMigrateBucket), ctx, bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucketAndDeductQuota", reflect.TypeOf((*MockManager)(nil).NotifyPreMigrateBucketAndDeductQuota), ctx, bucketID)
 }
 
 // PickVirtualGroupFamily mocks base method.

@@ -244,6 +244,57 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 	return resp, nil
 }
 
+// GfSpListCompleteMigrationBucketEvents list migrate bucket events, sp_id should be src sp id
+func (r *MetadataModular) GfSpListCompleteMigrationBucketEvents(ctx context.Context, req *types.GfSpListCompleteMigrationBucketEventsRequest) (resp *types.GfSpListCompleteMigrationBucketEventsResponse, err error) {
+	var (
+		completeEvents    []*model.EventCompleteMigrationBucket
+		spCompleteEvent   *storage_types.EventCompleteMigrationBucket
+		completeEventsMap map[common.Hash]*model.EventCompleteMigrationBucket
+		res               []*storage_types.EventCompleteMigrationBucket
+		filters           []func(*gorm.DB) *gorm.DB
+		latestBlock       int64
+	)
+
+	ctx = log.Context(ctx, req)
+	latestBlock, err = r.baseApp.GfBsDB().GetLatestBlockNumber()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
+		return nil, err
+	}
+	if uint64(latestBlock) < req.BlockId {
+		log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
+		return nil, ErrExceedBlockHeight
+	}
+	log.Debugw("GfSpListCompleteMigrationBucketEvents", "src-sp-id", req.SrcSpId, "block-id", req.BlockId)
+	filters = append(filters, model.CreateAtEqualFilter(int64(req.BlockId)))
+	completeEvents, err = r.baseApp.GfBsDB().ListCompleteMigrationBucket(req.SrcSpId, filters...)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
+		return nil, err
+	}
+
+	completeEventsMap = make(map[common.Hash]*model.EventCompleteMigrationBucket)
+	for _, e := range completeEvents {
+		completeEventsMap[e.BucketID] = e
+	}
+
+	res = make([]*storage_types.EventCompleteMigrationBucket, 0)
+
+	for _, e := range completeEvents {
+		spCompleteEvent = &storage_types.EventCompleteMigrationBucket{
+			Operator:                   e.Operator.String(),
+			BucketName:                 e.BucketName,
+			BucketId:                   math.NewUintFromBigInt(e.BucketID.Big()),
+			GlobalVirtualGroupFamilyId: e.GlobalVirtualGroupFamilyId,
+		}
+		res = append(res, spCompleteEvent)
+	}
+
+	resp = &types.GfSpListCompleteMigrationBucketEventsResponse{CompleteEvents: res}
+	log.CtxInfow(ctx, "succeed to list complete migrate bucket events", "request", req, "response", resp)
+	return resp, nil
+}
+
 // GfSpListSwapOutEvents list swap out events
 func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.GfSpListSwapOutEventsRequest) (resp *types.GfSpListSwapOutEventsResponse, err error) {
 	var (

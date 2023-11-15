@@ -651,6 +651,26 @@ func (mr *MockMetadataMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByVgfID", reflect.TypeOf((*MockMetadata)(nil).ListBucketsByVgfID), vgfIDs, startAfter, limit)
 }
 
+// ListCompleteMigrationBucket mocks base method.
+func (m *MockMetadata) ListCompleteMigrationBucket(srcSpID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventCompleteMigrationBucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{srcSpID}
+	for _, a := range filters {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListCompleteMigrationBucket", varargs...)
+	ret0, _ := ret[0].([]*EventCompleteMigrationBucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListCompleteMigrationBucket indicates an expected call of ListCompleteMigrationBucket.
+func (mr *MockMetadataMockRecorder) ListCompleteMigrationBucket(srcSpID interface{}, filters ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{srcSpID}, filters...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCompleteMigrationBucket", reflect.TypeOf((*MockMetadata)(nil).ListCompleteMigrationBucket), varargs...)
+}
+
 // ListDeletedObjectsByBlockNumberRange mocks base method.
 func (m *MockMetadata) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
 	m.ctrl.T.Helper()
@@ -1667,6 +1687,26 @@ func (m *MockBSDB) ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, l
 func (mr *MockBSDBMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByVgfID", reflect.TypeOf((*MockBSDB)(nil).ListBucketsByVgfID), vgfIDs, startAfter, limit)
+}
+
+// ListCompleteMigrationBucket mocks base method.
+func (m *MockBSDB) ListCompleteMigrationBucket(srcSpID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventCompleteMigrationBucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{srcSpID}
+	for _, a := range filters {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListCompleteMigrationBucket", varargs...)
+	ret0, _ := ret[0].([]*EventCompleteMigrationBucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListCompleteMigrationBucket indicates an expected call of ListCompleteMigrationBucket.
+func (mr *MockBSDBMockRecorder) ListCompleteMigrationBucket(srcSpID interface{}, filters ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{srcSpID}, filters...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCompleteMigrationBucket", reflect.TypeOf((*MockBSDB)(nil).ListCompleteMigrationBucket), varargs...)
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.

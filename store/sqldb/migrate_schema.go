@@ -44,3 +44,25 @@ type MigrateGVGTable struct {
 func (MigrateGVGTable) TableName() string {
 	return MigrateGVGTableName
 }
+
+// MigrateBucketProgressTable table schema.
+// used by persist bucket migration progress
+type MigrateBucketProgressTable struct {
+	BucketID              uint64 `gorm:"primary_key"`
+	SubscribedBlockHeight uint64 `gorm:"primary_key"`
+	MigrationState        int    `gorm:"migration_state"`
+
+	GvgUnits         uint32 // Total number of GVGs that need to be migrated
+	GvgUnitsFinished uint32 // Number of successfully migrated GVGs
+
+	PreDeductedQuota uint64 // Quota pre-deducted by the source sp in the pre-migrate bucket phase
+	RecoupQuota      uint64 // In case of migration failure, the dest sp recoup the quota for the source sp
+
+	LastGCObjectID uint64 // After bucket migration is complete, the progress of GC, up to which object is GC performed.
+	LastGCGvgID    uint64 // which GVG is GC performed.
+}
+
+// TableName is used to set MigrateBucketProgressTable Schema's table name in database.
+func (MigrateBucketProgressTable) TableName() string {
+	return MigrateBucketProgressTableName
+}

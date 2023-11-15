@@ -8,12 +8,38 @@ import (
 )
 
 type MigrateStatus int32
+type BucketMigrateState int32
 
+// MigrateGVGTable status
 // migrate: WaitForMigrate(created)->Migrating(schedule success)->Migrated(executor report success).
 var (
 	WaitForMigrate MigrateStatus = 0
 	Migrating      MigrateStatus = 1
 	Migrated       MigrateStatus = 2
+)
+
+// MigrateBucketTable state
+var (
+	Init                     BucketMigrateState = 0
+	SrcSPPreDeductQuotaDone  BucketMigrateState = 1 // produced execute plan and pre deduct quota
+	DestSPPreDeductQuotaDone BucketMigrateState = 2
+
+	MigratingGvgDoing      BucketMigrateState = 5 // migrating gvg task
+	MigratingGvgDone       BucketMigrateState = 6
+	MigratingQuotaInfoDone BucketMigrateState = 7
+
+	SendCompleteTxDone      BucketMigrateState = 10 // confirm tx
+	WaitCompleteTxEventDone BucketMigrateState = 11
+	SendRejectTxDone        BucketMigrateState = 12
+	WaitRejectTxEventDone   BucketMigrateState = 13
+
+	SrcSPGCDoing  BucketMigrateState = 20 // gc
+	SrcSPGCDone   BucketMigrateState = 21
+	DestSPGCDoing BucketMigrateState = 22
+	DestSPGCDone  BucketMigrateState = 23
+
+	PostSrcSPDone     BucketMigrateState = 30
+	MigrationFinished BucketMigrateState = 31
 )
 
 type BasicGVGMigrateExecuteUnit struct {
