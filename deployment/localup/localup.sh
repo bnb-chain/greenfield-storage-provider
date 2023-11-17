@@ -170,7 +170,6 @@ function make_config() {
 #############
 function start_sp() {
   index=0
-  sleep 5
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
     cd ${sp_dir} || exit 1
     nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1&

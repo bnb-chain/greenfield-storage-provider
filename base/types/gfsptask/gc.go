@@ -451,7 +451,3 @@ func (m *GfSpGCMetaTask) SetGCMetaTaskType(metaTaskType GfSpGCMetaTaskType) {
 func (m *GfSpGCMetaTask) GetGCMetaTaskType() GfSpGCMetaTaskType {
 	return m.GetMetaTaskType()
 }
-
-func (m *GfSpGCMetaTask) SetDeletionTime(tx uint64) {
-	m.DeletionTime = int64(tx)
-}

@@ -57,10 +57,10 @@ type ExecuteModular struct {
 
 	enableSkipFailedToMigrateObject bool // only for debugging, and online config can only be false
 
-	spID      uint32
-	spMap     map[uint32]*sptypes.StorageProvider
-	mutex     sync.RWMutex
-	gcChecker *GCChecker
+	spID     uint32
+	spMap    map[uint32]*sptypes.StorageProvider
+	mutex    sync.RWMutex
+	gcWorker *GCWorker
 }
 
 func (e *ExecuteModular) Name() string {
@@ -81,7 +81,7 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 	for _, sp := range sps {
 		e.spMap[sp.Id] = sp
 	}
-	e.gcChecker = NewGCChecker(e)
+	e.gcWorker = NewGCWorker(e)
 	go e.eventLoop(ctx)
 	return nil
 }

@@ -40,7 +40,7 @@ var (
 	ErrNotifyMigrateSwapOut = gfsperrors.Register(module.ManageModularName, http.StatusNotAcceptable, 60006, "failed to notify swap out start")
 )
 
-const BucketMigrationGCWaitTime = 10 * time.Second
+const bucketMigrationGCWaitTime = 10 * time.Second
 
 func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.ManageModularName, http.StatusInternalServerError, 65201, detail)
@@ -674,7 +674,7 @@ func (m *ManageModular) HandleGCMetaTask(ctx context.Context, gcMetaTask task.GC
 
 func (m *ManageModular) GenerateGCBucketMigrationTask(ctx context.Context, bucketID, bucketSize uint64) {
 	// src sp should wait meta data
-	<-time.After(BucketMigrationGCWaitTime)
+	<-time.After(bucketMigrationGCWaitTime)
 
 	// success generate gc task, gc for bucket migration src sp
 	gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}

@@ -178,10 +178,7 @@ message GfSpGCMetaTask {
   GfSpTask task = 1;
   uint64 current_idx = 2;
   uint64 delete_count = 3;
-  bool running = 4;
-  // delete meta record before deletion time
-  int64 deletion_time = 5;
-  GfSpGCMetaTaskType meta_task_type = 6;
+  GfSpGCMetaTaskType meta_task_type = 4;
 }
 
 message GfSpMigrateGVGTask {

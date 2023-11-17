@@ -170,28 +170,28 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		cfg.Parallel.GlobalChallengePieceTaskCacheSize = DefaultGlobalChallengePieceTaskCacheSize
 	}
 
-	if cfg.Parallel.GlobalBatchGcObjectTimeInterval == 0 {
-		cfg.Parallel.GlobalBatchGcObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
+	if cfg.GC.GCObjectTimeInterval == 0 {
+		cfg.GC.GCObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
 	}
-	if cfg.Parallel.GlobalGcObjectBlockInterval == 0 {
-		cfg.Parallel.GlobalGcObjectBlockInterval = DefaultGlobalGcObjectBlockInterval
+	if cfg.GC.GCObjectBlockInterval == 0 {
+		cfg.GC.GCObjectBlockInterval = DefaultGlobalGcObjectBlockInterval
 	}
-	if cfg.Parallel.GlobalGcObjectSafeBlockDistance == 0 {
-		cfg.Parallel.GlobalGcObjectSafeBlockDistance = DefaultGlobalGcObjectSafeBlockDistance
-	}
-
-	if cfg.Parallel.GlobalBatchGcZombiePieceTimeInterval == 0 {
-		cfg.Parallel.GlobalBatchGcZombiePieceTimeInterval = DefaultGlobalBatchGcZombiePieceTimeInterval
-	}
-	if cfg.Parallel.GlobalGcZombiePieceObjectIDInterval == 0 {
-		cfg.Parallel.GlobalGcZombiePieceObjectIDInterval = DefaultGlobalGcZombiePieceObjectIDInterval
-	}
-	if cfg.Parallel.GlobalGcZombieSafeObjectIDDistance == 0 {
-		cfg.Parallel.GlobalGcZombieSafeObjectIDDistance = DefaultGlobalGcZombieSafeObjectIDDistance
+	if cfg.GC.GCObjectSafeBlockDistance == 0 {
+		cfg.GC.GCObjectSafeBlockDistance = DefaultGlobalGcObjectSafeBlockDistance
 	}
 
-	if cfg.Parallel.GlobalGcMetaTimeInterval == 0 {
-		cfg.Parallel.GlobalGcMetaTimeInterval = DefaultGlobalBatchGcMetaTimeInterval
+	if cfg.GC.GCZombiePieceTimeInterval == 0 {
+		cfg.GC.GCZombiePieceTimeInterval = DefaultGlobalBatchGcZombiePieceTimeInterval
+	}
+	if cfg.GC.GCZombiePieceObjectIDInterval == 0 {
+		cfg.GC.GCZombiePieceObjectIDInterval = DefaultGlobalGcZombiePieceObjectIDInterval
+	}
+	if cfg.GC.GCZombieSafeObjectIDDistance == 0 {
+		cfg.GC.GCZombieSafeObjectIDDistance = DefaultGlobalGcZombieSafeObjectIDDistance
+	}
+
+	if cfg.GC.GCMetaTimeInterval == 0 {
+		cfg.GC.GCMetaTimeInterval = DefaultGlobalBatchGcMetaTimeInterval
 	}
 
 	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {
@@ -221,15 +221,15 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
-	manager.gcObjectTimeInterval = cfg.Parallel.GlobalBatchGcObjectTimeInterval
-	manager.gcObjectBlockInterval = cfg.Parallel.GlobalGcObjectBlockInterval
-	manager.gcSafeBlockDistance = cfg.Parallel.GlobalGcObjectSafeBlockDistance
-	manager.gcZombiePieceEnabled = cfg.Parallel.GlobalGCZombieEnabled
-	manager.gcZombiePieceTimeInterval = cfg.Parallel.GlobalBatchGcZombiePieceTimeInterval
-	manager.gcZombiePieceSafeObjectIDDistance = cfg.Parallel.GlobalGcZombieSafeObjectIDDistance
-	manager.gcZombiePieceObjectIDInterval = cfg.Parallel.GlobalGcZombiePieceObjectIDInterval
-	manager.gcMetaEnabled = cfg.Parallel.GlobalGCMetaEnabled
-	manager.gcMetaTimeInterval = cfg.Parallel.GlobalGcMetaTimeInterval
+	manager.gcObjectTimeInterval = cfg.GC.GCObjectTimeInterval
+	manager.gcObjectBlockInterval = cfg.GC.GCObjectBlockInterval
+	manager.gcSafeBlockDistance = cfg.GC.GCObjectSafeBlockDistance
+	manager.gcZombiePieceEnabled = cfg.GC.EnableGCZombie
+	manager.gcZombiePieceTimeInterval = cfg.GC.GCZombiePieceTimeInterval
+	manager.gcZombiePieceSafeObjectIDDistance = cfg.GC.GCZombieSafeObjectIDDistance
+	manager.gcZombiePieceObjectIDInterval = cfg.GC.GCZombiePieceObjectIDInterval
+	manager.gcMetaEnabled = cfg.GC.EnableGCMeta
+	manager.gcMetaTimeInterval = cfg.GC.GCMetaTimeInterval
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
 	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
 	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval
@@ -253,16 +253,16 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.Name()+"-gc-object", cfg.Parallel.GlobalGCObjectParallel)
 	manager.gcZombieQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-zombie", cfg.Parallel.GlobalGCZombieParallel)
-	manager.migrateGVGQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
-		manager.Name()+"-migrate-gvg", cfg.Parallel.GlobalMigrateGVGParallel)
 	manager.gcMetaQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-meta", cfg.Parallel.GlobalGCMetaParallel)
+	manager.gcBucketMigrationQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-gc-bucket-migration", cfg.Parallel.GlobalGCBucketMigrationParallel)
+	manager.migrateGVGQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-migrate-gvg", cfg.Parallel.GlobalMigrateGVGParallel)
 	manager.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-download-object", cfg.Parallel.GlobalDownloadObjectTaskCacheSize)
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
-	manager.gcBucketMigrationQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
-		manager.Name()+"-gc-bucket-migration", cfg.Parallel.GlobalGCBucketMigrationParallel)
 
 	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus(), manager.enableHealthyChecker); err != nil {
 		return err

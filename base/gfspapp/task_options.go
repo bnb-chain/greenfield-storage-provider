@@ -84,8 +84,8 @@ const (
 	MaxMigrateGVGRetry = 3
 	// MinGCBucketMigrationRetry defines the min retry number to gc bucket migration.
 	MinGCBucketMigrationRetry = 3
-	// MaxBucketMigrationRetry  defines the max retry number to gc bucket migration.
-	MaxBucketMigrationRetry = 5
+	// MaxGCBucketMigrationRetry  defines the max retry number to gc bucket migration.
+	MaxGCBucketMigrationRetry = 5
 )
 
 // TaskTimeout returns the task timeout by task type and some task need payload size
@@ -285,10 +285,10 @@ func (g *GfSpBaseApp) TaskMaxRetry(task coretask.Task) int64 {
 		return g.migrateGVGRetry
 	case coretask.TypeTaskGCBucketMigration:
 		if g.gcBucketMigrationRetry < MinGCBucketMigrationRetry {
-			return MinMigrateGVGRetry
+			return MinGCBucketMigrationRetry
 		}
-		if g.gcBucketMigrationRetry > MaxBucketMigrationRetry {
-			return MaxMigrateGVGRetry
+		if g.gcBucketMigrationRetry > MaxGCBucketMigrationRetry {
+			return MaxGCBucketMigrationRetry
 		}
 		return g.gcBucketMigrationRetry
 	default:

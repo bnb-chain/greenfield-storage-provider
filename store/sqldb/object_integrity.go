@@ -207,16 +207,16 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32)
 
 type ByRedundancyIndexAndObjectID []*corespdb.IntegrityMeta
 
-func (a ByRedundancyIndexAndObjectID) Len() int { return len(a) }
+func (b ByRedundancyIndexAndObjectID) Len() int { return len(b) }
 
 // Less we want to sort as ascending here
-func (a ByRedundancyIndexAndObjectID) Less(i, j int) bool {
-	if a[i].ObjectID == a[j].ObjectID {
-		return a[i].RedundancyIndex < a[j].RedundancyIndex
+func (b ByRedundancyIndexAndObjectID) Less(i, j int) bool {
+	if b[i].ObjectID == b[j].ObjectID {
+		return b[i].RedundancyIndex < b[j].RedundancyIndex
 	}
-	return a[i].ObjectID < a[j].ObjectID
+	return b[i].ObjectID < b[j].ObjectID
 }
-func (a ByRedundancyIndexAndObjectID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (b ByRedundancyIndexAndObjectID) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
 // ListIntegrityMetaByObjectIDRange list objects info by a block number range
 func (s *SpDBImpl) ListIntegrityMetaByObjectIDRange(startObjectID int64, endObjectID int64, includePrivate bool) ([]*corespdb.IntegrityMeta, error) {
