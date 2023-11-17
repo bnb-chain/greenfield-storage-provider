@@ -2,7 +2,7 @@ name: Docker-CI
 
 on:
   push:
-    branches: [ develop, master ]
+    branches: [ develop, master, fix-RefreshMetaInterval ]
 
 env:
   IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider-invisible
