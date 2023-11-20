@@ -96,7 +96,6 @@ type ManagerAPI interface {
 type MetadataAPI interface {
 	GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error)
 	ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error)
-	ListObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error)
 	GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error)
 	ListObjectsByBucketName(ctx context.Context, bucketName string, accountID string, maxKeys uint64, startAfter string, continuationToken string, delimiter string, prefix string, includeRemoved bool,
 		opts ...grpc.DialOption) (objects []*types.Object, keyCount, maxKeysRe uint64, isTruncated bool, nextContinuationToken, name, prefixRe, delimiterRe string, commonPrefixes []string, continuationTokenRe string, err error)
@@ -104,6 +103,7 @@ type MetadataAPI interface {
 	GetBucketByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error)
 	ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpID uint32, limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error)
 	GetObjectMeta(ctx context.Context, objectName string, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Object, error)
+	GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error)
 	GetPaymentByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error)
 	GetPaymentByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error)
 	VerifyPermission(ctx context.Context, Operator string, bucketName string, objectName string, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)

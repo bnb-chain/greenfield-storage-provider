@@ -51,34 +51,6 @@ func (mr *MockSPDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockSPDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
 }
 
-// DeleteAllBucketTrafficExpired mocks base method.
-func (m *MockSPDB) DeleteAllBucketTrafficExpired(yearMonth string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllBucketTrafficExpired", yearMonth)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteAllBucketTrafficExpired indicates an expected call of DeleteAllBucketTrafficExpired.
-func (mr *MockSPDBMockRecorder) DeleteAllBucketTrafficExpired(yearMonth interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllBucketTrafficExpired", reflect.TypeOf((*MockSPDB)(nil).DeleteAllBucketTrafficExpired), yearMonth)
-}
-
-// DeleteAllReadRecordExpired mocks base method.
-func (m *MockSPDB) DeleteAllReadRecordExpired(ts uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllReadRecordExpired", ts)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteAllReadRecordExpired indicates an expected call of DeleteAllReadRecordExpired.
-func (mr *MockSPDBMockRecorder) DeleteAllReadRecordExpired(ts interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReadRecordExpired", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReadRecordExpired), ts)
-}
-
 // DeleteAllReplicatePieceChecksum mocks base method.
 func (m *MockSPDB) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error {
 	m.ctrl.T.Helper()
@@ -105,6 +77,34 @@ func (m *MockSPDB) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 func (mr *MockSPDBMockRecorder) DeleteAllReplicatePieceChecksumOptimized(objectID, redundancyIdx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksumOptimized", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReplicatePieceChecksumOptimized), objectID, redundancyIdx)
+}
+
+// DeleteExpiredBucketTraffic mocks base method.
+func (m *MockSPDB) DeleteExpiredBucketTraffic(yearMonth string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExpiredBucketTraffic", yearMonth)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteExpiredBucketTraffic indicates an expected call of DeleteExpiredBucketTraffic.
+func (mr *MockSPDBMockRecorder) DeleteExpiredBucketTraffic(yearMonth interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).DeleteExpiredBucketTraffic), yearMonth)
+}
+
+// DeleteExpiredReadRecord mocks base method.
+func (m *MockSPDB) DeleteExpiredReadRecord(ts uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExpiredReadRecord", ts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteExpiredReadRecord indicates an expected call of DeleteExpiredReadRecord.
+func (mr *MockSPDBMockRecorder) DeleteExpiredReadRecord(ts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredReadRecord", reflect.TypeOf((*MockSPDB)(nil).DeleteExpiredReadRecord), ts)
 }
 
 // DeleteGCObjectProgress mocks base method.
@@ -1437,32 +1437,32 @@ func (mr *MockTrafficDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockTrafficDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
 }
 
-// DeleteAllBucketTrafficExpired mocks base method.
-func (m *MockTrafficDB) DeleteAllBucketTrafficExpired(yearMonth string) error {
+// DeleteExpiredBucketTraffic mocks base method.
+func (m *MockTrafficDB) DeleteExpiredBucketTraffic(yearMonth string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllBucketTrafficExpired", yearMonth)
+	ret := m.ctrl.Call(m, "DeleteExpiredBucketTraffic", yearMonth)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteAllBucketTrafficExpired indicates an expected call of DeleteAllBucketTrafficExpired.
-func (mr *MockTrafficDBMockRecorder) DeleteAllBucketTrafficExpired(yearMonth interface{}) *gomock.Call {
+// DeleteExpiredBucketTraffic indicates an expected call of DeleteExpiredBucketTraffic.
+func (mr *MockTrafficDBMockRecorder) DeleteExpiredBucketTraffic(yearMonth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllBucketTrafficExpired", reflect.TypeOf((*MockTrafficDB)(nil).DeleteAllBucketTrafficExpired), yearMonth)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).DeleteExpiredBucketTraffic), yearMonth)
 }
 
-// DeleteAllReadRecordExpired mocks base method.
-func (m *MockTrafficDB) DeleteAllReadRecordExpired(ts uint64) error {
+// DeleteExpiredReadRecord mocks base method.
+func (m *MockTrafficDB) DeleteExpiredReadRecord(ts uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllReadRecordExpired", ts)
+	ret := m.ctrl.Call(m, "DeleteExpiredReadRecord", ts)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteAllReadRecordExpired indicates an expected call of DeleteAllReadRecordExpired.
-func (mr *MockTrafficDBMockRecorder) DeleteAllReadRecordExpired(ts interface{}) *gomock.Call {
+// DeleteExpiredReadRecord indicates an expected call of DeleteExpiredReadRecord.
+func (mr *MockTrafficDBMockRecorder) DeleteExpiredReadRecord(ts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReadRecordExpired", reflect.TypeOf((*MockTrafficDB)(nil).DeleteAllReadRecordExpired), ts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredReadRecord", reflect.TypeOf((*MockTrafficDB)(nil).DeleteExpiredReadRecord), ts)
 }
 
 // GetBucketReadRecord mocks base method.

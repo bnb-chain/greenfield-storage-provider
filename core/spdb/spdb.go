@@ -116,10 +116,10 @@ type TrafficDB interface {
 	// GetUserReadRecord return user record list by time range.
 	GetUserReadRecord(userAddress string, timeRange *TrafficTimeRange) ([]*ReadRecord, error)
 
-	// DeleteAllReadRecordExpired delete all read record before ts
-	DeleteAllReadRecordExpired(ts uint64) (err error)
-	// DeleteAllBucketTrafficExpired delete all bucket traffic before yearMonth
-	DeleteAllBucketTrafficExpired(yearMonth string) (err error)
+	// DeleteExpiredReadRecord delete all read record before ts
+	DeleteExpiredReadRecord(ts uint64) (err error)
+	// DeleteExpiredBucketTraffic delete all bucket traffic before yearMonth, when large dataset
+	DeleteExpiredBucketTraffic(yearMonth string) (err error)
 }
 
 // SPInfoDB defines a series of sp interfaces.

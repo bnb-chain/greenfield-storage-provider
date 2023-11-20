@@ -152,62 +152,6 @@ func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, 
 	return totalObjects, err
 }
 
-// ListObjectsByBlockNumberRange list objects info by a block number range
-func (b *BsDBImpl) ListObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
-	var (
-		totalObjects []*Object
-		objects      []*Object
-		err          error
-	)
-	startTime := time.Now()
-	methodName := currentFunction()
-	defer func() {
-		if err != nil {
-			MetadataDatabaseFailureMetrics(err, startTime, methodName)
-		} else {
-			MetadataDatabaseSuccessMetrics(startTime, methodName)
-		}
-	}()
-
-	if includePrivate {
-		for i := 0; i < ObjectsNumberOfShards; i++ {
-			err = b.db.Table(GetObjectsTableNameByShardNumber(i)).
-				Select("*").
-				Where("update_at >= ? and update_at <= ?", startBlockNumber, endBlockNumber).
-				Limit(DeletedObjectsDefaultSize).
-				Order("update_at,object_id asc").
-				Find(&objects).Error
-			totalObjects = append(totalObjects, objects...)
-		}
-	} else {
-		for i := 0; i < ObjectsNumberOfShards; i++ {
-			objectTableName := GetObjectsTableNameByShardNumber(i)
-			joins := fmt.Sprintf("right join buckets on buckets.bucket_id = %s.bucket_id", objectTableName)
-			order := fmt.Sprintf("%s.update_at, %s.object_id asc", objectTableName, objectTableName)
-			where := fmt.Sprintf("%s.update_at >= ? and %s.update_at <= ? and "+
-				"((%s.visibility='VISIBILITY_TYPE_PUBLIC_READ') or "+
-				"(%s.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
-				objectTableName, objectTableName, objectTableName, objectTableName)
-
-			err = b.db.Table(objectTableName).
-				Select(objectTableName+".*").
-				Joins(joins).
-				Where(where, startBlockNumber, endBlockNumber).
-				Limit(ListObjectsDefaultSize).
-				Order(order).
-				Find(&objects).Error
-			totalObjects = append(totalObjects, objects...)
-		}
-	}
-
-	sort.Sort(ByUpdateAtAndObjectID(totalObjects))
-
-	if len(totalObjects) > ListObjectsDefaultSize {
-		totalObjects = totalObjects[0:ListObjectsDefaultSize]
-	}
-	return totalObjects, err
-}
-
 // GetObjectByName get object info by an object name
 func (b *BsDBImpl) GetObjectByName(objectName string, bucketName string, includePrivate bool) (*Object, error) {
 	var (

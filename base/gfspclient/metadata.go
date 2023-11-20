@@ -54,26 +54,6 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, s
 	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
 }
 
-func (s *GfSpClient) ListObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber uint64,
-	endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
-	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
-	if err != nil {
-		return nil, uint64(0), ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
-	}
-	defer conn.Close()
-	req := &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: int64(startBlockNumber),
-		EndBlockNumber:   int64(endBlockNumber),
-		IncludePrivate:   includePrivate,
-	}
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListDeletedObjectsByBlockNumberRange(ctx, req)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
-		return nil, uint64(0), ErrRPCUnknownWithDetail("failed to list deleted objects by block number range, error: " + err.Error())
-	}
-	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
-}
-
 func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -216,6 +196,25 @@ func (s *GfSpClient) GetObjectMeta(ctx context.Context, objectName string, bucke
 		return nil, ErrRPCUnknownWithDetail("failed to send get object meta rpc, error: " + err.Error())
 	}
 	return resp.GetObject(), nil
+}
+
+// GetLatestObjectID get latest object id
+func (s *GfSpClient) GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error) {
+	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if err != nil {
+		return 0, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
+	}
+	defer conn.Close()
+
+	req := &types.GfSpGetLatestObjectIDRequest{}
+
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetLatestObjectID(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to send get latest object id rpc", "error", err)
+		return 0, ErrRPCUnknownWithDetail("failed to send get latest object id rpc, error: " + err.Error())
+	}
+	return resp.GetObjectId(), nil
 }
 
 // GetPaymentByBucketName get bucket payment info by a bucket name

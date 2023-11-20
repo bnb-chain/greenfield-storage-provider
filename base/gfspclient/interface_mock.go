@@ -609,6 +609,26 @@ func (mr *MockGfSpClientAPIMockRecorder) GetLatestBucketReadQuota(ctx, bucketID 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetLatestBucketReadQuota), varargs...)
 }
 
+// GetLatestObjectID mocks base method.
+func (m *MockGfSpClientAPI) GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetLatestObjectID", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestObjectID indicates an expected call of GetLatestObjectID.
+func (mr *MockGfSpClientAPIMockRecorder) GetLatestObjectID(ctx interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestObjectID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetLatestObjectID), varargs...)
+}
+
 // GetObject mocks base method.
 func (m *MockGfSpClientAPI) GetObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask, opts ...grpc.DialOption) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -1184,27 +1204,6 @@ func (mr *MockGfSpClientAPIMockRecorder) ListObjectPolicies(ctx, objectName, buc
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectPolicies), varargs...)
-}
-
-// ListObjectsByBlockNumberRange mocks base method.
-func (m *MockGfSpClientAPI) ListObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "ListObjectsByBlockNumberRange", varargs...)
-	ret0, _ := ret[0].([]*types.Object)
-	ret1, _ := ret[1].(uint64)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// ListObjectsByBlockNumberRange indicates an expected call of ListObjectsByBlockNumberRange.
-func (mr *MockGfSpClientAPIMockRecorder) ListObjectsByBlockNumberRange(ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate interface{}, opts ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBlockNumberRange", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectsByBlockNumberRange), varargs...)
 }
 
 // ListObjectsByBucketName mocks base method.
@@ -3132,6 +3131,26 @@ func (mr *MockMetadataAPIMockRecorder) GetLatestBucketReadQuota(ctx, bucketID in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).GetLatestBucketReadQuota), varargs...)
 }
 
+// GetLatestObjectID mocks base method.
+func (m *MockMetadataAPI) GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetLatestObjectID", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestObjectID indicates an expected call of GetLatestObjectID.
+func (mr *MockMetadataAPIMockRecorder) GetLatestObjectID(ctx interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestObjectID", reflect.TypeOf((*MockMetadataAPI)(nil).GetLatestObjectID), varargs...)
+}
+
 // GetObjectByID mocks base method.
 func (m *MockMetadataAPI) GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*types3.ObjectInfo, error) {
 	m.ctrl.T.Helper()
@@ -3593,27 +3612,6 @@ func (mr *MockMetadataAPIMockRecorder) ListObjectPolicies(ctx, objectName, bucke
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectPolicies), varargs...)
-}
-
-// ListObjectsByBlockNumberRange mocks base method.
-func (m *MockMetadataAPI) ListObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "ListObjectsByBlockNumberRange", varargs...)
-	ret0, _ := ret[0].([]*types.Object)
-	ret1, _ := ret[1].(uint64)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// ListObjectsByBlockNumberRange indicates an expected call of ListObjectsByBlockNumberRange.
-func (mr *MockMetadataAPIMockRecorder) ListObjectsByBlockNumberRange(ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate interface{}, opts ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBlockNumberRange", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectsByBlockNumberRange), varargs...)
 }
 
 // ListObjectsByBucketName mocks base method.

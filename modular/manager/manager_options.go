@@ -50,27 +50,29 @@ const (
 	// DefaultGlobalChallengePieceTaskCacheSize defines the default max cache the challenge
 	// piece tasks in manager.
 	DefaultGlobalChallengePieceTaskCacheSize int = 4096
-	// DefaultGlobalBatchGcObjectTimeInterval defines the default interval for generating
+
+	// DefaultGlobalBatchGCObjectTimeInterval defines the default interval for generating
 	// gc object task.
-	DefaultGlobalBatchGcObjectTimeInterval int = 1 * 60
-	// DefaultGlobalBatchGcZombiePieceTimeInterval defines the default interval for generating
-	// gc object task.
-	DefaultGlobalBatchGcZombiePieceTimeInterval int = 1 * 3
-	// DefaultGlobalBatchGcMetaTimeInterval defines the default interval for generating
-	// gc object task.
-	DefaultGlobalBatchGcMetaTimeInterval int = 1 * 10
-	// DefaultGlobalGcZombiePieceObjectIDInterval defines the default object id number for getting
-	// deleted zombie piece.
-	DefaultGlobalGcZombiePieceObjectIDInterval uint64 = 100
-	// DefaultGlobalGcObjectBlockInterval defines the default blocks number for getting
+	DefaultGlobalBatchGCObjectTimeInterval int = 1 * 60
+	// DefaultGlobalGCObjectBlockInterval defines the default blocks number for getting
 	// deleted objects.
-	DefaultGlobalGcObjectBlockInterval uint64 = 1000
-	// DefaultGlobalGcObjectSafeBlockDistance defines the default distance form current block
+	DefaultGlobalGCObjectBlockInterval uint64 = 1000
+	// DefaultGlobalGCObjectSafeBlockDistance defines the default distance form current block
 	// height to gc the deleted object.
-	DefaultGlobalGcObjectSafeBlockDistance uint64 = 1000
-	// DefaultGlobalGcZombieSafeObjectIDDistance defines the default distance form current object id
+	DefaultGlobalGCObjectSafeBlockDistance uint64 = 1000
+	// DefaultGlobalGCZombiePieceTimeInterval defines the default interval for generating
+	// gc zombie piece task.
+	DefaultGlobalGCZombiePieceTimeInterval int = 10 * 60
+	// DefaultGlobalGCZombiePieceObjectIDInterval defines the default object id number for getting
+	// deleted zombie piece.
+	DefaultGlobalGCZombiePieceObjectIDInterval uint64 = 100
+	// DefaultGlobalGCZombieSafeObjectIDDistance defines the default distance form current object id
 	// to gc the deleted zombie piece.
-	DefaultGlobalGcZombieSafeObjectIDDistance uint64 = 1000
+	DefaultGlobalGCZombieSafeObjectIDDistance uint64 = 1000
+	// DefaultGlobalGCMetaTimeInterval defines the default interval for generating
+	// gc meta task.
+	DefaultGlobalGCMetaTimeInterval int = 10 * 60
+
 	// DefaultGlobalSyncConsensusInfoInterval defines the default interval for sync the sp
 	// info list to sp db.
 	DefaultGlobalSyncConsensusInfoInterval uint64 = 600
@@ -171,27 +173,27 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	}
 
 	if cfg.GC.GCObjectTimeInterval == 0 {
-		cfg.GC.GCObjectTimeInterval = DefaultGlobalBatchGcObjectTimeInterval
+		cfg.GC.GCObjectTimeInterval = DefaultGlobalBatchGCObjectTimeInterval
 	}
 	if cfg.GC.GCObjectBlockInterval == 0 {
-		cfg.GC.GCObjectBlockInterval = DefaultGlobalGcObjectBlockInterval
+		cfg.GC.GCObjectBlockInterval = DefaultGlobalGCObjectBlockInterval
 	}
 	if cfg.GC.GCObjectSafeBlockDistance == 0 {
-		cfg.GC.GCObjectSafeBlockDistance = DefaultGlobalGcObjectSafeBlockDistance
+		cfg.GC.GCObjectSafeBlockDistance = DefaultGlobalGCObjectSafeBlockDistance
 	}
 
 	if cfg.GC.GCZombiePieceTimeInterval == 0 {
-		cfg.GC.GCZombiePieceTimeInterval = DefaultGlobalBatchGcZombiePieceTimeInterval
+		cfg.GC.GCZombiePieceTimeInterval = DefaultGlobalGCZombiePieceTimeInterval
 	}
 	if cfg.GC.GCZombiePieceObjectIDInterval == 0 {
-		cfg.GC.GCZombiePieceObjectIDInterval = DefaultGlobalGcZombiePieceObjectIDInterval
+		cfg.GC.GCZombiePieceObjectIDInterval = DefaultGlobalGCZombiePieceObjectIDInterval
 	}
 	if cfg.GC.GCZombieSafeObjectIDDistance == 0 {
-		cfg.GC.GCZombieSafeObjectIDDistance = DefaultGlobalGcZombieSafeObjectIDDistance
+		cfg.GC.GCZombieSafeObjectIDDistance = DefaultGlobalGCZombieSafeObjectIDDistance
 	}
 
 	if cfg.GC.GCMetaTimeInterval == 0 {
-		cfg.GC.GCMetaTimeInterval = DefaultGlobalBatchGcMetaTimeInterval
+		cfg.GC.GCMetaTimeInterval = DefaultGlobalGCMetaTimeInterval
 	}
 
 	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {

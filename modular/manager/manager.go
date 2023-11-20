@@ -257,18 +257,15 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			start := m.gcZombiePieceObjectID
 			end := m.gcZombiePieceObjectID + m.gcZombiePieceObjectIDInterval
-			currentBlockHeight, err := m.baseApp.Consensus().CurrentHeight(ctx)
+			currentMaxObjectID, err := m.baseApp.GfSpClient().GetLatestObjectID(ctx)
 			if err != nil {
-				log.CtxErrorw(ctx, "failed to get current block height for gc object and try again later", "error", err)
+				log.CtxErrorw(ctx, "failed to get current max object id for gc zombie piece and try again later", "error", err)
 				continue
 			}
-			// TODO how to get current max objectID, we use currentBlockHeight as max object id, max object id always smaller than currentBlockHeight
-			if end+m.gcZombiePieceSafeObjectIDDistance > currentBlockHeight {
+			if end+m.gcZombiePieceSafeObjectIDDistance > currentMaxObjectID {
 				log.CtxErrorw(ctx, "current object id number less safe distance and try again later",
-					"start_gc_object_id", start,
-					"end_gc_object_id", end,
-					"safe_object_id_distance", m.gcZombiePieceSafeObjectIDDistance,
-					"current_block_height", currentBlockHeight)
+					"start_gc_object_id", start, "end_gc_object_id", end,
+					"safe_object_id_distance", m.gcZombiePieceSafeObjectIDDistance, "current_max_object_id", currentMaxObjectID)
 				// from 0 again later
 				m.gcZombiePieceObjectID = 0
 				continue

@@ -106,17 +106,17 @@ func (gc *GCWorker) deletePieceAndPieceChecksum(ctx context.Context, piece *spdb
 
 // isAllowGCCheck
 func (gc *GCWorker) isAllowGCCheck(objectInfo *storagetypes.ObjectInfo, bucketInfo *metadatatypes.Bucket) bool {
-	// object not in sealed status
+	// the object is not in a sealed status
 	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
 		log.Infow("the object isn't sealed, do not need to gc check")
 		return false
 	}
-	// bucket migrating
+	// the bucket is in the process of migration
 	if bucketInfo.GetBucketInfo().GetBucketStatus() == storagetypes.BUCKET_STATUS_MIGRATING {
 		log.Infow("bucket is migrating, do not need to gc check")
 		return false
 	}
-	log.Infow("the object is sealed and the bucket is not migrating, the object can gc", "object", objectInfo, "bucket", bucketInfo)
+	log.Debugw("the object is sealed and the bucket is not migrating, the object can gc", "object", objectInfo, "bucket", bucketInfo)
 	return true
 }
 
@@ -353,12 +353,10 @@ func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCM
 }
 
 func (e *ExecuteModular) gcMetaBucketTraffic(ctx context.Context, task coretask.GCMetaTask) error {
-	// TODO list buckets when large dataset
 	now := time.Now()
-	daysAgo := now.Add(-time.Duration(e.bucketTrafficKeepLatestDay) * time.Hour * 24)
+	daysAgo := now.Add(-time.Duration(e.bucketTrafficKeepLatestDay) * 24 * time.Hour)
 	yearMonth := sqldb.TimeToYearMonth(daysAgo)
-
-	err := e.baseApp.GfSpDB().DeleteAllBucketTrafficExpired(yearMonth)
+	err := e.baseApp.GfSpDB().DeleteExpiredBucketTraffic(yearMonth)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to delete expired bucket traffic", "error", err)
 		return err
@@ -372,12 +370,12 @@ func (e *ExecuteModular) gcMetaReadRecord(ctx context.Context, task coretask.GCM
 	now := time.Now()
 	daysAgo := now.Add(-time.Duration(e.readRecordKeepLatestDay) * time.Hour * 24)
 
-	err := e.baseApp.GfSpDB().DeleteAllReadRecordExpired(uint64(daysAgo.UnixMicro()))
+	err := e.baseApp.GfSpDB().DeleteExpiredReadRecord(uint64(daysAgo.UnixMicro()))
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to delete expired read record", "error", err)
 		return err
 	}
-	log.CtxInfow(ctx, "succeed to delete read record", "task", task, "daysAgo", daysAgo)
+	log.CtxInfow(ctx, "succeed to delete expired read record", "task", task, "daysAgo", daysAgo)
 	return nil
 }
 
@@ -455,31 +453,30 @@ func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, tas
 	)
 
 	if waitingVerifyGCIntegrityPieces, err = e.baseApp.GfSpDB().ListIntegrityMetaByObjectIDRange(int64(task.GetStartObjectId()), int64(task.GetEndObjectId()), true); err != nil {
-		log.CtxErrorw(ctx, "failed to query deleted object list", "task_info", task.Info(), "error", err)
+		log.CtxErrorw(ctx, "failed to query gc integrity pieces list", "task_info", task.Info(), "error", err)
 		return err
 	}
 
 	if len(waitingVerifyGCIntegrityPieces) == 0 {
-		log.CtxInfow(ctx, "no waiting gc objects", "task_info", task.Info())
+		log.CtxInfow(ctx, "no waiting gc integrity pieces", "task_info", task.Info())
 		return nil
 	}
 
 	for _, integrityObject := range waitingVerifyGCIntegrityPieces {
 		log.CtxDebugw(ctx, "gc zombie current waiting verify gc integrity meta piece", "integrity_meta", integrityObject)
-		// error
 		objID := integrityObject.ObjectID
 		// If metadata service has object info, use objInfoFromMetaData, otherwise query from chain
 		if objInfoFromMetaData, err = e.baseApp.GfSpClient().GetObjectByID(ctx, objID); err != nil {
 			log.Errorf("failed to get object meta from meta data service, will check from chain", "error", err)
 			if strings.Contains(err.Error(), "no such object from metadata") {
-				// could delete, has integrity hash, do not have object info, chain check verify check chain
+				// If deletion is possible, has integrity hash, lacks object info, perform a chain check, and verify against the chain.
 				if objInfoFromChain, err = e.baseApp.Consensus().QueryObjectInfoByID(ctx, strconv.FormatUint(objID, 10)); err != nil {
 					if strings.Contains(err.Error(), "No such object") {
 						// 1) This object does not exist on the chain
 						e.gcWorker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject)
 					}
 				} else {
-					// 2) query metadata error, but chain has the object info, gvg  primary sp should has integrity meta
+					// 2) query metadata error, but chain has the object info, gvg  primary sp should have integrity meta
 					if e.gcWorker.checkGVGMatchSP(ctx, objInfoFromChain, integrityObject.RedundancyIndex) == ErrInvalidRedundancyIndex {
 						e.gcWorker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject)
 					}
@@ -487,7 +484,7 @@ func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, tas
 				}
 			}
 		} else {
-			// check integrity meta & object info
+			// 3) check integrity meta & object info
 			if e.gcWorker.checkGVGMatchSP(ctx, objInfoFromMetaData, integrityObject.RedundancyIndex) == ErrInvalidRedundancyIndex {
 				e.gcWorker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject)
 			}
@@ -505,7 +502,7 @@ func (e *ExecuteModular) gcZombiePieceFromPieceHash(ctx context.Context, task co
 	)
 	log.CtxDebugw(ctx, "start to gc zombie piece from piece hash", "task_info", task.Info())
 
-	// replicate piece must be secondary sp
+	// replicate piece checksum must on secondary sp
 	if waitingVerifyGCPieces, err = e.baseApp.GfSpDB().ListReplicatePieceChecksumByObjectIDRange(
 		int64(task.GetStartObjectId()), int64(task.GetEndObjectId())); err != nil {
 		log.CtxErrorw(ctx, "failed to query replicate piece checksum", "task_info", task.Info(), "error", err)
@@ -519,32 +516,27 @@ func (e *ExecuteModular) gcZombiePieceFromPieceHash(ctx context.Context, task co
 
 	for _, piece := range waitingVerifyGCPieces {
 		log.CtxDebugw(ctx, "gc zombie current waiting verify gc meta piece", "piece", piece)
-		// error
-		// migrating
-		// sealed ? timeout ?
 		objID := piece.ObjectID
-		// object info
+		// Get object information from metadata
 		if objectInfoFromMetadata, err = e.baseApp.GfSpClient().GetObjectByID(ctx, objID); err != nil {
-			// check from chain delete ?
+			// If the object doesn't exist in metadata, recheck from the chain before proceeding with the deletion.
 			if strings.Contains(err.Error(), "no such object from metadata") {
-				log.Infof("failed to get object meta, the zombie piece should be deleted", "error", err)
 				if objInfoFromChain, err = e.baseApp.Consensus().QueryObjectInfoByID(ctx, strconv.FormatUint(objID, 10)); err != nil {
 					if strings.Contains(err.Error(), "No such object") {
 						// 1) This object does not exist on the chain
+						log.Infof("the object doesn't exist in metadata and chain, the zombie piece should be deleted", "piece", piece)
 						e.gcWorker.deletePieceAndPieceChecksum(ctx, piece)
 					}
 				} else {
-					// 2) query metadata error, but chain has the object info, gvg  primary sp should has integrity meta
-					// TODO: refine
+					// 2) If there is an error querying metadata but the chain contains object information, recheck the meta.
 					if e.gcWorker.checkGVGMatchSP(ctx, objInfoFromChain, piece.RedundancyIndex) == ErrInvalidRedundancyIndex {
 						e.gcWorker.deletePieceAndPieceChecksum(ctx, piece)
 					}
 				}
 			}
 		} else {
+			// 3) Validate using Metadata information.
 			if e.gcWorker.checkGVGMatchSP(ctx, objectInfoFromMetadata, piece.RedundancyIndex) == ErrInvalidRedundancyIndex {
-				//task.SetError(ErrSecondaryMismatch)
-				// ignore error
 				e.gcWorker.deletePieceAndPieceChecksum(ctx, piece)
 			}
 		}

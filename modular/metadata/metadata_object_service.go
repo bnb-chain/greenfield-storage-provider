@@ -622,3 +622,16 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 	log.CtxInfow(ctx, "succeed to list objects by gvg id")
 	return resp, nil
 }
+
+// GfSpGetLatestObjectID get latest object id
+func (r *MetadataModular) GfSpGetLatestObjectID(ctx context.Context, req *types.GfSpGetLatestObjectIDRequest) (resp *types.GfSpGetLatestObjectIDResponse, err error) {
+	objID, err := r.baseApp.GfBsDB().GetLatestObjectID()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get latest object id", "error", err)
+		return
+	}
+
+	resp = &types.GfSpGetLatestObjectIDResponse{ObjectId: objID}
+	log.CtxInfow(ctx, "succeed to get latest object id")
+	return resp, nil
+}

@@ -636,7 +636,6 @@ func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, gcZombiePie
 	}
 	err := m.gcZombieQueue.Push(gcZombiePieceTask)
 	log.CtxInfow(ctx, "succeed to push gc object task to queue again", "from", oldTask, "to", gcZombiePieceTask, "error", err)
-	// TODO GC Zombie piece progress
 	return nil
 }
 

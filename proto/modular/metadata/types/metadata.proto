@@ -1001,6 +1001,15 @@ message GfSpGetBucketSizeResponse {
   string bucket_size = 1;
 }
 
+// GfSpGetLatestObjectIDRequest is request type for the GfSpGetLatestObjectID RPC method
+message GfSpGetLatestObjectIDRequest {}
+
+// GfSpGetLatestObjectIDResponse is response type for the GfSpGetLatestObjectID RPC method
+message GfSpGetLatestObjectIDResponse {
+  // object_id define latest object id
+  uint64 object_id = 1;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest) returns (GfSpGetUserBucketsResponse) {}
   rpc GfSpListObjectsByBucketName(GfSpListObjectsByBucketNameRequest) returns (GfSpListObjectsByBucketNameResponse) {}
@@ -1010,6 +1019,7 @@ service GfSpMetadataService {
   rpc GfSpGetUserBucketsCount(GfSpGetUserBucketsCountRequest) returns (GfSpGetUserBucketsCountResponse) {}
   rpc GfSpListExpiredBucketsBySp(GfSpListExpiredBucketsBySpRequest) returns (GfSpListExpiredBucketsBySpResponse) {}
   rpc GfSpGetObjectMeta(GfSpGetObjectMetaRequest) returns (GfSpGetObjectMetaResponse) {}
+  rpc GfSpGetLatestObjectID(GfSpGetLatestObjectIDRequest) returns (GfSpGetLatestObjectIDResponse) {}
   rpc GfSpGetPaymentByBucketName(GfSpGetPaymentByBucketNameRequest) returns (GfSpGetPaymentByBucketNameResponse) {}
   rpc GfSpGetPaymentByBucketID(GfSpGetPaymentByBucketIDRequest) returns (GfSpGetPaymentByBucketIDResponse) {}
   rpc GfSpVerifyPermission(greenfield.storage.QueryVerifyPermissionRequest) returns (greenfield.storage.QueryVerifyPermissionResponse) {}
