@@ -636,6 +636,8 @@ func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, gcZombiePie
 	}
 	err := m.gcZombieQueue.Push(gcZombiePieceTask)
 	log.CtxInfow(ctx, "succeed to push gc object task to queue again", "from", oldTask, "to", gcZombiePieceTask, "error", err)
+	// Note: The persistence of GC zombie progress in the database is not implemented at the moment.
+	// However, this lack of persistence does not impact correctness since GC zombie periodically scans all objects.
 	return nil
 }
 

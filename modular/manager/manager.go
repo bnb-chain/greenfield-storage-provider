@@ -68,11 +68,11 @@ type ManageModular struct {
 	gcObjectQueue          taskqueue.TQueueOnStrategyWithLimit
 	gcZombieQueue          taskqueue.TQueueOnStrategyWithLimit
 	gcMetaQueue            taskqueue.TQueueOnStrategyWithLimit
+	gcBucketMigrationQueue taskqueue.TQueueOnStrategyWithLimit
 	downloadQueue          taskqueue.TQueueOnStrategy
 	challengeQueue         taskqueue.TQueueOnStrategy
 	recoveryQueue          taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
-	gcBucketMigrationQueue taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueueMux     sync.Mutex
 
 	// src sp used TODO: these should be persisted
@@ -137,6 +137,10 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.receiveQueue.SetFilterTaskStrategy(m.FilterReceiveTask)
 	m.gcObjectQueue.SetRetireTaskStrategy(m.ResetGCObjectTask)
 	m.gcObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
+	m.gcZombieQueue.SetRetireTaskStrategy(m.ResetGCZombieTask)
+	m.gcZombieQueue.SetFilterTaskStrategy(m.FilterGCTask)
+	m.gcMetaQueue.SetRetireTaskStrategy(m.ResetGCMetaTask)
+	m.gcMetaQueue.SetFilterTaskStrategy(m.FilterGCTask)
 	m.downloadQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.challengeQueue.SetRetireTaskStrategy(m.GCCacheQueue)
 	m.recoveryQueue.SetRetireTaskStrategy(m.GCRecoverQueue)
@@ -600,8 +604,28 @@ func (m *ManageModular) ResetGCObjectTask(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) GCCacheQueue(qTask task.Task) bool {
-	return true
+func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
+	return qTask.GetRetry() == 0
+}
+
+func (m *ManageModular) ResetGCZombieTask(qTask task.Task) bool {
+	task := qTask.(task.GCZombiePieceTask)
+	if task.Expired() {
+		log.Errorw("reset gc zombie task", "old_task_key", task.Key().String())
+		task.SetRetry(0)
+		log.Errorw("reset gc zombie task", "new_task_key", task.Key().String())
+	}
+	return false
+}
+
+func (m *ManageModular) ResetGCMetaTask(qTask task.Task) bool {
+	task := qTask.(task.GCMetaTask)
+	if task.Expired() {
+		log.Errorw("reset gc meta task", "old_task_key", task.Key().String())
+		task.SetRetry(0)
+		log.Errorw("reset gc meta task", "new_task_key", task.Key().String())
+	}
+	return false
 }
 
 func (m *ManageModular) ResetGCBucketMigrationQueue(qTask task.Task) bool {
@@ -614,8 +638,8 @@ func (m *ManageModular) ResetGCBucketMigrationQueue(qTask task.Task) bool {
 	return false
 }
 
-func (m *ManageModular) FilterGCTask(qTask task.Task) bool {
-	return qTask.GetRetry() == 0
+func (m *ManageModular) GCCacheQueue(qTask task.Task) bool {
+	return true
 }
 
 func (m *ManageModular) FilterUploadingTask(qTask task.Task) bool {
@@ -665,6 +689,10 @@ func (m *ManageModular) PickUpTask(ctx context.Context, tasks []task.Task) (task
 	var totalPriority int
 	for _, t := range tasks {
 		totalPriority += int(t.GetPriority())
+	}
+	// If all current tasks have an UnSchedulingPriority, i.e., all priorities are 0, then there is no need for scheduling.
+	if totalPriority <= 0 {
+		return nil, nil
 	}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randPriority := r.Intn(totalPriority)

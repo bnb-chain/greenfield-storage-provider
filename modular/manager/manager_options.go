@@ -36,7 +36,7 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
-	// DefaultGlobalGCBucketMigrationParallel defines the default max parallel gc meta db in SP
+	// DefaultGlobalGCBucketMigrationParallel defines the default max parallel gc bucket migration in SP
 	// system.
 	DefaultGlobalGCBucketMigrationParallel int = 1
 	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP

@@ -644,9 +644,9 @@ func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *corespdb.Tra
 }
 
 // DeleteExpiredReadRecord delete all read record before ts(ts is UnixMicro)
-func (s *SpDBImpl) DeleteExpiredReadRecord(ts uint64) (err error) {
+func (s *SpDBImpl) DeleteExpiredReadRecord(ts, limit uint64) (err error) {
 	var readRecords []ReadRecordTable
-	result := s.db.Where("read_timestamp_us < ?", ts).Limit(metaDeleteLimit).Find(&readRecords).Delete(&readRecords)
+	result := s.db.Where("read_timestamp_us < ?", ts).Limit(int(limit)).Find(&readRecords).Delete(&readRecords)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete read record in read record table: %s, ts:%d", result.Error, ts)
 	}

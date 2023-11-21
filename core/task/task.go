@@ -496,13 +496,13 @@ type GCZombiePieceTask interface {
 	GCTask
 	// InitGCZombiePieceTask inits InitGCObjectTask.
 	InitGCZombiePieceTask(priority TPriority, start, end uint64, timeout int64)
-	// SetStartObjectID sets start block number for collecting object.
+	// SetStartObjectID sets start block number for collecting zombie piece.
 	SetStartObjectID(uint64)
-	// GetStartObjectId returns start block number for collecting object.
+	// GetStartObjectId returns start block number for collecting zombie piece.
 	GetStartObjectId() uint64
-	// SetEndObjectID sets start block number for collecting object.
+	// SetEndObjectID sets start block number for collecting zombie piece.
 	SetEndObjectID(uint64)
-	// GetEndObjectId returns start block number for collecting object.
+	// GetEndObjectId returns start block number for collecting zombie piece.
 	GetEndObjectId() uint64
 }
 
@@ -586,10 +586,10 @@ type MigrateGVGTask interface {
 	SetSignature([]byte)
 }
 
-// GCBucketMigrationTask is an abstract interface to gc useless object piece data and integrity meta
+// GCBucketMigrationTask is an abstract interface to gc useless object after bucket migration
 type GCBucketMigrationTask interface {
 	Task
-	// InitGCBucketMigrationTask inits migrate gvg task by bucket id, gvg.
+	// InitGCBucketMigrationTask inits gc bucket migration task by bucket id.
 	InitGCBucketMigrationTask(priority TPriority, bucketID uint64, timeout, retry int64)
 	// GetBucketID returns the bucketID
 	GetBucketID() uint64

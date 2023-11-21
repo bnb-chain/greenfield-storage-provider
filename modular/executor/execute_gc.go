@@ -34,7 +34,7 @@ func NewGCWorker(e *ExecuteModular) *GCWorker {
 	}
 }
 
-// deleteObjectPiecesAndIntegrityMetaByObjectInfo used by gcZombiePiece
+// deleteObjectPiecesAndIntegrityMeta used by gcZombiePiece
 func (gc *GCWorker) deleteObjectPiecesAndIntegrityMeta(ctx context.Context, integrityMeta *corespdb.IntegrityMeta) error {
 	objID := integrityMeta.ObjectID
 	redundancyIdx := integrityMeta.RedundancyIndex
@@ -66,7 +66,7 @@ func (gc *GCWorker) deleteObjectSegments(ctx context.Context, objectInfo *storag
 		storageParams.VersionedParams.GetMaxSegmentSize())
 	for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 		pieceKey := gc.e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
-		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+		// ignore this delete api error
 		deleteErr := gc.e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
 		log.CtxDebugw(ctx, "succeed to delete the primary sp segment", "object_info", objectInfo,
 			"piece_key", pieceKey, "error", deleteErr)
@@ -370,7 +370,7 @@ func (e *ExecuteModular) gcMetaReadRecord(ctx context.Context, task coretask.GCM
 	now := time.Now()
 	daysAgo := now.Add(-time.Duration(e.readRecordKeepLatestDay) * time.Hour * 24)
 
-	err := e.baseApp.GfSpDB().DeleteExpiredReadRecord(uint64(daysAgo.UnixMicro()))
+	err := e.baseApp.GfSpDB().DeleteExpiredReadRecord(uint64(daysAgo.UnixMicro()), e.readRecordDeleteLimit)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to delete expired read record", "error", err)
 		return err

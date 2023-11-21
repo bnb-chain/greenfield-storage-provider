@@ -910,7 +910,7 @@ func TestExecuteModular_HandleGCMetaTask(t *testing.T) {
 				e.baseApp.SetPieceOp(m2)
 
 				m4 := corespdb.NewMockSPDB(ctrl)
-				m4.EXPECT().DeleteExpiredReadRecord(gomock.Any()).Return(nil).AnyTimes()
+				m4.EXPECT().DeleteExpiredReadRecord(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				m4.EXPECT().DeleteExpiredBucketTraffic(gomock.Any()).Return(nil).AnyTimes()
 				e.baseApp.SetGfSpDB(m4)
 

@@ -168,17 +168,10 @@ message GfSpGCZombiePieceTask {
   bool finished = 5;
 }
 
-enum GfSpGCMetaTaskType {
-  GF_SP_GC_META_TASK_TYPE_UNSPECIFIED = 0;
-  GF_SP_GC_META_TASK_TYPE_BUCKET_TRAFFIC = 1;
-  GF_SP_GC_META_TASK_TYPE_TRAFFIC_READ_RECORD = 2;
-}
-
 message GfSpGCMetaTask {
   GfSpTask task = 1;
   uint64 current_idx = 2;
   uint64 delete_count = 3;
-  GfSpGCMetaTaskType meta_task_type = 4;
 }
 
 message GfSpMigrateGVGTask {

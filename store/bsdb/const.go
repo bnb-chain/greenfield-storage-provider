@@ -4,8 +4,6 @@ package bsdb
 const (
 	// DeletedObjectsDefaultSize defines the default size of ListDeletedObjectsByBlockNumberRange response
 	DeletedObjectsDefaultSize = 1000
-	// ListObjectsDefaultSize defines the default size of ListObjectsByBlockNumberRange response
-	ListObjectsDefaultSize = 1000
 	// ExpiredBucketsDefaultSize defines the default size of ListExpiredBucketsBySp response
 	ExpiredBucketsDefaultSize = 1000
 	// ListObjectsDefaultMaxKeys defines the default size of ListObjectsByBucketName response

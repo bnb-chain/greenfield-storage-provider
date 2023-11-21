@@ -152,6 +152,7 @@ type ExecutorConfig struct {
 	EnableSkipFailedToMigrateObject bool    `comment:"optional"`
 	BucketTrafficKeepTimeDay        uint64  `comment:"optional"`
 	ReadRecordKeepTimeDay           uint64  `comment:"optional"`
+	ReadRecordDeleteLimit           uint64  `comment:"optional"`
 }
 
 type P2PConfig struct {
@@ -226,6 +227,7 @@ type TaskConfig struct {
 	SealObjectTaskRetry     int64 `comment:"optional"`
 	ReplicateTaskRetry      int64 `comment:"optional"`
 	ReceiveConfirmTaskRetry int64 `comment:"optional"`
+
 	// gc
 	GcObjectTaskTimeout int64 `comment:"optional"`
 	GcZombieTaskTimeout int64 `comment:"optional"`

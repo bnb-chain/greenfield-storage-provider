@@ -36,7 +36,7 @@ type GCObjectMeta struct {
 	LastDeletedObjectID uint64
 }
 
-// GCPieceMeta defines the payload integrity hash and piece checksum with objectID.
+// GCPieceMeta defines the gc piece with segment index and piece checksum.
 type GCPieceMeta struct {
 	ObjectID        uint64
 	SegmentIndex    uint32

@@ -796,7 +796,7 @@ func TestGfSpBaseApp_TaskPriority(t *testing.T) {
 		{
 			name:         "gc object task",
 			task:         &gfsptask.GfSpGCObjectTask{},
-			wantedResult: coretask.UnSchedulingPriority,
+			wantedResult: coretask.DefaultSmallerPriority / 4,
 		},
 		{
 			name:         "gc zombie piece task",
@@ -806,6 +806,11 @@ func TestGfSpBaseApp_TaskPriority(t *testing.T) {
 		{
 			name:         "gc meta task",
 			task:         &gfsptask.GfSpGCMetaTask{},
+			wantedResult: coretask.DefaultSmallerPriority / 4,
+		},
+		{
+			name:         "gc bucket migration task",
+			task:         &gfsptask.GfSpGCBucketMigrationTask{},
 			wantedResult: coretask.DefaultSmallerPriority / 4,
 		},
 		{

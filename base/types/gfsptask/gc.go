@@ -443,11 +443,3 @@ func (m *GfSpGCMetaTask) SetGCMetaStatus(current uint64, delete uint64) {
 	m.CurrentIdx = current
 	m.DeleteCount = delete
 }
-
-func (m *GfSpGCMetaTask) SetGCMetaTaskType(metaTaskType GfSpGCMetaTaskType) {
-	m.MetaTaskType = metaTaskType
-}
-
-func (m *GfSpGCMetaTask) GetGCMetaTaskType() GfSpGCMetaTaskType {
-	return m.GetMetaTaskType()
-}

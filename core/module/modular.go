@@ -207,7 +207,7 @@ type Manager interface {
 	HandleGCZombiePieceTask(ctx context.Context, task task.GCZombiePieceTask) error
 	// HandleGCMetaTask handles GCMetaTask, the request comes from TaskExecutor.
 	HandleGCMetaTask(ctx context.Context, task task.GCMetaTask) error
-	// HandleGCBucketMigrationTask handles GCMetaTask, the request comes from TaskExecutor.
+	// HandleGCBucketMigrationTask handles GC bucket migration task, the request comes from TaskExecutor.
 	HandleGCBucketMigrationTask(ctx context.Context, task task.GCBucketMigrationTask) error
 	// HandleDownloadObjectTask handles DownloadObjectTask, the request comes from Downloader.
 	HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error

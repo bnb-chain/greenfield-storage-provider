@@ -54,13 +54,15 @@ type ExecuteModular struct {
 	// gc meta
 	bucketTrafficKeepLatestDay uint64
 	readRecordKeepLatestDay    uint64
+	readRecordDeleteLimit      uint64
+
+	gcWorker *GCWorker
 
 	enableSkipFailedToMigrateObject bool // only for debugging, and online config can only be false
 
-	spID     uint32
-	spMap    map[uint32]*sptypes.StorageProvider
-	mutex    sync.RWMutex
-	gcWorker *GCWorker
+	spID  uint32
+	spMap map[uint32]*sptypes.StorageProvider
+	mutex sync.RWMutex
 }
 
 func (e *ExecuteModular) Name() string {
@@ -315,7 +317,7 @@ func (e *ExecuteModular) ReleaseResource(ctx context.Context, span corercmgr.Res
 
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
-		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], migrateGVG[%d], gcBucketMigration[%d]",
+		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], gcBucketMigration[%d], migrateGVG[%d]",
 		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
 		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
 		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
@@ -323,8 +325,8 @@ func (e *ExecuteModular) Statistics() string {
 		atomic.LoadInt64(&e.doingGCObjectTaskCnt),
 		atomic.LoadInt64(&e.doingGCZombiePieceTaskCnt),
 		atomic.LoadInt64(&e.doingGCGCMetaTaskCnt),
-		atomic.LoadInt64(&e.doingMigrationGVGTaskCnt),
-		atomic.LoadInt64(&e.doingGCBucketMigrationCnt))
+		atomic.LoadInt64(&e.doingGCBucketMigrationCnt),
+		atomic.LoadInt64(&e.doingMigrationGVGTaskCnt))
 }
 
 func (e *ExecuteModular) getSPID() (uint32, error) {
