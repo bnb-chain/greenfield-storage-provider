@@ -52,7 +52,7 @@ func (gc *GCWorker) deleteObjectPiecesAndIntegrityMeta(ctx context.Context, inte
 	return nil
 }
 
-func (gc *GCWorker) deleteObjectSegments(ctx context.Context, objectInfo *storagetypes.ObjectInfo) error {
+func (gc *GCWorker) deleteObjectSegmentsAndIntegrity(ctx context.Context, objectInfo *storagetypes.ObjectInfo) error {
 	var (
 		storageParams *storagetypes.Params
 		err           error
@@ -66,11 +66,12 @@ func (gc *GCWorker) deleteObjectSegments(ctx context.Context, objectInfo *storag
 		storageParams.VersionedParams.GetMaxSegmentSize())
 	for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 		pieceKey := gc.e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
-		// ignore this delete api error
 		deleteErr := gc.e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
 		log.CtxDebugw(ctx, "succeed to delete the primary sp segment", "object_info", objectInfo,
 			"piece_key", pieceKey, "error", deleteErr)
 	}
+	deleteErr := gc.e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+	log.CtxDebugw(ctx, "delete the object and integrity meta", "object_info", objectInfo, "error", deleteErr)
 	return nil
 }
 
@@ -436,12 +437,11 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 		for _, obj := range objects {
 			objectInfo := obj.GetObject().GetObjectInfo()
 			if e.gcWorker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
-				e.gcWorker.deleteObjectSegments(ctx, objectInfo)
+				e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
 				log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)
 			}
 		}
 	}
-
 }
 
 func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, task coretask.GCZombiePieceTask) error {
