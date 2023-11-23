@@ -544,3 +544,47 @@ func (s *GfSpClient) RejectMigrateBucket(ctx context.Context, rejectMigrateBucke
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: " + err.Error())
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_Deposit{
+			Deposit: deposit,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign deposit", "msg", deposit, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to sign deposit, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+func (s *GfSpClient) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: " + err.Error())
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_DeleteGlobalVirtualGroup{
+			DeleteGlobalVirtualGroup: deleteGVG,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign delete GVG", "msg", deleteGVG, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to sign delete GVG, error: " + err.Error())
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}

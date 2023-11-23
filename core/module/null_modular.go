@@ -272,6 +272,12 @@ func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *sto
 func (m *NilModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
 	return "", ErrNilModular
 }
+func (m *NilModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
+	return "", ErrNilModular
+}
+func (m *NilModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
+	return "", ErrNilModular
+}
 func (*NilModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
 	return nil, ErrNilModular
 }

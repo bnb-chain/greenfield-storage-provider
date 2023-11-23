@@ -34,6 +34,8 @@ var (
 	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
 	ErrUpdateSPPriceOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120012, "send update sp price failed")
 	ErrRejectMigrateBucketOnChain   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket failed")
+	ErrDepositOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120014, "send deposit failed")
+	ErrDeleteGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120015, "send delete GVG failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -225,4 +227,13 @@ func (s *SignModular) CompleteSPExit(ctx context.Context, completeSPExit *virtua
 
 func (s *SignModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
 	return s.client.RejectMigrateBucket(ctx, SignOperator, rejectMigrateBucket)
+}
+
+func (s *SignModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
+	return s.client.Deposit(ctx, SignOperator, deposit)
+}
+
+func (s *SignModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
+	return s.client.DeleteGlobalVirtualGroup(ctx, SignOperator, deleteGVG)
+
 }

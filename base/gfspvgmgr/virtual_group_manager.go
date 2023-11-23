@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
@@ -17,18 +20,23 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ vgmgr.VirtualGroupManager = &virtualGroupManager{}
 
 const (
 	VirtualGroupManagerSpace            = "VirtualGroupManager"
-	RefreshMetaInterval                 = 2 * time.Second
+	RefreshMetaInterval                 = 5 * time.Second
 	MaxStorageUsageRatio                = 0.95
-	DefaultInitialGVGStakingStorageSize = uint64(8) * 1024 * 1024 * 1024 * 1024 // 8TB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
-	defaultSPCheckTimeout               = 3 * time.Second
-	defaultSPHealthCheckerInterval      = 5 * time.Second
-	httpStatusPath                      = "/status"
+	DefaultInitialGVGStakingStorageSize = uint64(2) * 1024 * 1024 * 1024 * 1024 // 2TB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
+	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 1024 // 1TB
+
+	defaultSPCheckTimeout          = 3 * time.Second
+	defaultSPHealthCheckerInterval = 5 * time.Second
+	httpStatusPath                 = "/status"
+
+	emptyGVGSafeDeletePeriod = int64(60) * 60 * 24
 )
 
 var (
@@ -235,10 +243,10 @@ func (sm *spManager) querySPByID(spID uint32) (*sptypes.StorageProvider, error) 
 	return nil, ErrFailedPickDestSP
 }
 
-// TODO: add metadata service client.
 type virtualGroupManager struct {
 	selfOperatorAddress string
 	chainClient         consensus.Consensus // query VG params from chain
+	gfspClient          gfspclient.GfSpClientAPI
 	mutex               sync.RWMutex
 	selfSPID            uint32
 	spManager           *spManager // is used to generate a new gvg
@@ -246,10 +254,11 @@ type virtualGroupManager struct {
 	vgfManager          *virtualGroupFamilyManager
 	freezeSPPool        *FreezeSPPool
 	healthChecker       *HealthChecker
+	gvgGCMap            sync.Map // Keep track of empty GVG and the time for GC. Once a GVG is detected empty, it will be put into gvgGCMap, and delete it if it is still empty after 1 day
 }
 
 // NewVirtualGroupManager returns a virtual group manager interface.
-func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus, enableHealthyChecker bool) (vgmgr.VirtualGroupManager, error) {
+func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Consensus, gfspClient gfspclient.GfSpClientAPI, enableHealthyChecker bool) (vgmgr.VirtualGroupManager, error) {
 	var healthChecker *HealthChecker
 	if enableHealthyChecker {
 		healthChecker = NewHealthChecker(chainClient)
@@ -259,15 +268,17 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	vgm := &virtualGroupManager{
 		selfOperatorAddress: selfOperatorAddress,
 		chainClient:         chainClient,
+		gfspClient:          gfspClient,
 		freezeSPPool:        NewFreezeSPPool(),
 		healthChecker:       healthChecker,
+		gvgGCMap:            sync.Map{},
 	}
-	vgm.refreshMeta()
+	vgm.refreshGVGMeta(true)
 	go func() {
 		RefreshMetaTicker := time.NewTicker(RefreshMetaInterval)
 		for range RefreshMetaTicker.C {
 			// log.Info("start to refresh virtual group manager meta")
-			vgm.refreshMeta()
+			vgm.refreshGVGMeta(false)
 			// log.Info("finish to refresh virtual group manager meta")
 		}
 	}()
@@ -278,13 +289,8 @@ func NewVirtualGroupManager(selfOperatorAddress string, chainClient consensus.Co
 	return vgm, nil
 }
 
-// refreshMetadata is used to refresh virtual group manager metadata in background.
-func (vgm *virtualGroupManager) refreshMeta() {
-	// TODO: support load from metadata.
-	vgm.refreshMetaByChain()
-}
-
-func (vgm *virtualGroupManager) refreshMetaByChain() {
+// refreshGVGMeta is used to refresh virtual group manager metadata in background.
+func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	var (
 		err         error
 		spList      []*sptypes.StorageProvider
@@ -311,6 +317,9 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		log.Errorw("failed to list sps", "error", err)
 		return
 	}
+	sort.Slice(spList, func(i, j int) bool {
+		return spList[i].Id < spList[j].Id
+	})
 	for _, sp := range spList {
 		spMap[sp.Id] = sp
 		if vgm.healthChecker != nil {
@@ -358,9 +367,32 @@ func (vgm *virtualGroupManager) refreshMetaByChain() {
 		}
 		for _, gvgID := range vgf.GlobalVirtualGroupIds {
 			var gvg *virtualgrouptypes.GlobalVirtualGroup
-			if gvg, err = vgm.chainClient.QueryGlobalVirtualGroup(context.Background(), gvgID); err != nil {
-				log.Errorw("failed to query global virtual group", "error", err)
+			if byChain {
+				if gvg, err = vgm.chainClient.QueryGlobalVirtualGroup(context.Background(), gvgID); err != nil {
+					log.Errorw("failed to query global virtual group from chain", "error", err)
+					return
+				}
+			} else {
+				if gvg, err = vgm.gfspClient.GetGlobalVirtualGroupByGvgID(context.Background(), gvgID); err != nil {
+					log.Errorw("failed to query global virtual group from meta", "error", err)
+					return
+				}
+			}
+			deposited, deleted, err := vgm.monitorGVGUsage(gvg, vgParams, byChain)
+			if err != nil {
+				log.Errorw("failed to monitor global virtual group usage", "gvgID", gvg.Id, "error", err)
 				return
+			}
+			if deleted {
+				continue
+			}
+			if deposited {
+				time.Sleep(RefreshMetaInterval)
+				gvg, err = vgm.chainClient.QueryGlobalVirtualGroup(context.Background(), gvg.Id)
+				if err != nil {
+					log.Errorw("failed to query global virtual group", "error", err)
+					return
+				}
 			}
 			gvgMeta := &vgmgr.GlobalVirtualGroupMeta{
 				ID:                   gvg.GetId(),
@@ -432,8 +464,8 @@ func (vgm *virtualGroupManager) PickMigrateDestGlobalVirtualGroup(vgfID uint32, 
 // TODO: in the future background thread can pre-allocate gvg and reduce impact on foreground thread.
 func (vgm *virtualGroupManager) ForceRefreshMeta() error {
 	// sleep 5 seconds for waiting a new block
-	time.Sleep(5 * time.Second)
-	vgm.refreshMeta()
+	time.Sleep(RefreshMetaInterval)
+	vgm.refreshGVGMeta(true)
 	return nil
 }
 
@@ -511,6 +543,89 @@ func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 			vgm.freezeSPPool.ReleaseAllSP()
 		}
 	}
+}
+
+func (vgm *virtualGroupManager) monitorGVGUsage(gvg *virtualgrouptypes.GlobalVirtualGroup, vgParams *virtualgrouptypes.Params, byChain bool) (deposited, deleted bool, err error) {
+	needDeposit := func(gvg *virtualgrouptypes.GlobalVirtualGroup, vgParams *virtualgrouptypes.Params) bool {
+		return float64(gvg.GetStoredSize()) >= MaxStorageUsageRatio*float64(util.TotalStakingStoreSizeOfGVG(gvg, vgParams.GvgStakingPerBytes))
+	}
+	isEmpty := func(gvg *virtualgrouptypes.GlobalVirtualGroup) bool {
+		return gvg.StoredSize == 0
+	}
+
+	curTime := time.Now().Unix()
+	if isEmpty(gvg) {
+		// if the GVG is refilled, it can be removed from the gcMap.
+		vgm.gvgGCMap.Range(func(k, v interface{}) bool {
+			safeDeleteTime := v.(int64)
+			if curTime > safeDeleteTime+int64(time.Minute.Seconds()) {
+				vgm.gvgGCMap.Delete(k)
+			}
+			return true
+		})
+		if !byChain {
+			gvg, err = vgm.chainClient.QueryGlobalVirtualGroup(context.Background(), gvg.Id)
+			if err != nil {
+				log.Errorw("failed to query global virtual group", "error", err)
+				return
+			}
+			if !isEmpty(gvg) {
+				return
+			}
+		}
+		var safeDeleteTime int64
+		val, found := vgm.gvgGCMap.Load(gvg.Id)
+		if !found {
+			safeDeleteTime = curTime + emptyGVGSafeDeletePeriod
+			vgm.gvgGCMap.Store(gvg.Id, safeDeleteTime)
+			return
+		}
+		safeDeleteTime = val.(int64)
+		if curTime < safeDeleteTime {
+			return
+		}
+		var deleteGVGHash string
+		deleteGVGHash, err = vgm.gfspClient.DeleteGlobalVirtualGroup(context.Background(), &virtualgrouptypes.MsgDeleteGlobalVirtualGroup{
+			GlobalVirtualGroupId: gvg.Id,
+		})
+		if err != nil {
+			log.Errorw("failed to delete global virtual group", "gvgID", gvg.Id, "txHash", deleteGVGHash, "error", err)
+			return
+		}
+		vgm.gvgGCMap.Delete(gvg.Id)
+		deleted = true
+		return
+	}
+
+	if !needDeposit(gvg, vgParams) {
+		return
+	}
+
+	msgDeposit := &virtualgrouptypes.MsgDeposit{
+		GlobalVirtualGroupId: gvg.Id,
+		Deposit: sdk.Coin{
+			Denom:  vgParams.GetDepositDenom(),
+			Amount: vgParams.GvgStakingPerBytes.Mul(math.NewIntFromUint64(additionalGVGStakingStorageSize)),
+		},
+	}
+	if !byChain {
+		gvg, err = vgm.chainClient.QueryGlobalVirtualGroup(context.Background(), gvg.Id)
+		if err != nil {
+			log.Errorw("failed to query global virtual group", "error", err)
+			return
+		}
+		if !needDeposit(gvg, vgParams) {
+			return
+		}
+	}
+	var depositTxHash string
+	depositTxHash, err = vgm.gfspClient.Deposit(context.Background(), msgDeposit)
+	if err != nil {
+		log.Errorw("failed to deposit global virtual group", "gvgID", gvg.Id, "txHash", depositTxHash, "error", err)
+		return
+	}
+	deposited = true
+	return
 }
 
 type HealthChecker struct {
