@@ -541,6 +541,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 
 				m1 := consensus.NewMockConsensus(ctrl)
 				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				e.baseApp.SetConsensus(m1)
 				return e
 			},
@@ -569,6 +570,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m1 := consensus.NewMockConsensus(ctrl)
 				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
 					VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 10}}, nil).Times(1)
+				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				e.baseApp.SetConsensus(m1)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
@@ -608,6 +610,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m1 := consensus.NewMockConsensus(ctrl)
 				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
 					VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 10}}, nil).Times(1)
+				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				e.baseApp.SetConsensus(m1)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
@@ -639,26 +642,12 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(waitingGCObjects, uint64(0), nil).Times(1)
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
-					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil).Times(1)
-				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.GlobalVirtualGroup{
-					SecondarySpIds: []uint32{1}}, nil).Times(1)
 				e.baseApp.SetGfSpClient(m)
 
 				m1 := consensus.NewMockConsensus(ctrl)
-				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
-					VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 10}}, nil).Times(1)
 				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				e.baseApp.SetConsensus(m1)
 
-				m2 := piecestore.NewMockPieceOp(ctrl)
-				m2.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
-				e.baseApp.SetPieceOp(m2)
-
-				m3 := piecestore.NewMockPieceStore(ctrl)
-				m3.EXPECT().DeletePiece(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				e.baseApp.SetPieceStore(m3)
 				return e
 			},
 		},
