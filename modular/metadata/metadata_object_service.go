@@ -183,11 +183,20 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 		return nil, ErrInvalidParams
 	}
 
+	bucketInfo, err := r.baseApp.GfBsDB().GetBucketByName(req.BucketName, req.IncludePrivate)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket info", "error", err)
+		return nil, err
+	}
+	if bucketInfo == nil || bucketInfo.Removed {
+		return nil, ErrNoSuchBucket
+	}
+
 	object, err = r.baseApp.GfBsDB().GetObjectByName(req.ObjectName, req.BucketName, req.IncludePrivate)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object by object name", "error", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNoSuchBucket
+			return nil, ErrNoSuchObject
 		}
 		return nil, err
 	}
