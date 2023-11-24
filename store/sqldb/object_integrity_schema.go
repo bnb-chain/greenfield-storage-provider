@@ -7,6 +7,7 @@ import (
 const (
 	IntegrityMetasNumberOfShards = 64
 	ReasonableTableSize          = 5_000_000
+	ListObjectsDefaultSize       = 1000
 )
 
 // PieceHashTable table schema

@@ -964,7 +964,7 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Success(t *testing.T
 		},
 	).Times(1)
 	objects, err := a.GfSpListObjectsByGVGAndBucketForGC(context.Background(), &types.GfSpListObjectsByGVGAndBucketForGCRequest{
-		GvgId:      1,
+		DstGvgId:   1,
 		BucketId:   1,
 		StartAfter: 0,
 		Limit:      0,
@@ -1058,7 +1058,7 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Success2(t *testing.
 		},
 	).Times(1)
 	objects, err := a.GfSpListObjectsByGVGAndBucketForGC(context.Background(), &types.GfSpListObjectsByGVGAndBucketForGCRequest{
-		GvgId:      1,
+		DstGvgId:   1,
 		BucketId:   1,
 		StartAfter: 0,
 		Limit:      11111,
@@ -1136,7 +1136,7 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Failed(t *testing.T)
 		},
 	).Times(1)
 	_, err := a.GfSpListObjectsByGVGAndBucketForGC(context.Background(), &types.GfSpListObjectsByGVGAndBucketForGCRequest{
-		GvgId:      1,
+		DstGvgId:   1,
 		BucketId:   1,
 		StartAfter: 0,
 		Limit:      11111,
@@ -1155,7 +1155,7 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Failed2(t *testing.T
 		},
 	).Times(1)
 	_, err := a.GfSpListObjectsByGVGAndBucketForGC(context.Background(), &types.GfSpListObjectsByGVGAndBucketForGCRequest{
-		GvgId:      1,
+		DstGvgId:   1,
 		BucketId:   1,
 		StartAfter: 0,
 		Limit:      11111,

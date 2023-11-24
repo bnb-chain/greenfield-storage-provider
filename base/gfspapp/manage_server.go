@@ -168,6 +168,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		resp.Response = &gfspserver.GfSpAskTaskResponse_MigrateGvgTask{
 			MigrateGvgTask: t,
 		}
+	case *gfsptask.GfSpGCBucketMigrationTask:
+		resp.Response = &gfspserver.GfSpAskTaskResponse_GcBucketMigrationTask{
+			GcBucketMigrationTask: t,
+		}
 	default:
 		log.CtxErrorw(ctx, "[BUG] Unsupported task type to dispatch")
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrUnsupportedTaskType}, nil
@@ -300,6 +304,12 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported migrate gvg task", "task_info", task.Info())
 		err = g.manager.HandleMigrateGVGTask(ctx, t.MigrateGvgTask)
+	case *gfspserver.GfSpReportTaskRequest_GcBucketMigrationTask:
+		task := t.GcBucketMigrationTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
+		log.CtxInfow(ctx, "begin to handle reported gc bucket migration task", "task_info", task.Info())
+		err = g.manager.HandleGCBucketMigrationTask(ctx, t.GcBucketMigrationTask)
 	default:
 		log.CtxError(ctx, "receive unsupported task type")
 		return &gfspserver.GfSpReportTaskResponse{Err: ErrUnsupportedTaskType}, nil
@@ -358,9 +368,10 @@ func (g *GfSpBaseApp) GfSpNotifyPreMigrate(ctx context.Context, req *gfspserver.
 
 	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{}, nil
 }
+
 func (g *GfSpBaseApp) GfSpNotifyPostMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (
 	*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
-	if err := g.manager.NotifyPostMigrateBucket(ctx, req.GetBucketId()); err != nil {
+	if err := g.manager.NotifyPostMigrateBucket(ctx, req.GetBucketMigrationInfo()); err != nil {
 		return nil, err
 	}
 

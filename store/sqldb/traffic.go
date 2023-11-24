@@ -40,6 +40,8 @@ const (
 	SPDBFailureGetUserReadRecord = "get_user_read_record_failure"
 )
 
+const metaDeleteLimit = 100
+
 // CheckQuotaAndAddReadRecord check current quota, and add read record
 func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) (err error) {
 	startTime := time.Now()
@@ -451,6 +453,16 @@ func (s *SpDBImpl) UpdateBucketTraffic(bucketID uint64, update *corespdb.BucketT
 	return nil
 }
 
+// DeleteExpiredBucketTraffic update the bucket traffic in traffic db with the new traffic
+func (s *SpDBImpl) DeleteExpiredBucketTraffic(yearMonth string) (err error) {
+	var bucketTraffic []BucketTrafficTable
+	result := s.db.Where("month < ?", yearMonth).Limit(metaDeleteLimit).Find(&bucketTraffic).Delete(&bucketTraffic)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete bucket traffic record in bucket traffic table: %s, year_month:%s", result.Error, yearMonth)
+	}
+	return nil
+}
+
 // GetReadRecord return record list by time range
 func (s *SpDBImpl) GetReadRecord(timeRange *corespdb.TrafficTimeRange) (records []*corespdb.ReadRecord, err error) {
 	var (
@@ -629,4 +641,14 @@ func (s *SpDBImpl) GetUserReadRecord(userAddress string, timeRange *corespdb.Tra
 		})
 	}
 	return records, nil
+}
+
+// DeleteExpiredReadRecord delete all read record before ts(ts is UnixMicro)
+func (s *SpDBImpl) DeleteExpiredReadRecord(ts, limit uint64) (err error) {
+	var readRecords []ReadRecordTable
+	result := s.db.Where("read_timestamp_us < ?", ts).Limit(int(limit)).Find(&readRecords).Delete(&readRecords)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete read record in read record table: %s, ts:%d", result.Error, ts)
+	}
+	return nil
 }

@@ -322,6 +322,7 @@ func defaultGfSpDB(cfg *config.SQLDBConfig) {
 	if cfg.Database == "" {
 		cfg.Database = "storage_provider_db"
 	}
+	cfg.EnableTracePutEvent = sqldb.DefaultEnableTracePutEvent
 }
 
 var bsdbOnce = sync.Once{}

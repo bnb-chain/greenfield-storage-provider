@@ -8,6 +8,9 @@ import (
 )
 
 func (s *SpDBImpl) InsertPutEvent(task coretask.Task) error {
+	if !s.enableTracePutEvent {
+		return nil
+	}
 	go func() {
 		switch t := task.(type) {
 		case *gfsptask.GfSpUploadObjectTask:

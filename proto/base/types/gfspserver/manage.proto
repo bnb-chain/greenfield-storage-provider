@@ -34,6 +34,7 @@ message GfSpAskTaskResponse {
     base.types.gfsptask.GfSpGCMetaTask gc_meta_task = 7;
     base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 8;
     base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 9;
+    base.types.gfsptask.GfSpGCBucketMigrationTask gc_bucket_migration_task = 10;
   }
 }
 
@@ -51,6 +52,7 @@ message GfSpReportTaskRequest {
     base.types.gfsptask.GfSpResumableUploadObjectTask resumable_upload_object_task = 10;
     base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 11;
     base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 12;
+    base.types.gfsptask.GfSpGCBucketMigrationTask gc_bucket_migration_task = 13;
   }
 }
 
@@ -87,6 +89,7 @@ message GfSpNotifyPreMigrateBucketResponse {
 message GfSpNotifyPostMigrateBucketRequest {
   // bucket_id is the id of the bucket
   uint64 bucket_id = 1;
+  base.types.gfsptask.GfSpBucketMigrationInfo bucket_migration_info = 2;
 }
 
 message GfSpNotifyPostMigrateBucketResponse {

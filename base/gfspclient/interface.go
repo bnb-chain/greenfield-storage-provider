@@ -89,7 +89,7 @@ type ManagerAPI interface {
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error)
 	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
-	NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error
+	NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error
 }
 
 // MetadataAPI for mock sue
@@ -103,6 +103,7 @@ type MetadataAPI interface {
 	GetBucketByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error)
 	ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpID uint32, limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error)
 	GetObjectMeta(ctx context.Context, objectName string, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Object, error)
+	GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error)
 	GetPaymentByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error)
 	GetPaymentByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error)
 	VerifyPermission(ctx context.Context, Operator string, bucketName string, objectName string, actionType permission_types.ActionType, opts ...grpc.DialOption) (*permission_types.Effect, error)

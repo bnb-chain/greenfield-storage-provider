@@ -46,6 +46,8 @@ const (
 	TypeTaskGCZombiePiece
 	// TypeTaskGCMeta defines the type of collecting SP metadata task.
 	TypeTaskGCMeta
+	// TypeTaskGCBucketMigration defines the type of gc bucket migration task.
+	TypeTaskGCBucketMigration
 	// TypeTaskRecoverPiece defines the type of the recovering piece task.
 	TypeTaskRecoverPiece
 	// TypeTaskMigrateGVG defines the type of migrating gvg task.
@@ -67,6 +69,7 @@ var TypeTaskMap = map[TType]string{
 	TypeTaskGCObject:               "GCObjectTask",
 	TypeTaskGCZombiePiece:          "GCZombiePieceTask",
 	TypeTaskGCMeta:                 "GCMetaTask",
+	TypeTaskGCBucketMigration:      "GCBucketMigrationTask",
 	TypeTaskRecoverPiece:           "RecoverPieceTask",
 	TypeTaskMigrateGVG:             "MigrateGVGTask",
 }

@@ -68,7 +68,7 @@ func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.Msg
 func (*NullModular) NotifyPreMigrateBucket(context.Context, uint64) error {
 	return ErrNilModular
 }
-func (*NullModular) NotifyPostMigrateBucket(context.Context, uint64) error {
+func (*NullModular) NotifyPostMigrateBucket(context.Context, *gfsptask.GfSpBucketMigrationInfo) error {
 	return ErrNilModular
 }
 
@@ -143,6 +143,9 @@ func (*NullModular) HandleGCObjectTask(context.Context, task.GCObjectTask) error
 	return ErrNilModular
 }
 func (*NullModular) HandleGCZombiePieceTask(context.Context, task.GCZombiePieceTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleGCBucketMigrationTask(context.Context, task.GCBucketMigrationTask) error {
 	return ErrNilModular
 }
 func (*NullModular) HandleGCMetaTask(context.Context, task.GCMetaTask) error { return ErrNilModular }

@@ -42,6 +42,12 @@ const (
 	// DefaultSleepInterval defines the sleep interval when failed to ask task
 	// it is millisecond level
 	DefaultSleepInterval = 100
+	// DefaultExecutorBucketTrafficKeepTimeDay defines the default max keep bucket traffic time for gc meta bucket traffic.
+	DefaultExecutorBucketTrafficKeepTimeDay uint64 = 30 * 3
+	// DefaultExecutorReadRecordKeepTimeDay defines the default max keep read record time for gc meta read record.
+	DefaultExecutorReadRecordKeepTimeDay uint64 = 30
+	// DefaultExecutorReadRecordDeleteLimit defines the default deletion limit for delete gc meta read record.
+	DefaultExecutorReadRecordDeleteLimit uint64 = 100
 )
 
 const (
@@ -117,9 +123,23 @@ func defaultExecutorOptions(executor *ExecuteModular, cfg *gfspconfig.GfSpConfig
 		cfg.Executor.MaxObjectMigrationRetry = DefaultExecutorMaxObjectMigrationRetry
 	}
 
+	if cfg.Executor.BucketTrafficKeepTimeDay == 0 || cfg.Executor.BucketTrafficKeepTimeDay < DefaultExecutorBucketTrafficKeepTimeDay {
+		// Retain at least 3 months of bucket traffic records to ensure that traffic data from the current month, which is still being read and written, will not be deleted.
+		cfg.Executor.BucketTrafficKeepTimeDay = DefaultExecutorBucketTrafficKeepTimeDay
+	}
+	if cfg.Executor.ReadRecordKeepTimeDay == 0 {
+		cfg.Executor.ReadRecordKeepTimeDay = DefaultExecutorReadRecordKeepTimeDay
+	}
+	if cfg.Executor.ReadRecordDeleteLimit == 0 {
+		cfg.Executor.ReadRecordDeleteLimit = DefaultExecutorReadRecordDeleteLimit
+	}
+
 	executor.maxListenSealRetry = cfg.Executor.MaxListenSealRetry
 	executor.statisticsOutputInterval = DefaultStatisticsOutputInterval
 	executor.enableSkipFailedToMigrateObject = cfg.Executor.EnableSkipFailedToMigrateObject
 	executor.objectMigrationRetryTimeout = cfg.Executor.ObjectMigrationRetryTimeout
 	executor.maxObjectMigrationRetry = cfg.Executor.MaxObjectMigrationRetry
+	executor.bucketTrafficKeepLatestDay = cfg.Executor.BucketTrafficKeepTimeDay
+	executor.readRecordKeepLatestDay = cfg.Executor.ReadRecordKeepTimeDay
+	executor.readRecordDeleteLimit = cfg.Executor.ReadRecordDeleteLimit
 }

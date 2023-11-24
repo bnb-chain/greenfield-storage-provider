@@ -48,7 +48,7 @@ func (m *MockTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockTask)(nil).AppendLog), log)
 }
@@ -296,7 +296,7 @@ func (m *MockTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockTask)(nil).SetAddress), arg0)
 }
@@ -308,7 +308,7 @@ func (m *MockTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockTask)(nil).SetCreateTime), arg0)
 }
@@ -320,7 +320,7 @@ func (m *MockTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockTask)(nil).SetError), arg0)
 }
@@ -332,7 +332,7 @@ func (m *MockTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockTask)(nil).SetLogs), logs)
 }
@@ -344,7 +344,7 @@ func (m *MockTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockTask)(nil).SetMaxRetry), arg0)
 }
@@ -356,7 +356,7 @@ func (m *MockTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockTask)(nil).SetPriority), arg0)
 }
@@ -368,7 +368,7 @@ func (m *MockTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockTask)(nil).SetRetry), arg0)
 }
@@ -380,7 +380,7 @@ func (m *MockTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockTask)(nil).SetTimeout), arg0)
 }
@@ -392,7 +392,7 @@ func (m *MockTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockTask)(nil).SetUpdateTime), arg0)
 }
@@ -404,7 +404,7 @@ func (m *MockTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockTask)(nil).SetUserAddress), arg0)
 }
@@ -453,7 +453,7 @@ func (m *MockApprovalTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockApprovalTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockApprovalTask)(nil).AppendLog), log)
 }
@@ -715,7 +715,7 @@ func (m *MockApprovalTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockApprovalTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockApprovalTask)(nil).SetAddress), arg0)
 }
@@ -727,7 +727,7 @@ func (m *MockApprovalTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockApprovalTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockApprovalTask)(nil).SetCreateTime), arg0)
 }
@@ -739,7 +739,7 @@ func (m *MockApprovalTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockApprovalTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockApprovalTask)(nil).SetError), arg0)
 }
@@ -751,7 +751,7 @@ func (m *MockApprovalTask) SetExpiredHeight(arg0 uint64) {
 }
 
 // SetExpiredHeight indicates an expected call of SetExpiredHeight.
-func (mr *MockApprovalTaskMockRecorder) SetExpiredHeight(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetExpiredHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExpiredHeight", reflect.TypeOf((*MockApprovalTask)(nil).SetExpiredHeight), arg0)
 }
@@ -763,7 +763,7 @@ func (m *MockApprovalTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockApprovalTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockApprovalTask)(nil).SetLogs), logs)
 }
@@ -775,7 +775,7 @@ func (m *MockApprovalTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockApprovalTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockApprovalTask)(nil).SetMaxRetry), arg0)
 }
@@ -787,7 +787,7 @@ func (m *MockApprovalTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockApprovalTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockApprovalTask)(nil).SetPriority), arg0)
 }
@@ -799,7 +799,7 @@ func (m *MockApprovalTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockApprovalTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockApprovalTask)(nil).SetRetry), arg0)
 }
@@ -811,7 +811,7 @@ func (m *MockApprovalTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockApprovalTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockApprovalTask)(nil).SetTimeout), arg0)
 }
@@ -823,7 +823,7 @@ func (m *MockApprovalTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockApprovalTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockApprovalTask)(nil).SetUpdateTime), arg0)
 }
@@ -835,7 +835,7 @@ func (m *MockApprovalTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockApprovalTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockApprovalTask)(nil).SetUserAddress), arg0)
 }
@@ -884,7 +884,7 @@ func (m *MockApprovalCreateBucketTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).AppendLog), log)
 }
@@ -1146,7 +1146,7 @@ func (m *MockApprovalCreateBucketTask) InitApprovalCreateBucketTask(arg0 string,
 }
 
 // InitApprovalCreateBucketTask indicates an expected call of InitApprovalCreateBucketTask.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) InitApprovalCreateBucketTask(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) InitApprovalCreateBucketTask(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitApprovalCreateBucketTask", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).InitApprovalCreateBucketTask), arg0, arg1, arg2, arg3)
 }
@@ -1172,7 +1172,7 @@ func (m *MockApprovalCreateBucketTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetAddress), arg0)
 }
@@ -1184,7 +1184,7 @@ func (m *MockApprovalCreateBucketTask) SetCreateBucketInfo(arg0 *types0.MsgCreat
 }
 
 // SetCreateBucketInfo indicates an expected call of SetCreateBucketInfo.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetCreateBucketInfo(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetCreateBucketInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateBucketInfo", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetCreateBucketInfo), arg0)
 }
@@ -1196,7 +1196,7 @@ func (m *MockApprovalCreateBucketTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetCreateTime), arg0)
 }
@@ -1208,7 +1208,7 @@ func (m *MockApprovalCreateBucketTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetError), arg0)
 }
@@ -1220,7 +1220,7 @@ func (m *MockApprovalCreateBucketTask) SetExpiredHeight(arg0 uint64) {
 }
 
 // SetExpiredHeight indicates an expected call of SetExpiredHeight.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetExpiredHeight(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetExpiredHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExpiredHeight", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetExpiredHeight), arg0)
 }
@@ -1232,7 +1232,7 @@ func (m *MockApprovalCreateBucketTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetLogs), logs)
 }
@@ -1244,7 +1244,7 @@ func (m *MockApprovalCreateBucketTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetMaxRetry), arg0)
 }
@@ -1256,7 +1256,7 @@ func (m *MockApprovalCreateBucketTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetPriority), arg0)
 }
@@ -1268,7 +1268,7 @@ func (m *MockApprovalCreateBucketTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetRetry), arg0)
 }
@@ -1280,7 +1280,7 @@ func (m *MockApprovalCreateBucketTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetTimeout), arg0)
 }
@@ -1292,7 +1292,7 @@ func (m *MockApprovalCreateBucketTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetUpdateTime), arg0)
 }
@@ -1304,7 +1304,7 @@ func (m *MockApprovalCreateBucketTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockApprovalCreateBucketTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateBucketTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockApprovalCreateBucketTask)(nil).SetUserAddress), arg0)
 }
@@ -1353,7 +1353,7 @@ func (m *MockApprovalMigrateBucketTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).AppendLog), log)
 }
@@ -1615,7 +1615,7 @@ func (m *MockApprovalMigrateBucketTask) InitApprovalMigrateBucketTask(arg0 *type
 }
 
 // InitApprovalMigrateBucketTask indicates an expected call of InitApprovalMigrateBucketTask.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) InitApprovalMigrateBucketTask(arg0, arg1 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) InitApprovalMigrateBucketTask(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitApprovalMigrateBucketTask", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).InitApprovalMigrateBucketTask), arg0, arg1)
 }
@@ -1641,7 +1641,7 @@ func (m *MockApprovalMigrateBucketTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetAddress), arg0)
 }
@@ -1653,7 +1653,7 @@ func (m *MockApprovalMigrateBucketTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetCreateTime), arg0)
 }
@@ -1665,7 +1665,7 @@ func (m *MockApprovalMigrateBucketTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetError), arg0)
 }
@@ -1677,7 +1677,7 @@ func (m *MockApprovalMigrateBucketTask) SetExpiredHeight(arg0 uint64) {
 }
 
 // SetExpiredHeight indicates an expected call of SetExpiredHeight.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetExpiredHeight(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetExpiredHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExpiredHeight", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetExpiredHeight), arg0)
 }
@@ -1689,7 +1689,7 @@ func (m *MockApprovalMigrateBucketTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetLogs), logs)
 }
@@ -1701,7 +1701,7 @@ func (m *MockApprovalMigrateBucketTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetMaxRetry), arg0)
 }
@@ -1713,7 +1713,7 @@ func (m *MockApprovalMigrateBucketTask) SetMigrateBucketInfo(arg0 *types0.MsgMig
 }
 
 // SetMigrateBucketInfo indicates an expected call of SetMigrateBucketInfo.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetMigrateBucketInfo(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetMigrateBucketInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMigrateBucketInfo", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetMigrateBucketInfo), arg0)
 }
@@ -1725,7 +1725,7 @@ func (m *MockApprovalMigrateBucketTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetPriority), arg0)
 }
@@ -1737,7 +1737,7 @@ func (m *MockApprovalMigrateBucketTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetRetry), arg0)
 }
@@ -1749,7 +1749,7 @@ func (m *MockApprovalMigrateBucketTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetTimeout), arg0)
 }
@@ -1761,7 +1761,7 @@ func (m *MockApprovalMigrateBucketTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetUpdateTime), arg0)
 }
@@ -1773,7 +1773,7 @@ func (m *MockApprovalMigrateBucketTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalMigrateBucketTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockApprovalMigrateBucketTask)(nil).SetUserAddress), arg0)
 }
@@ -1822,7 +1822,7 @@ func (m *MockApprovalCreateObjectTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).AppendLog), log)
 }
@@ -2084,7 +2084,7 @@ func (m *MockApprovalCreateObjectTask) InitApprovalCreateObjectTask(arg0 string,
 }
 
 // InitApprovalCreateObjectTask indicates an expected call of InitApprovalCreateObjectTask.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) InitApprovalCreateObjectTask(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) InitApprovalCreateObjectTask(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitApprovalCreateObjectTask", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).InitApprovalCreateObjectTask), arg0, arg1, arg2, arg3)
 }
@@ -2110,7 +2110,7 @@ func (m *MockApprovalCreateObjectTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetAddress), arg0)
 }
@@ -2122,7 +2122,7 @@ func (m *MockApprovalCreateObjectTask) SetCreateObjectInfo(arg0 *types0.MsgCreat
 }
 
 // SetCreateObjectInfo indicates an expected call of SetCreateObjectInfo.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetCreateObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetCreateObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateObjectInfo", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetCreateObjectInfo), arg0)
 }
@@ -2134,7 +2134,7 @@ func (m *MockApprovalCreateObjectTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetCreateTime), arg0)
 }
@@ -2146,7 +2146,7 @@ func (m *MockApprovalCreateObjectTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetError), arg0)
 }
@@ -2158,7 +2158,7 @@ func (m *MockApprovalCreateObjectTask) SetExpiredHeight(arg0 uint64) {
 }
 
 // SetExpiredHeight indicates an expected call of SetExpiredHeight.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetExpiredHeight(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetExpiredHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExpiredHeight", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetExpiredHeight), arg0)
 }
@@ -2170,7 +2170,7 @@ func (m *MockApprovalCreateObjectTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetLogs), logs)
 }
@@ -2182,7 +2182,7 @@ func (m *MockApprovalCreateObjectTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetMaxRetry), arg0)
 }
@@ -2194,7 +2194,7 @@ func (m *MockApprovalCreateObjectTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetPriority), arg0)
 }
@@ -2206,7 +2206,7 @@ func (m *MockApprovalCreateObjectTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetRetry), arg0)
 }
@@ -2218,7 +2218,7 @@ func (m *MockApprovalCreateObjectTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetTimeout), arg0)
 }
@@ -2230,7 +2230,7 @@ func (m *MockApprovalCreateObjectTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetUpdateTime), arg0)
 }
@@ -2242,7 +2242,7 @@ func (m *MockApprovalCreateObjectTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockApprovalCreateObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalCreateObjectTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).SetUserAddress), arg0)
 }
@@ -2291,7 +2291,7 @@ func (m *MockApprovalReplicatePieceTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).AppendLog), log)
 }
@@ -2665,7 +2665,7 @@ func (m *MockApprovalReplicatePieceTask) InitApprovalReplicatePieceTask(object *
 }
 
 // InitApprovalReplicatePieceTask indicates an expected call of InitApprovalReplicatePieceTask.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) InitApprovalReplicatePieceTask(object, params, priority, askOpAddress any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) InitApprovalReplicatePieceTask(object, params, priority, askOpAddress interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitApprovalReplicatePieceTask", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).InitApprovalReplicatePieceTask), object, params, priority, askOpAddress)
 }
@@ -2691,7 +2691,7 @@ func (m *MockApprovalReplicatePieceTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetAddress), arg0)
 }
@@ -2703,7 +2703,7 @@ func (m *MockApprovalReplicatePieceTask) SetApprovedSignature(arg0 []byte) {
 }
 
 // SetApprovedSignature indicates an expected call of SetApprovedSignature.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSignature(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSignature(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetApprovedSignature", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetApprovedSignature), arg0)
 }
@@ -2715,7 +2715,7 @@ func (m *MockApprovalReplicatePieceTask) SetApprovedSpApprovalAddress(arg0 strin
 }
 
 // SetApprovedSpApprovalAddress indicates an expected call of SetApprovedSpApprovalAddress.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSpApprovalAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSpApprovalAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetApprovedSpApprovalAddress", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetApprovedSpApprovalAddress), arg0)
 }
@@ -2727,7 +2727,7 @@ func (m *MockApprovalReplicatePieceTask) SetApprovedSpEndpoint(arg0 string) {
 }
 
 // SetApprovedSpEndpoint indicates an expected call of SetApprovedSpEndpoint.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSpEndpoint(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSpEndpoint(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetApprovedSpEndpoint", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetApprovedSpEndpoint), arg0)
 }
@@ -2739,7 +2739,7 @@ func (m *MockApprovalReplicatePieceTask) SetApprovedSpOperatorAddress(arg0 strin
 }
 
 // SetApprovedSpOperatorAddress indicates an expected call of SetApprovedSpOperatorAddress.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSpOperatorAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetApprovedSpOperatorAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetApprovedSpOperatorAddress", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetApprovedSpOperatorAddress), arg0)
 }
@@ -2751,7 +2751,7 @@ func (m *MockApprovalReplicatePieceTask) SetAskSignature(arg0 []byte) {
 }
 
 // SetAskSignature indicates an expected call of SetAskSignature.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetAskSignature(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetAskSignature(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAskSignature", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetAskSignature), arg0)
 }
@@ -2763,7 +2763,7 @@ func (m *MockApprovalReplicatePieceTask) SetAskSpOperatorAddress(arg0 string) {
 }
 
 // SetAskSpOperatorAddress indicates an expected call of SetAskSpOperatorAddress.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetAskSpOperatorAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetAskSpOperatorAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAskSpOperatorAddress", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetAskSpOperatorAddress), arg0)
 }
@@ -2775,7 +2775,7 @@ func (m *MockApprovalReplicatePieceTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetCreateTime), arg0)
 }
@@ -2787,7 +2787,7 @@ func (m *MockApprovalReplicatePieceTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetError), arg0)
 }
@@ -2799,7 +2799,7 @@ func (m *MockApprovalReplicatePieceTask) SetExpiredHeight(arg0 uint64) {
 }
 
 // SetExpiredHeight indicates an expected call of SetExpiredHeight.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetExpiredHeight(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetExpiredHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExpiredHeight", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetExpiredHeight), arg0)
 }
@@ -2811,7 +2811,7 @@ func (m *MockApprovalReplicatePieceTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetLogs), logs)
 }
@@ -2823,7 +2823,7 @@ func (m *MockApprovalReplicatePieceTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetMaxRetry), arg0)
 }
@@ -2835,7 +2835,7 @@ func (m *MockApprovalReplicatePieceTask) SetObjectInfo(arg0 *types0.ObjectInfo) 
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetObjectInfo), arg0)
 }
@@ -2847,7 +2847,7 @@ func (m *MockApprovalReplicatePieceTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetPriority), arg0)
 }
@@ -2859,7 +2859,7 @@ func (m *MockApprovalReplicatePieceTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetRetry), arg0)
 }
@@ -2871,7 +2871,7 @@ func (m *MockApprovalReplicatePieceTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetStorageParams), arg0)
 }
@@ -2883,7 +2883,7 @@ func (m *MockApprovalReplicatePieceTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetTimeout), arg0)
 }
@@ -2895,7 +2895,7 @@ func (m *MockApprovalReplicatePieceTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetUpdateTime), arg0)
 }
@@ -2907,7 +2907,7 @@ func (m *MockApprovalReplicatePieceTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockApprovalReplicatePieceTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockApprovalReplicatePieceTask)(nil).SetUserAddress), arg0)
 }
@@ -2956,7 +2956,7 @@ func (m *MockObjectTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockObjectTask)(nil).AppendLog), log)
 }
@@ -3232,7 +3232,7 @@ func (m *MockObjectTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockObjectTask)(nil).SetAddress), arg0)
 }
@@ -3244,7 +3244,7 @@ func (m *MockObjectTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockObjectTask)(nil).SetCreateTime), arg0)
 }
@@ -3256,7 +3256,7 @@ func (m *MockObjectTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockObjectTask)(nil).SetError), arg0)
 }
@@ -3268,7 +3268,7 @@ func (m *MockObjectTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockObjectTask)(nil).SetLogs), logs)
 }
@@ -3280,7 +3280,7 @@ func (m *MockObjectTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockObjectTask)(nil).SetMaxRetry), arg0)
 }
@@ -3292,7 +3292,7 @@ func (m *MockObjectTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockObjectTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockObjectTask)(nil).SetObjectInfo), arg0)
 }
@@ -3304,7 +3304,7 @@ func (m *MockObjectTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockObjectTask)(nil).SetPriority), arg0)
 }
@@ -3316,7 +3316,7 @@ func (m *MockObjectTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockObjectTask)(nil).SetRetry), arg0)
 }
@@ -3328,7 +3328,7 @@ func (m *MockObjectTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockObjectTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockObjectTask)(nil).SetStorageParams), arg0)
 }
@@ -3340,7 +3340,7 @@ func (m *MockObjectTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockObjectTask)(nil).SetTimeout), arg0)
 }
@@ -3352,7 +3352,7 @@ func (m *MockObjectTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockObjectTask)(nil).SetUpdateTime), arg0)
 }
@@ -3364,7 +3364,7 @@ func (m *MockObjectTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockObjectTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockObjectTask)(nil).SetUserAddress), arg0)
 }
@@ -3413,7 +3413,7 @@ func (m *MockUploadObjectTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockUploadObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockUploadObjectTask)(nil).AppendLog), log)
 }
@@ -3689,7 +3689,7 @@ func (m *MockUploadObjectTask) InitUploadObjectTask(vgfID uint32, object *types0
 }
 
 // InitUploadObjectTask indicates an expected call of InitUploadObjectTask.
-func (mr *MockUploadObjectTaskMockRecorder) InitUploadObjectTask(vgfID, object, params, timeout any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) InitUploadObjectTask(vgfID, object, params, timeout interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitUploadObjectTask", reflect.TypeOf((*MockUploadObjectTask)(nil).InitUploadObjectTask), vgfID, object, params, timeout)
 }
@@ -3715,7 +3715,7 @@ func (m *MockUploadObjectTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockUploadObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockUploadObjectTask)(nil).SetAddress), arg0)
 }
@@ -3727,7 +3727,7 @@ func (m *MockUploadObjectTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockUploadObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockUploadObjectTask)(nil).SetCreateTime), arg0)
 }
@@ -3739,7 +3739,7 @@ func (m *MockUploadObjectTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockUploadObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockUploadObjectTask)(nil).SetError), arg0)
 }
@@ -3751,7 +3751,7 @@ func (m *MockUploadObjectTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockUploadObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockUploadObjectTask)(nil).SetLogs), logs)
 }
@@ -3763,7 +3763,7 @@ func (m *MockUploadObjectTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockUploadObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockUploadObjectTask)(nil).SetMaxRetry), arg0)
 }
@@ -3775,7 +3775,7 @@ func (m *MockUploadObjectTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockUploadObjectTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockUploadObjectTask)(nil).SetObjectInfo), arg0)
 }
@@ -3787,7 +3787,7 @@ func (m *MockUploadObjectTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockUploadObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockUploadObjectTask)(nil).SetPriority), arg0)
 }
@@ -3799,7 +3799,7 @@ func (m *MockUploadObjectTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockUploadObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockUploadObjectTask)(nil).SetRetry), arg0)
 }
@@ -3811,7 +3811,7 @@ func (m *MockUploadObjectTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockUploadObjectTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockUploadObjectTask)(nil).SetStorageParams), arg0)
 }
@@ -3823,7 +3823,7 @@ func (m *MockUploadObjectTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockUploadObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockUploadObjectTask)(nil).SetTimeout), arg0)
 }
@@ -3835,7 +3835,7 @@ func (m *MockUploadObjectTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockUploadObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockUploadObjectTask)(nil).SetUpdateTime), arg0)
 }
@@ -3847,7 +3847,7 @@ func (m *MockUploadObjectTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockUploadObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockUploadObjectTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockUploadObjectTask)(nil).SetUserAddress), arg0)
 }
@@ -3896,7 +3896,7 @@ func (m *MockResumableUploadObjectTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockResumableUploadObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).AppendLog), log)
 }
@@ -4200,7 +4200,7 @@ func (m *MockResumableUploadObjectTask) InitResumableUploadObjectTask(vgfID uint
 }
 
 // InitResumableUploadObjectTask indicates an expected call of InitResumableUploadObjectTask.
-func (mr *MockResumableUploadObjectTaskMockRecorder) InitResumableUploadObjectTask(vgfID, object, params, timeout, complete, offset any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) InitResumableUploadObjectTask(vgfID, object, params, timeout, complete, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitResumableUploadObjectTask", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).InitResumableUploadObjectTask), vgfID, object, params, timeout, complete, offset)
 }
@@ -4226,7 +4226,7 @@ func (m *MockResumableUploadObjectTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetAddress), arg0)
 }
@@ -4238,7 +4238,7 @@ func (m *MockResumableUploadObjectTask) SetCompleted(completed bool) {
 }
 
 // SetCompleted indicates an expected call of SetCompleted.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetCompleted(completed any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetCompleted(completed interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCompleted", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetCompleted), completed)
 }
@@ -4250,7 +4250,7 @@ func (m *MockResumableUploadObjectTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetCreateTime), arg0)
 }
@@ -4262,7 +4262,7 @@ func (m *MockResumableUploadObjectTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetError), arg0)
 }
@@ -4274,7 +4274,7 @@ func (m *MockResumableUploadObjectTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetLogs), logs)
 }
@@ -4286,7 +4286,7 @@ func (m *MockResumableUploadObjectTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetMaxRetry), arg0)
 }
@@ -4298,7 +4298,7 @@ func (m *MockResumableUploadObjectTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetObjectInfo), arg0)
 }
@@ -4310,7 +4310,7 @@ func (m *MockResumableUploadObjectTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetPriority), arg0)
 }
@@ -4322,7 +4322,7 @@ func (m *MockResumableUploadObjectTask) SetResumeOffset(offset uint64) {
 }
 
 // SetResumeOffset indicates an expected call of SetResumeOffset.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetResumeOffset(offset any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetResumeOffset(offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetResumeOffset", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetResumeOffset), offset)
 }
@@ -4334,7 +4334,7 @@ func (m *MockResumableUploadObjectTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetRetry), arg0)
 }
@@ -4346,7 +4346,7 @@ func (m *MockResumableUploadObjectTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetStorageParams), arg0)
 }
@@ -4358,7 +4358,7 @@ func (m *MockResumableUploadObjectTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetTimeout), arg0)
 }
@@ -4370,7 +4370,7 @@ func (m *MockResumableUploadObjectTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetUpdateTime), arg0)
 }
@@ -4382,7 +4382,7 @@ func (m *MockResumableUploadObjectTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockResumableUploadObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).SetUserAddress), arg0)
 }
@@ -4431,7 +4431,7 @@ func (m *MockReplicatePieceTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockReplicatePieceTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockReplicatePieceTask)(nil).AppendLog), log)
 }
@@ -4777,7 +4777,7 @@ func (m *MockReplicatePieceTask) InitReplicatePieceTask(object *types0.ObjectInf
 }
 
 // InitReplicatePieceTask indicates an expected call of InitReplicatePieceTask.
-func (mr *MockReplicatePieceTaskMockRecorder) InitReplicatePieceTask(object, params, priority, timeout, retry any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) InitReplicatePieceTask(object, params, priority, timeout, retry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitReplicatePieceTask", reflect.TypeOf((*MockReplicatePieceTask)(nil).InitReplicatePieceTask), object, params, priority, timeout, retry)
 }
@@ -4803,7 +4803,7 @@ func (m *MockReplicatePieceTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockReplicatePieceTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetAddress), arg0)
 }
@@ -4815,7 +4815,7 @@ func (m *MockReplicatePieceTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockReplicatePieceTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetCreateTime), arg0)
 }
@@ -4827,7 +4827,7 @@ func (m *MockReplicatePieceTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockReplicatePieceTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetError), arg0)
 }
@@ -4839,7 +4839,7 @@ func (m *MockReplicatePieceTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockReplicatePieceTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetLogs), logs)
 }
@@ -4851,7 +4851,7 @@ func (m *MockReplicatePieceTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockReplicatePieceTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetMaxRetry), arg0)
 }
@@ -4863,7 +4863,7 @@ func (m *MockReplicatePieceTask) SetNotAvailableSpIdx(arg0 int32) {
 }
 
 // SetNotAvailableSpIdx indicates an expected call of SetNotAvailableSpIdx.
-func (mr *MockReplicatePieceTaskMockRecorder) SetNotAvailableSpIdx(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetNotAvailableSpIdx(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotAvailableSpIdx", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetNotAvailableSpIdx), arg0)
 }
@@ -4875,7 +4875,7 @@ func (m *MockReplicatePieceTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockReplicatePieceTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetObjectInfo), arg0)
 }
@@ -4887,7 +4887,7 @@ func (m *MockReplicatePieceTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockReplicatePieceTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetPriority), arg0)
 }
@@ -4899,7 +4899,7 @@ func (m *MockReplicatePieceTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockReplicatePieceTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetRetry), arg0)
 }
@@ -4911,7 +4911,7 @@ func (m *MockReplicatePieceTask) SetSealed(arg0 bool) {
 }
 
 // SetSealed indicates an expected call of SetSealed.
-func (mr *MockReplicatePieceTaskMockRecorder) SetSealed(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetSealed(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSealed", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetSealed), arg0)
 }
@@ -4923,7 +4923,7 @@ func (m *MockReplicatePieceTask) SetSecondaryAddresses(arg0 []string) {
 }
 
 // SetSecondaryAddresses indicates an expected call of SetSecondaryAddresses.
-func (mr *MockReplicatePieceTaskMockRecorder) SetSecondaryAddresses(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetSecondaryAddresses(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSecondaryAddresses", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetSecondaryAddresses), arg0)
 }
@@ -4935,7 +4935,7 @@ func (m *MockReplicatePieceTask) SetSecondarySignatures(arg0 [][]byte) {
 }
 
 // SetSecondarySignatures indicates an expected call of SetSecondarySignatures.
-func (mr *MockReplicatePieceTaskMockRecorder) SetSecondarySignatures(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetSecondarySignatures(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSecondarySignatures", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetSecondarySignatures), arg0)
 }
@@ -4947,7 +4947,7 @@ func (m *MockReplicatePieceTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockReplicatePieceTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetStorageParams), arg0)
 }
@@ -4959,7 +4959,7 @@ func (m *MockReplicatePieceTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockReplicatePieceTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetTimeout), arg0)
 }
@@ -4971,7 +4971,7 @@ func (m *MockReplicatePieceTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockReplicatePieceTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetUpdateTime), arg0)
 }
@@ -4983,7 +4983,7 @@ func (m *MockReplicatePieceTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockReplicatePieceTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockReplicatePieceTask)(nil).SetUserAddress), arg0)
 }
@@ -5032,7 +5032,7 @@ func (m *MockReceivePieceTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockReceivePieceTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockReceivePieceTask)(nil).AppendLog), log)
 }
@@ -5434,7 +5434,7 @@ func (m *MockReceivePieceTask) InitReceivePieceTask(vgfID uint32, object *types0
 }
 
 // InitReceivePieceTask indicates an expected call of InitReceivePieceTask.
-func (mr *MockReceivePieceTaskMockRecorder) InitReceivePieceTask(vgfID, object, params, priority, segmentIdx, redundancyIdx, pieceSize any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) InitReceivePieceTask(vgfID, object, params, priority, segmentIdx, redundancyIdx, pieceSize interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitReceivePieceTask", reflect.TypeOf((*MockReceivePieceTask)(nil).InitReceivePieceTask), vgfID, object, params, priority, segmentIdx, redundancyIdx, pieceSize)
 }
@@ -5460,7 +5460,7 @@ func (m *MockReceivePieceTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockReceivePieceTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockReceivePieceTask)(nil).SetAddress), arg0)
 }
@@ -5472,7 +5472,7 @@ func (m *MockReceivePieceTask) SetBucketMigration(arg0 bool) {
 }
 
 // SetBucketMigration indicates an expected call of SetBucketMigration.
-func (mr *MockReceivePieceTaskMockRecorder) SetBucketMigration(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetBucketMigration(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBucketMigration", reflect.TypeOf((*MockReceivePieceTask)(nil).SetBucketMigration), arg0)
 }
@@ -5484,7 +5484,7 @@ func (m *MockReceivePieceTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockReceivePieceTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockReceivePieceTask)(nil).SetCreateTime), arg0)
 }
@@ -5496,7 +5496,7 @@ func (m *MockReceivePieceTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockReceivePieceTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockReceivePieceTask)(nil).SetError), arg0)
 }
@@ -5508,7 +5508,7 @@ func (m *MockReceivePieceTask) SetFinished(arg0 bool) {
 }
 
 // SetFinished indicates an expected call of SetFinished.
-func (mr *MockReceivePieceTaskMockRecorder) SetFinished(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetFinished(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFinished", reflect.TypeOf((*MockReceivePieceTask)(nil).SetFinished), arg0)
 }
@@ -5520,7 +5520,7 @@ func (m *MockReceivePieceTask) SetGlobalVirtualGroupID(arg0 uint32) {
 }
 
 // SetGlobalVirtualGroupID indicates an expected call of SetGlobalVirtualGroupID.
-func (mr *MockReceivePieceTaskMockRecorder) SetGlobalVirtualGroupID(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetGlobalVirtualGroupID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGlobalVirtualGroupID", reflect.TypeOf((*MockReceivePieceTask)(nil).SetGlobalVirtualGroupID), arg0)
 }
@@ -5532,7 +5532,7 @@ func (m *MockReceivePieceTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockReceivePieceTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockReceivePieceTask)(nil).SetLogs), logs)
 }
@@ -5544,7 +5544,7 @@ func (m *MockReceivePieceTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockReceivePieceTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockReceivePieceTask)(nil).SetMaxRetry), arg0)
 }
@@ -5556,7 +5556,7 @@ func (m *MockReceivePieceTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockReceivePieceTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockReceivePieceTask)(nil).SetObjectInfo), arg0)
 }
@@ -5568,7 +5568,7 @@ func (m *MockReceivePieceTask) SetPieceChecksum(arg0 []byte) {
 }
 
 // SetPieceChecksum indicates an expected call of SetPieceChecksum.
-func (mr *MockReceivePieceTaskMockRecorder) SetPieceChecksum(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetPieceChecksum(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPieceChecksum", reflect.TypeOf((*MockReceivePieceTask)(nil).SetPieceChecksum), arg0)
 }
@@ -5580,7 +5580,7 @@ func (m *MockReceivePieceTask) SetPieceSize(arg0 int64) {
 }
 
 // SetPieceSize indicates an expected call of SetPieceSize.
-func (mr *MockReceivePieceTaskMockRecorder) SetPieceSize(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetPieceSize(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPieceSize", reflect.TypeOf((*MockReceivePieceTask)(nil).SetPieceSize), arg0)
 }
@@ -5592,7 +5592,7 @@ func (m *MockReceivePieceTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockReceivePieceTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockReceivePieceTask)(nil).SetPriority), arg0)
 }
@@ -5604,7 +5604,7 @@ func (m *MockReceivePieceTask) SetRedundancyIdx(arg0 int32) {
 }
 
 // SetRedundancyIdx indicates an expected call of SetRedundancyIdx.
-func (mr *MockReceivePieceTaskMockRecorder) SetRedundancyIdx(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetRedundancyIdx(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRedundancyIdx", reflect.TypeOf((*MockReceivePieceTask)(nil).SetRedundancyIdx), arg0)
 }
@@ -5616,7 +5616,7 @@ func (m *MockReceivePieceTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockReceivePieceTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockReceivePieceTask)(nil).SetRetry), arg0)
 }
@@ -5628,7 +5628,7 @@ func (m *MockReceivePieceTask) SetSealed(arg0 bool) {
 }
 
 // SetSealed indicates an expected call of SetSealed.
-func (mr *MockReceivePieceTaskMockRecorder) SetSealed(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetSealed(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSealed", reflect.TypeOf((*MockReceivePieceTask)(nil).SetSealed), arg0)
 }
@@ -5640,7 +5640,7 @@ func (m *MockReceivePieceTask) SetSegmentIdx(arg0 uint32) {
 }
 
 // SetSegmentIdx indicates an expected call of SetSegmentIdx.
-func (mr *MockReceivePieceTaskMockRecorder) SetSegmentIdx(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetSegmentIdx(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSegmentIdx", reflect.TypeOf((*MockReceivePieceTask)(nil).SetSegmentIdx), arg0)
 }
@@ -5652,7 +5652,7 @@ func (m *MockReceivePieceTask) SetSignature(arg0 []byte) {
 }
 
 // SetSignature indicates an expected call of SetSignature.
-func (mr *MockReceivePieceTaskMockRecorder) SetSignature(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetSignature(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSignature", reflect.TypeOf((*MockReceivePieceTask)(nil).SetSignature), arg0)
 }
@@ -5664,7 +5664,7 @@ func (m *MockReceivePieceTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockReceivePieceTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockReceivePieceTask)(nil).SetStorageParams), arg0)
 }
@@ -5676,7 +5676,7 @@ func (m *MockReceivePieceTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockReceivePieceTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockReceivePieceTask)(nil).SetTimeout), arg0)
 }
@@ -5688,7 +5688,7 @@ func (m *MockReceivePieceTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockReceivePieceTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockReceivePieceTask)(nil).SetUpdateTime), arg0)
 }
@@ -5700,7 +5700,7 @@ func (m *MockReceivePieceTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockReceivePieceTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockReceivePieceTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockReceivePieceTask)(nil).SetUserAddress), arg0)
 }
@@ -5749,7 +5749,7 @@ func (m *MockSealObjectTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockSealObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockSealObjectTask)(nil).AppendLog), log)
 }
@@ -6053,7 +6053,7 @@ func (m *MockSealObjectTask) InitSealObjectTask(vgfID uint32, object *types0.Obj
 }
 
 // InitSealObjectTask indicates an expected call of InitSealObjectTask.
-func (mr *MockSealObjectTaskMockRecorder) InitSealObjectTask(vgfID, object, params, priority, addresses, signatures, timeout, retry any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) InitSealObjectTask(vgfID, object, params, priority, addresses, signatures, timeout, retry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitSealObjectTask", reflect.TypeOf((*MockSealObjectTask)(nil).InitSealObjectTask), vgfID, object, params, priority, addresses, signatures, timeout, retry)
 }
@@ -6079,7 +6079,7 @@ func (m *MockSealObjectTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockSealObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockSealObjectTask)(nil).SetAddress), arg0)
 }
@@ -6091,7 +6091,7 @@ func (m *MockSealObjectTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockSealObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockSealObjectTask)(nil).SetCreateTime), arg0)
 }
@@ -6103,7 +6103,7 @@ func (m *MockSealObjectTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockSealObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockSealObjectTask)(nil).SetError), arg0)
 }
@@ -6115,7 +6115,7 @@ func (m *MockSealObjectTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockSealObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockSealObjectTask)(nil).SetLogs), logs)
 }
@@ -6127,7 +6127,7 @@ func (m *MockSealObjectTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockSealObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockSealObjectTask)(nil).SetMaxRetry), arg0)
 }
@@ -6139,7 +6139,7 @@ func (m *MockSealObjectTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockSealObjectTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockSealObjectTask)(nil).SetObjectInfo), arg0)
 }
@@ -6151,7 +6151,7 @@ func (m *MockSealObjectTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockSealObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockSealObjectTask)(nil).SetPriority), arg0)
 }
@@ -6163,7 +6163,7 @@ func (m *MockSealObjectTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockSealObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockSealObjectTask)(nil).SetRetry), arg0)
 }
@@ -6175,7 +6175,7 @@ func (m *MockSealObjectTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockSealObjectTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockSealObjectTask)(nil).SetStorageParams), arg0)
 }
@@ -6187,7 +6187,7 @@ func (m *MockSealObjectTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockSealObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockSealObjectTask)(nil).SetTimeout), arg0)
 }
@@ -6199,7 +6199,7 @@ func (m *MockSealObjectTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockSealObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockSealObjectTask)(nil).SetUpdateTime), arg0)
 }
@@ -6211,7 +6211,7 @@ func (m *MockSealObjectTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockSealObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockSealObjectTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockSealObjectTask)(nil).SetUserAddress), arg0)
 }
@@ -6260,7 +6260,7 @@ func (m *MockDownloadObjectTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockDownloadObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockDownloadObjectTask)(nil).AppendLog), log)
 }
@@ -6578,7 +6578,7 @@ func (m *MockDownloadObjectTask) InitDownloadObjectTask(object *types0.ObjectInf
 }
 
 // InitDownloadObjectTask indicates an expected call of InitDownloadObjectTask.
-func (mr *MockDownloadObjectTaskMockRecorder) InitDownloadObjectTask(object, bucket, params, priority, userAddress, low, high, timeout, retry any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) InitDownloadObjectTask(object, bucket, params, priority, userAddress, low, high, timeout, retry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitDownloadObjectTask", reflect.TypeOf((*MockDownloadObjectTask)(nil).InitDownloadObjectTask), object, bucket, params, priority, userAddress, low, high, timeout, retry)
 }
@@ -6604,7 +6604,7 @@ func (m *MockDownloadObjectTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockDownloadObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetAddress), arg0)
 }
@@ -6616,7 +6616,7 @@ func (m *MockDownloadObjectTask) SetBucketInfo(arg0 *types0.BucketInfo) {
 }
 
 // SetBucketInfo indicates an expected call of SetBucketInfo.
-func (mr *MockDownloadObjectTaskMockRecorder) SetBucketInfo(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetBucketInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBucketInfo", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetBucketInfo), arg0)
 }
@@ -6628,7 +6628,7 @@ func (m *MockDownloadObjectTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockDownloadObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetCreateTime), arg0)
 }
@@ -6640,7 +6640,7 @@ func (m *MockDownloadObjectTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockDownloadObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetError), arg0)
 }
@@ -6652,7 +6652,7 @@ func (m *MockDownloadObjectTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockDownloadObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetLogs), logs)
 }
@@ -6664,7 +6664,7 @@ func (m *MockDownloadObjectTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockDownloadObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetMaxRetry), arg0)
 }
@@ -6676,7 +6676,7 @@ func (m *MockDownloadObjectTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockDownloadObjectTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetObjectInfo), arg0)
 }
@@ -6688,7 +6688,7 @@ func (m *MockDownloadObjectTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockDownloadObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetPriority), arg0)
 }
@@ -6700,7 +6700,7 @@ func (m *MockDownloadObjectTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockDownloadObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetRetry), arg0)
 }
@@ -6712,7 +6712,7 @@ func (m *MockDownloadObjectTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockDownloadObjectTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetStorageParams), arg0)
 }
@@ -6724,7 +6724,7 @@ func (m *MockDownloadObjectTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockDownloadObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetTimeout), arg0)
 }
@@ -6736,7 +6736,7 @@ func (m *MockDownloadObjectTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockDownloadObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetUpdateTime), arg0)
 }
@@ -6748,7 +6748,7 @@ func (m *MockDownloadObjectTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockDownloadObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockDownloadObjectTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockDownloadObjectTask)(nil).SetUserAddress), arg0)
 }
@@ -6797,7 +6797,7 @@ func (m *MockDownloadPieceTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockDownloadPieceTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockDownloadPieceTask)(nil).AppendLog), log)
 }
@@ -7157,7 +7157,7 @@ func (m *MockDownloadPieceTask) InitDownloadPieceTask(object *types0.ObjectInfo,
 }
 
 // InitDownloadPieceTask indicates an expected call of InitDownloadPieceTask.
-func (mr *MockDownloadPieceTaskMockRecorder) InitDownloadPieceTask(object, bucket, params, priority, enableCheck, userAddress, totalSize, pieceKey, pieceOffset, pieceLength, timeout, maxRetry any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) InitDownloadPieceTask(object, bucket, params, priority, enableCheck, userAddress, totalSize, pieceKey, pieceOffset, pieceLength, timeout, maxRetry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitDownloadPieceTask", reflect.TypeOf((*MockDownloadPieceTask)(nil).InitDownloadPieceTask), object, bucket, params, priority, enableCheck, userAddress, totalSize, pieceKey, pieceOffset, pieceLength, timeout, maxRetry)
 }
@@ -7183,7 +7183,7 @@ func (m *MockDownloadPieceTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockDownloadPieceTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetAddress), arg0)
 }
@@ -7195,7 +7195,7 @@ func (m *MockDownloadPieceTask) SetBucketInfo(arg0 *types0.BucketInfo) {
 }
 
 // SetBucketInfo indicates an expected call of SetBucketInfo.
-func (mr *MockDownloadPieceTaskMockRecorder) SetBucketInfo(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetBucketInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBucketInfo", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetBucketInfo), arg0)
 }
@@ -7207,7 +7207,7 @@ func (m *MockDownloadPieceTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockDownloadPieceTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetCreateTime), arg0)
 }
@@ -7219,7 +7219,7 @@ func (m *MockDownloadPieceTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockDownloadPieceTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetError), arg0)
 }
@@ -7231,7 +7231,7 @@ func (m *MockDownloadPieceTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockDownloadPieceTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetLogs), logs)
 }
@@ -7243,7 +7243,7 @@ func (m *MockDownloadPieceTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockDownloadPieceTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetMaxRetry), arg0)
 }
@@ -7255,7 +7255,7 @@ func (m *MockDownloadPieceTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockDownloadPieceTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetObjectInfo), arg0)
 }
@@ -7267,7 +7267,7 @@ func (m *MockDownloadPieceTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockDownloadPieceTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetPriority), arg0)
 }
@@ -7279,7 +7279,7 @@ func (m *MockDownloadPieceTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockDownloadPieceTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetRetry), arg0)
 }
@@ -7291,7 +7291,7 @@ func (m *MockDownloadPieceTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockDownloadPieceTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetStorageParams), arg0)
 }
@@ -7303,7 +7303,7 @@ func (m *MockDownloadPieceTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockDownloadPieceTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetTimeout), arg0)
 }
@@ -7315,7 +7315,7 @@ func (m *MockDownloadPieceTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockDownloadPieceTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetUpdateTime), arg0)
 }
@@ -7327,7 +7327,7 @@ func (m *MockDownloadPieceTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockDownloadPieceTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockDownloadPieceTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockDownloadPieceTask)(nil).SetUserAddress), arg0)
 }
@@ -7376,7 +7376,7 @@ func (m *MockChallengePieceTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockChallengePieceTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockChallengePieceTask)(nil).AppendLog), log)
 }
@@ -7722,7 +7722,7 @@ func (m *MockChallengePieceTask) InitChallengePieceTask(object *types0.ObjectInf
 }
 
 // InitChallengePieceTask indicates an expected call of InitChallengePieceTask.
-func (mr *MockChallengePieceTaskMockRecorder) InitChallengePieceTask(object, bucket, params, priority, userAddress, replicateIdx, segmentIdx, timeout, retry any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) InitChallengePieceTask(object, bucket, params, priority, userAddress, replicateIdx, segmentIdx, timeout, retry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitChallengePieceTask", reflect.TypeOf((*MockChallengePieceTask)(nil).InitChallengePieceTask), object, bucket, params, priority, userAddress, replicateIdx, segmentIdx, timeout, retry)
 }
@@ -7748,7 +7748,7 @@ func (m *MockChallengePieceTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockChallengePieceTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockChallengePieceTask)(nil).SetAddress), arg0)
 }
@@ -7760,7 +7760,7 @@ func (m *MockChallengePieceTask) SetBucketInfo(arg0 *types0.BucketInfo) {
 }
 
 // SetBucketInfo indicates an expected call of SetBucketInfo.
-func (mr *MockChallengePieceTaskMockRecorder) SetBucketInfo(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetBucketInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBucketInfo", reflect.TypeOf((*MockChallengePieceTask)(nil).SetBucketInfo), arg0)
 }
@@ -7772,7 +7772,7 @@ func (m *MockChallengePieceTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockChallengePieceTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockChallengePieceTask)(nil).SetCreateTime), arg0)
 }
@@ -7784,7 +7784,7 @@ func (m *MockChallengePieceTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockChallengePieceTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockChallengePieceTask)(nil).SetError), arg0)
 }
@@ -7796,7 +7796,7 @@ func (m *MockChallengePieceTask) SetIntegrityHash(arg0 []byte) {
 }
 
 // SetIntegrityHash indicates an expected call of SetIntegrityHash.
-func (mr *MockChallengePieceTaskMockRecorder) SetIntegrityHash(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetIntegrityHash(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetIntegrityHash", reflect.TypeOf((*MockChallengePieceTask)(nil).SetIntegrityHash), arg0)
 }
@@ -7808,7 +7808,7 @@ func (m *MockChallengePieceTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockChallengePieceTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockChallengePieceTask)(nil).SetLogs), logs)
 }
@@ -7820,7 +7820,7 @@ func (m *MockChallengePieceTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockChallengePieceTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockChallengePieceTask)(nil).SetMaxRetry), arg0)
 }
@@ -7832,7 +7832,7 @@ func (m *MockChallengePieceTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockChallengePieceTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockChallengePieceTask)(nil).SetObjectInfo), arg0)
 }
@@ -7844,7 +7844,7 @@ func (m *MockChallengePieceTask) SetPieceDataSize(arg0 int64) {
 }
 
 // SetPieceDataSize indicates an expected call of SetPieceDataSize.
-func (mr *MockChallengePieceTaskMockRecorder) SetPieceDataSize(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetPieceDataSize(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPieceDataSize", reflect.TypeOf((*MockChallengePieceTask)(nil).SetPieceDataSize), arg0)
 }
@@ -7856,7 +7856,7 @@ func (m *MockChallengePieceTask) SetPieceHash(arg0 [][]byte) {
 }
 
 // SetPieceHash indicates an expected call of SetPieceHash.
-func (mr *MockChallengePieceTaskMockRecorder) SetPieceHash(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetPieceHash(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPieceHash", reflect.TypeOf((*MockChallengePieceTask)(nil).SetPieceHash), arg0)
 }
@@ -7868,7 +7868,7 @@ func (m *MockChallengePieceTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockChallengePieceTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockChallengePieceTask)(nil).SetPriority), arg0)
 }
@@ -7880,7 +7880,7 @@ func (m *MockChallengePieceTask) SetRedundancyIdx(idx int32) {
 }
 
 // SetRedundancyIdx indicates an expected call of SetRedundancyIdx.
-func (mr *MockChallengePieceTaskMockRecorder) SetRedundancyIdx(idx any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetRedundancyIdx(idx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRedundancyIdx", reflect.TypeOf((*MockChallengePieceTask)(nil).SetRedundancyIdx), idx)
 }
@@ -7892,7 +7892,7 @@ func (m *MockChallengePieceTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockChallengePieceTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockChallengePieceTask)(nil).SetRetry), arg0)
 }
@@ -7904,7 +7904,7 @@ func (m *MockChallengePieceTask) SetSegmentIdx(arg0 uint32) {
 }
 
 // SetSegmentIdx indicates an expected call of SetSegmentIdx.
-func (mr *MockChallengePieceTaskMockRecorder) SetSegmentIdx(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetSegmentIdx(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSegmentIdx", reflect.TypeOf((*MockChallengePieceTask)(nil).SetSegmentIdx), arg0)
 }
@@ -7916,7 +7916,7 @@ func (m *MockChallengePieceTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockChallengePieceTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockChallengePieceTask)(nil).SetStorageParams), arg0)
 }
@@ -7928,7 +7928,7 @@ func (m *MockChallengePieceTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockChallengePieceTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockChallengePieceTask)(nil).SetTimeout), arg0)
 }
@@ -7940,7 +7940,7 @@ func (m *MockChallengePieceTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockChallengePieceTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockChallengePieceTask)(nil).SetUpdateTime), arg0)
 }
@@ -7952,7 +7952,7 @@ func (m *MockChallengePieceTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockChallengePieceTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockChallengePieceTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockChallengePieceTask)(nil).SetUserAddress), arg0)
 }
@@ -8001,7 +8001,7 @@ func (m *MockGCTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockGCTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockGCTask)(nil).AppendLog), log)
 }
@@ -8249,7 +8249,7 @@ func (m *MockGCTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockGCTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockGCTask)(nil).SetAddress), arg0)
 }
@@ -8261,7 +8261,7 @@ func (m *MockGCTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockGCTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockGCTask)(nil).SetCreateTime), arg0)
 }
@@ -8273,7 +8273,7 @@ func (m *MockGCTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockGCTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockGCTask)(nil).SetError), arg0)
 }
@@ -8285,7 +8285,7 @@ func (m *MockGCTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockGCTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockGCTask)(nil).SetLogs), logs)
 }
@@ -8297,7 +8297,7 @@ func (m *MockGCTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockGCTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockGCTask)(nil).SetMaxRetry), arg0)
 }
@@ -8309,7 +8309,7 @@ func (m *MockGCTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockGCTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockGCTask)(nil).SetPriority), arg0)
 }
@@ -8321,7 +8321,7 @@ func (m *MockGCTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockGCTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockGCTask)(nil).SetRetry), arg0)
 }
@@ -8333,7 +8333,7 @@ func (m *MockGCTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockGCTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockGCTask)(nil).SetTimeout), arg0)
 }
@@ -8345,7 +8345,7 @@ func (m *MockGCTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockGCTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockGCTask)(nil).SetUpdateTime), arg0)
 }
@@ -8357,7 +8357,7 @@ func (m *MockGCTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockGCTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockGCTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockGCTask)(nil).SetUserAddress), arg0)
 }
@@ -8406,7 +8406,7 @@ func (m *MockGCObjectTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockGCObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockGCObjectTask)(nil).AppendLog), log)
 }
@@ -8711,7 +8711,7 @@ func (m *MockGCObjectTask) InitGCObjectTask(priority TPriority, start, end uint6
 }
 
 // InitGCObjectTask indicates an expected call of InitGCObjectTask.
-func (mr *MockGCObjectTaskMockRecorder) InitGCObjectTask(priority, start, end, timeout any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) InitGCObjectTask(priority, start, end, timeout interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGCObjectTask", reflect.TypeOf((*MockGCObjectTask)(nil).InitGCObjectTask), priority, start, end, timeout)
 }
@@ -8737,7 +8737,7 @@ func (m *MockGCObjectTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockGCObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockGCObjectTask)(nil).SetAddress), arg0)
 }
@@ -8749,7 +8749,7 @@ func (m *MockGCObjectTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockGCObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockGCObjectTask)(nil).SetCreateTime), arg0)
 }
@@ -8761,7 +8761,7 @@ func (m *MockGCObjectTask) SetCurrentBlockNumber(arg0 uint64) {
 }
 
 // SetCurrentBlockNumber indicates an expected call of SetCurrentBlockNumber.
-func (mr *MockGCObjectTaskMockRecorder) SetCurrentBlockNumber(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetCurrentBlockNumber(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCurrentBlockNumber", reflect.TypeOf((*MockGCObjectTask)(nil).SetCurrentBlockNumber), arg0)
 }
@@ -8773,7 +8773,7 @@ func (m *MockGCObjectTask) SetEndBlockNumber(arg0 uint64) {
 }
 
 // SetEndBlockNumber indicates an expected call of SetEndBlockNumber.
-func (mr *MockGCObjectTaskMockRecorder) SetEndBlockNumber(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetEndBlockNumber(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEndBlockNumber", reflect.TypeOf((*MockGCObjectTask)(nil).SetEndBlockNumber), arg0)
 }
@@ -8785,7 +8785,7 @@ func (m *MockGCObjectTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockGCObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockGCObjectTask)(nil).SetError), arg0)
 }
@@ -8797,7 +8797,7 @@ func (m *MockGCObjectTask) SetGCObjectProgress(arg0, arg1 uint64) {
 }
 
 // SetGCObjectProgress indicates an expected call of SetGCObjectProgress.
-func (mr *MockGCObjectTaskMockRecorder) SetGCObjectProgress(arg0, arg1 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetGCObjectProgress(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCObjectProgress", reflect.TypeOf((*MockGCObjectTask)(nil).SetGCObjectProgress), arg0, arg1)
 }
@@ -8809,7 +8809,7 @@ func (m *MockGCObjectTask) SetLastDeletedObjectId(arg0 uint64) {
 }
 
 // SetLastDeletedObjectId indicates an expected call of SetLastDeletedObjectId.
-func (mr *MockGCObjectTaskMockRecorder) SetLastDeletedObjectId(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetLastDeletedObjectId(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastDeletedObjectId", reflect.TypeOf((*MockGCObjectTask)(nil).SetLastDeletedObjectId), arg0)
 }
@@ -8821,7 +8821,7 @@ func (m *MockGCObjectTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockGCObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockGCObjectTask)(nil).SetLogs), logs)
 }
@@ -8833,7 +8833,7 @@ func (m *MockGCObjectTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockGCObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockGCObjectTask)(nil).SetMaxRetry), arg0)
 }
@@ -8845,7 +8845,7 @@ func (m *MockGCObjectTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockGCObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockGCObjectTask)(nil).SetPriority), arg0)
 }
@@ -8857,7 +8857,7 @@ func (m *MockGCObjectTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockGCObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockGCObjectTask)(nil).SetRetry), arg0)
 }
@@ -8869,7 +8869,7 @@ func (m *MockGCObjectTask) SetStartBlockNumber(arg0 uint64) {
 }
 
 // SetStartBlockNumber indicates an expected call of SetStartBlockNumber.
-func (mr *MockGCObjectTaskMockRecorder) SetStartBlockNumber(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetStartBlockNumber(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStartBlockNumber", reflect.TypeOf((*MockGCObjectTask)(nil).SetStartBlockNumber), arg0)
 }
@@ -8881,7 +8881,7 @@ func (m *MockGCObjectTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockGCObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockGCObjectTask)(nil).SetTimeout), arg0)
 }
@@ -8893,7 +8893,7 @@ func (m *MockGCObjectTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockGCObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockGCObjectTask)(nil).SetUpdateTime), arg0)
 }
@@ -8905,7 +8905,7 @@ func (m *MockGCObjectTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockGCObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockGCObjectTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockGCObjectTask)(nil).SetUserAddress), arg0)
 }
@@ -8954,7 +8954,7 @@ func (m *MockGCZombiePieceTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockGCZombiePieceTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockGCZombiePieceTask)(nil).AppendLog), log)
 }
@@ -9057,19 +9057,75 @@ func (mr *MockGCZombiePieceTaskMockRecorder) GetCreateTime() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCreateTime", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetCreateTime))
 }
 
-// GetGCZombiePieceStatus mocks base method.
-func (m *MockGCZombiePieceTask) GetGCZombiePieceStatus() (uint64, uint64) {
+// GetCurrentBlockNumber mocks base method.
+func (m *MockGCZombiePieceTask) GetCurrentBlockNumber() uint64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGCZombiePieceStatus")
+	ret := m.ctrl.Call(m, "GetCurrentBlockNumber")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetCurrentBlockNumber indicates an expected call of GetCurrentBlockNumber.
+func (mr *MockGCZombiePieceTaskMockRecorder) GetCurrentBlockNumber() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentBlockNumber", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetCurrentBlockNumber))
+}
+
+// GetEndBlockNumber mocks base method.
+func (m *MockGCZombiePieceTask) GetEndBlockNumber() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEndBlockNumber")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetEndBlockNumber indicates an expected call of GetEndBlockNumber.
+func (mr *MockGCZombiePieceTaskMockRecorder) GetEndBlockNumber() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEndBlockNumber", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetEndBlockNumber))
+}
+
+// GetEndObjectId mocks base method.
+func (m *MockGCZombiePieceTask) GetEndObjectId() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEndObjectId")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetEndObjectId indicates an expected call of GetEndObjectId.
+func (mr *MockGCZombiePieceTaskMockRecorder) GetEndObjectId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEndObjectId", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetEndObjectId))
+}
+
+// GetGCObjectProgress mocks base method.
+func (m *MockGCZombiePieceTask) GetGCObjectProgress() (uint64, uint64) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGCObjectProgress")
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(uint64)
 	return ret0, ret1
 }
 
-// GetGCZombiePieceStatus indicates an expected call of GetGCZombiePieceStatus.
-func (mr *MockGCZombiePieceTaskMockRecorder) GetGCZombiePieceStatus() *gomock.Call {
+// GetGCObjectProgress indicates an expected call of GetGCObjectProgress.
+func (mr *MockGCZombiePieceTaskMockRecorder) GetGCObjectProgress() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCZombiePieceStatus", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetGCZombiePieceStatus))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCObjectProgress", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetGCObjectProgress))
+}
+
+// GetLastDeletedObjectId mocks base method.
+func (m *MockGCZombiePieceTask) GetLastDeletedObjectId() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLastDeletedObjectId")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetLastDeletedObjectId indicates an expected call of GetLastDeletedObjectId.
+func (mr *MockGCZombiePieceTaskMockRecorder) GetLastDeletedObjectId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastDeletedObjectId", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetLastDeletedObjectId))
 }
 
 // GetLogs mocks base method.
@@ -9126,6 +9182,34 @@ func (m *MockGCZombiePieceTask) GetRetry() int64 {
 func (mr *MockGCZombiePieceTaskMockRecorder) GetRetry() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRetry", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetRetry))
+}
+
+// GetStartBlockNumber mocks base method.
+func (m *MockGCZombiePieceTask) GetStartBlockNumber() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStartBlockNumber")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetStartBlockNumber indicates an expected call of GetStartBlockNumber.
+func (mr *MockGCZombiePieceTaskMockRecorder) GetStartBlockNumber() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStartBlockNumber", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetStartBlockNumber))
+}
+
+// GetStartObjectId mocks base method.
+func (m *MockGCZombiePieceTask) GetStartObjectId() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStartObjectId")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetStartObjectId indicates an expected call of GetStartObjectId.
+func (mr *MockGCZombiePieceTaskMockRecorder) GetStartObjectId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStartObjectId", reflect.TypeOf((*MockGCZombiePieceTask)(nil).GetStartObjectId))
 }
 
 // GetTimeout mocks base method.
@@ -9196,6 +9280,18 @@ func (mr *MockGCZombiePieceTaskMockRecorder) Info() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockGCZombiePieceTask)(nil).Info))
 }
 
+// InitGCZombiePieceTask mocks base method.
+func (m *MockGCZombiePieceTask) InitGCZombiePieceTask(priority TPriority, start, end uint64, timeout int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "InitGCZombiePieceTask", priority, start, end, timeout)
+}
+
+// InitGCZombiePieceTask indicates an expected call of InitGCZombiePieceTask.
+func (mr *MockGCZombiePieceTaskMockRecorder) InitGCZombiePieceTask(priority, start, end, timeout interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGCZombiePieceTask", reflect.TypeOf((*MockGCZombiePieceTask)(nil).InitGCZombiePieceTask), priority, start, end, timeout)
+}
+
 // Key mocks base method.
 func (m *MockGCZombiePieceTask) Key() TKey {
 	m.ctrl.T.Helper()
@@ -9217,7 +9313,7 @@ func (m *MockGCZombiePieceTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetAddress), arg0)
 }
@@ -9229,9 +9325,45 @@ func (m *MockGCZombiePieceTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetCreateTime), arg0)
+}
+
+// SetCurrentBlockNumber mocks base method.
+func (m *MockGCZombiePieceTask) SetCurrentBlockNumber(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCurrentBlockNumber", arg0)
+}
+
+// SetCurrentBlockNumber indicates an expected call of SetCurrentBlockNumber.
+func (mr *MockGCZombiePieceTaskMockRecorder) SetCurrentBlockNumber(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCurrentBlockNumber", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetCurrentBlockNumber), arg0)
+}
+
+// SetEndBlockNumber mocks base method.
+func (m *MockGCZombiePieceTask) SetEndBlockNumber(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetEndBlockNumber", arg0)
+}
+
+// SetEndBlockNumber indicates an expected call of SetEndBlockNumber.
+func (mr *MockGCZombiePieceTaskMockRecorder) SetEndBlockNumber(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEndBlockNumber", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetEndBlockNumber), arg0)
+}
+
+// SetEndObjectID mocks base method.
+func (m *MockGCZombiePieceTask) SetEndObjectID(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetEndObjectID", arg0)
+}
+
+// SetEndObjectID indicates an expected call of SetEndObjectID.
+func (mr *MockGCZombiePieceTaskMockRecorder) SetEndObjectID(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEndObjectID", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetEndObjectID), arg0)
 }
 
 // SetError mocks base method.
@@ -9241,21 +9373,33 @@ func (m *MockGCZombiePieceTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetError), arg0)
 }
 
-// SetGCZombiePieceStatus mocks base method.
-func (m *MockGCZombiePieceTask) SetGCZombiePieceStatus(arg0, arg1 uint64) {
+// SetGCObjectProgress mocks base method.
+func (m *MockGCZombiePieceTask) SetGCObjectProgress(arg0, arg1 uint64) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetGCZombiePieceStatus", arg0, arg1)
+	m.ctrl.Call(m, "SetGCObjectProgress", arg0, arg1)
 }
 
-// SetGCZombiePieceStatus indicates an expected call of SetGCZombiePieceStatus.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetGCZombiePieceStatus(arg0, arg1 any) *gomock.Call {
+// SetGCObjectProgress indicates an expected call of SetGCObjectProgress.
+func (mr *MockGCZombiePieceTaskMockRecorder) SetGCObjectProgress(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCZombiePieceStatus", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetGCZombiePieceStatus), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCObjectProgress", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetGCObjectProgress), arg0, arg1)
+}
+
+// SetLastDeletedObjectId mocks base method.
+func (m *MockGCZombiePieceTask) SetLastDeletedObjectId(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLastDeletedObjectId", arg0)
+}
+
+// SetLastDeletedObjectId indicates an expected call of SetLastDeletedObjectId.
+func (mr *MockGCZombiePieceTaskMockRecorder) SetLastDeletedObjectId(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastDeletedObjectId", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetLastDeletedObjectId), arg0)
 }
 
 // SetLogs mocks base method.
@@ -9265,7 +9409,7 @@ func (m *MockGCZombiePieceTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetLogs), logs)
 }
@@ -9277,7 +9421,7 @@ func (m *MockGCZombiePieceTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetMaxRetry), arg0)
 }
@@ -9289,7 +9433,7 @@ func (m *MockGCZombiePieceTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetPriority), arg0)
 }
@@ -9301,9 +9445,33 @@ func (m *MockGCZombiePieceTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetRetry), arg0)
+}
+
+// SetStartBlockNumber mocks base method.
+func (m *MockGCZombiePieceTask) SetStartBlockNumber(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetStartBlockNumber", arg0)
+}
+
+// SetStartBlockNumber indicates an expected call of SetStartBlockNumber.
+func (mr *MockGCZombiePieceTaskMockRecorder) SetStartBlockNumber(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStartBlockNumber", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetStartBlockNumber), arg0)
+}
+
+// SetStartObjectID mocks base method.
+func (m *MockGCZombiePieceTask) SetStartObjectID(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetStartObjectID", arg0)
+}
+
+// SetStartObjectID indicates an expected call of SetStartObjectID.
+func (mr *MockGCZombiePieceTaskMockRecorder) SetStartObjectID(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStartObjectID", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetStartObjectID), arg0)
 }
 
 // SetTimeout mocks base method.
@@ -9313,7 +9481,7 @@ func (m *MockGCZombiePieceTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetTimeout), arg0)
 }
@@ -9325,7 +9493,7 @@ func (m *MockGCZombiePieceTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetUpdateTime), arg0)
 }
@@ -9337,7 +9505,7 @@ func (m *MockGCZombiePieceTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockGCZombiePieceTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockGCZombiePieceTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockGCZombiePieceTask)(nil).SetUserAddress), arg0)
 }
@@ -9386,7 +9554,7 @@ func (m *MockGCMetaTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockGCMetaTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockGCMetaTask)(nil).AppendLog), log)
 }
@@ -9649,7 +9817,7 @@ func (m *MockGCMetaTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockGCMetaTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockGCMetaTask)(nil).SetAddress), arg0)
 }
@@ -9661,7 +9829,7 @@ func (m *MockGCMetaTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockGCMetaTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockGCMetaTask)(nil).SetCreateTime), arg0)
 }
@@ -9673,7 +9841,7 @@ func (m *MockGCMetaTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockGCMetaTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockGCMetaTask)(nil).SetError), arg0)
 }
@@ -9685,7 +9853,7 @@ func (m *MockGCMetaTask) SetGCMetaStatus(arg0, arg1 uint64) {
 }
 
 // SetGCMetaStatus indicates an expected call of SetGCMetaStatus.
-func (mr *MockGCMetaTaskMockRecorder) SetGCMetaStatus(arg0, arg1 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetGCMetaStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGCMetaStatus", reflect.TypeOf((*MockGCMetaTask)(nil).SetGCMetaStatus), arg0, arg1)
 }
@@ -9697,7 +9865,7 @@ func (m *MockGCMetaTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockGCMetaTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockGCMetaTask)(nil).SetLogs), logs)
 }
@@ -9709,7 +9877,7 @@ func (m *MockGCMetaTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockGCMetaTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockGCMetaTask)(nil).SetMaxRetry), arg0)
 }
@@ -9721,7 +9889,7 @@ func (m *MockGCMetaTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockGCMetaTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockGCMetaTask)(nil).SetPriority), arg0)
 }
@@ -9733,7 +9901,7 @@ func (m *MockGCMetaTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockGCMetaTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockGCMetaTask)(nil).SetRetry), arg0)
 }
@@ -9745,7 +9913,7 @@ func (m *MockGCMetaTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockGCMetaTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockGCMetaTask)(nil).SetTimeout), arg0)
 }
@@ -9757,7 +9925,7 @@ func (m *MockGCMetaTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockGCMetaTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockGCMetaTask)(nil).SetUpdateTime), arg0)
 }
@@ -9769,7 +9937,7 @@ func (m *MockGCMetaTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockGCMetaTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockGCMetaTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockGCMetaTask)(nil).SetUserAddress), arg0)
 }
@@ -9818,7 +9986,7 @@ func (m *MockRecoveryPieceTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockRecoveryPieceTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockRecoveryPieceTask)(nil).AppendLog), log)
 }
@@ -10150,7 +10318,7 @@ func (m *MockRecoveryPieceTask) InitRecoverPieceTask(object *types0.ObjectInfo, 
 }
 
 // InitRecoverPieceTask indicates an expected call of InitRecoverPieceTask.
-func (mr *MockRecoveryPieceTaskMockRecorder) InitRecoverPieceTask(object, params, priority, pieceIdx, ecIdx, pieceSize, timeout, retry any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) InitRecoverPieceTask(object, params, priority, pieceIdx, ecIdx, pieceSize, timeout, retry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitRecoverPieceTask", reflect.TypeOf((*MockRecoveryPieceTask)(nil).InitRecoverPieceTask), object, params, priority, pieceIdx, ecIdx, pieceSize, timeout, retry)
 }
@@ -10176,7 +10344,7 @@ func (m *MockRecoveryPieceTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetAddress), arg0)
 }
@@ -10188,7 +10356,7 @@ func (m *MockRecoveryPieceTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetCreateTime), arg0)
 }
@@ -10200,7 +10368,7 @@ func (m *MockRecoveryPieceTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetError), arg0)
 }
@@ -10212,7 +10380,7 @@ func (m *MockRecoveryPieceTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetLogs), logs)
 }
@@ -10224,7 +10392,7 @@ func (m *MockRecoveryPieceTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetMaxRetry), arg0)
 }
@@ -10236,7 +10404,7 @@ func (m *MockRecoveryPieceTask) SetObjectInfo(arg0 *types0.ObjectInfo) {
 }
 
 // SetObjectInfo indicates an expected call of SetObjectInfo.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetObjectInfo(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetObjectInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetObjectInfo", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetObjectInfo), arg0)
 }
@@ -10248,7 +10416,7 @@ func (m *MockRecoveryPieceTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetPriority), arg0)
 }
@@ -10272,7 +10440,7 @@ func (m *MockRecoveryPieceTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetRetry), arg0)
 }
@@ -10284,7 +10452,7 @@ func (m *MockRecoveryPieceTask) SetSignature(arg0 []byte) {
 }
 
 // SetSignature indicates an expected call of SetSignature.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetSignature(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetSignature(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSignature", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetSignature), arg0)
 }
@@ -10296,7 +10464,7 @@ func (m *MockRecoveryPieceTask) SetStorageParams(arg0 *types0.Params) {
 }
 
 // SetStorageParams indicates an expected call of SetStorageParams.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetStorageParams(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetStorageParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStorageParams", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetStorageParams), arg0)
 }
@@ -10308,7 +10476,7 @@ func (m *MockRecoveryPieceTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetTimeout), arg0)
 }
@@ -10320,7 +10488,7 @@ func (m *MockRecoveryPieceTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetUpdateTime), arg0)
 }
@@ -10332,7 +10500,7 @@ func (m *MockRecoveryPieceTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockRecoveryPieceTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockRecoveryPieceTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockRecoveryPieceTask)(nil).SetUserAddress), arg0)
 }
@@ -10381,7 +10549,7 @@ func (m *MockMigrateGVGTask) AppendLog(log string) {
 }
 
 // AppendLog indicates an expected call of AppendLog.
-func (mr *MockMigrateGVGTaskMockRecorder) AppendLog(log any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockMigrateGVGTask)(nil).AppendLog), log)
 }
@@ -10741,7 +10909,7 @@ func (m *MockMigrateGVGTask) InitMigrateGVGTask(priority TPriority, bucketID uin
 }
 
 // InitMigrateGVGTask indicates an expected call of InitMigrateGVGTask.
-func (mr *MockMigrateGVGTaskMockRecorder) InitMigrateGVGTask(priority, bucketID, srcGvg, redundancyIndex, srcSP, timeout, retry any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) InitMigrateGVGTask(priority, bucketID, srcGvg, redundancyIndex, srcSP, timeout, retry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitMigrateGVGTask", reflect.TypeOf((*MockMigrateGVGTask)(nil).InitMigrateGVGTask), priority, bucketID, srcGvg, redundancyIndex, srcSP, timeout, retry)
 }
@@ -10767,7 +10935,7 @@ func (m *MockMigrateGVGTask) SetAddress(arg0 string) {
 }
 
 // SetAddress indicates an expected call of SetAddress.
-func (mr *MockMigrateGVGTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetAddress), arg0)
 }
@@ -10779,7 +10947,7 @@ func (m *MockMigrateGVGTask) SetBucketID(arg0 uint64) {
 }
 
 // SetBucketID indicates an expected call of SetBucketID.
-func (mr *MockMigrateGVGTaskMockRecorder) SetBucketID(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetBucketID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBucketID", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetBucketID), arg0)
 }
@@ -10791,7 +10959,7 @@ func (m *MockMigrateGVGTask) SetCreateTime(arg0 int64) {
 }
 
 // SetCreateTime indicates an expected call of SetCreateTime.
-func (mr *MockMigrateGVGTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetCreateTime), arg0)
 }
@@ -10803,7 +10971,7 @@ func (m *MockMigrateGVGTask) SetDestGvg(arg0 *types1.GlobalVirtualGroup) {
 }
 
 // SetDestGvg indicates an expected call of SetDestGvg.
-func (mr *MockMigrateGVGTaskMockRecorder) SetDestGvg(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetDestGvg(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDestGvg", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetDestGvg), arg0)
 }
@@ -10815,7 +10983,7 @@ func (m *MockMigrateGVGTask) SetError(arg0 error) {
 }
 
 // SetError indicates an expected call of SetError.
-func (mr *MockMigrateGVGTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetError), arg0)
 }
@@ -10827,7 +10995,7 @@ func (m *MockMigrateGVGTask) SetFinished(arg0 bool) {
 }
 
 // SetFinished indicates an expected call of SetFinished.
-func (mr *MockMigrateGVGTaskMockRecorder) SetFinished(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetFinished(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFinished", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetFinished), arg0)
 }
@@ -10839,7 +11007,7 @@ func (m *MockMigrateGVGTask) SetLastMigratedObjectID(arg0 uint64) {
 }
 
 // SetLastMigratedObjectID indicates an expected call of SetLastMigratedObjectID.
-func (mr *MockMigrateGVGTaskMockRecorder) SetLastMigratedObjectID(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetLastMigratedObjectID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastMigratedObjectID", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetLastMigratedObjectID), arg0)
 }
@@ -10851,7 +11019,7 @@ func (m *MockMigrateGVGTask) SetLogs(logs string) {
 }
 
 // SetLogs indicates an expected call of SetLogs.
-func (mr *MockMigrateGVGTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetLogs), logs)
 }
@@ -10863,7 +11031,7 @@ func (m *MockMigrateGVGTask) SetMaxRetry(arg0 int64) {
 }
 
 // SetMaxRetry indicates an expected call of SetMaxRetry.
-func (mr *MockMigrateGVGTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetMaxRetry), arg0)
 }
@@ -10875,7 +11043,7 @@ func (m *MockMigrateGVGTask) SetMigratedBytesSize(arg0 uint64) {
 }
 
 // SetMigratedBytesSize indicates an expected call of SetMigratedBytesSize.
-func (mr *MockMigrateGVGTaskMockRecorder) SetMigratedBytesSize(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetMigratedBytesSize(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMigratedBytesSize", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetMigratedBytesSize), arg0)
 }
@@ -10887,7 +11055,7 @@ func (m *MockMigrateGVGTask) SetPriority(arg0 TPriority) {
 }
 
 // SetPriority indicates an expected call of SetPriority.
-func (mr *MockMigrateGVGTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetPriority), arg0)
 }
@@ -10899,7 +11067,7 @@ func (m *MockMigrateGVGTask) SetRedundancyIdx(arg0 int32) {
 }
 
 // SetRedundancyIdx indicates an expected call of SetRedundancyIdx.
-func (mr *MockMigrateGVGTaskMockRecorder) SetRedundancyIdx(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetRedundancyIdx(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRedundancyIdx", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetRedundancyIdx), arg0)
 }
@@ -10911,7 +11079,7 @@ func (m *MockMigrateGVGTask) SetRetry(arg0 int) {
 }
 
 // SetRetry indicates an expected call of SetRetry.
-func (mr *MockMigrateGVGTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetRetry), arg0)
 }
@@ -10923,7 +11091,7 @@ func (m *MockMigrateGVGTask) SetSignature(arg0 []byte) {
 }
 
 // SetSignature indicates an expected call of SetSignature.
-func (mr *MockMigrateGVGTaskMockRecorder) SetSignature(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetSignature(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSignature", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetSignature), arg0)
 }
@@ -10935,7 +11103,7 @@ func (m *MockMigrateGVGTask) SetSrcGvg(arg0 *types1.GlobalVirtualGroup) {
 }
 
 // SetSrcGvg indicates an expected call of SetSrcGvg.
-func (mr *MockMigrateGVGTaskMockRecorder) SetSrcGvg(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetSrcGvg(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSrcGvg", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetSrcGvg), arg0)
 }
@@ -10947,7 +11115,7 @@ func (m *MockMigrateGVGTask) SetSrcSp(arg0 *types.StorageProvider) {
 }
 
 // SetSrcSp indicates an expected call of SetSrcSp.
-func (mr *MockMigrateGVGTaskMockRecorder) SetSrcSp(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetSrcSp(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSrcSp", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetSrcSp), arg0)
 }
@@ -10959,7 +11127,7 @@ func (m *MockMigrateGVGTask) SetTimeout(arg0 int64) {
 }
 
 // SetTimeout indicates an expected call of SetTimeout.
-func (mr *MockMigrateGVGTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetTimeout), arg0)
 }
@@ -10971,7 +11139,7 @@ func (m *MockMigrateGVGTask) SetUpdateTime(arg0 int64) {
 }
 
 // SetUpdateTime indicates an expected call of SetUpdateTime.
-func (mr *MockMigrateGVGTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetUpdateTime), arg0)
 }
@@ -10983,7 +11151,7 @@ func (m *MockMigrateGVGTask) SetUserAddress(arg0 string) {
 }
 
 // SetUserAddress indicates an expected call of SetUserAddress.
-func (mr *MockMigrateGVGTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+func (mr *MockMigrateGVGTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockMigrateGVGTask)(nil).SetUserAddress), arg0)
 }
@@ -11000,4 +11168,447 @@ func (m *MockMigrateGVGTask) Type() TType {
 func (mr *MockMigrateGVGTaskMockRecorder) Type() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockMigrateGVGTask)(nil).Type))
+}
+
+// MockGCBucketMigrationTask is a mock of GCBucketMigrationTask interface.
+type MockGCBucketMigrationTask struct {
+	ctrl     *gomock.Controller
+	recorder *MockGCBucketMigrationTaskMockRecorder
+}
+
+// MockGCBucketMigrationTaskMockRecorder is the mock recorder for MockGCBucketMigrationTask.
+type MockGCBucketMigrationTaskMockRecorder struct {
+	mock *MockGCBucketMigrationTask
+}
+
+// NewMockGCBucketMigrationTask creates a new mock instance.
+func NewMockGCBucketMigrationTask(ctrl *gomock.Controller) *MockGCBucketMigrationTask {
+	mock := &MockGCBucketMigrationTask{ctrl: ctrl}
+	mock.recorder = &MockGCBucketMigrationTaskMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockGCBucketMigrationTask) EXPECT() *MockGCBucketMigrationTaskMockRecorder {
+	return m.recorder
+}
+
+// AppendLog mocks base method.
+func (m *MockGCBucketMigrationTask) AppendLog(log string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AppendLog", log)
+}
+
+// AppendLog indicates an expected call of AppendLog.
+func (mr *MockGCBucketMigrationTaskMockRecorder) AppendLog(log interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).AppendLog), log)
+}
+
+// Error mocks base method.
+func (m *MockGCBucketMigrationTask) Error() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Error")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Error indicates an expected call of Error.
+func (mr *MockGCBucketMigrationTaskMockRecorder) Error() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).Error))
+}
+
+// EstimateLimit mocks base method.
+func (m *MockGCBucketMigrationTask) EstimateLimit() rcmgr.Limit {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EstimateLimit")
+	ret0, _ := ret[0].(rcmgr.Limit)
+	return ret0
+}
+
+// EstimateLimit indicates an expected call of EstimateLimit.
+func (mr *MockGCBucketMigrationTaskMockRecorder) EstimateLimit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstimateLimit", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).EstimateLimit))
+}
+
+// ExceedRetry mocks base method.
+func (m *MockGCBucketMigrationTask) ExceedRetry() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExceedRetry")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// ExceedRetry indicates an expected call of ExceedRetry.
+func (mr *MockGCBucketMigrationTaskMockRecorder) ExceedRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExceedRetry", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).ExceedRetry))
+}
+
+// ExceedTimeout mocks base method.
+func (m *MockGCBucketMigrationTask) ExceedTimeout() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExceedTimeout")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// ExceedTimeout indicates an expected call of ExceedTimeout.
+func (mr *MockGCBucketMigrationTaskMockRecorder) ExceedTimeout() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExceedTimeout", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).ExceedTimeout))
+}
+
+// Expired mocks base method.
+func (m *MockGCBucketMigrationTask) Expired() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Expired")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Expired indicates an expected call of Expired.
+func (mr *MockGCBucketMigrationTaskMockRecorder) Expired() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Expired", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).Expired))
+}
+
+// GetAddress mocks base method.
+func (m *MockGCBucketMigrationTask) GetAddress() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAddress")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetAddress indicates an expected call of GetAddress.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetAddress))
+}
+
+// GetBucketID mocks base method.
+func (m *MockGCBucketMigrationTask) GetBucketID() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketID")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetBucketID indicates an expected call of GetBucketID.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetBucketID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketID", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetBucketID))
+}
+
+// GetCreateTime mocks base method.
+func (m *MockGCBucketMigrationTask) GetCreateTime() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCreateTime")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetCreateTime indicates an expected call of GetCreateTime.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetCreateTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCreateTime", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetCreateTime))
+}
+
+// GetLogs mocks base method.
+func (m *MockGCBucketMigrationTask) GetLogs() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLogs")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetLogs indicates an expected call of GetLogs.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetLogs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLogs", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetLogs))
+}
+
+// GetMaxRetry mocks base method.
+func (m *MockGCBucketMigrationTask) GetMaxRetry() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxRetry")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetMaxRetry indicates an expected call of GetMaxRetry.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetMaxRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxRetry", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetMaxRetry))
+}
+
+// GetPriority mocks base method.
+func (m *MockGCBucketMigrationTask) GetPriority() TPriority {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPriority")
+	ret0, _ := ret[0].(TPriority)
+	return ret0
+}
+
+// GetPriority indicates an expected call of GetPriority.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetPriority() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriority", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetPriority))
+}
+
+// GetRetry mocks base method.
+func (m *MockGCBucketMigrationTask) GetRetry() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRetry")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetRetry indicates an expected call of GetRetry.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRetry", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetRetry))
+}
+
+// GetTimeout mocks base method.
+func (m *MockGCBucketMigrationTask) GetTimeout() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTimeout")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetTimeout indicates an expected call of GetTimeout.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetTimeout() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeout", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetTimeout))
+}
+
+// GetUpdateTime mocks base method.
+func (m *MockGCBucketMigrationTask) GetUpdateTime() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUpdateTime")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetUpdateTime indicates an expected call of GetUpdateTime.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetUpdateTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUpdateTime", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetUpdateTime))
+}
+
+// GetUserAddress mocks base method.
+func (m *MockGCBucketMigrationTask) GetUserAddress() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserAddress")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetUserAddress indicates an expected call of GetUserAddress.
+func (mr *MockGCBucketMigrationTaskMockRecorder) GetUserAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAddress", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).GetUserAddress))
+}
+
+// IncRetry mocks base method.
+func (m *MockGCBucketMigrationTask) IncRetry() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IncRetry")
+}
+
+// IncRetry indicates an expected call of IncRetry.
+func (mr *MockGCBucketMigrationTaskMockRecorder) IncRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncRetry", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).IncRetry))
+}
+
+// Info mocks base method.
+func (m *MockGCBucketMigrationTask) Info() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Info")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Info indicates an expected call of Info.
+func (mr *MockGCBucketMigrationTaskMockRecorder) Info() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).Info))
+}
+
+// InitGCBucketMigrationTask mocks base method.
+func (m *MockGCBucketMigrationTask) InitGCBucketMigrationTask(priority TPriority, bucketID uint64, timeout, retry int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "InitGCBucketMigrationTask", priority, bucketID, timeout, retry)
+}
+
+// InitGCBucketMigrationTask indicates an expected call of InitGCBucketMigrationTask.
+func (mr *MockGCBucketMigrationTaskMockRecorder) InitGCBucketMigrationTask(priority, bucketID, timeout, retry interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGCBucketMigrationTask", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).InitGCBucketMigrationTask), priority, bucketID, timeout, retry)
+}
+
+// Key mocks base method.
+func (m *MockGCBucketMigrationTask) Key() TKey {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Key")
+	ret0, _ := ret[0].(TKey)
+	return ret0
+}
+
+// Key indicates an expected call of Key.
+func (mr *MockGCBucketMigrationTaskMockRecorder) Key() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Key", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).Key))
+}
+
+// SetAddress mocks base method.
+func (m *MockGCBucketMigrationTask) SetAddress(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetAddress", arg0)
+}
+
+// SetAddress indicates an expected call of SetAddress.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetAddress(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetAddress), arg0)
+}
+
+// SetBucketID mocks base method.
+func (m *MockGCBucketMigrationTask) SetBucketID(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetBucketID", arg0)
+}
+
+// SetBucketID indicates an expected call of SetBucketID.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetBucketID(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBucketID", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetBucketID), arg0)
+}
+
+// SetCreateTime mocks base method.
+func (m *MockGCBucketMigrationTask) SetCreateTime(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCreateTime", arg0)
+}
+
+// SetCreateTime indicates an expected call of SetCreateTime.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetCreateTime(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetCreateTime), arg0)
+}
+
+// SetError mocks base method.
+func (m *MockGCBucketMigrationTask) SetError(arg0 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetError", arg0)
+}
+
+// SetError indicates an expected call of SetError.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetError(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetError), arg0)
+}
+
+// SetLogs mocks base method.
+func (m *MockGCBucketMigrationTask) SetLogs(logs string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLogs", logs)
+}
+
+// SetLogs indicates an expected call of SetLogs.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetLogs(logs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetLogs), logs)
+}
+
+// SetMaxRetry mocks base method.
+func (m *MockGCBucketMigrationTask) SetMaxRetry(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMaxRetry", arg0)
+}
+
+// SetMaxRetry indicates an expected call of SetMaxRetry.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetMaxRetry(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetMaxRetry), arg0)
+}
+
+// SetPriority mocks base method.
+func (m *MockGCBucketMigrationTask) SetPriority(arg0 TPriority) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPriority", arg0)
+}
+
+// SetPriority indicates an expected call of SetPriority.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetPriority), arg0)
+}
+
+// SetRetry mocks base method.
+func (m *MockGCBucketMigrationTask) SetRetry(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetRetry", arg0)
+}
+
+// SetRetry indicates an expected call of SetRetry.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetRetry(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetRetry), arg0)
+}
+
+// SetTimeout mocks base method.
+func (m *MockGCBucketMigrationTask) SetTimeout(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTimeout", arg0)
+}
+
+// SetTimeout indicates an expected call of SetTimeout.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetTimeout(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetTimeout), arg0)
+}
+
+// SetUpdateTime mocks base method.
+func (m *MockGCBucketMigrationTask) SetUpdateTime(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUpdateTime", arg0)
+}
+
+// SetUpdateTime indicates an expected call of SetUpdateTime.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetUpdateTime(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetUpdateTime), arg0)
+}
+
+// SetUserAddress mocks base method.
+func (m *MockGCBucketMigrationTask) SetUserAddress(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUserAddress", arg0)
+}
+
+// SetUserAddress indicates an expected call of SetUserAddress.
+func (mr *MockGCBucketMigrationTaskMockRecorder) SetUserAddress(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).SetUserAddress), arg0)
+}
+
+// Type mocks base method.
+func (m *MockGCBucketMigrationTask) Type() TType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Type")
+	ret0, _ := ret[0].(TType)
+	return ret0
+}
+
+// Type indicates an expected call of Type.
+func (mr *MockGCBucketMigrationTaskMockRecorder) Type() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockGCBucketMigrationTask)(nil).Type))
 }

@@ -64,20 +64,22 @@ type GfSpBaseApp struct {
 	replicateSpeed int64
 	receiveSpeed   int64
 
-	sealObjectTimeout int64
-	gcObjectTimeout   int64
-	gcZombieTimeout   int64
-	gcMetaTimeout     int64
-	migrateGVGTimeout int64
+	sealObjectTimeout        int64
+	gcObjectTimeout          int64
+	gcZombieTimeout          int64
+	gcMetaTimeout            int64
+	gcBucketMigrationTimeout int64
+	migrateGVGTimeout        int64
 
-	sealObjectRetry     int64
-	replicateRetry      int64
-	receiveConfirmRetry int64
-	gcObjectRetry       int64
-	gcZombieRetry       int64
-	gcMetaRetry         int64
-	recoveryRetry       int64
-	migrateGVGRetry     int64
+	sealObjectRetry        int64
+	replicateRetry         int64
+	receiveConfirmRetry    int64
+	gcObjectRetry          int64
+	gcZombieRetry          int64
+	gcMetaRetry            int64
+	gcBucketMigrationRetry int64
+	recoveryRetry          int64
+	migrateGVGRetry        int64
 }
 
 // AppID returns the GfSpBaseApp ID, the default value is prefix(gfsp) add

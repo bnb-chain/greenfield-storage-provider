@@ -33,13 +33,16 @@ const (
 	DefaultMaxIdleConns = 2048
 	// DefaultMaxOpenConns defines the default max number of open connections.
 	DefaultMaxOpenConns = 2048
+	// DefaultEnableTracePutEvent defines the default max number of open connections.
+	DefaultEnableTracePutEvent = true
 )
 
 var _ corespdb.SPDB = &SpDBImpl{}
 
 // SpDBImpl storage provider database, implements SPDB interface
 type SpDBImpl struct {
-	db *gorm.DB
+	db                  *gorm.DB
+	enableTracePutEvent bool
 }
 
 // NewSpDB return a database instance
@@ -50,7 +53,7 @@ func NewSpDB(config *config.SQLDBConfig) (*SpDBImpl, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SpDBImpl{db: db}, err
+	return &SpDBImpl{db: db, enableTracePutEvent: config.EnableTracePutEvent}, err
 }
 
 // RegisterStdDBStats registers std lib sql DB

@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
+	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -21,6 +22,11 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+)
+
+const (
+	mockBucketName = "mock-bucket-name"
+	mockObjectName = "mock-object-name"
 )
 
 func TestErrGfSpDBWithDetail(t *testing.T) {
@@ -535,6 +541,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 
 				m1 := consensus.NewMockConsensus(ctrl)
 				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				e.baseApp.SetConsensus(m1)
 				return e
 			},
@@ -563,6 +570,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m1 := consensus.NewMockConsensus(ctrl)
 				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
 					VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 10}}, nil).Times(1)
+				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				e.baseApp.SetConsensus(m1)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
@@ -602,6 +610,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m1 := consensus.NewMockConsensus(ctrl)
 				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
 					VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 10}}, nil).Times(1)
+				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				e.baseApp.SetConsensus(m1)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
@@ -633,26 +642,12 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(waitingGCObjects, uint64(0), nil).Times(1)
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
-					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil).Times(1)
-				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.GlobalVirtualGroup{
-					SecondarySpIds: []uint32{1}}, nil).Times(1)
 				e.baseApp.SetGfSpClient(m)
 
 				m1 := consensus.NewMockConsensus(ctrl)
-				m1.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
-					VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 10}}, nil).Times(1)
 				m1.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				e.baseApp.SetConsensus(m1)
 
-				m2 := piecestore.NewMockPieceOp(ctrl)
-				m2.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
-				e.baseApp.SetPieceOp(m2)
-
-				m3 := piecestore.NewMockPieceStore(ctrl)
-				m3.EXPECT().DeletePiece(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				e.baseApp.SetPieceStore(m3)
 				return e
 			},
 		},
@@ -711,13 +706,216 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 }
 
 func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
-	e := setup(t)
-	e.HandleGCZombiePieceTask(context.TODO(), nil)
+	cases := []struct {
+		name string
+		task coretask.GCZombiePieceTask
+		fn   func() *ExecuteModular
+	}{
+		{
+			name: "succeed to gc an zombie piece",
+			task: &gfsptask.GfSpGCZombiePieceTask{
+				Task: &gfsptask.GfSpTask{},
+			},
+			fn: func() *ExecuteModular {
+				e := setup(t)
+
+				ctrl := gomock.NewController(t)
+				m := gfspclient.NewMockGfSpClientAPI(ctrl)
+				waitingIntegrityPieces := []*corespdb.IntegrityMeta{
+					{
+						ObjectID:          1,
+						RedundancyIndex:   1,
+						IntegrityChecksum: []byte("mock integrity checksum"),
+						PieceChecksumList: [][]byte{[]byte{35, 13, 131, 88, 220, 142, 136, 144, 180, 197, 141, 238, 182, 41, 18, 238, 47,
+							32, 53, 122, 233, 42, 92, 200, 97, 185, 142, 104, 254, 49, 172, 181}},
+					},
+				}
+
+				objectInfo := &storagetypes.ObjectInfo{
+					ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Id: sdkmath.NewUint(1), BucketName: mockBucketName}
+
+				bucketInfo := &storagetypes.BucketInfo{Id: sdkmath.NewUint(1), BucketStatus: storagetypes.BUCKET_STATUS_CREATED}
+
+				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				m.EXPECT().GetObjectByID(gomock.Any(), gomock.Any()).Return(objectInfo, nil).AnyTimes()
+				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+					BucketInfo: bucketInfo}, nil).AnyTimes()
+				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.GlobalVirtualGroup{
+					PrimarySpId:    1,
+					SecondarySpIds: []uint32{2, 3, 4, 5, 6, 7}}, nil).Times(1)
+				e.baseApp.SetGfSpClient(m)
+
+				resourceMock := corercmgr.NewMockResourceManager(ctrl)
+				m1 := corercmgr.NewMockResourceScope(ctrl)
+				resourceMock.EXPECT().OpenService(gomock.Any()).DoAndReturn(func(svc string) (corercmgr.ResourceScope, error) {
+					return m1, nil
+				}).Times(1)
+				e.baseApp.SetResourceManager(resourceMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
+					{Id: 1, Endpoint: "endpoint"}}, nil).Times(1)
+				e.baseApp.SetConsensus(consensusMock)
+
+				m2 := piecestore.NewMockPieceOp(ctrl)
+				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				e.baseApp.SetPieceOp(m2)
+
+				m3 := piecestore.NewMockPieceStore(ctrl)
+				m3.EXPECT().DeletePiece(gomock.Any(), gomock.Any()).Return(nil).Times(2)
+				e.baseApp.SetPieceStore(m3)
+
+				m4 := corespdb.NewMockSPDB(ctrl)
+				m4.EXPECT().DeleteObjectIntegrity(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				m4.EXPECT().ListIntegrityMetaByObjectIDRange(gomock.Any(), gomock.Any(), gomock.Any()).Return(waitingIntegrityPieces, nil).AnyTimes()
+				m4.EXPECT().ListReplicatePieceChecksumByObjectIDRange(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+				e.baseApp.SetGfSpDB(m4)
+
+				e.statisticsOutputInterval = 1
+				err := e.Start(context.TODO())
+				assert.Equal(t, nil, err)
+
+				return e
+			},
+		},
+		{
+			name: "succeed to gc an zombie piece from piece hash",
+			task: &gfsptask.GfSpGCZombiePieceTask{
+				Task: &gfsptask.GfSpTask{},
+			},
+			fn: func() *ExecuteModular {
+				e := setup(t)
+
+				ctrl := gomock.NewController(t)
+				m := gfspclient.NewMockGfSpClientAPI(ctrl)
+				waitingGCPieces := []*corespdb.GCPieceMeta{
+					{
+						ObjectID:        1,
+						SegmentIndex:    0,
+						RedundancyIndex: 1,
+						PieceChecksum:   "mock integrity checksum",
+					},
+				}
+
+				objectInfo := &storagetypes.ObjectInfo{
+					ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Id: sdkmath.NewUint(1), BucketName: mockBucketName}
+
+				bucketInfo := &storagetypes.BucketInfo{Id: sdkmath.NewUint(1), BucketStatus: storagetypes.BUCKET_STATUS_CREATED}
+
+				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				m.EXPECT().GetObjectByID(gomock.Any(), gomock.Any()).Return(objectInfo, nil).AnyTimes()
+				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+					BucketInfo: bucketInfo}, nil).AnyTimes()
+				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.GlobalVirtualGroup{
+					PrimarySpId:    1,
+					SecondarySpIds: []uint32{2, 3, 4, 5, 6, 7}}, nil).Times(1)
+				e.baseApp.SetGfSpClient(m)
+
+				resourceMock := corercmgr.NewMockResourceManager(ctrl)
+				m1 := corercmgr.NewMockResourceScope(ctrl)
+				resourceMock.EXPECT().OpenService(gomock.Any()).DoAndReturn(func(svc string) (corercmgr.ResourceScope, error) {
+					return m1, nil
+				}).Times(1)
+				e.baseApp.SetResourceManager(resourceMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
+					{Id: 1, Endpoint: "endpoint"}}, nil).Times(1)
+				e.baseApp.SetConsensus(consensusMock)
+
+				m2 := piecestore.NewMockPieceOp(ctrl)
+				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				e.baseApp.SetPieceOp(m2)
+
+				m3 := piecestore.NewMockPieceStore(ctrl)
+				m3.EXPECT().DeletePiece(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				e.baseApp.SetPieceStore(m3)
+
+				m4 := corespdb.NewMockSPDB(ctrl)
+				m4.EXPECT().ListIntegrityMetaByObjectIDRange(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+				m4.EXPECT().ListReplicatePieceChecksumByObjectIDRange(gomock.Any(), gomock.Any()).Return(waitingGCPieces, nil).AnyTimes()
+				m4.EXPECT().DeleteReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				e.baseApp.SetGfSpDB(m4)
+
+				e.statisticsOutputInterval = 1
+				err := e.Start(context.TODO())
+				assert.Equal(t, nil, err)
+
+				return e
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fn().HandleGCZombiePieceTask(context.TODO(), tt.task)
+		})
+	}
 }
 
 func TestExecuteModular_HandleGCMetaTask(t *testing.T) {
-	e := setup(t)
-	e.HandleGCMetaTask(context.TODO(), nil)
+	cases := []struct {
+		name string
+		task coretask.GCMetaTask
+		fn   func() *ExecuteModular
+	}{
+		{
+			name: "succeed to gc an meta task",
+			task: &gfsptask.GfSpGCMetaTask{
+				Task: &gfsptask.GfSpTask{},
+			},
+			fn: func() *ExecuteModular {
+				e := setup(t)
+
+				ctrl := gomock.NewController(t)
+				m := gfspclient.NewMockGfSpClientAPI(ctrl)
+
+				objectInfo := &storagetypes.ObjectInfo{
+					ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Id: sdkmath.NewUint(1), BucketName: mockBucketName}
+
+				bucketInfo := &storagetypes.BucketInfo{Id: sdkmath.NewUint(1), BucketStatus: storagetypes.BUCKET_STATUS_CREATED}
+
+				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				m.EXPECT().GetObjectByID(gomock.Any(), gomock.Any()).Return(objectInfo, nil).AnyTimes()
+				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+					BucketInfo: bucketInfo}, nil).AnyTimes()
+				e.baseApp.SetGfSpClient(m)
+
+				resourceMock := corercmgr.NewMockResourceManager(ctrl)
+				m1 := corercmgr.NewMockResourceScope(ctrl)
+				resourceMock.EXPECT().OpenService(gomock.Any()).DoAndReturn(func(svc string) (corercmgr.ResourceScope, error) {
+					return m1, nil
+				}).Times(1)
+				e.baseApp.SetResourceManager(resourceMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
+					{Id: 1, Endpoint: "endpoint"}}, nil).Times(1)
+				e.baseApp.SetConsensus(consensusMock)
+
+				m2 := piecestore.NewMockPieceOp(ctrl)
+				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				e.baseApp.SetPieceOp(m2)
+
+				m4 := corespdb.NewMockSPDB(ctrl)
+				m4.EXPECT().DeleteExpiredReadRecord(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				m4.EXPECT().DeleteExpiredBucketTraffic(gomock.Any()).Return(nil).AnyTimes()
+				e.baseApp.SetGfSpDB(m4)
+
+				e.statisticsOutputInterval = 1
+				err := e.Start(context.TODO())
+				assert.Equal(t, nil, err)
+
+				return e
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fn().HandleGCMetaTask(context.TODO(), tt.task)
+		})
+	}
 }
 
 func TestExecuteModular_HandleRecoverPieceTaskFailure1(t *testing.T) {

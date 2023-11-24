@@ -59,6 +59,7 @@ type GfSpConfig struct {
 	BlockSyncer    BlockSyncerConfig
 	APIRateLimiter mwhttp.RateLimiterConfig
 	Manager        ManagerConfig
+	GC             GCConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -149,6 +150,9 @@ type ExecutorConfig struct {
 	MaxObjectMigrationRetry         int     `comment:"optional"`
 	ObjectMigrationRetryTimeout     int     `comment:"optional"`
 	EnableSkipFailedToMigrateObject bool    `comment:"optional"`
+	BucketTrafficKeepTimeDay        uint64  `comment:"optional"`
+	ReadRecordKeepTimeDay           uint64  `comment:"optional"`
+	ReadRecordDeleteLimit           uint64  `comment:"optional"`
 }
 
 type P2PConfig struct {
@@ -157,6 +161,23 @@ type P2PConfig struct {
 	P2PAntAddress string   `comment:"required"`
 	P2PBootstrap  []string `comment:"required"`
 	P2PPingPeriod int      `comment:"optional"`
+}
+
+type GCConfig struct {
+	// gc object
+	GCObjectTimeInterval      int    `comment:"optional"`
+	GCObjectBlockInterval     uint64 `comment:"optional"`
+	GCObjectSafeBlockDistance uint64 `comment:"optional"`
+
+	// gc zombie
+	EnableGCZombie                bool   `comment:"optional"`
+	GCZombieSafeObjectIDDistance  uint64 `comment:"optional"`
+	GCZombiePieceTimeInterval     int    `comment:"optional"`
+	GCZombiePieceObjectIDInterval uint64 `comment:"optional"`
+
+	// gc meta
+	EnableGCMeta       bool `comment:"optional"`
+	GCMetaTimeInterval int  `comment:"optional"`
 }
 
 type ParallelConfig struct {
@@ -169,18 +190,18 @@ type ParallelConfig struct {
 	GlobalReplicatePieceParallel      int    `comment:"optional"`
 	GlobalSealObjectParallel          int    `comment:"optional"`
 	GlobalReceiveObjectParallel       int    `comment:"optional"`
-	GlobalGCObjectParallel            int    `comment:"optional"`
-	GlobalGCZombieParallel            int    `comment:"optional"`
-	GlobalGCMetaParallel              int    `comment:"optional"`
 	GlobalRecoveryPieceParallel       int    `comment:"optional"`
 	GlobalMigrateGVGParallel          int    `comment:"optional"`
 	GlobalBackupTaskParallel          int    `comment:"optional"`
 	GlobalDownloadObjectTaskCacheSize int    `comment:"optional"`
 	GlobalChallengePieceTaskCacheSize int    `comment:"optional"`
-	GlobalBatchGcObjectTimeInterval   int    `comment:"optional"`
-	GlobalGcObjectBlockInterval       uint64 `comment:"optional"`
-	GlobalGcObjectSafeBlockDistance   uint64 `comment:"optional"`
 	GlobalSyncConsensusInfoInterval   uint64 `comment:"optional"`
+
+	// gc
+	GlobalGCObjectParallel          int `comment:"optional"`
+	GlobalGCBucketMigrationParallel int `comment:"optional"`
+	GlobalGCZombieParallel          int `comment:"optional"`
+	GlobalGCMetaParallel            int `comment:"optional"`
 
 	UploadObjectParallelPerNode         int   `comment:"optional"`
 	ReceivePieceParallelPerNode         int   `comment:"optional"`
@@ -203,15 +224,17 @@ type TaskConfig struct {
 	ReplicateTaskSpeed      int64 `comment:"optional"`
 	ReceiveTaskSpeed        int64 `comment:"optional"`
 	SealObjectTaskTimeout   int64 `comment:"optional"`
-	GcObjectTaskTimeout     int64 `comment:"optional"`
-	GcZombieTaskTimeout     int64 `comment:"optional"`
-	GcMetaTaskTimeout       int64 `comment:"optional"`
 	SealObjectTaskRetry     int64 `comment:"optional"`
 	ReplicateTaskRetry      int64 `comment:"optional"`
 	ReceiveConfirmTaskRetry int64 `comment:"optional"`
-	GcObjectTaskRetry       int64 `comment:"optional"`
-	GcZombieTaskRetry       int64 `comment:"optional"`
-	GcMetaTaskRetry         int64 `comment:"optional"`
+
+	// gc
+	GcObjectTaskTimeout int64 `comment:"optional"`
+	GcZombieTaskTimeout int64 `comment:"optional"`
+	GcMetaTaskTimeout   int64 `comment:"optional"`
+	GcObjectTaskRetry   int64 `comment:"optional"`
+	GcZombieTaskRetry   int64 `comment:"optional"`
+	GcMetaTaskRetry     int64 `comment:"optional"`
 }
 
 type MonitorConfig struct {

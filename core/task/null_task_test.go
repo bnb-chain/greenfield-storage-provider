@@ -37,8 +37,6 @@ func TestNullTask(t *testing.T) {
 	n.SetObjectInfo(nil)
 	n.GetStorageParams()
 	n.SetStorageParams(nil)
-	n.GetGCZombiePieceStatus()
-	n.SetGCZombiePieceStatus(0, 0)
 	n.GetGCMetaStatus()
 	n.SetGCMetaStatus(0, 0)
 	n.InitApprovalCreateBucketTask("", nil, nil, 0)

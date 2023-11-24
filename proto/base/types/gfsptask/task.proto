@@ -162,16 +162,16 @@ message GfSpGCObjectTask {
 
 message GfSpGCZombiePieceTask {
   GfSpTask task = 1;
-  uint64 object_id = 2;
-  uint64 delete_count = 3;
-  bool running = 4;
+  bool running = 2;
+  uint64 start_object_id = 3;
+  uint64 end_object_id = 4;
+  bool finished = 5;
 }
 
 message GfSpGCMetaTask {
   GfSpTask task = 1;
   uint64 current_idx = 2;
   uint64 delete_count = 3;
-  bool running = 4;
 }
 
 message GfSpMigrateGVGTask {
@@ -196,6 +196,11 @@ message GfSpMigratePieceTask {
   uint32 segment_idx = 5;
   int32 redundancy_idx = 6;
   bool is_bucket_migrate = 7;
+}
+
+message GfSpGCBucketMigrationTask {
+  GfSpTask task = 1;
+  uint64 bucket_id = 2;
 }
 
 message GfSpBucketMigrationInfo {

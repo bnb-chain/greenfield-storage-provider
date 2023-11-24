@@ -24,46 +24,45 @@ var _ GCZombiePieceTask = (*NullTask)(nil)
 var _ GCMetaTask = (*NullTask)(nil)
 var _ RecoveryPieceTask = (*NullTask)(nil)
 var _ MigrateGVGTask = (*NullTask)(nil)
+var _ GCBucketMigrationTask = (*NullTask)(nil)
 
 type NullTask struct{}
 
-func (*NullTask) Key() TKey                                { return "" }
-func (*NullTask) Type() TType                              { return 0 }
-func (*NullTask) Info() string                             { return "" }
-func (*NullTask) GetAddress() string                       { return "" }
-func (*NullTask) SetAddress(string)                        {}
-func (*NullTask) GetCreateTime() int64                     { return 0 }
-func (*NullTask) SetCreateTime(int64)                      {}
-func (*NullTask) GetUpdateTime() int64                     { return 0 }
-func (*NullTask) SetUpdateTime(int64)                      {}
-func (*NullTask) GetTimeout() int64                        { return 0 }
-func (*NullTask) SetTimeout(int64)                         {}
-func (*NullTask) Expired() bool                            { return false }
-func (*NullTask) ExceedTimeout() bool                      { return false }
-func (*NullTask) GetPriority() TPriority                   { return 0 }
-func (*NullTask) SetPriority(TPriority)                    {}
-func (*NullTask) SetRetry(int)                             {}
-func (*NullTask) IncRetry()                                {}
-func (*NullTask) ExceedRetry() bool                        { return false }
-func (*NullTask) GetRetry() int64                          { return 0 }
-func (*NullTask) GetMaxRetry() int64                       { return 0 }
-func (*NullTask) SetMaxRetry(int64)                        {}
-func (*NullTask) EstimateLimit() rcmgr.Limit               { return nil }
-func (*NullTask) Error() error                             { return nil }
-func (NullTask) SetLogs(logs string)                       {}
-func (NullTask) GetLogs() string                           { return "" }
-func (NullTask) AppendLog(log string)                      {}
-func (*NullTask) SetError(error)                           {}
-func (*NullTask) GetExpiredHeight() uint64                 { return 0 }
-func (*NullTask) SetExpiredHeight(uint64)                  {}
-func (*NullTask) GetObjectInfo() *storagetypes.ObjectInfo  { return nil }
-func (*NullTask) SetObjectInfo(*storagetypes.ObjectInfo)   {}
-func (*NullTask) GetStorageParams() *storagetypes.Params   { return nil }
-func (*NullTask) SetStorageParams(*storagetypes.Params)    {}
-func (*NullTask) GetGCZombiePieceStatus() (uint64, uint64) { return 0, 0 }
-func (*NullTask) SetGCZombiePieceStatus(uint64, uint64)    {}
-func (*NullTask) GetGCMetaStatus() (uint64, uint64)        { return 0, 0 }
-func (*NullTask) SetGCMetaStatus(uint64, uint64)           {}
+func (*NullTask) Key() TKey                               { return "" }
+func (*NullTask) Type() TType                             { return 0 }
+func (*NullTask) Info() string                            { return "" }
+func (*NullTask) GetAddress() string                      { return "" }
+func (*NullTask) SetAddress(string)                       {}
+func (*NullTask) GetCreateTime() int64                    { return 0 }
+func (*NullTask) SetCreateTime(int64)                     {}
+func (*NullTask) GetUpdateTime() int64                    { return 0 }
+func (*NullTask) SetUpdateTime(int64)                     {}
+func (*NullTask) GetTimeout() int64                       { return 0 }
+func (*NullTask) SetTimeout(int64)                        {}
+func (*NullTask) Expired() bool                           { return false }
+func (*NullTask) ExceedTimeout() bool                     { return false }
+func (*NullTask) GetPriority() TPriority                  { return 0 }
+func (*NullTask) SetPriority(TPriority)                   {}
+func (*NullTask) SetRetry(int)                            {}
+func (*NullTask) IncRetry()                               {}
+func (*NullTask) ExceedRetry() bool                       { return false }
+func (*NullTask) GetRetry() int64                         { return 0 }
+func (*NullTask) GetMaxRetry() int64                      { return 0 }
+func (*NullTask) SetMaxRetry(int64)                       {}
+func (*NullTask) EstimateLimit() rcmgr.Limit              { return nil }
+func (*NullTask) Error() error                            { return nil }
+func (NullTask) SetLogs(logs string)                      {}
+func (NullTask) GetLogs() string                          { return "" }
+func (NullTask) AppendLog(log string)                     {}
+func (*NullTask) SetError(error)                          {}
+func (*NullTask) GetExpiredHeight() uint64                { return 0 }
+func (*NullTask) SetExpiredHeight(uint64)                 {}
+func (*NullTask) GetObjectInfo() *storagetypes.ObjectInfo { return nil }
+func (*NullTask) SetObjectInfo(*storagetypes.ObjectInfo)  {}
+func (*NullTask) GetStorageParams() *storagetypes.Params  { return nil }
+func (*NullTask) SetStorageParams(*storagetypes.Params)   {}
+func (*NullTask) GetGCMetaStatus() (uint64, uint64)       { return 0, 0 }
+func (*NullTask) SetGCMetaStatus(uint64, uint64)          {}
 func (*NullTask) InitApprovalCreateBucketTask(string, *storagetypes.MsgCreateBucket, []byte, TPriority) {
 }
 func (*NullTask) GetCreateBucketInfo() *storagetypes.MsgCreateBucket { return nil }
@@ -164,3 +163,22 @@ func (*NullTask) GetFinished() bool                                 { return fal
 func (*NullTask) SetFinished(bool)                                  {}
 func (*NullTask) GetNotAvailableSpIdx() int32                       { return 0 }
 func (*NullTask) SetNotAvailableSpIdx(i int32)                      {}
+
+func (t *NullTask) InitGCBucketMigrationTask(priority TPriority, bucketID uint64, timeout, retry int64) {
+}
+
+func (*NullTask) GetCurrentBlockNumber() uint64                                              { return 0 }
+func (*NullTask) SetStartBlockNumber(uint64)                                                 {}
+func (*NullTask) GetStartBlockNumber() uint64                                                { return 0 }
+func (*NullTask) SetEndBlockNumber(uint64)                                                   {}
+func (*NullTask) GetEndBlockNumber() uint64                                                  { return 0 }
+func (*NullTask) SetCurrentBlockNumber(uint64)                                               {}
+func (*NullTask) GetLastDeletedObjectId() uint64                                             { return 0 }
+func (*NullTask) SetLastDeletedObjectId(uint64)                                              {}
+func (*NullTask) GetGCObjectProgress() (uint64, uint64)                                      { return 0, 0 }
+func (*NullTask) SetGCObjectProgress(uint64, uint64)                                         {}
+func (*NullTask) InitGCZombiePieceTask(priority TPriority, start, end uint64, timeout int64) {}
+func (*NullTask) SetStartObjectID(uint64)                                                    {}
+func (*NullTask) GetStartObjectId() uint64                                                   { return 0 }
+func (*NullTask) SetEndObjectID(uint64)                                                      {}
+func (*NullTask) GetEndObjectId() uint64                                                     { return 0 }

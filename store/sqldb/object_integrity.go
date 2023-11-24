@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -27,6 +28,10 @@ const (
 	SPDBSuccessDelObjectIntegrity = "del_object_integrity_meta_success"
 	// SPDBFailureDelObjectIntegrity defines the metrics label of unsuccessfully del object integrity
 	SPDBFailureDelObjectIntegrity = "del_object_integrity_meta_failure"
+	// SPDBSuccessListObjectIntegrity defines the metrics label of successfully list object integrity
+	SPDBSuccessListObjectIntegrity = "list_object_integrity_meta_success"
+	// SPDBFailureListObjectIntegrity defines the metrics label of unsuccessfully list object integrity
+	SPDBFailureListObjectIntegrity = "list_object_integrity_meta_failure"
 
 	// SPDBSuccessUpdatePieceChecksum defines the metrics label of successfully update object piece checksum
 	SPDBSuccessUpdatePieceChecksum = "append_object_checksum_integrity_success"
@@ -57,6 +62,11 @@ const (
 	SPDBSuccessDelAllReplicatePieceChecksum = "del_all_replicate_piece_checksum_success"
 	// SPDBFailureDelAllReplicatePieceChecksum defines the metrics label of unsuccessfully del all replicate piece checksum
 	SPDBFailureDelAllReplicatePieceChecksum = "del_all_replicate_piece_checksum_failure"
+
+	// SPDBSuccessListReplicatePieceChecksumByObjectID defines the metrics label of successfully list replicate piece checksum by object id
+	SPDBSuccessListReplicatePieceChecksumByObjectID = "list_replicate_piece_checksum_by_object_id_success"
+	// SPDBFailureListReplicatePieceChecksumByObjectID defines the metrics label of unsuccessfully list replicate piece checksum by object id
+	SPDBFailureListReplicatePieceChecksumByObjectID = "list_replicate_piece_checksum_by_object_id_failure"
 )
 
 // GetObjectIntegrity returns the integrity hash info
@@ -197,6 +207,70 @@ func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32)
 		RedundancyIndex: redundancyIndex,
 	}).Error
 	return err
+}
+
+type ByRedundancyIndexAndObjectID []*corespdb.IntegrityMeta
+
+func (b ByRedundancyIndexAndObjectID) Len() int { return len(b) }
+
+// Less we want to sort as ascending here
+func (b ByRedundancyIndexAndObjectID) Less(i, j int) bool {
+	if b[i].ObjectID == b[j].ObjectID {
+		return b[i].RedundancyIndex < b[j].RedundancyIndex
+	}
+	return b[i].ObjectID < b[j].ObjectID
+}
+func (b ByRedundancyIndexAndObjectID) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+
+// ListIntegrityMetaByObjectIDRange list integrity meta by a block number range
+func (s *SpDBImpl) ListIntegrityMetaByObjectIDRange(startObjectID int64, endObjectID int64, includePrivate bool) ([]*corespdb.IntegrityMeta, error) {
+	var (
+		totalIntegrityMetas []*IntegrityMetaTable
+		integrityMetas      []*IntegrityMetaTable
+		resIntegrityMetas   []*corespdb.IntegrityMeta
+		err                 error
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureListObjectIntegrity).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureListObjectIntegrity).Observe(
+				time.Since(startTime).Seconds())
+		} else {
+			metrics.SPDBCounter.WithLabelValues(SPDBSuccessListObjectIntegrity).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBSuccessListObjectIntegrity).Observe(
+				time.Since(startTime).Seconds())
+		}
+	}()
+
+	if includePrivate {
+		for i := 0; i < IntegrityMetasNumberOfShards; i++ {
+			err = s.db.Table(GetIntegrityMetasTableNameByShardNumber(i)).
+				Select("*").
+				Where("object_id >= ? and object_id < ?", startObjectID, endObjectID).
+				Limit(ListObjectsDefaultSize).
+				Order("object_id,redundancy_index asc").
+				Find(&integrityMetas).Error
+			totalIntegrityMetas = append(totalIntegrityMetas, integrityMetas...)
+		}
+	}
+	if len(totalIntegrityMetas) > ListObjectsDefaultSize {
+		totalIntegrityMetas = totalIntegrityMetas[0:ListObjectsDefaultSize]
+	}
+
+	for _, metaQuery := range totalIntegrityMetas {
+		meta := &corespdb.IntegrityMeta{
+			ObjectID:          metaQuery.ObjectID,
+			RedundancyIndex:   metaQuery.RedundancyIndex,
+			IntegrityChecksum: []byte(metaQuery.IntegrityChecksum),
+		}
+		meta.PieceChecksumList, err = util.StringToBytesSlice(metaQuery.PieceChecksumList)
+		resIntegrityMetas = append(resIntegrityMetas, meta)
+	}
+
+	sort.Sort(ByRedundancyIndexAndObjectID(resIntegrityMetas))
+
+	return resIntegrityMetas, err
 }
 
 // UpdatePieceChecksum 1) If the IntegrityMetaTable does not exist, it will be created.
@@ -456,4 +530,45 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 		RedundancyIndex: redundancyIdx,
 	}).Error
 	return err
+}
+
+// ListReplicatePieceChecksumByObjectIDRange gets all replicate piece checksums for a given objectID and redundancyIdx.
+func (s *SpDBImpl) ListReplicatePieceChecksumByObjectIDRange(startObjectID int64, endObjectID int64) ([]*corespdb.GCPieceMeta, error) {
+	var (
+		err          error
+		queryReturns []PieceHashTable
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureListReplicatePieceChecksumByObjectID).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureListReplicatePieceChecksumByObjectID).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessListReplicatePieceChecksumByObjectID).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessListReplicatePieceChecksumByObjectID).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	if err = s.db.Model(&PieceHashTable{}).
+		Where("object_id >= ? and object_id <= ?", startObjectID, endObjectID).
+		Limit(ListObjectsDefaultSize).
+		Find(&queryReturns).Error; err != nil {
+		return nil, err
+	}
+
+	var pieceMetas []*corespdb.GCPieceMeta
+
+	for _, queryReturn := range queryReturns {
+		pieceMeta := &corespdb.GCPieceMeta{
+			ObjectID:        queryReturn.ObjectID,
+			SegmentIndex:    queryReturn.SegmentIndex,
+			RedundancyIndex: queryReturn.RedundancyIndex,
+			PieceChecksum:   queryReturn.PieceChecksum,
+		}
+		pieceMetas = append(pieceMetas, pieceMeta)
+	}
+
+	return pieceMetas, nil
 }

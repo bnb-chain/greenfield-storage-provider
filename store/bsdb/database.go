@@ -43,6 +43,8 @@ type Metadata interface {
 	GetObjectByName(objectName string, bucketName string, includePrivate bool) (*Object, error)
 	// GetObjectByID get object info by an object id
 	GetObjectByID(objectID int64, includeRemoved bool) (*Object, error)
+	// GetLatestObjectID get latest object id
+	GetLatestObjectID() (uint64, error)
 	// GetSwitchDBSignal check if there is a signal to switch the database
 	GetSwitchDBSignal() (*MasterDB, error)
 	// GetBucketMetaByName get bucket info with its related info

@@ -322,9 +322,11 @@ func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 		gvgIDs        []uint32
 		lvgIDs        []uint32
 		completeEvent *EventCompleteMigrationBucket
+		cancelEvent   *EventCancelMigrationBucket
 		bucket        *Bucket
 		filters       []func(*gorm.DB) *gorm.DB
 		err           error
+		createAt      int64
 	)
 	startTime := time.Now()
 	methodName := currentFunction()
@@ -339,8 +341,13 @@ func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 	gvgIDs = append(gvgIDs, gvgID)
 
 	localGroups, err = b.ListLvgByGvgAndBucketID(bucketID, gvgIDs)
-	if err != nil || len(localGroups) == 0 {
+	if err != nil {
 		return nil, nil, err
+	}
+
+	log.Debugw("ListObjectsByGVGAndBucketForGC", "localGroups", localGroups, "error", err)
+	if len(localGroups) == 0 {
+		return nil, nil, gorm.ErrRecordNotFound
 	}
 
 	lvgIDs = make([]uint32, len(localGroups))
@@ -349,12 +356,20 @@ func (b *BsDBImpl) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 	}
 
 	completeEvent, err = b.GetMigrateBucketEventByBucketID(bucketID)
-	if err != nil {
+	if err == nil {
+		createAt = completeEvent.CreateAt
+	}
+	cancelEvent, err = b.GetMigrateBucketCancelEventByBucketID(bucketID)
+	if err == nil {
+		createAt = cancelEvent.CreateAt
+	}
+	log.Debugw("ListObjectsByGVGAndBucketForGC", "createAt", createAt, "error", err)
+
+	if createAt == 0 {
 		return nil, nil, err
 	}
-	if completeEvent != nil {
-		filters = append(filters, CreateAtFilter(completeEvent.CreateAt))
-	}
+
+	filters = append(filters, CreateAtFilter(createAt))
 
 	objects, bucket, err = b.ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit, filters...)
 	return objects, bucket, err
