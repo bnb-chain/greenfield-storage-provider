@@ -35,8 +35,11 @@ var (
 	ErrNoSuchObject     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98093, "no such object from metadata")
 )
 
-func ErrRPCUnknownWithDetail(detail string) *gfsperrors.GfSpError {
-	return gfsperrors.Register(ClientCodeSpace, http.StatusInternalServerError, 98001, detail)
+func ErrRPCUnknownWithDetail(detail string, err error) *gfsperrors.GfSpError {
+	if gfspErr := gfsperrors.GetGfSpErr(err); gfspErr != nil {
+		return gfspErr
+	}
+	return gfsperrors.Register(ClientCodeSpace, http.StatusInternalServerError, 98001, detail+err.Error())
 }
 
 type GfSpClient struct {
@@ -94,7 +97,7 @@ func (s *GfSpClient) ApproverConn(ctx context.Context, opts ...grpc.DialOption) 
 		conn, err := s.Connection(ctx, s.approverEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: ", err)
 		}
 		s.approverConn = conn
 	}
@@ -112,7 +115,7 @@ func (s *GfSpClient) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (
 		conn, err := s.Connection(ctx, s.managerEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: ", err)
 		}
 		s.managerConn = conn
 	}
@@ -130,7 +133,7 @@ func (s *GfSpClient) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grp
 		conn, err := s.Connection(ctx, s.p2pEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: ", err)
 		}
 		s.p2pConn = conn
 	}
@@ -148,7 +151,7 @@ func (s *GfSpClient) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*
 		conn, err := s.Connection(ctx, s.signerEndpoint, options...)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create connection", "error", err)
-			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: " + err.Error())
+			return nil, ErrRPCUnknownWithDetail("failed to create connection, error: ", err)
 		}
 		s.signerConn = conn
 	}

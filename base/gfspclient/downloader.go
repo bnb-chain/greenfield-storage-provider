@@ -18,7 +18,7 @@ func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
-		return nil, ErrRPCUnknownWithDetail("client failed to connect downloader, error: " + connErr.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to connect downloader, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDownloadObjectRequest{
@@ -27,7 +27,7 @@ func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadObject(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to download object", "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to download object, error: " + err.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to download object, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -40,7 +40,7 @@ func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.Do
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
-		return nil, ErrRPCUnknownWithDetail("client failed to connect downloader, error: " + connErr.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to connect downloader, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDownloadPieceRequest{
@@ -49,7 +49,7 @@ func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.Do
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDownloadPiece(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to download piece", "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to download piece, error: " + err.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to download piece, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -61,7 +61,7 @@ func (s *GfSpClient) RecoupQuota(ctx context.Context, bucketID, extraQuota uint6
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect downloader, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect downloader, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpReimburseQuotaRequest{
@@ -73,7 +73,7 @@ func (s *GfSpClient) RecoupQuota(ctx context.Context, bucketID, extraQuota uint6
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpReimburseQuota(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to recoup the extra quota", "error", err)
-		return ErrRPCUnknownWithDetail("client failed to recoup extra quota, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to recoup extra quota, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -85,7 +85,7 @@ func (s *GfSpClient) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, 
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect downloader, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect downloader, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpDeductQuotaForBucketMigrateRequest{
@@ -97,7 +97,7 @@ func (s *GfSpClient) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, 
 	resp, err := gfspserver.NewGfSpDownloadServiceClient(conn).GfSpDeductQuotaForBucketMigrate(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to deduct the quota for bucket migrate", "request", req, "error", err)
-		return ErrRPCUnknownWithDetail("client failed to deduct the quota for bucket migrate, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to deduct the quota for bucket migrate, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -110,7 +110,7 @@ func (s *GfSpClient) GetChallengeInfo(ctx context.Context, challengePieceTask co
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
-		return nil, nil, nil, ErrRPCUnknownWithDetail("client failed to connect downloader, error: " + connErr.Error())
+		return nil, nil, nil, ErrRPCUnknownWithDetail("client failed to connect downloader, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpGetChallengeInfoRequest{
@@ -121,7 +121,7 @@ func (s *GfSpClient) GetChallengeInfo(ctx context.Context, challengePieceTask co
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_client_total_time").Observe(time.Since(startTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to get challenge piece info", "error", err)
-		return nil, nil, nil, ErrRPCUnknownWithDetail("client failed to get challenge piece info, error: " + err.Error())
+		return nil, nil, nil, ErrRPCUnknownWithDetail("client failed to get challenge piece info, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return nil, nil, nil, resp.GetErr()

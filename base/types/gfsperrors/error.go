@@ -1,8 +1,10 @@
 package gfsperrors
 
 import (
+	"encoding/json"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -15,7 +17,8 @@ const (
 
 // Error implements the error interface for compatibility with built-in error.
 func (m *GfSpError) Error() string {
-	return m.String()
+	str, _ := json.Marshal(m)
+	return string(str)
 }
 
 // SetError sets the Description field by Error(), it is use for change the
@@ -41,6 +44,26 @@ func init() {
 			innerCode2Err: make(map[int32]*GfSpError),
 		}
 	})
+}
+
+func GetGfSpErr(err error) *GfSpError {
+	if err == nil {
+		return nil
+	}
+	if gfspErr, ok := err.(*GfSpError); ok {
+		return gfspErr
+	}
+	i := strings.Index(err.Error(), "desc = ")
+	if i == -1 || len(err.Error())-1 < i+6 {
+		return nil
+	}
+	errInfo := err.Error()[i+6:]
+	var gfspErr GfSpError
+	unmarshalErr := json.Unmarshal([]byte(errInfo), &gfspErr)
+	if unmarshalErr == nil && gfspErr.HttpStatusCode != 0 {
+		return &gfspErr
+	}
+	return nil
 }
 
 // MakeGfSpError returns an GfSpError from the build-in error interface. It is
