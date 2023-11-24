@@ -160,6 +160,8 @@ function make_config() {
     sed -i -e "s/EnableGCMeta = .*/EnableGCMeta = true/g" config.toml
     sed -i -e "s/GCMetaTimeInterval = .*/GCMetaTimeInterval = 3/g" config.toml
     sed -i -e "s/GCZombiePieceTimeInterval = .*/GCZombiePieceTimeInterval = 3/g" config.toml
+    sed -i -e "s/GCZombieSafeObjectIDDistance = .*/GCZombieSafeObjectIDDistance = 1/g" config.toml
+    sed -i -e "s/GCZombiePieceObjectIDInterval = .*/GCZombiePieceObjectIDInterval = 5/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null

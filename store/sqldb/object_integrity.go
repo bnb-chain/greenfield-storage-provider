@@ -28,6 +28,10 @@ const (
 	SPDBSuccessDelObjectIntegrity = "del_object_integrity_meta_success"
 	// SPDBFailureDelObjectIntegrity defines the metrics label of unsuccessfully del object integrity
 	SPDBFailureDelObjectIntegrity = "del_object_integrity_meta_failure"
+	// SPDBSuccessListObjectIntegrity defines the metrics label of successfully list object integrity
+	SPDBSuccessListObjectIntegrity = "list_object_integrity_meta_success"
+	// SPDBFailureListObjectIntegrity defines the metrics label of unsuccessfully list object integrity
+	SPDBFailureListObjectIntegrity = "list_object_integrity_meta_failure"
 
 	// SPDBSuccessUpdatePieceChecksum defines the metrics label of successfully update object piece checksum
 	SPDBSuccessUpdatePieceChecksum = "append_object_checksum_integrity_success"
@@ -218,22 +222,23 @@ func (b ByRedundancyIndexAndObjectID) Less(i, j int) bool {
 }
 func (b ByRedundancyIndexAndObjectID) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
-// ListIntegrityMetaByObjectIDRange list objects info by a block number range
+// ListIntegrityMetaByObjectIDRange list integrity meta by a block number range
 func (s *SpDBImpl) ListIntegrityMetaByObjectIDRange(startObjectID int64, endObjectID int64, includePrivate bool) ([]*corespdb.IntegrityMeta, error) {
 	var (
-		totalObjects []*corespdb.IntegrityMeta
-		objects      []*corespdb.IntegrityMeta
-		err          error
+		totalIntegrityMetas []*IntegrityMetaTable
+		integrityMetas      []*IntegrityMetaTable
+		resIntegrityMetas   []*corespdb.IntegrityMeta
+		err                 error
 	)
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
-			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetObjectIntegrity).Inc()
-			metrics.SPDBTime.WithLabelValues(SPDBFailureGetObjectIntegrity).Observe(
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureListObjectIntegrity).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureListObjectIntegrity).Observe(
 				time.Since(startTime).Seconds())
 		} else {
-			metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetObjectIntegrity).Inc()
-			metrics.SPDBTime.WithLabelValues(SPDBSuccessGetObjectIntegrity).Observe(
+			metrics.SPDBCounter.WithLabelValues(SPDBSuccessListObjectIntegrity).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBSuccessListObjectIntegrity).Observe(
 				time.Since(startTime).Seconds())
 		}
 	}()
@@ -242,39 +247,30 @@ func (s *SpDBImpl) ListIntegrityMetaByObjectIDRange(startObjectID int64, endObje
 		for i := 0; i < IntegrityMetasNumberOfShards; i++ {
 			err = s.db.Table(GetIntegrityMetasTableNameByShardNumber(i)).
 				Select("*").
-				Where("object_id >= ? and object_id <= ?", startObjectID, endObjectID).
+				Where("object_id >= ? and object_id < ?", startObjectID, endObjectID).
 				Limit(ListObjectsDefaultSize).
 				Order("object_id,redundancy_index asc").
-				Find(&objects).Error
-			totalObjects = append(totalObjects, objects...)
-		}
-	} else {
-		for i := 0; i < IntegrityMetasNumberOfShards; i++ {
-			integrityMetasTableName := GetIntegrityMetasTableNameByShardNumber(i)
-			joins := fmt.Sprintf("right join buckets on buckets.bucket_id = %s.bucket_id", integrityMetasTableName)
-			order := fmt.Sprintf("%s.object_id, %s.redundancy_index asc", integrityMetasTableName, integrityMetasTableName)
-			where := fmt.Sprintf("%s.object_id >= ? and %s.object_id <= ? and "+
-				"((%s.visibility='VISIBILITY_TYPE_PUBLIC_READ') or "+
-				"(%s.visibility='VISIBILITY_TYPE_INHERIT' and buckets.visibility='VISIBILITY_TYPE_PUBLIC_READ'))",
-				integrityMetasTableName, integrityMetasTableName, integrityMetasTableName, integrityMetasTableName)
-
-			err = s.db.Table(integrityMetasTableName).
-				Select(integrityMetasTableName+".*").
-				Joins(joins).
-				Where(where, startObjectID, endObjectID).
-				Limit(ListObjectsDefaultSize).
-				Order(order).
-				Find(&objects).Error
-			totalObjects = append(totalObjects, objects...)
+				Find(&integrityMetas).Error
+			totalIntegrityMetas = append(totalIntegrityMetas, integrityMetas...)
 		}
 	}
-
-	sort.Sort(ByRedundancyIndexAndObjectID(totalObjects))
-
-	if len(totalObjects) > ListObjectsDefaultSize {
-		totalObjects = totalObjects[0:ListObjectsDefaultSize]
+	if len(totalIntegrityMetas) > ListObjectsDefaultSize {
+		totalIntegrityMetas = totalIntegrityMetas[0:ListObjectsDefaultSize]
 	}
-	return totalObjects, err
+
+	for _, metaQuery := range totalIntegrityMetas {
+		meta := &corespdb.IntegrityMeta{
+			ObjectID:          metaQuery.ObjectID,
+			RedundancyIndex:   metaQuery.RedundancyIndex,
+			IntegrityChecksum: []byte(metaQuery.IntegrityChecksum),
+		}
+		meta.PieceChecksumList, err = util.StringToBytesSlice(metaQuery.PieceChecksumList)
+		resIntegrityMetas = append(resIntegrityMetas, meta)
+	}
+
+	sort.Sort(ByRedundancyIndexAndObjectID(resIntegrityMetas))
+
+	return resIntegrityMetas, err
 }
 
 // UpdatePieceChecksum 1) If the IntegrityMetaTable does not exist, it will be created.

@@ -46,8 +46,8 @@ func (gc *GCWorker) deleteObjectPiecesAndIntegrityMeta(ctx context.Context, inte
 	}
 
 	// delete integrity meta
-	_ = gc.e.baseApp.GfSpDB().DeleteObjectIntegrity(objID, redundancyIdx)
-	log.CtxDebugw(ctx, "succeed to delete all object segment and integrity meta", "object_id", objID, "integrity_meta", integrityMeta)
+	err := gc.e.baseApp.GfSpDB().DeleteObjectIntegrity(objID, redundancyIdx)
+	log.CtxDebugw(ctx, "succeed to delete all object segment and integrity meta", "object_id", objID, "integrity_meta", integrityMeta, "error", err)
 
 	return nil
 }

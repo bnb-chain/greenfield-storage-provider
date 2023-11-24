@@ -632,6 +632,6 @@ func (r *MetadataModular) GfSpGetLatestObjectID(ctx context.Context, req *types.
 	}
 
 	resp = &types.GfSpGetLatestObjectIDResponse{ObjectId: objID}
-	log.CtxInfow(ctx, "succeed to get latest object id")
+	log.CtxInfow(ctx, "succeed to get latest object id", "object_id", objID)
 	return resp, nil
 }
