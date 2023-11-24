@@ -16,7 +16,7 @@ func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.Uploa
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpBeginTaskRequest{
 		Request: &gfspserver.GfSpBeginTaskRequest_UploadObjectTask{
@@ -26,7 +26,7 @@ func (s *GfSpClient) CreateUploadObject(ctx context.Context, task coretask.Uploa
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to create upload object task", "error", err)
-		return ErrRPCUnknownWithDetail("client failed to create upload object task, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to create upload object task, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -38,7 +38,7 @@ func (s *GfSpClient) CreateResumableUploadObject(ctx context.Context, task coret
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpBeginTaskRequest{
 		Request: &gfspserver.GfSpBeginTaskRequest_ResumableUploadObjectTask{
@@ -48,7 +48,7 @@ func (s *GfSpClient) CreateResumableUploadObject(ctx context.Context, task coret
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpBeginTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to create resummable upload object task", "error", err)
-		return ErrRPCUnknownWithDetail("client failed to create resummable upload object task, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to create resummable upload object task, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -60,7 +60,7 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpAskTaskRequest{
 		NodeLimit: limit.(*gfsplimit.GfSpLimit),
@@ -68,7 +68,7 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpAskTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask task", "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to ask task, error: " + err.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to ask task, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -99,7 +99,7 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpReportTaskRequest{}
 	switch t := report.(type) {
@@ -134,7 +134,7 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpReportTask(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to report task", "error", err)
-		return ErrRPCUnknownWithDetail("client failed to report task, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to report task, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return resp.GetErr()
@@ -146,7 +146,7 @@ func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return 0, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return 0, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpPickVirtualGroupFamilyRequest{
 		CreateBucketApprovalTask: task.(*gfsptask.GfSpCreateBucketApprovalTask),
@@ -154,7 +154,7 @@ func (s *GfSpClient) PickVirtualGroupFamilyID(ctx context.Context, task coretask
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpPickVirtualGroupFamily(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to pick virtual group family id", "error", err)
-		return 0, ErrRPCUnknownWithDetail("client failed to pick virtual group family id, error: " + err.Error())
+		return 0, ErrRPCUnknownWithDetail("client failed to pick virtual group family id, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return 0, resp.GetErr()
@@ -166,7 +166,7 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpNotifyMigrateSwapOutRequest{
 		SwapOut: swapOut,
@@ -174,7 +174,7 @@ func (s *GfSpClient) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualg
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyMigrateSwapOut(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to notify migrate swap out", "request", req, "error", err)
-		return ErrRPCUnknownWithDetail("client failed to notify migrate swap out, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to notify migrate swap out, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		log.CtxErrorw(ctx, "failed to notify migrate swap out", "request", req, "error", resp.GetErr())
@@ -187,12 +187,12 @@ func (s *GfSpClient) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats,
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryTasksStats(ctx, &gfspserver.GfSpQueryTasksStatsRequest{})
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query manager's task stats", "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to query manager's task stats, error: " + err.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to query manager's task stats, error: ", err)
 	}
 	return resp.GetStats(), nil
 }
@@ -201,7 +201,7 @@ func (s *GfSpClient) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpNotifyPreMigrateBucketRequest{
 		BucketId: bucketID,
@@ -209,7 +209,7 @@ func (s *GfSpClient) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPreMigrate(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to notify pre migrate bucket", "request", req, "error", err)
-		return ErrRPCUnknownWithDetail("client failed to notify pre migrate bucket, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to notify pre migrate bucket, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		log.CtxErrorw(ctx, "failed to notify pre migrate bucket", "request", req, "error", resp.GetErr())
@@ -222,7 +222,7 @@ func (s *GfSpClient) NotifyPostMigrateBucket(ctx context.Context, bucketID uint6
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpNotifyPostMigrateBucketRequest{
 		BucketId: bucketID,
@@ -230,7 +230,7 @@ func (s *GfSpClient) NotifyPostMigrateBucket(ctx context.Context, bucketID uint6
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPostMigrate(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to notify post migrate bucket", "request", req, "error", err)
-		return ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: " + err.Error())
+		return ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		log.CtxErrorw(ctx, "failed to notify post migrate bucket", "request", req, "error", resp.GetErr())
@@ -243,12 +243,12 @@ func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, err
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: " + connErr.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpResetRecoveryFailedList(ctx, &gfspserver.GfSpResetRecoveryFailedListRequest{})
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to reset manager's recovery failed list", "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to reset manager's recovery failed list, error: " + err.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to reset manager's recovery failed list, error: ", err)
 	}
 	return resp.GetRecoveryFailedList(), nil
 }
