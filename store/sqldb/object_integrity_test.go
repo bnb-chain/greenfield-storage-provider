@@ -236,7 +236,7 @@ func TestSpDBImpl_DeleteObjectIntegrityFailure(t *testing.T) {
 func TestSpDBImpl_ListIntegrityChecksumSuccess(t *testing.T) {
 	s, mock := setupDB(t)
 	for i := 0; i < IntegrityMetasNumberOfShards; i++ {
-		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id >= ? and object_id <= ? ORDER BY object_id,redundancy_index asc LIMIT 1000", fmt.Sprintf("integrity_meta_%02d", i))).
+		mock.ExpectQuery(fmt.Sprintf("SELECT * FROM `%s` WHERE object_id >= ? and object_id < ? ORDER BY object_id,redundancy_index asc LIMIT 1000", fmt.Sprintf("integrity_meta_%02d", i))).
 			WithArgs(0, 1000).WillReturnRows(
 			sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list"}).
 				AddRow(i, piecestore.PrimarySPRedundancyIndex, "test", "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"))
