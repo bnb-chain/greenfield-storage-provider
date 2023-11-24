@@ -148,7 +148,8 @@ func (gc *GCWorker) getGvgAndSpId(ctx context.Context, objectInfo *storagetypes.
 // checkGVGMatchSP only return ErrInvalidRedundancyIndex means the piece was dislocation
 func (gc *GCWorker) checkGVGMatchSP(ctx context.Context, objectInfo *storagetypes.ObjectInfo, redundancyIndex int32) error {
 	bucketInfo, gvg, spID, err := gc.getGvgAndSpId(ctx, objectInfo)
-	if err != nil {
+	if err != nil || bucketInfo == nil || gvg == nil {
+		log.CtxErrorw(ctx, "failed to get gvg and sp id", "object", objectInfo, "bucket", bucketInfo, "error", err)
 		return err
 	}
 
@@ -219,8 +220,15 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		return
 	}
 	if len(waitingGCObjects) == 0 {
-		log.Error("no waiting gc objects")
+		log.Info("no waiting gc objects")
 		hasNoObject = true
+		return
+	}
+
+	// TODO get sp id from config
+	spId, err := e.getSPID()
+	if err != nil {
+		log.Errorw("failed to get sp id", "error", err)
 		return
 	}
 
@@ -258,12 +266,7 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			log.Errorw("failed to get global virtual group", "error", err)
 			return
 		}
-		// TODO get sp id from config
-		spId, err := e.getSPID()
-		if err != nil {
-			log.Errorw("failed to get sp id", "error", err)
-			return
-		}
+
 		var redundancyIndex int32 = -1
 		for rIdx, sspId := range gvg.GetSecondarySpIds() {
 			if spId == sspId {
@@ -437,7 +440,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 		for _, obj := range objects {
 			objectInfo := obj.GetObject().GetObjectInfo()
 			if e.gcWorker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
-				e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
+				err = e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
 				log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)
 			}
 		}
@@ -510,14 +513,20 @@ func (e *ExecuteModular) gcZombiePieceFromPieceHash(ctx context.Context, task co
 	}
 
 	if len(waitingVerifyGCPieces) == 0 {
-		log.CtxErrorw(ctx, "no waiting gc pieces", "task_info", task.Info())
+		log.CtxInfow(ctx, "no waiting gc pieces", "task_info", task.Info())
 		return nil
 	}
 
 	for _, piece := range waitingVerifyGCPieces {
 		log.CtxDebugw(ctx, "gc zombie current waiting verify gc meta piece", "piece", piece)
 		objID := piece.ObjectID
+
 		// Get object information from metadata
+		// Note:Currently, waitingVerifyGCPieces is returned at the granularity of a piece. We may need a cache to
+		// store already queried information if there are performance issues:
+		//
+		// 1) objectInfoFromMetadata, objInfoFromChain;
+		// 2) bucketInfo, gvgInfo, and so on.
 		if objectInfoFromMetadata, err = e.baseApp.GfSpClient().GetObjectByID(ctx, objID); err != nil {
 			// If the object doesn't exist in metadata, recheck from the chain before proceeding with the deletion.
 			if strings.Contains(err.Error(), "no such object from metadata") {

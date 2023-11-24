@@ -692,9 +692,7 @@ func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketM
 	// if bucket migration failed, gc for dest sp
 	if !postMsg.GetFinished() {
 		// generate a gc bucket migration task(list objects and delete)
-		go func() {
-			s.manager.GenerateGCBucketMigrationTask(ctx, bucketID, postMsg.GetMigratedBytesSize())
-		}()
+		go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID, postMsg.GetMigratedBytesSize())
 	}
 	return nil
 }

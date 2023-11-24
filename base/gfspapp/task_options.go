@@ -52,9 +52,9 @@ const (
 	// MaxMigrateGVGTime defines the max timeout to migrate gvg.
 	MaxMigrateGVGTime int64 = 3600 // 1 hour
 	// MinGCBucketMigrationTime defines the min timeout to gc bucket migration.
-	MinGCBucketMigrationTime int64 = 300 // 0.5 hour
+	MinGCBucketMigrationTime int64 = 1800 // 0.5 hour
 	// MaxGCBucketMigrationTime defines the max timeout to gc bucket migration.
-	MaxGCBucketMigrationTime int64 = 600 // 1 hour
+	MaxGCBucketMigrationTime int64 = 3600 // 1 hour
 
 	// NotUseRetry defines the default task max retry.
 	NotUseRetry int64 = 0

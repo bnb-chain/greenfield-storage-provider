@@ -81,9 +81,7 @@ func (m *ManageModular) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfs
 	}
 
 	if bmInfo.GetFinished() {
-		go func() {
-			m.GenerateGCBucketMigrationTask(ctx, bucketID, bucketSize)
-		}()
+		go m.GenerateGCBucketMigrationTask(ctx, bucketID, bucketSize)
 	}
 
 	return nil
