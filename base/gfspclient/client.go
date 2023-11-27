@@ -36,7 +36,7 @@ var (
 )
 
 func ErrRPCUnknownWithDetail(detail string, err error) *gfsperrors.GfSpError {
-	if gfspErr := gfsperrors.GetGfSpErr(err); gfspErr != nil {
+	if gfspErr := gfsperrors.MakeGfSpError(err); gfspErr != nil {
 		return gfspErr
 	}
 	return gfsperrors.Register(ClientCodeSpace, http.StatusInternalServerError, 98001, detail+err.Error())
