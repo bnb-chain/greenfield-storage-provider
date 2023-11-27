@@ -2,6 +2,7 @@ package gfspclient
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 const mockAddress = "localhost:0"
 
 func TestErrRPCUnknownWithDetail(t *testing.T) {
-	err := ErrRPCUnknownWithDetail("mock")
+	err := ErrRPCUnknownWithDetail("mock", errors.New("mock"))
 	assert.NotNil(t, err)
 }
 
