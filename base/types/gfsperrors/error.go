@@ -66,6 +66,9 @@ func MakeGfSpError(err error) *GfSpError {
 		}
 		return gfspErr
 	}
+	// Attempting to check if the error is an RPC error; if so, trying to extract its error description and convert it to the GfSpError type.
+	// Expected error should be: "rpc error: code = Unknown desc = xxx"
+	// We only need to focus on xxx, and can extract the substring using string.Index().
 	i := strings.Index(err.Error(), "desc = ")
 	if i != -1 && len(err.Error())-1 >= i+6 {
 		errInfo := err.Error()[i+6:]
