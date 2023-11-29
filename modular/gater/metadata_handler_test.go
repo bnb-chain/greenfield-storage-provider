@@ -1,18 +1,10 @@
 package gater
 
 import (
-	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 	"log"
 	"math/big"
 	"net/http"
@@ -21,6 +13,15 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 )

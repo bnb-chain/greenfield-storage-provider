@@ -5,12 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
-	"github.com/cosmos/gogoproto/jsonpb"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cosmos/gogoproto/jsonpb"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
