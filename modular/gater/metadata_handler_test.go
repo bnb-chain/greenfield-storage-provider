@@ -9,9 +9,11 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
 	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"log"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -57,11 +59,20 @@ func getSampleChecksum() [][]byte {
 }
 func getTestGroupsInIdMap(length int) map[uint64]*types.Group {
 	groupsMap := make(map[uint64]*types.Group)
-	groups := getSampleTestGroupsResponse(length)
+	groups := getTestGroupsResponse(length)
 	for _, g := range groups {
 		groupsMap[g.Group.Id.BigInt().Uint64()] = g
 	}
 	return groupsMap
+}
+
+func getTestBucketsInIdMap(length int) map[uint64]*types.Bucket {
+	bucketsMap := make(map[uint64]*types.Bucket)
+	buckets := getTestBuckets(length)
+	for _, b := range buckets {
+		bucketsMap[b.BucketInfo.Id.BigInt().Uint64()] = b
+	}
+	return bucketsMap
 }
 
 func getTestBuckets(length int) []*types.Bucket {
@@ -95,22 +106,62 @@ func getTestBuckets(length int) []*types.Bucket {
 	return buckets
 }
 
+func getTestVGFInfoBuckets(length int) []*types.VGFInfoBucket {
+	buckets := make([]*types.VGFInfoBucket, length)
+
+	for i := 0; i < length; i++ {
+		bucket := &types.VGFInfoBucket{
+			BucketInfo: &storage_types.BucketInfo{
+				Owner:                      testAccount,
+				BucketName:                 mockBucketName + strconv.Itoa(i),
+				Visibility:                 storage_types.VISIBILITY_TYPE_PUBLIC_READ,
+				Id:                         math.NewUintFromBigInt(big.NewInt(int64(i))),
+				SourceType:                 storage_types.SOURCE_TYPE_ORIGIN,
+				CreateAt:                   1699781080,
+				PaymentAddress:             testAccount,
+				GlobalVirtualGroupFamilyId: 3,
+				ChargedReadQuota:           0,
+				BucketStatus:               storage_types.BUCKET_STATUS_CREATED,
+			},
+			Removed:      false,
+			DeleteAt:     0,
+			DeleteReason: "",
+			Operator:     testAccount,
+			CreateTxHash: "0x21c349a869bde1f44378936e2a9a15ed3fb2d54a43eaea8787960bba1134cdc2",
+			UpdateTxHash: "0x0cbff0ff3831d61345dbfda5b984e254c4bf87ecf80b45ccbb0635c0547a3b1a",
+			UpdateAt:     1279811,
+			UpdateTime:   1699781103,
+			Vgf: &virtual_types.GlobalVirtualGroupFamily{
+				Id:                    uint32(i),
+				PrimarySpId:           uint32(3),
+				VirtualPaymentAddress: "0x26281179b8885F21f95b0a246c8AD70957A95A23",
+			},
+		}
+		buckets[i] = bucket
+	}
+	return buckets
+}
+
+func getTestStreamRecord() *payment_types.StreamRecord {
+	return &payment_types.StreamRecord{
+		Account:           testAccount,
+		CrudTimestamp:     1699780994,
+		NetflowRate:       math.NewIntFromBigInt(big.NewInt(int64(0))),
+		StaticBalance:     math.NewIntFromBigInt(big.NewInt(int64(240000000000000001))),
+		BufferBalance:     math.NewIntFromBigInt(big.NewInt(int64(0))),
+		LockBalance:       math.NewIntFromBigInt(big.NewInt(int64(0))),
+		Status:            payment_types.STREAM_ACCOUNT_STATUS_ACTIVE,
+		SettleTimestamp:   0,
+		OutFlowCount:      0,
+		FrozenNetflowRate: math.NewIntFromBigInt(big.NewInt(int64(0))),
+	}
+}
+
 func getTestPaymentAccountMeta() []*types.PaymentAccountMeta {
 	paymentAccounts := make([]*types.PaymentAccountMeta, 1)
 
 	paymentAccount := &types.PaymentAccountMeta{
-		StreamRecord: &payment_types.StreamRecord{
-			Account:           testAccount,
-			CrudTimestamp:     1699780994,
-			NetflowRate:       math.NewIntFromBigInt(big.NewInt(int64(0))),
-			StaticBalance:     math.NewIntFromBigInt(big.NewInt(int64(240000000000000001))),
-			BufferBalance:     math.NewIntFromBigInt(big.NewInt(int64(0))),
-			LockBalance:       math.NewIntFromBigInt(big.NewInt(int64(0))),
-			Status:            payment_types.STREAM_ACCOUNT_STATUS_ACTIVE,
-			SettleTimestamp:   0,
-			OutFlowCount:      0,
-			FrozenNetflowRate: math.NewIntFromBigInt(big.NewInt(int64(0))),
-		},
+		StreamRecord: getTestStreamRecord(),
 		PaymentAccount: &types.PaymentAccount{
 			Address:    testAccount,
 			Owner:      testAccount,
@@ -194,7 +245,7 @@ func getTestObjectsResponse(objectLength int) []*types.Object {
 	return objects
 }
 
-func getSampleTestGroupsResponse(groupLength int) []*types.Group {
+func getTestGroupsResponse(groupLength int) []*types.Group {
 	length := groupLength
 	groups := make([]*types.Group, length)
 	owner := testAccount
@@ -216,6 +267,32 @@ func getSampleTestGroupsResponse(groupLength int) []*types.Group {
 		groups[i] = group
 	}
 	return groups
+}
+
+func getTestGroupMembersResponse(groupLength int) []*types.GroupMember {
+	length := groupLength
+	groupMembers := make([]*types.GroupMember, length)
+	for i := 0; i < length; i++ {
+		groupMember := &types.GroupMember{
+			Group: &storage_types.GroupInfo{
+				Owner:      testAccount,
+				GroupName:  "TestGroupName " + strconv.Itoa(i),
+				SourceType: storage_types.SOURCE_TYPE_ORIGIN,
+				Id:         math.NewUintFromBigInt(big.NewInt(int64(i))),
+				Extra:      "",
+			},
+			AccountId:      testAccount,
+			Operator:       testAccount,
+			CreateAt:       1376086,
+			CreateTime:     1700032197,
+			UpdateAt:       1376086,
+			UpdateTime:     1700032197,
+			Removed:        false,
+			ExpirationTime: 253402300799,
+		}
+		groupMembers[i] = groupMember
+	}
+	return groupMembers
 }
 
 func TestGateModular_ListObjectsByBucketNameHandler(t *testing.T) {
@@ -823,6 +900,227 @@ func TestGateModular_ListGroupsByIDsHandler(t *testing.T) {
 	}
 }
 
+func mockGetGroupListHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	router.Path("/").Name(getGroupListRouterName).Methods(http.MethodGet).Queries(GetGroupListGroupQuery, "").HandlerFunc(g.getGroupListHandler)
+	return router
+}
+
+func TestGateModular_GetGroupListHandler(t *testing.T) {
+
+	cases := []struct {
+		name           string
+		fn             func() *GateModular
+		request        func() *http.Request
+		wantedResult   string
+		wantedResultFn func(body string) bool
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=10&offset=0&name=e&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "blank name",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=10&offset=0&name=&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "blank prefix",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=10&offset=0&name=n&prefix=", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "bad offset",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=&offset=a&name=n&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "bad limit",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=a&offset=&name=n&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "limit is negative",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=-1&offset=&name=n&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "bad sourceType",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_UNKNOWN&limit=1&offset=0&name=n&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "xml response",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(getTestGroupsResponse(1), int64(1), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=1&offset=0&name=n&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				assert.Equal(t, "<GfSpGetGroupListResponse><Groups><Group><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><GroupName>TestGroupName 0</GroupName><SourceType>0</SourceType><Id>0</Id><Extra></Extra></Group><Operator>0x03AbbEe8E426C9887A8ae3C34602AbCA42aeDFa0</Operator><CreateAt>0</CreateAt><CreateTime>0</CreateTime><UpdateAt>1280048</UpdateAt><UpdateTime>0</UpdateTime><NumberOfMembers>1</NumberOfMembers><Removed>false</Removed></Groups><Count>1</Count></GfSpGetGroupListResponse>",
+					body)
+				return true
+			},
+		},
+
+		{
+			name: "xml response for large limit", // return 1000 records when limit is more than 1000
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(int64(1000)), gomock.Any(), gomock.Any()).Return(getTestGroupsResponse(1000), int64(1), nil).AnyTimes()
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(int64(1001)), gomock.Any(), gomock.Any()).Return(getTestGroupsResponse(1001), int64(1), nil).AnyTimes()
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(int64(50)), gomock.Any(), gomock.Any()).Return(getTestGroupsResponse(50), int64(1), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=1001&offset=0&name=n&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetGroupListResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 1000, len(res.Groups))
+				return true
+			},
+		},
+		{
+			name: "xml response for default limit", // return 50 records when limit is not set
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(int64(1000)), gomock.Any(), gomock.Any()).Return(getTestGroupsResponse(1000), int64(1), nil).AnyTimes()
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(int64(1001)), gomock.Any(), gomock.Any()).Return(getTestGroupsResponse(1001), int64(1), nil).AnyTimes()
+				clientMock.EXPECT().GetGroupList(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(int64(50)), gomock.Any(), gomock.Any()).Return(getTestGroupsResponse(50), int64(1), nil).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-query&source-type=SOURCE_TYPE_ORIGIN&offset=0&name=n&prefix=t", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetGroupListResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 50, len(res.Groups))
+				return true
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockGetGroupListHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, tt.request())
+			if tt.wantedResult != "" {
+				assert.Contains(t, w.Body.String(), tt.wantedResult)
+			}
+			if tt.wantedResultFn != nil {
+				assert.True(t, tt.wantedResultFn(w.Body.String()))
+			}
+		})
+	}
+}
+
 func mockListPaymentAccountStreamsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 	t.Helper()
 	router := mux.NewRouter().SkipClean(true)
@@ -989,6 +1287,788 @@ func TestGateModular_ListUserPaymentAccountsHandler(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			router := mockListUserPaymentAccountsHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, tt.request())
+			if tt.wantedResult != "" {
+				assert.Contains(t, w.Body.String(), tt.wantedResult)
+			}
+			if tt.wantedResultFn != nil {
+				assert.True(t, tt.wantedResultFn(w.Body.String()))
+			}
+		})
+	}
+}
+
+func mockListBucketsByIDsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	router.Path("/").Name(listBucketsByIDsRouterName).Methods(http.MethodGet).Queries(ListBucketsByIDsQuery, "").HandlerFunc(g.listBucketsByIDsHandler)
+	return router
+}
+
+func TestGateModular_ListBucketsByIDsHandler(t *testing.T) {
+
+	cases := []struct {
+		name           string
+		fn             func() *GateModular
+		request        func() *http.Request
+		wantedResult   string
+		wantedResultFn func(body string) bool
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().ListBucketsByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?%s&ids=%s", scheme, testDomain, ListBucketsByIDsQuery, "1,2,3,4")
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "invalid id",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?%s&ids=%s", scheme, testDomain, ListBucketsByIDsQuery, "a,2,3,4")
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "invalid id number",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				ids := "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100"
+				path := fmt.Sprintf("%s%s/?%s&ids=%s", scheme, testDomain, ListBucketsByIDsQuery, ids)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "repeated id number",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				ids := "1,1"
+				path := fmt.Sprintf("%s%s/?%s&ids=%s", scheme, testDomain, ListBucketsByIDsQuery, ids)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "xml response",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().ListBucketsByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(getTestBucketsInIdMap(1), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				ids := "1"
+				path := fmt.Sprintf("%s%s/?%s&ids=%s", scheme, testDomain, ListBucketsByIDsQuery, ids)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				assert.Equal(t, "<GfSpListBucketsByIDsResponse><BucketEntry><Id>0</Id><Value><BucketInfo><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><BucketName>mock-bucket-name0</BucketName><Visibility>1</Visibility><Id>0</Id><SourceType>0</SourceType><CreateAt>1699781080</CreateAt><PaymentAddress>0xF72aDa8130f934887755492879496b026665FbAB</PaymentAddress><GlobalVirtualGroupFamilyId>3</GlobalVirtualGroupFamilyId><ChargedReadQuota>0</ChargedReadQuota><BucketStatus>0</BucketStatus></BucketInfo><Removed>false</Removed><DeleteAt>0</DeleteAt><DeleteReason></DeleteReason><Operator>0xF72aDa8130f934887755492879496b026665FbAB</Operator><CreateTxHash>0x21c349a869bde1f44378936e2a9a15ed3fb2d54a43eaea8787960bba1134cdc2</CreateTxHash><UpdateTxHash>0x0cbff0ff3831d61345dbfda5b984e254c4bf87ecf80b45ccbb0635c0547a3b1a</UpdateTxHash><UpdateAt>1279811</UpdateAt><UpdateTime>1699781103</UpdateTime><StorageSize></StorageSize></Value></BucketEntry></GfSpListBucketsByIDsResponse>",
+					body)
+				return true
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockListBucketsByIDsHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, tt.request())
+			if tt.wantedResult != "" {
+				assert.Contains(t, w.Body.String(), tt.wantedResult)
+			}
+			if tt.wantedResultFn != nil {
+				assert.True(t, tt.wantedResultFn(w.Body.String()))
+			}
+		})
+	}
+}
+
+func mockGetUserGroupsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	router.Path("/").Name(getUserGroupsRouterName).Methods(http.MethodGet).Queries(GetUserGroupsQuery, "").HandlerFunc(g.getUserGroupsHandler)
+	return router
+}
+
+func TestGateModular_GetUserGroupsHandler(t *testing.T) {
+
+	cases := []struct {
+		name           string
+		fn             func() *GateModular
+		request        func() *http.Request
+		wantedResult   string
+		wantedResultFn func(body string) bool
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserGroups(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?user-groups&start-after=0&limit=1000", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "invalid user address",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?user-groups&start-after=0&limit=1000", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, "invalid_account")
+				return req
+			},
+			wantedResult: "invalid request header",
+		},
+		{
+			name: "invalid requestStartAfter",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?user-groups&start-after=a&limit=1000", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "invalid limit",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?user-groups&limit=a", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "xmlResponse",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserGroups(gomock.Any(), gomock.Eq(testAccount), gomock.Eq(uint64(2)), gomock.Eq(uint32(1))).Return(getTestGroupMembersResponse(1), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?user-groups&start-after=2&limit=1", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "<GfSpGetUserGroupsResponse><Groups><Group><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><GroupName>TestGroupName 0</GroupName><SourceType>0</SourceType><Id>0</Id><Extra></Extra></Group><AccountId>0xF72aDa8130f934887755492879496b026665FbAB</AccountId><Operator>0xF72aDa8130f934887755492879496b026665FbAB</Operator><CreateAt>1376086</CreateAt><CreateTime>1700032197</CreateTime><UpdateAt>1376086</UpdateAt><UpdateTime>1700032197</UpdateTime><Removed>false</Removed><ExpirationTime>253402300799</ExpirationTime></Groups></GfSpGetUserGroupsResponse>",
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetUserGroupsResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 1, len(res.Groups))
+				return true
+			},
+		},
+		{
+			name: "large xmlResponse",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserGroups(gomock.Any(), gomock.Eq(testAccount), gomock.Eq(uint64(2)), gomock.Eq(uint32(1000))).Return(getTestGroupMembersResponse(1000), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?user-groups&start-after=2&limit=1000", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetUserGroupsResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 1000, len(res.Groups))
+				return true
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockGetUserGroupsHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			begin := time.Now()
+			router.ServeHTTP(w, tt.request())
+			end := time.Now()
+			log.Printf("GetUserGroupsHandler takes %d to finish", end.UnixMilli()-begin.UnixMilli())
+
+			assert.Less(t, end.UnixMilli()-begin.UnixMilli(), int64(300)) // we expected this API can return response in 0.3 sec after it gets data from DB.
+			if tt.wantedResult != "" {
+				assert.Contains(t, w.Body.String(), tt.wantedResult)
+			}
+			if tt.wantedResultFn != nil {
+				assert.True(t, tt.wantedResultFn(w.Body.String()))
+			}
+		})
+	}
+}
+
+func mockGetGroupMembersHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	router.Path("/").Name(getGroupMembersRouterName).Methods(http.MethodGet).Queries(GetGroupMembersQuery, "").HandlerFunc(g.getGroupMembersHandler)
+	return router
+}
+
+func TestGateModular_GetGroupMembersHandler(t *testing.T) {
+
+	cases := []struct {
+		name           string
+		fn             func() *GateModular
+		request        func() *http.Request
+		wantedResult   string
+		wantedResultFn func(body string) bool
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetGroupMembers(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-members&group-id=2&limit=10", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "invalid requestStartAfter",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-members&group-id=2&limit=10&start-after=a", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "invalid group id",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-members&group-id=a&limit=10", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "invalid limit",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-members&group-id=2&limit=a", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "xmlResponse",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetGroupMembers(gomock.Any(), gomock.Eq(uint64(73)), gomock.Eq("0x76d32704A1f415a0a8139997Bb40978b9EEf031f"), gomock.Eq(uint32(1))).Return(getTestGroupMembersResponse(1), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-members&group-id=73&limit=1&start-after=0x76d32704A1f415a0a8139997Bb40978b9EEf031f", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "<GfSpGetGroupMembersResponse><Groups><Group><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><GroupName>TestGroupName 0</GroupName><SourceType>0</SourceType><Id>0</Id><Extra></Extra></Group><AccountId>0xF72aDa8130f934887755492879496b026665FbAB</AccountId><Operator>0xF72aDa8130f934887755492879496b026665FbAB</Operator><CreateAt>1376086</CreateAt><CreateTime>1700032197</CreateTime><UpdateAt>1376086</UpdateAt><UpdateTime>1700032197</UpdateTime><Removed>false</Removed><ExpirationTime>253402300799</ExpirationTime></Groups></GfSpGetGroupMembersResponse>",
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetGroupMembersResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 1, len(res.Groups))
+				return true
+			},
+		},
+		{
+			name: "large xmlResponse",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetGroupMembers(gomock.Any(), gomock.Eq(uint64(73)), gomock.Eq("0x76d32704A1f415a0a8139997Bb40978b9EEf031f"), gomock.Eq(uint32(1000))).Return(getTestGroupMembersResponse(1000), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?group-members&group-id=73&limit=1000&start-after=0x76d32704A1f415a0a8139997Bb40978b9EEf031f", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetGroupMembersResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 1000, len(res.Groups))
+				return true
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockGetGroupMembersHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			begin := time.Now()
+			router.ServeHTTP(w, tt.request())
+			end := time.Now()
+			log.Printf("GetGroupMembersHandler takes %d to finish", end.UnixMilli()-begin.UnixMilli())
+			assert.Less(t, end.UnixMilli()-begin.UnixMilli(), int64(300)) // we expected this API can return response in 0.3 sec after it gets data from DB.
+			if tt.wantedResult != "" {
+				assert.Contains(t, w.Body.String(), tt.wantedResult)
+			}
+			if tt.wantedResultFn != nil {
+				assert.True(t, tt.wantedResultFn(w.Body.String()))
+			}
+		})
+	}
+}
+
+func mockGetUserOwnedGroupsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	router.Path("/").Name(getUserOwnedGroupsRouterName).Methods(http.MethodGet).Queries(GetUserOwnedGroupsQuery, "").HandlerFunc(g.getUserOwnedGroupsHandler)
+	return router
+}
+
+func TestGateModular_GetUserOwnedGroupsHandler(t *testing.T) {
+
+	cases := []struct {
+		name           string
+		fn             func() *GateModular
+		request        func() *http.Request
+		wantedResult   string
+		wantedResultFn func(body string) bool
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserOwnedGroups(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?owned-groups&start-after=15&limit=1", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "invalid user address",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?owned-groups&start-after=15&limit=1", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, "invalid_account")
+				return req
+			},
+			wantedResult: "invalid request header",
+		},
+
+		{
+			name: "invalid requestStartAfter",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?owned-groups&start-after=a&limit=1", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "invalid limit",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?owned-groups&start-after=15&limit=a", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "xmlResponse",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserOwnedGroups(gomock.Any(), gomock.Eq(testAccount), gomock.Eq(uint64(15)), gomock.Eq(uint32(1))).Return(getTestGroupMembersResponse(1), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?owned-groups&start-after=15&limit=1", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "<GfSpGetUserOwnedGroupsResponse><Groups><Group><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><GroupName>TestGroupName 0</GroupName><SourceType>0</SourceType><Id>0</Id><Extra></Extra></Group><AccountId>0xF72aDa8130f934887755492879496b026665FbAB</AccountId><Operator>0xF72aDa8130f934887755492879496b026665FbAB</Operator><CreateAt>1376086</CreateAt><CreateTime>1700032197</CreateTime><UpdateAt>1376086</UpdateAt><UpdateTime>1700032197</UpdateTime><Removed>false</Removed><ExpirationTime>253402300799</ExpirationTime></Groups></GfSpGetUserOwnedGroupsResponse>",
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetUserOwnedGroupsResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 1, len(res.Groups))
+				return true
+			},
+		},
+		{
+			name: "large xmlResponse",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserOwnedGroups(gomock.Any(), gomock.Eq(testAccount), gomock.Eq(uint64(15)), gomock.Eq(uint32(1000))).Return(getTestGroupMembersResponse(1000), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?owned-groups&start-after=15&limit=1000", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				var res types.GfSpGetUserOwnedGroupsResponse
+				err := xml.Unmarshal([]byte(body), &res)
+				if err != nil {
+					return false
+				}
+				assert.Equal(t, 1000, len(res.Groups))
+				return true
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockGetUserOwnedGroupsHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			begin := time.Now()
+			router.ServeHTTP(w, tt.request())
+			end := time.Now()
+			log.Printf("GetUserOwnedGroupsHandler takes %d to finish", end.UnixMilli()-begin.UnixMilli())
+			assert.Less(t, end.UnixMilli()-begin.UnixMilli(), int64(300)) // we expected this API can return response in 0.3 sec after it gets data from DB.
+			if tt.wantedResult != "" {
+				assert.Contains(t, w.Body.String(), tt.wantedResult)
+			}
+			if tt.wantedResultFn != nil {
+				assert.True(t, tt.wantedResultFn(w.Body.String()))
+			}
+		})
+	}
+}
+
+func mockGetBucketMetaHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	var routers []*mux.Router
+	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())
+	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
+	for _, r := range routers {
+		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
+	}
+	return router
+}
+
+func TestGateModular_GetBucketMetaHandler(t *testing.T) {
+
+	cases := []struct {
+		name           string
+		fn             func() *GateModular
+		request        func() *http.Request
+		wantedResult   string
+		wantedResultFn func(body string) bool
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, testDomain, mockBucketName, GetBucketMetaQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "wrong BucketName",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, testDomain, "aa", GetBucketMetaQuery) // aa is an invalid bucket name
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "xml response",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), gomock.Any()).Return(getTestVGFInfoBuckets(1)[0], getTestStreamRecord(), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, testDomain, mockBucketName, GetBucketMetaQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResult: "<GfSpGetBucketMetaResponse><Bucket><BucketInfo><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><BucketName>mock-bucket-name0</BucketName><Visibility>1</Visibility><Id>0</Id><SourceType>0</SourceType><CreateAt>1699781080</CreateAt><PaymentAddress>0xF72aDa8130f934887755492879496b026665FbAB</PaymentAddress><GlobalVirtualGroupFamilyId>3</GlobalVirtualGroupFamilyId><ChargedReadQuota>0</ChargedReadQuota><BucketStatus>0</BucketStatus></BucketInfo><Removed>false</Removed><DeleteAt>0</DeleteAt><DeleteReason></DeleteReason><Operator>0xF72aDa8130f934887755492879496b026665FbAB</Operator><CreateTxHash>0x21c349a869bde1f44378936e2a9a15ed3fb2d54a43eaea8787960bba1134cdc2</CreateTxHash><UpdateTxHash>0x0cbff0ff3831d61345dbfda5b984e254c4bf87ecf80b45ccbb0635c0547a3b1a</UpdateTxHash><UpdateAt>1279811</UpdateAt><UpdateTime>1699781103</UpdateTime><Vgf><Id>0</Id><PrimarySpId>3</PrimarySpId><VirtualPaymentAddress>0x26281179b8885F21f95b0a246c8AD70957A95A23</VirtualPaymentAddress></Vgf><StorageSize></StorageSize></Bucket><StreamRecord><Account>0xF72aDa8130f934887755492879496b026665FbAB</Account><CrudTimestamp>1699780994</CrudTimestamp><NetflowRate>0</NetflowRate><StaticBalance>240000000000000001</StaticBalance><BufferBalance>0</BufferBalance><LockBalance>0</LockBalance><Status>0</Status><SettleTimestamp>0</SettleTimestamp><OutFlowCount>0</OutFlowCount><FrozenNetflowRate>0</FrozenNetflowRate></StreamRecord></GfSpGetBucketMetaResponse>",
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockGetBucketMetaHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, tt.request())
+			if tt.wantedResult != "" {
+				assert.Contains(t, w.Body.String(), tt.wantedResult)
+			}
+			if tt.wantedResultFn != nil {
+				assert.True(t, tt.wantedResultFn(w.Body.String()))
+			}
+		})
+	}
+}
+
+func mockGetUserBucketsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	router.Path("/").Name(getUserBucketsRouterName).Methods(http.MethodGet).HandlerFunc(g.getUserBucketsHandler)
+
+	return router
+}
+
+func TestGateModular_GetUserBucketsHandler(t *testing.T) {
+
+	cases := []struct {
+		name           string
+		fn             func() *GateModular
+		request        func() *http.Request
+		wantedResult   string
+		wantedResultFn func(body string) bool
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserBuckets(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "invalid user address",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, "invalid_account")
+				return req
+			},
+			wantedResult: "invalid request header",
+		},
+		{
+			name: "wrong requestIncludeRemoved",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/?&&include-removed=invalid", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "invalid request params for query",
+		},
+
+		{
+			name: "xml response",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetUserBuckets(gomock.Any(), testAccount, gomock.Any()).Return(getTestVGFInfoBuckets(1), nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/", scheme, testDomain)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUserAddressHeader, testAccount)
+				return req
+			},
+			wantedResult: "<GfSpGetUserBucketsResponse><Buckets><BucketInfo><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><BucketName>mock-bucket-name0</BucketName><Visibility>1</Visibility><Id>0</Id><SourceType>0</SourceType><CreateAt>1699781080</CreateAt><PaymentAddress>0xF72aDa8130f934887755492879496b026665FbAB</PaymentAddress><GlobalVirtualGroupFamilyId>3</GlobalVirtualGroupFamilyId><ChargedReadQuota>0</ChargedReadQuota><BucketStatus>0</BucketStatus></BucketInfo><Removed>false</Removed><DeleteAt>0</DeleteAt><DeleteReason></DeleteReason><Operator>0xF72aDa8130f934887755492879496b026665FbAB</Operator><CreateTxHash>0x21c349a869bde1f44378936e2a9a15ed3fb2d54a43eaea8787960bba1134cdc2</CreateTxHash><UpdateTxHash>0x0cbff0ff3831d61345dbfda5b984e254c4bf87ecf80b45ccbb0635c0547a3b1a</UpdateTxHash><UpdateAt>1279811</UpdateAt><UpdateTime>1699781103</UpdateTime><Vgf><Id>0</Id><PrimarySpId>3</PrimarySpId><VirtualPaymentAddress>0x26281179b8885F21f95b0a246c8AD70957A95A23</VirtualPaymentAddress></Vgf><StorageSize></StorageSize></Buckets></GfSpGetUserBucketsResponse>",
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockGetUserBucketsHandlerRoute(t, tt.fn())
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, tt.request())
 			if tt.wantedResult != "" {
