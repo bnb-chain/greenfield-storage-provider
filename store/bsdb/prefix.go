@@ -111,7 +111,7 @@ func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode, bucketName string
 	err = b.db.Table(GetObjectsTableName(bucketName)).
 		Where("object_id in (?)", objectIDs).
 		Find(&objects).Error
-	//stop after finding one set?
+
 	if err != nil {
 		return nil, err
 	}

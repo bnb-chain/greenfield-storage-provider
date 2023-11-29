@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/jsonpb"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
 
