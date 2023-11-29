@@ -278,7 +278,6 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 
 	if format == "json" {
 		respBytes, err = json.Marshal(grpcResponse)
-
 		w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
 		w.Write(respBytes)
 		return
@@ -287,7 +286,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	respBytes, err = xml.Marshal((*GfSpListObjectsByBucketNameResponse)(grpcResponse))
 
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by given bucket name", "error", err)
 		return
 	}
 
@@ -608,11 +607,11 @@ func (m GfSpListObjectsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.Start
 		return err
 	}
 
-	for k, v := range m.Objects {
-		for i, c := range v.ObjectInfo.Checksums {
-			v.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
+	for k, o := range m.Objects {
+		for i, c := range o.ObjectInfo.Checksums {
+			o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
 		}
-		e.Encode(ObjectEntry{Id: k, Value: v})
+		e.Encode(ObjectEntry{Id: k, Value: o})
 	}
 
 	return e.EncodeToken(start.End())
