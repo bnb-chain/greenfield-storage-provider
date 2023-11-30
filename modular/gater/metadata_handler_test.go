@@ -2,7 +2,6 @@ package gater
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -472,34 +471,35 @@ func TestGateModular_ListObjectsByBucketNameHandler(t *testing.T) {
 			},
 			wantedResult: "invalid request params for query",
 		},
-		{
-			name: "json response",
-			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().ListObjectsByBucketName(gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-				).Return(mockData, uint64(0), uint64(0), false, "", "", "", "", nil, "", nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
-				return g
-			},
-			request: func() *http.Request {
-				path := fmt.Sprintf("%s%s.%s/?max-keys=1000&delimiter=%%2F&format=json", scheme, mockBucketName, testDomain)
-				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				return req
-			},
-			wantedResultFn: func(body string) bool {
-				var res types.GfSpListObjectsByBucketNameResponse
-				err := json.Unmarshal([]byte(body), &res)
-				if err != nil {
-					return false
-				}
-				assert.Equal(t, len(mockData), len(res.Objects))
-				assert.Equal(t, mockData[0].ObjectInfo.Id, res.Objects[0].ObjectInfo.Id)
-				return true
-			},
-		},
+		// Disable the following json response unit test and will add it back once we add json response support in metadata_handler soon.
+		//{
+		//	name: "json response",
+		//	fn: func() *GateModular {
+		//		g := setup(t)
+		//		ctrl := gomock.NewController(t)
+		//		clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+		//		clientMock.EXPECT().ListObjectsByBucketName(gomock.Any(), gomock.Any(), gomock.Any(),
+		//			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+		//		).Return(mockData, uint64(0), uint64(0), false, "", "", "", "", nil, "", nil).Times(1)
+		//		g.baseApp.SetGfSpClient(clientMock)
+		//		return g
+		//	},
+		//	request: func() *http.Request {
+		//		path := fmt.Sprintf("%s%s.%s/?max-keys=1000&delimiter=%%2F&format=json", scheme, mockBucketName, testDomain)
+		//		req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+		//		return req
+		//	},
+		//	wantedResultFn: func(body string) bool {
+		//		var res types.GfSpListObjectsByBucketNameResponse
+		//		err := json.Unmarshal([]byte(body), &res)
+		//		if err != nil {
+		//			return false
+		//		}
+		//		assert.Equal(t, len(mockData), len(res.Objects))
+		//		assert.Equal(t, mockData[0].ObjectInfo.Id, res.Objects[0].ObjectInfo.Id)
+		//		return true
+		//	},
+		//},
 		{
 			name: "xml response",
 			fn: func() *GateModular {

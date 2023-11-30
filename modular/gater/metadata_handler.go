@@ -3,7 +3,6 @@ package gater
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/xml"
 	"net/http"
 	"net/url"
@@ -165,7 +164,6 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	requestDelimiter = queryParams.Get(ListObjectsDelimiterQuery)
 	requestPrefix = queryParams.Get(ListObjectsPrefixQuery)
 	requestIncludeRemoved = queryParams.Get(ListObjectsIncludeRemovedQuery)
-	format := queryParams.Get("format")
 
 	if requestDelimiter != "" && requestDelimiter != "/" {
 		log.CtxErrorw(reqCtx.Context(), "failed to check delimiter", "delimiter", requestDelimiter, "error", err)
@@ -275,14 +273,7 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		ContinuationToken:     continuationToken,
 	}
 
-	if format == "json" {
-		respBytes, err = json.Marshal(grpcResponse)
-		w.Header().Set(ContentTypeHeader, ContentTypeJSONHeaderValue)
-		w.Write(respBytes)
-		return
-	}
-
-	respBytes, err = xml.Marshal((*GfSpListObjectsByBucketNameResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by given bucket name", "error", err)
@@ -339,7 +330,7 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 	grpcResponse := &types.GfSpGetObjectMetaResponse{
 		Object: resp,
 	}
-	respBytes, err = xml.Marshal((*GfSpGetObjectMetaResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 
 	if err != nil {
 		log.Errorf("failed to get object meta", "error", err)
@@ -589,33 +580,6 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 	w.Write(respBytes)
 }
 
-type GfSpListObjectsByIDsResponse types.GfSpListObjectsByIDsResponse
-
-type ObjectEntry struct {
-	Id    uint64
-	Value *types.Object
-}
-
-func (m GfSpListObjectsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if len(m.Objects) == 0 {
-		return nil
-	}
-
-	err := e.EncodeToken(start)
-	if err != nil {
-		return err
-	}
-
-	for k, o := range m.Objects {
-		for i, c := range o.ObjectInfo.Checksums {
-			o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
-		}
-		e.Encode(ObjectEntry{Id: k, Value: o})
-	}
-
-	return e.EncodeToken(start.End())
-}
-
 // listObjectsByIDsHandler list objects by object ids
 func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -686,7 +650,7 @@ func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Req
 	}
 	grpcResponse := &types.GfSpListObjectsByIDsResponse{Objects: objects}
 
-	respBytes, err = xml.Marshal((*GfSpListObjectsByIDsResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
@@ -694,30 +658,6 @@ func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
-}
-
-type GfSpListBucketsByIDsResponse types.GfSpListBucketsByIDsResponse
-
-type BucketEntry struct {
-	Id    uint64
-	Value *types.Bucket
-}
-
-func (m GfSpListBucketsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if len(m.Buckets) == 0 {
-		return nil
-	}
-
-	err := e.EncodeToken(start)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range m.Buckets {
-		e.Encode(BucketEntry{Id: k, Value: v})
-	}
-
-	return e.EncodeToken(start.End())
 }
 
 // listBucketsByIDsHandler list buckets by bucket ids
@@ -790,7 +730,7 @@ func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Req
 	}
 	grpcResponse := &types.GfSpListBucketsByIDsResponse{Buckets: buckets}
 
-	respBytes, err = xml.Marshal((*GfSpListBucketsByIDsResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
@@ -2581,57 +2521,6 @@ func (g *GateModular) listUserPaymentAccountsHandler(w http.ResponseWriter, r *h
 	w.Write(respBytes)
 }
 
-type GfSpListGroupsByIDsResponse types.GfSpListGroupsByIDsResponse
-
-type GroupEntry struct {
-	Id    uint64
-	Value *types.Group
-}
-
-func (m GfSpListGroupsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if len(m.Groups) == 0 {
-		return nil
-	}
-
-	err := e.EncodeToken(start)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range m.Groups {
-		e.Encode(GroupEntry{Id: k, Value: v})
-	}
-
-	return e.EncodeToken(start.End())
-}
-
-type GfSpListObjectsByBucketNameResponse types.GfSpListObjectsByBucketNameResponse
-
-func (m GfSpListObjectsByBucketNameResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	type Alias GfSpListObjectsByBucketNameResponse
-	// Create a new struct with Base64-encoded Checksums field
-	responseAlias := Alias(m)
-	for _, o := range responseAlias.Objects {
-		for i, c := range o.ObjectInfo.Checksums {
-			o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
-		}
-	}
-	return e.EncodeElement(responseAlias, start)
-}
-
-type GfSpGetObjectMetaResponse types.GfSpGetObjectMetaResponse
-
-func (m GfSpGetObjectMetaResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	type Alias GfSpGetObjectMetaResponse
-	// Create a new struct with Base64-encoded Checksums field
-	responseAlias := Alias(m)
-	o := responseAlias.Object
-	for i, c := range o.ObjectInfo.Checksums {
-		o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
-	}
-	return e.EncodeElement(responseAlias, start)
-}
-
 // listGroupsByIDsHandler list groups by ids
 func (g *GateModular) listGroupsByIDsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -2702,7 +2591,7 @@ func (g *GateModular) listGroupsByIDsHandler(w http.ResponseWriter, r *http.Requ
 	}
 	grpcResponse := &types.GfSpListGroupsByIDsResponse{Groups: groups}
 
-	respBytes, err = xml.Marshal((*GfSpListGroupsByIDsResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {
 		log.Errorf("failed to list groups by ids", "error", err)
 		return
