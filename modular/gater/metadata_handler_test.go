@@ -3,6 +3,7 @@ package gater
 import (
 	"encoding/base64"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
