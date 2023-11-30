@@ -46,6 +46,26 @@ func init() {
 	})
 }
 
+func GetGfSpErr(err error) *GfSpError {
+	if err == nil {
+		return nil
+	}
+	if gfspErr, ok := err.(*GfSpError); ok {
+		return gfspErr
+	}
+	i := strings.Index(err.Error(), "desc = ")
+	if i == -1 || len(err.Error())-1 < i+6 {
+		return nil
+	}
+	errInfo := err.Error()[i+6:]
+	var gfspErr GfSpError
+	unmarshalErr := json.Unmarshal([]byte(errInfo), &gfspErr)
+	if unmarshalErr == nil && gfspErr.HttpStatusCode != 0 {
+		return &gfspErr
+	}
+	return nil
+}
+
 // MakeGfSpError returns an GfSpError from the build-in error interface. It is
 // difficult to predefine all errors. For undefined errors, there needs to be a
 // way to capture them and return them to the client according to the GfSpError
