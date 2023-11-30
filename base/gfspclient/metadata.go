@@ -202,7 +202,7 @@ func (s *GfSpClient) GetObjectMeta(ctx context.Context, objectName string, bucke
 func (s *GfSpClient) GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
-		return 0, ErrRPCUnknownWithDetail("client failed to connect metadata, error: " + err.Error())
+		return 0, ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", err)
 	}
 	defer conn.Close()
 
@@ -212,7 +212,7 @@ func (s *GfSpClient) GetLatestObjectID(ctx context.Context, opts ...grpc.DialOpt
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to send get latest object id rpc", "error", err)
-		return 0, ErrRPCUnknownWithDetail("failed to send get latest object id rpc, error: " + err.Error())
+		return 0, ErrRPCUnknownWithDetail("failed to send get latest object id rpc, error: ", err)
 	}
 	return resp.GetObjectId(), nil
 }
