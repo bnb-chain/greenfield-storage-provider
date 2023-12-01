@@ -120,6 +120,9 @@ type ManageModular struct {
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
 	enableHealthyChecker bool
+
+	enableTaskRetryScheduler bool
+	taskRetryScheduler       *TaskRetryScheduler
 }
 
 func (m *ManageModular) Name() string {
@@ -174,10 +177,19 @@ func (m *ManageModular) Start(ctx context.Context) error {
 			}
 		}
 	}
-
+	m.startTaskRetryScheduler()
 	go m.delayStartMigrateScheduler()
 	go m.eventLoop(ctx)
 	return nil
+}
+
+func (m *ManageModular) startTaskRetryScheduler() {
+	if !m.enableTaskRetryScheduler {
+		log.Info("Skip to start task retry scheduler")
+		return
+	}
+	m.taskRetryScheduler = NewTaskRetryScheduler(m)
+	m.taskRetryScheduler.Start()
 }
 
 func (m *ManageModular) delayStartMigrateScheduler() {

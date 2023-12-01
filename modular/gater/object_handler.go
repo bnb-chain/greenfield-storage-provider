@@ -641,7 +641,6 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 	var (
 		err                  error
 		reqCtx               *RequestContext
-		authenticated        bool
 		objectInfo           *storagetypes.ObjectInfo
 		errDescription       string
 		taskStateDescription string
@@ -666,17 +665,6 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 
 	reqCtx, err = NewRequestContext(r, g)
 	if err != nil {
-		return
-	}
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypeGetUploadingState, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-		return
-	}
-	if !authenticated {
-		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-		err = ErrNoPermission
 		return
 	}
 

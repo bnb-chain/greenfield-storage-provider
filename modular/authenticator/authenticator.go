@@ -322,9 +322,9 @@ func (a *AuthenticationModular) VerifyAuthentication(
 				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotSealedState
+		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED || objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+			log.CtxErrorw(ctx, "object state is not sealed or created", "state", objectInfo.GetObjectStatus())
+			return false, ErrNoPermission
 		}
 		streamTime := time.Now()
 		streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPaymentAddress())

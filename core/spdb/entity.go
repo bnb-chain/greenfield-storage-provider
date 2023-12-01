@@ -25,6 +25,7 @@ type UploadObjectMeta struct {
 	SecondaryEndpoints   []string
 	SecondarySignatures  [][]byte
 	ErrorDescription     string
+	UpdateTimeStamp      int64
 }
 
 // GCObjectMeta defines the gc object range progress info.

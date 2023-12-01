@@ -37,6 +37,15 @@ type UploadObjectProgressDB interface {
 	// GetUploadMetasToSeal queries the latest replicate_done/seal_doing object to continue seal.
 	// It is only used in startup.
 	GetUploadMetasToSeal(limit int, timeout int64) ([]*UploadObjectMeta, error)
+	// GetUploadMetasToReplicateByStartTS queries the upload_done/replicate_doing object to continue replicate.
+	// It is used in task retry scheduler.
+	GetUploadMetasToReplicateByStartTS(limit int, startTimeStamp int64) ([]*UploadObjectMeta, error)
+	// GetUploadMetasToSealByStartTS queries the replicate_done/seal_doing object to continue seal.
+	// It is used in task retry scheduler.
+	GetUploadMetasToSealByStartTS(limit int, startTimeStamp int64) ([]*UploadObjectMeta, error)
+	// GetUploadMetasToRejectByRangeTS queries the upload_done/replicate_doing object to reject.
+	// It is used in task retry scheduler.
+	GetUploadMetasToRejectByRangeTS(limit int, startTimeStamp int64, endTimeStamp int64) ([]*UploadObjectMeta, error)
 	// InsertPutEvent inserts a new upload event progress.
 	InsertPutEvent(task coretask.Task) error
 }
