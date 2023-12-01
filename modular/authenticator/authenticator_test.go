@@ -2,9 +2,10 @@ package authenticator
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"encoding/hex"
 	"errors"
+
+	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
