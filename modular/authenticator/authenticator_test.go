@@ -2,10 +2,9 @@ package authenticator
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"encoding/hex"
 	"errors"
-
-	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
@@ -474,6 +473,7 @@ func VerifyAuthPutObjectAndGetUploadingState(t *testing.T, authType coremodule.A
 
 	mockedConsensus := consensus.NewMockConsensus(ctrl)
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
+		ObjectName:   "test_object",
 		ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 	}, nil).Times(1)
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
@@ -484,7 +484,7 @@ func VerifyAuthPutObjectAndGetUploadingState(t *testing.T, authType coremodule.A
 	}, nil).Times(1)
 	a.baseApp.SetConsensus(mockedConsensus)
 	_, err := a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
-	assert.Equal(t, ErrNotCreatedState, err)
+	assert.Equal(t, ErrUnexpectedObjectStatusWithDetail("test_object", storagetypes.OBJECT_STATUS_CREATED, storagetypes.OBJECT_STATUS_SEALED), err)
 
 	// VerifyPutObjectPermission get error
 	mockedConsensus = consensus.NewMockConsensus(ctrl)

@@ -3,6 +3,7 @@ package authenticator
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -26,7 +27,6 @@ import (
 var (
 	ErrUnsupportedAuthType = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20001, "unsupported auth op type")
 	ErrMismatchSp          = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20002, "mismatched primary sp")
-	ErrNotCreatedState     = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20003, "object has not been created state")
 	ErrNotSealedState      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20004, "object has not been sealed state")
 	ErrPaymentState        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20005, "payment account is not active")
 	ErrInvalidAddress      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20006, "the user address format is invalid")
@@ -41,6 +41,15 @@ var (
 	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
 	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
 )
+
+func ErrUnexpectedObjectStatusWithDetail(objectName string, expectedStatus storagetypes.ObjectStatus, actualStatus storagetypes.ObjectStatus) *gfsperrors.GfSpError {
+	return &gfsperrors.GfSpError{
+		CodeSpace:      module.AuthenticationModularName,
+		HttpStatusCode: int32(http.StatusBadRequest),
+		InnerCode:      int32(20003),
+		Description:    fmt.Sprintf("object %s is expected to be %s status but actually %s status", objectName, expectedStatus, actualStatus),
+	}
+}
 
 func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.AuthenticationModularName, http.StatusInternalServerError, 25002, detail)
@@ -233,8 +242,8 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotCreatedState
+			log.CtxErrorw(ctx, "object state should be OBJECT_STATUS_CREATED", "state", objectInfo.GetObjectStatus())
+			return false, ErrUnexpectedObjectStatusWithDetail(objectInfo.ObjectName, storagetypes.OBJECT_STATUS_CREATED, objectInfo.GetObjectStatus())
 		}
 		permissionTime := time.Now()
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
@@ -273,8 +282,8 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state is not created", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotCreatedState
+			log.CtxErrorw(ctx, "object state should be OBJECT_STATUS_CREATED", "state", objectInfo.GetObjectStatus())
+			return false, ErrUnexpectedObjectStatusWithDetail(objectInfo.ObjectName, storagetypes.OBJECT_STATUS_CREATED, objectInfo.GetObjectStatus())
 		}
 		permissionTime := time.Now()
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
