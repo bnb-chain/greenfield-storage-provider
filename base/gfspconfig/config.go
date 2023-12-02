@@ -276,4 +276,6 @@ type ManagerConfig struct {
 	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`
 	GVGPreferSPList                                []uint32 `comment:"optional"`
 	SPBlackList                                    []uint32 `comment:"optional"`
+	EnableTaskRetryScheduler                       bool     `comment:"optional"`
+	RejectUnsealThresholdSecond                    uint64   `comment:"optional"`
 }

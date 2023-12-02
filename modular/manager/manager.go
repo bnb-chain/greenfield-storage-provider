@@ -121,8 +121,9 @@ type ManageModular struct {
 	gvgBlackList         vgmgr.IDSet
 	enableHealthyChecker bool
 
-	enableTaskRetryScheduler bool
-	taskRetryScheduler       *TaskRetryScheduler
+	enableTaskRetryScheduler    bool
+	rejectUnsealThresholdSecond uint64
+	taskRetryScheduler          *TaskRetryScheduler
 }
 
 func (m *ManageModular) Name() string {

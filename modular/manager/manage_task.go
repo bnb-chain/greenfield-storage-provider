@@ -317,7 +317,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 				log.Errorw("failed to update object task state", "task_info", task.Info(), "error", err)
 			}
 			log.Errorw("succeed to update object task state", "task_info", task.Info())
-			// TODO: delete this upload db record?
+			_ = m.baseApp.GfSpDB().DeleteUploadProgress(task.GetObjectInfo().Id.Uint64())
 		}()
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessReplicateAndSeal).Inc()
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessReplicateAndSeal).Observe(

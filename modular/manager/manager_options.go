@@ -289,5 +289,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 
 	manager.spBlackList = cfg.Manager.SPBlackList
 
+	manager.enableTaskRetryScheduler = cfg.Manager.EnableTaskRetryScheduler
+	manager.rejectUnsealThresholdSecond = cfg.Manager.RejectUnsealThresholdSecond
+
 	return nil
 }
