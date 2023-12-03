@@ -276,6 +276,13 @@ type ManagerConfig struct {
 	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`
 	GVGPreferSPList                                []uint32 `comment:"optional"`
 	SPBlackList                                    []uint32 `comment:"optional"`
-	EnableTaskRetryScheduler                       bool     `comment:"optional"`
-	RejectUnsealThresholdSecond                    uint64   `comment:"optional"`
+
+	// EnableTaskRetryScheduler is used to enable task retry scheduler.
+	EnableTaskRetryScheduler bool `comment:"optional"`
+
+	// RejectUnsealThresholdSecond is as the following meanings:
+	// retry replicate and seal task when the task's create_timestamp + RejectUnsealThresholdSecond > now.time();
+	// retry reject unseal when the task's create_timestamp + RejectUnsealThresholdSecond <= now.time() &&
+	// create_timestamp + 2*RejectUnsealThresholdSecond > now.time().
+	RejectUnsealThresholdSecond uint64 `comment:"optional"`
 }

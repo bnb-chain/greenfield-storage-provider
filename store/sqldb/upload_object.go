@@ -131,10 +131,11 @@ func (s *SpDBImpl) GetUploadMetasToReplicateByStartTS(limit int, startTS int64) 
 		uploadObjectProgresses  []UploadObjectProgressTable
 		returnUploadObjectMetas []*corespdb.UploadObjectMeta
 	)
-	result = s.db.Where("task_state IN ? and update_timestamp_second > ?", []string{
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DONE)),
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_SEAL_OBJECT_DOING)),
-	}, startTS).Order("update_timestamp_second ASC").Limit(limit).Find(&uploadObjectProgresses)
+	result = s.db.Where("task_state IN ? and create_timestamp_second > ?", []string{
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE)),
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING)),
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_ERROR)),
+	}, startTS).Order("create_timestamp_second ASC").Limit(limit).Find(&uploadObjectProgresses)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query upload table: %s", result.Error)
 	}
@@ -144,11 +145,11 @@ func (s *SpDBImpl) GetUploadMetasToReplicateByStartTS(limit int, startTS int64) 
 			return nil, err
 		}
 		returnUploadObjectMetas = append(returnUploadObjectMetas, &corespdb.UploadObjectMeta{
-			ObjectID:             u.ObjectID,
-			GlobalVirtualGroupID: u.GlobalVirtualGroupID,
-			SecondaryEndpoints:   util.SplitByComma(u.SecondaryEndpoints),
-			SecondarySignatures:  secondarySignatures,
-			UpdateTimeStamp:      u.UpdateTimestampSecond,
+			ObjectID:              u.ObjectID,
+			GlobalVirtualGroupID:  u.GlobalVirtualGroupID,
+			SecondaryEndpoints:    util.SplitByComma(u.SecondaryEndpoints),
+			SecondarySignatures:   secondarySignatures,
+			CreateTimeStampSecond: u.CreateTimestampSecond,
 		})
 	}
 	return returnUploadObjectMetas, nil
@@ -160,10 +161,11 @@ func (s *SpDBImpl) GetUploadMetasToSealByStartTS(limit int, startTS int64) ([]*c
 		uploadObjectProgresses  []UploadObjectProgressTable
 		returnUploadObjectMetas []*corespdb.UploadObjectMeta
 	)
-	result = s.db.Where("task_state IN ? and update_timestamp_second > ?", []string{
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE)),
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING)),
-	}, startTS).Order("update_timestamp_second ASC").Limit(limit).Find(&uploadObjectProgresses)
+	result = s.db.Where("task_state IN ? and create_timestamp_second > ?", []string{
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DONE)),
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_SEAL_OBJECT_DOING)),
+		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_SEAL_OBJECT_ERROR)),
+	}, startTS).Order("create_timestamp_second ASC").Limit(limit).Find(&uploadObjectProgresses)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query upload table: %s", result.Error)
 	}
@@ -173,35 +175,31 @@ func (s *SpDBImpl) GetUploadMetasToSealByStartTS(limit int, startTS int64) ([]*c
 			return nil, err
 		}
 		returnUploadObjectMetas = append(returnUploadObjectMetas, &corespdb.UploadObjectMeta{
-			ObjectID:             u.ObjectID,
-			GlobalVirtualGroupID: u.GlobalVirtualGroupID,
-			SecondaryEndpoints:   util.SplitByComma(u.SecondaryEndpoints),
-			SecondarySignatures:  secondarySignatures,
-			UpdateTimeStamp:      u.UpdateTimestampSecond,
+			ObjectID:              u.ObjectID,
+			GlobalVirtualGroupID:  u.GlobalVirtualGroupID,
+			SecondaryEndpoints:    util.SplitByComma(u.SecondaryEndpoints),
+			SecondarySignatures:   secondarySignatures,
+			CreateTimeStampSecond: u.CreateTimestampSecond,
 		})
 	}
 	return returnUploadObjectMetas, nil
 }
 
-func (s *SpDBImpl) GetUploadMetasToRejectByRangeTS(limit int, startTS int64, endTS int64) ([]*corespdb.UploadObjectMeta, error) {
+func (s *SpDBImpl) GetUploadMetasToRejectUnsealByRangeTS(limit int, startTS int64, endTS int64) ([]*corespdb.UploadObjectMeta, error) {
 	var (
 		result                  *gorm.DB
 		uploadObjectProgresses  []UploadObjectProgressTable
 		returnUploadObjectMetas []*corespdb.UploadObjectMeta
 	)
-	result = s.db.Where("task_state IN ? and update_timestamp_second > ? and update_timestamp_second <= ?", []string{
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE)),
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING)),
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DONE)),
-		util.Uint32ToString(uint32(storetypes.TaskState_TASK_STATE_SEAL_OBJECT_DOING)),
-	}, startTS, endTS).Order("update_timestamp_second ASC").Limit(limit).Find(&uploadObjectProgresses)
+	result = s.db.Where("create_timestamp_second > ? and create_timestamp_second <= ?",
+		startTS, endTS).Order("create_timestamp_second ASC").Limit(limit).Find(&uploadObjectProgresses)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to query upload table: %s", result.Error)
 	}
 	for _, u := range uploadObjectProgresses {
 		returnUploadObjectMetas = append(returnUploadObjectMetas, &corespdb.UploadObjectMeta{
-			ObjectID:        u.ObjectID,
-			UpdateTimeStamp: u.UpdateTimestampSecond,
+			ObjectID:              u.ObjectID,
+			CreateTimeStampSecond: u.CreateTimestampSecond,
 		})
 	}
 	return returnUploadObjectMetas, nil

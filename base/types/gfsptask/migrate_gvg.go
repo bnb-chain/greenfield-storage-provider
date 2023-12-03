@@ -89,7 +89,7 @@ func (m *GfSpMigrateGVGTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpMigrateGVGTask) SetRetry(retry int) {
+func (m *GfSpMigrateGVGTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -306,7 +306,7 @@ func (m *GfSpGCBucketMigrationTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpGCBucketMigrationTask) SetRetry(retry int) {
+func (m *GfSpGCBucketMigrationTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 

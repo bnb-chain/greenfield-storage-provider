@@ -19,13 +19,13 @@ const (
 
 // UploadObjectMeta defines the upload object state and related seal info, etc.
 type UploadObjectMeta struct {
-	ObjectID             uint64
-	TaskState            storetypes.TaskState
-	GlobalVirtualGroupID uint32
-	SecondaryEndpoints   []string
-	SecondarySignatures  [][]byte
-	ErrorDescription     string
-	UpdateTimeStamp      int64
+	ObjectID              uint64
+	TaskState             storetypes.TaskState
+	GlobalVirtualGroupID  uint32
+	SecondaryEndpoints    []string
+	SecondarySignatures   [][]byte
+	ErrorDescription      string
+	CreateTimeStampSecond int64
 }
 
 // GCObjectMeta defines the gc object range progress info.

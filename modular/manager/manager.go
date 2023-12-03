@@ -417,9 +417,8 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
 			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
-		replicateTask.SetSecondaryAddresses(meta.SecondaryEndpoints)
-		replicateTask.SetSecondarySignatures(meta.SecondarySignatures)
 		replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
+		replicateTask.SetSecondaryAddresses(meta.SecondaryEndpoints)
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
@@ -773,7 +772,7 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], resumableUpload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
+		"current inner status, upload[%d], resumableUpload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
 		m.uploadQueue.Len(), m.resumableUploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),

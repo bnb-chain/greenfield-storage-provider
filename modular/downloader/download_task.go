@@ -58,7 +58,7 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		log.CtxErrorw(ctx, "failed pre download object due to pointer dangling")
 		return ErrDanglingPointer
 	}
-	if downloadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED ||
+	if downloadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED &&
 		downloadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.CtxErrorw(ctx, "failed to pre download object due to object is not in sealed or created")
 		return ErrDownloadStatus
@@ -265,7 +265,7 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		return ErrDanglingPointer
 	}
 
-	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED ||
+	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED &&
 		downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.CtxErrorw(ctx, "failed to pre download piece due to object is not in sealed or created")
 		return ErrDownloadStatus

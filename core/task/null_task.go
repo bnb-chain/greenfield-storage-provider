@@ -43,7 +43,7 @@ func (*NullTask) Expired() bool                           { return false }
 func (*NullTask) ExceedTimeout() bool                     { return false }
 func (*NullTask) GetPriority() TPriority                  { return 0 }
 func (*NullTask) SetPriority(TPriority)                   {}
-func (*NullTask) SetRetry(int)                            {}
+func (*NullTask) SetRetry(int64)                          {}
 func (*NullTask) IncRetry()                               {}
 func (*NullTask) ExceedRetry() bool                       { return false }
 func (*NullTask) GetRetry() int64                         { return 0 }

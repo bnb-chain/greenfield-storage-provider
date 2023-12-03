@@ -18,6 +18,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -148,6 +149,14 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 				return ErrGfSpDBWithDetail("failed to write integrity hash to db, error: " + err.Error())
 			}
+			err = u.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
+				ObjectID:  uploadObjectTask.GetObjectInfo().Id.Uint64(),
+				TaskState: types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
+			})
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to update upload progress", "error", err)
+				return ErrGfSpDBWithDetail("failed to update upload progress, error: " + err.Error())
+			}
 			log.CtxDebugw(ctx, "succeed to upload payload to piece store")
 			return nil
 		}
@@ -272,6 +281,14 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 					return ErrGfSpDBWithDetail("failed to write integrity hash to db, error: " + err.Error())
+				}
+				err = u.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
+					ObjectID:  task.GetObjectInfo().Id.Uint64(),
+					TaskState: types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
+				})
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to update upload progress", "error", err)
+					return ErrGfSpDBWithDetail("failed to update upload progress, error: " + err.Error())
 				}
 			}
 

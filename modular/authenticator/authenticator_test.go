@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"strings"
+	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -20,10 +23,6 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 
 	"google.golang.org/grpc"
-
-	"strings"
-	"testing"
-	"time"
 
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -462,7 +461,9 @@ func VerifyObjectAndBucketAndSPID(t *testing.T, authType coremodule.AuthOpType) 
 	_, err = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
 	assert.Equal(t, ErrMismatchSp, err)
 }
-func VerifyAuthPutObjectAndGetUploadingState(t *testing.T, authType coremodule.AuthOpType) {
+
+func Test_VerifyAuth_PutObject(t *testing.T) {
+	authType := coremodule.AuthOpTypePutObject
 	VerifyObjectAndBucketAndSPID(t, authType)
 	a := setup(t)
 	ctrl := gomock.NewController(t)
@@ -518,14 +519,33 @@ func VerifyAuthPutObjectAndGetUploadingState(t *testing.T, authType coremodule.A
 	a.baseApp.SetConsensus(mockedConsensus)
 	verifyResult, _ = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
 	assert.Equal(t, true, verifyResult)
-}
-
-func Test_VerifyAuth_PutObject(t *testing.T) {
-	VerifyAuthPutObjectAndGetUploadingState(t, coremodule.AuthOpTypePutObject)
 
 }
 func Test_VerifyAuth_GetUploadingState(t *testing.T) {
-	VerifyAuthPutObjectAndGetUploadingState(t, coremodule.AuthOpTypeGetUploadingState)
+	authType := coremodule.AuthOpTypeGetUploadingState
+	VerifyObjectAndBucketAndSPID(t, authType)
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	a.baseApp.SetGfSpDB(m)
+
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+
+	// VerifyPutObjectPermission doesn't have an error
+	mockedConsensus := consensus.NewMockConsensus(ctrl)
+	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
+		ObjectStatus: storagetypes.OBJECT_STATUS_CREATED,
+	}, nil).Times(1)
+	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
+		Id: 1,
+	}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{
+		PrimarySpId: 1,
+	}, nil).Times(1)
+	a.baseApp.SetConsensus(mockedConsensus)
+	verifyResult, _ := a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
+	assert.Equal(t, true, verifyResult)
 }
 
 func Test_VerifyAuth_GetObject(t *testing.T) {
@@ -539,7 +559,7 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	privateKey, _ := crypto.GenerateKey()
 	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
 
-	// ObjectStatus is not OBJECT_STATUS_CREATED
+	// QueryPaymentStreamRecord get error
 	mockedConsensus := consensus.NewMockConsensus(ctrl)
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
 		ObjectStatus: storagetypes.OBJECT_STATUS_CREATED,
@@ -550,9 +570,10 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{
 		PrimarySpId: 1,
 	}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryPaymentStreamRecord(gomock.Any(), gomock.Any()).Return(nil, errors.New("error")).Times(1)
 	a.baseApp.SetConsensus(mockedConsensus)
 	_, err := a.VerifyAuthentication(context.Background(), coremodule.AuthOpTypeGetObject, userAddress, "test_bucket", "test_object")
-	assert.Equal(t, ErrNotSealedState, err)
+	assert.Equal(t, errors.New("error"), err)
 
 	// QueryPaymentStreamRecord get error
 	mockedConsensus = consensus.NewMockConsensus(ctrl)

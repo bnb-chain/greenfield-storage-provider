@@ -44,12 +44,12 @@ const (
 // TaskRetryScheduler is used to schedule background task retry.
 type TaskRetryScheduler struct {
 	manager                     *ManageModular
-	rejectUnsealThresholdSecond uint64
+	rejectUnsealThresholdSecond int64
 }
 
 // NewTaskRetryScheduler returns a task retry scheduler instance.
 func NewTaskRetryScheduler(m *ManageModular) *TaskRetryScheduler {
-	rejectUnsealThresholdSecond := m.rejectUnsealThresholdSecond
+	rejectUnsealThresholdSecond := int64(m.rejectUnsealThresholdSecond)
 	if rejectUnsealThresholdSecond == 0 {
 		rejectUnsealThresholdSecond = defaultRejectUnsealThresholdSecond
 	}
@@ -77,8 +77,8 @@ func (s *TaskRetryScheduler) startReplicateTaskRetry() {
 	)
 
 	for {
-		time.Sleep(retryIntervalSecond * 10)
-		iter = NewTaskIterator(s.manager.baseApp.GfSpDB(), retryReplicate, int64(s.rejectUnsealThresholdSecond))
+		time.Sleep(retryIntervalSecond * 100)
+		iter = NewTaskIterator(s.manager.baseApp.GfSpDB(), retryReplicate, s.rejectUnsealThresholdSecond)
 		log.Infow("start a new loop to retry replicate", "iterator", iter,
 			"loop_number", loopNumber, "total_retry_number", totalRetryNumber)
 
@@ -110,8 +110,8 @@ func (s *TaskRetryScheduler) startSealTaskRetry() {
 	)
 
 	for {
-		time.Sleep(retryIntervalSecond * 10)
-		iter = NewTaskIterator(s.manager.baseApp.GfSpDB(), retrySeal, int64(s.rejectUnsealThresholdSecond))
+		time.Sleep(retryIntervalSecond * 100)
+		iter = NewTaskIterator(s.manager.baseApp.GfSpDB(), retrySeal, s.rejectUnsealThresholdSecond)
 		log.Infow("start a new loop to retry seal", "iterator", iter,
 			"loop_number", loopNumber, "total_retry_number", totalRetryNumber)
 
@@ -143,8 +143,8 @@ func (s *TaskRetryScheduler) startRejectUnsealTaskRetry() {
 	)
 
 	for {
-		time.Sleep(retryIntervalSecond * 10)
-		iter = NewTaskIterator(s.manager.baseApp.GfSpDB(), retryRejectUnseal, int64(s.rejectUnsealThresholdSecond))
+		time.Sleep(retryIntervalSecond * 100)
+		iter = NewTaskIterator(s.manager.baseApp.GfSpDB(), retryRejectUnseal, s.rejectUnsealThresholdSecond)
 		log.Infow("start a new loop to retry reject unseal task", "iterator", iter,
 			"loop_number", loopNumber, "total_retry_number", totalRetryNumber)
 
@@ -166,102 +166,125 @@ func (s *TaskRetryScheduler) startRejectUnsealTaskRetry() {
 	}
 }
 
-func isAlreadyNotFound(err error) bool {
+func isNotFound(err error) bool {
 	return strings.Contains(err.Error(), "No such object")
 }
 
 // retryReplicateTask is used to push the failed replicate task to task dispatcher,
 // and the task will be executed by executor.
-func (s *TaskRetryScheduler) retryReplicateTask(t *spdb.UploadObjectMeta) error {
-	objectInfo, queryErr := s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(t.ObjectID))
-	if queryErr != nil {
-		log.Errorw("failed to query object info", "object_id", t.ObjectID, "error", queryErr)
-		if !isAlreadyNotFound(queryErr) {
+func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) error {
+	var (
+		err           error
+		objectInfo    *storagetypes.ObjectInfo
+		storageParams *storagetypes.Params
+		replicateTask *gfsptask.GfSpReplicatePieceTask
+	)
+
+	objectInfo, err = s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(meta.ObjectID))
+	if err != nil {
+		log.Errorw("failed to query object info", "object_id", meta.ObjectID, "error", err)
+		if !isNotFound(err) { // the object maybe deleted.
 			time.Sleep(backoffIntervalSecond)
 		}
-		return queryErr
+		return err
 	}
 	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.Infow("object is not in create status", "object_info", objectInfo)
 		return fmt.Errorf("object is not in create status")
 	}
-	storageParams, queryErr := s.manager.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
-	if queryErr != nil {
-		log.Errorw("failed to query storage param", "object_id", t.ObjectID, "error", queryErr)
+	storageParams, err = s.manager.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+	if err != nil {
+		log.Errorw("failed to query storage param", "object_id", meta.ObjectID, "error", err)
 		time.Sleep(backoffIntervalSecond)
-		return queryErr
+		return err
 	}
 
-	replicateTask := &gfsptask.GfSpReplicatePieceTask{}
+	replicateTask = &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(objectInfo, storageParams, s.manager.baseApp.TaskPriority(replicateTask),
 		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask))
-	replicateTask.SetSecondaryAddresses(t.SecondaryEndpoints)
-	replicateTask.SetSecondarySignatures(t.SecondarySignatures)
-	replicateTask.GlobalVirtualGroupId = t.GlobalVirtualGroupID
-	pushErr := s.manager.replicateQueue.Push(replicateTask)
-	if pushErr != nil {
-		if errors.Is(pushErr, gfsptqueue.ErrTaskQueueExceed) {
+	replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
+	replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
+	err = s.manager.replicateQueue.Push(replicateTask)
+	if err != nil {
+		if errors.Is(err, gfsptqueue.ErrTaskQueueExceed) {
 			time.Sleep(backoffIntervalSecond)
 		}
-		log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
-		return pushErr
+		log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", err)
+		return err
 	}
 	return nil
 }
 
 // retrySealTask is used to send seal tx to chain.
 // This task is very lightweight and therefore executed directly inside the scheduler.
-func (s *TaskRetryScheduler) retrySealTask(t *spdb.UploadObjectMeta) error {
-	objectInfo, queryErr := s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(t.ObjectID))
-	if queryErr != nil {
-		log.Errorw("failed to query object info", "object_id", t.ObjectID, "error", queryErr)
-		if !isAlreadyNotFound(queryErr) {
+func (s *TaskRetryScheduler) retrySealTask(meta *spdb.UploadObjectMeta) error {
+	var (
+		err        error
+		objectInfo *storagetypes.ObjectInfo
+		blsSig     []bls.Signature
+		sealMsg    *storagetypes.MsgSealObject
+	)
+
+	objectInfo, err = s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(meta.ObjectID))
+	if err != nil {
+		log.Errorw("failed to query object info", "object_id", meta.ObjectID, "error", err)
+		if !isNotFound(err) { // the object maybe deleted.
 			time.Sleep(backoffIntervalSecond)
 		}
-		return queryErr
+		return err
 	}
 	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.Infow("object is not in create status", "object_info", objectInfo)
 		return fmt.Errorf("object is not in create status")
 	}
 
-	blsSig, err := bls.MultipleSignaturesFromBytes(t.SecondarySignatures)
+	blsSig, err = bls.MultipleSignaturesFromBytes(meta.SecondarySignatures)
 	if err != nil {
-		log.Errorw("failed to get multiple signature", "object_id", t.ObjectID, "error", err)
+		log.Errorw("failed to get multiple signature", "object_id", meta.ObjectID, "error", err)
 		return err
 	}
-	sealMsg := &storagetypes.MsgSealObject{
+	sealMsg = &storagetypes.MsgSealObject{
 		Operator:                    s.manager.baseApp.OperatorAddress(),
 		BucketName:                  objectInfo.GetBucketName(),
 		ObjectName:                  objectInfo.GetObjectName(),
-		GlobalVirtualGroupId:        t.GlobalVirtualGroupID,
+		GlobalVirtualGroupId:        meta.GlobalVirtualGroupID,
 		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
 	}
-	return sendAndConfirmSealObjectTx(s.manager.baseApp, sealMsg)
+	err = sendAndConfirmSealObjectTx(s.manager.baseApp, sealMsg)
+	if err == nil {
+		_ = s.manager.baseApp.GfSpDB().DeleteUploadProgress(objectInfo.Id.Uint64())
+	}
+	return err
 }
 
 // retryRejectTask is used to send reject unseal tx to chain.
 // This task is very lightweight and therefore executed directly inside the scheduler.
-func (s *TaskRetryScheduler) retryRejectUnsealTask(t *spdb.UploadObjectMeta) error {
-	objectInfo, queryErr := s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(t.ObjectID))
-	if queryErr != nil {
-		log.Errorw("failed to query object info", "object_id", t.ObjectID, "error", queryErr)
-		if !isAlreadyNotFound(queryErr) {
+func (s *TaskRetryScheduler) retryRejectUnsealTask(meta *spdb.UploadObjectMeta) error {
+	var (
+		err             error
+		objectInfo      *storagetypes.ObjectInfo
+		rejectUnsealMsg *storagetypes.MsgRejectSealObject
+	)
+
+	objectInfo, err = s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(meta.ObjectID))
+	if err != nil {
+		log.Errorw("failed to query object info", "object_id", meta.ObjectID, "error", err)
+		if !isNotFound(err) { // the object maybe deleted.
 			time.Sleep(backoffIntervalSecond)
 		}
-		return queryErr
+		return err
 	}
 	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.Infow("object is not in create status", "object_info", objectInfo)
 		return fmt.Errorf("object is not in create status")
 	}
 
-	rejectUnsealMsg := &storagetypes.MsgRejectSealObject{
+	rejectUnsealMsg = &storagetypes.MsgRejectSealObject{
 		Operator:   s.manager.baseApp.OperatorAddress(),
 		BucketName: objectInfo.GetBucketName(),
 		ObjectName: objectInfo.GetObjectName(),
 	}
-	err := sendAndConfirmRejectUnsealObjectTx(s.manager.baseApp, rejectUnsealMsg)
+	err = sendAndConfirmRejectUnsealObjectTx(s.manager.baseApp, rejectUnsealMsg)
 	if err == nil {
 		_ = s.manager.baseApp.GfSpDB().DeleteUploadProgress(objectInfo.Id.Uint64())
 	}
@@ -291,7 +314,7 @@ func sendAndConfirmRejectUnsealObjectTx(baseApp *gfspapp.GfSpBaseApp, msg *stora
 				txErr  error
 			)
 			if txHash, txErr = baseApp.GfSpClient().RejectUnSealObject(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
-				log.Errorw("failed to send seal object", "reject_unseal_object_msg", msg, "error", txErr)
+				log.Errorw("failed to send reject unseal object", "reject_unseal_object_msg", msg, "error", txErr)
 				return "", txErr
 			}
 			return txHash, nil
@@ -317,6 +340,7 @@ func NewTaskIterator(db spdb.SPDB, taskType RetryTaskType, rejectUnsealThreshold
 		endTS        int64
 		prefetchFunc PrefetchFunc
 	)
+
 	switch taskType {
 	case retryReplicate:
 		startTS = sqldb.GetCurrentUnixTime() - rejectUnsealThresholdSecond
@@ -333,7 +357,7 @@ func NewTaskIterator(db spdb.SPDB, taskType RetryTaskType, rejectUnsealThreshold
 		case retrySeal:
 			return iter.dbReader.GetUploadMetasToSealByStartTS(prefetchLimit, iter.startTimeStampSecond)
 		case retryRejectUnseal:
-			return iter.dbReader.GetUploadMetasToRejectByRangeTS(prefetchLimit, iter.startTimeStampSecond, iter.endTimeStampSecond)
+			return iter.dbReader.GetUploadMetasToRejectUnsealByRangeTS(prefetchLimit, iter.startTimeStampSecond, iter.endTimeStampSecond)
 		}
 		return nil, nil
 	}
@@ -348,18 +372,19 @@ func NewTaskIterator(db spdb.SPDB, taskType RetryTaskType, rejectUnsealThreshold
 }
 
 func (iter *TaskIterator) Valid() bool {
+	var err error
 	if iter.currentIndex >= len(iter.cachedValueList) {
-		var err error
 		iter.cachedValueList, err = iter.prefetchFunc(iter)
 		if err != nil {
-			log.Errorw("failed to get upload metas to replicate by start timestamp", "error", err)
+			log.Errorw("failed to prefetch retry task meta", "iter_type", iter.taskType, "error", err)
 			return false
 		}
 		if len(iter.cachedValueList) == 0 {
+			log.Debugw("Skip to iterate due to empty result", "iter_type", iter.taskType)
 			return false
 		}
 		iter.currentIndex = 0
-		iter.startTimeStampSecond = iter.cachedValueList[len(iter.cachedValueList)-1].UpdateTimeStamp
+		iter.startTimeStampSecond = iter.cachedValueList[len(iter.cachedValueList)-1].CreateTimeStampSecond
 	}
 	return true
 }
