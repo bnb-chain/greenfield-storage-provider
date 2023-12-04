@@ -1,8 +1,10 @@
 package gfsperrors
 
 import (
+	"encoding/json"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -15,7 +17,8 @@ const (
 
 // Error implements the error interface for compatibility with built-in error.
 func (m *GfSpError) Error() string {
-	return m.String()
+	str, _ := json.Marshal(m)
+	return string(str)
 }
 
 // SetError sets the Description field by Error(), it is use for change the
@@ -56,19 +59,32 @@ func MakeGfSpError(err error) *GfSpError {
 	if err == nil {
 		return nil
 	}
-	switch e := err.(type) {
-	case *GfSpError:
-		if e.GetInnerCode() == 0 {
+
+	if gfspErr, ok := err.(*GfSpError); ok {
+		if gfspErr.GetInnerCode() == 0 {
 			return nil
 		}
-		return e
-	default:
-		return &GfSpError{
-			CodeSpace:      DefaultCodeSpace,
-			HttpStatusCode: int32(http.StatusInternalServerError),
-			InnerCode:      int32(DefaultInnerCode),
-			Description:    err.Error(),
+		return gfspErr
+	}
+	// Attempting to check if the error is an RPC error; if so, trying to extract its error description and convert it to the GfSpError type.
+	// Expected error should be: "rpc error: code = Unknown desc = xxx"
+	// We only need to focus on xxx, and can extract the substring using string.Index().
+	errInfo := err.Error()
+	i := strings.Index(errInfo, "desc = ")
+	if i != -1 && len(errInfo)-1 >= i+6 {
+		errInfo := errInfo[i+6:]
+		var gfspErr GfSpError
+		unmarshalErr := json.Unmarshal([]byte(errInfo), &gfspErr)
+		if unmarshalErr == nil && gfspErr.HttpStatusCode != 0 {
+			return &gfspErr
 		}
+	}
+
+	return &GfSpError{
+		CodeSpace:      DefaultCodeSpace,
+		HttpStatusCode: int32(http.StatusInternalServerError),
+		InnerCode:      int32(DefaultInnerCode),
+		Description:    errInfo,
 	}
 }
 

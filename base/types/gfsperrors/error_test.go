@@ -12,7 +12,7 @@ import (
 func TestGfSpError_Error(t *testing.T) {
 	m := &GfSpError{}
 	result := m.Error()
-	assert.Equal(t, "", result)
+	assert.Equal(t, "{}", result)
 }
 
 func TestGfSpError_SetError(t *testing.T) {

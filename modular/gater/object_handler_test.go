@@ -1,6 +1,7 @@
 package gater
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -1095,6 +1096,53 @@ func mockGetObjectHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 	return router
 }
 
+func TestGateModularCode_getObjectHandler(t *testing.T) {
+	cases := []struct {
+		name       string
+		fn         func() *GateModular
+		request    func() *http.Request
+		wantedCode int
+	}{
+		{
+			name: "failed to verify authentication no object",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				c1 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil).Times(1)
+				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New(`rpc error: code = Unknown desc = {"code_space":"metadata","http_status_code":404,"inner_code":90008,"description":"the specified bucket does not exist"}`)).Times(1)
+				c2 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).AnyTimes()
+				gomock.InOrder(c1, c2)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(false, mockErr).AnyTimes()
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s.%s/%s?Authorization=GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221&X-Gnfd-User-Address=user&X-Gnfd-App-Domain=app&X-Gnfd-Expiry-Timestamp=time&view=true",
+					scheme, mockBucketName, testDomain, mockObjectName)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedCode: 404,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockGetObjectHandlerRoute(t, tt.fn())
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, tt.request())
+			assert.Equal(t, w.Code, tt.wantedCode)
+		})
+	}
+}
+
 func TestGateModular_getObjectHandler(t *testing.T) {
 	cases := []struct {
 		name         string
@@ -1105,6 +1153,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 		{
 			name: "failed to verify authentication for getting public object",
 			fn: func() *GateModular {
+
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
