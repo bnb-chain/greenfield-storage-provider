@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
@@ -20,7 +22,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ vgmgr.VirtualGroupManager = &virtualGroupManager{}
@@ -555,7 +556,7 @@ func (vgm *virtualGroupManager) monitorGVGUsage(gvg *virtualgrouptypes.GlobalVir
 
 	curTime := time.Now().Unix()
 	if isEmpty(gvg) {
-		// if the GVG is refilled, it can be removed from the gcMap.
+		// Remove any GVG from the gvgGCMap if the stored size is no longer empty.
 		vgm.gvgGCMap.Range(func(k, v interface{}) bool {
 			safeDeleteTime := v.(int64)
 			if curTime > safeDeleteTime+int64(time.Minute.Seconds()) {
@@ -563,6 +564,7 @@ func (vgm *virtualGroupManager) monitorGVGUsage(gvg *virtualgrouptypes.GlobalVir
 			}
 			return true
 		})
+
 		if !byChain {
 			gvg, err = vgm.chainClient.QueryGlobalVirtualGroup(context.Background(), gvg.Id)
 			if err != nil {
