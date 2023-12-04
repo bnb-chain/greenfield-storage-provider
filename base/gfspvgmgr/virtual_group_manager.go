@@ -573,6 +573,7 @@ func (vgm *virtualGroupManager) monitorGVGUsage(gvg *virtualgrouptypes.GlobalVir
 				return
 			}
 		}
+		log.Infow("found GVG is empty", "GVG", gvg)
 		var safeDeleteTime int64
 		val, found := vgm.gvgGCMap.Load(gvg.Id)
 		if !found {
@@ -581,18 +582,21 @@ func (vgm *virtualGroupManager) monitorGVGUsage(gvg *virtualgrouptypes.GlobalVir
 			return
 		}
 		safeDeleteTime = val.(int64)
+		log.Infow("GVG will be deleted at", "safe_delete_time", safeDeleteTime)
 		if curTime < safeDeleteTime {
 			return
 		}
+		log.Infow("start to delete GVG", "GVG", gvg)
 		var deleteGVGHash string
 		deleteGVGHash, err = vgm.gfspClient.DeleteGlobalVirtualGroup(context.Background(), &virtualgrouptypes.MsgDeleteGlobalVirtualGroup{
 			GlobalVirtualGroupId: gvg.Id,
 		})
 		if err != nil {
-			log.Errorw("failed to delete global virtual group", "gvgID", gvg.Id, "txHash", deleteGVGHash, "error", err)
+			log.Errorw("failed to delete global virtual group", "gvgID", gvg.Id, "tx_hash", deleteGVGHash, "error", err)
 			return
 		}
 		vgm.gvgGCMap.Delete(gvg.Id)
+		log.Infow("GVG is deleted onchain", "GVG", gvg, "tx_hash", deleteGVGHash)
 		deleted = true
 		return
 	}
@@ -618,12 +622,14 @@ func (vgm *virtualGroupManager) monitorGVGUsage(gvg *virtualgrouptypes.GlobalVir
 			return
 		}
 	}
+	log.Infow("found GVG need to deposit", "GVG", gvg)
 	var depositTxHash string
 	depositTxHash, err = vgm.gfspClient.Deposit(context.Background(), msgDeposit)
 	if err != nil {
 		log.Errorw("failed to deposit global virtual group", "gvgID", gvg.Id, "txHash", depositTxHash, "error", err)
 		return
 	}
+	log.Infow("GVG is deposited", "GVG", gvg, "depositTxHash", depositTxHash)
 	deposited = true
 	return
 }
