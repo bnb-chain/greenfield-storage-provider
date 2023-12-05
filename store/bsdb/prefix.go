@@ -14,7 +14,7 @@ import (
 const PrefixesNumberOfShards = 64
 
 // ListObjects List objects by bucket name
-func (b *BsDBImpl) ListObjects(bucketName, continuationToken, prefix string, maxKeys int) ([]*ListObjectsResult, error) {
+func (b *BsDBImpl) ListObjects(bucketName, continuationToken, prefix string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error) {
 	var (
 		nodes       []*SlashPrefixTreeNode
 		filters     []func(*gorm.DB) *gorm.DB
@@ -47,12 +47,21 @@ func (b *BsDBImpl) ListObjects(bucketName, continuationToken, prefix string, max
 	if continuationToken != "" {
 		filters = append(filters, FullNameFilter(continuationToken))
 	}
-	err = b.db.Table(GetPrefixesTableName(bucketName)).
-		Where("bucket_name = ?", bucketName).
-		Scopes(filters...).
-		Order("full_name").
-		Limit(limit).
-		Find(&nodes).Error
+	if includeRemoved {
+		err = b.db.Table(GetPrefixesTableName(bucketName)).
+			Where("bucket_name = ?", bucketName).
+			Scopes(filters...).
+			Order("full_name").
+			Limit(limit).
+			Find(&nodes).Error
+	} else {
+		err = b.db.Table(GetPrefixesTableName(bucketName)).
+			Where("bucket_name = ? and removed = false", bucketName).
+			Scopes(filters...).
+			Order("full_name").
+			Limit(limit).
+			Find(&nodes).Error
+	}
 	if err != nil {
 		return nil, err
 	}

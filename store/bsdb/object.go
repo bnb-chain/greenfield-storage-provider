@@ -51,7 +51,7 @@ func (b *BsDBImpl) ListObjectsByBucketName(bucketName, continuationToken, prefix
 	// 2. Find common prefixes based on the delimiter
 	// 3. Limit results
 	if delimiter != "" {
-		results, err = b.ListObjects(bucketName, continuationToken, prefix, maxKeys)
+		results, err = b.ListObjects(bucketName, continuationToken, prefix, maxKeys, includeRemoved)
 	} else {
 		// If delimiter is not specified, retrieve objects directly
 

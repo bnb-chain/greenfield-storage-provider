@@ -39,7 +39,7 @@ func TestBsDBImpl_ListObjectsSuccess(t *testing.T) {
 				AddRow(common.HexToHash("1"), "obj1").
 				AddRow(common.HexToHash("2"), "obj2"))
 
-	res, err := s.ListObjects(bucketName, "", prefix, maxKeys)
+	res, err := s.ListObjects(bucketName, "", prefix, maxKeys, true)
 
 	assert.Nil(t, err)
 	assert.Equal(t, expectedObjects, res)
@@ -72,7 +72,7 @@ func TestBsDBImpl_ListObjectsWithContinuationToken(t *testing.T) {
 			sqlmock.NewRows([]string{"object_id", "object_name"}).
 				AddRow(common.HexToHash("2"), "obj2"))
 
-	res, err := s.ListObjects(bucketName, continuationToken, prefix, maxKeys)
+	res, err := s.ListObjects(bucketName, continuationToken, prefix, maxKeys, true)
 
 	assert.Nil(t, err)
 	assert.Equal(t, expectedObjects, res)
@@ -98,7 +98,7 @@ func TestBsDBImpl_ListObjectsWithEmptyResult(t *testing.T) {
 		WillReturnRows(
 			sqlmock.NewRows([]string{"object_id", "object_name"}))
 
-	res, err := s.ListObjects(bucketName, "", prefix, maxKeys)
+	res, err := s.ListObjects(bucketName, "", prefix, maxKeys, true)
 	assert.Nil(t, err)
 	assert.Empty(t, res)
 }
@@ -114,7 +114,7 @@ func TestBsDBImpl_ListObjectsWithError(t *testing.T) {
 		WithArgs(bucketName, prefix).
 		WillReturnError(errors.New("test error"))
 
-	_, err := s.ListObjects(bucketName, "", prefix, maxKeys)
+	_, err := s.ListObjects(bucketName, "", prefix, maxKeys, true)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "test error")
 }
@@ -142,7 +142,7 @@ func TestBsDBImpl_ListObjectsWithPathName(t *testing.T) {
 			sqlmock.NewRows([]string{"object_id", "object_name"}).
 				AddRow(common.HexToHash("2"), "obj2"))
 
-	res, err := s.ListObjects(bucketName, "", prefix, maxKeys)
+	res, err := s.ListObjects(bucketName, "", prefix, maxKeys, true)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedObjects, res)
 }
@@ -176,7 +176,7 @@ func TestBsDBImpl_ListObjectsWithPrefixQuery(t *testing.T) {
 			sqlmock.NewRows([]string{"object_id", "object_name"}).
 				AddRow(common.HexToHash("2"), "obj2"))
 
-	res, err := s.ListObjects(bucketName, "", prefix, maxKeys)
+	res, err := s.ListObjects(bucketName, "", prefix, maxKeys, true)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedObjects, res)
 }
@@ -209,7 +209,7 @@ func TestBsDBImpl_ListObjectsWithAllConditions(t *testing.T) {
 			sqlmock.NewRows([]string{"object_id", "object_name"}).
 				AddRow(common.HexToHash("2"), "obj2"))
 
-	res, err := s.ListObjects(bucketName, continuationToken, prefix, maxKeys)
+	res, err := s.ListObjects(bucketName, continuationToken, prefix, maxKeys, true)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedObjects, res)
 }
