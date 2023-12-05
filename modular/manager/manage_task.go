@@ -373,11 +373,10 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 			m.replicateQueue.PopByKey(handleTask.Key())
 			return nil
 		}
-
 		gvgID := handleTask.GetGlobalVirtualGroupId()
-		gvg, err := m.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
+		gvg, err := m.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, gvgID)
 		if err != nil {
-			log.Errorw("failed to query global virtual group from chain, ", "gvgID", gvgID, "error", err)
+			log.Errorw("failed to query global virtual group from Meta", "gvgID", gvgID, "error", err)
 			return err
 		}
 		sspID := gvg.GetSecondarySpIds()[handleTask.GetNotAvailableSpIdx()]

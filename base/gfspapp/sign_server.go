@@ -291,6 +291,26 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SignerSuccessRejectMigrateBucket).Inc()
 			metrics.ReqTime.WithLabelValues(SignerSuccessRejectMigrateBucket).Observe(time.Since(startTime).Seconds())
 		}
+	case *gfspserver.GfSpSignRequest_Deposit:
+		txHash, err = g.signer.Deposit(ctx, t.Deposit)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to deposit", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureDeposit).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureDeposit).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessDeposit).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessDeposit).Observe(time.Since(startTime).Seconds())
+		}
+	case *gfspserver.GfSpSignRequest_DeleteGlobalVirtualGroup:
+		txHash, err = g.signer.DeleteGlobalVirtualGroup(ctx, t.DeleteGlobalVirtualGroup)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to delete global virtual group", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")
 		return &gfspserver.GfSpSignResponse{

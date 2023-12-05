@@ -1668,6 +1668,16 @@ type MockSigner struct {
 	recorder *MockSignerMockRecorder
 }
 
+func (m *MockSigner) Deposit(ctx context.Context, deposit *types1.MsgDeposit) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockSigner) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types1.MsgDeleteGlobalVirtualGroup) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // MockSignerMockRecorder is the mock recorder for MockSigner.
 type MockSignerMockRecorder struct {
 	mock *MockSigner

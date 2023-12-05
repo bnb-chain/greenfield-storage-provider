@@ -53,6 +53,8 @@ message GfSpSignRequest {
     base.types.gfsptask.GfSpMigrateGVGTask gfsp_migrate_gvg_task = 23;
     base.types.gfsptask.GfSpBucketMigrationInfo gfsp_bucket_migrate_info = 24;
     greenfield.storage.MsgRejectMigrateBucket reject_migrate_bucket = 25;
+    greenfield.virtualgroup.MsgDeposit deposit = 26;
+    greenfield.virtualgroup.MsgDeleteGlobalVirtualGroup delete_global_virtual_group = 27;
   }
 }
 
