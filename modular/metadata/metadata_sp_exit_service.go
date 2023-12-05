@@ -256,8 +256,7 @@ func (r *MetadataModular) GfSpListCompleteMigrationBucketEvents(ctx context.Cont
 	)
 
 	ctx = log.Context(ctx, req)
-	latestBlock, err = r.baseApp.GfBsDB().GetLatestBlockNumber()
-	if err != nil {
+	if latestBlock, err = r.baseApp.GfBsDB().GetLatestBlockNumber(); err != nil {
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
 	}
@@ -267,9 +266,8 @@ func (r *MetadataModular) GfSpListCompleteMigrationBucketEvents(ctx context.Cont
 	}
 	log.Debugw("GfSpListCompleteMigrationBucketEvents", "src-sp-id", req.SrcSpId, "block-id", req.BlockId)
 	filters = append(filters, model.CreateAtEqualFilter(int64(req.BlockId)))
-	completeEvents, err = r.baseApp.GfBsDB().ListCompleteMigrationBucket(req.SrcSpId, filters...)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
+	if completeEvents, err = r.baseApp.GfBsDB().ListCompleteMigrationBucket(req.SrcSpId, filters...); err != nil {
+		log.CtxErrorw(ctx, "failed to list complete migrate bucket events", "error", err)
 		return nil, err
 	}
 

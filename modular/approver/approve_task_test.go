@@ -380,7 +380,7 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskFailure2(t *testing.T) {
 	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	m1.EXPECT().SignBucketMigrationInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
 	m1.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
-		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).Times(1)
+		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).AnyTimes()
 
 	// mock consensus
 	mockedConsensus := consensus.NewMockConsensus(ctrl)

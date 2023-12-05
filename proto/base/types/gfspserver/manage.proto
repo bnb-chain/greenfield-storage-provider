@@ -121,7 +121,6 @@ message GfSpResetRecoveryFailedListResponse {
   repeated string recovery_failed_list = 1;
 }
 
-// GfSpBucketQuotaInfo
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}

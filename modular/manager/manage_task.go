@@ -721,8 +721,20 @@ func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucke
 		return ErrCanceledTask
 	}
 	if gcBucketMigrationTask.Error() == nil {
-		log.CtxInfow(ctx, "succeed to finish the gc bucket migration task", "task_info", gcBucketMigrationTask.Info())
-		m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+		// success
+		if gcBucketMigrationTask.GetFinished() {
+			log.CtxInfow(ctx, "succeed to finish the gc bucket migration task", "task_info", gcBucketMigrationTask.Info())
+			m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+		} else {
+			// update progress
+			bucketID := gcBucketMigrationTask.GetBucketID()
+			lastGCObjectID := gcBucketMigrationTask.GetLastGCObjectID()
+			lastGCGvgID := gcBucketMigrationTask.GetLastGCGvgID()
+			if err := m.baseApp.GfSpDB().UpdateBucketMigrationGCProgress(bucketID, lastGCObjectID, lastGCGvgID); err != nil {
+				log.CtxErrorw(ctx, "failed to update bucket migration gc progress", "task", gcBucketMigrationTask, "error", err)
+			}
+		}
+
 		return nil
 	}
 	gcBucketMigrationTask.SetUpdateTime(time.Now().Unix())

@@ -212,11 +212,11 @@ func (s *GfSpClient) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, b
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPreMigrateBucketAndDeductQuota(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to notify pre migrate bucket", "request", req, "error", err)
+		log.CtxErrorw(ctx, "client failed to notify pre migrate bucket and deduct quota", "request", req, "error", err)
 		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to notify pre migrate bucket, error: ", err)
 	}
 	if resp.GetErr() != nil {
-		log.CtxErrorw(ctx, "failed to notify begin pre migrate bucket", "request", req, "error", resp.GetErr())
+		log.CtxErrorw(ctx, "failed to notify pre migrate bucket and deduct quota", "request", req, "error", resp.GetErr())
 		return &gfsptask.GfSpBucketQuotaInfo{}, resp.GetErr()
 	}
 	return resp.Quota, nil
@@ -233,11 +233,11 @@ func (s *GfSpClient) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, 
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPostMigrateAndRecoupQuota(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to notify post migrate bucket", "request", req, "error", err)
-		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: ", err)
+		log.CtxErrorw(ctx, "client failed to notify post migrate bucket and recoup quota", "request", req, "error", err)
+		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to notify post migrate bucket and recoup quota, error: ", err)
 	}
 	if resp.GetErr() != nil {
-		log.CtxErrorw(ctx, "failed to notify post migrate bucket", "request", req, "error", resp.GetErr())
+		log.CtxErrorw(ctx, "failed to notify post migrate bucket and recoup quota", "request", req, "error", resp.GetErr())
 		return &gfsptask.GfSpBucketQuotaInfo{}, resp.GetErr()
 	}
 	return resp.Quota, nil

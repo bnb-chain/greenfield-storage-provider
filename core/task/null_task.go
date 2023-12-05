@@ -182,3 +182,7 @@ func (*NullTask) SetStartObjectID(uint64)                                       
 func (*NullTask) GetStartObjectId() uint64                                                   { return 0 }
 func (*NullTask) SetEndObjectID(uint64)                                                      {}
 func (*NullTask) GetEndObjectId() uint64                                                     { return 0 }
+func (*NullTask) SetLastGCGvgID(lastGCGvgID uint64)                                          {}
+func (*NullTask) GetLastGCGvgID() uint64                                                     { return 0 }
+func (*NullTask) SetLastGCObjectID(lastGCObjectID uint64)                                    {}
+func (*NullTask) GetLastGCObjectID() uint64                                                  { return 0 }

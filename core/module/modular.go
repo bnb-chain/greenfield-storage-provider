@@ -223,9 +223,9 @@ type Manager interface {
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 	// QueryTasksStats queries tasks stats from Manager server
 	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string)
-	// NotifyPreMigrateBucketAndDeductQuota is used to notify src sp begin pre migrate bucket.
+	// NotifyPreMigrateBucketAndDeductQuota is used to notify src sp pre migrate bucket and deduct quota.
 	NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (gfsptask.GfSpBucketQuotaInfo, error)
-	// NotifyPostMigrateBucketAndRecoupQuota is used to notify src sp post migrate bucket.
+	// NotifyPostMigrateBucketAndRecoupQuota is used to notify src sp post migrate bucket and recoup quota.
 	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error)
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string

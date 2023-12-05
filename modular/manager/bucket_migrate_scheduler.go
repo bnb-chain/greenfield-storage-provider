@@ -526,8 +526,7 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 
 	// notify src sp to gc
 	postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID, Finished: true}
-	err = executePlan.manager.bucketMigrateScheduler.PostMigrateBucket(postMsg, executePlan.srcSP)
-	if err != nil {
+	if err = executePlan.manager.bucketMigrateScheduler.PostMigrateBucket(postMsg, executePlan.srcSP); err != nil {
 		log.Errorw("failed to post migrate bucket", "msg", postMsg, "error", err)
 	}
 
@@ -544,9 +543,11 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 }
 
 func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject bool) error {
-
-	executePlan, err := s.getExecutePlanByBucketID(bucketID)
-	if err != nil {
+	var (
+		executePlan *BucketMigrateExecutePlan
+		err         error
+	)
+	if executePlan, err = s.getExecutePlanByBucketID(bucketID); err != nil {
 		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "bucket_id", bucketID, "error", err)
 		return err
 	}
@@ -569,11 +570,14 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 }
 
 func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMigrateBucketEvents) error {
+	var (
+		err         error
+		executePlan *BucketMigrateExecutePlan
+	)
 	// 1. process EventCancelMigrationBucket
 	if migrateBucketEvents.CancelEvent != nil {
 		log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent)
-		err := s.cancelMigrateBucket(migrateBucketEvents.CancelEvent.BucketId.Uint64(), false)
-		if err != nil {
+		if err = s.cancelMigrateBucket(migrateBucketEvents.CancelEvent.BucketId.Uint64(), false); err != nil {
 			log.Errorw("failed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent, "error", err)
 		}
 		return nil
@@ -583,8 +587,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	if migrateBucketEvents.RejectEvent != nil {
 		log.Infow("begin to process reject events", "reject_event", migrateBucketEvents.RejectEvent)
 
-		err := s.cancelMigrateBucket(migrateBucketEvents.RejectEvent.BucketId.Uint64(), true)
-		if err != nil {
+		if err = s.cancelMigrateBucket(migrateBucketEvents.RejectEvent.BucketId.Uint64(), true); err != nil {
 			log.Errorw("failed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent, "error", err)
 		}
 		return nil
@@ -596,18 +599,15 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	}
 	// 4. process EventMigrationBucket
 	if migrateBucketEvents.Event != nil {
-		executePlan, err := s.produceBucketMigrateExecutePlan(migrateBucketEvents.Event, false)
-		if err != nil {
+		if executePlan, err = s.produceBucketMigrateExecutePlan(migrateBucketEvents.Event, false); err != nil || executePlan == nil {
 			log.Errorw("failed to produce bucket migrate execute plan", "Events", migrateBucketEvents.Event, "error", err)
 			return err
 		}
-		if executePlan != nil {
-			if err = executePlan.Start(); err != nil {
-				log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Event, "executePlan", executePlan, "error", err)
-				return err
-			}
-			s.executePlanIDMap[executePlan.bucketID] = executePlan
+		if err = executePlan.Start(); err != nil {
+			log.Errorw("failed to start bucket migrate execute plan", "Events", migrateBucketEvents.Event, "executePlan", executePlan, "error", err)
+			return err
 		}
+		s.executePlanIDMap[executePlan.bucketID] = executePlan
 	}
 	return nil
 }

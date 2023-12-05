@@ -595,4 +595,16 @@ type GCBucketMigrationTask interface {
 	GetBucketID() uint64
 	// SetBucketID sets the bucketID
 	SetBucketID(uint64)
+	// GetLastGCObjectID returns the last gc object id
+	GetLastGCObjectID() uint64
+	// SetLastGCObjectID sets the last gc object id
+	SetLastGCObjectID(uint64)
+	// GetLastGCGvgID returns the last gc gvg id
+	GetLastGCGvgID() uint64
+	// SetLastGCGvgID sets the last gc gvg id
+	SetLastGCGvgID(uint64)
+	// GetFinished returns the task whether finished
+	GetFinished() bool
+	// SetFinished sets the bucket migration task status when finished
+	SetFinished(bool)
 }

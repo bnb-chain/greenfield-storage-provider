@@ -368,6 +368,8 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 		bucketID            uint64
 		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
+		bz                  []byte
+		quota               gfsptask.GfSpBucketQuotaInfo
 	)
 
 	defer func() {
@@ -394,16 +396,13 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 	}
 
 	bucketID = bucketMigrationInfo.GetBucketId()
-	quota, err := g.baseApp.GfSpClient().GetLatestBucketReadQuota(
-		reqCtx.Context(), bucketID)
-	if err != nil {
+	if quota, err = g.baseApp.GfSpClient().GetLatestBucketReadQuota(reqCtx.Context(), bucketID); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "bucket_id",
 			bucketID, "error", err)
 		return
 	}
 
-	bz, err := quota.Marshal()
-	if err != nil {
+	if bz, err = quota.Marshal(); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to marshal", "bucket_id",
 			bucketID, "error", err)
 		return
@@ -426,6 +425,7 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
 		quota               *gfsptask.GfSpBucketQuotaInfo
+		bz                  []byte
 	)
 
 	defer func() {
@@ -452,8 +452,7 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	bucketID = bucketMigrationInfo.GetBucketId()
-	quota, err = g.baseApp.GfSpClient().NotifyPreMigrateBucketAndDeductQuota(reqCtx.Context(), bucketID)
-	if err != nil || quota == nil {
+	if quota, err = g.baseApp.GfSpClient().NotifyPreMigrateBucketAndDeductQuota(reqCtx.Context(), bucketID); err != nil || quota == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to pre migrate bucket, the bucket may already notified", "bucket_id",
 			bucketID, "error", err)
 		// if the bucket has already pre notified ignore the error
@@ -463,8 +462,7 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	bz, err := quota.Marshal()
-	if err != nil {
+	if bz, err = quota.Marshal(); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to marshal", "bucket_id",
 			bucketID, "error", err)
 		return
@@ -513,8 +511,7 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	bucketID = bucketMigrationInfo.GetBucketId()
-	latestQuota, err = g.baseApp.GfSpClient().NotifyPostMigrateBucketAndRecoupQuota(reqCtx.Context(), bucketMigrationInfo)
-	if err != nil {
+	if latestQuota, err = g.baseApp.GfSpClient().NotifyPostMigrateBucketAndRecoupQuota(reqCtx.Context(), bucketMigrationInfo); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "post migrate bucket error, the bucket may already notified", "bucket_id",
 			bucketID, "error", err)
 		return

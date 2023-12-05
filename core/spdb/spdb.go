@@ -204,17 +204,20 @@ type MigrateDB interface {
 	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
 	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
 
-	// UpdateBucketMigrationProgress update MigrateBucketTable migrate state.
+	// UpdateBucketMigrationProgress update MigrateBucketProgress migrate state.
 	UpdateBucketMigrationProgress(bucketID uint64, migrateState int) error
+	// UpdateBucketMigrationPreDeductedQuota update MigrateBucketTable migrate state.
+	UpdateBucketMigrationPreDeductedQuota(bucketID uint64, deductedQuota uint64, state int) error
+	// UpdateBucketMigrationRecoupQuota update RecoupQuota and the corresponding state in MigrateBucketProgress.
+	UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error
+	// UpdateBucketMigrationGCProgress update bucket migration gc progress
+	UpdateBucketMigrationGCProgress(bucketID uint64, lastGCObjectID uint64, lastGCGvgID uint64) error
+	// UpdateBucketMigrationMigratingProgress migrating progress
+	UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error
 	// QueryMigrateBucketState returns the migrate state.
 	QueryMigrateBucketState(bucketID uint64) (int, error)
 	// ListBucketMigrationToConfirm returns the migrate bucket id to be confirmed.
 	ListBucketMigrationToConfirm() ([]*MigrateBucketProgressMeta, error)
-	// UpdateBucketMigrationPreDeductedQuota update MigrateBucketTable migrate state.
-	UpdateBucketMigrationPreDeductedQuota(bucketID uint64, deductedQuota uint64, state int) error
-	UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error
-	UpdateBucketMigrationGCProgress(bucketID uint64, lastGCObjectID uint64, lastGCGvgID uint64) error
-	UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error
 	// DeleteMigrateBucket delete the bucket migrate status
 	DeleteMigrateBucket(bucketID uint64) error
 }

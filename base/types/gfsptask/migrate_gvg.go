@@ -373,3 +373,23 @@ func (m *GfSpGCBucketMigrationTask) GetBucketID() uint64 {
 func (m *GfSpGCBucketMigrationTask) SetBucketID(bucketID uint64) {
 	m.BucketId = bucketID
 }
+
+func (m *GfSpGCBucketMigrationTask) SetLastGCObjectID(lastGCObjectID uint64) {
+	m.LastGcObjectId = lastGCObjectID
+}
+
+func (m *GfSpGCBucketMigrationTask) GetLastGCObjectID() uint64 {
+	return m.GetLastGcObjectId()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetLastGCGvgID(lastGCGvgID uint64) {
+	m.LastGcGvgId = lastGCGvgID
+}
+
+func (m *GfSpGCBucketMigrationTask) GetLastGCGvgID() uint64 {
+	return m.GetLastGcObjectId()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetFinished(finished bool) {
+	m.Finished = finished
+}

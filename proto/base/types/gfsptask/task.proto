@@ -201,6 +201,10 @@ message GfSpMigratePieceTask {
 message GfSpGCBucketMigrationTask {
   GfSpTask task = 1;
   uint64 bucket_id = 2;
+  uint64 last_gc_object_id = 3;
+  uint64 last_gc_gvg_id = 4;
+  // whether the gc of bucket migration succeed
+  bool finished = 5;
 }
 
 message GfSpBucketMigrationInfo {

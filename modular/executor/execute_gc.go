@@ -384,13 +384,14 @@ func (e *ExecuteModular) gcMetaReadRecord(ctx context.Context, task coretask.GCM
 }
 
 func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task coretask.GCBucketMigrationTask) {
-	// TODO gc progress persist in db
 	var (
 		groups     []*bsdb.GlobalVirtualGroup
 		err        error
 		startAfter uint64 = 0
-		limit      uint32
+		limit      uint32 = 100
 		objects    []*metadatatypes.ObjectDetails
+		gcNum      uint64 = 0
+		bucketInfo *storagetypes.BucketInfo
 	)
 	bucketID := task.GetBucketID()
 
@@ -410,15 +411,13 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 	}()
 
 	// list gvg
-	groups, err = e.baseApp.GfBsDB().ListGvgByBucketID(common.BigToHash(math.NewUint(bucketID).BigInt()))
-	if err != nil {
+	if groups, err = e.baseApp.GfBsDB().ListGvgByBucketID(common.BigToHash(math.NewUint(bucketID).BigInt())); err != nil {
 		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "error", err)
 		return
 	}
 
 	// current chain's gvg info compare metadata info
-	bucketInfo, err := e.baseApp.Consensus().QueryBucketInfoById(ctx, bucketID)
-	if err != nil || bucketInfo == nil {
+	if bucketInfo, err = e.baseApp.Consensus().QueryBucketInfoById(ctx, bucketID); err != nil || bucketInfo == nil {
 		log.Errorw("failed to get bucket by bucket name", "error", err)
 		return
 	}
@@ -431,17 +430,34 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 			err = errors.New("gvg family id mismatch")
 			return
 		}
-		objects, err = e.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(ctx, gvg.GlobalVirtualGroupId, bucketID, startAfter, limit)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to list objects by gvg and bucket for gc", "error", err)
-			return
-		}
-		// can delete, verify
-		for _, obj := range objects {
-			objectInfo := obj.GetObject().GetObjectInfo()
-			if e.gcWorker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
-				err = e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
-				log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)
+		for {
+			if objects, err = e.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(ctx, gvg.GlobalVirtualGroupId, bucketID, startAfter, limit); err != nil {
+				log.CtxErrorw(ctx, "failed to list objects by gvg and bucket for gc", "error", err)
+				return
+			}
+			// can delete, verify
+			for _, obj := range objects {
+				gcNum++
+				objectInfo := obj.GetObject().GetObjectInfo()
+				if e.gcWorker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
+					err = e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
+					log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)
+				}
+				if gcNum%reportProgressPerN == 0 {
+					log.Infow("bucket migration gc report task", "current_gvg", gvg, "bucket_id", bucketID,
+						"last_gc_object_id", obj.GetObject().GetObjectInfo().Id.Uint64())
+					task.SetLastGCObjectID(obj.GetObject().GetObjectInfo().Id.Uint64())
+					task.SetLastGCGvgID(gvg.ID)
+					if err = e.ReportTask(ctx, task); err != nil { // report task is already automatically triggered.
+						log.CtxErrorw(ctx, "failed to report bucket migration task gc progress", "task_info", task, "error", err)
+						return
+					}
+				}
+			}
+
+			if len(objects) < int(limit) {
+				log.CtxInfow(ctx, "succeed to finish one gvg bucket migration gc", "gvg", gvg)
+				break
 			}
 		}
 	}
