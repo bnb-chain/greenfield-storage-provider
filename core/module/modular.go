@@ -309,6 +309,10 @@ type Signer interface {
 	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 	// RejectMigrateBucket rejects the bucket migration by dest SP.
 	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
+	// Deposit into a Global virtual group for more store size
+	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
+	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.
+	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

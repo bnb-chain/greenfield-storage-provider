@@ -1,6 +1,7 @@
 package vgmgr
 
 import (
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -146,6 +147,6 @@ type VirtualGroupManager interface {
 }
 
 // NewVirtualGroupManager is the virtual group manager init api.
-type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus, enableHealthyChecker bool) (VirtualGroupManager, error)
+type NewVirtualGroupManager = func(selfOperatorAddress string, chainClient consensus.Consensus, gfspClient gfspclient.GfSpClientAPI, enableHealthyChecker bool) (VirtualGroupManager, error)
 
 type IDSet = map[uint32]struct{}

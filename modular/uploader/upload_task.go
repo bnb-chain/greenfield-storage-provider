@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -20,6 +21,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+)
+
+var (
+	rtyAttNum = uint(3)
+	rtyAttem  = retry.Attempts(rtyAttNum)
+	rtyDelay  = retry.Delay(time.Millisecond * 500)
+	rtyErr    = retry.LastErrorOnly(true)
 )
 
 var (
@@ -96,7 +104,16 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_end_from_task_create").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		go func() {
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
-			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
+			if err = retry.Do(func() error {
+				return u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
+			}, rtyAttem,
+				rtyDelay,
+				rtyErr,
+				retry.OnRetry(func(n uint, err error) {
+					log.CtxErrorw(ctx, "failed to report upload object task", "error", err, "attempt", n, "max_attempts", rtyAttNum)
+				})); err != nil {
+				log.CtxErrorw(ctx, "failed to report upload object task", "error", err)
+			}
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		}()
 	}()
@@ -233,7 +250,16 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 			"read_size", readSize, "error", err)
 		go func() {
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
-			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), task)
+			if err = retry.Do(func() error {
+				return u.baseApp.GfSpClient().ReportTask(context.Background(), task)
+			}, rtyAttem,
+				rtyDelay,
+				rtyErr,
+				retry.OnRetry(func(n uint, err error) {
+					log.CtxErrorw(ctx, "failed to report upload object task", "error", err, "attempt", n, "max_attempts", rtyAttNum)
+				})); err != nil {
+				log.CtxErrorw(ctx, "failed to report upload object task", "error", err)
+			}
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		}()
 	}()

@@ -54,7 +54,7 @@ type ApprovalModular struct {
 	// the maximum number of GVGs migrating to current SP concurrently is allowed
 	migrateGVGLimit int
 
-	statsMutex sync.Mutex
+	statsMutex sync.RWMutex
 	tasksStats *managerTasksStats
 
 	spID uint32
@@ -166,13 +166,13 @@ func (a *ApprovalModular) getSPID() (uint32, error) {
 }
 
 func (a *ApprovalModular) exceedCreateObjectLimit() bool {
-	a.statsMutex.Lock()
-	defer a.statsMutex.Unlock()
+	a.statsMutex.RLock()
+	defer a.statsMutex.RUnlock()
 	return a.tasksStats.totalUploadTasks() >= a.tasksStats.maxUploadingCount
 }
 
 func (a *ApprovalModular) exceedMigrateGVGLimit() bool {
-	a.statsMutex.Lock()
-	defer a.statsMutex.Unlock()
+	a.statsMutex.RLock()
+	defer a.statsMutex.RUnlock()
 	return a.tasksStats.migrateGVGCount >= uint32(a.migrateGVGLimit)
 }
