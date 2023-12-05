@@ -294,7 +294,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	case *gfspserver.GfSpSignRequest_Deposit:
 		txHash, err = g.signer.Deposit(ctx, t.Deposit)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign deposit", "error", err)
+			log.CtxErrorw(ctx, "failed to deposit", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureDeposit).Inc()
 			metrics.ReqTime.WithLabelValues(SignerFailureDeposit).Observe(time.Since(startTime).Seconds())
 		} else {
@@ -304,7 +304,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	case *gfspserver.GfSpSignRequest_DeleteGlobalVirtualGroup:
 		txHash, err = g.signer.DeleteGlobalVirtualGroup(ctx, t.DeleteGlobalVirtualGroup)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign delete global virtual group", "error", err)
+			log.CtxErrorw(ctx, "failed to delete global virtual group", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Inc()
 			metrics.ReqTime.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
 		} else {

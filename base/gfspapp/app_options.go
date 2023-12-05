@@ -155,10 +155,10 @@ const (
 	SignerFailureRejectMigrateBucket        = "signer_reject_migrate_bucket_failure"
 
 	SignerSuccessDeposit = "signer_deposit_success"
-	SignerFailureDeposit = "signer_Deposit_failure"
+	SignerFailureDeposit = "signer_deposit_failure"
 
 	SignerSuccessDeleteGlobalVirtualGroup = "signer_delete_global_virtual_group_success"
-	SignerFailureDeleteGlobalVirtualGroup = "signer_DeleteGlobalVirtualGroup_failure"
+	SignerFailureDeleteGlobalVirtualGroup = "signer_delete_global_virtual_group_failure"
 
 	UploaderSuccessPutObject = "uploader_put_object_success"
 	UploaderFailurePutObject = "uploader_put_object_failure"
