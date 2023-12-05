@@ -680,16 +680,24 @@ func (m *ManageModular) HandleGCMetaTask(ctx context.Context, gcMetaTask task.GC
 	return nil
 }
 
-func (m *ManageModular) GenerateGCBucketMigrationTask(ctx context.Context, bucketID, bucketSize uint64) {
+func (m *ManageModular) GenerateGCBucketMigrationTask(ctx context.Context, bucketID uint64) {
 	// src sp should wait meta data
 	<-time.After(bucketMigrationGCWaitTime)
+	var (
+		bucketSize uint64
+		err        error
+	)
+	// get bucket quota and check, lock quota
+	if bucketSize, err = m.getBucketTotalSize(ctx, bucketID); err != nil {
+		log.Errorw("failed to get bucket total size", "bucket_id", bucketID)
+		return
+	}
 
 	// success generate gc task, gc for bucket migration src sp
 	gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}
 	gcBucketMigrationTask.InitGCBucketMigrationTask(m.baseApp.TaskPriority(gcBucketMigrationTask), bucketID,
 		m.baseApp.TaskTimeout(gcBucketMigrationTask, bucketSize), m.baseApp.TaskMaxRetry(gcBucketMigrationTask))
-	err := m.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask)
-	if err != nil {
+	if err = m.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask); err != nil {
 		log.CtxErrorw(ctx, "failed to begin gc bucket migration task", "info", gcBucketMigrationTask.Info(), "error", err)
 	}
 	log.CtxInfow(ctx, "succeed to generate bucket migration gc task and push to queue", "bucket_id", bucketID, "gcBucketMigrationTask", gcBucketMigrationTask)
@@ -826,9 +834,12 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
 		return ErrDanglingTask
 	}
-	var err, pushErr error
-	cancelTask := false
+	var (
+		err, pushErr      error
+		migratedBytesSize uint64
+	)
 
+	cancelTask := false
 	if task.GetBucketID() != 0 {
 		// if there is no execute plan, we should cancel this task
 		if _, err = m.bucketMigrateScheduler.getExecutePlanByBucketID(task.GetBucketID()); err != nil {
@@ -844,10 +855,12 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 
 	//  if cancel migrate bucket, migrated recoup quota
 	if cancelTask {
-		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
+		if migratedBytesSize, err = m.bucketMigrateScheduler.getMigratedBytesSize(task.GetBucketID()); err != nil {
+			log.CtxErrorw(ctx, "failed to get migrated bytes size", "task", task, "error", err)
+		}
+		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: migratedBytesSize}
 		log.CtxInfow(ctx, "start to cancel migrate task and send post migrate bucket to src sp", "post_msg", postMsg, "task", task)
-		err = m.bucketMigrateScheduler.PostMigrateBucket(postMsg, nil)
-		if err != nil {
+		if err = m.bucketMigrateScheduler.PostMigrateBucket(postMsg, nil); err != nil {
 			log.CtxErrorw(ctx, "failed to post migrate bucket", "msg", postMsg, "error", err)
 		}
 		return err

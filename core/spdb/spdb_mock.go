@@ -1046,6 +1046,20 @@ func (mr *MockSPDBMockRecorder) UpdateIntegrityChecksum(integrity interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateIntegrityChecksum), integrity)
 }
 
+// UpdateMigrateGVGMigratedBytesSize mocks base method.
+func (m *MockSPDB) UpdateMigrateGVGMigratedBytesSize(migrateKey string, migratedBytes uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMigrateGVGMigratedBytesSize", migrateKey, migratedBytes)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMigrateGVGMigratedBytesSize indicates an expected call of UpdateMigrateGVGMigratedBytesSize.
+func (mr *MockSPDBMockRecorder) UpdateMigrateGVGMigratedBytesSize(migrateKey, migratedBytes interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGMigratedBytesSize", reflect.TypeOf((*MockSPDB)(nil).UpdateMigrateGVGMigratedBytesSize), migrateKey, migratedBytes)
+}
+
 // UpdateMigrateGVGRetryCount mocks base method.
 func (m *MockSPDB) UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error {
 	m.ctrl.T.Helper()
@@ -2354,6 +2368,20 @@ func (m *MockMigrateDB) UpdateBucketMigrationRecoupQuota(bucketID, recoupQuota u
 func (mr *MockMigrateDBMockRecorder) UpdateBucketMigrationRecoupQuota(bucketID, recoupQuota, state interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrationRecoupQuota", reflect.TypeOf((*MockMigrateDB)(nil).UpdateBucketMigrationRecoupQuota), bucketID, recoupQuota, state)
+}
+
+// UpdateMigrateGVGMigratedBytesSize mocks base method.
+func (m *MockMigrateDB) UpdateMigrateGVGMigratedBytesSize(migrateKey string, migratedBytes uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMigrateGVGMigratedBytesSize", migrateKey, migratedBytes)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMigrateGVGMigratedBytesSize indicates an expected call of UpdateMigrateGVGMigratedBytesSize.
+func (mr *MockMigrateDBMockRecorder) UpdateMigrateGVGMigratedBytesSize(migrateKey, migratedBytes interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMigrateGVGMigratedBytesSize", reflect.TypeOf((*MockMigrateDB)(nil).UpdateMigrateGVGMigratedBytesSize), migrateKey, migratedBytes)
 }
 
 // UpdateMigrateGVGRetryCount mocks base method.

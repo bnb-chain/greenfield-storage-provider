@@ -207,7 +207,7 @@ func (s *GfSpClient) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, b
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
 		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
-	req := &gfspserver.GfSpNotifPreMigrateBucketRequest{
+	req := &gfspserver.GfSpNotifyPreMigrateBucketRequest{
 		BucketId: bucketID,
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPreMigrateBucketAndDeductQuota(ctx, req)

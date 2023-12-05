@@ -360,7 +360,7 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 	}, nil
 }
 
-func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifPreMigrateBucketRequest) (
+func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (
 	*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
 	var (
 		quota gfsptask.GfSpBucketQuotaInfo

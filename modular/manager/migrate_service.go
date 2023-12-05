@@ -75,8 +75,7 @@ func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context
 
 	// reduce quota, sql db
 	if err = m.baseApp.GfSpClient().DeductQuotaForBucketMigrate(ctx, bucketID, bucketSize, quota.GetMonth()); err != nil {
-		log.CtxErrorw(ctx, "failed to get bucket read quota", "bucket_id",
-			bucketID, "error", err)
+		log.CtxErrorw(ctx, "failed to get bucket read quota", "bucket_id", bucketID, "error", err)
 		return quota, err
 	}
 
@@ -84,8 +83,6 @@ func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context
 	if err = m.baseApp.GfSpDB().UpdateBucketMigrationPreDeductedQuota(bucketID, bucketSize, int(SrcSPPreDeductQuotaDone)); err != nil {
 		log.CtxErrorw(ctx, "failed to update migrate bucket state and deduct quota", "bucket_id", bucketID, "error", err)
 		// if failed to update migrate bucket state, recoup quota and return error
-		log.CtxErrorw(ctx, "failed to pre done migrate bucket due to update db failed", "bucket_id",
-			bucketID, "error", err)
 		if quotaUpdateErr := m.baseApp.GfSpClient().RecoupQuota(ctx, bucketID, bucketSize, quota.GetMonth()); quotaUpdateErr != nil {
 			log.CtxErrorw(ctx, "failed to recoup extra quota to user", "error", err)
 		}
@@ -101,26 +98,35 @@ func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Contex
 		err         error
 		extraQuota  uint64
 		bucketSize  uint64
+		state       int
 		latestQuota gfsptask.GfSpBucketQuotaInfo
 	)
 
 	bucketID := bmInfo.GetBucketId()
+
+	if state, err = m.baseApp.GfSpDB().QueryMigrateBucketState(bucketID); err != nil {
+		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
+		return gfsptask.GfSpBucketQuotaInfo{}, err
+	}
+	if state != int(SrcSPPreDeductQuotaDone) {
+		log.CtxInfow(ctx, "the bucket has already recoup quota", "bucket_id", bucketID, "state", state, "expected_state", int(SrcSPPreDeductQuotaDone))
+		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("the bucket has already post, recoup quota done")
+	}
 
 	if latestQuota, err = m.baseApp.GfSpClient().GetLatestBucketReadQuota(ctx, bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket read quota", "bucket_id", bucketID, "error", err)
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
+	// get bucket quota and check
 	if bucketSize, err = m.getBucketTotalSize(ctx, bucketID); err != nil {
 		log.Errorf("failed to get bucket total object size", "bucket_id", bucketID, "error", err)
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
 	if bmInfo.GetFinished() {
-		// bucket migration gc
-		//go m.GenerateGCBucketMigrationTask(ctx, bucketID, bucketSize)
+		// bucket migration gc trigger by bucket migration complete event in src sp
 	} else {
-		// get bucket quota and check TODO month check
 		migratedBytes := bmInfo.GetMigratedBytesSize()
 		if migratedBytes >= bucketSize {
 			// If the data migrated surpasses the total bucket size, quota recoup is skipped.
@@ -129,10 +135,10 @@ func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Contex
 		} else {
 			extraQuota = bucketSize - migratedBytes
 			if quotaUpdateErr := m.baseApp.GfSpClient().RecoupQuota(ctx, bmInfo.GetBucketId(), extraQuota, latestQuota.GetMonth()); quotaUpdateErr != nil {
-				// no need to return the db error to user
 				log.CtxErrorw(ctx, "failed to recoup extra quota to user", "error", err)
+				return gfsptask.GfSpBucketQuotaInfo{}, err
 			}
-			if err = m.baseApp.GfSpDB().UpdateBucketMigrationRecoupQuota(bucketID, extraQuota, int(Init)); err != nil {
+			if err = m.baseApp.GfSpDB().UpdateBucketMigrationRecoupQuota(bucketID, extraQuota, int(MigrationFinished)); err != nil {
 				log.CtxErrorw(ctx, "failed to update bucket migrate progress recoup quota", "error", err)
 			}
 		}

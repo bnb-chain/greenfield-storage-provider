@@ -38,6 +38,7 @@ type MigrateGVGTable struct {
 	LastMigratedObjectID     uint64
 	MigrateStatus            int `gorm:"index:migrate_status_index"`
 	RetryTime                int `gorm:"comment:retry_time"`
+	MigratedBytesSize        uint64
 }
 
 // TableName is used to set MigrateGVGTable Schema's table name in database.
@@ -46,7 +47,7 @@ func (MigrateGVGTable) TableName() string {
 }
 
 // MigrateBucketProgressTable table schema.
-// used by persist bucket migration progress
+// used by persist bucket migration progress and meta
 type MigrateBucketProgressTable struct {
 	BucketID              uint64 `gorm:"primary_key"`
 	SubscribedBlockHeight uint64 `gorm:"primary_key"`

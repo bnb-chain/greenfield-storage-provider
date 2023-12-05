@@ -399,6 +399,15 @@ func (s *SpDBImpl) UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) 
 	return nil
 }
 
+func (s *SpDBImpl) UpdateMigrateGVGMigratedBytesSize(migrateKey string, migrateBytes uint64) error {
+	if result := s.db.Model(&MigrateGVGTable{}).Where("migrate_key = ?", migrateKey).Updates(&MigrateGVGTable{
+		MigratedBytesSize: migrateBytes,
+	}); result.Error != nil {
+		return fmt.Errorf("failed to update migrate gvg migrated bytes size: %s", result.Error)
+	}
+	return nil
+}
+
 func (s *SpDBImpl) QueryMigrateGVGUnit(migrateKey string) (*spdb.MigrateGVGUnitMeta, error) {
 	var (
 		result      *gorm.DB

@@ -21,6 +21,8 @@ message GfSpBucketMigrate {
   uint64 bucket_id = 2;
   uint32 finished = 3;
   repeated GfSpMigrateGVG gvg_task = 4;
+  uint32 state = 5;
+  uint64 migrated_bytes_size = 6;
 }
 
 message GfSpMigrateGVG {

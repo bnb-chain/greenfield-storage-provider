@@ -192,8 +192,7 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 	}
 	// empty bucket, need to pick a vgf
 	if migrateExecuteUnit == nil {
-		vgfID, err = plan.manager.PickVirtualGroupFamily(context.Background(), &task.NullTask{})
-		if err != nil {
+		if vgfID, err = plan.manager.PickVirtualGroupFamily(context.Background(), &task.NullTask{}); err != nil {
 			log.Errorw("failed to pick vgf for migrate bucket", "error", err)
 			return err
 		}
@@ -256,6 +255,7 @@ func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(migrateExecuteUni
 	var (
 		signature []byte
 		err       error
+		quota     gfsptask.GfSpBucketQuotaInfo
 	)
 	bucketID := migrateExecuteUnit.BucketID
 	srcSPInfo := migrateExecuteUnit.SrcSP
@@ -264,14 +264,12 @@ func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(migrateExecuteUni
 	// query src sp, bucket migrate quota
 	queryMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID}
 	queryMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
-	signature, err = plan.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), queryMsg)
-	if err != nil {
+	if signature, err = plan.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), queryMsg); err != nil {
 		log.Errorw("failed to sign migrate bucket", "bucket_migration_info", queryMsg, "error", err)
 		return err
 	}
 	queryMsg.SetSignature(signature)
-	quota, err := plan.manager.baseApp.GfSpClient().QueryLatestBucketQuota(context.Background(), srcSPInfo.GetEndpoint(), queryMsg)
-	if err != nil {
+	if quota, err = plan.manager.baseApp.GfSpClient().QueryLatestBucketQuota(context.Background(), srcSPInfo.GetEndpoint(), queryMsg); err != nil {
 		log.Debugw("failed to query bucket quota from src sp", "src_sp", srcSPInfo, "error", err)
 		return err
 	}
@@ -287,9 +285,12 @@ func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(migrateExecuteUni
 	}
 
 	// set dest sp bucket quota info
-	err = plan.manager.baseApp.GfSpDB().UpdateBucketTraffic(bucketID, update)
-	if err != nil {
+	if err = plan.manager.baseApp.GfSpDB().UpdateBucketTraffic(bucketID, update); err != nil {
 		log.Errorw("failed to update bucket traffic for bucket migrate", "bucket_id", bucketID, "error", err)
+		return err
+	}
+
+	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucketID, MigratingQuotaInfoDone); err != nil {
 		return err
 	}
 
@@ -298,27 +299,37 @@ func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(migrateExecuteUni
 }
 
 func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, task task.MigrateGVGTask, migrateExecuteUnit *BucketMigrateGVGExecuteUnit, migrateStatus MigrateStatus) error {
-
+	var err error
+	bucketID := migrateExecuteUnit.BucketID
+	gvgUnitsTotal := uint32(len(plan.gvgUnitMap))
+	gvgUnitsFinished := uint32(len(plan.finishedGvgUnits))
 	// update migrate gvg status
-	err := plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus))
-	if err != nil {
+	if err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus)); err != nil {
 		log.Errorw("update migrate gvg status", "migrate_key", migrateKey, "error", err)
 		return err
 	}
+	if err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGMigratedBytesSize(migrateKey, task.GetMigratedBytesSize()); err != nil {
+		log.Errorw("update migrate gvg migrated bytes size", "migrate_key", migrateKey, "migrated_bytes", task.GetMigratedBytesSize(), "error", err)
+		return err
+	}
+
 	migrateExecuteUnit.MigrateStatus = migrateStatus
 	plan.finishedGvgUnits[migrateExecuteUnit.SrcGVG.GetId()] = struct{}{}
+
+	if err = plan.manager.baseApp.GfSpDB().UpdateBucketMigrationMigratingProgress(bucketID, gvgUnitsTotal, gvgUnitsFinished); err != nil {
+		log.Errorw("failed to update bucket migration migrating progress", "migrate_key", migrateKey, "total", gvgUnitsTotal, "finished", gvgUnitsFinished, "error", err)
+		return err
+	}
 
 	// all migrate units success, send tx to chain
 	if len(plan.finishedGvgUnits) == len(plan.gvgUnitMap) {
 		// set bucket quota
-		err = plan.syncBucketQuotaFromSrcSP(migrateExecuteUnit)
-		if err != nil {
+		if err = plan.syncBucketQuotaFromSrcSP(migrateExecuteUnit); err != nil {
 			log.Errorw("failed to update bucket quota", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
 			return err
 		}
 
-		err = plan.sendCompleteMigrateBucketTx(migrateExecuteUnit)
-		if err != nil {
+		if err = plan.sendCompleteMigrateBucketTx(migrateExecuteUnit); err != nil {
 			log.Errorw("failed to send complete migrate bucket msg to chain", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
 			return err
 		}
@@ -417,8 +428,7 @@ type BucketMigrateScheduler struct {
 	lastSubscribedBlockHeightGC uint64                               // src sp subscribe gc progress
 	executePlanIDMap            map[uint64]*BucketMigrateExecutePlan // bucketID -> BucketMigrateExecutePlan
 	bucketCache                 *BucketCache
-	// src sp swap unit plan.
-	mutex sync.RWMutex
+	mutex                       sync.RWMutex // Protects the executePlanIDMap fields
 }
 
 // NewBucketMigrateScheduler returns a bucket migrate scheduler instance.
@@ -494,7 +504,6 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedS
 		}
 	} else {
 		err = QueryBucketInfoFromChainFunc()
-
 	}
 
 	if err != nil || bucketInfo == nil {
@@ -506,6 +515,23 @@ func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedS
 		return false, nil
 	}
 	return true, nil
+}
+
+func (s *BucketMigrateScheduler) getMigratedBytesSize(bucketID uint64) (uint64, error) {
+	var (
+		err                error
+		migrateGVGUnitMeta []*spdb.MigrateGVGUnitMeta
+		migratedBytes      uint64
+	)
+	if migrateGVGUnitMeta, err = s.manager.baseApp.GfSpDB().ListMigrateGVGUnitsByBucketID(bucketID); err != nil {
+		return 0, err
+	}
+
+	for _, migrateUnit := range migrateGVGUnitMeta {
+		migratedBytes += migrateUnit.MigratedBytesSize
+	}
+
+	return migratedBytes, nil
 }
 
 func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
@@ -547,6 +573,7 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 		executePlan *BucketMigrateExecutePlan
 		err         error
 	)
+	ctx := context.Background()
 	if executePlan, err = s.getExecutePlanByBucketID(bucketID); err != nil {
 		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "bucket_id", bucketID, "error", err)
 		return err
@@ -564,7 +591,16 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 	s.deleteExecutePlanByBucketID(bucketID)
 
 	executePlan.stopSPSchedule()
-	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
+	if err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID); err != nil {
+		return err
+	}
+
+	// if bucket migration failed, gc for dest sp
+	// generate a gc bucket migration task(list objects and delete)
+	if err = UpdateBucketMigrationProgress(executePlan.manager.baseApp, bucketID, DestSPGCDoing); err != nil {
+		return err
+	}
+	go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID)
 
 	return err
 }
@@ -613,13 +649,18 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 }
 
 func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, event *spdb.MigrateBucketProgressMeta) {
+	var (
+		bucket *types.Bucket
+		err    error
+	)
 	bucketID := event.BucketID
+
 	if event.MigrationState != int(SendCompleteTxDone) {
 		return
 	}
 	// confirm
-	bucket, err := s.manager.baseApp.GfSpClient().GetBucketByBucketID(ctx, int64(bucketID), true)
-	if err != nil {
+	if bucket, err = s.manager.baseApp.GfSpClient().GetBucketByBucketID(ctx, int64(bucketID), true); err != nil {
+		log.Errorw("failed to get bucket by bucket id", "bucket_id", bucketID, "error", err)
 		return
 	}
 
@@ -634,6 +675,8 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 	}
 }
 
+// After the dest sp completes the migration, it needs to send the CompleteMigrateBucketTx to the chain.
+// The dest sp waits for the successful execution of the transaction and then proceeds to 1) notify the source SP and 2) clean up its own state.
 func (s *BucketMigrateScheduler) confirmEvents() {
 	subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Millisecond)
 	defer subscribeBucketMigrateEventsTicker.Stop()
@@ -641,12 +684,12 @@ func (s *BucketMigrateScheduler) confirmEvents() {
 	logNumber := uint64(0)
 
 	for range subscribeBucketMigrateEventsTicker.C {
-		confirmEvents, subscribeError := s.manager.baseApp.GfSpDB().ListBucketMigrationToConfirm()
-		if subscribeError != nil {
+		confirmEvents, listError := s.manager.baseApp.GfSpDB().ListBucketMigrationToConfirm()
+		if listError != nil {
 			logNumber++
 			if (logNumber % printLogPerN) == 0 {
 				log.Errorw("failed to list migrate bucket events to confirm", "block_id", s.lastSubscribedBlockHeight+1,
-					"error", subscribeError)
+					"error", listError)
 			}
 			continue
 		}
@@ -688,8 +731,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 			// 2. make plan, start plan
 			for _, migrateBucketEvents := range migrationBucketEvents {
 				log.Infow("loop subscribe bucket migrate event", "migration_bucket_events", migrationBucketEvents, "block_id", s.lastSubscribedBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
-				err := s.processEvents(migrateBucketEvents)
-				if err != nil {
+				if err := s.processEvents(migrateBucketEvents); err != nil {
 					log.Errorw("bucket migrate process error", "migration_bucket_events", migrateBucketEvents, "error", err)
 				}
 			}
@@ -703,8 +745,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 		logNumber := uint64(0)
 
 		UpdateBucketMigrateGCSubscribeProgressFunc := func(num uint64) {
-			updateErr := s.manager.baseApp.GfSpDB().UpdateBucketMigrateGCSubscribeProgress(s.lastSubscribedBlockHeightGC + 1)
-			if updateErr != nil {
+			if updateErr := s.manager.baseApp.GfSpDB().UpdateBucketMigrateGCSubscribeProgress(s.lastSubscribedBlockHeightGC + 1); updateErr != nil {
 				log.Errorw("failed to update bucket migrate src sp gc progress", "error", updateErr)
 			}
 			s.lastSubscribedBlockHeightGC++
@@ -714,11 +755,15 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 		}
 		subscribeBucketMigrateEventsTicker := time.NewTicker(time.Duration(s.manager.subscribeBucketMigrateEventInterval) * time.Millisecond)
 		defer subscribeBucketMigrateEventsTicker.Stop()
+		var (
+			completeMigrationBucketEvents []*storagetypes.EventCompleteMigrationBucket
+			subscribeError                error
+		)
 
 		for range subscribeBucketMigrateEventsTicker.C {
 			// 1. subscribe migrate bucket events
-			completeMigrationBucketEvents, subscribeError := s.manager.baseApp.GfSpClient().ListCompleteMigrationBucketEvents(context.Background(), s.lastSubscribedBlockHeightGC+1, s.selfSP.GetId())
-			if subscribeError != nil {
+			if completeMigrationBucketEvents, subscribeError = s.manager.baseApp.GfSpClient().ListCompleteMigrationBucketEvents(
+				context.Background(), s.lastSubscribedBlockHeightGC+1, s.selfSP.GetId()); subscribeError != nil {
 				logNumber++
 				if (logNumber % printLogPerN) == 0 {
 					log.Errorw("failed to list migrate completed bucket events", "block_id", s.lastSubscribedBlockHeightGC+1,
@@ -727,19 +772,17 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				continue
 			}
 
-			// 2. make plan, start plan
+			// 2. src confirm complete migration bucket event and update progress
 			for _, migrateBucketEvents := range completeMigrationBucketEvents {
 				log.Infow("loop subscribe completed bucket migrate event", "complete_migration_bucket_events", completeMigrationBucketEvents, "block_id", s.lastSubscribedBlockHeight+1, "sp_address", s.manager.baseApp.OperatorAddress())
 				bucketID := migrateBucketEvents.BucketId.Uint64()
 				ctx := context.Background()
-				// get bucket quota and check, lock quota
-				bucketSize, err := s.manager.getBucketTotalSize(ctx, bucketID)
-				if err != nil {
-					log.Errorw("failed to get bucket total size", "bucket_id", bucketID)
-					continue
+
+				if err := UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, DestSPGCDoing); err != nil {
+					return
 				}
 
-				go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID, bucketSize)
+				go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID)
 			}
 
 			// 3.update subscribe progress to db
@@ -782,33 +825,23 @@ func (s *BucketMigrateScheduler) PostMigrateBucket(postMsg *gfsptask.GfSpBucketM
 		err       error
 	)
 
-	bucketID := postMsg.GetBucketId()
-	ctx := context.Background()
-
 	if srcSPInfo == nil {
 		srcSPInfo = s.getSPInfoByBucketID(postMsg.GetBucketId())
 	}
 
 	postMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
-	signature, err = s.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), postMsg)
-	if err != nil {
+	if signature, err = s.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), postMsg); err != nil {
 		log.Errorw("failed to sign migrate bucket", "bucket_migration", postMsg, "error", err)
 		return err
-	} else {
-		postMsg.SetSignature(signature)
 	}
+	postMsg.SetSignature(signature)
 
-	_, err = s.manager.baseApp.GfSpClient().PostMigrateBucket(context.Background(), srcSPInfo.GetEndpoint(), postMsg)
-	if err != nil {
+	if _, err = s.manager.baseApp.GfSpClient().PostMigrateBucket(context.Background(), srcSPInfo.GetEndpoint(), postMsg); err != nil {
 		log.Debugw("failed to query bucket quota from src sp", "src_sp", srcSPInfo, "error", err)
 		return err
 	}
 	log.Debugw("succeed to post migrate bucket quota", "src_sp", srcSPInfo, "postMsg", postMsg, "error", err)
-	// if bucket migration failed, gc for dest sp
-	if !postMsg.GetFinished() {
-		// generate a gc bucket migration task(list objects and delete)
-		go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID, postMsg.GetMigratedBytesSize())
-	}
+
 	return nil
 }
 
@@ -822,17 +855,14 @@ func (s *BucketMigrateScheduler) PreMigrateBucket(bucketID uint64, srcSPInfo *sp
 	log.Debugw("start to pre migrate bucket", "bucket_id", bucketID)
 	preMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: bucketID, Finished: false}
 	preMsg.ExpireTime = time.Now().Unix() + SigExpireTimeSecond
-	signature, err = s.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), preMsg)
-	if err != nil {
+	if signature, err = s.manager.baseApp.GfSpClient().SignBucketMigrationInfo(context.Background(), preMsg); err != nil {
 		log.Errorw("failed to sign migrate bucket", "bucket_migration", preMsg, "error", err)
 		return err
-	} else {
-		preMsg.SetSignature(signature)
 	}
+	preMsg.SetSignature(signature)
 
 	// query src sp, bucket migrate quota
-	_, err = s.manager.baseApp.GfSpClient().PreMigrateBucket(context.Background(), srcSPInfo.GetEndpoint(), preMsg)
-	if err != nil {
+	if _, err = s.manager.baseApp.GfSpClient().PreMigrateBucket(context.Background(), srcSPInfo.GetEndpoint(), preMsg); err != nil {
 		log.Debugw("failed to query bucket quota from src sp", "src_sp", srcSPInfo, "error", err)
 		return err
 	}
@@ -1047,9 +1077,20 @@ func (s *BucketMigrateScheduler) listExecutePlan() (*gfspserver.GfSpQueryBucketM
 	var res gfspserver.GfSpQueryBucketMigrateResponse
 	var plans []*gfspserver.GfSpBucketMigrate
 	for _, executePlan := range s.executePlanIDMap {
-		var plan gfspserver.GfSpBucketMigrate
+		var (
+			plan              gfspserver.GfSpBucketMigrate
+			migratedBytesSize uint64
+			err               error
+		)
+
 		plan.BucketId = executePlan.bucketID
 		plan.Finished = uint32(len(executePlan.finishedGvgUnits))
+		if migratedBytesSize, err = s.getMigratedBytesSize(executePlan.bucketID); err != nil {
+			// if something error, set migratedBytesSize to zero
+			log.Errorw("failed to get migrated bytes size", "execute_plan", executePlan, "error", err)
+			migratedBytesSize = 0
+		}
+		plan.MigratedBytesSize = migratedBytesSize
 		for _, unit := range executePlan.gvgUnitMap {
 			plan.GvgTask = append(plan.GvgTask, &gfspserver.GfSpMigrateGVG{
 				SrcGvgId:             unit.SrcGVG.GetId(),
@@ -1082,8 +1123,7 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 	migrateKey := MakeBucketMigrateKey(migrateExecuteUnit.BucketID, migrateExecuteUnit.SrcGVG.GetId())
 
 	if task.GetFinished() {
-		err = executePlan.updateMigrateGVGStatus(migrateKey, task, migrateExecuteUnit, Migrated)
-		if err != nil {
+		if err = executePlan.updateMigrateGVGStatus(migrateKey, task, migrateExecuteUnit, Migrated); err != nil {
 			log.Errorw("failed to update migrate gvg status", "migrate_key", migrateKey, "error", err)
 			return err
 		}
@@ -1520,7 +1560,7 @@ func SendAndConfirmCompleteMigrateBucketTx(baseApp *gfspapp.GfSpBaseApp, msg *st
 
 func UpdateBucketMigrationProgress(baseApp *gfspapp.GfSpBaseApp, bucketID uint64, migrateState BucketMigrateState) error {
 	if err := baseApp.GfSpDB().UpdateBucketMigrationProgress(bucketID, int(migrateState)); err != nil {
-		log.Errorw("failed to update bucket migration progress", "error", err)
+		log.Errorw("failed to update bucket migration progress", "bucket_id", bucketID, "state", migrateState, "error", err)
 		return err
 	}
 	return nil

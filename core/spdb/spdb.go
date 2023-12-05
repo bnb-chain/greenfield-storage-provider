@@ -189,14 +189,14 @@ type MigrateDB interface {
 	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
 	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
-
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
 	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
 	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
 	// UpdateMigrateGVGRetryCount updates gvg unit retry time
 	UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error
-
+	// UpdateMigrateGVGMigratedBytesSize updates gvg unit retry time
+	UpdateMigrateGVGMigratedBytesSize(migrateKey string, migratedBytes uint64) error
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
@@ -206,13 +206,13 @@ type MigrateDB interface {
 
 	// UpdateBucketMigrationProgress update MigrateBucketProgress migrate state.
 	UpdateBucketMigrationProgress(bucketID uint64, migrateState int) error
-	// UpdateBucketMigrationPreDeductedQuota update MigrateBucketTable migrate state.
+	// UpdateBucketMigrationPreDeductedQuota update pre-deducted quota and migration state when src sp receives a preMigrateBucket request.
 	UpdateBucketMigrationPreDeductedQuota(bucketID uint64, deductedQuota uint64, state int) error
 	// UpdateBucketMigrationRecoupQuota update RecoupQuota and the corresponding state in MigrateBucketProgress.
 	UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error
 	// UpdateBucketMigrationGCProgress update bucket migration gc progress
 	UpdateBucketMigrationGCProgress(bucketID uint64, lastGCObjectID uint64, lastGCGvgID uint64) error
-	// UpdateBucketMigrationMigratingProgress migrating progress
+	// UpdateBucketMigrationMigratingProgress update bucket migration migrating progress
 	UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error
 	// QueryMigrateBucketState returns the migrate state.
 	QueryMigrateBucketState(bucketID uint64) (int, error)
