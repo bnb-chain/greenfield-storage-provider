@@ -156,6 +156,7 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
 	replicateTask.SetCreateTime(task.GetCreateTime())
 	replicateTask.SetLogs(task.GetLogs())
+	replicateTask.SetRetry(task.GetRetry())
 	replicateTask.AppendLog("manager-create-replicate-task")
 	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
@@ -165,8 +166,10 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	go m.backUpTask()
 	go func() {
 		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:  task.GetObjectInfo().Id.Uint64(),
-			TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+			ObjectID:             task.GetObjectInfo().Id.Uint64(),
+			TaskState:            types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+			GlobalVirtualGroupID: gvgMeta.ID,
+			SecondaryEndpoints:   gvgMeta.SecondarySPEndpoints,
 		})
 		if err != nil {
 			log.Errorw("failed to update object task state", "task_info", task.Info(), "error", err)
@@ -270,8 +273,10 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 	go m.backUpTask()
 	go func() error {
 		err = m.baseApp.GfSpDB().UpdateUploadProgress(&spdb.UploadObjectMeta{
-			ObjectID:  task.GetObjectInfo().Id.Uint64(),
-			TaskState: types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+			ObjectID:             task.GetObjectInfo().Id.Uint64(),
+			TaskState:            types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+			GlobalVirtualGroupID: gvgMeta.ID,
+			SecondaryEndpoints:   gvgMeta.SecondarySPEndpoints,
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update object task state", "error", err)
@@ -289,7 +294,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 		return ErrDanglingTask
 	}
 	if task.Error() != nil {
-		log.CtxErrorw(ctx, "handler error replicate piece task", "task_info", task.Info(), "error", task.Error())
+		log.CtxErrorw(ctx, "failed to replicate piece task", "task_info", task.Info(), "error", task.Error())
 		_ = m.handleFailedReplicatePieceTask(ctx, task)
 		metrics.ManagerCounter.WithLabelValues(ManagerFailureReplicate).Inc()
 		metrics.ManagerTime.WithLabelValues(ManagerFailureReplicate).Observe(
@@ -317,7 +322,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 				log.Errorw("failed to update object task state", "task_info", task.Info(), "error", err)
 			}
 			log.Errorw("succeed to update object task state", "task_info", task.Info())
-			// TODO: delete this upload db record?
+			_ = m.baseApp.GfSpDB().DeleteUploadProgress(task.GetObjectInfo().Id.Uint64())
 		}()
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessReplicateAndSeal).Inc()
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessReplicateAndSeal).Observe(
@@ -362,47 +367,6 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 }
 
 func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, handleTask task.ReplicatePieceTask) error {
-	if handleTask.GetNotAvailableSpIdx() != -1 {
-		objectInfo, queryErr := m.baseApp.Consensus().QueryObjectInfoByID(ctx, util.Uint64ToString(handleTask.GetObjectInfo().Id.Uint64()))
-		if queryErr != nil {
-			log.Errorw("failed to query object info", "object", handleTask.GetObjectInfo(), "error", queryErr)
-			return queryErr
-		}
-		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
-			log.CtxInfow(ctx, "object already sealed, abort replicate task", "object_info", objectInfo)
-			m.replicateQueue.PopByKey(handleTask.Key())
-			return nil
-		}
-		gvgID := handleTask.GetGlobalVirtualGroupId()
-		gvg, err := m.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, gvgID)
-		if err != nil {
-			log.Errorw("failed to query global virtual group from Meta", "gvgID", gvgID, "error", err)
-			return err
-		}
-		sspID := gvg.GetSecondarySpIds()[handleTask.GetNotAvailableSpIdx()]
-		sspJoinGVGs, err := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
-		if err != nil {
-			log.Errorw("failed to list GVGs by secondary sp", "spID", sspID, "error", err)
-			return err
-		}
-		shouldFreezeGVGs := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
-		selfSPID, err := m.getSPID()
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get self sp id", "error", err)
-			return err
-		}
-		for _, g := range sspJoinGVGs {
-			if g.GetPrimarySpId() == selfSPID {
-				shouldFreezeGVGs = append(shouldFreezeGVGs, g)
-			}
-		}
-		m.virtualGroupManager.FreezeSPAndGVGs(sspID, shouldFreezeGVGs)
-		log.CtxDebugw(ctx, "add sp to freeze pool", "spID", sspID, "excludedGVGs", shouldFreezeGVGs)
-		m.replicateQueue.PopByKey(handleTask.Key())
-
-		return m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask)
-	}
-
 	shadowTask := handleTask
 	oldTask := m.replicateQueue.PopByKey(handleTask.Key())
 	if m.TaskUploading(ctx, handleTask) {
@@ -418,8 +382,52 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-repush:%d", shadowTask.GetRetry()))
 		handleTask.AppendLog(shadowTask.GetLogs())
 		handleTask.SetUpdateTime(time.Now().Unix())
-		err := m.replicateQueue.Push(handleTask)
-		log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", err)
+		if handleTask.GetNotAvailableSpIdx() != -1 {
+			objectInfo, queryErr := m.baseApp.Consensus().QueryObjectInfoByID(ctx, util.Uint64ToString(handleTask.GetObjectInfo().Id.Uint64()))
+			if queryErr != nil {
+				log.Errorw("failed to query object info", "object", handleTask.GetObjectInfo(), "error", queryErr)
+				return queryErr
+			}
+			if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+				log.CtxInfow(ctx, "object already sealed, abort replicate task", "object_info", objectInfo)
+				m.replicateQueue.PopByKey(handleTask.Key())
+				return nil
+			}
+
+			gvgID := handleTask.GetGlobalVirtualGroupId()
+			gvg, queryErr := m.baseApp.Consensus().QueryGlobalVirtualGroup(context.Background(), gvgID)
+			if queryErr != nil {
+				log.Errorw("failed to query global virtual group from chain", "gvgID", gvgID, "error", queryErr)
+				return queryErr
+			}
+			sspID := gvg.GetSecondarySpIds()[handleTask.GetNotAvailableSpIdx()]
+			sspJoinGVGs, queryErr := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
+			if queryErr != nil {
+				log.Errorw("failed to list GVGs by secondary sp", "spID", sspID, "error", queryErr)
+				return queryErr
+			}
+			shouldFreezeGVGs := make([]*virtualgrouptypes.GlobalVirtualGroup, 0)
+			selfSPID, queryErr := m.getSPID()
+			if queryErr != nil {
+				log.CtxErrorw(ctx, "failed to get self sp id", "error", queryErr)
+				return queryErr
+			}
+			for _, g := range sspJoinGVGs {
+				if g.GetPrimarySpId() == selfSPID {
+					shouldFreezeGVGs = append(shouldFreezeGVGs, g)
+				}
+			}
+			m.virtualGroupManager.FreezeSPAndGVGs(sspID, shouldFreezeGVGs)
+			rePickAndReplicateErr := m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask)
+			log.CtxDebugw(ctx, "add failed sp to freeze pool, re-pick and push task again",
+				"failed_sp_id", sspID, "task_info", handleTask.Info(),
+				"excludedGVGs", shouldFreezeGVGs, "error", rePickAndReplicateErr)
+			return rePickAndReplicateErr
+		} else {
+			pushErr := m.replicateQueue.Push(handleTask)
+			log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", pushErr)
+			return pushErr
+		}
 	} else {
 		shadowTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-error:%s-retry:%d", shadowTask.Error().Error(), shadowTask.GetRetry()))
 		metrics.ManagerCounter.WithLabelValues(ManagerCancelReplicate).Inc()
