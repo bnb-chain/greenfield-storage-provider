@@ -1,14 +1,10 @@
 package registrar
 
 import (
-	"github.com/forbole/juno/v4/modules"
-	"github.com/forbole/juno/v4/modules/epoch"
-	"github.com/forbole/juno/v4/modules/messages"
-	"github.com/forbole/juno/v4/modules/registrar"
-
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/events"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/general"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/group"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/object"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/objectidmap"
@@ -17,6 +13,10 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/prefixtree"
 	sp "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/storage_provider"
 	virtualgroup "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/virtual_group"
+	"github.com/forbole/juno/v4/modules"
+	"github.com/forbole/juno/v4/modules/epoch"
+	"github.com/forbole/juno/v4/modules/messages"
+	"github.com/forbole/juno/v4/modules/registrar"
 )
 
 var (
@@ -54,5 +54,6 @@ func (r *BlockSyncerRegistrar) BuildModules(ctx registrar.Context) modules.Modul
 		//vg event module
 		events.NewModule(db),
 		objectidmap.NewModule(db),
+		general.NewModule(db),
 	}
 }

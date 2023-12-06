@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -106,6 +106,7 @@ func (m *Module) handleCreateGroup(ctx context.Context, block *tmctypes.ResultBl
 		UpdateAt:   block.Block.Height,
 		UpdateTime: block.Block.Time.UTC().Unix(),
 		Removed:    false,
+		Tags:       util.GetTagJson(createGroup.Tags),
 	}
 	membersToAddList = append(membersToAddList, groupItem)
 

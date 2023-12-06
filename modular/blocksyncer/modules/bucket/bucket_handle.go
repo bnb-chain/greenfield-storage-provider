@@ -3,7 +3,7 @@ package bucket
 import (
 	"context"
 	"errors"
-
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -107,6 +107,7 @@ func (m *Module) handleCreateBucket(ctx context.Context, block *tmctypes.ResultB
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),
+		Tags:         util.GetTagJson(createBucket.Tags),
 	}
 	k, v := m.db.SaveBucketToSQL(ctx, bucket)
 	return map[string][]interface{}{

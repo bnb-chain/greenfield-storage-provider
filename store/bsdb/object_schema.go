@@ -1,8 +1,12 @@
 package bsdb
 
 import (
+	"encoding/json"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 	"github.com/lib/pq"
+	"gorm.io/datatypes"
 )
 
 // Object is the structure for user object
@@ -61,9 +65,23 @@ type Object struct {
 	UpdateTxHash common.Hash `gorm:"update_tx_hash"`
 	// SealTxHash defines the sealed transaction hash of object
 	SealTxHash common.Hash `gorm:"column:sealed_tx_hash"`
+	// Tags
+	Tags datatypes.JSON `gorm:"column:tags;TYPE:json"` // tags
 }
 
 // TableName is used to set Object table name in database
 func (o *Object) TableName() string {
 	return ObjectTableName
+}
+
+// GetResourceTags is used to convert the db tags string to *storage_types.ResourceTags type
+func (o *Object) GetResourceTags() *storage_types.ResourceTags {
+	tags := &storage_types.ResourceTags{}
+	if o.Tags != nil {
+		tagUnmarshalErr := json.Unmarshal([]byte(o.Tags), tags)
+		if tagUnmarshalErr != nil {
+			log.Warnw("failed to Unmarshal object tags", "error", tagUnmarshalErr)
+		}
+	}
+	return tags
 }

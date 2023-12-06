@@ -112,6 +112,7 @@ func (r *MetadataModular) GfSpListPaymentAccountStreams(ctx context.Context, req
 				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
 				ChargedReadQuota:           bucket.ChargedReadQuota,
 				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+				Tags:                       bucket.GetResourceTags(),
 			},
 			Removed:      bucket.Removed,
 			DeleteAt:     bucket.DeleteAt,

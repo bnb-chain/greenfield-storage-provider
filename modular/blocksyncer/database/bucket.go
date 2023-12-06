@@ -36,6 +36,11 @@ func (db *DB) UpdateBucketToSQL(ctx context.Context, bucket *models.Bucket) (str
 	return stat.SQL.String(), stat.Vars
 }
 
+func (db *DB) UpdateBucketByNameToSQL(ctx context.Context, bucket *models.Bucket) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Bucket{}).TableName()).Where("bucket_name= ?", bucket.BucketName).Updates(bucket).Statement
+	return stat.SQL.String(), stat.Vars
+}
+
 func (db *DB) BatchUpdateBucketSize(ctx context.Context, buckets []*models.Bucket) error {
 	return db.Db.Table((&models.Bucket{}).TableName()).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bucket_id"}},

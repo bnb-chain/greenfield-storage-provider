@@ -30,6 +30,10 @@ func (db *DB) UpdateGroupToSQL(ctx context.Context, group *models.Group) (string
 	return stat.SQL.String(), stat.Vars
 }
 
+func (db *DB) UpdateGroupByOwnerAndNameToSQL(ctx context.Context, group *models.Group) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Group{}).TableName()).Where("account_id = ? AND owner = ? AND group_name = ?", group.AccountID, group.Owner, group.GroupName).Updates(group).Statement
+	return stat.SQL.String(), stat.Vars
+}
 func (db *DB) DeleteGroupToSQL(ctx context.Context, group *models.Group) (string, []interface{}) {
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Group{}).TableName()).Where("group_id = ?", group.GroupID).Updates(group).Statement
 	return stat.SQL.String(), stat.Vars

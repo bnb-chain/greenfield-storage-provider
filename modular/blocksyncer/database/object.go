@@ -63,3 +63,8 @@ func (db *DB) UpdateObjectToSQL(ctx context.Context, object *models.Object) (str
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table(bsdb.GetObjectsTableName(object.BucketName)).Where("object_id = ?", object.ObjectID).Updates(object).Statement
 	return stat.SQL.String(), stat.Vars
 }
+
+func (db *DB) UpdateObjectByBucketNameAndObjectNameToSQL(ctx context.Context, object *models.Object) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table(bsdb.GetObjectsTableName(object.BucketName)).Where("bucket_name = ? AND object_name =?", object.BucketName, object.ObjectName).Updates(object).Statement
+	return stat.SQL.String(), stat.Vars
+}
