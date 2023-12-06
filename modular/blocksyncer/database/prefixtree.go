@@ -10,21 +10,24 @@ import (
 )
 
 // CreatePrefixTree create prefix tree nodes by input slice
-func (db *DB) CreatePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) (string, []interface{}) {
+func (db *DB) CreatePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) error {
 	// because the passed in prefixTree is one object, the array members have same bucketName, we can use the first one
 	shardTableName := bsdb.GetPrefixesTableName(prefixTree[0].BucketName)
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table(shardTableName).Create(&prefixTree).Statement
-	return stat.SQL.String(), stat.Vars
+	err := db.Db.WithContext(ctx).Table(shardTableName).Create(&prefixTree).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // DeletePrefixTree delete prefix tree nodes by given conditions
-func (db *DB) DeletePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) (string, []interface{}) {
+func (db *DB) DeletePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) error {
 	if len(prefixTree) == 0 {
-		return "", nil
+		return nil
 	}
 	// because the passed in prefixTree is one object, the array members have same bucketName, we can use the first one
 	shardTableName := bsdb.GetPrefixesTableName(prefixTree[0].BucketName)
-	tx := db.Db.Session(&gorm.Session{DryRun: true}).Table(shardTableName)
+	tx := db.Db.WithContext(ctx).Table(shardTableName)
 	stmt := tx.Where("bucket_name = ? AND full_name = ? AND is_object = ?",
 		prefixTree[0].BucketName,
 		prefixTree[0].FullName,
@@ -36,9 +39,11 @@ func (db *DB) DeletePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPref
 			object.FullName,
 			object.IsObject)
 	}
-	stmt2 := stmt.Unscoped().Delete(&bsdb.SlashPrefixTreeNode{}).Statement
-	return stmt2.SQL.String(), stmt2.Vars
-
+	err := stmt.Unscoped().Delete(&bsdb.SlashPrefixTreeNode{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetPrefixTree get prefix tree node by full name and bucket name

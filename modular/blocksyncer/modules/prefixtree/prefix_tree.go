@@ -143,10 +143,12 @@ func (m *Module) handleCreateObject(ctx context.Context, sealObject *storagetype
 	if len(nodes) == 0 {
 		return nil, nil
 	}
-	k, v := m.db.CreatePrefixTree(ctx, nodes)
-	return map[string][]interface{}{
-		k: v,
-	}, nil
+	err = m.db.CreatePrefixTree(ctx, nodes)
+	if err != nil {
+		log.Errorw("failed to create prefix tree", "error", err)
+		return nil, err
+	}
+	return nil, nil
 }
 
 // handleDeleteObject handles EventDeleteObject.
@@ -201,8 +203,10 @@ func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string
 	if len(nodes) == 0 {
 		return nil, nil
 	}
-	k, v := m.db.DeletePrefixTree(ctx, nodes)
-	return map[string][]interface{}{
-		k: v,
-	}, nil
+	err := m.db.DeletePrefixTree(ctx, nodes)
+	if err != nil {
+		log.Errorw("failed to delete prefix tree", "error", err)
+		return nil, err
+	}
+	return nil, nil
 }
