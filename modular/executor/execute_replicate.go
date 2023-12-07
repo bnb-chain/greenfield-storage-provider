@@ -132,7 +132,10 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		var gvg *virtualgrouptypes.GlobalVirtualGroup
 		gvg, err = e.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, rTask.GetGlobalVirtualGroupId())
 		if err != nil {
-			return ErrConsensusWithDetail("QueryGVGInfo error: " + err.Error())
+			return ErrConsensusWithDetail("query gvg error: " + err.Error())
+		}
+		if gvg == nil {
+			return fmt.Errorf("gvg not exist")
 		}
 		for rIdx, spEp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", spEp)

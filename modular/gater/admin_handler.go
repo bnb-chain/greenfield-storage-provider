@@ -683,7 +683,7 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 	}
 
 	if gvg == nil {
-		return ErrConsensusWithDetail("QueryGVGInfo nil: " + err.Error())
+		return ErrConsensusWithDetail("QueryGVGInfo nil")
 	}
 
 	// judge if sender is the primary sp of the gvg
