@@ -256,3 +256,23 @@ func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, err
 	}
 	return resp.GetRecoveryFailedList(), nil
 }
+
+func (s *GfSpClient) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpTriggerRecoverForSuccessorSP(ctx, &gfspserver.GfSpTriggerRecoverForSuccessorSPRequest{
+		VgfId: vgfID, GvgId: gvgID,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to trigger recover objects for successor SP", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to trigger recover objects for successor SP", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return resp.GetErr()
+	}
+	return nil
+}

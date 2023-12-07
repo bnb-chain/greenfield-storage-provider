@@ -19,12 +19,13 @@ import (
 )
 
 const (
-	maxRecoveryRetry    = 3
-	MaxRecoveryTime     = 50
-	recoveryCommands    = "RECOVERY COMMANDS"
-	MaxRecoveryJob      = 1000
-	FullQueueWaitTime   = 5 * time.Second
-	RecoveryJobSyncTime = 30 * time.Second
+	maxRecoveryRetry          = 3
+	MaxRecoveryTime           = 50
+	recoveryCommands          = "RECOVERY COMMANDS"
+	MaxRecoveryJob            = 1000
+	MaxCurrentRecoveryObjects = 500
+	FullQueueWaitTime         = 5 * time.Second
+	RecoveryJobSyncTime       = 30 * time.Second
 )
 
 var bucketFlag = &cli.StringFlag{
@@ -93,11 +94,11 @@ func recoverObjectAction(ctx *cli.Context) error {
 		objectNames := ctx.String(objectListFlag.Name)
 		objectNameList := strings.Split(objectNames, "//")
 		for _, objectName := range objectNameList {
-			recoverObject(bucketName, objectName, cfg, client)
+			recoverObject(bucketName, objectName, cfg, client, false, 0)
 		}
 	} else {
 		objectName := ctx.String(objectFlag.Name)
-		recoverObject(bucketName, objectName, cfg, client)
+		recoverObject(bucketName, objectName, cfg, client, false, 0)
 	}
 
 	taskCheckTicker := time.NewTicker(RecoveryJobSyncTime)
@@ -117,7 +118,7 @@ func recoverObjectAction(ctx *cli.Context) error {
 	return nil
 }
 
-func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpConfig, client *gfspclient.GfSpClient) error {
+func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpConfig, client *gfspclient.GfSpClient, bySuccessorSP bool, exitSPIdx int) error {
 	var (
 		replicateIdx    int
 		processingCount uint32
@@ -137,9 +138,13 @@ func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpCon
 		return err
 	}
 
-	replicateIdx, err = getReplicateIdxBySP(bucketInfo, objectInfo, cfg)
-	if err != nil {
-		return err
+	if bySuccessorSP {
+		replicateIdx = exitSPIdx
+	} else {
+		replicateIdx, err = getReplicateIdxBySP(bucketInfo, objectInfo, cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	maxSegmentSize := storageParams.GetMaxSegmentSize()
@@ -151,6 +156,7 @@ func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpCon
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoverPieceTask{}
 			task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(-1), maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
+			task.SetBySuccessorSP(bySuccessorSP)
 			err = client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}
@@ -160,6 +166,7 @@ func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpCon
 		for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 			task := &gfsptask.GfSpRecoverPieceTask{}
 			task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(replicateIdx), maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
+			task.SetBySuccessorSP(bySuccessorSP)
 			err = client.ReportTask(context.Background(), task)
 			time.Sleep(time.Second)
 		}

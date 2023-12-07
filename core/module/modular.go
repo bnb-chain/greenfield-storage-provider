@@ -229,6 +229,8 @@ type Manager interface {
 	NotifyPostMigrateBucket(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) error
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
+
+	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

@@ -129,3 +129,27 @@ type SwapOutMeta struct {
 	SwapOutMsg    *virtualgrouptypes.MsgSwapOut
 	CompletedGVGs []uint32
 }
+
+type RecoverStatus int
+
+const (
+	NotDone   RecoverStatus = 0
+	Processed RecoverStatus = 2
+	Success   RecoverStatus = 1
+)
+
+type RecoverGVGStats struct {
+	VirtualGroupID       uint32
+	VirtualGroupFamilyID uint32
+	ExitingSPID          uint32
+	RedundancyIndex      int32
+	StartAfterObjectID   uint64
+	Limit                uint64
+	Status               int //  Saved, Processed, Completed
+}
+
+type RecoverFailedObject struct {
+	ObjectID        uint64
+	VirtualGroupID  uint32
+	RedundancyIndex int32
+}

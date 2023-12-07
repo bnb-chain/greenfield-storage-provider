@@ -80,6 +80,10 @@ func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
 	return nil
 }
 
+func (m *NullModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32) error {
+	return nil
+}
+
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
 }

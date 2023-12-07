@@ -289,5 +289,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 
 	manager.spBlackList = cfg.Manager.SPBlackList
 
+	manager.recoverObjectStats = make(map[uint64]*ObjectPieceStats)
+
 	return nil
 }

@@ -115,8 +115,13 @@ type ManageModular struct {
 
 	gvgPreferSPList []uint32
 
-	recoveryFailedList   []string
-	recoveryTaskMap      map[string]string
+	recoveryFailedList []string
+
+	recoverMtx      sync.RWMutex
+	recoveryTaskMap map[string]string
+
+	recoverObjectStats map[uint64]*ObjectPieceStats // objectId -> ObjectPieceStats
+
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
 	enableHealthyChecker bool
@@ -175,7 +180,7 @@ func (m *ManageModular) Start(ctx context.Context) error {
 		}
 	}
 
-	go m.delayStartMigrateScheduler()
+	//go m.delayStartMigrateScheduler()
 	go m.eventLoop(ctx)
 	return nil
 }
@@ -584,7 +589,10 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 		if !slices.Contains(m.recoveryFailedList, task.GetObjectInfo().ObjectName) {
 			m.recoveryFailedList = append(m.recoveryFailedList, task.GetObjectInfo().ObjectName)
 		}
+		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, task.Key().String())
+		m.recoverMtx.Unlock()
+
 	}
 	return GcConditionMet
 }
@@ -949,4 +957,15 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
 	m.recoveryFailedList = m.recoveryFailedList[:0]
 	return m.recoveryFailedList
+}
+
+func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32) error {
+	go m.startRecoverScheduler(vgfID, gvgID)
+	return nil
+}
+
+// start the loop, failed object will be
+func (m *ManageModular) startRecoverScheduler(vgfID, gvgID uint32) {
+	s := NewRecoverGVGScheduler(m, vgfID, gvgID)
+	s.Start()
 }

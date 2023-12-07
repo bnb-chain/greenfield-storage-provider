@@ -385,3 +385,12 @@ func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspse
 		RecoveryFailedList: recoveryFailedList,
 	}, nil
 }
+
+func (g *GfSpBaseApp) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, req *gfspserver.GfSpTriggerRecoverForSuccessorSPRequest) (
+	*gfspserver.GfSpTriggerRecoverForSuccessorSPResponse, error) {
+	err := g.manager.TriggerRecoverForSuccessorSP(ctx, req.GetVgfId(), req.GetGvgId())
+	if err != nil {
+		return nil, err
+	}
+	return &gfspserver.GfSpTriggerRecoverForSuccessorSPResponse{}, nil
+}

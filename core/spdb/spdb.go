@@ -19,6 +19,7 @@ type SPDB interface {
 	SPInfoDB
 	OffChainAuthKeyDB
 	MigrateDB
+	ExitRecoverDB
 }
 
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
@@ -192,4 +193,20 @@ type MigrateDB interface {
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
 	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
+}
+
+type ExitRecoverDB interface {
+	GetRecoverGVGStats(gvgID uint32) (*RecoverGVGStats, error)
+	SetRecoverGVGStats(gvg *RecoverGVGStats) error
+	UpdateRecoverGVGStats(gvg *RecoverGVGStats) (err error)
+	DeleteRecoverGVGStats(vgfID, gvgID uint32) (err error)
+	GetRecoverGVGStatsByFamilyIDAndStatus(vgfID uint32, status RecoverStatus) ([]*RecoverGVGStats, error)
+
+	InsertRecoverFailedObject(object *RecoverFailedObject) error
+	UpdateRecoverObject(object *RecoverFailedObject) (err error)
+	DeleteRecoverObject(objectID uint64) (err error)
+	GetRecoverObject(objectID uint64) (*RecoverFailedObject, error)
+	GetRecoverObjectsByGVGIDAndStatus(gvgID uint32, status RecoverStatus) ([]*RecoverFailedObject, error)
+
+	InsertBatchRecoverObjects(gvg *RecoverGVGStats, objects []*RecoverFailedObject) error
 }

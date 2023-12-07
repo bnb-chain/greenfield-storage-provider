@@ -266,6 +266,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 		return
 	}
 
+	// used by secondary SP or successor secondary SP for GVG
 	if redundancyIdx >= 0 {
 		log.Info(1)
 		// recover secondary SP data by the primary SP
@@ -281,6 +282,7 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 		log.CtxDebugw(ctx, "secondary SP recovery successfully", "pieceKey:", recoveryKey)
 		finishRecovery = true
 	} else {
+		// used by Primary SP or successor primary SP for VGF
 		// recover primarySP data by secondary SPs
 		if recoverErr := e.recoverBySecondarySP(ctx, task, false); recoverErr != nil {
 			err = recoverErr
@@ -323,7 +325,13 @@ func (e *ExecuteModular) recoverByPrimarySP(ctx context.Context, task coretask.R
 		log.CtxErrorw(ctx, "EC recover data write piece fail", "pieceKey:", recoveryKey, "error", err)
 		return err
 	}
-
+	if task.BySuccessorSP() {
+		err = e.setPieceMetadata(ctx, task, pieceData)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to set piece meta data to DB", "objectName:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx(), "redundancy_idx", task.GetEcIdx(), "error", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -458,7 +466,14 @@ loop:
 		return err
 	}
 
-	log.CtxDebugw(ctx, "finish recovery from secondary SPs", "objectName:", task.GetObjectInfo().GetObjectName())
+	if task.BySuccessorSP() {
+		err = e.setPieceMetadata(ctx, task, recoveredPieceData)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to set piece meta data to DB", "objectName:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx(), "error", err)
+			return err
+		}
+	}
+	log.CtxDebugw(ctx, "finish recovery from secondary SPs", "objectName:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx())
 	return nil
 }
 
@@ -591,4 +606,37 @@ func (e *ExecuteModular) getBucketPrimarySPEndpoint(ctx context.Context, bucketN
 		}
 	}
 	return "", ErrPrimaryNotFound
+}
+
+func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.RecoveryPieceTask, pieceData []byte) error {
+	objectID := task.GetObjectInfo().Id.Uint64()
+	segmentIdx := task.GetSegmentIdx()
+	redundancyIdx := task.GetEcIdx()
+
+	pieceChecksum := hash.GenerateChecksum(pieceData)
+	if err := e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, segmentIdx, int32(segmentIdx), pieceChecksum); err != nil {
+		log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", objectID,
+			"segment_index", segmentIdx, "redundancy_index", redundancyIdx, "error", err)
+		detail := fmt.Sprintf("failed to set replicate piece checksum, object_id: %s, segment_index: %v, redundancy_index: %v, error: %s",
+			task.GetObjectInfo().Id.String(), segmentIdx, task.GetEcIdx(), err.Error())
+		return ErrGfSpDBWithDetail(detail)
+	}
+	segmentCount := e.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
+		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
+
+	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(task.GetObjectInfo().Id.Uint64(), task.GetEcIdx(), segmentCount)
+	if err != nil {
+		return err
+	}
+	if len(pieceChecksums) == int(segmentCount) {
+		integrityChecksum := hash.GenerateIntegrityHash(pieceChecksums)
+		integrityMeta := &spdb.IntegrityMeta{
+			ObjectID:          task.GetObjectInfo().Id.Uint64(),
+			RedundancyIndex:   task.GetEcIdx(),
+			IntegrityChecksum: integrityChecksum,
+			PieceChecksumList: pieceChecksums,
+		}
+		err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
+	}
+	return nil
 }

@@ -183,6 +183,14 @@ func (m *GfSpRecoverPieceTask) SetRecoverDone() {
 	m.Recovered = true
 }
 
+func (m *GfSpRecoverPieceTask) SetBySuccessorSP(bySuccessor bool) {
+	m.BySuccessorSp = bySuccessor
+}
+
+func (m *GfSpRecoverPieceTask) BySuccessorSP() bool {
+	return m.BySuccessorSp
+}
+
 func (m *GfSpRecoverPieceTask) GetSignBytes() []byte {
 	fakeMsg := &GfSpRecoverPieceTask{
 		ObjectInfo:    m.GetObjectInfo(),
