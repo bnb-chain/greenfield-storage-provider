@@ -88,7 +88,7 @@ func (m *GfSpCreateBucketApprovalTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpCreateBucketApprovalTask) SetRetry(retry int) {
+func (m *GfSpCreateBucketApprovalTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -230,7 +230,7 @@ func (m *GfSpMigrateBucketApprovalTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpMigrateBucketApprovalTask) SetRetry(retry int) {
+func (m *GfSpMigrateBucketApprovalTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -378,7 +378,7 @@ func (m *GfSpCreateObjectApprovalTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpCreateObjectApprovalTask) SetRetry(retry int) {
+func (m *GfSpCreateObjectApprovalTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -536,7 +536,7 @@ func (m *GfSpReplicatePieceApprovalTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpReplicatePieceApprovalTask) SetRetry(retry int) {
+func (m *GfSpReplicatePieceApprovalTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 

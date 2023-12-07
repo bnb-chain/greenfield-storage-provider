@@ -55,7 +55,7 @@ type Task interface {
 	// GetRetry returns the retry counter of the task.
 	GetRetry() int64
 	// SetRetry sets the retry counter of the task.
-	SetRetry(int)
+	SetRetry(int64)
 	// IncRetry increases the retry counter of the task. Each task has the max retry
 	// times, if retry counter exceed the max retry, the task should be canceled.
 	IncRetry()

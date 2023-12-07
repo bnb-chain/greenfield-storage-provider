@@ -146,7 +146,7 @@ function make_config() {
     sed -i -e "s/ProbeHTTPAddress = '.*'/ProbeHTTPAddress = '${probe_address}'/g" config.toml
 
     # blocksyncer
-    sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\]/g" config.toml
+    sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\,\'general\'\]/g" config.toml
     WORKERS=10
     sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml
     sed -i -e "s/BsDBWriteAddress = '.*'/BsDBWriteAddress = '${ADDRESS}'/g" config.toml
@@ -162,6 +162,8 @@ function make_config() {
     sed -i -e "s/GCZombiePieceTimeInterval = .*/GCZombiePieceTimeInterval = 3/g" config.toml
     sed -i -e "s/GCZombieSafeObjectIDDistance = .*/GCZombieSafeObjectIDDistance = 1/g" config.toml
     sed -i -e "s/GCZombiePieceObjectIDInterval = .*/GCZombiePieceObjectIDInterval = 5/g" config.toml
+    sed -i -e "s/EnableTaskRetryScheduler = .*/EnableTaskRetryScheduler = true/g" config.toml
+    sed -i -e "s/RejectUnsealThresholdSecond = .*/RejectUnsealThresholdSecond = 600/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null
