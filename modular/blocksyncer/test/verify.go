@@ -19,7 +19,7 @@ import (
 )
 
 var verifyFuncs = []func(db *gorm.DB) error{verify1, verify2, verify3, verify4, verify5, verify6, verify7, verify8, verify9, verify10, verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify18, verify19, verify20, verify21, verify22, verify23, verify24, verify25, verify26, verify27,
-	verify28, verify29, verify30, verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40, verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49,
+	verify28, verify29, verify30, verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40, verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49, verify50, verify51,
 }
 
 func Verify() error {
@@ -510,6 +510,32 @@ func verify49(db *gorm.DB) error {
 	return nil
 }
 
+func verify50(db *gorm.DB) error {
+	var count int64
+	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and is_folder = ? and full_name = ?", "cxz", true, "/coco/").Count(&count).Error; err != nil {
+		return errors.New("event not found")
+	}
+
+	// if count == 2 which means there exist repeat folder in the root case
+	if count >= 2 {
+		return fmt.Errorf("failed to batch create slash prefix tree node")
+	}
+	return nil
+}
+
+func verify51(db *gorm.DB) error {
+	var count int64
+	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and is_folder = ? and path_name = ?", "cxz", true, "/coco/").Count(&count).Error; err != nil {
+		return errors.New("event not found")
+	}
+
+	// if count > 0 which means the /coco/ folder didn't delete successfully
+	if count > 0 {
+		return fmt.Errorf("failed to batch delete slash prefix tree node")
+	}
+	return nil
+}
+
 const ObjectsNumberOfShards = 64
 const ObjectTableName = "objects"
 
@@ -523,4 +549,19 @@ func GetObjectsShardNumberByBucketName(bucketName string) uint32 {
 
 func GetObjectsTableNameByShardNumber(shard int) string {
 	return fmt.Sprintf("%s_%02d", ObjectTableName, shard)
+}
+
+const PrefixesNumberOfShards = 64
+const PrefixTreeTableName = "slash_prefix_tree_nodes"
+
+func GetPrefixesTableName(bucketName string) string {
+	return GetPrefixesTableNameByShardNumber(int(GetPrefixesShardNumberByBucketName(bucketName)))
+}
+
+func GetPrefixesShardNumberByBucketName(bucketName string) uint32 {
+	return murmur3.Sum32([]byte(bucketName)) % PrefixesNumberOfShards
+}
+
+func GetPrefixesTableNameByShardNumber(shard int) string {
+	return fmt.Sprintf("%s_%02d", PrefixTreeTableName, shard)
 }
