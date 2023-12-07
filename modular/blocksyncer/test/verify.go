@@ -26,7 +26,7 @@ var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
 	verify21, verify22, verify23, verify24, verify25, verify26, verify27, verify28, verify29, verify30,
 	verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40,
 	verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49, verify50,
-	verify51, verify52, verify53, verify54, verify55, verify56, verify57, verify58,verify59,verify60,
+	verify51, verify52, verify53, verify54, verify55, verify56, verify57, verify58, verify59, verify60,
 }
 
 func Verify(t *testing.T) error {
@@ -597,7 +597,7 @@ func verify58(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify59(t *testing.T,db *gorm.DB) error {
+func verify59(t *testing.T, db *gorm.DB) error {
 	var count int64
 	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and is_folder = ? and full_name = ?", "cxz", true, "/coco/").Count(&count).Error; err != nil {
 		return errors.New("event not found")
@@ -610,7 +610,7 @@ func verify59(t *testing.T,db *gorm.DB) error {
 	return nil
 }
 
-func verify60(t *testing.T,db *gorm.DB) error {
+func verify60(t *testing.T, db *gorm.DB) error {
 	var count int64
 	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and is_folder = ? and path_name = ?", "cxz", true, "/coco/").Count(&count).Error; err != nil {
 		return errors.New("event not found")
