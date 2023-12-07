@@ -3,8 +3,9 @@ package util
 import (
 	"testing"
 
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/stretchr/testify/assert"
+
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func Test_GetTagString(t *testing.T) {

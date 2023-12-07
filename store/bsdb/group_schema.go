@@ -2,10 +2,12 @@ package bsdb
 
 import (
 	"encoding/json"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/datatypes"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // Group is the structure for group information
@@ -60,8 +62,8 @@ func (g *Group) TableName() string {
 }
 
 // GetResourceTags is used to convert the db tags string to *storage_types.ResourceTags type
-func (g *Group) GetResourceTags() *storage_types.ResourceTags {
-	tags := &storage_types.ResourceTags{}
+func (g *Group) GetResourceTags() *storagetypes.ResourceTags {
+	tags := &storagetypes.ResourceTags{}
 	if g.Tags != nil {
 		tagUnmarshalErr := json.Unmarshal([]byte(g.Tags), tags)
 		if tagUnmarshalErr != nil {

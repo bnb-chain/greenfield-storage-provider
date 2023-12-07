@@ -2,8 +2,10 @@ package util
 
 import (
 	"encoding/json"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"gorm.io/datatypes"
+
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func GetTagJson(resourceTags *storagetypes.ResourceTags) datatypes.JSON {

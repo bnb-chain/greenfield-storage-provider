@@ -3,6 +3,11 @@ package test
 import (
 	"errors"
 	"fmt"
+	golog "log"
+	"math/big"
+	"testing"
+	"time"
+
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/models"
 	"github.com/shopspring/decimal"
@@ -10,10 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	golog "log"
-	"math/big"
-	"testing"
-	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"

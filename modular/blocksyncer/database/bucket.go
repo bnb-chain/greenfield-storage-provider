@@ -37,7 +37,7 @@ func (db *DB) UpdateBucketToSQL(ctx context.Context, bucket *models.Bucket) (str
 }
 
 func (db *DB) UpdateBucketByNameToSQL(ctx context.Context, bucket *models.Bucket) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Bucket{}).TableName()).Where("bucket_name= ?", bucket.BucketName).Updates(bucket).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Bucket{}).TableName()).Where("bucket_name= ? AND removed=false", bucket.BucketName).Updates(bucket).Statement
 	return stat.SQL.String(), stat.Vars
 }
 

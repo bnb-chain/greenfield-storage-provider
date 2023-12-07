@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GfSpGetGroupList get group list by queryName/prefix/sourceType

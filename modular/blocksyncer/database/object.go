@@ -3,10 +3,9 @@ package database
 import (
 	"context"
 
-	"gorm.io/gorm"
-
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/models"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
@@ -65,6 +64,6 @@ func (db *DB) UpdateObjectToSQL(ctx context.Context, object *models.Object) (str
 }
 
 func (db *DB) UpdateObjectByBucketNameAndObjectNameToSQL(ctx context.Context, object *models.Object) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table(bsdb.GetObjectsTableName(object.BucketName)).Where("bucket_name = ? AND object_name =?", object.BucketName, object.ObjectName).Updates(object).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table(bsdb.GetObjectsTableName(object.BucketName)).Where("bucket_name = ? AND object_name =? AND removed=false", object.BucketName, object.ObjectName).Updates(object).Statement
 	return stat.SQL.String(), stat.Vars
 }

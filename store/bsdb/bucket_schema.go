@@ -2,11 +2,13 @@ package bsdb
 
 import (
 	"encoding/json"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+
 	"github.com/forbole/juno/v4/common"
 	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // Bucket is the structure for user bucket
@@ -67,8 +69,8 @@ func (b *Bucket) TableName() string {
 }
 
 // GetResourceTags is used to convert the db tags string to *storage_types.ResourceTags type
-func (b *Bucket) GetResourceTags() *storage_types.ResourceTags {
-	tags := &storage_types.ResourceTags{}
+func (b *Bucket) GetResourceTags() *storagetypes.ResourceTags {
+	tags := &storagetypes.ResourceTags{}
 	if b.Tags != nil {
 		tagUnmarshalErr := json.Unmarshal(b.Tags, tags)
 		if tagUnmarshalErr != nil {

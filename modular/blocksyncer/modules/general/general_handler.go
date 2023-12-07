@@ -3,10 +3,7 @@ package general
 import (
 	"context"
 	"errors"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
-	"github.com/bnb-chain/greenfield/types"
-	"github.com/bnb-chain/greenfield/types/resource"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +11,11 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
 	"github.com/forbole/juno/v4/models"
+
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
+	"github.com/bnb-chain/greenfield/types"
+	"github.com/bnb-chain/greenfield/types/resource"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 var (

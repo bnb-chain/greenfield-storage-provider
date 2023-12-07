@@ -6,15 +6,15 @@ import (
 	"errors"
 
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/bnb-chain/greenfield/types/s3util"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
 // GfSpListObjectsByBucketName list objects info by a bucket name
@@ -66,7 +66,7 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 			commonPrefixes = append(commonPrefixes, object.PathName)
 		} else {
 			res = append(res, &types.Object{
-				ObjectInfo: &storage_types.ObjectInfo{
+				ObjectInfo: &storagetypes.ObjectInfo{
 					Owner:               object.Owner.String(),
 					Creator:             object.Creator.String(),
 					BucketName:          object.BucketName,
@@ -74,12 +74,12 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
 					LocalVirtualGroupId: object.LocalVirtualGroupId,
 					PayloadSize:         object.PayloadSize,
-					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					Visibility:          storagetypes.VisibilityType(storagetypes.VisibilityType_value[object.Visibility]),
 					ContentType:         object.ContentType,
 					CreateAt:            object.CreateTime,
-					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					ObjectStatus:        storagetypes.ObjectStatus(storagetypes.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storagetypes.RedundancyType(storagetypes.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
 				},
@@ -135,7 +135,7 @@ func (r *MetadataModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.C
 	res := make([]*types.Object, 0)
 	for _, object := range objects {
 		res = append(res, &types.Object{
-			ObjectInfo: &storage_types.ObjectInfo{
+			ObjectInfo: &storagetypes.ObjectInfo{
 				Owner:               object.Owner.String(),
 				Creator:             object.Creator.String(),
 				BucketName:          object.BucketName,
@@ -143,12 +143,12 @@ func (r *MetadataModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.C
 				Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
 				LocalVirtualGroupId: object.LocalVirtualGroupId,
 				PayloadSize:         object.PayloadSize,
-				Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+				Visibility:          storagetypes.VisibilityType(storagetypes.VisibilityType_value[object.Visibility]),
 				ContentType:         object.ContentType,
 				CreateAt:            object.CreateTime,
-				ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-				RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-				SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+				ObjectStatus:        storagetypes.ObjectStatus(storagetypes.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:      storagetypes.RedundancyType(storagetypes.RedundancyType_value[object.RedundancyType]),
+				SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 				Checksums:           object.Checksums,
 				Tags:                object.GetResourceTags(),
 			},
@@ -196,7 +196,7 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 
 	if object != nil {
 		res = &types.Object{
-			ObjectInfo: &storage_types.ObjectInfo{
+			ObjectInfo: &storagetypes.ObjectInfo{
 				Owner:               object.Owner.String(),
 				Creator:             object.Creator.String(),
 				BucketName:          object.BucketName,
@@ -204,12 +204,12 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 				Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
 				LocalVirtualGroupId: object.LocalVirtualGroupId,
 				PayloadSize:         object.PayloadSize,
-				Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+				Visibility:          storagetypes.VisibilityType(storagetypes.VisibilityType_value[object.Visibility]),
 				ContentType:         object.ContentType,
 				CreateAt:            object.CreateTime,
-				ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-				RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-				SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+				ObjectStatus:        storagetypes.ObjectStatus(storagetypes.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:      storagetypes.RedundancyType(storagetypes.RedundancyType_value[object.RedundancyType]),
+				SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 				Checksums:           object.Checksums,
 				Tags:                object.GetResourceTags(),
 			},
@@ -254,7 +254,7 @@ func (r *MetadataModular) GfSpListObjectsByIDs(ctx context.Context, req *types.G
 
 	for _, object := range objects {
 		objectsMap[object.ObjectID.Big().Uint64()] = &types.Object{
-			ObjectInfo: &storage_types.ObjectInfo{
+			ObjectInfo: &storagetypes.ObjectInfo{
 				Owner:               object.Owner.String(),
 				Creator:             object.Creator.String(),
 				BucketName:          object.BucketName,
@@ -262,12 +262,12 @@ func (r *MetadataModular) GfSpListObjectsByIDs(ctx context.Context, req *types.G
 				Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
 				LocalVirtualGroupId: object.LocalVirtualGroupId,
 				PayloadSize:         object.PayloadSize,
-				Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+				Visibility:          storagetypes.VisibilityType(storagetypes.VisibilityType_value[object.Visibility]),
 				ContentType:         object.ContentType,
 				CreateAt:            object.CreateTime,
-				ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-				RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-				SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+				ObjectStatus:        storagetypes.ObjectStatus(storagetypes.ObjectStatus_value[object.ObjectStatus]),
+				RedundancyType:      storagetypes.RedundancyType(storagetypes.RedundancyType_value[object.RedundancyType]),
+				SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 				Checksums:           object.Checksums,
 				Tags:                object.GetResourceTags(),
 			},
@@ -322,11 +322,11 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 		detail = &types.ObjectDetails{
 			Object: &types.Object{},
 			Bucket: &types.Bucket{},
-			Gvg:    &virtual_types.GlobalVirtualGroup{},
+			Gvg:    &virtualtypes.GlobalVirtualGroup{},
 		}
 		if object != nil {
 			detail.Object = &types.Object{
-				ObjectInfo: &storage_types.ObjectInfo{
+				ObjectInfo: &storagetypes.ObjectInfo{
 					Owner:               object.Owner.String(),
 					Creator:             object.Creator.String(),
 					BucketName:          object.BucketName,
@@ -334,12 +334,12 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
 					LocalVirtualGroupId: object.LocalVirtualGroupId,
 					PayloadSize:         object.PayloadSize,
-					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					Visibility:          storagetypes.VisibilityType(storagetypes.VisibilityType_value[object.Visibility]),
 					ContentType:         object.ContentType,
 					CreateAt:            object.CreateTime,
-					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					ObjectStatus:        storagetypes.ObjectStatus(storagetypes.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storagetypes.RedundancyType(storagetypes.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
 				},
@@ -356,17 +356,17 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 		}
 		if bucket != nil {
 			detail.Bucket = &types.Bucket{
-				BucketInfo: &storage_types.BucketInfo{
+				BucketInfo: &storagetypes.BucketInfo{
 					Owner:                      bucket.Owner.String(),
 					BucketName:                 bucket.BucketName,
-					Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+					Visibility:                 storagetypes.VisibilityType(storagetypes.VisibilityType_value[bucket.Visibility]),
 					Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-					SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+					SourceType:                 storagetypes.SourceType(storagetypes.SourceType_value[bucket.SourceType]),
 					CreateAt:                   bucket.CreateTime,
 					PaymentAddress:             bucket.PaymentAddress.String(),
 					GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
 					ChargedReadQuota:           bucket.ChargedReadQuota,
-					BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+					BucketStatus:               storagetypes.BucketStatus(storagetypes.BucketStatus_value[bucket.Status]),
 					Tags:                       bucket.GetResourceTags(),
 				},
 				Removed:      bucket.Removed,
@@ -380,7 +380,7 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 			}
 		}
 		if gvg != nil {
-			detail.Gvg = &virtual_types.GlobalVirtualGroup{
+			detail.Gvg = &virtualtypes.GlobalVirtualGroup{
 				Id:                    gvg.GlobalVirtualGroupId,
 				FamilyId:              gvg.FamilyId,
 				PrimarySpId:           gvg.PrimarySpId,
@@ -434,11 +434,11 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 		detail = &types.ObjectDetails{
 			Object: &types.Object{},
 			Bucket: &types.Bucket{},
-			Gvg:    &virtual_types.GlobalVirtualGroup{},
+			Gvg:    &virtualtypes.GlobalVirtualGroup{},
 		}
 		if object != nil {
 			detail.Object = &types.Object{
-				ObjectInfo: &storage_types.ObjectInfo{
+				ObjectInfo: &storagetypes.ObjectInfo{
 					Owner:               object.Owner.String(),
 					Creator:             object.Creator.String(),
 					BucketName:          object.BucketName,
@@ -446,12 +446,12 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
 					LocalVirtualGroupId: object.LocalVirtualGroupId,
 					PayloadSize:         object.PayloadSize,
-					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					Visibility:          storagetypes.VisibilityType(storagetypes.VisibilityType_value[object.Visibility]),
 					ContentType:         object.ContentType,
 					CreateAt:            object.CreateTime,
-					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					ObjectStatus:        storagetypes.ObjectStatus(storagetypes.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storagetypes.RedundancyType(storagetypes.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
 				},
@@ -468,17 +468,17 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 		}
 		if bucket != nil {
 			detail.Bucket = &types.Bucket{
-				BucketInfo: &storage_types.BucketInfo{
+				BucketInfo: &storagetypes.BucketInfo{
 					Owner:                      bucket.Owner.String(),
 					BucketName:                 bucket.BucketName,
-					Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+					Visibility:                 storagetypes.VisibilityType(storagetypes.VisibilityType_value[bucket.Visibility]),
 					Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-					SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+					SourceType:                 storagetypes.SourceType(storagetypes.SourceType_value[bucket.SourceType]),
 					CreateAt:                   bucket.CreateTime,
 					PaymentAddress:             bucket.PaymentAddress.String(),
 					GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
 					ChargedReadQuota:           bucket.ChargedReadQuota,
-					BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+					BucketStatus:               storagetypes.BucketStatus(storagetypes.BucketStatus_value[bucket.Status]),
 					Tags:                       bucket.GetResourceTags(),
 				},
 				Removed:      bucket.Removed,
@@ -492,7 +492,7 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 			}
 		}
 		if gvg != nil {
-			detail.Gvg = &virtual_types.GlobalVirtualGroup{
+			detail.Gvg = &virtualtypes.GlobalVirtualGroup{
 				Id:                    gvg.GlobalVirtualGroupId,
 				FamilyId:              gvg.FamilyId,
 				PrimarySpId:           gvg.PrimarySpId,
@@ -558,11 +558,11 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		detail = &types.ObjectDetails{
 			Object: &types.Object{},
 			Bucket: &types.Bucket{},
-			Gvg:    &virtual_types.GlobalVirtualGroup{},
+			Gvg:    &virtualtypes.GlobalVirtualGroup{},
 		}
 		if object != nil {
 			detail.Object = &types.Object{
-				ObjectInfo: &storage_types.ObjectInfo{
+				ObjectInfo: &storagetypes.ObjectInfo{
 					Owner:               object.Owner.String(),
 					Creator:             object.Creator.String(),
 					BucketName:          object.BucketName,
@@ -570,12 +570,12 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 					Id:                  math.NewUintFromBigInt(object.ObjectID.Big()),
 					LocalVirtualGroupId: object.LocalVirtualGroupId,
 					PayloadSize:         object.PayloadSize,
-					Visibility:          storage_types.VisibilityType(storage_types.VisibilityType_value[object.Visibility]),
+					Visibility:          storagetypes.VisibilityType(storagetypes.VisibilityType_value[object.Visibility]),
 					ContentType:         object.ContentType,
 					CreateAt:            object.CreateTime,
-					ObjectStatus:        storage_types.ObjectStatus(storage_types.ObjectStatus_value[object.ObjectStatus]),
-					RedundancyType:      storage_types.RedundancyType(storage_types.RedundancyType_value[object.RedundancyType]),
-					SourceType:          storage_types.SourceType(storage_types.SourceType_value[object.SourceType]),
+					ObjectStatus:        storagetypes.ObjectStatus(storagetypes.ObjectStatus_value[object.ObjectStatus]),
+					RedundancyType:      storagetypes.RedundancyType(storagetypes.RedundancyType_value[object.RedundancyType]),
+					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
 				},
@@ -592,17 +592,17 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 		}
 		if bucket != nil {
 			detail.Bucket = &types.Bucket{
-				BucketInfo: &storage_types.BucketInfo{
+				BucketInfo: &storagetypes.BucketInfo{
 					Owner:                      bucket.Owner.String(),
 					BucketName:                 bucket.BucketName,
-					Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+					Visibility:                 storagetypes.VisibilityType(storagetypes.VisibilityType_value[bucket.Visibility]),
 					Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-					SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+					SourceType:                 storagetypes.SourceType(storagetypes.SourceType_value[bucket.SourceType]),
 					CreateAt:                   bucket.CreateTime,
 					PaymentAddress:             bucket.PaymentAddress.String(),
 					GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
 					ChargedReadQuota:           bucket.ChargedReadQuota,
-					BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+					BucketStatus:               storagetypes.BucketStatus(storagetypes.BucketStatus_value[bucket.Status]),
 					Tags:                       bucket.GetResourceTags(),
 				},
 				Removed:      bucket.Removed,
@@ -616,7 +616,7 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 			}
 		}
 		if gvg != nil {
-			detail.Gvg = &virtual_types.GlobalVirtualGroup{
+			detail.Gvg = &virtualtypes.GlobalVirtualGroup{
 				Id:                    gvg.GlobalVirtualGroupId,
 				FamilyId:              gvg.FamilyId,
 				PrimarySpId:           gvg.PrimarySpId,
