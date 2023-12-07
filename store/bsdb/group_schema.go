@@ -1,7 +1,13 @@
 package bsdb
 
 import (
+	"encoding/json"
+
 	"github.com/forbole/juno/v4/common"
+	"gorm.io/datatypes"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // Group is the structure for group information
@@ -34,6 +40,8 @@ type Group struct {
 	UpdateTime int64 `gorm:"column:update_time"`
 	// Removed defines the group is deleted or not
 	Removed bool `gorm:"column:removed"`
+	// Tags
+	Tags datatypes.JSON `gorm:"column:tags;TYPE:json"` // tags
 }
 
 type GroupMeta struct {
@@ -51,4 +59,16 @@ type GroupCount struct {
 // TableName is used to set Group table name in database
 func (g *Group) TableName() string {
 	return GroupTableName
+}
+
+// GetResourceTags is used to convert the db tags string to *storage_types.ResourceTags type
+func (g *Group) GetResourceTags() *storagetypes.ResourceTags {
+	tags := &storagetypes.ResourceTags{}
+	if g.Tags != nil {
+		tagUnmarshalErr := json.Unmarshal([]byte(g.Tags), tags)
+		if tagUnmarshalErr != nil {
+			log.Warnw("failed to Unmarshal group tags", "error", tagUnmarshalErr)
+		}
+	}
+	return tags
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/forbole/juno/v4/log"
 	"github.com/forbole/juno/v4/models"
 
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -138,6 +139,8 @@ func (m *Module) handleCreateObject(ctx context.Context, block *tmctypes.ResultB
 		UpdateTxHash: txHash,
 		UpdateTime:   createObject.CreateAt,
 		Removed:      false,
+
+		Tags: util.GetTagJson(createObject.Tags),
 	}
 
 	res := make(map[string][]interface{})
