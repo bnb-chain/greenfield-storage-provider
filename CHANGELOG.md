@@ -1,4 +1,16 @@
 # Changelog
+## v1.2.0
+
+FEATURES
+* [#1263](https://github.com/bnb-chain/greenfield-storage-provider/pull/1263) feat: add Tags in object/bucket/group
+* [#1260](https://github.com/bnb-chain/greenfield-storage-provider/pull/1260) feat: add task retry scheduler
+* [#1258](https://github.com/bnb-chain/greenfield-storage-provider/pull/1258) add deposit and delete operation to GVG in signer and fix a few issue
+* [#1190](https://github.com/bnb-chain/greenfield-storage-provider/pull/1190) gc for zombie piece & metaTask & bucket migration
+
+BUGFIXES
+* [#1257](https://github.com/bnb-chain/greenfield-storage-provider/pull/1257) fix: httpcode error
+* [#1259](https://github.com/bnb-chain/greenfield-storage-provider/pull/1259) fix: refine error message when object status is unexpected
+* [#1256](https://github.com/bnb-chain/greenfield-storage-provider/pull/1256) fix: fix the slow xml marshaling when returning a large list of objects
 
 ## V1.1.0
 

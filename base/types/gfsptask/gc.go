@@ -86,7 +86,7 @@ func (m *GfSpGCObjectTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpGCObjectTask) SetRetry(retry int) {
+func (m *GfSpGCObjectTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -171,8 +171,19 @@ func (m *GfSpGCObjectTask) SetLastDeletedObjectId(object uint64) {
 	m.LastDeletedObjectId = object
 }
 
+func (m *GfSpGCZombiePieceTask) InitGCZombiePieceTask(priority coretask.TPriority, start, end uint64, timeout int64) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.SetStartObjectID(start)
+	m.SetEndObjectID(end)
+	m.SetPriority(priority)
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
+	m.SetTimeout(timeout)
+}
+
 func (m *GfSpGCZombiePieceTask) Key() coretask.TKey {
-	return GfSpGCZombiePieceTaskKey(m.GetCreateTime())
+	return GfSpGCZombiePieceTaskKey(m.GetStartObjectId(), m.GetEndObjectId(), m.GetCreateTime())
 }
 
 func (m *GfSpGCZombiePieceTask) Type() coretask.TType {
@@ -180,9 +191,9 @@ func (m *GfSpGCZombiePieceTask) Type() coretask.TType {
 }
 
 func (m *GfSpGCZombiePieceTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], start_object_id[%d], end_object_id[%d],%s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(),
-		m.EstimateLimit().String(), m.GetTask().Info())
+		m.EstimateLimit().String(), m.GetStartObjectId(), m.GetEndObjectId(), m.GetTask().Info())
 }
 
 func (m *GfSpGCZombiePieceTask) GetAddress() string {
@@ -229,7 +240,7 @@ func (m *GfSpGCZombiePieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpGCZombiePieceTask) SetRetry(retry int) {
+func (m *GfSpGCZombiePieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -289,13 +300,21 @@ func (m *GfSpGCZombiePieceTask) SetError(err error) {
 	m.GetTask().SetError(err)
 }
 
-func (m *GfSpGCZombiePieceTask) GetGCZombiePieceStatus() (uint64, uint64) {
-	return m.GetObjectId(), m.GetDeleteCount()
+func (m *GfSpGCZombiePieceTask) SetStartObjectID(id uint64) {
+	m.StartObjectId = id
 }
 
-func (m *GfSpGCZombiePieceTask) SetGCZombiePieceStatus(object uint64, delete uint64) {
-	m.ObjectId = object
-	m.DeleteCount = delete
+func (m *GfSpGCZombiePieceTask) SetEndObjectID(id uint64) {
+	m.EndObjectId = id
+}
+
+func (m *GfSpGCMetaTask) InitGCMetaTask(priority coretask.TPriority, timeout int64) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.SetPriority(priority)
+	m.SetCreateTime(time.Now().Unix())
+	m.SetUpdateTime(time.Now().Unix())
+	m.SetTimeout(timeout)
 }
 
 func (m *GfSpGCMetaTask) Key() coretask.TKey {
@@ -356,7 +375,7 @@ func (m *GfSpGCMetaTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpGCMetaTask) SetRetry(retry int) {
+func (m *GfSpGCMetaTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 

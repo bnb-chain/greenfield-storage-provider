@@ -93,7 +93,7 @@ func (m *GfSpRecoverPieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpRecoverPieceTask) SetRetry(retry int) {
+func (m *GfSpRecoverPieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 

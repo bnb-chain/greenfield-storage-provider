@@ -3,6 +3,7 @@ package authenticator
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -24,23 +25,32 @@ import (
 )
 
 var (
-	ErrUnsupportedAuthType = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20001, "unsupported auth op type")
-	ErrMismatchSp          = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20002, "mismatched primary sp")
-	ErrNotCreatedState     = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20003, "object has not been created state")
-	ErrNotSealedState      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20004, "object has not been sealed state")
-	ErrPaymentState        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20005, "payment account is not active")
-	ErrInvalidAddress      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20006, "the user address format is invalid")
-	ErrNoSuchBucket        = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20007, "no such bucket")
-	ErrNoSuchObject        = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20008, "no such object")
-	ErrRepeatedBucket      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20009, "repeated bucket")
-	ErrRepeatedObject      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20010, "repeated object")
-	ErrNoPermission        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20011, "no permission")
+	ErrUnsupportedAuthType    = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20001, "unsupported auth op type")
+	ErrMismatchSp             = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20002, "mismatched primary sp")
+	ErrUnexpectedObjectStatus = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20003, "")
+	ErrNotSealedState         = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20004, "object has not been sealed state")
+	ErrPaymentState           = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20005, "payment account is not active")
+	ErrInvalidAddress         = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20006, "the user address format is invalid")
+	ErrNoSuchBucket           = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20007, "no such bucket")
+	ErrNoSuchObject           = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 20008, "no such object")
+	ErrRepeatedBucket         = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20009, "repeated bucket")
+	ErrRepeatedObject         = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20010, "repeated object")
+	ErrNoPermission           = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20011, "no permission")
 
 	ErrBadSignature           = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20012, "bad signature")
 	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
 	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
 	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
 )
+
+func ErrUnexpectedObjectStatusWithDetail(objectName string, expectedStatus storagetypes.ObjectStatus, actualStatus storagetypes.ObjectStatus) *gfsperrors.GfSpError {
+	return &gfsperrors.GfSpError{
+		CodeSpace:      module.AuthenticationModularName,
+		HttpStatusCode: int32(http.StatusBadRequest),
+		InnerCode:      int32(20003),
+		Description:    fmt.Sprintf("object %s is expected to be %s status but actually %s status", objectName, expectedStatus, actualStatus),
+	}
+}
 
 func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.AuthenticationModularName, http.StatusInternalServerError, 25002, detail)
@@ -233,8 +243,8 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrMismatchSp
 		}
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotCreatedState
+			log.CtxErrorw(ctx, "object state should be OBJECT_STATUS_CREATED", "state", objectInfo.GetObjectStatus())
+			return false, ErrUnexpectedObjectStatusWithDetail(objectInfo.ObjectName, storagetypes.OBJECT_STATUS_CREATED, objectInfo.GetObjectStatus())
 		}
 		permissionTime := time.Now()
 		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
@@ -246,7 +256,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		return allow, nil
 	case coremodule.AuthOpTypeGetUploadingState:
 		queryTime := time.Now()
-		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		bucketInfo, _, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
@@ -272,18 +282,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state is not created", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotCreatedState
-		}
-		permissionTime := time.Now()
-		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
-		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
-			return false, err
-		}
-		return allow, nil
+		return true, nil
 	case coremodule.AuthOpTypeGetObject:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
@@ -312,9 +311,10 @@ func (a *AuthenticationModular) VerifyAuthentication(
 				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotSealedState
+		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED &&
+			objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+			log.CtxErrorw(ctx, "object state is not sealed or created", "state", objectInfo.GetObjectStatus())
+			return false, ErrNoPermission
 		}
 		streamTime := time.Now()
 		streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPaymentAddress())

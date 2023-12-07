@@ -67,14 +67,15 @@ func TestDefaultGfSpDBOptionFailure1(t *testing.T) {
 
 func Test_defaultGfSpDB(t *testing.T) {
 	cfg := &config.SQLDBConfig{
-		User:            "",
-		Passwd:          "",
-		Address:         "",
-		Database:        "",
-		ConnMaxLifetime: 0,
-		ConnMaxIdleTime: 0,
-		MaxIdleConns:    0,
-		MaxOpenConns:    0,
+		User:                "",
+		Passwd:              "",
+		Address:             "",
+		Database:            "",
+		ConnMaxLifetime:     0,
+		ConnMaxIdleTime:     0,
+		MaxIdleConns:        0,
+		MaxOpenConns:        0,
+		EnableTracePutEvent: true,
 	}
 	defaultGfSpDB(cfg)
 	assert.Equal(t, "storage_provider_db", cfg.Database)

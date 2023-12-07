@@ -49,6 +49,14 @@ type ExecuteModular struct {
 	doingGCGCMetaTaskCnt       int64
 	doingRecoveryPieceTaskCnt  int64
 	doingMigrationGVGTaskCnt   int64
+	doingGCBucketMigrationCnt  int64
+
+	// gc meta
+	bucketTrafficKeepLatestDay uint64
+	readRecordKeepLatestDay    uint64
+	readRecordDeleteLimit      uint64
+
+	gcWorker *GCWorker
 
 	enableSkipFailedToMigrateObject bool // only for debugging, and online config can only be false
 
@@ -75,6 +83,7 @@ func (e *ExecuteModular) Start(ctx context.Context) error {
 	for _, sp := range sps {
 		e.spMap[sp.Id] = sp
 	}
+	e.gcWorker = NewGCWorker(e)
 	go e.eventLoop(ctx)
 	return nil
 }
@@ -257,6 +266,10 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		atomic.AddInt64(&e.doingMigrationGVGTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingMigrationGVGTaskCnt, -1)
 		e.HandleMigrateGVGTask(ctx, t)
+	case *gfsptask.GfSpGCBucketMigrationTask:
+		atomic.AddInt64(&e.doingGCBucketMigrationCnt, 1)
+		defer atomic.AddInt64(&e.doingGCBucketMigrationCnt, -1)
+		e.HandleGCBucketMigrationBucket(ctx, t)
 	default:
 		log.CtxError(ctx, "unsupported task type")
 	}
@@ -304,7 +317,7 @@ func (e *ExecuteModular) ReleaseResource(ctx context.Context, span corercmgr.Res
 
 func (e *ExecuteModular) Statistics() string {
 	return fmt.Sprintf(
-		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], migrateGVG[%d]",
+		"maxAsk[%d], asking[%d], replicate[%d], seal[%d], receive[%d], gcObject[%d], gcZombie[%d], gcMeta[%d], gcBucketMigration[%d], migrateGVG[%d]",
 		atomic.LoadInt64(&e.maxExecuteNum), atomic.LoadInt64(&e.executingNum),
 		atomic.LoadInt64(&e.doingReplicatePieceTaskCnt),
 		atomic.LoadInt64(&e.doingSpSealObjectTaskCnt),
@@ -312,6 +325,7 @@ func (e *ExecuteModular) Statistics() string {
 		atomic.LoadInt64(&e.doingGCObjectTaskCnt),
 		atomic.LoadInt64(&e.doingGCZombiePieceTaskCnt),
 		atomic.LoadInt64(&e.doingGCGCMetaTaskCnt),
+		atomic.LoadInt64(&e.doingGCBucketMigrationCnt),
 		atomic.LoadInt64(&e.doingMigrationGVGTaskCnt))
 }
 

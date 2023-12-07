@@ -14,7 +14,7 @@ func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey str
 	conn, connErr := s.Connection(ctx, endpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
-		return nil, ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpQueryTasksRequest{
@@ -23,7 +23,7 @@ func (s *GfSpClient) QueryTasks(ctx context.Context, endpoint string, subKey str
 	resp, err := gfspserver.NewGfSpQueryTaskServiceClient(conn).GfSpQueryTasks(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query tasks", "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to query tasks, error: " + err.Error())
+		return nil, ErrRPCUnknownWithDetail("client failed to query tasks, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return nil, resp.GetErr()
@@ -35,14 +35,14 @@ func (s *GfSpClient) QueryBucketMigrate(ctx context.Context, endpoint string, op
 	conn, connErr := s.Connection(ctx, endpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
-		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
+		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpQueryBucketMigrateRequest{}
 	resp, err := gfspserver.NewGfSpQueryTaskServiceClient(conn).GfSpQueryBucketMigrate(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query tasks", "error", err)
-		return "", ErrRPCUnknownWithDetail("client failed to query tasks, error: " + err.Error())
+		return "", ErrRPCUnknownWithDetail("client failed to query tasks, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()
@@ -58,14 +58,14 @@ func (s *GfSpClient) QuerySPExit(ctx context.Context, endpoint string, opts ...g
 	conn, connErr := s.Connection(ctx, endpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect gfsp server", "error", connErr)
-		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: " + connErr.Error())
+		return "", ErrRPCUnknownWithDetail("client failed to connect gfsp server, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &gfspserver.GfSpQuerySpExitRequest{}
 	resp, err := gfspserver.NewGfSpQueryTaskServiceClient(conn).GfSpQuerySpExit(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to query tasks", "error", err)
-		return "", ErrRPCUnknownWithDetail("client failed to query tasks, error: " + err.Error())
+		return "", ErrRPCUnknownWithDetail("client failed to query tasks, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()

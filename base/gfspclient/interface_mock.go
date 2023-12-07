@@ -57,7 +57,7 @@ func (m *MockGfSpClientAPI) EXPECT() *MockGfSpClientAPIMockRecorder {
 // ApproverConn mocks base method.
 func (m *MockGfSpClientAPI) ApproverConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -68,9 +68,9 @@ func (m *MockGfSpClientAPI) ApproverConn(ctx context.Context, opts ...grpc.DialO
 }
 
 // ApproverConn indicates an expected call of ApproverConn.
-func (mr *MockGfSpClientAPIMockRecorder) ApproverConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ApproverConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApproverConn", reflect.TypeOf((*MockGfSpClientAPI)(nil).ApproverConn), varargs...)
 }
 
@@ -85,7 +85,7 @@ func (m *MockGfSpClientAPI) AskCreateBucketApproval(ctx context.Context, t task.
 }
 
 // AskCreateBucketApproval indicates an expected call of AskCreateBucketApproval.
-func (mr *MockGfSpClientAPIMockRecorder) AskCreateBucketApproval(ctx, t any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) AskCreateBucketApproval(ctx, t interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateBucketApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskCreateBucketApproval), ctx, t)
 }
@@ -101,7 +101,7 @@ func (m *MockGfSpClientAPI) AskCreateObjectApproval(ctx context.Context, t task.
 }
 
 // AskCreateObjectApproval indicates an expected call of AskCreateObjectApproval.
-func (mr *MockGfSpClientAPIMockRecorder) AskCreateObjectApproval(ctx, t any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) AskCreateObjectApproval(ctx, t interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateObjectApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskCreateObjectApproval), ctx, t)
 }
@@ -117,7 +117,7 @@ func (m *MockGfSpClientAPI) AskMigrateBucketApproval(ctx context.Context, t task
 }
 
 // AskMigrateBucketApproval indicates an expected call of AskMigrateBucketApproval.
-func (mr *MockGfSpClientAPIMockRecorder) AskMigrateBucketApproval(ctx, t any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) AskMigrateBucketApproval(ctx, t interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskMigrateBucketApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskMigrateBucketApproval), ctx, t)
 }
@@ -132,7 +132,7 @@ func (m *MockGfSpClientAPI) AskSecondaryReplicatePieceApproval(ctx context.Conte
 }
 
 // AskSecondaryReplicatePieceApproval indicates an expected call of AskSecondaryReplicatePieceApproval.
-func (mr *MockGfSpClientAPIMockRecorder) AskSecondaryReplicatePieceApproval(ctx, task, low, high, timeout any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) AskSecondaryReplicatePieceApproval(ctx, task, low, high, timeout interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskSecondaryReplicatePieceApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskSecondaryReplicatePieceApproval), ctx, task, low, high, timeout)
 }
@@ -147,7 +147,7 @@ func (m *MockGfSpClientAPI) AskTask(ctx context.Context, limit rcmgr.Limit) (tas
 }
 
 // AskTask indicates an expected call of AskTask.
-func (mr *MockGfSpClientAPIMockRecorder) AskTask(ctx, limit any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) AskTask(ctx, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskTask", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskTask), ctx, limit)
 }
@@ -176,7 +176,7 @@ func (m *MockGfSpClientAPI) CompleteMigrateBucket(ctx context.Context, migrateBu
 }
 
 // CompleteMigrateBucket indicates an expected call of CompleteMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) CompleteMigrateBucket(ctx, migrateBucket any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) CompleteMigrateBucket(ctx, migrateBucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).CompleteMigrateBucket), ctx, migrateBucket)
 }
@@ -191,7 +191,7 @@ func (m *MockGfSpClientAPI) CompleteSPExit(ctx context.Context, completeSPExit *
 }
 
 // CompleteSPExit indicates an expected call of CompleteSPExit.
-func (mr *MockGfSpClientAPIMockRecorder) CompleteSPExit(ctx, completeSPExit any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) CompleteSPExit(ctx, completeSPExit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSPExit", reflect.TypeOf((*MockGfSpClientAPI)(nil).CompleteSPExit), ctx, completeSPExit)
 }
@@ -206,7 +206,7 @@ func (m *MockGfSpClientAPI) CompleteSwapOut(ctx context.Context, completeSwapOut
 }
 
 // CompleteSwapOut indicates an expected call of CompleteSwapOut.
-func (mr *MockGfSpClientAPIMockRecorder) CompleteSwapOut(ctx, completeSwapOut any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) CompleteSwapOut(ctx, completeSwapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSwapOut", reflect.TypeOf((*MockGfSpClientAPI)(nil).CompleteSwapOut), ctx, completeSwapOut)
 }
@@ -214,7 +214,7 @@ func (mr *MockGfSpClientAPIMockRecorder) CompleteSwapOut(ctx, completeSwapOut an
 // Connection mocks base method.
 func (m *MockGfSpClientAPI) Connection(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, address}
+	varargs := []interface{}{ctx, address}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -225,9 +225,9 @@ func (m *MockGfSpClientAPI) Connection(ctx context.Context, address string, opts
 }
 
 // Connection indicates an expected call of Connection.
-func (mr *MockGfSpClientAPIMockRecorder) Connection(ctx, address any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) Connection(ctx, address interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, address}, opts...)
+	varargs := append([]interface{}{ctx, address}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connection", reflect.TypeOf((*MockGfSpClientAPI)(nil).Connection), varargs...)
 }
 
@@ -240,7 +240,7 @@ func (m *MockGfSpClientAPI) CreateGlobalVirtualGroup(ctx context.Context, group 
 }
 
 // CreateGlobalVirtualGroup indicates an expected call of CreateGlobalVirtualGroup.
-func (mr *MockGfSpClientAPIMockRecorder) CreateGlobalVirtualGroup(ctx, group any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) CreateGlobalVirtualGroup(ctx, group interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockGfSpClientAPI)(nil).CreateGlobalVirtualGroup), ctx, group)
 }
@@ -254,7 +254,7 @@ func (m *MockGfSpClientAPI) CreateResumableUploadObject(ctx context.Context, tas
 }
 
 // CreateResumableUploadObject indicates an expected call of CreateResumableUploadObject.
-func (mr *MockGfSpClientAPIMockRecorder) CreateResumableUploadObject(ctx, task any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) CreateResumableUploadObject(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateResumableUploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).CreateResumableUploadObject), ctx, task)
 }
@@ -268,7 +268,7 @@ func (m *MockGfSpClientAPI) CreateUploadObject(ctx context.Context, task task.Up
 }
 
 // CreateUploadObject indicates an expected call of CreateUploadObject.
-func (mr *MockGfSpClientAPIMockRecorder) CreateUploadObject(ctx, task any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) CreateUploadObject(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).CreateUploadObject), ctx, task)
 }
@@ -276,7 +276,7 @@ func (mr *MockGfSpClientAPIMockRecorder) CreateUploadObject(ctx, task any) *gomo
 // DeductQuotaForBucketMigrate mocks base method.
 func (m *MockGfSpClientAPI) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, deductQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, deductQuota, yearMonth}
+	varargs := []interface{}{ctx, bucketID, deductQuota, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -286,10 +286,40 @@ func (m *MockGfSpClientAPI) DeductQuotaForBucketMigrate(ctx context.Context, buc
 }
 
 // DeductQuotaForBucketMigrate indicates an expected call of DeductQuotaForBucketMigrate.
-func (mr *MockGfSpClientAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucketID, deductQuota, yearMonth any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucketID, deductQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, deductQuota, yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, deductQuota, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeductQuotaForBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeductQuotaForBucketMigrate), varargs...)
+}
+
+// DeleteGlobalVirtualGroup mocks base method.
+func (m *MockGfSpClientAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGlobalVirtualGroup", ctx, deleteGVG)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteGlobalVirtualGroup indicates an expected call of DeleteGlobalVirtualGroup.
+func (mr *MockGfSpClientAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGlobalVirtualGroup", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeleteGlobalVirtualGroup), ctx, deleteGVG)
+}
+
+// Deposit mocks base method.
+func (m *MockGfSpClientAPI) Deposit(ctx context.Context, deposit *types4.MsgDeposit) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deposit", ctx, deposit)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deposit indicates an expected call of Deposit.
+func (mr *MockGfSpClientAPIMockRecorder) Deposit(ctx, deposit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deposit", reflect.TypeOf((*MockGfSpClientAPI)(nil).Deposit), ctx, deposit)
 }
 
 // DiscontinueBucket mocks base method.
@@ -302,7 +332,7 @@ func (m *MockGfSpClientAPI) DiscontinueBucket(ctx context.Context, bucket *types
 }
 
 // DiscontinueBucket indicates an expected call of DiscontinueBucket.
-func (mr *MockGfSpClientAPIMockRecorder) DiscontinueBucket(ctx, bucket any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) DiscontinueBucket(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DiscontinueBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).DiscontinueBucket), ctx, bucket)
 }
@@ -310,7 +340,7 @@ func (mr *MockGfSpClientAPIMockRecorder) DiscontinueBucket(ctx, bucket any) *gom
 // DoneReplicatePiece mocks base method.
 func (m *MockGfSpClientAPI) DoneReplicatePiece(ctx context.Context, task task.ReceivePieceTask, opts ...grpc.DialOption) ([]byte, []byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task}
+	varargs := []interface{}{ctx, task}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -322,9 +352,9 @@ func (m *MockGfSpClientAPI) DoneReplicatePiece(ctx context.Context, task task.Re
 }
 
 // DoneReplicatePiece indicates an expected call of DoneReplicatePiece.
-func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePiece(ctx, task any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePiece(ctx, task interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task}, opts...)
+	varargs := append([]interface{}{ctx, task}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).DoneReplicatePiece), varargs...)
 }
 
@@ -338,7 +368,7 @@ func (m *MockGfSpClientAPI) DoneReplicatePieceToSecondary(ctx context.Context, e
 }
 
 // DoneReplicatePieceToSecondary indicates an expected call of DoneReplicatePieceToSecondary.
-func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endpoint, receive any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endpoint, receive interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePieceToSecondary", reflect.TypeOf((*MockGfSpClientAPI)(nil).DoneReplicatePieceToSecondary), ctx, endpoint, receive)
 }
@@ -346,7 +376,7 @@ func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endp
 // GetAuthNonce mocks base method.
 func (m *MockGfSpClientAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, domain}
+	varargs := []interface{}{ctx, account, domain}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -360,16 +390,16 @@ func (m *MockGfSpClientAPI) GetAuthNonce(ctx context.Context, account, domain st
 }
 
 // GetAuthNonce indicates an expected call of GetAuthNonce.
-func (mr *MockGfSpClientAPIMockRecorder) GetAuthNonce(ctx, account, domain any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetAuthNonce(ctx, account, domain interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, domain}, opts...)
+	varargs := append([]interface{}{ctx, account, domain}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthNonce", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetAuthNonce), varargs...)
 }
 
 // GetBucketByBucketID mocks base method.
 func (m *MockGfSpClientAPI) GetBucketByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, includePrivate}
+	varargs := []interface{}{ctx, bucketID, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -380,16 +410,16 @@ func (m *MockGfSpClientAPI) GetBucketByBucketID(ctx context.Context, bucketID in
 }
 
 // GetBucketByBucketID indicates an expected call of GetBucketByBucketID.
-func (mr *MockGfSpClientAPIMockRecorder) GetBucketByBucketID(ctx, bucketID, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketByBucketID(ctx, bucketID, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByBucketID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketByBucketID), varargs...)
 }
 
 // GetBucketByBucketName mocks base method.
 func (m *MockGfSpClientAPI) GetBucketByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, includePrivate}
+	varargs := []interface{}{ctx, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -400,16 +430,16 @@ func (m *MockGfSpClientAPI) GetBucketByBucketName(ctx context.Context, bucketNam
 }
 
 // GetBucketByBucketName indicates an expected call of GetBucketByBucketName.
-func (mr *MockGfSpClientAPIMockRecorder) GetBucketByBucketName(ctx, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketByBucketName(ctx, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByBucketName", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketByBucketName), varargs...)
 }
 
 // GetBucketMeta mocks base method.
 func (m *MockGfSpClientAPI) GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.VGFInfoBucket, *types0.StreamRecord, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, includePrivate}
+	varargs := []interface{}{ctx, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -421,16 +451,16 @@ func (m *MockGfSpClientAPI) GetBucketMeta(ctx context.Context, bucketName string
 }
 
 // GetBucketMeta indicates an expected call of GetBucketMeta.
-func (mr *MockGfSpClientAPIMockRecorder) GetBucketMeta(ctx, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketMeta(ctx, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMeta", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketMeta), varargs...)
 }
 
 // GetBucketReadQuota mocks base method.
 func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucket, yearMonth}
+	varargs := []interface{}{ctx, bucket, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -444,16 +474,16 @@ func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *type
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
-func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucket, yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucket, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
 // GetBucketSize mocks base method.
 func (m *MockGfSpClientAPI) GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID}
+	varargs := []interface{}{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -464,16 +494,16 @@ func (m *MockGfSpClientAPI) GetBucketSize(ctx context.Context, bucketID uint64, 
 }
 
 // GetBucketSize indicates an expected call of GetBucketSize.
-func (mr *MockGfSpClientAPIMockRecorder) GetBucketSize(ctx, bucketID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketSize(ctx, bucketID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSize", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketSize), varargs...)
 }
 
 // GetChallengeInfo mocks base method.
 func (m *MockGfSpClientAPI) GetChallengeInfo(ctx context.Context, challengePieceTask task.ChallengePieceTask, opts ...grpc.DialOption) ([]byte, [][]byte, []byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, challengePieceTask}
+	varargs := []interface{}{ctx, challengePieceTask}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -486,16 +516,16 @@ func (m *MockGfSpClientAPI) GetChallengeInfo(ctx context.Context, challengePiece
 }
 
 // GetChallengeInfo indicates an expected call of GetChallengeInfo.
-func (mr *MockGfSpClientAPIMockRecorder) GetChallengeInfo(ctx, challengePieceTask any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetChallengeInfo(ctx, challengePieceTask interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, challengePieceTask}, opts...)
+	varargs := append([]interface{}{ctx, challengePieceTask}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChallengeInfo", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetChallengeInfo), varargs...)
 }
 
 // GetEndpointBySpID mocks base method.
 func (m *MockGfSpClientAPI) GetEndpointBySpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -506,16 +536,16 @@ func (m *MockGfSpClientAPI) GetEndpointBySpID(ctx context.Context, spID uint32, 
 }
 
 // GetEndpointBySpID indicates an expected call of GetEndpointBySpID.
-func (mr *MockGfSpClientAPIMockRecorder) GetEndpointBySpID(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetEndpointBySpID(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEndpointBySpID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetEndpointBySpID), varargs...)
 }
 
 // GetGlobalVirtualGroup mocks base method.
 func (m *MockGfSpClientAPI) GetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, lvgID}
+	varargs := []interface{}{ctx, bucketID, lvgID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -526,16 +556,16 @@ func (m *MockGfSpClientAPI) GetGlobalVirtualGroup(ctx context.Context, bucketID 
 }
 
 // GetGlobalVirtualGroup indicates an expected call of GetGlobalVirtualGroup.
-func (mr *MockGfSpClientAPIMockRecorder) GetGlobalVirtualGroup(ctx, bucketID, lvgID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetGlobalVirtualGroup(ctx, bucketID, lvgID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, lvgID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, lvgID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroup", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetGlobalVirtualGroup), varargs...)
 }
 
 // GetGlobalVirtualGroupByGvgID mocks base method.
 func (m *MockGfSpClientAPI) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uint32, opts ...grpc.DialOption) (*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID}
+	varargs := []interface{}{ctx, gvgID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -546,16 +576,16 @@ func (m *MockGfSpClientAPI) GetGlobalVirtualGroupByGvgID(ctx context.Context, gv
 }
 
 // GetGlobalVirtualGroupByGvgID indicates an expected call of GetGlobalVirtualGroupByGvgID.
-func (mr *MockGfSpClientAPIMockRecorder) GetGlobalVirtualGroupByGvgID(ctx, gvgID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetGlobalVirtualGroupByGvgID(ctx, gvgID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID}, opts...)
+	varargs := append([]interface{}{ctx, gvgID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroupByGvgID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetGlobalVirtualGroupByGvgID), varargs...)
 }
 
 // GetGroupList mocks base method.
 func (m *MockGfSpClientAPI) GetGroupList(ctx context.Context, name, prefix, sourceType string, limit, offset int64, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Group, int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, name, prefix, sourceType, limit, offset, includeRemoved}
+	varargs := []interface{}{ctx, name, prefix, sourceType, limit, offset, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -567,16 +597,16 @@ func (m *MockGfSpClientAPI) GetGroupList(ctx context.Context, name, prefix, sour
 }
 
 // GetGroupList indicates an expected call of GetGroupList.
-func (mr *MockGfSpClientAPIMockRecorder) GetGroupList(ctx, name, prefix, sourceType, limit, offset, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetGroupList(ctx, name, prefix, sourceType, limit, offset, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, name, prefix, sourceType, limit, offset, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, name, prefix, sourceType, limit, offset, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupList", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetGroupList), varargs...)
 }
 
 // GetGroupMembers mocks base method.
 func (m *MockGfSpClientAPI) GetGroupMembers(ctx context.Context, groupID uint64, startAfter string, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, groupID, startAfter, limit}
+	varargs := []interface{}{ctx, groupID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -587,16 +617,16 @@ func (m *MockGfSpClientAPI) GetGroupMembers(ctx context.Context, groupID uint64,
 }
 
 // GetGroupMembers indicates an expected call of GetGroupMembers.
-func (mr *MockGfSpClientAPIMockRecorder) GetGroupMembers(ctx, groupID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetGroupMembers(ctx, groupID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, groupID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, groupID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembers", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetGroupMembers), varargs...)
 }
 
 // GetLatestBucketReadQuota mocks base method.
 func (m *MockGfSpClientAPI) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID}
+	varargs := []interface{}{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -607,16 +637,36 @@ func (m *MockGfSpClientAPI) GetLatestBucketReadQuota(ctx context.Context, bucket
 }
 
 // GetLatestBucketReadQuota indicates an expected call of GetLatestBucketReadQuota.
-func (mr *MockGfSpClientAPIMockRecorder) GetLatestBucketReadQuota(ctx, bucketID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetLatestBucketReadQuota(ctx, bucketID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetLatestBucketReadQuota), varargs...)
+}
+
+// GetLatestObjectID mocks base method.
+func (m *MockGfSpClientAPI) GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetLatestObjectID", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestObjectID indicates an expected call of GetLatestObjectID.
+func (mr *MockGfSpClientAPIMockRecorder) GetLatestObjectID(ctx interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestObjectID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetLatestObjectID), varargs...)
 }
 
 // GetObject mocks base method.
 func (m *MockGfSpClientAPI) GetObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask, opts ...grpc.DialOption) ([]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, downloadObjectTask}
+	varargs := []interface{}{ctx, downloadObjectTask}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -627,16 +677,16 @@ func (m *MockGfSpClientAPI) GetObject(ctx context.Context, downloadObjectTask ta
 }
 
 // GetObject indicates an expected call of GetObject.
-func (mr *MockGfSpClientAPIMockRecorder) GetObject(ctx, downloadObjectTask any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetObject(ctx, downloadObjectTask interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, downloadObjectTask}, opts...)
+	varargs := append([]interface{}{ctx, downloadObjectTask}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetObject), varargs...)
 }
 
 // GetObjectByID mocks base method.
 func (m *MockGfSpClientAPI) GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*types3.ObjectInfo, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectID}
+	varargs := []interface{}{ctx, objectID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -647,16 +697,16 @@ func (m *MockGfSpClientAPI) GetObjectByID(ctx context.Context, objectID uint64, 
 }
 
 // GetObjectByID indicates an expected call of GetObjectByID.
-func (mr *MockGfSpClientAPIMockRecorder) GetObjectByID(ctx, objectID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetObjectByID(ctx, objectID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectID}, opts...)
+	varargs := append([]interface{}{ctx, objectID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetObjectByID), varargs...)
 }
 
 // GetObjectMeta mocks base method.
 func (m *MockGfSpClientAPI) GetObjectMeta(ctx context.Context, objectName, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Object, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectName, bucketName, includePrivate}
+	varargs := []interface{}{ctx, objectName, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -667,16 +717,16 @@ func (m *MockGfSpClientAPI) GetObjectMeta(ctx context.Context, objectName, bucke
 }
 
 // GetObjectMeta indicates an expected call of GetObjectMeta.
-func (mr *MockGfSpClientAPIMockRecorder) GetObjectMeta(ctx, objectName, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetObjectMeta(ctx, objectName, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectName, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, objectName, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectMeta", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetObjectMeta), varargs...)
 }
 
 // GetPaymentByBucketID mocks base method.
 func (m *MockGfSpClientAPI) GetPaymentByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types0.StreamRecord, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, includePrivate}
+	varargs := []interface{}{ctx, bucketID, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -687,16 +737,16 @@ func (m *MockGfSpClientAPI) GetPaymentByBucketID(ctx context.Context, bucketID i
 }
 
 // GetPaymentByBucketID indicates an expected call of GetPaymentByBucketID.
-func (mr *MockGfSpClientAPIMockRecorder) GetPaymentByBucketID(ctx, bucketID, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetPaymentByBucketID(ctx, bucketID, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetPaymentByBucketID), varargs...)
 }
 
 // GetPaymentByBucketName mocks base method.
 func (m *MockGfSpClientAPI) GetPaymentByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types0.StreamRecord, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, includePrivate}
+	varargs := []interface{}{ctx, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -707,16 +757,16 @@ func (m *MockGfSpClientAPI) GetPaymentByBucketName(ctx context.Context, bucketNa
 }
 
 // GetPaymentByBucketName indicates an expected call of GetPaymentByBucketName.
-func (mr *MockGfSpClientAPIMockRecorder) GetPaymentByBucketName(ctx, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetPaymentByBucketName(ctx, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetPaymentByBucketName), varargs...)
 }
 
 // GetPiece mocks base method.
 func (m *MockGfSpClientAPI) GetPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask, opts ...grpc.DialOption) ([]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, downloadPieceTask}
+	varargs := []interface{}{ctx, downloadPieceTask}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -727,9 +777,9 @@ func (m *MockGfSpClientAPI) GetPiece(ctx context.Context, downloadPieceTask task
 }
 
 // GetPiece indicates an expected call of GetPiece.
-func (mr *MockGfSpClientAPIMockRecorder) GetPiece(ctx, downloadPieceTask any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetPiece(ctx, downloadPieceTask interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, downloadPieceTask}, opts...)
+	varargs := append([]interface{}{ctx, downloadPieceTask}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetPiece), varargs...)
 }
 
@@ -743,7 +793,7 @@ func (m *MockGfSpClientAPI) GetPieceFromECChunks(ctx context.Context, endpoint s
 }
 
 // GetPieceFromECChunks indicates an expected call of GetPieceFromECChunks.
-func (mr *MockGfSpClientAPIMockRecorder) GetPieceFromECChunks(ctx, endpoint, task any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetPieceFromECChunks(ctx, endpoint, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPieceFromECChunks", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetPieceFromECChunks), ctx, endpoint, task)
 }
@@ -751,7 +801,7 @@ func (mr *MockGfSpClientAPIMockRecorder) GetPieceFromECChunks(ctx, endpoint, tas
 // GetSPInfo mocks base method.
 func (m *MockGfSpClientAPI) GetSPInfo(ctx context.Context, operatorAddress string, opts ...grpc.DialOption) (*types2.StorageProvider, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, operatorAddress}
+	varargs := []interface{}{ctx, operatorAddress}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -762,16 +812,16 @@ func (m *MockGfSpClientAPI) GetSPInfo(ctx context.Context, operatorAddress strin
 }
 
 // GetSPInfo indicates an expected call of GetSPInfo.
-func (mr *MockGfSpClientAPIMockRecorder) GetSPInfo(ctx, operatorAddress any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetSPInfo(ctx, operatorAddress interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, operatorAddress}, opts...)
+	varargs := append([]interface{}{ctx, operatorAddress}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPInfo", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetSPInfo), varargs...)
 }
 
 // GetSPMigratingBucketNumber mocks base method.
 func (m *MockGfSpClientAPI) GetSPMigratingBucketNumber(ctx context.Context, spID uint32, opts ...grpc.DialOption) (uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -782,9 +832,9 @@ func (m *MockGfSpClientAPI) GetSPMigratingBucketNumber(ctx context.Context, spID
 }
 
 // GetSPMigratingBucketNumber indicates an expected call of GetSPMigratingBucketNumber.
-func (mr *MockGfSpClientAPIMockRecorder) GetSPMigratingBucketNumber(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetSPMigratingBucketNumber(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPMigratingBucketNumber", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetSPMigratingBucketNumber), varargs...)
 }
 
@@ -798,7 +848,7 @@ func (m *MockGfSpClientAPI) GetSecondarySPMigrationBucketApproval(ctx context.Co
 }
 
 // GetSecondarySPMigrationBucketApproval indicates an expected call of GetSecondarySPMigrationBucketApproval.
-func (mr *MockGfSpClientAPIMockRecorder) GetSecondarySPMigrationBucketApproval(ctx, secondarySPEndpoint, signDoc any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetSecondarySPMigrationBucketApproval(ctx, secondarySPEndpoint, signDoc interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecondarySPMigrationBucketApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetSecondarySPMigrationBucketApproval), ctx, secondarySPEndpoint, signDoc)
 }
@@ -806,7 +856,7 @@ func (mr *MockGfSpClientAPIMockRecorder) GetSecondarySPMigrationBucketApproval(c
 // GetStatus mocks base method.
 func (m *MockGfSpClientAPI) GetStatus(ctx context.Context, opts ...grpc.DialOption) (*types.Status, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -817,9 +867,9 @@ func (m *MockGfSpClientAPI) GetStatus(ctx context.Context, opts ...grpc.DialOpti
 }
 
 // GetStatus indicates an expected call of GetStatus.
-func (mr *MockGfSpClientAPIMockRecorder) GetStatus(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetStatus(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetStatus), varargs...)
 }
 
@@ -833,7 +883,7 @@ func (m *MockGfSpClientAPI) GetSwapOutApproval(ctx context.Context, destSPEndpoi
 }
 
 // GetSwapOutApproval indicates an expected call of GetSwapOutApproval.
-func (mr *MockGfSpClientAPIMockRecorder) GetSwapOutApproval(ctx, destSPEndpoint, swapOutApproval any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetSwapOutApproval(ctx, destSPEndpoint, swapOutApproval interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapOutApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetSwapOutApproval), ctx, destSPEndpoint, swapOutApproval)
 }
@@ -848,7 +898,7 @@ func (m *MockGfSpClientAPI) GetTasksStats(ctx context.Context) (*gfspserver.Task
 }
 
 // GetTasksStats indicates an expected call of GetTasksStats.
-func (mr *MockGfSpClientAPIMockRecorder) GetTasksStats(ctx any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetTasksStats(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksStats", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetTasksStats), ctx)
 }
@@ -856,7 +906,7 @@ func (mr *MockGfSpClientAPIMockRecorder) GetTasksStats(ctx any) *gomock.Call {
 // GetUploadObjectSegment mocks base method.
 func (m *MockGfSpClientAPI) GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectID}
+	varargs := []interface{}{ctx, objectID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -867,16 +917,16 @@ func (m *MockGfSpClientAPI) GetUploadObjectSegment(ctx context.Context, objectID
 }
 
 // GetUploadObjectSegment indicates an expected call of GetUploadObjectSegment.
-func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectSegment(ctx, objectID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectSegment(ctx, objectID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectID}, opts...)
+	varargs := append([]interface{}{ctx, objectID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadObjectSegment", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUploadObjectSegment), varargs...)
 }
 
 // GetUploadObjectState mocks base method.
 func (m *MockGfSpClientAPI) GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectID}
+	varargs := []interface{}{ctx, objectID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -888,16 +938,16 @@ func (m *MockGfSpClientAPI) GetUploadObjectState(ctx context.Context, objectID u
 }
 
 // GetUploadObjectState indicates an expected call of GetUploadObjectState.
-func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectState(ctx, objectID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetUploadObjectState(ctx, objectID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectID}, opts...)
+	varargs := append([]interface{}{ctx, objectID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadObjectState", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUploadObjectState), varargs...)
 }
 
 // GetUserBuckets mocks base method.
 func (m *MockGfSpClientAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, includeRemoved}
+	varargs := []interface{}{ctx, account, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -908,16 +958,16 @@ func (m *MockGfSpClientAPI) GetUserBuckets(ctx context.Context, account string, 
 }
 
 // GetUserBuckets indicates an expected call of GetUserBuckets.
-func (mr *MockGfSpClientAPIMockRecorder) GetUserBuckets(ctx, account, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetUserBuckets(ctx, account, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, account, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUserBuckets), varargs...)
 }
 
 // GetUserBucketsCount mocks base method.
 func (m *MockGfSpClientAPI) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, includeRemoved}
+	varargs := []interface{}{ctx, account, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -928,16 +978,16 @@ func (m *MockGfSpClientAPI) GetUserBucketsCount(ctx context.Context, account str
 }
 
 // GetUserBucketsCount indicates an expected call of GetUserBucketsCount.
-func (mr *MockGfSpClientAPIMockRecorder) GetUserBucketsCount(ctx, account, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetUserBucketsCount(ctx, account, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, account, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUserBucketsCount), varargs...)
 }
 
 // GetUserGroups mocks base method.
 func (m *MockGfSpClientAPI) GetUserGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, accountID, startAfter, limit}
+	varargs := []interface{}{ctx, accountID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -948,16 +998,16 @@ func (m *MockGfSpClientAPI) GetUserGroups(ctx context.Context, accountID string,
 }
 
 // GetUserGroups indicates an expected call of GetUserGroups.
-func (mr *MockGfSpClientAPIMockRecorder) GetUserGroups(ctx, accountID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetUserGroups(ctx, accountID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, accountID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, accountID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUserGroups), varargs...)
 }
 
 // GetUserOwnedGroups mocks base method.
 func (m *MockGfSpClientAPI) GetUserOwnedGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, accountID, startAfter, limit}
+	varargs := []interface{}{ctx, accountID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -968,16 +1018,16 @@ func (m *MockGfSpClientAPI) GetUserOwnedGroups(ctx context.Context, accountID st
 }
 
 // GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
-func (mr *MockGfSpClientAPIMockRecorder) GetUserOwnedGroups(ctx, accountID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetUserOwnedGroups(ctx, accountID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, accountID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, accountID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetUserOwnedGroups), varargs...)
 }
 
 // GetVirtualGroupFamily mocks base method.
 func (m *MockGfSpClientAPI) GetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*types4.GlobalVirtualGroupFamily, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, vgfID}
+	varargs := []interface{}{ctx, vgfID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -988,9 +1038,9 @@ func (m *MockGfSpClientAPI) GetVirtualGroupFamily(ctx context.Context, vgfID uin
 }
 
 // GetVirtualGroupFamily indicates an expected call of GetVirtualGroupFamily.
-func (mr *MockGfSpClientAPIMockRecorder) GetVirtualGroupFamily(ctx, vgfID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) GetVirtualGroupFamily(ctx, vgfID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, vgfID}, opts...)
+	varargs := append([]interface{}{ctx, vgfID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualGroupFamily", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetVirtualGroupFamily), varargs...)
 }
 
@@ -1003,7 +1053,7 @@ func (m *MockGfSpClientAPI) HTTPClient(ctx context.Context) *http.Client {
 }
 
 // HTTPClient indicates an expected call of HTTPClient.
-func (mr *MockGfSpClientAPIMockRecorder) HTTPClient(ctx any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) HTTPClient(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HTTPClient", reflect.TypeOf((*MockGfSpClientAPI)(nil).HTTPClient), ctx)
 }
@@ -1011,7 +1061,7 @@ func (mr *MockGfSpClientAPIMockRecorder) HTTPClient(ctx any) *gomock.Call {
 // ListBucketReadRecord mocks base method.
 func (m *MockGfSpClientAPI) ListBucketReadRecord(ctx context.Context, bucket *types3.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}
+	varargs := []interface{}{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1023,16 +1073,16 @@ func (m *MockGfSpClientAPI) ListBucketReadRecord(ctx context.Context, bucket *ty
 }
 
 // ListBucketReadRecord indicates an expected call of ListBucketReadRecord.
-func (mr *MockGfSpClientAPIMockRecorder) ListBucketReadRecord(ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListBucketReadRecord(ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}, opts...)
+	varargs := append([]interface{}{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketReadRecord", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListBucketReadRecord), varargs...)
 }
 
 // ListBucketsByIDs mocks base method.
 func (m *MockGfSpClientAPI) ListBucketsByIDs(ctx context.Context, bucketIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketIDs, includeRemoved}
+	varargs := []interface{}{ctx, bucketIDs, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1043,16 +1093,16 @@ func (m *MockGfSpClientAPI) ListBucketsByIDs(ctx context.Context, bucketIDs []ui
 }
 
 // ListBucketsByIDs indicates an expected call of ListBucketsByIDs.
-func (mr *MockGfSpClientAPIMockRecorder) ListBucketsByIDs(ctx, bucketIDs, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListBucketsByIDs(ctx, bucketIDs, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketIDs, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, bucketIDs, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByIDs", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListBucketsByIDs), varargs...)
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.
 func (m *MockGfSpClientAPI) ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}
+	varargs := []interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1064,16 +1114,16 @@ func (m *MockGfSpClientAPI) ListDeletedObjectsByBlockNumberRange(ctx context.Con
 }
 
 // ListDeletedObjectsByBlockNumberRange indicates an expected call of ListDeletedObjectsByBlockNumberRange.
-func (mr *MockGfSpClientAPIMockRecorder) ListDeletedObjectsByBlockNumberRange(ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListDeletedObjectsByBlockNumberRange(ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListDeletedObjectsByBlockNumberRange), varargs...)
 }
 
 // ListExpiredBucketsBySp mocks base method.
 func (m *MockGfSpClientAPI) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpID uint32, limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, createAt, primarySpID, limit}
+	varargs := []interface{}{ctx, createAt, primarySpID, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1084,16 +1134,16 @@ func (m *MockGfSpClientAPI) ListExpiredBucketsBySp(ctx context.Context, createAt
 }
 
 // ListExpiredBucketsBySp indicates an expected call of ListExpiredBucketsBySp.
-func (mr *MockGfSpClientAPIMockRecorder) ListExpiredBucketsBySp(ctx, createAt, primarySpID, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListExpiredBucketsBySp(ctx, createAt, primarySpID, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, createAt, primarySpID, limit}, opts...)
+	varargs := append([]interface{}{ctx, createAt, primarySpID, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListExpiredBucketsBySp), varargs...)
 }
 
 // ListGlobalVirtualGroupsByBucket mocks base method.
 func (m *MockGfSpClientAPI) ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID}
+	varargs := []interface{}{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1104,16 +1154,16 @@ func (m *MockGfSpClientAPI) ListGlobalVirtualGroupsByBucket(ctx context.Context,
 }
 
 // ListGlobalVirtualGroupsByBucket indicates an expected call of ListGlobalVirtualGroupsByBucket.
-func (mr *MockGfSpClientAPIMockRecorder) ListGlobalVirtualGroupsByBucket(ctx, bucketID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListGlobalVirtualGroupsByBucket(ctx, bucketID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGlobalVirtualGroupsByBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListGlobalVirtualGroupsByBucket), varargs...)
 }
 
 // ListGlobalVirtualGroupsBySecondarySP mocks base method.
 func (m *MockGfSpClientAPI) ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1124,16 +1174,16 @@ func (m *MockGfSpClientAPI) ListGlobalVirtualGroupsBySecondarySP(ctx context.Con
 }
 
 // ListGlobalVirtualGroupsBySecondarySP indicates an expected call of ListGlobalVirtualGroupsBySecondarySP.
-func (mr *MockGfSpClientAPIMockRecorder) ListGlobalVirtualGroupsBySecondarySP(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListGlobalVirtualGroupsBySecondarySP(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGlobalVirtualGroupsBySecondarySP", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListGlobalVirtualGroupsBySecondarySP), varargs...)
 }
 
 // ListGroupsByIDs mocks base method.
 func (m *MockGfSpClientAPI) ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, groupIDs}
+	varargs := []interface{}{ctx, groupIDs}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1144,16 +1194,16 @@ func (m *MockGfSpClientAPI) ListGroupsByIDs(ctx context.Context, groupIDs []uint
 }
 
 // ListGroupsByIDs indicates an expected call of ListGroupsByIDs.
-func (mr *MockGfSpClientAPIMockRecorder) ListGroupsByIDs(ctx, groupIDs any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListGroupsByIDs(ctx, groupIDs interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, groupIDs}, opts...)
+	varargs := append([]interface{}{ctx, groupIDs}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByIDs", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListGroupsByIDs), varargs...)
 }
 
 // ListMigrateBucketEvents mocks base method.
 func (m *MockGfSpClientAPI) ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListMigrateBucketEvents, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, blockID, spID}
+	varargs := []interface{}{ctx, blockID, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1164,16 +1214,16 @@ func (m *MockGfSpClientAPI) ListMigrateBucketEvents(ctx context.Context, blockID
 }
 
 // ListMigrateBucketEvents indicates an expected call of ListMigrateBucketEvents.
-func (mr *MockGfSpClientAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, blockID, spID}, opts...)
+	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListMigrateBucketEvents), varargs...)
 }
 
 // ListObjectPolicies mocks base method.
 func (m *MockGfSpClientAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType int32, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectName, bucketName, startAfter, actionType, limit}
+	varargs := []interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1184,16 +1234,16 @@ func (m *MockGfSpClientAPI) ListObjectPolicies(ctx context.Context, objectName, 
 }
 
 // ListObjectPolicies indicates an expected call of ListObjectPolicies.
-func (mr *MockGfSpClientAPIMockRecorder) ListObjectPolicies(ctx, objectName, bucketName, startAfter, actionType, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListObjectPolicies(ctx, objectName, bucketName, startAfter, actionType, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
+	varargs := append([]interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectPolicies), varargs...)
 }
 
 // ListObjectsByBucketName mocks base method.
 func (m *MockGfSpClientAPI) ListObjectsByBucketName(ctx context.Context, bucketName, accountID string, maxKeys uint64, startAfter, continuationToken, delimiter, prefix string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Object, uint64, uint64, bool, string, string, string, string, []string, string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}
+	varargs := []interface{}{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1213,16 +1263,16 @@ func (m *MockGfSpClientAPI) ListObjectsByBucketName(ctx context.Context, bucketN
 }
 
 // ListObjectsByBucketName indicates an expected call of ListObjectsByBucketName.
-func (mr *MockGfSpClientAPIMockRecorder) ListObjectsByBucketName(ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListObjectsByBucketName(ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectsByBucketName), varargs...)
 }
 
 // ListObjectsByGVGAndBucketForGC mocks base method.
 func (m *MockGfSpClientAPI) ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID uint32, bucketID, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID, bucketID, startAfter, limit}
+	varargs := []interface{}{ctx, gvgID, bucketID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1233,16 +1283,16 @@ func (m *MockGfSpClientAPI) ListObjectsByGVGAndBucketForGC(ctx context.Context, 
 }
 
 // ListObjectsByGVGAndBucketForGC indicates an expected call of ListObjectsByGVGAndBucketForGC.
-func (mr *MockGfSpClientAPIMockRecorder) ListObjectsByGVGAndBucketForGC(ctx, gvgID, bucketID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListObjectsByGVGAndBucketForGC(ctx, gvgID, bucketID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID, bucketID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, gvgID, bucketID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByGVGAndBucketForGC", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectsByGVGAndBucketForGC), varargs...)
 }
 
 // ListObjectsByIDs mocks base method.
 func (m *MockGfSpClientAPI) ListObjectsByIDs(ctx context.Context, objectIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Object, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectIDs, includeRemoved}
+	varargs := []interface{}{ctx, objectIDs, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1253,16 +1303,16 @@ func (m *MockGfSpClientAPI) ListObjectsByIDs(ctx context.Context, objectIDs []ui
 }
 
 // ListObjectsByIDs indicates an expected call of ListObjectsByIDs.
-func (mr *MockGfSpClientAPIMockRecorder) ListObjectsByIDs(ctx, objectIDs, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListObjectsByIDs(ctx, objectIDs, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectIDs, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, objectIDs, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByIDs", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectsByIDs), varargs...)
 }
 
 // ListObjectsInGVG mocks base method.
 func (m *MockGfSpClientAPI) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID, startAfter, limit}
+	varargs := []interface{}{ctx, gvgID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1273,16 +1323,16 @@ func (m *MockGfSpClientAPI) ListObjectsInGVG(ctx context.Context, gvgID uint32, 
 }
 
 // ListObjectsInGVG indicates an expected call of ListObjectsInGVG.
-func (mr *MockGfSpClientAPIMockRecorder) ListObjectsInGVG(ctx, gvgID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListObjectsInGVG(ctx, gvgID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, gvgID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVG", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectsInGVG), varargs...)
 }
 
 // ListObjectsInGVGAndBucket mocks base method.
 func (m *MockGfSpClientAPI) ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID, bucketID, startAfter, limit}
+	varargs := []interface{}{ctx, gvgID, bucketID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1293,16 +1343,16 @@ func (m *MockGfSpClientAPI) ListObjectsInGVGAndBucket(ctx context.Context, gvgID
 }
 
 // ListObjectsInGVGAndBucket indicates an expected call of ListObjectsInGVGAndBucket.
-func (mr *MockGfSpClientAPIMockRecorder) ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID, bucketID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, gvgID, bucketID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVGAndBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListObjectsInGVGAndBucket), varargs...)
 }
 
 // ListPaymentAccountStreams mocks base method.
 func (m *MockGfSpClientAPI) ListPaymentAccountStreams(ctx context.Context, paymentAccount string, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, paymentAccount}
+	varargs := []interface{}{ctx, paymentAccount}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1313,16 +1363,16 @@ func (m *MockGfSpClientAPI) ListPaymentAccountStreams(ctx context.Context, payme
 }
 
 // ListPaymentAccountStreams indicates an expected call of ListPaymentAccountStreams.
-func (mr *MockGfSpClientAPIMockRecorder) ListPaymentAccountStreams(ctx, paymentAccount any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListPaymentAccountStreams(ctx, paymentAccount interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, paymentAccount}, opts...)
+	varargs := append([]interface{}{ctx, paymentAccount}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAccountStreams", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListPaymentAccountStreams), varargs...)
 }
 
 // ListSpExitEvents mocks base method.
 func (m *MockGfSpClientAPI) ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, blockID, spID}
+	varargs := []interface{}{ctx, blockID, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1333,16 +1383,16 @@ func (m *MockGfSpClientAPI) ListSpExitEvents(ctx context.Context, blockID uint64
 }
 
 // ListSpExitEvents indicates an expected call of ListSpExitEvents.
-func (mr *MockGfSpClientAPIMockRecorder) ListSpExitEvents(ctx, blockID, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListSpExitEvents(ctx, blockID, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, blockID, spID}, opts...)
+	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListSpExitEvents), varargs...)
 }
 
 // ListSwapOutEvents mocks base method.
 func (m *MockGfSpClientAPI) ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListSwapOutEvents, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, blockID, spID}
+	varargs := []interface{}{ctx, blockID, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1353,16 +1403,16 @@ func (m *MockGfSpClientAPI) ListSwapOutEvents(ctx context.Context, blockID uint6
 }
 
 // ListSwapOutEvents indicates an expected call of ListSwapOutEvents.
-func (mr *MockGfSpClientAPIMockRecorder) ListSwapOutEvents(ctx, blockID, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListSwapOutEvents(ctx, blockID, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, blockID, spID}, opts...)
+	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSwapOutEvents", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListSwapOutEvents), varargs...)
 }
 
 // ListUserPaymentAccounts mocks base method.
 func (m *MockGfSpClientAPI) ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.PaymentAccountMeta, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, accountID}
+	varargs := []interface{}{ctx, accountID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1373,16 +1423,16 @@ func (m *MockGfSpClientAPI) ListUserPaymentAccounts(ctx context.Context, account
 }
 
 // ListUserPaymentAccounts indicates an expected call of ListUserPaymentAccounts.
-func (mr *MockGfSpClientAPIMockRecorder) ListUserPaymentAccounts(ctx, accountID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListUserPaymentAccounts(ctx, accountID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, accountID}, opts...)
+	varargs := append([]interface{}{ctx, accountID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserPaymentAccounts", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListUserPaymentAccounts), varargs...)
 }
 
 // ListVirtualGroupFamiliesSpID mocks base method.
 func (m *MockGfSpClientAPI) ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*types4.GlobalVirtualGroupFamily, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1393,16 +1443,16 @@ func (m *MockGfSpClientAPI) ListVirtualGroupFamiliesSpID(ctx context.Context, sp
 }
 
 // ListVirtualGroupFamiliesSpID indicates an expected call of ListVirtualGroupFamiliesSpID.
-func (mr *MockGfSpClientAPIMockRecorder) ListVirtualGroupFamiliesSpID(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ListVirtualGroupFamiliesSpID(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesSpID", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListVirtualGroupFamiliesSpID), varargs...)
 }
 
 // ManagerConn mocks base method.
 func (m *MockGfSpClientAPI) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1413,9 +1463,9 @@ func (m *MockGfSpClientAPI) ManagerConn(ctx context.Context, opts ...grpc.DialOp
 }
 
 // ManagerConn indicates an expected call of ManagerConn.
-func (mr *MockGfSpClientAPIMockRecorder) ManagerConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ManagerConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ManagerConn", reflect.TypeOf((*MockGfSpClientAPI)(nil).ManagerConn), varargs...)
 }
 
@@ -1429,7 +1479,7 @@ func (m *MockGfSpClientAPI) MigratePiece(ctx context.Context, gvgTask *gfsptask.
 }
 
 // MigratePiece indicates an expected call of MigratePiece.
-func (mr *MockGfSpClientAPIMockRecorder) MigratePiece(ctx, gvgTask, pieceTask any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) MigratePiece(ctx, gvgTask, pieceTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigratePiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).MigratePiece), ctx, gvgTask, pieceTask)
 }
@@ -1443,7 +1493,7 @@ func (m *MockGfSpClientAPI) NotifyDestSPMigrateSwapOut(ctx context.Context, dest
 }
 
 // NotifyDestSPMigrateSwapOut indicates an expected call of NotifyDestSPMigrateSwapOut.
-func (mr *MockGfSpClientAPIMockRecorder) NotifyDestSPMigrateSwapOut(ctx, destEndpoint, swapOut any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) NotifyDestSPMigrateSwapOut(ctx, destEndpoint, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyDestSPMigrateSwapOut", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyDestSPMigrateSwapOut), ctx, destEndpoint, swapOut)
 }
@@ -1457,23 +1507,23 @@ func (m *MockGfSpClientAPI) NotifyMigrateSwapOut(ctx context.Context, swapOut *t
 }
 
 // NotifyMigrateSwapOut indicates an expected call of NotifyMigrateSwapOut.
-func (mr *MockGfSpClientAPIMockRecorder) NotifyMigrateSwapOut(ctx, swapOut any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) NotifyMigrateSwapOut(ctx, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyMigrateSwapOut", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyMigrateSwapOut), ctx, swapOut)
 }
 
 // NotifyPostMigrateBucket mocks base method.
-func (m *MockGfSpClientAPI) NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error {
+func (m *MockGfSpClientAPI) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bucketID)
+	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bmInfo)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // NotifyPostMigrateBucket indicates an expected call of NotifyPostMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) NotifyPostMigrateBucket(ctx, bucketID any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) NotifyPostMigrateBucket(ctx, bmInfo interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyPostMigrateBucket), ctx, bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyPostMigrateBucket), ctx, bmInfo)
 }
 
 // NotifyPreMigrateBucket mocks base method.
@@ -1485,7 +1535,7 @@ func (m *MockGfSpClientAPI) NotifyPreMigrateBucket(ctx context.Context, bucketID
 }
 
 // NotifyPreMigrateBucket indicates an expected call of NotifyPreMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) NotifyPreMigrateBucket(ctx, bucketID any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) NotifyPreMigrateBucket(ctx, bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyPreMigrateBucket), ctx, bucketID)
 }
@@ -1493,7 +1543,7 @@ func (mr *MockGfSpClientAPIMockRecorder) NotifyPreMigrateBucket(ctx, bucketID an
 // P2PConn mocks base method.
 func (m *MockGfSpClientAPI) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1504,9 +1554,9 @@ func (m *MockGfSpClientAPI) P2PConn(ctx context.Context, opts ...grpc.DialOption
 }
 
 // P2PConn indicates an expected call of P2PConn.
-func (mr *MockGfSpClientAPIMockRecorder) P2PConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) P2PConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "P2PConn", reflect.TypeOf((*MockGfSpClientAPI)(nil).P2PConn), varargs...)
 }
 
@@ -1520,7 +1570,7 @@ func (m *MockGfSpClientAPI) PickVirtualGroupFamilyID(ctx context.Context, task t
 }
 
 // PickVirtualGroupFamilyID indicates an expected call of PickVirtualGroupFamilyID.
-func (mr *MockGfSpClientAPIMockRecorder) PickVirtualGroupFamilyID(ctx, task any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) PickVirtualGroupFamilyID(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PickVirtualGroupFamilyID", reflect.TypeOf((*MockGfSpClientAPI)(nil).PickVirtualGroupFamilyID), ctx, task)
 }
@@ -1535,7 +1585,7 @@ func (m *MockGfSpClientAPI) PostMigrateBucket(ctx context.Context, srcSPEndpoint
 }
 
 // PostMigrateBucket indicates an expected call of PostMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) PostMigrateBucket(ctx, srcSPEndpoint, postMsg any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) PostMigrateBucket(ctx, srcSPEndpoint, postMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).PostMigrateBucket), ctx, srcSPEndpoint, postMsg)
 }
@@ -1550,7 +1600,7 @@ func (m *MockGfSpClientAPI) PreMigrateBucket(ctx context.Context, srcSPEndpoint 
 }
 
 // PreMigrateBucket indicates an expected call of PreMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) PreMigrateBucket(ctx, srcSPEndpoint, preMsg any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) PreMigrateBucket(ctx, srcSPEndpoint, preMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).PreMigrateBucket), ctx, srcSPEndpoint, preMsg)
 }
@@ -1558,7 +1608,7 @@ func (mr *MockGfSpClientAPIMockRecorder) PreMigrateBucket(ctx, srcSPEndpoint, pr
 // PrimarySpIncomeDetails mocks base method.
 func (m *MockGfSpClientAPI) PrimarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.PrimarySpIncomeDetail, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1570,16 +1620,16 @@ func (m *MockGfSpClientAPI) PrimarySpIncomeDetails(ctx context.Context, spID uin
 }
 
 // PrimarySpIncomeDetails indicates an expected call of PrimarySpIncomeDetails.
-func (mr *MockGfSpClientAPIMockRecorder) PrimarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) PrimarySpIncomeDetails(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrimarySpIncomeDetails", reflect.TypeOf((*MockGfSpClientAPI)(nil).PrimarySpIncomeDetails), varargs...)
 }
 
 // QueryBucketMigrate mocks base method.
 func (m *MockGfSpClientAPI) QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, endpoint}
+	varargs := []interface{}{ctx, endpoint}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1590,9 +1640,9 @@ func (m *MockGfSpClientAPI) QueryBucketMigrate(ctx context.Context, endpoint str
 }
 
 // QueryBucketMigrate indicates an expected call of QueryBucketMigrate.
-func (mr *MockGfSpClientAPIMockRecorder) QueryBucketMigrate(ctx, endpoint any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QueryBucketMigrate(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, endpoint}, opts...)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryBucketMigrate), varargs...)
 }
 
@@ -1606,7 +1656,7 @@ func (m *MockGfSpClientAPI) QueryLatestBucketQuota(ctx context.Context, endpoint
 }
 
 // QueryLatestBucketQuota indicates an expected call of QueryLatestBucketQuota.
-func (mr *MockGfSpClientAPIMockRecorder) QueryLatestBucketQuota(ctx, endpoint, queryMsg any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QueryLatestBucketQuota(ctx, endpoint, queryMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryLatestBucketQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryLatestBucketQuota), ctx, endpoint, queryMsg)
 }
@@ -1621,7 +1671,7 @@ func (m *MockGfSpClientAPI) QueryP2PBootstrap(ctx context.Context) ([]string, er
 }
 
 // QueryP2PBootstrap indicates an expected call of QueryP2PBootstrap.
-func (mr *MockGfSpClientAPIMockRecorder) QueryP2PBootstrap(ctx any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QueryP2PBootstrap(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryP2PBootstrap", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryP2PBootstrap), ctx)
 }
@@ -1629,7 +1679,7 @@ func (mr *MockGfSpClientAPIMockRecorder) QueryP2PBootstrap(ctx any) *gomock.Call
 // QuerySPExit mocks base method.
 func (m *MockGfSpClientAPI) QuerySPExit(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, endpoint}
+	varargs := []interface{}{ctx, endpoint}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1640,9 +1690,9 @@ func (m *MockGfSpClientAPI) QuerySPExit(ctx context.Context, endpoint string, op
 }
 
 // QuerySPExit indicates an expected call of QuerySPExit.
-func (mr *MockGfSpClientAPIMockRecorder) QuerySPExit(ctx, endpoint any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QuerySPExit(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, endpoint}, opts...)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExit", reflect.TypeOf((*MockGfSpClientAPI)(nil).QuerySPExit), varargs...)
 }
 
@@ -1655,7 +1705,7 @@ func (m *MockGfSpClientAPI) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Co
 }
 
 // QuerySPHasEnoughQuotaForMigrateBucket indicates an expected call of QuerySPHasEnoughQuotaForMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) QuerySPHasEnoughQuotaForMigrateBucket(ctx, srcSPEndpoint, queryMsg any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QuerySPHasEnoughQuotaForMigrateBucket(ctx, srcSPEndpoint, queryMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPHasEnoughQuotaForMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).QuerySPHasEnoughQuotaForMigrateBucket), ctx, srcSPEndpoint, queryMsg)
 }
@@ -1663,7 +1713,7 @@ func (mr *MockGfSpClientAPIMockRecorder) QuerySPHasEnoughQuotaForMigrateBucket(c
 // QueryTasks mocks base method.
 func (m *MockGfSpClientAPI) QueryTasks(ctx context.Context, endpoint, subKey string, opts ...grpc.DialOption) ([]string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, endpoint, subKey}
+	varargs := []interface{}{ctx, endpoint, subKey}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1674,16 +1724,16 @@ func (m *MockGfSpClientAPI) QueryTasks(ctx context.Context, endpoint, subKey str
 }
 
 // QueryTasks indicates an expected call of QueryTasks.
-func (mr *MockGfSpClientAPIMockRecorder) QueryTasks(ctx, endpoint, subKey any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) QueryTasks(ctx, endpoint, subKey interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, endpoint, subKey}, opts...)
+	varargs := append([]interface{}{ctx, endpoint, subKey}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockGfSpClientAPI)(nil).QueryTasks), varargs...)
 }
 
 // RecoupQuota mocks base method.
 func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, extraQuota, yearMonth}
+	varargs := []interface{}{ctx, bucketID, extraQuota, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1693,9 +1743,9 @@ func (m *MockGfSpClientAPI) RecoupQuota(ctx context.Context, bucketID, extraQuot
 }
 
 // RecoupQuota indicates an expected call of RecoupQuota.
-func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, extraQuota, yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).RecoupQuota), varargs...)
 }
 
@@ -1709,7 +1759,7 @@ func (m *MockGfSpClientAPI) RejectMigrateBucket(ctx context.Context, rejectMigra
 }
 
 // RejectMigrateBucket indicates an expected call of RejectMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) RejectMigrateBucket(ctx, rejectMigrateBucket any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) RejectMigrateBucket(ctx, rejectMigrateBucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).RejectMigrateBucket), ctx, rejectMigrateBucket)
 }
@@ -1724,7 +1774,7 @@ func (m *MockGfSpClientAPI) RejectUnSealObject(ctx context.Context, object *type
 }
 
 // RejectUnSealObject indicates an expected call of RejectUnSealObject.
-func (mr *MockGfSpClientAPIMockRecorder) RejectUnSealObject(ctx, object any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) RejectUnSealObject(ctx, object interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectUnSealObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).RejectUnSealObject), ctx, object)
 }
@@ -1732,7 +1782,7 @@ func (mr *MockGfSpClientAPIMockRecorder) RejectUnSealObject(ctx, object any) *go
 // ReplicatePiece mocks base method.
 func (m *MockGfSpClientAPI) ReplicatePiece(ctx context.Context, task task.ReceivePieceTask, data []byte, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task, data}
+	varargs := []interface{}{ctx, task, data}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1742,9 +1792,9 @@ func (m *MockGfSpClientAPI) ReplicatePiece(ctx context.Context, task task.Receiv
 }
 
 // ReplicatePiece indicates an expected call of ReplicatePiece.
-func (mr *MockGfSpClientAPIMockRecorder) ReplicatePiece(ctx, task, data any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ReplicatePiece(ctx, task, data interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task, data}, opts...)
+	varargs := append([]interface{}{ctx, task, data}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplicatePiece", reflect.TypeOf((*MockGfSpClientAPI)(nil).ReplicatePiece), varargs...)
 }
 
@@ -1757,7 +1807,7 @@ func (m *MockGfSpClientAPI) ReplicatePieceToSecondary(ctx context.Context, endpo
 }
 
 // ReplicatePieceToSecondary indicates an expected call of ReplicatePieceToSecondary.
-func (mr *MockGfSpClientAPIMockRecorder) ReplicatePieceToSecondary(ctx, endpoint, receive, data any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ReplicatePieceToSecondary(ctx, endpoint, receive, data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplicatePieceToSecondary", reflect.TypeOf((*MockGfSpClientAPI)(nil).ReplicatePieceToSecondary), ctx, endpoint, receive, data)
 }
@@ -1771,7 +1821,7 @@ func (m *MockGfSpClientAPI) ReportTask(ctx context.Context, report task.Task) er
 }
 
 // ReportTask indicates an expected call of ReportTask.
-func (mr *MockGfSpClientAPIMockRecorder) ReportTask(ctx, report any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ReportTask(ctx, report interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportTask", reflect.TypeOf((*MockGfSpClientAPI)(nil).ReportTask), ctx, report)
 }
@@ -1779,7 +1829,7 @@ func (mr *MockGfSpClientAPIMockRecorder) ReportTask(ctx, report any) *gomock.Cal
 // ResumableUploadObject mocks base method.
 func (m *MockGfSpClientAPI) ResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task, stream}
+	varargs := []interface{}{ctx, task, stream}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1789,9 +1839,9 @@ func (m *MockGfSpClientAPI) ResumableUploadObject(ctx context.Context, task task
 }
 
 // ResumableUploadObject indicates an expected call of ResumableUploadObject.
-func (mr *MockGfSpClientAPIMockRecorder) ResumableUploadObject(ctx, task, stream any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) ResumableUploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task, stream}, opts...)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumableUploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).ResumableUploadObject), varargs...)
 }
 
@@ -1805,7 +1855,7 @@ func (m *MockGfSpClientAPI) SPExit(ctx context.Context, spExit *types4.MsgStorag
 }
 
 // SPExit indicates an expected call of SPExit.
-func (mr *MockGfSpClientAPIMockRecorder) SPExit(ctx, spExit any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SPExit(ctx, spExit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SPExit", reflect.TypeOf((*MockGfSpClientAPI)(nil).SPExit), ctx, spExit)
 }
@@ -1820,7 +1870,7 @@ func (m *MockGfSpClientAPI) SealObject(ctx context.Context, object *types3.MsgSe
 }
 
 // SealObject indicates an expected call of SealObject.
-func (mr *MockGfSpClientAPIMockRecorder) SealObject(ctx, object any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SealObject(ctx, object interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).SealObject), ctx, object)
 }
@@ -1828,7 +1878,7 @@ func (mr *MockGfSpClientAPIMockRecorder) SealObject(ctx, object any) *gomock.Cal
 // SecondarySpIncomeDetails mocks base method.
 func (m *MockGfSpClientAPI) SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -1840,9 +1890,9 @@ func (m *MockGfSpClientAPI) SecondarySpIncomeDetails(ctx context.Context, spID u
 }
 
 // SecondarySpIncomeDetails indicates an expected call of SecondarySpIncomeDetails.
-func (mr *MockGfSpClientAPIMockRecorder) SecondarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SecondarySpIncomeDetails(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecondarySpIncomeDetails", reflect.TypeOf((*MockGfSpClientAPI)(nil).SecondarySpIncomeDetails), varargs...)
 }
 
@@ -1856,7 +1906,7 @@ func (m *MockGfSpClientAPI) SignBucketMigrationInfo(ctx context.Context, task *g
 }
 
 // SignBucketMigrationInfo indicates an expected call of SignBucketMigrationInfo.
-func (mr *MockGfSpClientAPIMockRecorder) SignBucketMigrationInfo(ctx, task any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignBucketMigrationInfo(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignBucketMigrationInfo", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignBucketMigrationInfo), ctx, task)
 }
@@ -1871,7 +1921,7 @@ func (m *MockGfSpClientAPI) SignCreateBucketApproval(ctx context.Context, bucket
 }
 
 // SignCreateBucketApproval indicates an expected call of SignCreateBucketApproval.
-func (mr *MockGfSpClientAPIMockRecorder) SignCreateBucketApproval(ctx, bucket any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignCreateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignCreateBucketApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignCreateBucketApproval), ctx, bucket)
 }
@@ -1886,7 +1936,7 @@ func (m *MockGfSpClientAPI) SignCreateObjectApproval(ctx context.Context, object
 }
 
 // SignCreateObjectApproval indicates an expected call of SignCreateObjectApproval.
-func (mr *MockGfSpClientAPIMockRecorder) SignCreateObjectApproval(ctx, object any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignCreateObjectApproval(ctx, object interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignCreateObjectApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignCreateObjectApproval), ctx, object)
 }
@@ -1901,7 +1951,7 @@ func (m *MockGfSpClientAPI) SignMigrateBucketApproval(ctx context.Context, bucke
 }
 
 // SignMigrateBucketApproval indicates an expected call of SignMigrateBucketApproval.
-func (mr *MockGfSpClientAPIMockRecorder) SignMigrateBucketApproval(ctx, bucket any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignMigrateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateBucketApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignMigrateBucketApproval), ctx, bucket)
 }
@@ -1916,7 +1966,7 @@ func (m *MockGfSpClientAPI) SignMigrateGVG(ctx context.Context, task *gfsptask.G
 }
 
 // SignMigrateGVG indicates an expected call of SignMigrateGVG.
-func (mr *MockGfSpClientAPIMockRecorder) SignMigrateGVG(ctx, task any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignMigrateGVG(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateGVG", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignMigrateGVG), ctx, task)
 }
@@ -1931,7 +1981,7 @@ func (m *MockGfSpClientAPI) SignP2PPingMsg(ctx context.Context, ping *gfspp2p.Gf
 }
 
 // SignP2PPingMsg indicates an expected call of SignP2PPingMsg.
-func (mr *MockGfSpClientAPIMockRecorder) SignP2PPingMsg(ctx, ping any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignP2PPingMsg(ctx, ping interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignP2PPingMsg", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignP2PPingMsg), ctx, ping)
 }
@@ -1946,7 +1996,7 @@ func (m *MockGfSpClientAPI) SignP2PPongMsg(ctx context.Context, pong *gfspp2p.Gf
 }
 
 // SignP2PPongMsg indicates an expected call of SignP2PPongMsg.
-func (mr *MockGfSpClientAPIMockRecorder) SignP2PPongMsg(ctx, pong any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignP2PPongMsg(ctx, pong interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignP2PPongMsg", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignP2PPongMsg), ctx, pong)
 }
@@ -1961,7 +2011,7 @@ func (m *MockGfSpClientAPI) SignReceiveTask(ctx context.Context, receiveTask tas
 }
 
 // SignReceiveTask indicates an expected call of SignReceiveTask.
-func (mr *MockGfSpClientAPIMockRecorder) SignReceiveTask(ctx, receiveTask any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignReceiveTask(ctx, receiveTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignReceiveTask", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignReceiveTask), ctx, receiveTask)
 }
@@ -1976,7 +2026,7 @@ func (m *MockGfSpClientAPI) SignRecoveryTask(ctx context.Context, recoveryTask t
 }
 
 // SignRecoveryTask indicates an expected call of SignRecoveryTask.
-func (mr *MockGfSpClientAPIMockRecorder) SignRecoveryTask(ctx, recoveryTask any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignRecoveryTask(ctx, recoveryTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignRecoveryTask", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignRecoveryTask), ctx, recoveryTask)
 }
@@ -1991,7 +2041,7 @@ func (m *MockGfSpClientAPI) SignReplicatePieceApproval(ctx context.Context, task
 }
 
 // SignReplicatePieceApproval indicates an expected call of SignReplicatePieceApproval.
-func (mr *MockGfSpClientAPIMockRecorder) SignReplicatePieceApproval(ctx, task any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignReplicatePieceApproval(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignReplicatePieceApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignReplicatePieceApproval), ctx, task)
 }
@@ -2006,7 +2056,7 @@ func (m *MockGfSpClientAPI) SignSecondarySPMigrationBucket(ctx context.Context, 
 }
 
 // SignSecondarySPMigrationBucket indicates an expected call of SignSecondarySPMigrationBucket.
-func (mr *MockGfSpClientAPIMockRecorder) SignSecondarySPMigrationBucket(ctx, signDoc any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignSecondarySPMigrationBucket(ctx, signDoc interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignSecondarySPMigrationBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignSecondarySPMigrationBucket), ctx, signDoc)
 }
@@ -2021,7 +2071,7 @@ func (m *MockGfSpClientAPI) SignSecondarySealBls(ctx context.Context, objectID u
 }
 
 // SignSecondarySealBls indicates an expected call of SignSecondarySealBls.
-func (mr *MockGfSpClientAPIMockRecorder) SignSecondarySealBls(ctx, objectID, gvgId, checksums any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignSecondarySealBls(ctx, objectID, gvgId, checksums interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignSecondarySealBls", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignSecondarySealBls), ctx, objectID, gvgId, checksums)
 }
@@ -2036,7 +2086,7 @@ func (m *MockGfSpClientAPI) SignSwapOut(ctx context.Context, swapOut *types4.Msg
 }
 
 // SignSwapOut indicates an expected call of SignSwapOut.
-func (mr *MockGfSpClientAPIMockRecorder) SignSwapOut(ctx, swapOut any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignSwapOut(ctx, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignSwapOut", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignSwapOut), ctx, swapOut)
 }
@@ -2044,7 +2094,7 @@ func (mr *MockGfSpClientAPIMockRecorder) SignSwapOut(ctx, swapOut any) *gomock.C
 // SignerConn mocks base method.
 func (m *MockGfSpClientAPI) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2055,9 +2105,9 @@ func (m *MockGfSpClientAPI) SignerConn(ctx context.Context, opts ...grpc.DialOpt
 }
 
 // SignerConn indicates an expected call of SignerConn.
-func (mr *MockGfSpClientAPIMockRecorder) SignerConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SignerConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignerConn", reflect.TypeOf((*MockGfSpClientAPI)(nil).SignerConn), varargs...)
 }
 
@@ -2071,7 +2121,7 @@ func (m *MockGfSpClientAPI) SwapOut(ctx context.Context, swapOut *types4.MsgSwap
 }
 
 // SwapOut indicates an expected call of SwapOut.
-func (mr *MockGfSpClientAPIMockRecorder) SwapOut(ctx, swapOut any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) SwapOut(ctx, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapOut", reflect.TypeOf((*MockGfSpClientAPI)(nil).SwapOut), ctx, swapOut)
 }
@@ -2086,7 +2136,7 @@ func (m *MockGfSpClientAPI) UpdateSPPrice(ctx context.Context, price *types2.Msg
 }
 
 // UpdateSPPrice indicates an expected call of UpdateSPPrice.
-func (mr *MockGfSpClientAPIMockRecorder) UpdateSPPrice(ctx, price any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) UpdateSPPrice(ctx, price interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSPPrice", reflect.TypeOf((*MockGfSpClientAPI)(nil).UpdateSPPrice), ctx, price)
 }
@@ -2094,7 +2144,7 @@ func (mr *MockGfSpClientAPIMockRecorder) UpdateSPPrice(ctx, price any) *gomock.C
 // UpdateUserPublicKey mocks base method.
 func (m *MockGfSpClientAPI) UpdateUserPublicKey(ctx context.Context, account, domain string, currentNonce, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}
+	varargs := []interface{}{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2105,16 +2155,16 @@ func (m *MockGfSpClientAPI) UpdateUserPublicKey(ctx context.Context, account, do
 }
 
 // UpdateUserPublicKey indicates an expected call of UpdateUserPublicKey.
-func (mr *MockGfSpClientAPIMockRecorder) UpdateUserPublicKey(ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) UpdateUserPublicKey(ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}, opts...)
+	varargs := append([]interface{}{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockGfSpClientAPI)(nil).UpdateUserPublicKey), varargs...)
 }
 
 // UploadObject mocks base method.
 func (m *MockGfSpClientAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task, stream}
+	varargs := []interface{}{ctx, task, stream}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2124,16 +2174,16 @@ func (m *MockGfSpClientAPI) UploadObject(ctx context.Context, task task.UploadOb
 }
 
 // UploadObject indicates an expected call of UploadObject.
-func (mr *MockGfSpClientAPIMockRecorder) UploadObject(ctx, task, stream any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) UploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task, stream}, opts...)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).UploadObject), varargs...)
 }
 
 // VerifyAuthentication mocks base method.
 func (m *MockGfSpClientAPI) VerifyAuthentication(ctx context.Context, auth module.AuthOpType, account, bucket, object string, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, auth, account, bucket, object}
+	varargs := []interface{}{ctx, auth, account, bucket, object}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2144,16 +2194,16 @@ func (m *MockGfSpClientAPI) VerifyAuthentication(ctx context.Context, auth modul
 }
 
 // VerifyAuthentication indicates an expected call of VerifyAuthentication.
-func (mr *MockGfSpClientAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, auth, account, bucket, object}, opts...)
+	varargs := append([]interface{}{ctx, auth, account, bucket, object}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAuthentication", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyAuthentication), varargs...)
 }
 
 // VerifyGNFD1EddsaSignature mocks base method.
 func (m *MockGfSpClientAPI) VerifyGNFD1EddsaSignature(ctx context.Context, account, domain, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, domain, offChainSig, realMsgToSign}
+	varargs := []interface{}{ctx, account, domain, offChainSig, realMsgToSign}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2164,16 +2214,16 @@ func (m *MockGfSpClientAPI) VerifyGNFD1EddsaSignature(ctx context.Context, accou
 }
 
 // VerifyGNFD1EddsaSignature indicates an expected call of VerifyGNFD1EddsaSignature.
-func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account, domain, offChainSig, realMsgToSign any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account, domain, offChainSig, realMsgToSign interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
+	varargs := append([]interface{}{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
 }
 
 // VerifyMigrateGVGPermission mocks base method.
 func (m *MockGfSpClientAPI) VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, gvgID, dstSpID}
+	varargs := []interface{}{ctx, bucketID, gvgID, dstSpID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2184,16 +2234,16 @@ func (m *MockGfSpClientAPI) VerifyMigrateGVGPermission(ctx context.Context, buck
 }
 
 // VerifyMigrateGVGPermission indicates an expected call of VerifyMigrateGVGPermission.
-func (mr *MockGfSpClientAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, gvgID, dstSpID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, gvgID, dstSpID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyMigrateGVGPermission", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyMigrateGVGPermission), varargs...)
 }
 
 // VerifyPermission mocks base method.
 func (m *MockGfSpClientAPI) VerifyPermission(ctx context.Context, Operator, bucketName, objectName string, actionType types1.ActionType, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, Operator, bucketName, objectName, actionType}
+	varargs := []interface{}{ctx, Operator, bucketName, objectName, actionType}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2204,16 +2254,16 @@ func (m *MockGfSpClientAPI) VerifyPermission(ctx context.Context, Operator, buck
 }
 
 // VerifyPermission indicates an expected call of VerifyPermission.
-func (mr *MockGfSpClientAPIMockRecorder) VerifyPermission(ctx, Operator, bucketName, objectName, actionType any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) VerifyPermission(ctx, Operator, bucketName, objectName, actionType interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, Operator, bucketName, objectName, actionType}, opts...)
+	varargs := append([]interface{}{ctx, Operator, bucketName, objectName, actionType}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyPermission", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyPermission), varargs...)
 }
 
 // VerifyPermissionByID mocks base method.
 func (m *MockGfSpClientAPI) VerifyPermissionByID(ctx context.Context, Operator string, resourceType resource.ResourceType, resourceID uint64, actionType types1.ActionType, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, Operator, resourceType, resourceID, actionType}
+	varargs := []interface{}{ctx, Operator, resourceType, resourceID, actionType}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2224,9 +2274,9 @@ func (m *MockGfSpClientAPI) VerifyPermissionByID(ctx context.Context, Operator s
 }
 
 // VerifyPermissionByID indicates an expected call of VerifyPermissionByID.
-func (mr *MockGfSpClientAPIMockRecorder) VerifyPermissionByID(ctx, Operator, resourceType, resourceID, actionType any, opts ...any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) VerifyPermissionByID(ctx, Operator, resourceType, resourceID, actionType interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, Operator, resourceType, resourceID, actionType}, opts...)
+	varargs := append([]interface{}{ctx, Operator, resourceType, resourceID, actionType}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyPermissionByID", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyPermissionByID), varargs...)
 }
 
@@ -2264,7 +2314,7 @@ func (m *MockApproverAPI) AskCreateBucketApproval(ctx context.Context, t task.Ap
 }
 
 // AskCreateBucketApproval indicates an expected call of AskCreateBucketApproval.
-func (mr *MockApproverAPIMockRecorder) AskCreateBucketApproval(ctx, t any) *gomock.Call {
+func (mr *MockApproverAPIMockRecorder) AskCreateBucketApproval(ctx, t interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateBucketApproval", reflect.TypeOf((*MockApproverAPI)(nil).AskCreateBucketApproval), ctx, t)
 }
@@ -2280,7 +2330,7 @@ func (m *MockApproverAPI) AskCreateObjectApproval(ctx context.Context, t task.Ap
 }
 
 // AskCreateObjectApproval indicates an expected call of AskCreateObjectApproval.
-func (mr *MockApproverAPIMockRecorder) AskCreateObjectApproval(ctx, t any) *gomock.Call {
+func (mr *MockApproverAPIMockRecorder) AskCreateObjectApproval(ctx, t interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateObjectApproval", reflect.TypeOf((*MockApproverAPI)(nil).AskCreateObjectApproval), ctx, t)
 }
@@ -2296,7 +2346,7 @@ func (m *MockApproverAPI) AskMigrateBucketApproval(ctx context.Context, t task.A
 }
 
 // AskMigrateBucketApproval indicates an expected call of AskMigrateBucketApproval.
-func (mr *MockApproverAPIMockRecorder) AskMigrateBucketApproval(ctx, t any) *gomock.Call {
+func (mr *MockApproverAPIMockRecorder) AskMigrateBucketApproval(ctx, t interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskMigrateBucketApproval", reflect.TypeOf((*MockApproverAPI)(nil).AskMigrateBucketApproval), ctx, t)
 }
@@ -2327,7 +2377,7 @@ func (m *MockAuthenticatorAPI) EXPECT() *MockAuthenticatorAPIMockRecorder {
 // GetAuthNonce mocks base method.
 func (m *MockAuthenticatorAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, domain}
+	varargs := []interface{}{ctx, account, domain}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2341,16 +2391,16 @@ func (m *MockAuthenticatorAPI) GetAuthNonce(ctx context.Context, account, domain
 }
 
 // GetAuthNonce indicates an expected call of GetAuthNonce.
-func (mr *MockAuthenticatorAPIMockRecorder) GetAuthNonce(ctx, account, domain any, opts ...any) *gomock.Call {
+func (mr *MockAuthenticatorAPIMockRecorder) GetAuthNonce(ctx, account, domain interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, domain}, opts...)
+	varargs := append([]interface{}{ctx, account, domain}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthNonce", reflect.TypeOf((*MockAuthenticatorAPI)(nil).GetAuthNonce), varargs...)
 }
 
 // UpdateUserPublicKey mocks base method.
 func (m *MockAuthenticatorAPI) UpdateUserPublicKey(ctx context.Context, account, domain string, currentNonce, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}
+	varargs := []interface{}{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2361,16 +2411,16 @@ func (m *MockAuthenticatorAPI) UpdateUserPublicKey(ctx context.Context, account,
 }
 
 // UpdateUserPublicKey indicates an expected call of UpdateUserPublicKey.
-func (mr *MockAuthenticatorAPIMockRecorder) UpdateUserPublicKey(ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate any, opts ...any) *gomock.Call {
+func (mr *MockAuthenticatorAPIMockRecorder) UpdateUserPublicKey(ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}, opts...)
+	varargs := append([]interface{}{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockAuthenticatorAPI)(nil).UpdateUserPublicKey), varargs...)
 }
 
 // VerifyAuthentication mocks base method.
 func (m *MockAuthenticatorAPI) VerifyAuthentication(ctx context.Context, auth module.AuthOpType, account, bucket, object string, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, auth, account, bucket, object}
+	varargs := []interface{}{ctx, auth, account, bucket, object}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2381,16 +2431,16 @@ func (m *MockAuthenticatorAPI) VerifyAuthentication(ctx context.Context, auth mo
 }
 
 // VerifyAuthentication indicates an expected call of VerifyAuthentication.
-func (mr *MockAuthenticatorAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object any, opts ...any) *gomock.Call {
+func (mr *MockAuthenticatorAPIMockRecorder) VerifyAuthentication(ctx, auth, account, bucket, object interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, auth, account, bucket, object}, opts...)
+	varargs := append([]interface{}{ctx, auth, account, bucket, object}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAuthentication", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyAuthentication), varargs...)
 }
 
 // VerifyGNFD1EddsaSignature mocks base method.
 func (m *MockAuthenticatorAPI) VerifyGNFD1EddsaSignature(ctx context.Context, account, domain, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, domain, offChainSig, realMsgToSign}
+	varargs := []interface{}{ctx, account, domain, offChainSig, realMsgToSign}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2401,9 +2451,9 @@ func (m *MockAuthenticatorAPI) VerifyGNFD1EddsaSignature(ctx context.Context, ac
 }
 
 // VerifyGNFD1EddsaSignature indicates an expected call of VerifyGNFD1EddsaSignature.
-func (mr *MockAuthenticatorAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account, domain, offChainSig, realMsgToSign any, opts ...any) *gomock.Call {
+func (mr *MockAuthenticatorAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account, domain, offChainSig, realMsgToSign interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
+	varargs := append([]interface{}{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
 }
 
@@ -2433,7 +2483,7 @@ func (m *MockDownloaderAPI) EXPECT() *MockDownloaderAPIMockRecorder {
 // DeductQuotaForBucketMigrate mocks base method.
 func (m *MockDownloaderAPI) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, deductQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, deductQuota, yearMonth}
+	varargs := []interface{}{ctx, bucketID, deductQuota, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2443,16 +2493,16 @@ func (m *MockDownloaderAPI) DeductQuotaForBucketMigrate(ctx context.Context, buc
 }
 
 // DeductQuotaForBucketMigrate indicates an expected call of DeductQuotaForBucketMigrate.
-func (mr *MockDownloaderAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucketID, deductQuota, yearMonth any, opts ...any) *gomock.Call {
+func (mr *MockDownloaderAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucketID, deductQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, deductQuota, yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, deductQuota, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeductQuotaForBucketMigrate", reflect.TypeOf((*MockDownloaderAPI)(nil).DeductQuotaForBucketMigrate), varargs...)
 }
 
 // GetChallengeInfo mocks base method.
 func (m *MockDownloaderAPI) GetChallengeInfo(ctx context.Context, challengePieceTask task.ChallengePieceTask, opts ...grpc.DialOption) ([]byte, [][]byte, []byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, challengePieceTask}
+	varargs := []interface{}{ctx, challengePieceTask}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2465,16 +2515,16 @@ func (m *MockDownloaderAPI) GetChallengeInfo(ctx context.Context, challengePiece
 }
 
 // GetChallengeInfo indicates an expected call of GetChallengeInfo.
-func (mr *MockDownloaderAPIMockRecorder) GetChallengeInfo(ctx, challengePieceTask any, opts ...any) *gomock.Call {
+func (mr *MockDownloaderAPIMockRecorder) GetChallengeInfo(ctx, challengePieceTask interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, challengePieceTask}, opts...)
+	varargs := append([]interface{}{ctx, challengePieceTask}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChallengeInfo", reflect.TypeOf((*MockDownloaderAPI)(nil).GetChallengeInfo), varargs...)
 }
 
 // GetObject mocks base method.
 func (m *MockDownloaderAPI) GetObject(ctx context.Context, downloadObjectTask task.DownloadObjectTask, opts ...grpc.DialOption) ([]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, downloadObjectTask}
+	varargs := []interface{}{ctx, downloadObjectTask}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2485,16 +2535,16 @@ func (m *MockDownloaderAPI) GetObject(ctx context.Context, downloadObjectTask ta
 }
 
 // GetObject indicates an expected call of GetObject.
-func (mr *MockDownloaderAPIMockRecorder) GetObject(ctx, downloadObjectTask any, opts ...any) *gomock.Call {
+func (mr *MockDownloaderAPIMockRecorder) GetObject(ctx, downloadObjectTask interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, downloadObjectTask}, opts...)
+	varargs := append([]interface{}{ctx, downloadObjectTask}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObject", reflect.TypeOf((*MockDownloaderAPI)(nil).GetObject), varargs...)
 }
 
 // GetPiece mocks base method.
 func (m *MockDownloaderAPI) GetPiece(ctx context.Context, downloadPieceTask task.DownloadPieceTask, opts ...grpc.DialOption) ([]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, downloadPieceTask}
+	varargs := []interface{}{ctx, downloadPieceTask}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2505,16 +2555,16 @@ func (m *MockDownloaderAPI) GetPiece(ctx context.Context, downloadPieceTask task
 }
 
 // GetPiece indicates an expected call of GetPiece.
-func (mr *MockDownloaderAPIMockRecorder) GetPiece(ctx, downloadPieceTask any, opts ...any) *gomock.Call {
+func (mr *MockDownloaderAPIMockRecorder) GetPiece(ctx, downloadPieceTask interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, downloadPieceTask}, opts...)
+	varargs := append([]interface{}{ctx, downloadPieceTask}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPiece", reflect.TypeOf((*MockDownloaderAPI)(nil).GetPiece), varargs...)
 }
 
 // RecoupQuota mocks base method.
 func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuota uint64, yearMonth string, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, extraQuota, yearMonth}
+	varargs := []interface{}{ctx, bucketID, extraQuota, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2524,9 +2574,9 @@ func (m *MockDownloaderAPI) RecoupQuota(ctx context.Context, bucketID, extraQuot
 }
 
 // RecoupQuota indicates an expected call of RecoupQuota.
-func (mr *MockDownloaderAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth any, opts ...any) *gomock.Call {
+func (mr *MockDownloaderAPIMockRecorder) RecoupQuota(ctx, bucketID, extraQuota, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, extraQuota, yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, extraQuota, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecoupQuota", reflect.TypeOf((*MockDownloaderAPI)(nil).RecoupQuota), varargs...)
 }
 
@@ -2563,7 +2613,7 @@ func (m *MockGaterAPI) DoneReplicatePieceToSecondary(ctx context.Context, endpoi
 }
 
 // DoneReplicatePieceToSecondary indicates an expected call of DoneReplicatePieceToSecondary.
-func (mr *MockGaterAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endpoint, receive any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endpoint, receive interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePieceToSecondary", reflect.TypeOf((*MockGaterAPI)(nil).DoneReplicatePieceToSecondary), ctx, endpoint, receive)
 }
@@ -2578,7 +2628,7 @@ func (m *MockGaterAPI) GetPieceFromECChunks(ctx context.Context, endpoint string
 }
 
 // GetPieceFromECChunks indicates an expected call of GetPieceFromECChunks.
-func (mr *MockGaterAPIMockRecorder) GetPieceFromECChunks(ctx, endpoint, task any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) GetPieceFromECChunks(ctx, endpoint, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPieceFromECChunks", reflect.TypeOf((*MockGaterAPI)(nil).GetPieceFromECChunks), ctx, endpoint, task)
 }
@@ -2593,7 +2643,7 @@ func (m *MockGaterAPI) GetSecondarySPMigrationBucketApproval(ctx context.Context
 }
 
 // GetSecondarySPMigrationBucketApproval indicates an expected call of GetSecondarySPMigrationBucketApproval.
-func (mr *MockGaterAPIMockRecorder) GetSecondarySPMigrationBucketApproval(ctx, secondarySPEndpoint, signDoc any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) GetSecondarySPMigrationBucketApproval(ctx, secondarySPEndpoint, signDoc interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecondarySPMigrationBucketApproval", reflect.TypeOf((*MockGaterAPI)(nil).GetSecondarySPMigrationBucketApproval), ctx, secondarySPEndpoint, signDoc)
 }
@@ -2608,7 +2658,7 @@ func (m *MockGaterAPI) GetSwapOutApproval(ctx context.Context, destSPEndpoint st
 }
 
 // GetSwapOutApproval indicates an expected call of GetSwapOutApproval.
-func (mr *MockGaterAPIMockRecorder) GetSwapOutApproval(ctx, destSPEndpoint, swapOutApproval any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) GetSwapOutApproval(ctx, destSPEndpoint, swapOutApproval interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapOutApproval", reflect.TypeOf((*MockGaterAPI)(nil).GetSwapOutApproval), ctx, destSPEndpoint, swapOutApproval)
 }
@@ -2623,7 +2673,7 @@ func (m *MockGaterAPI) MigratePiece(ctx context.Context, gvgTask *gfsptask.GfSpM
 }
 
 // MigratePiece indicates an expected call of MigratePiece.
-func (mr *MockGaterAPIMockRecorder) MigratePiece(ctx, gvgTask, pieceTask any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) MigratePiece(ctx, gvgTask, pieceTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigratePiece", reflect.TypeOf((*MockGaterAPI)(nil).MigratePiece), ctx, gvgTask, pieceTask)
 }
@@ -2637,7 +2687,7 @@ func (m *MockGaterAPI) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpo
 }
 
 // NotifyDestSPMigrateSwapOut indicates an expected call of NotifyDestSPMigrateSwapOut.
-func (mr *MockGaterAPIMockRecorder) NotifyDestSPMigrateSwapOut(ctx, destEndpoint, swapOut any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) NotifyDestSPMigrateSwapOut(ctx, destEndpoint, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyDestSPMigrateSwapOut", reflect.TypeOf((*MockGaterAPI)(nil).NotifyDestSPMigrateSwapOut), ctx, destEndpoint, swapOut)
 }
@@ -2652,7 +2702,7 @@ func (m *MockGaterAPI) PostMigrateBucket(ctx context.Context, srcSPEndpoint stri
 }
 
 // PostMigrateBucket indicates an expected call of PostMigrateBucket.
-func (mr *MockGaterAPIMockRecorder) PostMigrateBucket(ctx, srcSPEndpoint, postMsg any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) PostMigrateBucket(ctx, srcSPEndpoint, postMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostMigrateBucket", reflect.TypeOf((*MockGaterAPI)(nil).PostMigrateBucket), ctx, srcSPEndpoint, postMsg)
 }
@@ -2667,7 +2717,7 @@ func (m *MockGaterAPI) PreMigrateBucket(ctx context.Context, srcSPEndpoint strin
 }
 
 // PreMigrateBucket indicates an expected call of PreMigrateBucket.
-func (mr *MockGaterAPIMockRecorder) PreMigrateBucket(ctx, srcSPEndpoint, preMsg any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) PreMigrateBucket(ctx, srcSPEndpoint, preMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreMigrateBucket", reflect.TypeOf((*MockGaterAPI)(nil).PreMigrateBucket), ctx, srcSPEndpoint, preMsg)
 }
@@ -2682,7 +2732,7 @@ func (m *MockGaterAPI) QueryLatestBucketQuota(ctx context.Context, endpoint stri
 }
 
 // QueryLatestBucketQuota indicates an expected call of QueryLatestBucketQuota.
-func (mr *MockGaterAPIMockRecorder) QueryLatestBucketQuota(ctx, endpoint, queryMsg any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) QueryLatestBucketQuota(ctx, endpoint, queryMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryLatestBucketQuota", reflect.TypeOf((*MockGaterAPI)(nil).QueryLatestBucketQuota), ctx, endpoint, queryMsg)
 }
@@ -2696,7 +2746,7 @@ func (m *MockGaterAPI) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context
 }
 
 // QuerySPHasEnoughQuotaForMigrateBucket indicates an expected call of QuerySPHasEnoughQuotaForMigrateBucket.
-func (mr *MockGaterAPIMockRecorder) QuerySPHasEnoughQuotaForMigrateBucket(ctx, srcSPEndpoint, queryMsg any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) QuerySPHasEnoughQuotaForMigrateBucket(ctx, srcSPEndpoint, queryMsg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPHasEnoughQuotaForMigrateBucket", reflect.TypeOf((*MockGaterAPI)(nil).QuerySPHasEnoughQuotaForMigrateBucket), ctx, srcSPEndpoint, queryMsg)
 }
@@ -2710,7 +2760,7 @@ func (m *MockGaterAPI) ReplicatePieceToSecondary(ctx context.Context, endpoint s
 }
 
 // ReplicatePieceToSecondary indicates an expected call of ReplicatePieceToSecondary.
-func (mr *MockGaterAPIMockRecorder) ReplicatePieceToSecondary(ctx, endpoint, receive, data any) *gomock.Call {
+func (mr *MockGaterAPIMockRecorder) ReplicatePieceToSecondary(ctx, endpoint, receive, data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplicatePieceToSecondary", reflect.TypeOf((*MockGaterAPI)(nil).ReplicatePieceToSecondary), ctx, endpoint, receive, data)
 }
@@ -2748,7 +2798,7 @@ func (m *MockManagerAPI) AskTask(ctx context.Context, limit rcmgr.Limit) (task.T
 }
 
 // AskTask indicates an expected call of AskTask.
-func (mr *MockManagerAPIMockRecorder) AskTask(ctx, limit any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) AskTask(ctx, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskTask", reflect.TypeOf((*MockManagerAPI)(nil).AskTask), ctx, limit)
 }
@@ -2762,7 +2812,7 @@ func (m *MockManagerAPI) CreateResumableUploadObject(ctx context.Context, task t
 }
 
 // CreateResumableUploadObject indicates an expected call of CreateResumableUploadObject.
-func (mr *MockManagerAPIMockRecorder) CreateResumableUploadObject(ctx, task any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) CreateResumableUploadObject(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateResumableUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateResumableUploadObject), ctx, task)
 }
@@ -2776,7 +2826,7 @@ func (m *MockManagerAPI) CreateUploadObject(ctx context.Context, task task.Uploa
 }
 
 // CreateUploadObject indicates an expected call of CreateUploadObject.
-func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
 }
@@ -2791,7 +2841,7 @@ func (m *MockManagerAPI) GetTasksStats(ctx context.Context) (*gfspserver.TasksSt
 }
 
 // GetTasksStats indicates an expected call of GetTasksStats.
-func (mr *MockManagerAPIMockRecorder) GetTasksStats(ctx any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) GetTasksStats(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasksStats", reflect.TypeOf((*MockManagerAPI)(nil).GetTasksStats), ctx)
 }
@@ -2805,23 +2855,23 @@ func (m *MockManagerAPI) NotifyMigrateSwapOut(ctx context.Context, swapOut *type
 }
 
 // NotifyMigrateSwapOut indicates an expected call of NotifyMigrateSwapOut.
-func (mr *MockManagerAPIMockRecorder) NotifyMigrateSwapOut(ctx, swapOut any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) NotifyMigrateSwapOut(ctx, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyMigrateSwapOut", reflect.TypeOf((*MockManagerAPI)(nil).NotifyMigrateSwapOut), ctx, swapOut)
 }
 
 // NotifyPostMigrateBucket mocks base method.
-func (m *MockManagerAPI) NotifyPostMigrateBucket(ctx context.Context, bucketID uint64) error {
+func (m *MockManagerAPI) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bucketID)
+	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bmInfo)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // NotifyPostMigrateBucket indicates an expected call of NotifyPostMigrateBucket.
-func (mr *MockManagerAPIMockRecorder) NotifyPostMigrateBucket(ctx, bucketID any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) NotifyPostMigrateBucket(ctx, bmInfo interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockManagerAPI)(nil).NotifyPostMigrateBucket), ctx, bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockManagerAPI)(nil).NotifyPostMigrateBucket), ctx, bmInfo)
 }
 
 // NotifyPreMigrateBucket mocks base method.
@@ -2833,7 +2883,7 @@ func (m *MockManagerAPI) NotifyPreMigrateBucket(ctx context.Context, bucketID ui
 }
 
 // NotifyPreMigrateBucket indicates an expected call of NotifyPreMigrateBucket.
-func (mr *MockManagerAPIMockRecorder) NotifyPreMigrateBucket(ctx, bucketID any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) NotifyPreMigrateBucket(ctx, bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucket", reflect.TypeOf((*MockManagerAPI)(nil).NotifyPreMigrateBucket), ctx, bucketID)
 }
@@ -2848,7 +2898,7 @@ func (m *MockManagerAPI) PickVirtualGroupFamilyID(ctx context.Context, task task
 }
 
 // PickVirtualGroupFamilyID indicates an expected call of PickVirtualGroupFamilyID.
-func (mr *MockManagerAPIMockRecorder) PickVirtualGroupFamilyID(ctx, task any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) PickVirtualGroupFamilyID(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PickVirtualGroupFamilyID", reflect.TypeOf((*MockManagerAPI)(nil).PickVirtualGroupFamilyID), ctx, task)
 }
@@ -2862,7 +2912,7 @@ func (m *MockManagerAPI) ReportTask(ctx context.Context, report task.Task) error
 }
 
 // ReportTask indicates an expected call of ReportTask.
-func (mr *MockManagerAPIMockRecorder) ReportTask(ctx, report any) *gomock.Call {
+func (mr *MockManagerAPIMockRecorder) ReportTask(ctx, report interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportTask", reflect.TypeOf((*MockManagerAPI)(nil).ReportTask), ctx, report)
 }
@@ -2893,7 +2943,7 @@ func (m *MockMetadataAPI) EXPECT() *MockMetadataAPIMockRecorder {
 // GetBucketByBucketID mocks base method.
 func (m *MockMetadataAPI) GetBucketByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, includePrivate}
+	varargs := []interface{}{ctx, bucketID, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2904,16 +2954,16 @@ func (m *MockMetadataAPI) GetBucketByBucketID(ctx context.Context, bucketID int6
 }
 
 // GetBucketByBucketID indicates an expected call of GetBucketByBucketID.
-func (mr *MockMetadataAPIMockRecorder) GetBucketByBucketID(ctx, bucketID, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetBucketByBucketID(ctx, bucketID, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByBucketID", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketByBucketID), varargs...)
 }
 
 // GetBucketByBucketName mocks base method.
 func (m *MockMetadataAPI) GetBucketByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, includePrivate}
+	varargs := []interface{}{ctx, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2924,16 +2974,16 @@ func (m *MockMetadataAPI) GetBucketByBucketName(ctx context.Context, bucketName 
 }
 
 // GetBucketByBucketName indicates an expected call of GetBucketByBucketName.
-func (mr *MockMetadataAPIMockRecorder) GetBucketByBucketName(ctx, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetBucketByBucketName(ctx, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByBucketName", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketByBucketName), varargs...)
 }
 
 // GetBucketMeta mocks base method.
 func (m *MockMetadataAPI) GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.VGFInfoBucket, *types0.StreamRecord, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, includePrivate}
+	varargs := []interface{}{ctx, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2945,16 +2995,16 @@ func (m *MockMetadataAPI) GetBucketMeta(ctx context.Context, bucketName string, 
 }
 
 // GetBucketMeta indicates an expected call of GetBucketMeta.
-func (mr *MockMetadataAPIMockRecorder) GetBucketMeta(ctx, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetBucketMeta(ctx, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMeta", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketMeta), varargs...)
 }
 
 // GetBucketReadQuota mocks base method.
 func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucket, yearMonth}
+	varargs := []interface{}{ctx, bucket, yearMonth}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2968,16 +3018,16 @@ func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
-func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucket, yearMonth}, opts...)
+	varargs := append([]interface{}{ctx, bucket, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
 // GetBucketSize mocks base method.
 func (m *MockMetadataAPI) GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID}
+	varargs := []interface{}{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -2988,16 +3038,16 @@ func (m *MockMetadataAPI) GetBucketSize(ctx context.Context, bucketID uint64, op
 }
 
 // GetBucketSize indicates an expected call of GetBucketSize.
-func (mr *MockMetadataAPIMockRecorder) GetBucketSize(ctx, bucketID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetBucketSize(ctx, bucketID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSize", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketSize), varargs...)
 }
 
 // GetEndpointBySpID mocks base method.
 func (m *MockMetadataAPI) GetEndpointBySpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3008,16 +3058,16 @@ func (m *MockMetadataAPI) GetEndpointBySpID(ctx context.Context, spID uint32, op
 }
 
 // GetEndpointBySpID indicates an expected call of GetEndpointBySpID.
-func (mr *MockMetadataAPIMockRecorder) GetEndpointBySpID(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetEndpointBySpID(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEndpointBySpID", reflect.TypeOf((*MockMetadataAPI)(nil).GetEndpointBySpID), varargs...)
 }
 
 // GetGlobalVirtualGroup mocks base method.
 func (m *MockMetadataAPI) GetGlobalVirtualGroup(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, lvgID}
+	varargs := []interface{}{ctx, bucketID, lvgID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3028,16 +3078,16 @@ func (m *MockMetadataAPI) GetGlobalVirtualGroup(ctx context.Context, bucketID ui
 }
 
 // GetGlobalVirtualGroup indicates an expected call of GetGlobalVirtualGroup.
-func (mr *MockMetadataAPIMockRecorder) GetGlobalVirtualGroup(ctx, bucketID, lvgID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetGlobalVirtualGroup(ctx, bucketID, lvgID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, lvgID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, lvgID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroup", reflect.TypeOf((*MockMetadataAPI)(nil).GetGlobalVirtualGroup), varargs...)
 }
 
 // GetGlobalVirtualGroupByGvgID mocks base method.
 func (m *MockMetadataAPI) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgID uint32, opts ...grpc.DialOption) (*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID}
+	varargs := []interface{}{ctx, gvgID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3048,16 +3098,16 @@ func (m *MockMetadataAPI) GetGlobalVirtualGroupByGvgID(ctx context.Context, gvgI
 }
 
 // GetGlobalVirtualGroupByGvgID indicates an expected call of GetGlobalVirtualGroupByGvgID.
-func (mr *MockMetadataAPIMockRecorder) GetGlobalVirtualGroupByGvgID(ctx, gvgID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetGlobalVirtualGroupByGvgID(ctx, gvgID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID}, opts...)
+	varargs := append([]interface{}{ctx, gvgID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroupByGvgID", reflect.TypeOf((*MockMetadataAPI)(nil).GetGlobalVirtualGroupByGvgID), varargs...)
 }
 
 // GetGroupList mocks base method.
 func (m *MockMetadataAPI) GetGroupList(ctx context.Context, name, prefix, sourceType string, limit, offset int64, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Group, int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, name, prefix, sourceType, limit, offset, includeRemoved}
+	varargs := []interface{}{ctx, name, prefix, sourceType, limit, offset, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3069,16 +3119,16 @@ func (m *MockMetadataAPI) GetGroupList(ctx context.Context, name, prefix, source
 }
 
 // GetGroupList indicates an expected call of GetGroupList.
-func (mr *MockMetadataAPIMockRecorder) GetGroupList(ctx, name, prefix, sourceType, limit, offset, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetGroupList(ctx, name, prefix, sourceType, limit, offset, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, name, prefix, sourceType, limit, offset, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, name, prefix, sourceType, limit, offset, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupList", reflect.TypeOf((*MockMetadataAPI)(nil).GetGroupList), varargs...)
 }
 
 // GetGroupMembers mocks base method.
 func (m *MockMetadataAPI) GetGroupMembers(ctx context.Context, groupID uint64, startAfter string, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, groupID, startAfter, limit}
+	varargs := []interface{}{ctx, groupID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3089,16 +3139,16 @@ func (m *MockMetadataAPI) GetGroupMembers(ctx context.Context, groupID uint64, s
 }
 
 // GetGroupMembers indicates an expected call of GetGroupMembers.
-func (mr *MockMetadataAPIMockRecorder) GetGroupMembers(ctx, groupID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetGroupMembers(ctx, groupID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, groupID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, groupID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembers", reflect.TypeOf((*MockMetadataAPI)(nil).GetGroupMembers), varargs...)
 }
 
 // GetLatestBucketReadQuota mocks base method.
 func (m *MockMetadataAPI) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID}
+	varargs := []interface{}{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3109,16 +3159,36 @@ func (m *MockMetadataAPI) GetLatestBucketReadQuota(ctx context.Context, bucketID
 }
 
 // GetLatestBucketReadQuota indicates an expected call of GetLatestBucketReadQuota.
-func (mr *MockMetadataAPIMockRecorder) GetLatestBucketReadQuota(ctx, bucketID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetLatestBucketReadQuota(ctx, bucketID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).GetLatestBucketReadQuota), varargs...)
+}
+
+// GetLatestObjectID mocks base method.
+func (m *MockMetadataAPI) GetLatestObjectID(ctx context.Context, opts ...grpc.DialOption) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetLatestObjectID", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestObjectID indicates an expected call of GetLatestObjectID.
+func (mr *MockMetadataAPIMockRecorder) GetLatestObjectID(ctx interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestObjectID", reflect.TypeOf((*MockMetadataAPI)(nil).GetLatestObjectID), varargs...)
 }
 
 // GetObjectByID mocks base method.
 func (m *MockMetadataAPI) GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*types3.ObjectInfo, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectID}
+	varargs := []interface{}{ctx, objectID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3129,16 +3199,16 @@ func (m *MockMetadataAPI) GetObjectByID(ctx context.Context, objectID uint64, op
 }
 
 // GetObjectByID indicates an expected call of GetObjectByID.
-func (mr *MockMetadataAPIMockRecorder) GetObjectByID(ctx, objectID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetObjectByID(ctx, objectID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectID}, opts...)
+	varargs := append([]interface{}{ctx, objectID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByID", reflect.TypeOf((*MockMetadataAPI)(nil).GetObjectByID), varargs...)
 }
 
 // GetObjectMeta mocks base method.
 func (m *MockMetadataAPI) GetObjectMeta(ctx context.Context, objectName, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.Object, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectName, bucketName, includePrivate}
+	varargs := []interface{}{ctx, objectName, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3149,16 +3219,16 @@ func (m *MockMetadataAPI) GetObjectMeta(ctx context.Context, objectName, bucketN
 }
 
 // GetObjectMeta indicates an expected call of GetObjectMeta.
-func (mr *MockMetadataAPIMockRecorder) GetObjectMeta(ctx, objectName, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetObjectMeta(ctx, objectName, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectName, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, objectName, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectMeta", reflect.TypeOf((*MockMetadataAPI)(nil).GetObjectMeta), varargs...)
 }
 
 // GetPaymentByBucketID mocks base method.
 func (m *MockMetadataAPI) GetPaymentByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types0.StreamRecord, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, includePrivate}
+	varargs := []interface{}{ctx, bucketID, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3169,16 +3239,16 @@ func (m *MockMetadataAPI) GetPaymentByBucketID(ctx context.Context, bucketID int
 }
 
 // GetPaymentByBucketID indicates an expected call of GetPaymentByBucketID.
-func (mr *MockMetadataAPIMockRecorder) GetPaymentByBucketID(ctx, bucketID, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetPaymentByBucketID(ctx, bucketID, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockMetadataAPI)(nil).GetPaymentByBucketID), varargs...)
 }
 
 // GetPaymentByBucketName mocks base method.
 func (m *MockMetadataAPI) GetPaymentByBucketName(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types0.StreamRecord, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, includePrivate}
+	varargs := []interface{}{ctx, bucketName, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3189,16 +3259,16 @@ func (m *MockMetadataAPI) GetPaymentByBucketName(ctx context.Context, bucketName
 }
 
 // GetPaymentByBucketName indicates an expected call of GetPaymentByBucketName.
-func (mr *MockMetadataAPIMockRecorder) GetPaymentByBucketName(ctx, bucketName, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetPaymentByBucketName(ctx, bucketName, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockMetadataAPI)(nil).GetPaymentByBucketName), varargs...)
 }
 
 // GetSPInfo mocks base method.
 func (m *MockMetadataAPI) GetSPInfo(ctx context.Context, operatorAddress string, opts ...grpc.DialOption) (*types2.StorageProvider, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, operatorAddress}
+	varargs := []interface{}{ctx, operatorAddress}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3209,16 +3279,16 @@ func (m *MockMetadataAPI) GetSPInfo(ctx context.Context, operatorAddress string,
 }
 
 // GetSPInfo indicates an expected call of GetSPInfo.
-func (mr *MockMetadataAPIMockRecorder) GetSPInfo(ctx, operatorAddress any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetSPInfo(ctx, operatorAddress interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, operatorAddress}, opts...)
+	varargs := append([]interface{}{ctx, operatorAddress}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPInfo", reflect.TypeOf((*MockMetadataAPI)(nil).GetSPInfo), varargs...)
 }
 
 // GetSPMigratingBucketNumber mocks base method.
 func (m *MockMetadataAPI) GetSPMigratingBucketNumber(ctx context.Context, spID uint32, opts ...grpc.DialOption) (uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3229,16 +3299,16 @@ func (m *MockMetadataAPI) GetSPMigratingBucketNumber(ctx context.Context, spID u
 }
 
 // GetSPMigratingBucketNumber indicates an expected call of GetSPMigratingBucketNumber.
-func (mr *MockMetadataAPIMockRecorder) GetSPMigratingBucketNumber(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetSPMigratingBucketNumber(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPMigratingBucketNumber", reflect.TypeOf((*MockMetadataAPI)(nil).GetSPMigratingBucketNumber), varargs...)
 }
 
 // GetStatus mocks base method.
 func (m *MockMetadataAPI) GetStatus(ctx context.Context, opts ...grpc.DialOption) (*types.Status, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3249,16 +3319,16 @@ func (m *MockMetadataAPI) GetStatus(ctx context.Context, opts ...grpc.DialOption
 }
 
 // GetStatus indicates an expected call of GetStatus.
-func (mr *MockMetadataAPIMockRecorder) GetStatus(ctx any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetStatus(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockMetadataAPI)(nil).GetStatus), varargs...)
 }
 
 // GetUploadObjectSegment mocks base method.
 func (m *MockMetadataAPI) GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectID}
+	varargs := []interface{}{ctx, objectID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3269,16 +3339,16 @@ func (m *MockMetadataAPI) GetUploadObjectSegment(ctx context.Context, objectID u
 }
 
 // GetUploadObjectSegment indicates an expected call of GetUploadObjectSegment.
-func (mr *MockMetadataAPIMockRecorder) GetUploadObjectSegment(ctx, objectID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetUploadObjectSegment(ctx, objectID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectID}, opts...)
+	varargs := append([]interface{}{ctx, objectID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadObjectSegment", reflect.TypeOf((*MockMetadataAPI)(nil).GetUploadObjectSegment), varargs...)
 }
 
 // GetUploadObjectState mocks base method.
 func (m *MockMetadataAPI) GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectID}
+	varargs := []interface{}{ctx, objectID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3290,16 +3360,16 @@ func (m *MockMetadataAPI) GetUploadObjectState(ctx context.Context, objectID uin
 }
 
 // GetUploadObjectState indicates an expected call of GetUploadObjectState.
-func (mr *MockMetadataAPIMockRecorder) GetUploadObjectState(ctx, objectID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetUploadObjectState(ctx, objectID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectID}, opts...)
+	varargs := append([]interface{}{ctx, objectID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadObjectState", reflect.TypeOf((*MockMetadataAPI)(nil).GetUploadObjectState), varargs...)
 }
 
 // GetUserBuckets mocks base method.
 func (m *MockMetadataAPI) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, includeRemoved}
+	varargs := []interface{}{ctx, account, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3310,16 +3380,16 @@ func (m *MockMetadataAPI) GetUserBuckets(ctx context.Context, account string, in
 }
 
 // GetUserBuckets indicates an expected call of GetUserBuckets.
-func (mr *MockMetadataAPIMockRecorder) GetUserBuckets(ctx, account, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetUserBuckets(ctx, account, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, account, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockMetadataAPI)(nil).GetUserBuckets), varargs...)
 }
 
 // GetUserBucketsCount mocks base method.
 func (m *MockMetadataAPI) GetUserBucketsCount(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, account, includeRemoved}
+	varargs := []interface{}{ctx, account, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3330,16 +3400,16 @@ func (m *MockMetadataAPI) GetUserBucketsCount(ctx context.Context, account strin
 }
 
 // GetUserBucketsCount indicates an expected call of GetUserBucketsCount.
-func (mr *MockMetadataAPIMockRecorder) GetUserBucketsCount(ctx, account, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetUserBucketsCount(ctx, account, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, account, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, account, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockMetadataAPI)(nil).GetUserBucketsCount), varargs...)
 }
 
 // GetUserGroups mocks base method.
 func (m *MockMetadataAPI) GetUserGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, accountID, startAfter, limit}
+	varargs := []interface{}{ctx, accountID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3350,16 +3420,16 @@ func (m *MockMetadataAPI) GetUserGroups(ctx context.Context, accountID string, s
 }
 
 // GetUserGroups indicates an expected call of GetUserGroups.
-func (mr *MockMetadataAPIMockRecorder) GetUserGroups(ctx, accountID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetUserGroups(ctx, accountID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, accountID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, accountID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockMetadataAPI)(nil).GetUserGroups), varargs...)
 }
 
 // GetUserOwnedGroups mocks base method.
 func (m *MockMetadataAPI) GetUserOwnedGroups(ctx context.Context, accountID string, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.GroupMember, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, accountID, startAfter, limit}
+	varargs := []interface{}{ctx, accountID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3370,16 +3440,16 @@ func (m *MockMetadataAPI) GetUserOwnedGroups(ctx context.Context, accountID stri
 }
 
 // GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
-func (mr *MockMetadataAPIMockRecorder) GetUserOwnedGroups(ctx, accountID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetUserOwnedGroups(ctx, accountID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, accountID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, accountID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockMetadataAPI)(nil).GetUserOwnedGroups), varargs...)
 }
 
 // GetVirtualGroupFamily mocks base method.
 func (m *MockMetadataAPI) GetVirtualGroupFamily(ctx context.Context, vgfID uint32, opts ...grpc.DialOption) (*types4.GlobalVirtualGroupFamily, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, vgfID}
+	varargs := []interface{}{ctx, vgfID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3390,16 +3460,16 @@ func (m *MockMetadataAPI) GetVirtualGroupFamily(ctx context.Context, vgfID uint3
 }
 
 // GetVirtualGroupFamily indicates an expected call of GetVirtualGroupFamily.
-func (mr *MockMetadataAPIMockRecorder) GetVirtualGroupFamily(ctx, vgfID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) GetVirtualGroupFamily(ctx, vgfID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, vgfID}, opts...)
+	varargs := append([]interface{}{ctx, vgfID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualGroupFamily", reflect.TypeOf((*MockMetadataAPI)(nil).GetVirtualGroupFamily), varargs...)
 }
 
 // ListBucketReadRecord mocks base method.
 func (m *MockMetadataAPI) ListBucketReadRecord(ctx context.Context, bucket *types3.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}
+	varargs := []interface{}{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3411,16 +3481,16 @@ func (m *MockMetadataAPI) ListBucketReadRecord(ctx context.Context, bucket *type
 }
 
 // ListBucketReadRecord indicates an expected call of ListBucketReadRecord.
-func (mr *MockMetadataAPIMockRecorder) ListBucketReadRecord(ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListBucketReadRecord(ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}, opts...)
+	varargs := append([]interface{}{ctx, bucket, startTimestampUs, endTimestampUs, maxRecordNum}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketReadRecord", reflect.TypeOf((*MockMetadataAPI)(nil).ListBucketReadRecord), varargs...)
 }
 
 // ListBucketsByIDs mocks base method.
 func (m *MockMetadataAPI) ListBucketsByIDs(ctx context.Context, bucketIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketIDs, includeRemoved}
+	varargs := []interface{}{ctx, bucketIDs, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3431,16 +3501,16 @@ func (m *MockMetadataAPI) ListBucketsByIDs(ctx context.Context, bucketIDs []uint
 }
 
 // ListBucketsByIDs indicates an expected call of ListBucketsByIDs.
-func (mr *MockMetadataAPIMockRecorder) ListBucketsByIDs(ctx, bucketIDs, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListBucketsByIDs(ctx, bucketIDs, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketIDs, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, bucketIDs, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByIDs", reflect.TypeOf((*MockMetadataAPI)(nil).ListBucketsByIDs), varargs...)
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.
 func (m *MockMetadataAPI) ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}
+	varargs := []interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3452,16 +3522,16 @@ func (m *MockMetadataAPI) ListDeletedObjectsByBlockNumberRange(ctx context.Conte
 }
 
 // ListDeletedObjectsByBlockNumberRange indicates an expected call of ListDeletedObjectsByBlockNumberRange.
-func (mr *MockMetadataAPIMockRecorder) ListDeletedObjectsByBlockNumberRange(ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListDeletedObjectsByBlockNumberRange(ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}, opts...)
+	varargs := append([]interface{}{ctx, spOperatorAddress, startBlockNumber, endBlockNumber, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockMetadataAPI)(nil).ListDeletedObjectsByBlockNumberRange), varargs...)
 }
 
 // ListExpiredBucketsBySp mocks base method.
 func (m *MockMetadataAPI) ListExpiredBucketsBySp(ctx context.Context, createAt int64, primarySpID uint32, limit int64, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, createAt, primarySpID, limit}
+	varargs := []interface{}{ctx, createAt, primarySpID, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3472,16 +3542,16 @@ func (m *MockMetadataAPI) ListExpiredBucketsBySp(ctx context.Context, createAt i
 }
 
 // ListExpiredBucketsBySp indicates an expected call of ListExpiredBucketsBySp.
-func (mr *MockMetadataAPIMockRecorder) ListExpiredBucketsBySp(ctx, createAt, primarySpID, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListExpiredBucketsBySp(ctx, createAt, primarySpID, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, createAt, primarySpID, limit}, opts...)
+	varargs := append([]interface{}{ctx, createAt, primarySpID, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockMetadataAPI)(nil).ListExpiredBucketsBySp), varargs...)
 }
 
 // ListGlobalVirtualGroupsByBucket mocks base method.
 func (m *MockMetadataAPI) ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID}
+	varargs := []interface{}{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3492,16 +3562,16 @@ func (m *MockMetadataAPI) ListGlobalVirtualGroupsByBucket(ctx context.Context, b
 }
 
 // ListGlobalVirtualGroupsByBucket indicates an expected call of ListGlobalVirtualGroupsByBucket.
-func (mr *MockMetadataAPIMockRecorder) ListGlobalVirtualGroupsByBucket(ctx, bucketID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListGlobalVirtualGroupsByBucket(ctx, bucketID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGlobalVirtualGroupsByBucket", reflect.TypeOf((*MockMetadataAPI)(nil).ListGlobalVirtualGroupsByBucket), varargs...)
 }
 
 // ListGlobalVirtualGroupsBySecondarySP mocks base method.
 func (m *MockMetadataAPI) ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*types4.GlobalVirtualGroup, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3512,16 +3582,16 @@ func (m *MockMetadataAPI) ListGlobalVirtualGroupsBySecondarySP(ctx context.Conte
 }
 
 // ListGlobalVirtualGroupsBySecondarySP indicates an expected call of ListGlobalVirtualGroupsBySecondarySP.
-func (mr *MockMetadataAPIMockRecorder) ListGlobalVirtualGroupsBySecondarySP(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListGlobalVirtualGroupsBySecondarySP(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGlobalVirtualGroupsBySecondarySP", reflect.TypeOf((*MockMetadataAPI)(nil).ListGlobalVirtualGroupsBySecondarySP), varargs...)
 }
 
 // ListGroupsByIDs mocks base method.
 func (m *MockMetadataAPI) ListGroupsByIDs(ctx context.Context, groupIDs []uint64, opts ...grpc.DialOption) (map[uint64]*types.Group, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, groupIDs}
+	varargs := []interface{}{ctx, groupIDs}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3532,16 +3602,16 @@ func (m *MockMetadataAPI) ListGroupsByIDs(ctx context.Context, groupIDs []uint64
 }
 
 // ListGroupsByIDs indicates an expected call of ListGroupsByIDs.
-func (mr *MockMetadataAPIMockRecorder) ListGroupsByIDs(ctx, groupIDs any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListGroupsByIDs(ctx, groupIDs interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, groupIDs}, opts...)
+	varargs := append([]interface{}{ctx, groupIDs}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByIDs", reflect.TypeOf((*MockMetadataAPI)(nil).ListGroupsByIDs), varargs...)
 }
 
 // ListMigrateBucketEvents mocks base method.
 func (m *MockMetadataAPI) ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListMigrateBucketEvents, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, blockID, spID}
+	varargs := []interface{}{ctx, blockID, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3552,16 +3622,16 @@ func (m *MockMetadataAPI) ListMigrateBucketEvents(ctx context.Context, blockID u
 }
 
 // ListMigrateBucketEvents indicates an expected call of ListMigrateBucketEvents.
-func (mr *MockMetadataAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListMigrateBucketEvents(ctx, blockID, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, blockID, spID}, opts...)
+	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockMetadataAPI)(nil).ListMigrateBucketEvents), varargs...)
 }
 
 // ListObjectPolicies mocks base method.
 func (m *MockMetadataAPI) ListObjectPolicies(ctx context.Context, objectName, bucketName string, startAfter uint64, actionType int32, limit uint32, opts ...grpc.DialOption) ([]*types.Policy, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectName, bucketName, startAfter, actionType, limit}
+	varargs := []interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3572,16 +3642,16 @@ func (m *MockMetadataAPI) ListObjectPolicies(ctx context.Context, objectName, bu
 }
 
 // ListObjectPolicies indicates an expected call of ListObjectPolicies.
-func (mr *MockMetadataAPIMockRecorder) ListObjectPolicies(ctx, objectName, bucketName, startAfter, actionType, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListObjectPolicies(ctx, objectName, bucketName, startAfter, actionType, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
+	varargs := append([]interface{}{ctx, objectName, bucketName, startAfter, actionType, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectPolicies), varargs...)
 }
 
 // ListObjectsByBucketName mocks base method.
 func (m *MockMetadataAPI) ListObjectsByBucketName(ctx context.Context, bucketName, accountID string, maxKeys uint64, startAfter, continuationToken, delimiter, prefix string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.Object, uint64, uint64, bool, string, string, string, string, []string, string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}
+	varargs := []interface{}{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3601,16 +3671,16 @@ func (m *MockMetadataAPI) ListObjectsByBucketName(ctx context.Context, bucketNam
 }
 
 // ListObjectsByBucketName indicates an expected call of ListObjectsByBucketName.
-func (mr *MockMetadataAPIMockRecorder) ListObjectsByBucketName(ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListObjectsByBucketName(ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, bucketName, accountID, maxKeys, startAfter, continuationToken, delimiter, prefix, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectsByBucketName), varargs...)
 }
 
 // ListObjectsByGVGAndBucketForGC mocks base method.
 func (m *MockMetadataAPI) ListObjectsByGVGAndBucketForGC(ctx context.Context, gvgID uint32, bucketID, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID, bucketID, startAfter, limit}
+	varargs := []interface{}{ctx, gvgID, bucketID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3621,16 +3691,16 @@ func (m *MockMetadataAPI) ListObjectsByGVGAndBucketForGC(ctx context.Context, gv
 }
 
 // ListObjectsByGVGAndBucketForGC indicates an expected call of ListObjectsByGVGAndBucketForGC.
-func (mr *MockMetadataAPIMockRecorder) ListObjectsByGVGAndBucketForGC(ctx, gvgID, bucketID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListObjectsByGVGAndBucketForGC(ctx, gvgID, bucketID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID, bucketID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, gvgID, bucketID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByGVGAndBucketForGC", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectsByGVGAndBucketForGC), varargs...)
 }
 
 // ListObjectsByIDs mocks base method.
 func (m *MockMetadataAPI) ListObjectsByIDs(ctx context.Context, objectIDs []uint64, includeRemoved bool, opts ...grpc.DialOption) (map[uint64]*types.Object, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, objectIDs, includeRemoved}
+	varargs := []interface{}{ctx, objectIDs, includeRemoved}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3641,16 +3711,16 @@ func (m *MockMetadataAPI) ListObjectsByIDs(ctx context.Context, objectIDs []uint
 }
 
 // ListObjectsByIDs indicates an expected call of ListObjectsByIDs.
-func (mr *MockMetadataAPIMockRecorder) ListObjectsByIDs(ctx, objectIDs, includeRemoved any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListObjectsByIDs(ctx, objectIDs, includeRemoved interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, objectIDs, includeRemoved}, opts...)
+	varargs := append([]interface{}{ctx, objectIDs, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByIDs", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectsByIDs), varargs...)
 }
 
 // ListObjectsInGVG mocks base method.
 func (m *MockMetadataAPI) ListObjectsInGVG(ctx context.Context, gvgID uint32, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID, startAfter, limit}
+	varargs := []interface{}{ctx, gvgID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3661,16 +3731,16 @@ func (m *MockMetadataAPI) ListObjectsInGVG(ctx context.Context, gvgID uint32, st
 }
 
 // ListObjectsInGVG indicates an expected call of ListObjectsInGVG.
-func (mr *MockMetadataAPIMockRecorder) ListObjectsInGVG(ctx, gvgID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListObjectsInGVG(ctx, gvgID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, gvgID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVG", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectsInGVG), varargs...)
 }
 
 // ListObjectsInGVGAndBucket mocks base method.
 func (m *MockMetadataAPI) ListObjectsInGVGAndBucket(ctx context.Context, gvgID uint32, bucketID, startAfter uint64, limit uint32, opts ...grpc.DialOption) ([]*types.ObjectDetails, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, gvgID, bucketID, startAfter, limit}
+	varargs := []interface{}{ctx, gvgID, bucketID, startAfter, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3681,16 +3751,16 @@ func (m *MockMetadataAPI) ListObjectsInGVGAndBucket(ctx context.Context, gvgID u
 }
 
 // ListObjectsInGVGAndBucket indicates an expected call of ListObjectsInGVGAndBucket.
-func (mr *MockMetadataAPIMockRecorder) ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, startAfter, limit any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListObjectsInGVGAndBucket(ctx, gvgID, bucketID, startAfter, limit interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, gvgID, bucketID, startAfter, limit}, opts...)
+	varargs := append([]interface{}{ctx, gvgID, bucketID, startAfter, limit}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVGAndBucket", reflect.TypeOf((*MockMetadataAPI)(nil).ListObjectsInGVGAndBucket), varargs...)
 }
 
 // ListPaymentAccountStreams mocks base method.
 func (m *MockMetadataAPI) ListPaymentAccountStreams(ctx context.Context, paymentAccount string, opts ...grpc.DialOption) ([]*types.Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, paymentAccount}
+	varargs := []interface{}{ctx, paymentAccount}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3701,16 +3771,16 @@ func (m *MockMetadataAPI) ListPaymentAccountStreams(ctx context.Context, payment
 }
 
 // ListPaymentAccountStreams indicates an expected call of ListPaymentAccountStreams.
-func (mr *MockMetadataAPIMockRecorder) ListPaymentAccountStreams(ctx, paymentAccount any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListPaymentAccountStreams(ctx, paymentAccount interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, paymentAccount}, opts...)
+	varargs := append([]interface{}{ctx, paymentAccount}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAccountStreams", reflect.TypeOf((*MockMetadataAPI)(nil).ListPaymentAccountStreams), varargs...)
 }
 
 // ListSpExitEvents mocks base method.
 func (m *MockMetadataAPI) ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, blockID, spID}
+	varargs := []interface{}{ctx, blockID, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3721,16 +3791,16 @@ func (m *MockMetadataAPI) ListSpExitEvents(ctx context.Context, blockID uint64, 
 }
 
 // ListSpExitEvents indicates an expected call of ListSpExitEvents.
-func (mr *MockMetadataAPIMockRecorder) ListSpExitEvents(ctx, blockID, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListSpExitEvents(ctx, blockID, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, blockID, spID}, opts...)
+	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockMetadataAPI)(nil).ListSpExitEvents), varargs...)
 }
 
 // ListSwapOutEvents mocks base method.
 func (m *MockMetadataAPI) ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListSwapOutEvents, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, blockID, spID}
+	varargs := []interface{}{ctx, blockID, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3741,16 +3811,16 @@ func (m *MockMetadataAPI) ListSwapOutEvents(ctx context.Context, blockID uint64,
 }
 
 // ListSwapOutEvents indicates an expected call of ListSwapOutEvents.
-func (mr *MockMetadataAPIMockRecorder) ListSwapOutEvents(ctx, blockID, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListSwapOutEvents(ctx, blockID, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, blockID, spID}, opts...)
+	varargs := append([]interface{}{ctx, blockID, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSwapOutEvents", reflect.TypeOf((*MockMetadataAPI)(nil).ListSwapOutEvents), varargs...)
 }
 
 // ListUserPaymentAccounts mocks base method.
 func (m *MockMetadataAPI) ListUserPaymentAccounts(ctx context.Context, accountID string, opts ...grpc.DialOption) ([]*types.PaymentAccountMeta, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, accountID}
+	varargs := []interface{}{ctx, accountID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3761,16 +3831,16 @@ func (m *MockMetadataAPI) ListUserPaymentAccounts(ctx context.Context, accountID
 }
 
 // ListUserPaymentAccounts indicates an expected call of ListUserPaymentAccounts.
-func (mr *MockMetadataAPIMockRecorder) ListUserPaymentAccounts(ctx, accountID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListUserPaymentAccounts(ctx, accountID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, accountID}, opts...)
+	varargs := append([]interface{}{ctx, accountID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserPaymentAccounts", reflect.TypeOf((*MockMetadataAPI)(nil).ListUserPaymentAccounts), varargs...)
 }
 
 // ListVirtualGroupFamiliesSpID mocks base method.
 func (m *MockMetadataAPI) ListVirtualGroupFamiliesSpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*types4.GlobalVirtualGroupFamily, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3781,16 +3851,16 @@ func (m *MockMetadataAPI) ListVirtualGroupFamiliesSpID(ctx context.Context, spID
 }
 
 // ListVirtualGroupFamiliesSpID indicates an expected call of ListVirtualGroupFamiliesSpID.
-func (mr *MockMetadataAPIMockRecorder) ListVirtualGroupFamiliesSpID(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) ListVirtualGroupFamiliesSpID(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesSpID", reflect.TypeOf((*MockMetadataAPI)(nil).ListVirtualGroupFamiliesSpID), varargs...)
 }
 
 // PrimarySpIncomeDetails mocks base method.
 func (m *MockMetadataAPI) PrimarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.PrimarySpIncomeDetail, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3802,16 +3872,16 @@ func (m *MockMetadataAPI) PrimarySpIncomeDetails(ctx context.Context, spID uint3
 }
 
 // PrimarySpIncomeDetails indicates an expected call of PrimarySpIncomeDetails.
-func (mr *MockMetadataAPIMockRecorder) PrimarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) PrimarySpIncomeDetails(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrimarySpIncomeDetails", reflect.TypeOf((*MockMetadataAPI)(nil).PrimarySpIncomeDetails), varargs...)
 }
 
 // SecondarySpIncomeDetails mocks base method.
 func (m *MockMetadataAPI) SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, spID}
+	varargs := []interface{}{ctx, spID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3823,16 +3893,16 @@ func (m *MockMetadataAPI) SecondarySpIncomeDetails(ctx context.Context, spID uin
 }
 
 // SecondarySpIncomeDetails indicates an expected call of SecondarySpIncomeDetails.
-func (mr *MockMetadataAPIMockRecorder) SecondarySpIncomeDetails(ctx, spID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) SecondarySpIncomeDetails(ctx, spID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, spID}, opts...)
+	varargs := append([]interface{}{ctx, spID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecondarySpIncomeDetails", reflect.TypeOf((*MockMetadataAPI)(nil).SecondarySpIncomeDetails), varargs...)
 }
 
 // VerifyMigrateGVGPermission mocks base method.
 func (m *MockMetadataAPI) VerifyMigrateGVGPermission(ctx context.Context, bucketID uint64, gvgID, dstSpID uint32, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketID, gvgID, dstSpID}
+	varargs := []interface{}{ctx, bucketID, gvgID, dstSpID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3843,16 +3913,16 @@ func (m *MockMetadataAPI) VerifyMigrateGVGPermission(ctx context.Context, bucket
 }
 
 // VerifyMigrateGVGPermission indicates an expected call of VerifyMigrateGVGPermission.
-func (mr *MockMetadataAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) VerifyMigrateGVGPermission(ctx, bucketID, gvgID, dstSpID interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketID, gvgID, dstSpID}, opts...)
+	varargs := append([]interface{}{ctx, bucketID, gvgID, dstSpID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyMigrateGVGPermission", reflect.TypeOf((*MockMetadataAPI)(nil).VerifyMigrateGVGPermission), varargs...)
 }
 
 // VerifyPermission mocks base method.
 func (m *MockMetadataAPI) VerifyPermission(ctx context.Context, Operator, bucketName, objectName string, actionType types1.ActionType, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, Operator, bucketName, objectName, actionType}
+	varargs := []interface{}{ctx, Operator, bucketName, objectName, actionType}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3863,16 +3933,16 @@ func (m *MockMetadataAPI) VerifyPermission(ctx context.Context, Operator, bucket
 }
 
 // VerifyPermission indicates an expected call of VerifyPermission.
-func (mr *MockMetadataAPIMockRecorder) VerifyPermission(ctx, Operator, bucketName, objectName, actionType any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) VerifyPermission(ctx, Operator, bucketName, objectName, actionType interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, Operator, bucketName, objectName, actionType}, opts...)
+	varargs := append([]interface{}{ctx, Operator, bucketName, objectName, actionType}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyPermission", reflect.TypeOf((*MockMetadataAPI)(nil).VerifyPermission), varargs...)
 }
 
 // VerifyPermissionByID mocks base method.
 func (m *MockMetadataAPI) VerifyPermissionByID(ctx context.Context, Operator string, resourceType resource.ResourceType, resourceID uint64, actionType types1.ActionType, opts ...grpc.DialOption) (*types1.Effect, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, Operator, resourceType, resourceID, actionType}
+	varargs := []interface{}{ctx, Operator, resourceType, resourceID, actionType}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3883,9 +3953,9 @@ func (m *MockMetadataAPI) VerifyPermissionByID(ctx context.Context, Operator str
 }
 
 // VerifyPermissionByID indicates an expected call of VerifyPermissionByID.
-func (mr *MockMetadataAPIMockRecorder) VerifyPermissionByID(ctx, Operator, resourceType, resourceID, actionType any, opts ...any) *gomock.Call {
+func (mr *MockMetadataAPIMockRecorder) VerifyPermissionByID(ctx, Operator, resourceType, resourceID, actionType interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, Operator, resourceType, resourceID, actionType}, opts...)
+	varargs := append([]interface{}{ctx, Operator, resourceType, resourceID, actionType}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyPermissionByID", reflect.TypeOf((*MockMetadataAPI)(nil).VerifyPermissionByID), varargs...)
 }
 
@@ -3922,7 +3992,7 @@ func (m *MockP2PAPI) AskSecondaryReplicatePieceApproval(ctx context.Context, tas
 }
 
 // AskSecondaryReplicatePieceApproval indicates an expected call of AskSecondaryReplicatePieceApproval.
-func (mr *MockP2PAPIMockRecorder) AskSecondaryReplicatePieceApproval(ctx, task, low, high, timeout any) *gomock.Call {
+func (mr *MockP2PAPIMockRecorder) AskSecondaryReplicatePieceApproval(ctx, task, low, high, timeout interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskSecondaryReplicatePieceApproval", reflect.TypeOf((*MockP2PAPI)(nil).AskSecondaryReplicatePieceApproval), ctx, task, low, high, timeout)
 }
@@ -3937,7 +4007,7 @@ func (m *MockP2PAPI) QueryP2PBootstrap(ctx context.Context) ([]string, error) {
 }
 
 // QueryP2PBootstrap indicates an expected call of QueryP2PBootstrap.
-func (mr *MockP2PAPIMockRecorder) QueryP2PBootstrap(ctx any) *gomock.Call {
+func (mr *MockP2PAPIMockRecorder) QueryP2PBootstrap(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryP2PBootstrap", reflect.TypeOf((*MockP2PAPI)(nil).QueryP2PBootstrap), ctx)
 }
@@ -3968,7 +4038,7 @@ func (m *MockQueryAPI) EXPECT() *MockQueryAPIMockRecorder {
 // QueryBucketMigrate mocks base method.
 func (m *MockQueryAPI) QueryBucketMigrate(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, endpoint}
+	varargs := []interface{}{ctx, endpoint}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3979,16 +4049,16 @@ func (m *MockQueryAPI) QueryBucketMigrate(ctx context.Context, endpoint string, 
 }
 
 // QueryBucketMigrate indicates an expected call of QueryBucketMigrate.
-func (mr *MockQueryAPIMockRecorder) QueryBucketMigrate(ctx, endpoint any, opts ...any) *gomock.Call {
+func (mr *MockQueryAPIMockRecorder) QueryBucketMigrate(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, endpoint}, opts...)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockQueryAPI)(nil).QueryBucketMigrate), varargs...)
 }
 
 // QuerySPExit mocks base method.
 func (m *MockQueryAPI) QuerySPExit(ctx context.Context, endpoint string, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, endpoint}
+	varargs := []interface{}{ctx, endpoint}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -3999,16 +4069,16 @@ func (m *MockQueryAPI) QuerySPExit(ctx context.Context, endpoint string, opts ..
 }
 
 // QuerySPExit indicates an expected call of QuerySPExit.
-func (mr *MockQueryAPIMockRecorder) QuerySPExit(ctx, endpoint any, opts ...any) *gomock.Call {
+func (mr *MockQueryAPIMockRecorder) QuerySPExit(ctx, endpoint interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, endpoint}, opts...)
+	varargs := append([]interface{}{ctx, endpoint}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPExit", reflect.TypeOf((*MockQueryAPI)(nil).QuerySPExit), varargs...)
 }
 
 // QueryTasks mocks base method.
 func (m *MockQueryAPI) QueryTasks(ctx context.Context, endpoint, subKey string, opts ...grpc.DialOption) ([]string, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, endpoint, subKey}
+	varargs := []interface{}{ctx, endpoint, subKey}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4019,9 +4089,9 @@ func (m *MockQueryAPI) QueryTasks(ctx context.Context, endpoint, subKey string, 
 }
 
 // QueryTasks indicates an expected call of QueryTasks.
-func (mr *MockQueryAPIMockRecorder) QueryTasks(ctx, endpoint, subKey any, opts ...any) *gomock.Call {
+func (mr *MockQueryAPIMockRecorder) QueryTasks(ctx, endpoint, subKey interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, endpoint, subKey}, opts...)
+	varargs := append([]interface{}{ctx, endpoint, subKey}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryTasks", reflect.TypeOf((*MockQueryAPI)(nil).QueryTasks), varargs...)
 }
 
@@ -4051,7 +4121,7 @@ func (m *MockReceiverAPI) EXPECT() *MockReceiverAPIMockRecorder {
 // DoneReplicatePiece mocks base method.
 func (m *MockReceiverAPI) DoneReplicatePiece(ctx context.Context, task task.ReceivePieceTask, opts ...grpc.DialOption) ([]byte, []byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task}
+	varargs := []interface{}{ctx, task}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4063,16 +4133,16 @@ func (m *MockReceiverAPI) DoneReplicatePiece(ctx context.Context, task task.Rece
 }
 
 // DoneReplicatePiece indicates an expected call of DoneReplicatePiece.
-func (mr *MockReceiverAPIMockRecorder) DoneReplicatePiece(ctx, task any, opts ...any) *gomock.Call {
+func (mr *MockReceiverAPIMockRecorder) DoneReplicatePiece(ctx, task interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task}, opts...)
+	varargs := append([]interface{}{ctx, task}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePiece", reflect.TypeOf((*MockReceiverAPI)(nil).DoneReplicatePiece), varargs...)
 }
 
 // ReplicatePiece mocks base method.
 func (m *MockReceiverAPI) ReplicatePiece(ctx context.Context, task task.ReceivePieceTask, data []byte, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task, data}
+	varargs := []interface{}{ctx, task, data}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4082,9 +4152,9 @@ func (m *MockReceiverAPI) ReplicatePiece(ctx context.Context, task task.ReceiveP
 }
 
 // ReplicatePiece indicates an expected call of ReplicatePiece.
-func (mr *MockReceiverAPIMockRecorder) ReplicatePiece(ctx, task, data any, opts ...any) *gomock.Call {
+func (mr *MockReceiverAPIMockRecorder) ReplicatePiece(ctx, task, data interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task, data}, opts...)
+	varargs := append([]interface{}{ctx, task, data}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplicatePiece", reflect.TypeOf((*MockReceiverAPI)(nil).ReplicatePiece), varargs...)
 }
 
@@ -4121,7 +4191,7 @@ func (m *MockSignerAPI) CompleteMigrateBucket(ctx context.Context, migrateBucket
 }
 
 // CompleteMigrateBucket indicates an expected call of CompleteMigrateBucket.
-func (mr *MockSignerAPIMockRecorder) CompleteMigrateBucket(ctx, migrateBucket any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) CompleteMigrateBucket(ctx, migrateBucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteMigrateBucket", reflect.TypeOf((*MockSignerAPI)(nil).CompleteMigrateBucket), ctx, migrateBucket)
 }
@@ -4136,7 +4206,7 @@ func (m *MockSignerAPI) CompleteSPExit(ctx context.Context, completeSPExit *type
 }
 
 // CompleteSPExit indicates an expected call of CompleteSPExit.
-func (mr *MockSignerAPIMockRecorder) CompleteSPExit(ctx, completeSPExit any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) CompleteSPExit(ctx, completeSPExit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSPExit", reflect.TypeOf((*MockSignerAPI)(nil).CompleteSPExit), ctx, completeSPExit)
 }
@@ -4151,7 +4221,7 @@ func (m *MockSignerAPI) CompleteSwapOut(ctx context.Context, completeSwapOut *ty
 }
 
 // CompleteSwapOut indicates an expected call of CompleteSwapOut.
-func (mr *MockSignerAPIMockRecorder) CompleteSwapOut(ctx, completeSwapOut any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) CompleteSwapOut(ctx, completeSwapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSwapOut", reflect.TypeOf((*MockSignerAPI)(nil).CompleteSwapOut), ctx, completeSwapOut)
 }
@@ -4165,9 +4235,39 @@ func (m *MockSignerAPI) CreateGlobalVirtualGroup(ctx context.Context, group *gfs
 }
 
 // CreateGlobalVirtualGroup indicates an expected call of CreateGlobalVirtualGroup.
-func (mr *MockSignerAPIMockRecorder) CreateGlobalVirtualGroup(ctx, group any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) CreateGlobalVirtualGroup(ctx, group interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSignerAPI)(nil).CreateGlobalVirtualGroup), ctx, group)
+}
+
+// DeleteGlobalVirtualGroup mocks base method.
+func (m *MockSignerAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGlobalVirtualGroup", ctx, deleteGVG)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteGlobalVirtualGroup indicates an expected call of DeleteGlobalVirtualGroup.
+func (mr *MockSignerAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGlobalVirtualGroup", reflect.TypeOf((*MockSignerAPI)(nil).DeleteGlobalVirtualGroup), ctx, deleteGVG)
+}
+
+// Deposit mocks base method.
+func (m *MockSignerAPI) Deposit(ctx context.Context, deposit *types4.MsgDeposit) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deposit", ctx, deposit)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deposit indicates an expected call of Deposit.
+func (mr *MockSignerAPIMockRecorder) Deposit(ctx, deposit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deposit", reflect.TypeOf((*MockSignerAPI)(nil).Deposit), ctx, deposit)
 }
 
 // DiscontinueBucket mocks base method.
@@ -4180,7 +4280,7 @@ func (m *MockSignerAPI) DiscontinueBucket(ctx context.Context, bucket *types3.Ms
 }
 
 // DiscontinueBucket indicates an expected call of DiscontinueBucket.
-func (mr *MockSignerAPIMockRecorder) DiscontinueBucket(ctx, bucket any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) DiscontinueBucket(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DiscontinueBucket", reflect.TypeOf((*MockSignerAPI)(nil).DiscontinueBucket), ctx, bucket)
 }
@@ -4195,7 +4295,7 @@ func (m *MockSignerAPI) RejectMigrateBucket(ctx context.Context, rejectMigrateBu
 }
 
 // RejectMigrateBucket indicates an expected call of RejectMigrateBucket.
-func (mr *MockSignerAPIMockRecorder) RejectMigrateBucket(ctx, rejectMigrateBucket any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) RejectMigrateBucket(ctx, rejectMigrateBucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectMigrateBucket", reflect.TypeOf((*MockSignerAPI)(nil).RejectMigrateBucket), ctx, rejectMigrateBucket)
 }
@@ -4210,7 +4310,7 @@ func (m *MockSignerAPI) RejectUnSealObject(ctx context.Context, object *types3.M
 }
 
 // RejectUnSealObject indicates an expected call of RejectUnSealObject.
-func (mr *MockSignerAPIMockRecorder) RejectUnSealObject(ctx, object any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) RejectUnSealObject(ctx, object interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectUnSealObject", reflect.TypeOf((*MockSignerAPI)(nil).RejectUnSealObject), ctx, object)
 }
@@ -4225,7 +4325,7 @@ func (m *MockSignerAPI) SPExit(ctx context.Context, spExit *types4.MsgStoragePro
 }
 
 // SPExit indicates an expected call of SPExit.
-func (mr *MockSignerAPIMockRecorder) SPExit(ctx, spExit any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SPExit(ctx, spExit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SPExit", reflect.TypeOf((*MockSignerAPI)(nil).SPExit), ctx, spExit)
 }
@@ -4240,7 +4340,7 @@ func (m *MockSignerAPI) SealObject(ctx context.Context, object *types3.MsgSealOb
 }
 
 // SealObject indicates an expected call of SealObject.
-func (mr *MockSignerAPIMockRecorder) SealObject(ctx, object any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SealObject(ctx, object interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSignerAPI)(nil).SealObject), ctx, object)
 }
@@ -4255,7 +4355,7 @@ func (m *MockSignerAPI) SignBucketMigrationInfo(ctx context.Context, task *gfspt
 }
 
 // SignBucketMigrationInfo indicates an expected call of SignBucketMigrationInfo.
-func (mr *MockSignerAPIMockRecorder) SignBucketMigrationInfo(ctx, task any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignBucketMigrationInfo(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignBucketMigrationInfo", reflect.TypeOf((*MockSignerAPI)(nil).SignBucketMigrationInfo), ctx, task)
 }
@@ -4270,7 +4370,7 @@ func (m *MockSignerAPI) SignCreateBucketApproval(ctx context.Context, bucket *ty
 }
 
 // SignCreateBucketApproval indicates an expected call of SignCreateBucketApproval.
-func (mr *MockSignerAPIMockRecorder) SignCreateBucketApproval(ctx, bucket any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignCreateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignCreateBucketApproval", reflect.TypeOf((*MockSignerAPI)(nil).SignCreateBucketApproval), ctx, bucket)
 }
@@ -4285,7 +4385,7 @@ func (m *MockSignerAPI) SignCreateObjectApproval(ctx context.Context, object *ty
 }
 
 // SignCreateObjectApproval indicates an expected call of SignCreateObjectApproval.
-func (mr *MockSignerAPIMockRecorder) SignCreateObjectApproval(ctx, object any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignCreateObjectApproval(ctx, object interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignCreateObjectApproval", reflect.TypeOf((*MockSignerAPI)(nil).SignCreateObjectApproval), ctx, object)
 }
@@ -4300,7 +4400,7 @@ func (m *MockSignerAPI) SignMigrateBucketApproval(ctx context.Context, bucket *t
 }
 
 // SignMigrateBucketApproval indicates an expected call of SignMigrateBucketApproval.
-func (mr *MockSignerAPIMockRecorder) SignMigrateBucketApproval(ctx, bucket any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignMigrateBucketApproval(ctx, bucket interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateBucketApproval", reflect.TypeOf((*MockSignerAPI)(nil).SignMigrateBucketApproval), ctx, bucket)
 }
@@ -4315,7 +4415,7 @@ func (m *MockSignerAPI) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpM
 }
 
 // SignMigrateGVG indicates an expected call of SignMigrateGVG.
-func (mr *MockSignerAPIMockRecorder) SignMigrateGVG(ctx, task any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignMigrateGVG(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignMigrateGVG", reflect.TypeOf((*MockSignerAPI)(nil).SignMigrateGVG), ctx, task)
 }
@@ -4330,7 +4430,7 @@ func (m *MockSignerAPI) SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPi
 }
 
 // SignP2PPingMsg indicates an expected call of SignP2PPingMsg.
-func (mr *MockSignerAPIMockRecorder) SignP2PPingMsg(ctx, ping any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignP2PPingMsg(ctx, ping interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignP2PPingMsg", reflect.TypeOf((*MockSignerAPI)(nil).SignP2PPingMsg), ctx, ping)
 }
@@ -4345,7 +4445,7 @@ func (m *MockSignerAPI) SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPo
 }
 
 // SignP2PPongMsg indicates an expected call of SignP2PPongMsg.
-func (mr *MockSignerAPIMockRecorder) SignP2PPongMsg(ctx, pong any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignP2PPongMsg(ctx, pong interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignP2PPongMsg", reflect.TypeOf((*MockSignerAPI)(nil).SignP2PPongMsg), ctx, pong)
 }
@@ -4360,7 +4460,7 @@ func (m *MockSignerAPI) SignReceiveTask(ctx context.Context, receiveTask task.Re
 }
 
 // SignReceiveTask indicates an expected call of SignReceiveTask.
-func (mr *MockSignerAPIMockRecorder) SignReceiveTask(ctx, receiveTask any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignReceiveTask(ctx, receiveTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignReceiveTask", reflect.TypeOf((*MockSignerAPI)(nil).SignReceiveTask), ctx, receiveTask)
 }
@@ -4375,7 +4475,7 @@ func (m *MockSignerAPI) SignRecoveryTask(ctx context.Context, recoveryTask task.
 }
 
 // SignRecoveryTask indicates an expected call of SignRecoveryTask.
-func (mr *MockSignerAPIMockRecorder) SignRecoveryTask(ctx, recoveryTask any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignRecoveryTask(ctx, recoveryTask interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignRecoveryTask", reflect.TypeOf((*MockSignerAPI)(nil).SignRecoveryTask), ctx, recoveryTask)
 }
@@ -4390,7 +4490,7 @@ func (m *MockSignerAPI) SignReplicatePieceApproval(ctx context.Context, task tas
 }
 
 // SignReplicatePieceApproval indicates an expected call of SignReplicatePieceApproval.
-func (mr *MockSignerAPIMockRecorder) SignReplicatePieceApproval(ctx, task any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignReplicatePieceApproval(ctx, task interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignReplicatePieceApproval", reflect.TypeOf((*MockSignerAPI)(nil).SignReplicatePieceApproval), ctx, task)
 }
@@ -4405,7 +4505,7 @@ func (m *MockSignerAPI) SignSecondarySPMigrationBucket(ctx context.Context, sign
 }
 
 // SignSecondarySPMigrationBucket indicates an expected call of SignSecondarySPMigrationBucket.
-func (mr *MockSignerAPIMockRecorder) SignSecondarySPMigrationBucket(ctx, signDoc any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignSecondarySPMigrationBucket(ctx, signDoc interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignSecondarySPMigrationBucket", reflect.TypeOf((*MockSignerAPI)(nil).SignSecondarySPMigrationBucket), ctx, signDoc)
 }
@@ -4420,7 +4520,7 @@ func (m *MockSignerAPI) SignSecondarySealBls(ctx context.Context, objectID uint6
 }
 
 // SignSecondarySealBls indicates an expected call of SignSecondarySealBls.
-func (mr *MockSignerAPIMockRecorder) SignSecondarySealBls(ctx, objectID, gvgId, checksums any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignSecondarySealBls(ctx, objectID, gvgId, checksums interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignSecondarySealBls", reflect.TypeOf((*MockSignerAPI)(nil).SignSecondarySealBls), ctx, objectID, gvgId, checksums)
 }
@@ -4435,7 +4535,7 @@ func (m *MockSignerAPI) SignSwapOut(ctx context.Context, swapOut *types4.MsgSwap
 }
 
 // SignSwapOut indicates an expected call of SignSwapOut.
-func (mr *MockSignerAPIMockRecorder) SignSwapOut(ctx, swapOut any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SignSwapOut(ctx, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignSwapOut", reflect.TypeOf((*MockSignerAPI)(nil).SignSwapOut), ctx, swapOut)
 }
@@ -4450,7 +4550,7 @@ func (m *MockSignerAPI) SwapOut(ctx context.Context, swapOut *types4.MsgSwapOut)
 }
 
 // SwapOut indicates an expected call of SwapOut.
-func (mr *MockSignerAPIMockRecorder) SwapOut(ctx, swapOut any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) SwapOut(ctx, swapOut interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapOut", reflect.TypeOf((*MockSignerAPI)(nil).SwapOut), ctx, swapOut)
 }
@@ -4465,7 +4565,7 @@ func (m *MockSignerAPI) UpdateSPPrice(ctx context.Context, price *types2.MsgUpda
 }
 
 // UpdateSPPrice indicates an expected call of UpdateSPPrice.
-func (mr *MockSignerAPIMockRecorder) UpdateSPPrice(ctx, price any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) UpdateSPPrice(ctx, price interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSPPrice", reflect.TypeOf((*MockSignerAPI)(nil).UpdateSPPrice), ctx, price)
 }
@@ -4496,7 +4596,7 @@ func (m *MockUploaderAPI) EXPECT() *MockUploaderAPIMockRecorder {
 // ResumableUploadObject mocks base method.
 func (m *MockUploaderAPI) ResumableUploadObject(ctx context.Context, task task.ResumableUploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task, stream}
+	varargs := []interface{}{ctx, task, stream}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4506,16 +4606,16 @@ func (m *MockUploaderAPI) ResumableUploadObject(ctx context.Context, task task.R
 }
 
 // ResumableUploadObject indicates an expected call of ResumableUploadObject.
-func (mr *MockUploaderAPIMockRecorder) ResumableUploadObject(ctx, task, stream any, opts ...any) *gomock.Call {
+func (mr *MockUploaderAPIMockRecorder) ResumableUploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task, stream}, opts...)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumableUploadObject", reflect.TypeOf((*MockUploaderAPI)(nil).ResumableUploadObject), varargs...)
 }
 
 // UploadObject mocks base method.
 func (m *MockUploaderAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, task, stream}
+	varargs := []interface{}{ctx, task, stream}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4525,9 +4625,9 @@ func (m *MockUploaderAPI) UploadObject(ctx context.Context, task task.UploadObje
 }
 
 // UploadObject indicates an expected call of UploadObject.
-func (mr *MockUploaderAPIMockRecorder) UploadObject(ctx, task, stream any, opts ...any) *gomock.Call {
+func (mr *MockUploaderAPIMockRecorder) UploadObject(ctx, task, stream interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, task, stream}, opts...)
+	varargs := append([]interface{}{ctx, task, stream}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadObject", reflect.TypeOf((*MockUploaderAPI)(nil).UploadObject), varargs...)
 }
 
@@ -4557,7 +4657,7 @@ func (m *MockGfSpConnAPI) EXPECT() *MockGfSpConnAPIMockRecorder {
 // ApproverConn mocks base method.
 func (m *MockGfSpConnAPI) ApproverConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4568,9 +4668,9 @@ func (m *MockGfSpConnAPI) ApproverConn(ctx context.Context, opts ...grpc.DialOpt
 }
 
 // ApproverConn indicates an expected call of ApproverConn.
-func (mr *MockGfSpConnAPIMockRecorder) ApproverConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpConnAPIMockRecorder) ApproverConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApproverConn", reflect.TypeOf((*MockGfSpConnAPI)(nil).ApproverConn), varargs...)
 }
 
@@ -4591,7 +4691,7 @@ func (mr *MockGfSpConnAPIMockRecorder) Close() *gomock.Call {
 // Connection mocks base method.
 func (m *MockGfSpConnAPI) Connection(ctx context.Context, address string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, address}
+	varargs := []interface{}{ctx, address}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4602,9 +4702,9 @@ func (m *MockGfSpConnAPI) Connection(ctx context.Context, address string, opts .
 }
 
 // Connection indicates an expected call of Connection.
-func (mr *MockGfSpConnAPIMockRecorder) Connection(ctx, address any, opts ...any) *gomock.Call {
+func (mr *MockGfSpConnAPIMockRecorder) Connection(ctx, address interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, address}, opts...)
+	varargs := append([]interface{}{ctx, address}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connection", reflect.TypeOf((*MockGfSpConnAPI)(nil).Connection), varargs...)
 }
 
@@ -4617,7 +4717,7 @@ func (m *MockGfSpConnAPI) HTTPClient(ctx context.Context) *http.Client {
 }
 
 // HTTPClient indicates an expected call of HTTPClient.
-func (mr *MockGfSpConnAPIMockRecorder) HTTPClient(ctx any) *gomock.Call {
+func (mr *MockGfSpConnAPIMockRecorder) HTTPClient(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HTTPClient", reflect.TypeOf((*MockGfSpConnAPI)(nil).HTTPClient), ctx)
 }
@@ -4625,7 +4725,7 @@ func (mr *MockGfSpConnAPIMockRecorder) HTTPClient(ctx any) *gomock.Call {
 // ManagerConn mocks base method.
 func (m *MockGfSpConnAPI) ManagerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4636,16 +4736,16 @@ func (m *MockGfSpConnAPI) ManagerConn(ctx context.Context, opts ...grpc.DialOpti
 }
 
 // ManagerConn indicates an expected call of ManagerConn.
-func (mr *MockGfSpConnAPIMockRecorder) ManagerConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpConnAPIMockRecorder) ManagerConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ManagerConn", reflect.TypeOf((*MockGfSpConnAPI)(nil).ManagerConn), varargs...)
 }
 
 // P2PConn mocks base method.
 func (m *MockGfSpConnAPI) P2PConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4656,16 +4756,16 @@ func (m *MockGfSpConnAPI) P2PConn(ctx context.Context, opts ...grpc.DialOption) 
 }
 
 // P2PConn indicates an expected call of P2PConn.
-func (mr *MockGfSpConnAPIMockRecorder) P2PConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpConnAPIMockRecorder) P2PConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "P2PConn", reflect.TypeOf((*MockGfSpConnAPI)(nil).P2PConn), varargs...)
 }
 
 // SignerConn mocks base method.
 func (m *MockGfSpConnAPI) SignerConn(ctx context.Context, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx}
+	varargs := []interface{}{ctx}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -4676,9 +4776,9 @@ func (m *MockGfSpConnAPI) SignerConn(ctx context.Context, opts ...grpc.DialOptio
 }
 
 // SignerConn indicates an expected call of SignerConn.
-func (mr *MockGfSpConnAPIMockRecorder) SignerConn(ctx any, opts ...any) *gomock.Call {
+func (mr *MockGfSpConnAPIMockRecorder) SignerConn(ctx interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, opts...)
+	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignerConn", reflect.TypeOf((*MockGfSpConnAPI)(nil).SignerConn), varargs...)
 }
 
@@ -4729,7 +4829,7 @@ func (m *MockstdLib) Read(p []byte) (int, error) {
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockstdLibMockRecorder) Read(p any) *gomock.Call {
+func (mr *MockstdLibMockRecorder) Read(p interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockstdLib)(nil).Read), p)
 }

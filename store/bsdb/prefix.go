@@ -56,7 +56,7 @@ func (b *BsDBImpl) ListObjects(bucketName, continuationToken, prefix string, max
 	if err != nil {
 		return nil, err
 	}
-	res, err = b.filterObjects(nodes)
+	res, err = b.filterObjects(nodes, bucketName)
 	return res, err
 }
 
@@ -82,7 +82,7 @@ func processPath(pathName string) (string, string) {
 // filterObjects filters a slice of SlashPrefixTreeNode for nodes which IsObject attribute is true,
 // maps these objects by their ID and transforms them into a ListObjectsResult format.
 // Returns a slice of ListObjectsResult containing filtered object data or an error if something goes wrong.
-func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode) ([]*ListObjectsResult, error) {
+func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode, bucketName string) ([]*ListObjectsResult, error) {
 	var (
 		objectIDs    []common.Hash
 		totalObjects []*Object
@@ -108,16 +108,14 @@ func (b *BsDBImpl) filterObjects(nodes []*SlashPrefixTreeNode) ([]*ListObjectsRe
 		}
 	}
 
-	for i := 0; i < ObjectsNumberOfShards; i++ {
-		err = b.db.Table(GetObjectsTableNameByShardNumber(i)).
-			Where("object_id in (?)", objectIDs).
-			Find(&objects).Error
-		//stop after finding one set?
-		if err != nil {
-			return nil, err
-		}
-		totalObjects = append(totalObjects, objects...)
+	err = b.db.Table(GetObjectsTableName(bucketName)).
+		Where("object_id in (?)", objectIDs).
+		Find(&objects).Error
+
+	if err != nil {
+		return nil, err
 	}
+	totalObjects = append(totalObjects, objects...)
 
 	objectsMap = make(map[common.Hash]*Object)
 	for _, object := range totalObjects {

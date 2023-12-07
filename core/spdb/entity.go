@@ -19,12 +19,13 @@ const (
 
 // UploadObjectMeta defines the upload object state and related seal info, etc.
 type UploadObjectMeta struct {
-	ObjectID             uint64
-	TaskState            storetypes.TaskState
-	GlobalVirtualGroupID uint32
-	SecondaryEndpoints   []string
-	SecondarySignatures  [][]byte
-	ErrorDescription     string
+	ObjectID              uint64
+	TaskState             storetypes.TaskState
+	GlobalVirtualGroupID  uint32
+	SecondaryEndpoints    []string
+	SecondarySignatures   [][]byte
+	ErrorDescription      string
+	CreateTimeStampSecond int64
 }
 
 // GCObjectMeta defines the gc object range progress info.
@@ -34,6 +35,14 @@ type GCObjectMeta struct {
 	EndBlockHeight      uint64
 	CurrentBlockHeight  uint64
 	LastDeletedObjectID uint64
+}
+
+// GCPieceMeta defines the gc piece with segment index and piece checksum.
+type GCPieceMeta struct {
+	ObjectID        uint64
+	SegmentIndex    uint32
+	RedundancyIndex int32
+	PieceChecksum   string
 }
 
 // IntegrityMeta defines the payload integrity hash and piece checksum with objectID.

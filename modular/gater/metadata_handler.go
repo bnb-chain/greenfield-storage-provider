@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/xml"
-	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -117,8 +115,6 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
 		return
 	}
-
-	respBytes = processVGFInfoBucketXmlResponse(respBytes, grpcResponse.Buckets)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -278,12 +274,11 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	}
 
 	respBytes, err = xml.Marshal(grpcResponse)
+
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to list objects by given bucket name", "error", err)
 		return
 	}
-
-	respBytes = processObjectsXmlResponse(respBytes, grpcResponse.Objects)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -335,15 +330,12 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 	grpcResponse := &types.GfSpGetObjectMetaResponse{
 		Object: resp,
 	}
-
 	respBytes, err = xml.Marshal(grpcResponse)
+
 	if err != nil {
 		log.Errorf("failed to get object meta", "error", err)
 		return
 	}
-
-	var objects = []*types.Object{grpcResponse.Object}
-	respBytes = processObjectsXmlResponse(respBytes, objects)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -394,9 +386,6 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		log.Errorf("failed to get bucket metadata", "error", err)
 		return
 	}
-
-	var bucketsWithPayment = []*types.GfSpGetBucketMetaResponse{grpcResponse}
-	respBytes = processBucketsWithPaymentResponse(respBytes, bucketsWithPayment)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -587,34 +576,8 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	respBytes = processGroupsXmlResponse(respBytes, grpcResponse.Groups)
-
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
-}
-
-type GfSpListObjectsByIDsResponse types.GfSpListObjectsByIDsResponse
-
-type ObjectEntry struct {
-	Id    uint64
-	Value *types.Object
-}
-
-func (m GfSpListObjectsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if len(m.Objects) == 0 {
-		return nil
-	}
-
-	err := e.EncodeToken(start)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range m.Objects {
-		e.Encode(ObjectEntry{Id: k, Value: v})
-	}
-
-	return e.EncodeToken(start.End())
 }
 
 // listObjectsByIDsHandler list objects by object ids
@@ -663,7 +626,7 @@ func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	if len(objectIDs) == 0 || len(objectIDs) > MaximumIDSize {
-		log.Errorf("failed to check ids", "error", err)
+		log.Errorf("len(objectIDs) is invalid : %d", len(objectIDs))
 		err = ErrInvalidQuery
 		return
 	}
@@ -687,40 +650,14 @@ func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Req
 	}
 	grpcResponse := &types.GfSpListObjectsByIDsResponse{Objects: objects}
 
-	respBytes, err = xml.Marshal((*GfSpListObjectsByIDsResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {
 		log.Errorf("failed to list objects by ids", "error", err)
 		return
 	}
 
-	respBytes = processObjectsMapXmlResponse(respBytes, grpcResponse.Objects)
-
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
-}
-
-type GfSpListBucketsByIDsResponse types.GfSpListBucketsByIDsResponse
-
-type BucketEntry struct {
-	Id    uint64
-	Value *types.Bucket
-}
-
-func (m GfSpListBucketsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if len(m.Buckets) == 0 {
-		return nil
-	}
-
-	err := e.EncodeToken(start)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range m.Buckets {
-		e.Encode(BucketEntry{Id: k, Value: v})
-	}
-
-	return e.EncodeToken(start.End())
 }
 
 // listBucketsByIDsHandler list buckets by bucket ids
@@ -793,13 +730,11 @@ func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Req
 	}
 	grpcResponse := &types.GfSpListBucketsByIDsResponse{Buckets: buckets}
 
-	respBytes, err = xml.Marshal((*GfSpListBucketsByIDsResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {
 		log.Errorf("failed to list buckets by ids", "error", err)
 		return
 	}
-
-	respBytes = processBucketsMapXmlResponse(respBytes, grpcResponse.Buckets)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2239,8 +2174,6 @@ func (g *GateModular) getUserGroupsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
-
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
 }
@@ -2283,7 +2216,7 @@ func (g *GateModular) getGroupMembersHandler(w http.ResponseWriter, r *http.Requ
 	if requestStartAfter != "" {
 		if ok := common.IsHexAddress(requestStartAfter); !ok {
 			log.Errorw("failed to check start after", "start-after", requestStartAfter, "error", err)
-			err = ErrInvalidHeader
+			err = ErrInvalidQuery
 			return
 		}
 	}
@@ -2315,8 +2248,6 @@ func (g *GateModular) getGroupMembersHandler(w http.ResponseWriter, r *http.Requ
 		log.CtxErrorw(reqCtx.Context(), "failed to get group members by group id", "error", err)
 		return
 	}
-
-	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2390,8 +2321,6 @@ func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.R
 		log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", "error", err)
 		return
 	}
-
-	respBytes = processGroupMembersXmlResponse(respBytes, grpcResponse.Groups)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2522,7 +2451,7 @@ func (g *GateModular) listPaymentAccountStreamsHandler(w http.ResponseWriter, r 
 
 	if ok := common.IsHexAddress(paymentAccount); !ok {
 		log.Errorw("failed to check payment account", "payment-account", paymentAccount, "error", err)
-		err = ErrInvalidHeader
+		err = ErrInvalidQuery
 		return
 	}
 
@@ -2539,8 +2468,6 @@ func (g *GateModular) listPaymentAccountStreamsHandler(w http.ResponseWriter, r 
 		log.CtxErrorw(reqCtx.Context(), "failed to list payment account streams", "error", err)
 		return
 	}
-
-	respBytes = processBucketsXmlResponse(respBytes, grpcResponse.Buckets)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2590,34 +2517,8 @@ func (g *GateModular) listUserPaymentAccountsHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	respBytes = processPaymentResponse(respBytes, grpcResponse)
-
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
-}
-
-type GfSpListGroupsByIDsResponse types.GfSpListGroupsByIDsResponse
-
-type GroupEntry struct {
-	Id    uint64
-	Value *types.Group
-}
-
-func (m GfSpListGroupsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if len(m.Groups) == 0 {
-		return nil
-	}
-
-	err := e.EncodeToken(start)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range m.Groups {
-		e.Encode(GroupEntry{Id: k, Value: v})
-	}
-
-	return e.EncodeToken(start.End())
 }
 
 // listGroupsByIDsHandler list groups by ids
@@ -2690,13 +2591,11 @@ func (g *GateModular) listGroupsByIDsHandler(w http.ResponseWriter, r *http.Requ
 	}
 	grpcResponse := &types.GfSpListGroupsByIDsResponse{Groups: groups}
 
-	respBytes, err = xml.Marshal((*GfSpListGroupsByIDsResponse)(grpcResponse))
+	respBytes, err = xml.Marshal(grpcResponse)
 	if err != nil {
 		log.Errorf("failed to list groups by ids", "error", err)
 		return
 	}
-
-	respBytes = processGroupsMapXmlResponse(respBytes, grpcResponse.Groups)
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
@@ -2880,171 +2779,4 @@ func (g *GateModular) getBucketSizeHandler(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	w.Write(respBytes)
-}
-
-// processObjectsXmlResponse process the unhandled Uint id and checksum of object xml unmarshal
-func processObjectsXmlResponse(respBytes []byte, objects []*types.Object) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	// startIdx is to trace the index for next checkSum to be processed
-	var startIdx = 0
-	for _, object := range objects {
-		if object != nil {
-			// iterate through each object and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
-			// inside each object, there is an array of checksum that need to be unmarshalled correctly
-			for _, checkSum := range object.ObjectInfo.Checksums {
-				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
-				// first find the matching string of regex
-				found := re.FindString(respString[startIdx:])
-				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
-				if found != "" {
-					// replace the matching string of regex and move the startIdx after that to search next regex
-					respString = strings.Replace(respString, found, respCheckSum, 1)
-					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
-				}
-			}
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processObjectsMapXmlResponse process the unhandled Uint id and checksum of object map xml unmarshal
-func processObjectsMapXmlResponse(respBytes []byte, objects map[uint64]*types.Object) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	// startIdx is to trace the index for next checkSum to be processed
-	var startIdx = 0
-	for _, object := range objects {
-		if object != nil {
-			// iterate through each object and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+object.ObjectInfo.Id.String()+"</Id>", 1)
-			// inside each object, there is an array of checksum that need to be unmarshalled correctly
-			for _, checkSum := range object.ObjectInfo.Checksums {
-				re := regexp.MustCompile("<Checksums>(.*?)</Checksums>")
-				// first find the matching string of regex
-				found := re.FindString(respString[startIdx:])
-				respCheckSum := "<Checksums>" + fmt.Sprintf("%x", checkSum) + "</Checksums>"
-				if found != "" {
-					// replace the matching string of regex and move the startIdx after that to search next regex
-					respString = strings.Replace(respString, found, respCheckSum, 1)
-					startIdx = strings.LastIndex(respString, respCheckSum) + len(respCheckSum)
-				}
-			}
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processGroupsMapXmlResponse process the unhandled Uint id of group map xml unmarshal
-func processGroupsMapXmlResponse(respBytes []byte, groups map[uint64]*types.Group) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, group := range groups {
-		if group != nil {
-			// iterate through each group and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processBucketsXmlResponse process the unhandled Uint id of bucket xml unmarshal
-func processBucketsXmlResponse(respBytes []byte, buckets []*types.Bucket) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, bucket := range buckets {
-		if bucket != nil {
-			// iterate through each bucket and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processBucketsWithPaymentResponse process the unhandled Uint id and several balance of bucket with payment xml unmarshal
-func processBucketsWithPaymentResponse(respBytes []byte, buckets []*types.GfSpGetBucketMetaResponse) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, bucket := range buckets {
-		if bucket != nil {
-			// iterate through each bucket and assign id and payment Uint value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.Bucket.BucketInfo.Id.String()+"</Id>", 1)
-			respString = strings.Replace(respString, "<NetflowRate></NetflowRate>", "<NetflowRate>"+bucket.StreamRecord.NetflowRate.String()+"</NetflowRate>", 1)
-			respString = strings.Replace(respString, "<StaticBalance></StaticBalance>", "<StaticBalance>"+bucket.StreamRecord.StaticBalance.String()+"</StaticBalance>", 1)
-			respString = strings.Replace(respString, "<BufferBalance></BufferBalance>", "<BufferBalance>"+bucket.StreamRecord.BufferBalance.String()+"</BufferBalance>", 1)
-			respString = strings.Replace(respString, "<LockBalance></LockBalance>", "<LockBalance>"+bucket.StreamRecord.LockBalance.String()+"</LockBalance>", 1)
-			respString = strings.Replace(respString, "<FrozenNetflowRate></FrozenNetflowRate>", "<FrozenNetflowRate>"+bucket.StreamRecord.FrozenNetflowRate.String()+"</FrozenNetflowRate>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processPaymentResponse process the unhandled Uint id and several balance of payment xml unmarshal
-func processPaymentResponse(respBytes []byte, payments *types.GfSpListUserPaymentAccountsResponse) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, payment := range payments.PaymentAccounts {
-		if payment != nil {
-			// iterate through each payment Uint value
-			respString = strings.Replace(respString, "<NetflowRate></NetflowRate>", "<NetflowRate>"+payment.StreamRecord.NetflowRate.String()+"</NetflowRate>", 1)
-			respString = strings.Replace(respString, "<StaticBalance></StaticBalance>", "<StaticBalance>"+payment.StreamRecord.StaticBalance.String()+"</StaticBalance>", 1)
-			respString = strings.Replace(respString, "<BufferBalance></BufferBalance>", "<BufferBalance>"+payment.StreamRecord.BufferBalance.String()+"</BufferBalance>", 1)
-			respString = strings.Replace(respString, "<LockBalance></LockBalance>", "<LockBalance>"+payment.StreamRecord.LockBalance.String()+"</LockBalance>", 1)
-			respString = strings.Replace(respString, "<FrozenNetflowRate></FrozenNetflowRate>", "<FrozenNetflowRate>"+payment.StreamRecord.FrozenNetflowRate.String()+"</FrozenNetflowRate>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processBucketsMapXmlResponse process the unhandled Uint id of bucket map xml unmarshal
-func processBucketsMapXmlResponse(respBytes []byte, buckets map[uint64]*types.Bucket) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, bucket := range buckets {
-		if bucket != nil {
-			// iterate through each bucket and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processGroupsXmlResponse process the unhandled Uint id of group xml unmarshal
-func processGroupsXmlResponse(respBytes []byte, groups []*types.Group) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, group := range groups {
-		if group != nil {
-			// iterate through each group and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processGroupMembersXmlResponse process the unhandled Uint id of group member xml unmarshal
-func processGroupMembersXmlResponse(respBytes []byte, groupMembers []*types.GroupMember) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, group := range groupMembers {
-		if group != nil {
-			// iterate through each group and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+group.Group.Id.String()+"</Id>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
-}
-
-// processVGFInfoBucketXmlResponse process the unhandled Uint id of bucket with vgf xml unmarshal
-func processVGFInfoBucketXmlResponse(respBytes []byte, buckets []*types.VGFInfoBucket) (respBytesProcessed []byte) {
-	respString := string(respBytes)
-	for _, bucket := range buckets {
-		if bucket != nil {
-			// iterate through each bucket and assign id value
-			respString = strings.Replace(respString, "<Id></Id>", "<Id>"+bucket.BucketInfo.Id.String()+"</Id>", 1)
-		}
-	}
-	respBytesProcessed = []byte(respString)
-	return
 }

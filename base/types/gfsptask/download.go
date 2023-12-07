@@ -94,7 +94,7 @@ func (m *GfSpDownloadObjectTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpDownloadObjectTask) SetRetry(retry int) {
+func (m *GfSpDownloadObjectTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -259,7 +259,7 @@ func (m *GfSpDownloadPieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpDownloadPieceTask) SetRetry(retry int) {
+func (m *GfSpDownloadPieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -419,7 +419,7 @@ func (m *GfSpChallengePieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpChallengePieceTask) SetRetry(retry int) {
+func (m *GfSpChallengePieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 

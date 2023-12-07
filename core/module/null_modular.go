@@ -68,7 +68,7 @@ func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.Msg
 func (*NullModular) NotifyPreMigrateBucket(context.Context, uint64) error {
 	return ErrNilModular
 }
-func (*NullModular) NotifyPostMigrateBucket(context.Context, uint64) error {
+func (*NullModular) NotifyPostMigrateBucket(context.Context, *gfsptask.GfSpBucketMigrationInfo) error {
 	return ErrNilModular
 }
 
@@ -143,6 +143,9 @@ func (*NullModular) HandleGCObjectTask(context.Context, task.GCObjectTask) error
 	return ErrNilModular
 }
 func (*NullModular) HandleGCZombiePieceTask(context.Context, task.GCZombiePieceTask) error {
+	return ErrNilModular
+}
+func (*NullModular) HandleGCBucketMigrationTask(context.Context, task.GCBucketMigrationTask) error {
 	return ErrNilModular
 }
 func (*NullModular) HandleGCMetaTask(context.Context, task.GCMetaTask) error { return ErrNilModular }
@@ -267,6 +270,12 @@ func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *sto
 	return "", ErrNilModular
 }
 func (m *NilModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	return "", ErrNilModular
+}
+func (m *NilModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
+	return "", ErrNilModular
+}
+func (m *NilModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
 	return "", ErrNilModular
 }
 func (*NilModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {

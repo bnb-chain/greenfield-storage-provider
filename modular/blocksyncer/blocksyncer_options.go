@@ -592,7 +592,7 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 			offset = right
 		}
 	}
-	log.Info("sync bucket size success")
+	log.Info("succeed to sync bucket size")
 	err = db.Cast(b.parserCtx.Database).UpdateDataMigrationRecord(context.Background(), dataMigrateKey, true)
 	if err != nil {
 		log.Errorw("failed to UpdateDataMigrationRecord", "error", err, "dataMigrateKey", dataMigrateKey)

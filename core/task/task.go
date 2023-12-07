@@ -55,7 +55,7 @@ type Task interface {
 	// GetRetry returns the retry counter of the task.
 	GetRetry() int64
 	// SetRetry sets the retry counter of the task.
-	SetRetry(int)
+	SetRetry(int64)
 	// IncRetry increases the retry counter of the task. Each task has the max retry
 	// times, if retry counter exceed the max retry, the task should be canceled.
 	IncRetry()
@@ -494,12 +494,16 @@ type GCObjectTask interface {
 // the piece data meta is not on chain but the pieces has been store in piece store.
 type GCZombiePieceTask interface {
 	GCTask
-	// GetGCZombiePieceStatus returns the status of collecting zombie pieces, returns
-	// the last deleted object id and the number that has been deleted.
-	GetGCZombiePieceStatus() (uint64, uint64)
-	// SetGCZombiePieceStatus sets the status of collecting zombie pieces, param
-	// stands the last deleted object id and the has been deleted pieces number.
-	SetGCZombiePieceStatus(uint64, uint64)
+	// InitGCZombiePieceTask inits InitGCObjectTask.
+	InitGCZombiePieceTask(priority TPriority, start, end uint64, timeout int64)
+	// SetStartObjectID sets start block number for collecting zombie piece.
+	SetStartObjectID(uint64)
+	// GetStartObjectId returns start block number for collecting zombie piece.
+	GetStartObjectId() uint64
+	// SetEndObjectID sets start block number for collecting zombie piece.
+	SetEndObjectID(uint64)
+	// GetEndObjectId returns start block number for collecting zombie piece.
+	GetEndObjectId() uint64
 }
 
 // GCMetaTask is an abstract interface to record the information for collecting the SP
@@ -580,4 +584,15 @@ type MigrateGVGTask interface {
 	GetSignBytes() []byte
 	// SetSignature sets the task signature.
 	SetSignature([]byte)
+}
+
+// GCBucketMigrationTask is an abstract interface to gc useless object after bucket migration
+type GCBucketMigrationTask interface {
+	Task
+	// InitGCBucketMigrationTask inits gc bucket migration task by bucket id.
+	InitGCBucketMigrationTask(priority TPriority, bucketID uint64, timeout, retry int64)
+	// GetBucketID returns the bucketID
+	GetBucketID() uint64
+	// SetBucketID sets the bucketID
+	SetBucketID(uint64)
 }
