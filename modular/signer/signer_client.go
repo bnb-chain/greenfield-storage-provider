@@ -860,3 +860,56 @@ func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdCl
 	}
 	return resp.TxResponse.TxHash, nil
 }
+
+func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scope SignType,
+	msg *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	log.Infow("signer starts to reject migrate bucket", "scope", scope)
+	if msg == nil {
+		log.CtxError(ctx, "reject migrate bucket msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msgReserveSwapIn := virtualgrouptypes.NewMsgReserveSwapIn(km.GetAddr(), msg.GetTargetSpId(), msg.GetGlobalVirtualGroupFamilyId(), msg.GetGlobalVirtualGroupId())
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgReserveSwapIn}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrRejectMigrateBucketOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast reject migrate bucket tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast reject migrate bucket tx", "tx_hash", txHash, "reject_migrate_bucket_msg", msgReserveSwapIn)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast reject migrate bucket, error: %v", err))
+	return "", ErrRejectMigrateBucketOnChain
+}

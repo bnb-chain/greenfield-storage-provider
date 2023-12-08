@@ -80,7 +80,7 @@ func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
 	return nil
 }
 
-func (m *NullModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32) error {
+func (m *NullModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, targetSPID uint32) error {
 	return nil
 }
 
@@ -303,6 +303,9 @@ func (*NilModular) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrat
 }
 func (*NilModular) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	return nil, ErrNilModular
+}
+func (m *NilModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	return "", ErrNilModular
 }
 
 var _ Receiver = (*NullReceiveModular)(nil)

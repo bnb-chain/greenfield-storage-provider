@@ -230,7 +230,7 @@ type Manager interface {
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
 
-	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32) error
+	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, targetSPID uint32) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -311,6 +311,8 @@ type Signer interface {
 	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 	// RejectMigrateBucket rejects the bucket migration by dest SP.
 	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
+	// ReserveSwapIn reserve swapIn
+	ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

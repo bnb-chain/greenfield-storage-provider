@@ -8,7 +8,7 @@ import (
 
 const ListRecoverObjectLimit = 50
 
-func (s *SpDBImpl) SetRecoverGVGStats(stats *spdb.RecoverGVGStats) error {
+func (s *SpDBImpl) SetRecoverGVGStats(stats []*corespdb.RecoverGVGStats) error {
 	result := s.db.Create(&RecoverGVGStatsTable{
 		VirtualGroupFamilyID: stats.VirtualGroupFamilyID,
 		VirtualGroupID:       stats.VirtualGroupID,
@@ -39,7 +39,7 @@ func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error
 	return nil
 }
 
-func (s *SpDBImpl) DeleteRecoverGVGStats(gvgID uint32) (err error) {
+func (s *SpDBImpl) DeleteRecoverGVGStats(vgfID, gvgID uint32) (err error) {
 	err = s.db.Table(RecoverGVGStatsTableName).Delete(&RecoverGVGStatsTable{
 		VirtualGroupID: gvgID,
 	}).Error

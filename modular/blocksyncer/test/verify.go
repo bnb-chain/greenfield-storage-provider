@@ -23,7 +23,7 @@ var verifyFuncs = []func(db *gorm.DB) error{verify1, verify2, verify3, verify4, 
 }
 
 func Verify() error {
-	dsn := "root:root@tcp(localhost:3306)/block_syncer?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+	dsn := "root:1q2w3e4r*@tcp(localhost:3306)/block_syncer?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect to the database")

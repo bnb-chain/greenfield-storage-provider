@@ -226,3 +226,7 @@ func (s *SignModular) CompleteSPExit(ctx context.Context, completeSPExit *virtua
 func (s *SignModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
 	return s.client.RejectMigrateBucket(ctx, SignOperator, rejectMigrateBucket)
 }
+
+func (s *SignModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	return s.client.ReserveSwapIn(ctx, SignOperator, reserveSwapIn)
+}

@@ -143,7 +143,7 @@ type RecoverGVGStats struct {
 	VirtualGroupFamilyID uint32
 	ExitingSPID          uint32
 	RedundancyIndex      int32
-	StartAfterObjectID   uint64
+	StartAfter           uint64
 	Limit                uint64
 	Status               int //  Saved, Processed, Completed
 }

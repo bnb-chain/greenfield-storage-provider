@@ -544,3 +544,47 @@ func (s *GfSpClient) RejectMigrateBucket(ctx context.Context, rejectMigrateBucke
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_ReserveSwapIn{
+			ReserveSwapIn: reserveSwapIn,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign reject migrate bucket", "msg", reserveSwapIn, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to sign reject migrate bucket, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+//func (s *GfSpClient) CompleteSwapIn(ctx context.Context, completeSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+//	conn, err := s.SignerConn(ctx)
+//	if err != nil {
+//		log.Errorw("failed to connect to signer", "error", err)
+//		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+//	}
+//	req := &gfspserver.GfSpSignRequest{
+//		Request: &gfspserver.GfSpSignRequest_Com{
+//			completeSwapIn: completeSwapIn,
+//		},
+//	}
+//	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+//	if err != nil {
+//		log.CtxErrorw(ctx, "client failed to sign reject migrate bucket", "msg", reserveSwapIn, "error", err)
+//		return "", ErrRPCUnknownWithDetail("client failed to sign reject migrate bucket, error: ", err)
+//	}
+//	if resp.GetErr() != nil {
+//		return "", resp.GetErr()
+//	}
+//	return resp.GetTxHash(), nil
+//}

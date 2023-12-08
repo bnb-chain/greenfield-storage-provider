@@ -959,13 +959,23 @@ func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
 	return m.recoveryFailedList
 }
 
-func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32) error {
-	go m.startRecoverScheduler(vgfID, gvgID)
-	return nil
+func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, targetSpID uint32) error {
+	return m.startRecoverScheduler(vgfID, gvgID, targetSpID)
+
 }
 
 // start the loop, failed object will be
-func (m *ManageModular) startRecoverScheduler(vgfID, gvgID uint32) {
-	s := NewRecoverGVGScheduler(m, vgfID, gvgID)
-	s.Start()
+func (m *ManageModular) startRecoverScheduler(vgfID, gvgID, targetSpID uint32) (err error) {
+	s := NewRecoverGVGScheduler(m, vgfID, targetSpID)
+	if err = s.Init(gvgID); err != nil {
+		return err
+	}
+	go s.Start()
+	go func() {
+		tick := time.NewTicker(10 * time.Second)
+		for range tick.C {
+			s.MonitorBatch()
+		}
+	}()
+	return nil
 }

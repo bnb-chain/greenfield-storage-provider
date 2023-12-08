@@ -122,6 +122,7 @@ message GfSpResetRecoveryFailedListResponse {
 message GfSpTriggerRecoverForSuccessorSPRequest {
   uint32 vgf_id = 1;
   uint32 gvg_id = 2;
+  uint32 target_sp_id = 3;
 }
 
 message GfSpTriggerRecoverForSuccessorSPResponse {

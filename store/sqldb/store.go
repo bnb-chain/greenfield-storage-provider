@@ -45,6 +45,26 @@ type SpDBImpl struct {
 	enableTracePutEvent bool
 }
 
+func (s *SpDBImpl) UpdateRecoverObject(object *corespdb.RecoverFailedObject) (err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *SpDBImpl) DeleteRecoverObject(objectID uint64) (err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *SpDBImpl) GetRecoverObjectsByGVGIDAndStatus(gvgID uint32, status corespdb.RecoverStatus) ([]*corespdb.RecoverFailedObject, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *SpDBImpl) InsertBatchRecoverObjects(gvg *corespdb.RecoverGVGStats, objects []*corespdb.RecoverFailedObject) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewSpDB return a database instance
 func NewSpDB(config *config.SQLDBConfig) (*SpDBImpl, error) {
 	LoadDBConfigFromEnv(config)
