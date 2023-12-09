@@ -572,16 +572,20 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 	var (
 		executePlan *BucketMigrateExecutePlan
 		err         error
+		state       BucketMigrateState
 	)
 	ctx := context.Background()
 	if executePlan, err = s.getExecutePlanByBucketID(bucketID); err != nil {
-		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket", "bucket_id", bucketID, "error", err)
+		log.Errorw("bucket migrate schedule received EventCancelMigrationBucket", "bucket_id", bucketID, "error", err)
 		return err
 	}
 	if reject {
-		if err = UpdateBucketMigrationProgress(executePlan.manager.baseApp, bucketID, WaitRejectTxEventDone); err != nil {
-			return err
-		}
+		state = WaitRejectTxEventDone
+	} else {
+		state = WaitCancelTxEventDone
+	}
+	if err = UpdateBucketMigrationProgress(executePlan.manager.baseApp, bucketID, state); err != nil {
+		return err
 	}
 
 	for _, migrateGVGUnit := range executePlan.gvgUnitMap {
@@ -602,6 +606,8 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 	}
 	go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID)
 
+	log.CtxInfow(ctx, "succeed to cancel migration event from memory, the bucket migration will generate a gc task", "bucket_id", bucketID)
+
 	return err
 }
 
@@ -612,6 +618,11 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	)
 	// 1. process EventCancelMigrationBucket
 	if migrateBucketEvents.CancelEvent != nil {
+		// no need to process cancel migration event, maybe already canceled
+		if executePlan, err = s.getExecutePlanByBucketID(migrateBucketEvents.CancelEvent.BucketId.Uint64()); err != nil {
+			log.Infow("bucket migrate schedule received EventCancelMigrationBucket", "bucket_id", migrateBucketEvents.CancelEvent.BucketId.Uint64(), "error", err)
+			return nil
+		}
 		log.Infow("begin to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent)
 		if err = s.cancelMigrateBucket(migrateBucketEvents.CancelEvent.BucketId.Uint64(), false); err != nil {
 			log.Errorw("failed to process cancel events", "cancel_event", migrateBucketEvents.CancelEvent, "error", err)
@@ -778,7 +789,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				bucketID := migrateBucketEvents.BucketId.Uint64()
 				ctx := context.Background()
 
-				if err := UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, DestSPGCDoing); err != nil {
+				if err := UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, SrcSPGCDoing); err != nil {
 					return
 				}
 
@@ -1159,6 +1170,30 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 			return err
 		}
 		migrateExecuteUnit.LastMigratedObjectID = task.GetLastMigratedObjectID()
+	}
+	return nil
+}
+
+func (s *BucketMigrateScheduler) UpdateBucketMigrationGCProgress(ctx context.Context, gcBucketMigrationTask task.GCBucketMigrationTask) error {
+	// update gc progress
+	var state BucketMigrateState
+	if gcBucketMigrationTask.GetFinished() {
+		state = MigrationFinished
+	} else {
+		state = SrcSPGCDoing
+	}
+
+	meta := spdb.MigrateBucketProgressMeta{
+		BucketID:         gcBucketMigrationTask.GetBucketID(),
+		MigrationState:   int(state),
+		LastGCObjectID:   gcBucketMigrationTask.GetLastGCObjectID(),
+		LastGCGvgID:      gcBucketMigrationTask.GetLastGCGvgID(),
+		GvgTotalNum:      uint32(gcBucketMigrationTask.GetGvgTotalNum()),
+		GvgNumGcFinished: uint32(gcBucketMigrationTask.GetGvgGcNumFinished()),
+	}
+	if err := s.manager.baseApp.GfSpDB().UpdateBucketMigrationGCProgress(meta); err != nil {
+		log.CtxErrorw(ctx, "failed to update bucket migration gc progress", "task", gcBucketMigrationTask, "error", err)
+		return err
 	}
 	return nil
 }

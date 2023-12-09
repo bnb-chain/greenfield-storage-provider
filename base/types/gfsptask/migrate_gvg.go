@@ -393,3 +393,18 @@ func (m *GfSpGCBucketMigrationTask) GetLastGCGvgID() uint64 {
 func (m *GfSpGCBucketMigrationTask) SetFinished(finished bool) {
 	m.Finished = finished
 }
+
+func (m *GfSpGCBucketMigrationTask) GetGvgTotalNum() uint64 {
+	return m.GetGvgNumTotal()
+}
+
+func (m *GfSpGCBucketMigrationTask) SetGvgTotalNum(gvgNum uint64) {
+	m.GvgNumTotal = gvgNum
+}
+
+func (m *GfSpGCBucketMigrationTask) GetGvgGcNumFinished() uint64 {
+	return m.GetGvgNumGcFinished()
+}
+func (m *GfSpGCBucketMigrationTask) SetGvgGcNumFinished(gvgGcNum uint64) {
+	m.GvgNumGcFinished = gvgGcNum
+}

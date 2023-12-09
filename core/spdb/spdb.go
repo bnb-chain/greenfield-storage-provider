@@ -211,7 +211,7 @@ type MigrateDB interface {
 	// UpdateBucketMigrationRecoupQuota update RecoupQuota and the corresponding state in MigrateBucketProgress.
 	UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error
 	// UpdateBucketMigrationGCProgress update bucket migration gc progress
-	UpdateBucketMigrationGCProgress(bucketID uint64, lastGCObjectID uint64, lastGCGvgID uint64) error
+	UpdateBucketMigrationGCProgress(progressMeta MigrateBucketProgressMeta) error
 	// UpdateBucketMigrationMigratingProgress update bucket migration migrating progress
 	UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error
 	// QueryMigrateBucketState returns the migrate state.

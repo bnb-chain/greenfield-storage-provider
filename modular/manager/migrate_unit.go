@@ -32,6 +32,7 @@ var (
 	WaitCompleteTxEventDone BucketMigrateState = 11
 	SendRejectTxDone        BucketMigrateState = 12
 	WaitRejectTxEventDone   BucketMigrateState = 13
+	WaitCancelTxEventDone   BucketMigrateState = 14
 
 	SrcSPGCDoing  BucketMigrateState = 20 // gc
 	DestSPGCDoing BucketMigrateState = 21

@@ -597,8 +597,9 @@ func (s *SpDBImpl) UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota
 	)
 	queryReturn = &MigrateBucketProgressTable{}
 	insertMigrateBucket = &MigrateBucketProgressTable{
-		BucketID:    bucketID,
-		RecoupQuota: recoupQuota,
+		BucketID:       bucketID,
+		RecoupQuota:    recoupQuota,
+		MigrationState: state,
 	}
 	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
 	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -624,18 +625,22 @@ func (s *SpDBImpl) UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota
 	return nil
 }
 
-func (s *SpDBImpl) UpdateBucketMigrationGCProgress(bucketID uint64, lastGCObjectID uint64, lastGCGvgID uint64) error {
+func (s *SpDBImpl) UpdateBucketMigrationGCProgress(progressMeta spdb.MigrateBucketProgressMeta) error {
 	var (
 		result              *gorm.DB
 		insertMigrateBucket *MigrateBucketProgressTable
 		queryReturn         *MigrateBucketProgressTable
 		needInsert          bool
 	)
+	bucketID := progressMeta.BucketID
 	queryReturn = &MigrateBucketProgressTable{}
 	insertMigrateBucket = &MigrateBucketProgressTable{
-		BucketID:       bucketID,
-		LastGCGvgID:    lastGCGvgID,
-		LastGCObjectID: lastGCObjectID,
+		BucketID:         bucketID,
+		MigrationState:   progressMeta.MigrationState,
+		GvgTotalNum:      progressMeta.GvgTotalNum,
+		GvgNumGcFinished: progressMeta.GvgNumGcFinished,
+		LastGCGvgID:      progressMeta.LastGCGvgID,
+		LastGCObjectID:   progressMeta.LastGCObjectID,
 	}
 	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
 	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -670,9 +675,9 @@ func (s *SpDBImpl) UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUn
 	)
 	queryReturn = &MigrateBucketProgressTable{}
 	insertMigrateBucket = &MigrateBucketProgressTable{
-		BucketID:         bucketID,
-		GvgUnits:         gvgUnits,
-		GvgUnitsFinished: gvgUnitsFinished,
+		BucketID:               bucketID,
+		GvgTotalNum:            gvgUnits,
+		GvgNumMigratedFinished: gvgUnitsFinished,
 	}
 	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
 	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {

@@ -720,6 +720,7 @@ func (m *ManageModular) HandleCreateGCBucketMigrationTask(ctx context.Context, t
 }
 
 func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucketMigrationTask task.GCBucketMigrationTask) error {
+	var err error
 	if gcBucketMigrationTask == nil {
 		log.CtxError(ctx, "failed to handle gc bucket migration due to gc bucket migration task pointer dangling")
 		return ErrDanglingTask
@@ -728,19 +729,14 @@ func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucke
 		log.CtxErrorw(ctx, "failed to handle gc bucket migration task due to task is not in the gc bucket migration queue", "task_info", gcBucketMigrationTask.Info())
 		return ErrCanceledTask
 	}
+	if err = m.bucketMigrateScheduler.UpdateBucketMigrationGCProgress(ctx, gcBucketMigrationTask); err != nil {
+		return err
+	}
 	if gcBucketMigrationTask.Error() == nil {
 		// success
 		if gcBucketMigrationTask.GetFinished() {
 			log.CtxInfow(ctx, "succeed to finish the gc bucket migration task", "task_info", gcBucketMigrationTask.Info())
 			m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
-		} else {
-			// update progress
-			bucketID := gcBucketMigrationTask.GetBucketID()
-			lastGCObjectID := gcBucketMigrationTask.GetLastGCObjectID()
-			lastGCGvgID := gcBucketMigrationTask.GetLastGCGvgID()
-			if err := m.baseApp.GfSpDB().UpdateBucketMigrationGCProgress(bucketID, lastGCObjectID, lastGCGvgID); err != nil {
-				log.CtxErrorw(ctx, "failed to update bucket migration gc progress", "task", gcBucketMigrationTask, "error", err)
-			}
 		}
 
 		return nil
@@ -758,9 +754,9 @@ func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucke
 		log.CtxErrorw(ctx, "the reported gc object gc bucket migration task is canceled", "report_info", gcBucketMigrationTask.Info())
 		return ErrCanceledTask
 	}
-	err := m.gcBucketMigrationQueue.Push(gcBucketMigrationTask)
+	err = m.gcBucketMigrationQueue.Push(gcBucketMigrationTask)
 	log.CtxInfow(ctx, "succeed to push gc bucket migration task to queue again", "from", oldTask, "to", gcBucketMigrationTask, "error", err)
-	return nil
+	return err
 }
 
 func (m *ManageModular) HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error {
