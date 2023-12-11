@@ -128,15 +128,15 @@ message MigrateBucketProgressMeta {
   uint64 subscribed_block_height = 2;
   uint32 migration_state = 3;
 
-  uint32 gvg_total_num = 4;      // Total number of GVGs that need to be migrated
+  uint32 gvg_total_num = 4; // Total number of GVGs that need to be migrated
   uint32 gvg_num_migrated_finished = 5; // Number of successfully migrated GVGs
-  uint32 gvg_num_gc_finished  = 6;      // Number of successfully gc finished GVGs
+  uint32 gvg_num_gc_finished = 6; // Number of successfully gc finished GVGs
 
-  uint64 pre_deducted_quota = 7;  // Quota pre-deducted by the source sp in the pre-migrate bucket phase
-  uint64 recoup_quota = 8  ;    // In case of migration failure, the dest sp recoup the quota for the source sp
+  uint64 pre_deducted_quota = 7; // Quota pre-deducted by the source sp in the pre-migrate bucket phase
+  uint64 recoup_quota = 8; // In case of migration failure, the dest sp recoup the quota for the source sp
 
-  uint64 last_gcObject_id = 9;  // After bucket migration is complete, the progress of GC, up to which object is GC performed.
-  uint64 last_gc_gvg_id  = 10;   // which GVG is GC performed.
+  uint64 last_gc_object_id = 9; // After bucket migration is complete, the progress of GC, up to which object is GC performed.
+  uint64 last_gc_gvg_id = 10; // which GVG is GC performed.
   uint64 migrated_bytes = 11;
 }
 

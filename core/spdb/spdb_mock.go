@@ -747,6 +747,21 @@ func (mr *MockSPDBMockRecorder) QueryBucketMigrateSubscribeProgress() *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrateSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).QueryBucketMigrateSubscribeProgress))
 }
 
+// QueryMigrateBucketProgress mocks base method.
+func (m *MockSPDB) QueryMigrateBucketProgress(bucketID uint64) (*MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryMigrateBucketProgress", bucketID)
+	ret0, _ := ret[0].(*MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryMigrateBucketProgress indicates an expected call of QueryMigrateBucketProgress.
+func (mr *MockSPDBMockRecorder) QueryMigrateBucketProgress(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryMigrateBucketProgress", reflect.TypeOf((*MockSPDB)(nil).QueryMigrateBucketProgress), bucketID)
+}
+
 // QueryMigrateBucketState mocks base method.
 func (m *MockSPDB) QueryMigrateBucketState(bucketID uint64) (int, error) {
 	m.ctrl.T.Helper()
@@ -921,17 +936,17 @@ func (mr *MockSPDBMockRecorder) UpdateBucketMigrateSubscribeProgress(blockHeight
 }
 
 // UpdateBucketMigrationGCProgress mocks base method.
-func (m *MockSPDB) UpdateBucketMigrationGCProgress(bucketID, lastGCObjectID, lastGCGvgID uint64) error {
+func (m *MockSPDB) UpdateBucketMigrationGCProgress(progressMeta MigrateBucketProgressMeta) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBucketMigrationGCProgress", bucketID, lastGCObjectID, lastGCGvgID)
+	ret := m.ctrl.Call(m, "UpdateBucketMigrationGCProgress", progressMeta)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateBucketMigrationGCProgress indicates an expected call of UpdateBucketMigrationGCProgress.
-func (mr *MockSPDBMockRecorder) UpdateBucketMigrationGCProgress(bucketID, lastGCObjectID, lastGCGvgID interface{}) *gomock.Call {
+func (mr *MockSPDBMockRecorder) UpdateBucketMigrationGCProgress(progressMeta interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrationGCProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateBucketMigrationGCProgress), bucketID, lastGCObjectID, lastGCGvgID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrationGCProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateBucketMigrationGCProgress), progressMeta)
 }
 
 // UpdateBucketMigrationMigratingProgress mocks base method.
@@ -2197,6 +2212,21 @@ func (mr *MockMigrateDBMockRecorder) QueryBucketMigrateSubscribeProgress() *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrateSubscribeProgress", reflect.TypeOf((*MockMigrateDB)(nil).QueryBucketMigrateSubscribeProgress))
 }
 
+// QueryMigrateBucketProgress mocks base method.
+func (m *MockMigrateDB) QueryMigrateBucketProgress(bucketID uint64) (*MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryMigrateBucketProgress", bucketID)
+	ret0, _ := ret[0].(*MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryMigrateBucketProgress indicates an expected call of QueryMigrateBucketProgress.
+func (mr *MockMigrateDBMockRecorder) QueryMigrateBucketProgress(bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryMigrateBucketProgress", reflect.TypeOf((*MockMigrateDB)(nil).QueryMigrateBucketProgress), bucketID)
+}
+
 // QueryMigrateBucketState mocks base method.
 func (m *MockMigrateDB) QueryMigrateBucketState(bucketID uint64) (int, error) {
 	m.ctrl.T.Helper()
@@ -2301,17 +2331,17 @@ func (mr *MockMigrateDBMockRecorder) UpdateBucketMigrateSubscribeProgress(blockH
 }
 
 // UpdateBucketMigrationGCProgress mocks base method.
-func (m *MockMigrateDB) UpdateBucketMigrationGCProgress(bucketID, lastGCObjectID, lastGCGvgID uint64) error {
+func (m *MockMigrateDB) UpdateBucketMigrationGCProgress(progressMeta MigrateBucketProgressMeta) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBucketMigrationGCProgress", bucketID, lastGCObjectID, lastGCGvgID)
+	ret := m.ctrl.Call(m, "UpdateBucketMigrationGCProgress", progressMeta)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateBucketMigrationGCProgress indicates an expected call of UpdateBucketMigrationGCProgress.
-func (mr *MockMigrateDBMockRecorder) UpdateBucketMigrationGCProgress(bucketID, lastGCObjectID, lastGCGvgID interface{}) *gomock.Call {
+func (mr *MockMigrateDBMockRecorder) UpdateBucketMigrationGCProgress(progressMeta interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrationGCProgress", reflect.TypeOf((*MockMigrateDB)(nil).UpdateBucketMigrationGCProgress), bucketID, lastGCObjectID, lastGCGvgID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBucketMigrationGCProgress", reflect.TypeOf((*MockMigrateDB)(nil).UpdateBucketMigrationGCProgress), progressMeta)
 }
 
 // UpdateBucketMigrationMigratingProgress mocks base method.

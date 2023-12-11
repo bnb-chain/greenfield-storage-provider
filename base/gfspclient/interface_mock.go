@@ -302,7 +302,7 @@ func (m *MockGfSpClientAPI) DeleteGlobalVirtualGroup(ctx context.Context, delete
 }
 
 // DeleteGlobalVirtualGroup indicates an expected call of DeleteGlobalVirtualGroup.
-func (mr *MockGfSpClientAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGlobalVirtualGroup", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeleteGlobalVirtualGroup), ctx, deleteGVG)
 }
@@ -317,7 +317,7 @@ func (m *MockGfSpClientAPI) Deposit(ctx context.Context, deposit *types4.MsgDepo
 }
 
 // Deposit indicates an expected call of Deposit.
-func (mr *MockGfSpClientAPIMockRecorder) Deposit(ctx, deposit any) *gomock.Call {
+func (mr *MockGfSpClientAPIMockRecorder) Deposit(ctx, deposit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deposit", reflect.TypeOf((*MockGfSpClientAPI)(nil).Deposit), ctx, deposit)
 }
@@ -661,6 +661,21 @@ func (mr *MockGfSpClientAPIMockRecorder) GetLatestObjectID(ctx interface{}, opts
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestObjectID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetLatestObjectID), varargs...)
+}
+
+// GetMigrationBucketState mocks base method.
+func (m *MockGfSpClientAPI) GetMigrationBucketState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMigrationBucketState", ctx, bucketID)
+	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMigrationBucketState indicates an expected call of GetMigrationBucketState.
+func (mr *MockGfSpClientAPIMockRecorder) GetMigrationBucketState(ctx, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrationBucketState", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetMigrationBucketState), ctx, bucketID)
 }
 
 // GetObject mocks base method.
@@ -2853,6 +2868,21 @@ func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
 }
 
+// GetMigrationBucketState mocks base method.
+func (m *MockManagerAPI) GetMigrationBucketState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMigrationBucketState", ctx, bucketID)
+	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMigrationBucketState indicates an expected call of GetMigrationBucketState.
+func (mr *MockManagerAPIMockRecorder) GetMigrationBucketState(ctx, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrationBucketState", reflect.TypeOf((*MockManagerAPI)(nil).GetMigrationBucketState), ctx, bucketID)
+}
+
 // GetTasksStats mocks base method.
 func (m *MockManagerAPI) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
 	m.ctrl.T.Helper()
@@ -4294,7 +4324,7 @@ func (m *MockSignerAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG 
 }
 
 // DeleteGlobalVirtualGroup indicates an expected call of DeleteGlobalVirtualGroup.
-func (mr *MockSignerAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGlobalVirtualGroup", reflect.TypeOf((*MockSignerAPI)(nil).DeleteGlobalVirtualGroup), ctx, deleteGVG)
 }
@@ -4309,7 +4339,7 @@ func (m *MockSignerAPI) Deposit(ctx context.Context, deposit *types4.MsgDeposit)
 }
 
 // Deposit indicates an expected call of Deposit.
-func (mr *MockSignerAPIMockRecorder) Deposit(ctx, deposit any) *gomock.Call {
+func (mr *MockSignerAPIMockRecorder) Deposit(ctx, deposit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deposit", reflect.TypeOf((*MockSignerAPI)(nil).Deposit), ctx, deposit)
 }

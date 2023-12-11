@@ -348,6 +348,15 @@ func (s mockManagerServer) GfSpQueryTasksStats(ctx context.Context, req *gfspser
 	}, nil
 }
 
+func (s mockManagerServer) GfSpQueryBucketMigrationProgress(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrationProgressRequest) (*gfspserver.GfSpQueryBucketMigrationProgressResponse, error) {
+	if req == nil {
+		return nil, mockRPCErr
+	}
+	return &gfspserver.GfSpQueryBucketMigrationProgressResponse{
+		Progress: &gfspserver.MigrateBucketProgressMeta{},
+	}, nil
+}
+
 func (s mockManagerServer) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
 	if req == nil {
 		return nil, mockRPCErr

@@ -619,7 +619,7 @@ func (s *BucketMigrateScheduler) processEvents(migrateBucketEvents *types.ListMi
 	// 1. process EventCancelMigrationBucket
 	if migrateBucketEvents.CancelEvent != nil {
 		// no need to process cancel migration event, maybe already canceled
-		if executePlan, err = s.getExecutePlanByBucketID(migrateBucketEvents.CancelEvent.BucketId.Uint64()); err != nil {
+		if _, err = s.getExecutePlanByBucketID(migrateBucketEvents.CancelEvent.BucketId.Uint64()); err != nil {
 			log.Infow("bucket migrate schedule received EventCancelMigrationBucket", "bucket_id", migrateBucketEvents.CancelEvent.BucketId.Uint64(), "error", err)
 			return nil
 		}

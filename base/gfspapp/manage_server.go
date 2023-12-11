@@ -367,6 +367,7 @@ func (g *GfSpBaseApp) GfSpQueryBucketMigrationProgress(ctx context.Context, req 
 		err      error
 	)
 	if progress, err = g.manager.QueryBucketMigrationProgress(ctx, req.GetBucketId()); err != nil {
+		log.CtxErrorw(ctx, "failed to query bucket migration progress", "bucket_id", req.GetBucketId(), "error", err)
 		return nil, err
 	}
 

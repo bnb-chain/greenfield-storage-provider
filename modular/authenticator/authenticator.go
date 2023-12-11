@@ -203,7 +203,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_migrate_bucket_progress_query_bucket_time").Observe(time.Since(queryTime).Seconds())
 		if bucketInfo == nil {
-			log.CtxErrorw(ctx, "failed to verify authentication of asking migrate bucket "+
+			log.CtxErrorw(ctx, "failed to verify authentication of asking query migrate bucket "+
 				"progress, bucket not existed", "bucket", bucket)
 			return false, ErrNoSuchBucket
 		}

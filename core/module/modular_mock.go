@@ -1271,6 +1271,21 @@ func (mr *MockManagerMockRecorder) QueryBucketMigrate(ctx interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrate", reflect.TypeOf((*MockManager)(nil).QueryBucketMigrate), ctx)
 }
 
+// QueryBucketMigrationProgress mocks base method.
+func (m *MockManager) QueryBucketMigrationProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryBucketMigrationProgress", ctx, bucketID)
+	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryBucketMigrationProgress indicates an expected call of QueryBucketMigrationProgress.
+func (mr *MockManagerMockRecorder) QueryBucketMigrationProgress(ctx, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketMigrationProgress", reflect.TypeOf((*MockManager)(nil).QueryBucketMigrationProgress), ctx, bucketID)
+}
+
 // QuerySpExit mocks base method.
 func (m *MockManager) QuerySpExit(ctx context.Context) (*gfspserver.GfSpQuerySpExitResponse, error) {
 	m.ctrl.T.Helper()
@@ -1670,16 +1685,6 @@ type MockSigner struct {
 	recorder *MockSignerMockRecorder
 }
 
-func (m *MockSigner) Deposit(ctx context.Context, deposit *types1.MsgDeposit) (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *MockSigner) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types1.MsgDeleteGlobalVirtualGroup) (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 // MockSignerMockRecorder is the mock recorder for MockSigner.
 type MockSignerMockRecorder struct {
 	mock *MockSigner
@@ -1755,6 +1760,36 @@ func (m *MockSigner) CreateGlobalVirtualGroup(ctx context.Context, gvg *types1.M
 func (mr *MockSignerMockRecorder) CreateGlobalVirtualGroup(ctx, gvg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSigner)(nil).CreateGlobalVirtualGroup), ctx, gvg)
+}
+
+// DeleteGlobalVirtualGroup mocks base method.
+func (m *MockSigner) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types1.MsgDeleteGlobalVirtualGroup) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGlobalVirtualGroup", ctx, deleteGVG)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteGlobalVirtualGroup indicates an expected call of DeleteGlobalVirtualGroup.
+func (mr *MockSignerMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGlobalVirtualGroup", reflect.TypeOf((*MockSigner)(nil).DeleteGlobalVirtualGroup), ctx, deleteGVG)
+}
+
+// Deposit mocks base method.
+func (m *MockSigner) Deposit(ctx context.Context, deposit *types1.MsgDeposit) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deposit", ctx, deposit)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deposit indicates an expected call of Deposit.
+func (mr *MockSignerMockRecorder) Deposit(ctx, deposit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deposit", reflect.TypeOf((*MockSigner)(nil).Deposit), ctx, deposit)
 }
 
 // DiscontinueBucket mocks base method.
