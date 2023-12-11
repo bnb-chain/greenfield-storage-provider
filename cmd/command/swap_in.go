@@ -152,7 +152,7 @@ func RecoverGVGAction(ctx *cli.Context) error {
 	}
 
 	// trigger
-	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), swapInInfo.TargetSpId)
+	//return spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), swapInInfo.)
 }
 
 func RecoverVGFAction(ctx *cli.Context) error {
@@ -183,5 +183,5 @@ func RecoverVGFAction(ctx *cli.Context) error {
 	}
 
 	// trigger
-	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, uint32(vgfID), 0, swapInInfo.TargetSpId)
+	//return spClient.TriggerRecoverForSuccessorSP(ctx.Context, uint32(vgfID), 0, swapInInfo.TargetSpId)
 }

@@ -154,18 +154,35 @@ func (s *SpDBImpl) GetRecoverFailedObjects(retry, limit uint32) ([]*spdb.Recover
 	return returnObjects, nil
 }
 
-func (s *SpDBImpl) SetVerifyGVGProgress(gvgProgress *spdb.VerifyGVGProgress) error {
-	result := s.db.Create(&VerifyGVGProgressTable{
-		VirtualGroupID:  gvgProgress.VirtualGroupID,
-		RedundancyIndex: int32(gvgProgress.RedundancyIndex),
-		StartAfter:      gvgProgress.StartAfter,
-		Limit:           uint32(gvgProgress.Limit),
-	})
-	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
+func (s *SpDBImpl) UpdateRecoverFailedObject(object *spdb.RecoverFailedObject) (err error) {
+	result := s.db.Table(RecoverFailedObjectTableName).Where("object_id = ?", object.ObjectID).
+		Updates(&RecoverFailedObjectTable{
+			Retry: object.RetryTime,
+		})
+	if result.Error != nil {
+		return fmt.Errorf("failed to VerifyGVGProgress%s", result.Error)
+	}
+	return nil
+}
+
+func (s *SpDBImpl) SetVerifyGVGProgress(gvgProgress []*spdb.VerifyGVGProgress) error {
+	saveGVGProgress := make([]*VerifyGVGProgressTable, 0)
+	for _, g := range gvgProgress {
+		gt := &VerifyGVGProgressTable{
+			VirtualGroupID:  g.VirtualGroupID,
+			RedundancyIndex: int32(g.RedundancyIndex),
+			StartAfter:      g.StartAfter,
+			Limit:           uint32(g.Limit),
+		}
+		saveGVGProgress = append(saveGVGProgress, gt)
+	}
+
+	err := s.db.CreateInBatches(saveGVGProgress, len(saveGVGProgress)).Error
+	if err != nil && MysqlErrCode(err) == ErrDuplicateEntryCode {
 		return nil
 	}
-	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to set VerifyGVGProgress: %s", result.Error)
+	if err != nil {
+		return fmt.Errorf("failed to set gvg recover stats record: %s", err.Error)
 	}
 	return nil
 }

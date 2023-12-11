@@ -257,14 +257,14 @@ func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, err
 	return resp.GetRecoveryFailedList(), nil
 }
 
-func (s *GfSpClient) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, targetSpId uint32) error {
+func (s *GfSpClient) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, replicateIndex int32) error {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
 		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpTriggerRecoverForSuccessorSP(ctx, &gfspserver.GfSpTriggerRecoverForSuccessorSPRequest{
-		VgfId: vgfID, GvgId: gvgID, TargetSpId: targetSpId,
+		VgfId: vgfID, GvgId: gvgID, ReplicateIndex: replicateIndex,
 	})
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to trigger recover objects for successor SP", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)

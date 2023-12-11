@@ -822,7 +822,7 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 				object := &spdb.RecoverFailedObject{
 					ObjectID:        handleTask.GetObjectInfo().Id.Uint64(),
 					VirtualGroupID:  handleTask.GetGVGID(),
-					RedundancyIndex: uint32(handleTask.GetEcIdx()),
+					RedundancyIndex: handleTask.GetEcIdx(),
 				}
 				err := m.baseApp.GfSpDB().InsertRecoverFailedObject(object)
 				if err != nil {

@@ -230,7 +230,7 @@ type Manager interface {
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
 
-	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, targetSPID uint32) error
+	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.

@@ -28,6 +28,11 @@ var _ GCBucketMigrationTask = (*NullTask)(nil)
 
 type NullTask struct{}
 
+func (t *NullTask) GetGVGID() uint32 {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (*NullTask) Key() TKey                               { return "" }
 func (*NullTask) Type() TType                             { return 0 }
 func (*NullTask) Info() string                            { return "" }

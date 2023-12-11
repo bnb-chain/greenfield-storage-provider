@@ -80,7 +80,7 @@ func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
 	return nil
 }
 
-func (m *NullModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, targetSPID uint32) error {
+func (m *NullModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error {
 	return nil
 }
 

@@ -983,6 +983,5 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 		go recoverGVGScheduler.Start()
 		go recoverFailedObjectScheduler.Start()
 	}
-
 	return nil
 }
