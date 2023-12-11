@@ -5,6 +5,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -69,18 +70,18 @@ var RecoverVGFCmd = &cli.Command{
 	Description: ``,
 }
 
-//var CompleteSwapInCmd = &cli.Command{
-//	Action: CompleteSwapInAction,
-//	Name:   "complete swap in",
-//	Usage:  "complete swap in",
-//	Flags: []cli.Flag{
-//		utils.ConfigFileFlag,
-//		gvgIDFlag,
-//		vgfIDFlag,
-//	},
-//	Category:    swapInCommands,
-//	Description: ``,
-//}
+var CompleteSwapInCmd = &cli.Command{
+	Action: CompleteSwapInAction,
+	Name:   "complete swap in",
+	Usage:  "complete swap in",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		gvgIDFlag,
+		vgfIDFlag,
+	},
+	Category:    swapInCommands,
+	Description: ``,
+}
 
 func SwapInAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
@@ -104,25 +105,25 @@ func SwapInAction(ctx *cli.Context) error {
 	return err
 }
 
-//func CompleteSwapInAction(ctx *cli.Context) error {
-//	cfg, err := utils.MakeConfig(ctx)
-//	if err != nil {
-//		return err
-//	}
-//
-//	gvgID := ctx.Uint64(gvgIDFlag.Name)
-//	gvgfID := ctx.Uint64(gvgIDFlag.Name)
-//
-//	completeSwapIn := &virtualgrouptypes.MsgCompleteSwapIn{
-//		GlobalVirtualGroupFamilyId: uint32(gvgfID),
-//		GlobalVirtualGroupId:       uint32(gvgID),
-//		StorageProvider:            cfg.SpAccount.SpOperatorAddress,
-//	}
-//
-//	spClient := utils.MakeGfSpClient(cfg)
-//	_, err = spClient.(ctx.Context, completeSwapIn)
-//	return err
-//}
+func CompleteSwapInAction(ctx *cli.Context) error {
+	cfg, err := utils.MakeConfig(ctx)
+	if err != nil {
+		return err
+	}
+
+	gvgID := ctx.Uint64(gvgIDFlag.Name)
+	gvgfID := ctx.Uint64(gvgIDFlag.Name)
+
+	completeSwapIn := &virtualgrouptypes.MsgCompleteSwapIn{
+		GlobalVirtualGroupFamilyId: uint32(gvgfID),
+		GlobalVirtualGroupId:       uint32(gvgID),
+		StorageProvider:            cfg.SpAccount.SpOperatorAddress,
+	}
+
+	spClient := utils.MakeGfSpClient(cfg)
+	_, err = spClient.CompleteSwapIn(ctx.Context, completeSwapIn)
+	return err
+}
 
 func RecoverGVGAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
@@ -151,8 +152,25 @@ func RecoverGVGAction(ctx *cli.Context) error {
 		return errors.New("sp is not successor sp")
 	}
 
+	//get replicateIndex
+	gvgInfo, err := spClient.GetGlobalVirtualGroupByGvgID(ctx.Context, uint32(gvgID))
+	if err != nil {
+		return err
+	}
+	vgfId := gvgInfo.GetFamilyId()
+	vgfInfo, err := spClient.GetVirtualGroupFamily(ctx.Context, vgfId)
+	if err != nil {
+		return err
+	}
+	var replicateIndex int32
+	for idx, gvg := range vgfInfo.GetGlobalVirtualGroupIds() {
+		if uint64(gvg) == gvgID {
+			replicateIndex = int32(idx - 1)
+			break
+		}
+	}
 	// trigger
-	//return spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), swapInInfo.)
+	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), replicateIndex)
 }
 
 func RecoverVGFAction(ctx *cli.Context) error {
@@ -183,5 +201,5 @@ func RecoverVGFAction(ctx *cli.Context) error {
 	}
 
 	// trigger
-	//return spClient.TriggerRecoverForSuccessorSP(ctx.Context, uint32(vgfID), 0, swapInInfo.TargetSpId)
+	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, uint32(vgfID), 0, -1)
 }

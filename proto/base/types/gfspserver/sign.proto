@@ -54,6 +54,7 @@ message GfSpSignRequest {
     base.types.gfsptask.GfSpBucketMigrationInfo gfsp_bucket_migrate_info = 24;
     greenfield.storage.MsgRejectMigrateBucket reject_migrate_bucket = 25;
     greenfield.virtualgroup.MsgReserveSwapIn reserve_swap_in = 26;
+  greenfield.virtualgroup.MsgCompleteSwapIn complete_swap_in = 27;
   }
 }
 
