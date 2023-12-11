@@ -120,7 +120,7 @@ type ManageModular struct {
 	recoverMtx      sync.RWMutex
 	recoveryTaskMap map[string]string
 
-	recoverObjectStats map[uint64]*ObjectPieceStats // objectId -> ObjectPieceStats
+	recoverObjectStats *ObjectsSegmentsStats // objectId -> ObjectSegmentsStats
 
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
@@ -959,23 +959,24 @@ func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
 	return m.recoveryFailedList
 }
 
-func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, targetSpID uint32) error {
-	return m.startRecoverScheduler(vgfID, gvgID, targetSpID)
-
+func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID, redundancyIndex uint32) error {
+	return m.startRecoverSchedulers(vgfID, gvgID, redundancyIndex)
 }
 
 // start the loop, failed object will be
-func (m *ManageModular) startRecoverScheduler(vgfID, gvgID, targetSpID uint32) (err error) {
-	s := NewRecoverGVGScheduler(m, vgfID, targetSpID)
-	if err = s.Init(gvgID); err != nil {
-		return err
-	}
-	go s.Start()
-	go func() {
-		tick := time.NewTicker(10 * time.Second)
-		for range tick.C {
-			s.MonitorBatch()
+func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID, redundancyIndex uint32) (err error) {
+	if vgfID != 0 {
+		recoverVGFScheduler, err := NewRecoverVGFScheduler(m, vgfID)
+		if err != nil {
+			return err
 		}
-	}()
+		go recoverVGFScheduler.Start()
+	} else {
+		recoverGVGScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, redundancyIndex)
+		if err != nil {
+			return err
+		}
+		go recoverGVGScheduler.Start()
+	}
 	return nil
 }

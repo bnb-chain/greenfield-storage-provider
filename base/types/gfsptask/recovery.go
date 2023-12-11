@@ -191,6 +191,14 @@ func (m *GfSpRecoverPieceTask) BySuccessorSP() bool {
 	return m.BySuccessorSp
 }
 
+func (m *GfSpRecoverPieceTask) SetGVGID(gvgID uint32) {
+	m.GvgId = gvgID
+}
+
+func (m *GfSpRecoverPieceTask) GetGVGID() uint32 {
+	return m.GvgId
+}
+
 func (m *GfSpRecoverPieceTask) GetSignBytes() []byte {
 	fakeMsg := &GfSpRecoverPieceTask{
 		ObjectInfo:    m.GetObjectInfo(),

@@ -199,14 +199,17 @@ type ExitRecoverDB interface {
 	GetRecoverGVGStats(gvgID uint32) (*RecoverGVGStats, error)
 	SetRecoverGVGStats(gvg []*RecoverGVGStats) error
 	UpdateRecoverGVGStats(gvg *RecoverGVGStats) (err error)
-	DeleteRecoverGVGStats(vgfID, gvgID uint32) (err error)
+	DeleteRecoverGVGStats(gvgID uint32) (err error)
 	GetRecoverGVGStatsByFamilyIDAndStatus(vgfID uint32, status RecoverStatus) ([]*RecoverGVGStats, error)
 
 	InsertRecoverFailedObject(object *RecoverFailedObject) error
-	UpdateRecoverObject(object *RecoverFailedObject) (err error)
-	DeleteRecoverObject(objectID uint64) (err error)
-	GetRecoverObject(objectID uint64) (*RecoverFailedObject, error)
-	GetRecoverObjectsByGVGIDAndStatus(gvgID uint32, status RecoverStatus) ([]*RecoverFailedObject, error)
+	UpdateRecoverFailedObject(object *RecoverFailedObject) (err error)
+	DeleteRecoverFailedObject(objectID uint64) (err error)
+	GetRecoverFailedObject(objectID uint64) (*RecoverFailedObject, error)
+	GetRecoverFailedObjects(retry, limit uint32) ([]*RecoverFailedObject, error)
 
-	InsertBatchRecoverObjects(gvg *RecoverGVGStats, objects []*RecoverFailedObject) error
+	SetVerifyGVGProgress(gvgProgress *VerifyGVGProgress) error
+	GetVerifyGVGProgress(gvgID uint32) (*VerifyGVGProgress, error)
+	UpdateVerifyGVGProgress(gvgProgress *VerifyGVGProgress) error
+	DeleteVerifyGVGProgress(gvgID uint64) (err error)
 }

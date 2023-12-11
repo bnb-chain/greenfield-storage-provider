@@ -92,6 +92,7 @@ message GfSpRecoverPieceTask {
   bytes signature = 7;
   bool recovered = 8;
   bool by_successor_sp = 9;
+  uint32 gvg_id = 10;
 }
 
 message GfSpReceivePieceTask {

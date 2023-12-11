@@ -8,7 +8,22 @@ import (
 
 const ListRecoverObjectLimit = 50
 
-func (s *SpDBImpl) SetRecoverGVGStats(stats []*corespdb.RecoverGVGStats) error {
+func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, error) {
+	var queryReturn RecoverGVGStatsTable
+	if err := s.db.Model(&RecoverGVGStatsTable{}).
+		Where("virtual_group_id = ?", gvgID).
+		First(&queryReturn).Error; err != nil {
+		return nil, err
+	}
+	return &spdb.RecoverGVGStats{
+		VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
+		VirtualGroupID:       queryReturn.VirtualGroupID,
+		RedundancyIndex:      uint32(queryReturn.RedundancyIndex),
+		Status:               queryReturn.Status,
+	}, nil
+}
+
+func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 	result := s.db.Create(&RecoverGVGStatsTable{
 		VirtualGroupFamilyID: stats.VirtualGroupFamilyID,
 		VirtualGroupID:       stats.VirtualGroupID,
@@ -31,7 +46,7 @@ func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error
 	result := s.db.Table(RecoverGVGStatsTableName).Where("virtual_group_id = ?", stats.VirtualGroupID).
 		Updates(&RecoverGVGStatsTable{
 			Status:             stats.Status,
-			StartAfterObjectID: stats.StartAfterObjectID,
+			StartAfterObjectID: stats.StartAfter,
 		})
 	if result.Error != nil {
 		return fmt.Errorf("failed to update the GVG status for recover_stats table: %s", result.Error)
@@ -39,27 +54,11 @@ func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error
 	return nil
 }
 
-func (s *SpDBImpl) DeleteRecoverGVGStats(vgfID, gvgID uint32) (err error) {
+func (s *SpDBImpl) DeleteRecoverGVGStats(gvgID uint32) (err error) {
 	err = s.db.Table(RecoverGVGStatsTableName).Delete(&RecoverGVGStatsTable{
 		VirtualGroupID: gvgID,
 	}).Error
 	return err
-}
-
-func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, error) {
-	var queryReturn RecoverGVGStatsTable
-	if err := s.db.Model(&RecoverGVGStatsTable{}).
-		Where("virtual_group_id = ?", gvgID).
-		First(&queryReturn).Error; err != nil {
-		return nil, err
-	}
-	return &spdb.RecoverGVGStats{
-		VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
-		VirtualGroupID:       queryReturn.VirtualGroupID,
-		ExitingSPID:          queryReturn.ExitingSPID,
-		RedundancyIndex:      queryReturn.RedundancyIndex,
-		Status:               queryReturn.Status,
-	}, nil
 }
 
 func (s *SpDBImpl) GetRecoverGVGStatsByFamilyIDAndStatus(familyID uint32, status int) ([]*spdb.RecoverGVGStats, error) {
@@ -81,8 +80,7 @@ func (s *SpDBImpl) GetRecoverGVGStatsByFamilyIDAndStatus(familyID uint32, status
 		returnGVGstats = append(returnGVGstats, &spdb.RecoverGVGStats{
 			VirtualGroupFamilyID: gvgStats.VirtualGroupFamilyID,
 			VirtualGroupID:       gvgStats.VirtualGroupID,
-			ExitingSPID:          gvgStats.ExitingSPID,
-			RedundancyIndex:      gvgStats.RedundancyIndex,
+			RedundancyIndex:      uint32(gvgStats.RedundancyIndex),
 			Status:               gvgStats.Status,
 		})
 	}
@@ -93,7 +91,7 @@ func (s *SpDBImpl) InsertRecoverFailedObject(object *spdb.RecoverFailedObject) e
 	result := s.db.Create(&RecoverFailedObjectTable{
 		ObjectID:        object.ObjectID,
 		VirtualGroupID:  object.VirtualGroupID,
-		RedundancyIndex: object.RedundancyIndex,
+		RedundancyIndex: int32(object.RedundancyIndex),
 	})
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
 		return nil
@@ -121,7 +119,7 @@ func (s *SpDBImpl) GetRecoverObject(objectID uint64) (*spdb.RecoverFailedObject,
 	return &spdb.RecoverFailedObject{
 		ObjectID:        objectID,
 		VirtualGroupID:  queryReturn.VirtualGroupID,
-		RedundancyIndex: queryReturn.RedundancyIndex,
+		RedundancyIndex: uint32(queryReturn.RedundancyIndex),
 	}, nil
 }
 
@@ -145,7 +143,7 @@ func (s *SpDBImpl) GetRecoverObjectsByGVGID(gvgID uint32) ([]*spdb.RecoverFailed
 		returnObjects = append(returnObjects, &spdb.RecoverFailedObject{
 			ObjectID:        object.ObjectID,
 			VirtualGroupID:  object.VirtualGroupID,
-			RedundancyIndex: object.RedundancyIndex,
+			RedundancyIndex: uint32(object.RedundancyIndex),
 		})
 	}
 	return returnObjects, nil

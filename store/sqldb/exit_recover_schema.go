@@ -20,6 +20,7 @@ type RecoverFailedObjectTable struct {
 	ObjectID        uint64 `gorm:"primary_key"`
 	VirtualGroupID  uint32
 	RedundancyIndex int32 `gorm:"index:redundancy_index"`
+	Retry           int
 }
 
 // TableName is used to set MigrateGVGTable Schema's table name in database.

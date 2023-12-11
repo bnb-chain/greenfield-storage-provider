@@ -761,35 +761,14 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		m.recoverMtx.Unlock()
 		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
 
-		m.recoverMtx.Lock()
-		objectPieceStats, ok := m.recoverObjectStats[task.GetObjectInfo().Id.Uint64()]
-		if !ok {
+		if task.BySuccessorSP() {
+			objectID := task.GetObjectInfo().Id.Uint64()
+			success := m.recoverObjectStats.addSegmentRecord(objectID, true, task.GetSegmentIdx())
+			if !success {
+				return nil
+			}
 			return nil
 		}
-		objectPieceStats.SuccessPieceCount[task.GetSegmentIdx()] = struct{}{}
-		if len(objectPieceStats.SuccessPieceCount)+len(objectPieceStats.FailedPieceCount) == objectPieceStats.TotalPiece {
-			objectPieceStats.Processed = true
-			if len(objectPieceStats.FailedPieceCount) != 0 {
-
-				object := &spdb.RecoverFailedObject{
-					ObjectID:        task.GetObjectInfo().Id.Uint64(),
-					VirtualGroupID:  task.GetObjectInfo().LocalVirtualGroupId,
-					RedundancyIndex: task.GetEcIdx(),
-				}
-				err := m.baseApp.GfSpDB().InsertRecoverFailedObject(object)
-				if err != nil {
-					if strings.Contains(err.Error(), "Duplicate entry") {
-						log.Infow("insert recover failed object duplicate entry", "task_info", task.Info())
-						return nil
-					} else {
-						log.CtxErrorw(ctx, "failed to recover failed object duplicate entry", "task_info", task.Info(), "error", err)
-						return ErrGfSpDBWithDetail("failed to recover failed object duplicate entry, task_info: " + task.Info() + ", error: " + err.Error())
-					}
-				}
-			}
-		}
-		m.recoverMtx.Unlock()
-		return nil
 	}
 
 	if task.Error() != nil {
@@ -832,34 +811,27 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 		delete(m.recoveryTaskMap, handleTask.Key().String())
 		m.recoverMtx.Unlock()
 
-		m.recoverMtx.Lock()
-		objectPieceStats, ok := m.recoverObjectStats[handleTask.GetObjectInfo().Id.Uint64()]
-		if !ok {
-			return nil
-		}
-
-		objectPieceStats.FailedPieceCount[handleTask.GetSegmentIdx()] = struct{}{}
-		if len(objectPieceStats.SuccessPieceCount)+len(objectPieceStats.FailedPieceCount) == objectPieceStats.TotalPiece {
-			objectPieceStats.Processed = true
-
-			object := &spdb.RecoverFailedObject{
-				ObjectID:        handleTask.GetObjectInfo().Id.Uint64(),
-				VirtualGroupID:  handleTask.GetObjectInfo().LocalVirtualGroupId,
-				RedundancyIndex: handleTask.GetEcIdx(),
+		if handleTask.BySuccessorSP() {
+			objectID := handleTask.GetObjectInfo().Id.Uint64()
+			success := m.recoverObjectStats.addSegmentRecord(objectID, false, handleTask.GetSegmentIdx())
+			if !success {
+				return nil
 			}
-			err := m.baseApp.GfSpDB().InsertRecoverFailedObject(object)
-			if err != nil {
-				if strings.Contains(err.Error(), "Duplicate entry") {
-					log.Infow("insert recover failed object duplicate entry", "task_info", handleTask.Info())
-					return nil
-				} else {
-					log.CtxErrorw(ctx, "failed to recover failed object duplicate entry", "task_info", handleTask.Info(), "error", err)
-					return ErrGfSpDBWithDetail("failed to recover failed object duplicate entry, task_info: " + handleTask.Info() + ", error: " + err.Error())
+
+			if m.recoverObjectStats.isRecoverFailed(objectID) {
+				object := &spdb.RecoverFailedObject{
+					ObjectID:        handleTask.GetObjectInfo().Id.Uint64(),
+					VirtualGroupID:  handleTask.GetGVGID(),
+					RedundancyIndex: uint32(handleTask.GetEcIdx()),
+				}
+				err := m.baseApp.GfSpDB().InsertRecoverFailedObject(object)
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to insert recover failed object entry", "task_info", handleTask.Info(), "error", err)
+					return ErrGfSpDBWithDetail("failed to insert recover failed object entry, task_info: " + handleTask.Info() + ", error: " + err.Error())
 				}
 			}
+			return nil
 		}
-
-		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
 	}
 	return nil
 }

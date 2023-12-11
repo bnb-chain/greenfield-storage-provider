@@ -542,6 +542,8 @@ type RecoveryPieceTask interface {
 	SetRecoverDone()
 	// BySuccessorSP returns whether the task is initial by a successor SP
 	BySuccessorSP() bool
+	//
+	GetGVGID() uint32
 }
 
 // MigrateGVGTask is an abstract interface to record migrate gvg information.
