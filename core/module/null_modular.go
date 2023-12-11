@@ -77,6 +77,10 @@ func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, 
 	return 0, 0, 0, 0, 0, 0, 0, nil
 }
 
+func (m *NullModular) QueryBucketMigrationProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	return &gfspserver.MigrateBucketProgressMeta{}, nil
+}
+
 func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
 	return nil
 }

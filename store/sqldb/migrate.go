@@ -533,6 +533,33 @@ func (s *SpDBImpl) QueryMigrateBucketState(bucketID uint64) (int, error) {
 	return state, nil
 }
 
+func (s *SpDBImpl) QueryMigrateBucketProgress(bucketID uint64) (*spdb.MigrateBucketProgressMeta, error) {
+	var (
+		result      *gorm.DB
+		queryReturn *MigrateBucketProgressTable
+	)
+
+	progress := &spdb.MigrateBucketProgressMeta{}
+
+	queryReturn = &MigrateBucketProgressTable{}
+	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return &spdb.MigrateBucketProgressMeta{}, result.Error
+	}
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
+	}
+
+	progress.BucketID = queryReturn.BucketID
+	progress.SubscribedBlockHeight = queryReturn.SubscribedBlockHeight
+	progress.LastGCObjectID = queryReturn.LastGCObjectID
+	progress.LastGCGvgID = queryReturn.LastGCGvgID
+	progress.RecoupQuota = queryReturn.RecoupQuota
+	progress.MigrationState = queryReturn.MigrationState
+
+	return progress, nil
+}
+
 func (s *SpDBImpl) ListBucketMigrationToConfirm() ([]*spdb.MigrateBucketProgressMeta, error) {
 	var queryReturns []MigrateBucketProgressTable
 	migrationStates := []int{11, 13}

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -951,6 +952,37 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	recoveryProcessCount = len(m.recoveryTaskMap)
 	recoveryFailedList = m.recoveryFailedList
 	return
+}
+
+func (m *ManageModular) QueryBucketMigrationProgress(_ context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	var (
+		progress      *spdb.MigrateBucketProgressMeta
+		err           error
+		migratedBytes uint64
+	)
+
+	if progress, err = m.baseApp.GfSpDB().QueryMigrateBucketProgress(bucketID); err != nil {
+		return nil, err
+	}
+
+	if migratedBytes, err = m.bucketMigrateScheduler.getMigratedBytesSize(bucketID); err != nil {
+		return nil, err
+	}
+
+	progressMeta := &gfspserver.MigrateBucketProgressMeta{
+		BucketId:               progress.BucketID,
+		SubscribedBlockHeight:  progress.SubscribedBlockHeight,
+		MigrationState:         uint32(progress.MigrationState),
+		GvgTotalNum:            progress.GvgTotalNum,
+		GvgNumMigratedFinished: progress.GvgNumMigratedFinished,
+		GvgNumGcFinished:       progress.GvgNumGcFinished,
+		PreDeductedQuota:       progress.PreDeductedQuota,
+		RecoupQuota:            progress.RecoupQuota,
+		LastGcObjectId:         progress.LastGCObjectID,
+		LastGcGvgId:            progress.LastGCGvgID,
+		MigratedBytes:          migratedBytes,
+	}
+	return progressMeta, err
 }
 
 func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {

@@ -2,7 +2,6 @@ package gfspclient
 
 import (
 	"context"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -255,4 +254,21 @@ func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, err
 		return nil, ErrRPCUnknownWithDetail("client failed to reset manager's recovery failed list, error: ", err)
 	}
 	return resp.GetRecoveryFailedList(), nil
+}
+
+func (s *GfSpClient) GetMigrationBucketState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	req := &gfspserver.GfSpQueryBucketMigrationProgressRequest{
+		BucketId: bucketID,
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryBucketMigrationProgress(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query bucket migration's progress", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to query bucket migration's progress, error: ", err)
+	}
+	return resp.GetProgress(), nil
 }

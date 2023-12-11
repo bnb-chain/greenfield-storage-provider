@@ -32,6 +32,7 @@ const (
 	viewObjectByUniversalEndpointName              = "ViewObjectByUniversalEndpoint"
 	getObjectMetaRouterName                        = "GetObjectMeta"
 	getBucketMetaRouterName                        = "GetBucketMeta"
+	queryMigrationProgressRouterName               = "QueryMigrationProgress"
 	getGroupListRouterName                         = "GetGroupList"
 	listBucketsByIDsRouterName                     = "ListBucketsByIDs"
 	listObjectsByIDsRouterName                     = "ListObjectsByIDs"
@@ -168,6 +169,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// Get Bucket Meta
 		r.NewRoute().Name(getBucketMetaRouterName).Methods(http.MethodGet).Queries(GetBucketMetaQuery, "").HandlerFunc(g.getBucketMetaHandler)
+
+		// Query migration progress
+		r.NewRoute().Name(queryMigrationProgressRouterName).Methods(http.MethodGet).HandlerFunc(g.queryBucketMigrationProgressHandler).
+			Queries(GetBucketMigrationQuery, "")
 
 		// Get Object Meta
 		r.NewRoute().Name(getObjectMetaRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectMetaHandler).

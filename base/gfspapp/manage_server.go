@@ -360,6 +360,21 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 	}, nil
 }
 
+func (g *GfSpBaseApp) GfSpQueryBucketMigrationProgress(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrationProgressRequest) (
+	*gfspserver.GfSpQueryBucketMigrationProgressResponse, error) {
+	var (
+		progress *gfspserver.MigrateBucketProgressMeta
+		err      error
+	)
+	if progress, err = g.manager.QueryBucketMigrationProgress(ctx, req.GetBucketId()); err != nil {
+		return nil, err
+	}
+
+	return &gfspserver.GfSpQueryBucketMigrationProgressResponse{
+		Progress: progress,
+	}, nil
+}
+
 func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (
 	*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
 	var (

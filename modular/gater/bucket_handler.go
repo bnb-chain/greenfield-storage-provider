@@ -3,14 +3,17 @@ package gater
 import (
 	"encoding/xml"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -227,4 +230,97 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 		return
 	}
 	log.Debugw("succeed to list bucket read records", "xml_info", xmlInfo)
+}
+
+// queryBucketMigrationProgressHandler handles the query bucket migration  progress request.
+func (g *GateModular) queryBucketMigrationProgressHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err                  error
+		reqCtx               *RequestContext
+		authenticated        bool
+		bucketInfo           *storagetypes.BucketInfo
+		errDescription       string
+		taskStateDescription string
+		migrationState       int32
+		progressMeta         *gfspserver.MigrateBucketProgressMeta
+		migratedBytes        uint64
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			reqCtx.SetHTTPCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	if reqCtx, err = NewRequestContext(r, g); err != nil {
+		return
+	}
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
+		coremodule.AuthOpTypeQueryBucketMigrationProgress, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
+	}
+
+	if bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		return
+	}
+
+	if progressMeta, err = g.baseApp.GfSpClient().GetMigrationBucketState(reqCtx.Context(), bucketInfo.Id.Uint64()); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get bucket migration job state", "error", err)
+		if !strings.Contains(err.Error(), "no uploading record") {
+			return
+		}
+		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(0))
+		err = nil
+	} else {
+		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(migrationState))
+		migrationState = int32(progressMeta.GetMigrationState())
+		migratedBytes = progressMeta.GetMigratedBytes()
+	}
+
+	var xmlInfo = struct {
+		XMLName             xml.Name `xml:"QueryMigrationProgress"`
+		Version             string   `xml:"version,attr"`
+		ProgressDescription string   `xml:"ProgressDescription"`
+		ErrorDescription    string   `xml:"ErrorDescription"`
+		MigratedBytes       uint64   `xml:"MigratedBytes"`
+		MigrationState      uint32   `xml:"MigrationState"`
+	}{
+		Version:             GnfdResponseXMLVersion,
+		ProgressDescription: taskStateDescription,
+		ErrorDescription:    errDescription,
+		MigratedBytes:       migratedBytes,
+		MigrationState:      uint32(migrationState),
+	}
+	xmlBody, err := xml.Marshal(&xmlInfo)
+	if err != nil {
+		log.Errorw("failed to marshal xml", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	if _, err = w.Write(xmlBody); err != nil {
+		log.Errorw("failed to write body", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
+		return
+	}
+	log.Debugw("succeed to query bucket migration progress", "xml_info", xmlInfo)
 }

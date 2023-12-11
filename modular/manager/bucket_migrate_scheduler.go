@@ -302,7 +302,6 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 	var err error
 	bucketID := migrateExecuteUnit.BucketID
 	gvgUnitsTotal := uint32(len(plan.gvgUnitMap))
-	gvgUnitsFinished := uint32(len(plan.finishedGvgUnits))
 	// update migrate gvg status
 	if err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateKey, int(migrateStatus)); err != nil {
 		log.Errorw("update migrate gvg status", "migrate_key", migrateKey, "error", err)
@@ -316,6 +315,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 	migrateExecuteUnit.MigrateStatus = migrateStatus
 	plan.finishedGvgUnits[migrateExecuteUnit.SrcGVG.GetId()] = struct{}{}
 
+	gvgUnitsFinished := uint32(len(plan.finishedGvgUnits))
 	if err = plan.manager.baseApp.GfSpDB().UpdateBucketMigrationMigratingProgress(bucketID, gvgUnitsTotal, gvgUnitsFinished); err != nil {
 		log.Errorw("failed to update bucket migration migrating progress", "migrate_key", migrateKey, "total", gvgUnitsTotal, "finished", gvgUnitsFinished, "error", err)
 		return err
@@ -372,9 +372,7 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 			return // Terminate the scheduling
 		default:
 			log.Debugw("start to push migrate gvg task to queue", "plan", plan, "gvg_unit_map", plan.gvgUnitMap)
-			if err := UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, MigratingGvgDoing); err != nil {
-				return
-			}
+
 			for _, migrateGVGUnit := range plan.gvgUnitMap {
 				// Skipping units that have already been scheduled
 				if migrateGVGUnit.MigrateStatus != WaitForMigrate {
@@ -397,9 +395,11 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 				log.Debugw("success to push migrate gvg task to queue", "migrateGVGUnit", migrateGVGUnit, "migrateGVGTask", migrateGVGTask)
 
 				// Update database: migrateStatus to migrating
-				err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateGVGUnit.Key(), int(Migrating))
-				if err != nil {
+				if err = plan.manager.baseApp.GfSpDB().UpdateMigrateGVGUnitStatus(migrateGVGUnit.Key(), int(Migrating)); err != nil {
 					log.Errorw("failed to update migrate gvg status", "gvg_unit", migrateGVGUnit, "error", err)
+					return
+				}
+				if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, MigratingGvgDoing); err != nil {
 					return
 				}
 				migrateGVGUnit.MigrateStatus = Migrating

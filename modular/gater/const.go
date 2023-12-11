@@ -71,6 +71,8 @@ const (
 	ListObjectsIncludeRemovedQuery = "include-removed"
 	// GetBucketMetaQuery defines get bucket metadata query, which is used to route request
 	GetBucketMetaQuery = "bucket-meta"
+	// GetBucketMigrationQuery defines get bucket metadata query, which is used to route request
+	GetBucketMigrationQuery = "bucket-migration-progress"
 	// GetObjectMetaQuery defines get object metadata query, which is used to route request
 	GetObjectMetaQuery = "object-meta"
 	// GetGroupListSourceTypeQuery defines get group list source type query, which is used to route request
