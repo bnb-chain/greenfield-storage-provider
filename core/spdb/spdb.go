@@ -197,10 +197,9 @@ type MigrateDB interface {
 
 type ExitRecoverDB interface {
 	GetRecoverGVGStats(gvgID uint32) (*RecoverGVGStats, error)
-	SetRecoverGVGStats(gvg []*RecoverGVGStats) error
-	UpdateRecoverGVGStats(gvg *RecoverGVGStats) (err error)
+	SetRecoverGVGStats(stats []*RecoverGVGStats) error
+	UpdateRecoverGVGStats(stats *RecoverGVGStats) (err error)
 	DeleteRecoverGVGStats(gvgID uint32) (err error)
-	GetRecoverGVGStatsByFamilyIDAndStatus(vgfID uint32, status RecoverStatus) ([]*RecoverGVGStats, error)
 
 	InsertRecoverFailedObject(object *RecoverFailedObject) error
 	UpdateRecoverFailedObject(object *RecoverFailedObject) (err error)
@@ -208,7 +207,7 @@ type ExitRecoverDB interface {
 	GetRecoverFailedObject(objectID uint64) (*RecoverFailedObject, error)
 	GetRecoverFailedObjects(retry, limit uint32) ([]*RecoverFailedObject, error)
 
-	SetVerifyGVGProgress(gvgProgress *VerifyGVGProgress) error
+	SetVerifyGVGProgress(gvgProgress []*VerifyGVGProgress) error
 	GetVerifyGVGProgress(gvgID uint32) (*VerifyGVGProgress, error)
 	UpdateVerifyGVGProgress(gvgProgress *VerifyGVGProgress) error
 	DeleteVerifyGVGProgress(gvgID uint64) (err error)

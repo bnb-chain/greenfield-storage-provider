@@ -4,8 +4,7 @@ package sqldb
 type RecoverGVGStatsTable struct {
 	VirtualGroupID       uint32 `gorm:"primary_key"`
 	VirtualGroupFamilyID uint32 // only need to record it when SP is the successor Primary SP
-	ExitingSPID          uint32
-	RedundancyIndex      int32 `gorm:"index:redundancy_index"`
+	RedundancyIndex      int32  `gorm:"index:redundancy_index"`
 	StartAfterObjectID   uint64
 	Limit                uint32
 	Status               int //  NotDone, Processed, Completed
@@ -26,4 +25,15 @@ type RecoverFailedObjectTable struct {
 // TableName is used to set MigrateGVGTable Schema's table name in database.
 func (RecoverFailedObjectTable) TableName() string {
 	return RecoverFailedObjectTableName
+}
+
+type VerifyGVGProgressTable struct {
+	VirtualGroupID  uint32 `gorm:"primary_key"`
+	RedundancyIndex int32  `gorm:"index:redundancy_index"`
+	StartAfter      uint64
+	Limit           uint32
+}
+
+func (VerifyGVGProgressTable) TableName() string {
+	return VerifyGVGProgressTableName
 }

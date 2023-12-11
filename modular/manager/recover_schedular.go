@@ -18,15 +18,17 @@ import (
 )
 
 const (
-	recoverBatchSize = 10
-	pauseInterval    = 10 * time.Second
-	maxRecoveryRetry = 3
-	MaxRecoveryTime  = 50
+	recoverBatchSize         = 10
+	pauseInterval            = 10 * time.Second
+	maxRecoveryRetry         = 3
+	MaxRecoveryTime          = 50
+	primarySPRedundancyIndex = -1
 )
 
 type RecoverVGFScheduler struct {
-	manager    *ManageModular
-	Schedulers []*RecoverGVGScheduler
+	manager           *ManageModular
+	RecoverSchedulers []*RecoverGVGScheduler
+	VerifySchedulers  []*VerifyGVGScheduler
 }
 
 func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFScheduler, error) {
@@ -41,6 +43,10 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 	}
 	recoveryUnits := make([]*spdb.RecoverGVGStats, 0, len(vgf.GetGlobalVirtualGroupIds()))
 	gvgSchedulers := make([]*RecoverGVGScheduler, 0, len(vgf.GetGlobalVirtualGroupIds()))
+
+	verifyGVGProgresses := make([]*spdb.VerifyGVGProgress, 0, len(vgf.GetGlobalVirtualGroupIds()))
+	verifySchedulers := make([]*VerifyGVGScheduler, 0, len(vgf.GetGlobalVirtualGroupIds()))
+
 	for _, gvgID := range vgf.GetGlobalVirtualGroupIds() {
 		recoveryUnits = append(recoveryUnits, &spdb.RecoverGVGStats{
 			VirtualGroupFamilyID: vgfID,
@@ -48,25 +54,46 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 			StartAfter:           0,
 			Limit:                recoverBatchSize,
 		})
-		gvgScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, -1)
+		gvgScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, primarySPRedundancyIndex)
 		if err != nil {
 			return nil, err
 		}
 		gvgSchedulers = append(gvgSchedulers, gvgScheduler)
+
+		verifyGVGProgresses = append(verifyGVGProgresses, &spdb.VerifyGVGProgress{
+			VirtualGroupID:  gvgID,
+			RedundancyIndex: primarySPRedundancyIndex,
+			StartAfter:      0,
+			Limit:           recoverBatchSize,
+		})
+		verifyScheduler, err := NewVerifyGVGScheduler(m, gvgID, vgfID, primarySPRedundancyIndex)
+		if err != nil {
+			return nil, err
+		}
+		verifySchedulers = append(verifySchedulers, verifyScheduler)
 	}
 	err = m.baseApp.GfSpDB().SetRecoverGVGStats(recoveryUnits)
 	if err != nil {
 		return nil, err
 	}
+	err = m.baseApp.GfSpDB().SetVerifyGVGProgress(verifyGVGProgresses)
+	if err != nil {
+		return nil, err
+	}
+
 	return &RecoverVGFScheduler{
-		manager:    m,
-		Schedulers: gvgSchedulers,
+		manager:           m,
+		RecoverSchedulers: gvgSchedulers,
+		VerifySchedulers:  verifySchedulers,
 	}, nil
 }
 
 func (s *RecoverVGFScheduler) Start() {
-	for _, gvgScheduler := range s.Schedulers {
-		go gvgScheduler.Start()
+	for _, g := range s.RecoverSchedulers {
+		go g.Start()
+	}
+	for _, v := range s.VerifySchedulers {
+		go v.Start()
 	}
 }
 
@@ -170,11 +197,11 @@ type RecoverGVGScheduler struct {
 	currentBatchID  uint64 // every 10 objects is a batch
 	vgfID           uint32
 	gvgID           uint32
-	redundancyIndex uint32
+	redundancyIndex int32
 	curStartAfter   uint64
 }
 
-func NewRecoverGVGScheduler(m *ManageModular, vgfID, gvgID, redundancyIndex uint32) (*RecoverGVGScheduler, error) {
+func NewRecoverGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyIndex int32) (*RecoverGVGScheduler, error) {
 	if vgfID == 0 {
 		err := m.baseApp.GfSpDB().SetRecoverGVGStats([]*spdb.RecoverGVGStats{{
 			VirtualGroupFamilyID: vgfID,
@@ -411,16 +438,17 @@ type VerifyGVGScheduler struct {
 	manager         *ManageModular
 	vgfID           uint32
 	gvgID           uint32
-	redundancyIndex uint32
+	redundancyIndex int32
 	curStartAfter   uint64
 }
 
-func NewVerifyGVGScheduler(m *ManageModular, gvgID, vgfID, redundancyIndex uint32) (*VerifyGVGScheduler, error) {
-	err := m.baseApp.GfSpDB().SetVerifyGVGProgress(&spdb.VerifyGVGProgress{
+func NewVerifyGVGScheduler(m *ManageModular, gvgID, vgfID uint32, redundancyIndex int32) (*VerifyGVGScheduler, error) {
+	err := m.baseApp.GfSpDB().SetVerifyGVGProgress([]*spdb.VerifyGVGProgress{{
 		VirtualGroupID:  gvgID,
 		RedundancyIndex: redundancyIndex,
 		Limit:           recoverBatchSize,
-	})
+	}})
+
 	if err != nil {
 		return nil, err
 	}
@@ -503,8 +531,8 @@ func (s *VerifyGVGScheduler) Start() {
 	}
 }
 
-func verifyIntegrityAndPieceHash(m *ManageModular, object *types.ObjectInfo, redundancyIndex uint32, maxSegmentSize uint64) (bool, error) {
-	_, err := m.baseApp.GfSpDB().GetObjectIntegrity(object.Id.Uint64(), int32(redundancyIndex))
+func verifyIntegrityAndPieceHash(m *ManageModular, object *types.ObjectInfo, redundancyIndex int32, maxSegmentSize uint64) (bool, error) {
+	_, err := m.baseApp.GfSpDB().GetObjectIntegrity(object.Id.Uint64(), redundancyIndex)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil
@@ -513,7 +541,7 @@ func verifyIntegrityAndPieceHash(m *ManageModular, object *types.ObjectInfo, red
 		return false, err
 	}
 	segmentCount := segmentPieceCount(object.PayloadSize, maxSegmentSize)
-	pieceChecksums, err := m.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(object.Id.Uint64(), int32(redundancyIndex), segmentCount)
+	pieceChecksums, err := m.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(object.Id.Uint64(), redundancyIndex, segmentCount)
 	if err != nil {
 		return false, err
 	}

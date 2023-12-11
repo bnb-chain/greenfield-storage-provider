@@ -24,6 +24,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -876,8 +877,26 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		sspAddress = append(sspAddress, sp.OperatorAddress)
 	}
 
+	isSuccessor := false
+	var successorSP *sptypes.StorageProvider
+	var swapInInfo *virtualgrouptypes.SwapInInfo
+
+	if recoveryTask.GetBySuccessorSp() {
+		swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, 0)
+		if err != nil {
+			return nil, ErrConsensusWithDetail("query swapInInfo err: " + err.Error())
+		}
+		successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
+		if err != nil {
+			return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
+		}
+		if primarySp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
+			isSuccessor = true
+		}
+	}
+
 	// if myself is secondary, the sender of the request can be both of the primary SP or the secondary SP of the gvg
-	if primarySp.OperatorAddress != signatureAddr.String() {
+	if primarySp.OperatorAddress != signatureAddr.String() && !isSuccessor {
 		log.CtxDebug(ctx, "recovery request not come from primary sp", "secondary sp", signatureAddr.String())
 		// judge if the sender is not one of the secondary SP
 		isRequestFromSecondary := false
@@ -936,7 +955,6 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 
 	// if the handler is not the primary SP of the object, return error
-	// TODO get sp id from config
 	spID, err := g.getSPID()
 	if err != nil {
 		return nil, ErrConsensusWithDetail("getSPID error: " + err.Error())
@@ -955,21 +973,41 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	if err != nil {
 		return nil, ErrRecoverySP
 	}
-	// if the sender is not one of the secondarySp, return err
+	// if the sender is not one of the secondarySp or the successor of the exiting secondary SP, return err
 	isOneOfSecondary := false
-	var ECIndex int32
+	isSuccessor := false
+	var (
+		ECIndex     int32
+		swapInInfo  *virtualgrouptypes.SwapInInfo
+		successorSP *sptypes.StorageProvider
+	)
+	if recoveryTask.GetBySuccessorSp() {
+		swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, 0, gvg.Id)
+		if err != nil {
+			return nil, ErrConsensusWithDetail("query swapInInfo err: " + err.Error())
+		}
+		successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
+		if err != nil {
+			return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
+		}
+	}
+
 	for idx, sspId := range gvg.GetSecondarySpIds() {
 		ssp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspId)
 		if err != nil {
+			log.CtxErrorw(ctx, "failed query SP by ID", "sp_id", sspId, "error", err)
 			return nil, ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
 		}
+		ECIndex = int32(idx)
 		if ssp.OperatorAddress == signatureAddr.String() {
 			isOneOfSecondary = true
-			ECIndex = int32(idx)
+		} else if ssp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
+			isSuccessor = true
 		}
 	}
 	redundancyIdx := recoveryTask.EcIdx
-	if !isOneOfSecondary || ECIndex != recoveryTask.EcIdx {
+	if !isOneOfSecondary || ECIndex != recoveryTask.EcIdx || !isSuccessor {
+		log.CtxErrorw(ctx, "failed to recover", "is_one_of_secondary", isOneOfSecondary, "EC_index", recoveryTask.EcIdx, "is_successor", isSuccessor)
 		return nil, ErrRecoverySP
 	}
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
@@ -980,6 +1018,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	// no need to check quota when recovering primary SP or secondary SP data
 	bucketPrimarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, bucketSPID)
 	if err != nil {
+		log.CtxErrorw(ctx, "failed query SP by ID", "sp_id", bucketSPID, "error", err)
 		return nil, err
 	}
 	if redundancyIdx < int32(params.GetRedundantDataChunkNum())-1 {

@@ -141,7 +141,7 @@ const (
 type RecoverGVGStats struct {
 	VirtualGroupID       uint32
 	VirtualGroupFamilyID uint32
-	RedundancyIndex      uint32
+	RedundancyIndex      int32
 	StartAfter           uint64
 	Limit                uint64
 	Status               int //  Saved, Processed, Completed
@@ -150,13 +150,13 @@ type RecoverGVGStats struct {
 type RecoverFailedObject struct {
 	ObjectID        uint64
 	VirtualGroupID  uint32
-	RedundancyIndex uint32
+	RedundancyIndex int32
 	RetryTime       int
 }
 
 type VerifyGVGProgress struct {
 	VirtualGroupID  uint32
-	RedundancyIndex uint32
+	RedundancyIndex int32
 	StartAfter      uint64
 	Limit           uint64
 }

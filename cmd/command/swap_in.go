@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/urfave/cli/v2"
@@ -10,23 +11,23 @@ import (
 const swapInCommands = "SwapIn Commands"
 
 var gvgIDFlag = &cli.Uint64Flag{
-	Name:     "gvgIDFlag",
-	Usage:    "The bucket name",
-	Aliases:  []string{"b"},
+	Name:     "gvg",
+	Usage:    "gvg id",
+	Aliases:  []string{"gvg"},
 	Required: true,
 }
 
 var vgfIDFlag = &cli.Uint64Flag{
-	Name:     "vgfIDFlag",
-	Usage:    "The bucket name",
-	Aliases:  []string{"b"},
+	Name:     "vgf",
+	Usage:    "",
+	Aliases:  []string{"vgf"},
 	Required: true,
 }
 
 var targetSPIDFlag = &cli.Uint64Flag{
-	Name:     "targetSPIDFlag",
-	Usage:    "The bucket name",
-	Aliases:  []string{"b"},
+	Name:     "targetSP",
+	Usage:    "target sp",
+	Aliases:  []string{"sp"},
 	Required: true,
 }
 
@@ -51,6 +52,18 @@ var RecoverGVGCmd = &cli.Command{
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		gvgIDFlag,
+	},
+	Category:    swapInCommands,
+	Description: ``,
+}
+
+var RecoverVGFCmd = &cli.Command{
+	Action: RecoverVGFAction,
+	Name:   "recover-vgf",
+	Usage:  "recover objects in vgf",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		vgfIDFlag,
 	},
 	Category:    swapInCommands,
 	Description: ``,
