@@ -11,6 +11,7 @@ BUGFIXES
 * [#1257](https://github.com/bnb-chain/greenfield-storage-provider/pull/1257) fix: httpcode error
 * [#1259](https://github.com/bnb-chain/greenfield-storage-provider/pull/1259) fix: refine error message when object status is unexpected
 * [#1256](https://github.com/bnb-chain/greenfield-storage-provider/pull/1256) fix: fix the slow xml marshaling when returning a large list of objects
+* [#1266](https://github.com/bnb-chain/greenfield-storage-provider/pull/1266) fix: queried gvg might be nil
 
 ## V1.1.0
 
