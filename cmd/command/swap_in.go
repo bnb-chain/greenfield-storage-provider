@@ -34,7 +34,7 @@ var targetSPIDFlag = &cli.Uint64Flag{
 
 var SwapInCmd = &cli.Command{
 	Action: SwapInAction,
-	Name:   "swap in",
+	Name:   "swapIn",
 	Usage:  "Successor swap in GVG/VGF",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
@@ -48,7 +48,7 @@ var SwapInCmd = &cli.Command{
 
 var RecoverGVGCmd = &cli.Command{
 	Action: RecoverGVGAction,
-	Name:   "swap in",
+	Name:   "recoverGVG",
 	Usage:  "Successor swap in GVG/VGF",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
@@ -72,7 +72,7 @@ var RecoverVGFCmd = &cli.Command{
 
 var CompleteSwapInCmd = &cli.Command{
 	Action: CompleteSwapInAction,
-	Name:   "complete swap in",
+	Name:   "completeSwapIn",
 	Usage:  "complete swap in",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
