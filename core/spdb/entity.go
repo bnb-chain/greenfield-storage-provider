@@ -133,9 +133,9 @@ type SwapOutMeta struct {
 type RecoverStatus int
 
 const (
-	Starting  RecoverStatus = 0
-	Processed RecoverStatus = 1
-	Completed RecoverStatus = 2
+	Processing RecoverStatus = 0
+	Processed  RecoverStatus = 1
+	Completed  RecoverStatus = 2
 )
 
 type RecoverGVGStats struct {
@@ -144,7 +144,7 @@ type RecoverGVGStats struct {
 	RedundancyIndex      int32
 	StartAfter           uint64
 	Limit                uint64
-	Status               int //  Saved, Processed, Completed
+	Status               RecoverStatus
 }
 
 type RecoverFailedObject struct {

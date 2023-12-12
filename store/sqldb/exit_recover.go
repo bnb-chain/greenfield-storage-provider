@@ -17,7 +17,7 @@ func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, erro
 		VirtualGroupFamilyID: queryReturn.VirtualGroupFamilyID,
 		VirtualGroupID:       queryReturn.VirtualGroupID,
 		RedundancyIndex:      queryReturn.RedundancyIndex,
-		Status:               queryReturn.Status,
+		Status:               spdb.RecoverStatus(queryReturn.Status),
 		Limit:                uint64(queryReturn.Limit),
 	}, nil
 }
@@ -28,10 +28,10 @@ func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 		gt := &RecoverGVGStatsTable{
 			VirtualGroupFamilyID: g.VirtualGroupFamilyID,
 			VirtualGroupID:       g.VirtualGroupID,
-			RedundancyIndex:      int32(g.RedundancyIndex),
+			RedundancyIndex:      g.RedundancyIndex,
 			StartAfterObjectID:   g.StartAfter,
 			Limit:                uint32(g.Limit),
-			Status:               g.Status,
+			Status:               int(g.Status),
 		}
 		saveGVG = append(saveGVG, gt)
 	}
@@ -49,7 +49,7 @@ func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error) {
 	result := s.db.Table(RecoverGVGStatsTableName).Where("virtual_group_id = ?", stats.VirtualGroupID).
 		Updates(&RecoverGVGStatsTable{
-			Status:             stats.Status,
+			Status:             int(stats.Status),
 			StartAfterObjectID: stats.StartAfter,
 		})
 	if result.Error != nil {
@@ -65,37 +65,11 @@ func (s *SpDBImpl) DeleteRecoverGVGStats(gvgID uint32) (err error) {
 	return err
 }
 
-//func (s *SpDBImpl) GetRecoverGVGStatsByFamilyIDAndStatus(familyID uint32, status int) ([]*spdb.RecoverGVGStats, error) {
-//	var (
-//		recoverGVGstats []*RecoverGVGStatsTable
-//		returnGVGstats  []*spdb.RecoverGVGStats
-//		err             error
-//	)
-//
-//	err = s.db.Table(RecoverGVGStatsTableName).
-//		Select("*").
-//		Where("virtual_group_family_id = ? and status = ?", familyID, status).
-//		Order("virtual_group_id asc").
-//		Find(&recoverGVGstats).Error
-//	if err != nil {
-//		return nil, err
-//	}
-//	for _, gvgStats := range recoverGVGstats {
-//		returnGVGstats = append(returnGVGstats, &spdb.RecoverGVGStats{
-//			VirtualGroupFamilyID: gvgStats.VirtualGroupFamilyID,
-//			VirtualGroupID:       gvgStats.VirtualGroupID,
-//			RedundancyIndex:      uint32(gvgStats.RedundancyIndex),
-//			Status:               gvgStats.Status,
-//		})
-//	}
-//	return returnGVGstats, nil
-//}
-
 func (s *SpDBImpl) InsertRecoverFailedObject(object *spdb.RecoverFailedObject) error {
 	result := s.db.Create(&RecoverFailedObjectTable{
 		ObjectID:        object.ObjectID,
 		VirtualGroupID:  object.VirtualGroupID,
-		RedundancyIndex: int32(object.RedundancyIndex),
+		RedundancyIndex: object.RedundancyIndex,
 	})
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
 		return nil
@@ -124,6 +98,7 @@ func (s *SpDBImpl) GetRecoverFailedObject(objectID uint64) (*spdb.RecoverFailedO
 		ObjectID:        objectID,
 		VirtualGroupID:  queryReturn.VirtualGroupID,
 		RedundancyIndex: queryReturn.RedundancyIndex,
+		RetryTime:       queryReturn.Retry,
 	}, nil
 }
 
@@ -148,6 +123,7 @@ func (s *SpDBImpl) GetRecoverFailedObjects(retry, limit uint32) ([]*spdb.Recover
 			ObjectID:        object.ObjectID,
 			VirtualGroupID:  object.VirtualGroupID,
 			RedundancyIndex: object.RedundancyIndex,
+			RetryTime:       object.Retry,
 		})
 	}
 	return returnObjects, nil
@@ -169,7 +145,7 @@ func (s *SpDBImpl) SetVerifyGVGProgress(gvgProgress []*spdb.VerifyGVGProgress) e
 	for _, g := range gvgProgress {
 		gt := &VerifyGVGProgressTable{
 			VirtualGroupID:  g.VirtualGroupID,
-			RedundancyIndex: int32(g.RedundancyIndex),
+			RedundancyIndex: g.RedundancyIndex,
 			StartAfter:      g.StartAfter,
 			Limit:           uint32(g.Limit),
 		}
