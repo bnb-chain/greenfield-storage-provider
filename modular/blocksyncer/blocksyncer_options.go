@@ -734,7 +734,7 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 		// 2. For parent folders, check if they too contain only one folder and no objects. Recursively perform this check up to the root ('/') folder, and then directly delete it.
 		// 3. End this loop.
 		for _, node := range nodes {
-			// 这里使用full name的原因是看看这个文件夹下面是不为空
+			// The reason for using full name here is to check if the folder below is not empty
 			trees, err := db.Cast(b.parserCtx.Database).GetPrefixTreesByBucketAndPathName(context.Background(), node.BucketName, node.FullName)
 			if err != nil {
 				log.Errorw("failed to get prefix trees by bucket and path name", "error", err, "bucketName", node.BucketName, "pathName", node.PathName)
