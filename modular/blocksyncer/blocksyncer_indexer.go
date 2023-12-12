@@ -228,7 +228,7 @@ func (i *Impl) Process(height uint64) error {
 	// after each block height ends, clear the corresponding key value in ctx
 	for _, module := range i.Modules {
 		if eventModule, ok := module.(modules.EventModule); ok {
-			eventModule.Clear()
+			eventModule.ClearCtx()
 		}
 	}
 

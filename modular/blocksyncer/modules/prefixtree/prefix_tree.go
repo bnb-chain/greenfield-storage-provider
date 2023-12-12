@@ -101,7 +101,7 @@ func (m *Module) handleCreateObject(ctx context.Context, createObject *storagety
 		path := strings.Join(pathParts[:i], "/") + "/"
 		// Check if the current directory exists
 		// If the context doesn't contain this folder
-		if m.Get(GetFolderNameExist(path)) == nil {
+		if m.GetCtx(GetFolderNameExist(path)) == nil {
 			// folder is not existed in the context value
 			tree, err := m.db.GetPrefixTree(ctx, path, bucketName)
 			if err != nil {
@@ -110,7 +110,7 @@ func (m *Module) handleCreateObject(ctx context.Context, createObject *storagety
 			}
 			if tree == nil {
 				// Create the tree node and set it to exist in the context
-				m.Set(GetFolderNameExist(path), 1)
+				m.SetCtx(GetFolderNameExist(path), 1)
 				// If the directory does not exist, create it
 				newNode := &bsdb.SlashPrefixTreeNode{
 					PathName:   strings.Join(pathParts[:i-1], "/") + "/",
@@ -128,10 +128,10 @@ func (m *Module) handleCreateObject(ctx context.Context, createObject *storagety
 			}
 		} else {
 			// If the context contains this folder
-			if intVal, ok := m.Get(GetFolderNameExist(path)).(int64); ok {
+			if intVal, ok := m.GetCtx(GetFolderNameExist(path)).(int64); ok {
 				// If intVal = 0 which means this folder already been deleted, we are supposed to create a new one
 				if intVal == 0 {
-					m.Set(GetFolderNameExist(path), 1)
+					m.SetCtx(GetFolderNameExist(path), 1)
 					// If the directory does not exist, create it
 					newNode := &bsdb.SlashPrefixTreeNode{
 						PathName:   strings.Join(pathParts[:i-1], "/") + "/",
@@ -150,29 +150,29 @@ func (m *Module) handleCreateObject(ctx context.Context, createObject *storagety
 			}
 		}
 		// Update how many object exists in under this folder
-		if m.Get(GetFolderNameCount(path)) == nil {
+		if m.GetCtx(GetFolderNameCount(path)) == nil {
 			count, err := m.db.GetPrefixTreeCount(ctx, path, bucketName)
 			if err != nil {
 				log.Errorw("failed to get prefix tree count", "error", err)
 				return nil, err
 			}
-			m.Set(GetFolderNameCount(path), count+1)
+			m.SetCtx(GetFolderNameCount(path), count+1)
 		} else {
-			if intVal, ok := m.Get(GetFolderNameCount(path)).(int64); ok {
-				m.Set(GetFolderNameCount(path), intVal+1)
+			if intVal, ok := m.GetCtx(GetFolderNameCount(path)).(int64); ok {
+				m.SetCtx(GetFolderNameCount(path), intVal+1)
 			}
 		}
 	}
 
 	// if object is not exist in the context
-	if m.Get(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String())) == nil {
+	if m.GetCtx(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String())) == nil {
 		object, err := m.db.GetPrefixTreeObject(ctx, common.BigToHash(objectID.BigInt()), bucketName)
 		if err != nil {
 			log.Errorw("failed to get prefix tree object", "error", err)
 			return nil, err
 		}
 		if object == nil {
-			m.Set(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String()), 1)
+			m.SetCtx(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String()), 1)
 			objectNode := &bsdb.SlashPrefixTreeNode{
 				PathName:   strings.Join(pathParts[:len(pathParts)-1], "/") + "/",
 				FullName:   objectPath,
@@ -187,10 +187,10 @@ func (m *Module) handleCreateObject(ctx context.Context, createObject *storagety
 		}
 	} else {
 		// If the context contains this object
-		if intVal, ok := m.Get(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String())).(int); ok {
+		if intVal, ok := m.GetCtx(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String())).(int); ok {
 			// if intVal = 0 which means this folder already been deleted, we are supposed to create a new one
 			if intVal == 0 {
-				m.Set(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String()), 1)
+				m.SetCtx(GetObjectNameExist(common.BigToHash(objectID.BigInt()).String()), 1)
 				objectNode := &bsdb.SlashPrefixTreeNode{
 					PathName:   strings.Join(pathParts[:len(pathParts)-1], "/") + "/",
 					FullName:   objectPath,
@@ -249,18 +249,18 @@ func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string
 		var count int64
 		path := strings.Join(pathParts[:i], "/") + "/"
 		// If the context don't contain this count, we need to update all the folder count under this path
-		if m.Get(GetFolderNameCount(path)) == nil {
+		if m.GetCtx(GetFolderNameCount(path)) == nil {
 			count, err = m.db.GetPrefixTreeCount(ctx, path, bucketName)
 			if err != nil {
 				log.Errorw("failed to get prefix tree count", "error", err)
 				return nil, err
 			}
-			m.Set(GetFolderNameCount(path), count-1)
+			m.SetCtx(GetFolderNameCount(path), count-1)
 		} else {
 			// If the context contains this folder
-			if intVal, ok := m.Get(GetFolderNameCount(path)).(int64); ok {
+			if intVal, ok := m.GetCtx(GetFolderNameCount(path)).(int64); ok {
 				count = intVal
-				m.Set(GetFolderNameCount(path), intVal-1)
+				m.SetCtx(GetFolderNameCount(path), intVal-1)
 			}
 		}
 		if count <= 1 {
@@ -269,7 +269,7 @@ func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string
 				IsObject:   false,
 				BucketName: bucketName,
 			})
-			m.Set(GetFolderNameExist(path), 0)
+			m.SetCtx(GetFolderNameExist(path), 0)
 		} else {
 			// Found a non-empty directory, stop here
 			break
@@ -279,7 +279,7 @@ func (m *Module) deleteObject(ctx context.Context, objectPath, bucketName string
 		return nil, nil
 	}
 	k, v := m.db.DeletePrefixTree(ctx, nodes)
-	m.Set(GetObjectNameExist(objectID.String()), 0)
+	m.SetCtx(GetObjectNameExist(objectID.String()), 0)
 	return map[string][]interface{}{
 		k: v,
 	}, nil
