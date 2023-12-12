@@ -131,6 +131,13 @@ func init() {
 		command.SetQuotaCmd,
 		// block syncer
 		bs_data_migration.BsDataMigrationCmd,
+		// sp exit v2
+		command.SpExitCmd,
+		command.CompleteSpExitCmd,
+		command.SwapInCmd,
+		command.CompleteSwapInCmd,
+		command.RecoverGVGCmd,
+		command.RecoverVGFCmd,
 	}
 	registerModular()
 }
