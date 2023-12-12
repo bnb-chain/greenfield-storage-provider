@@ -11,7 +11,7 @@ const spExitCommands = "Sp Exit Commands"
 
 var SpExitCmd = &cli.Command{
 	Action: SpExitAction,
-	Name:   "spExit ",
+	Name:   "spExit",
 	Usage:  "sp exit",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
@@ -37,7 +37,7 @@ func SpExitAction(ctx *cli.Context) error {
 
 var CompleteSpExitCmd = &cli.Command{
 	Action: CompleteSpExitAction,
-	Name:   "completeSpExit ",
+	Name:   "completeSpExit",
 	Usage:  "complete sp exit",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
