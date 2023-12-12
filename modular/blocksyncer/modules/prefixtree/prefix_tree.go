@@ -149,7 +149,9 @@ func (m *Module) handleCreateObject(ctx context.Context, createObject *storagety
 				break
 			}
 		}
-		// Update how many object exists in under this folder
+		// check if this folder count key exist in the context
+		// if yes, we will get count from context and update it to count + 1
+		// if not, we will generate folder count key and set value count + 1 in the context
 		if m.GetCtx(GenerateFolderCountKey(path)) == nil {
 			count, err := m.db.GetPrefixTreeCount(ctx, path, bucketName)
 			if err != nil {
