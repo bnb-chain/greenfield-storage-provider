@@ -967,23 +967,6 @@ func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID,
 // start the loop, failed object will be
 func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIndex int32) (err error) {
 
-	spId, _ := m.getSPID()
-
-	if spId != 8 {
-		return nil
-	}
-
-	for {
-		time.Sleep(10 * time.Second)
-		_, err := m.baseApp.Consensus().QuerySwapInInfo(context.Background(), 1, 0)
-		if err == nil {
-			vgfID = 1
-			break
-		}
-	}
-
-	log.Infow("starting scheduler")
-	log.Infow("vgf_id", "vgf_id", vgfID)
 	if vgfID != 0 {
 		log.Infow("starting NewRecoverVGFScheduler")
 		recoverVGFScheduler, err := NewRecoverVGFScheduler(m, vgfID)
