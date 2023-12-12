@@ -11,17 +11,17 @@ import (
 
 const swapInCommands = "SwapIn Commands"
 
-var gvgIDFlag = &cli.Uint64Flag{
-	Name:     "gvg",
+var ngvgIDFlag = &cli.Uint64Flag{
+	Name:     "ngvgId",
 	Usage:    "gvg id",
-	Aliases:  []string{"gvg"},
+	Aliases:  []string{"gid"},
 	Required: true,
 }
 
 var vgfIDFlag = &cli.Uint64Flag{
 	Name:     "vgf",
 	Usage:    "",
-	Aliases:  []string{"vgf"},
+	Aliases:  []string{"f"},
 	Required: true,
 }
 
@@ -38,7 +38,7 @@ var SwapInCmd = &cli.Command{
 	Usage:  "Successor swap in GVG/VGF",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		gvgIDFlag,
+		ngvgIDFlag,
 		vgfIDFlag,
 		targetSPIDFlag,
 	},
@@ -52,7 +52,7 @@ var RecoverGVGCmd = &cli.Command{
 	Usage:  "Successor swap in GVG/VGF",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		gvgIDFlag,
+		ngvgIDFlag,
 	},
 	Category:    swapInCommands,
 	Description: ``,
@@ -76,7 +76,7 @@ var CompleteSwapInCmd = &cli.Command{
 	Usage:  "complete swap in",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		gvgIDFlag,
+		ngvgIDFlag,
 		vgfIDFlag,
 	},
 	Category:    swapInCommands,
@@ -90,8 +90,8 @@ func SwapInAction(ctx *cli.Context) error {
 	}
 
 	targetSpID := ctx.Uint64(targetSPIDFlag.Name)
-	gvgID := ctx.Uint64(gvgIDFlag.Name)
-	gvgfID := ctx.Uint64(gvgIDFlag.Name)
+	gvgID := ctx.Uint64(ngvgIDFlag.Name)
+	gvgfID := ctx.Uint64(vgfIDFlag.Name)
 
 	reserveSwapIn := &virtualgrouptypes.MsgReserveSwapIn{
 		TargetSpId:                 uint32(targetSpID),
@@ -111,8 +111,8 @@ func CompleteSwapInAction(ctx *cli.Context) error {
 		return err
 	}
 
-	gvgID := ctx.Uint64(gvgIDFlag.Name)
-	gvgfID := ctx.Uint64(gvgIDFlag.Name)
+	gvgID := ctx.Uint64(ngvgIDFlag.Name)
+	gvgfID := ctx.Uint64(vgfIDFlag.Name)
 
 	completeSwapIn := &virtualgrouptypes.MsgCompleteSwapIn{
 		GlobalVirtualGroupFamilyId: uint32(gvgfID),
@@ -143,7 +143,7 @@ func RecoverGVGAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	gvgID := ctx.Uint64(gvgIDFlag.Name)
+	gvgID := ctx.Uint64(ngvgIDFlag.Name)
 	swapInInfo, err := chainClient.QuerySwapInInfo(ctx.Context, 0, uint32(gvgID))
 	if err != nil {
 		return err
