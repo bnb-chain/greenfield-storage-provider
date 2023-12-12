@@ -165,6 +165,18 @@ func InitDB(config *config.SQLDBConfig) (*gorm.DB, error) {
 		log.Errorw("failed to migrate gvg table", "error", err)
 		return nil, err
 	}
+	if err = db.AutoMigrate(&RecoverGVGStatsTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to recover gvg table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&RecoverFailedObjectTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to recover gvg table", "error", err)
+		return nil, err
+	}
+	if err = db.AutoMigrate(&VerifyGVGProgressTable{}); err != nil && !isAlreadyExists(err) {
+		log.Errorw("failed to recover gvg table", "error", err)
+		return nil, err
+	}
 	return db, nil
 }
 

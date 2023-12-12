@@ -32,7 +32,7 @@ type RecoverVGFScheduler struct {
 }
 
 func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFScheduler, error) {
-	vgf, err := m.baseApp.GfSpClient().GetVirtualGroupFamily(context.Background(), vgfID)
+	vgf, err := m.baseApp.Consensus().QueryVirtualGroupFamily(context.Background(), vgfID)
 	if err != nil {
 		log.Errorw("failed to GetVirtualGroupFamily", "error", err)
 		return nil, err
@@ -51,11 +51,13 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 		recoveryUnits = append(recoveryUnits, &spdb.RecoverGVGStats{
 			VirtualGroupFamilyID: vgfID,
 			VirtualGroupID:       gvgID,
+			RedundancyIndex:      primarySPRedundancyIndex,
 			StartAfter:           0,
 			Limit:                recoverBatchSize,
 		})
 		gvgScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, primarySPRedundancyIndex)
 		if err != nil {
+			log.Errorw("failed to new RecoverGVGScheduler")
 			return nil, err
 		}
 		gvgSchedulers = append(gvgSchedulers, gvgScheduler)
@@ -68,6 +70,7 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 		})
 		verifyScheduler, err := NewVerifyGVGScheduler(m, gvgID, vgfID, primarySPRedundancyIndex)
 		if err != nil {
+			log.Errorw("failed to new VerifyGVGScheduler")
 			return nil, err
 		}
 		verifySchedulers = append(verifySchedulers, verifyScheduler)
@@ -90,9 +93,11 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 
 func (s *RecoverVGFScheduler) Start() {
 	for _, g := range s.RecoverSchedulers {
+		log.Infow("started recover scheduler for %d", "gvg_id", g.gvgID)
 		go g.Start()
 	}
 	for _, v := range s.VerifySchedulers {
+		log.Infow("started verify gvg scheduler for %d", "gvg_id", v.gvgID)
 		go v.Start()
 	}
 }
@@ -194,7 +199,7 @@ type RecoverGVGScheduler struct {
 	mtx                   sync.RWMutex
 	currentBatchObjectIDs []uint64 // record ids of objects that been processed by reported task, either success or failed.
 
-	currentBatchID  uint64 // every 10 objects is a batch
+	//currentBatchID  uint64 // every 10 objects is a batch
 	vgfID           uint32
 	gvgID           uint32
 	redundancyIndex int32
@@ -226,19 +231,21 @@ func NewRecoverGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyInd
 func (s *RecoverGVGScheduler) Start() {
 	storageParams, err := s.manager.baseApp.Consensus().QueryStorageParams(context.Background())
 	if err != nil {
+		log.Errorw("failed to get storage params", "err", err)
 		return
 	}
 	maxSegmentSize := storageParams.GetMaxSegmentSize()
 
 	gvgStats, err := s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
 	if err != nil {
+		log.Errorw("failed to get gvg stats", "err", err)
 		return
 	}
 	if gvgStats.Status != int(spdb.Starting) {
 		log.Infow("the recover gvg unit is not in starting status.")
 		return
 	}
-	recoverTicker := time.NewTicker(100 * time.Second)
+	recoverTicker := time.NewTicker(10 * time.Second)
 	defer recoverTicker.Stop()
 	startAfter := gvgStats.StartAfter
 	limit := gvgStats.Limit
@@ -246,8 +253,10 @@ func (s *RecoverGVGScheduler) Start() {
 	for {
 		select {
 		case <-recoverTicker.C:
+			log.Debug("recover gvg loop")
 			gvgStats, err = s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
 			if err != nil {
+				log.Errorw("failed to get gvg stats", "err", err)
 				continue
 			}
 			if gvgStats.Status != int(spdb.Starting) {
@@ -255,7 +264,7 @@ func (s *RecoverGVGScheduler) Start() {
 				break
 			}
 			// upon all reported tasks for a batch objects are done, and finish update the objectSegmentStats, the monitor will update the startAfter.
-			if gvgStats.StartAfter == s.curStartAfter {
+			if gvgStats.StartAfter == s.curStartAfter && s.curStartAfter != 0 {
 				continue
 			}
 			s.curStartAfter = gvgStats.StartAfter
@@ -265,6 +274,8 @@ func (s *RecoverGVGScheduler) Start() {
 				log.Errorw("failed to list objects in gvg", "start_after_object_id", startAfter, "limit", limit)
 				continue
 			}
+
+			log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects))
 
 			if len(objects) == 0 {
 				log.Infow("all objects in gvg have been processed", "start_after_object_id", startAfter, "limit", limit)
@@ -282,13 +293,15 @@ func (s *RecoverGVGScheduler) Start() {
 				objectID := objectInfo.Id.Uint64()
 				segmentCount := segmentPieceCount(objectInfo.PayloadSize, maxSegmentSize)
 				objectFailed := false // if there is any segment is failed to send out the recover task, will skip it; there is another recovering-failed object scheduler.
+				log.Infow("starting to recover object", "object_info", objectInfo)
 				for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
 					task := &gfsptask.GfSpRecoverPieceTask{}
-					task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, int32(s.redundancyIndex), maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
+					task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, s.redundancyIndex, maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
 					task.SetBySuccessorSP(true)
 					task.SetGVGID(s.gvgID)
 					err = s.manager.recoveryQueue.Push(task)
 					if err != nil {
+						log.Errorw("failed to push task to recover queue", "task_info", task)
 						o := &spdb.RecoverFailedObject{
 							ObjectID:        objectID,
 							VirtualGroupID:  object.Gvg.Id,
@@ -296,6 +309,7 @@ func (s *RecoverGVGScheduler) Start() {
 						}
 						err = s.manager.baseApp.GfSpDB().InsertRecoverFailedObject(o)
 						if err != nil {
+							log.Errorw("failed to InsertRecoverFailedObject", "error", err)
 							return
 						}
 						objectFailed = true
@@ -326,6 +340,10 @@ func segmentPieceCount(payloadSize uint64, maxSegmentSize uint64) uint32 {
 func (s *RecoverGVGScheduler) monitorBatch() {
 	ticker := time.NewTicker(10 * time.Second)
 	for range ticker.C {
+		if len(s.currentBatchObjectIDs) == 0 {
+			continue
+		}
+		log.Infow("monitoring for current batch objects", "object_ids", s.currentBatchObjectIDs)
 		processedBatch := true
 		for _, objectID := range s.currentBatchObjectIDs {
 			if !s.manager.recoverObjectStats.isObjectProcessed(objectID) {
@@ -347,8 +365,10 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 			continue
 		}
 		for _, objectID := range s.currentBatchObjectIDs {
+			log.Infow("removing records", "object_id", objectID)
 			s.manager.recoverObjectStats.remove(objectID)
 		}
+		s.currentBatchObjectIDs = make([]uint64, 0)
 	}
 }
 
@@ -378,6 +398,7 @@ func (s *RecoverFailedObjectScheduler) Start() {
 
 	ticker := time.NewTicker(50 * time.Second)
 	for range ticker.C {
+
 		recoverFailedObjects, err := s.manager.baseApp.GfSpDB().GetRecoverFailedObjects(3, 10)
 		if err != nil {
 			continue
@@ -472,8 +493,10 @@ func (s *VerifyGVGScheduler) Start() {
 	for {
 		select {
 		case <-verifyTicker.C:
+			log.Infow("verify gvg scheduler")
 			gvgStats, err := s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
 			if err != nil {
+				log.Errorw("failed to get recover gvg stats", "err", err)
 				continue
 			}
 			if gvgStats.Status != int(spdb.Processed) {
@@ -483,6 +506,7 @@ func (s *VerifyGVGScheduler) Start() {
 
 			verifyGVGProgress, err := s.manager.baseApp.GfSpDB().GetVerifyGVGProgress(s.gvgID)
 			if err != nil {
+				log.Errorw("failed to verify gvg progress", "err", err)
 				continue
 			}
 			startAfter := verifyGVGProgress.StartAfter
@@ -490,8 +514,11 @@ func (s *VerifyGVGScheduler) Start() {
 
 			objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, startAfter, uint32(limit))
 			if err != nil {
+				log.Errorw("failed to list object in GVG", "err", err)
 				continue
 			}
+
+			log.Infow("list objects in GVG", "start_after", startAfter, "limit", limit)
 
 			if len(objects) == 0 {
 				log.Infow("all objects in gvg have been verified", "start_after_object_id", startAfter, "limit", limit)

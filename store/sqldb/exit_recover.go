@@ -6,8 +6,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 )
 
-const ListRecoverObjectLimit = 10
-
 func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, error) {
 	var queryReturn RecoverGVGStatsTable
 	if err := s.db.Model(&RecoverGVGStatsTable{}).
@@ -20,6 +18,7 @@ func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, erro
 		VirtualGroupID:       queryReturn.VirtualGroupID,
 		RedundancyIndex:      queryReturn.RedundancyIndex,
 		Status:               queryReturn.Status,
+		Limit:                uint64(queryReturn.Limit),
 	}, nil
 }
 

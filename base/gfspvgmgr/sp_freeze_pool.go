@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	DefaultFreezingPeriodForSP = 10 * time.Minute
+	DefaultFreezingPeriodForSP = 1 * time.Second
 	ReleaseSPJobInterval       = 1 * time.Minute
 )
 

@@ -684,7 +684,7 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 	}
 
 	if gvg == nil {
-		return ErrConsensusWithDetail("QueryGVGInfo nil: " + err.Error())
+		return ErrConsensusWithDetail("QueryGVGInfo nil: ")
 	}
 
 	// judge if sender is the primary sp of the gvg
@@ -881,6 +881,8 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	var successorSP *sptypes.StorageProvider
 	var swapInInfo *virtualgrouptypes.SwapInInfo
 
+	log.Infow("recoveryTask", "recoveryTask", recoveryTask)
+
 	if recoveryTask.GetBySuccessorSp() {
 		swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, 0)
 		if err != nil {
@@ -890,6 +892,9 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		if err != nil {
 			return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
 		}
+		log.Infow("the successor sp operator address", "successorSP", successorSP.OperatorAddress)
+		log.Infow("swapInInfo", "swapInInfo", swapInInfo)
+		log.Infow("signatureAddr", "signatureAddr", signatureAddr.String())
 		if primarySp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
 			isSuccessor = true
 		}
