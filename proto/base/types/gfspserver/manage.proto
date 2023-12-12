@@ -129,6 +129,25 @@ message GfSpTriggerRecoverForSuccessorSPResponse {
   base.types.gfsperrors.GfSpError err = 1;
 }
 
+message GfSpQueryRecoverProcessRequest {
+  uint32 vgf_id = 1;
+  uint32 gvg_id = 2;
+}
+
+message RecoverProcess {
+  uint32 virtual_group_id = 1;
+  uint32 virtual_group_family_id = 2;
+  int32  redundancy_index = 3;
+  uint64 start_after = 4;
+  uint64 limit = 5;
+  int32 status = 6;
+}
+
+message GfSpQueryRecoverProcessResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated RecoverProcess recover_processes = 2;
+}
+
 service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
@@ -140,4 +159,5 @@ service GfSpManageService {
   rpc GfSpNotifyPostMigrate(GfSpNotifyPostMigrateBucketRequest) returns (GfSpNotifyPostMigrateBucketResponse) {}
   rpc GfSpResetRecoveryFailedList(GfSpResetRecoveryFailedListRequest) returns (GfSpResetRecoveryFailedListResponse) {}
   rpc GfSpTriggerRecoverForSuccessorSP(GfSpTriggerRecoverForSuccessorSPRequest) returns (GfSpTriggerRecoverForSuccessorSPResponse) {}
+  rpc GfSpQueryRecoverProcess(GfSpQueryRecoverProcessRequest) returns (GfSpQueryRecoverProcessResponse) {}
 }

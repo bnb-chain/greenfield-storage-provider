@@ -138,6 +138,7 @@ func init() {
 		command.CompleteSwapInCmd,
 		command.RecoverGVGCmd,
 		command.RecoverVGFCmd,
+		command.QueryRecoverProcessCmd,
 	}
 	registerModular()
 }

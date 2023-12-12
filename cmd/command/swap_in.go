@@ -1,7 +1,10 @@
 package command
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -74,6 +77,19 @@ var CompleteSwapInCmd = &cli.Command{
 	Action: CompleteSwapInAction,
 	Name:   "completeSwapIn",
 	Usage:  "complete swap in",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		ngvgIDFlag,
+		vgfIDFlag,
+	},
+	Category:    swapInCommands,
+	Description: ``,
+}
+
+var QueryRecoverProcessCmd = &cli.Command{
+	Action: QueryRecoverProcessAction,
+	Name:   "query-recover-p",
+	Usage:  "query recover process",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
 		ngvgIDFlag,
@@ -202,4 +218,34 @@ func RecoverVGFAction(ctx *cli.Context) error {
 
 	// trigger
 	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, uint32(vgfID), 0, -1)
+}
+
+func QueryRecoverProcessAction(ctx *cli.Context) error {
+	cfg, err := utils.MakeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	spClient := utils.MakeGfSpClient(cfg)
+	gvgID := ctx.Uint64(ngvgIDFlag.Name)
+	gvgfID := ctx.Uint64(vgfIDFlag.Name)
+	gvgstatsList, err := spClient.QueryRecoverProcess(ctx.Context, uint32(gvgfID), uint32(gvgID))
+	if err != nil {
+		return err
+	}
+	res, err := json.Marshal(gvgstatsList)
+	if err != nil {
+		return err
+	}
+	println(res)
+	// create file
+	f, err := os.Create("recover_process.json")
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(f, res)
+	if err != nil {
+		return err
+	}
+	return nil
 }

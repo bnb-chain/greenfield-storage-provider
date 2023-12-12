@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"math/rand"
 	"sort"
 	"strings"
@@ -990,4 +991,36 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 		go recoverFailedObjectScheduler.Start()
 	}
 	return nil
+}
+
+func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, error) {
+	gvgIds := make([]uint32, 0)
+	if vgfID != 0 {
+		vgfInfo, err := m.baseApp.GfSpClient().GetVirtualGroupFamily(ctx, vgfID)
+		if err != nil {
+			log.Errorw("failed to GetVirtualGroupFamily", "error", err)
+			return nil, err
+		}
+		gvgIds = vgfInfo.GetGlobalVirtualGroupIds()
+	} else {
+		gvgIds = append(gvgIds, gvgID)
+	}
+
+	gvgStatsList, err := m.baseApp.GfSpDB().BatchGetRecoverGVGStats(gvgIds)
+	if err != nil {
+		log.Errorw("failed to BatchGetRecoverGVGStats", "error", err)
+		return nil, err
+	}
+	res := make([]*gfspserver.RecoverProcess, 0, len(gvgStatsList))
+	for _, gvgstats := range gvgStatsList {
+		res = append(res, &gfspserver.RecoverProcess{
+			VirtualGroupId:       gvgstats.VirtualGroupID,
+			VirtualGroupFamilyId: gvgstats.VirtualGroupFamilyID,
+			RedundancyIndex:      gvgstats.RedundancyIndex,
+			StartAfter:           gvgstats.StartAfter,
+			Limit:                gvgstats.Limit,
+			Status:               int32(gvgstats.Status),
+		})
+	}
+	return res, nil
 }

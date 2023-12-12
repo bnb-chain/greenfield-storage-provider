@@ -276,3 +276,23 @@ func (s *GfSpClient) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gv
 	}
 	return nil
 }
+
+func (s *GfSpClient) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryRecoverProcess(ctx, &gfspserver.GfSpQueryRecoverProcessRequest{
+		VgfId: vgfID, GvgId: gvgID,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query recover process", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to query recover process, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to query recover process", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return nil, resp.GetErr()
+	}
+	return resp.GetRecoverProcesses(), nil
+}

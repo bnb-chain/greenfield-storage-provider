@@ -22,6 +22,26 @@ func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, erro
 	}, nil
 }
 
+func (s *SpDBImpl) BatchGetRecoverGVGStats(gvgIDs []uint32) ([]*spdb.RecoverGVGStats, error) {
+	var queryReturn []*RecoverGVGStatsTable
+	if err := s.db.Model(&RecoverGVGStatsTable{}).
+		Where("virtual_group_id IN ?", gvgIDs).
+		Find(&queryReturn).Error; err != nil {
+		return nil, err
+	}
+	res := make([]*spdb.RecoverGVGStats, 0, len(queryReturn))
+	for _, ret := range queryReturn {
+		res = append(res, &spdb.RecoverGVGStats{
+			VirtualGroupFamilyID: ret.VirtualGroupFamilyID,
+			VirtualGroupID:       ret.VirtualGroupID,
+			RedundancyIndex:      ret.RedundancyIndex,
+			Status:               ret.Status,
+			Limit:                uint64(ret.Limit),
+		})
+	}
+	return res, nil
+}
+
 func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 	saveGVG := make([]*RecoverGVGStatsTable, 0)
 	for _, g := range stats {
