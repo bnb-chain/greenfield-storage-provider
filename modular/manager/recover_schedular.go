@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -14,6 +15,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield/x/storage/types"
+	types2 "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"gorm.io/gorm"
 )
 
@@ -46,8 +48,6 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 	}
 	recoveryGVG := make([]*spdb.RecoverGVGStats, 0, len(vgf.GetGlobalVirtualGroupIds()))
 	gvgSchedulers := make([]*RecoverGVGScheduler, 0, len(vgf.GetGlobalVirtualGroupIds()))
-
-	verifyGVGProgresses := make([]*spdb.VerifyGVGProgress, 0, len(vgf.GetGlobalVirtualGroupIds()))
 	verifySchedulers := make([]*VerifyGVGScheduler, 0, len(vgf.GetGlobalVirtualGroupIds()))
 
 	for _, gvgID := range vgf.GetGlobalVirtualGroupIds() {
@@ -65,13 +65,7 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 		}
 		gvgSchedulers = append(gvgSchedulers, gvgScheduler)
 
-		verifyGVGProgresses = append(verifyGVGProgresses, &spdb.VerifyGVGProgress{
-			VirtualGroupID:  gvgID,
-			RedundancyIndex: primarySPRedundancyIndex,
-			StartAfter:      0,
-			Limit:           recoverBatchSize,
-		})
-		verifyScheduler, err := NewVerifyGVGScheduler(m, gvgID, primarySPRedundancyIndex)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, primarySPRedundancyIndex)
 		if err != nil {
 			log.Errorw("failed to create VerifyGVGScheduler")
 			return nil, err
@@ -79,10 +73,6 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 		verifySchedulers = append(verifySchedulers, verifyScheduler)
 	}
 	err = m.baseApp.GfSpDB().SetRecoverGVGStats(recoveryGVG)
-	if err != nil {
-		return nil, err
-	}
-	err = m.baseApp.GfSpDB().SetVerifyGVGProgress(verifyGVGProgresses)
 	if err != nil {
 		return nil, err
 	}
@@ -419,6 +409,12 @@ func (s *RecoverFailedObjectScheduler) Start() {
 	recoveryCompacity := s.manager.recoveryQueue.Cap()
 
 	ticker := time.NewTicker(10 * time.Second)
+	defer func() {
+
+		// todo need signal from
+		ticker.Stop()
+	}()
+
 	for range ticker.C {
 
 		recoverFailedObjects, err := s.manager.baseApp.GfSpDB().GetRecoverFailedObjects(3, 3)
@@ -496,6 +492,7 @@ func (s *RecoverFailedObjectScheduler) Start() {
 // a recover GVG unit is marked as completed from Processed only when all objects pass the verification.
 type VerifyGVGScheduler struct {
 	manager              *ManageModular
+	vgfID                uint32
 	gvgID                uint32
 	redundancyIndex      int32
 	curStartAfter        uint64
@@ -503,10 +500,10 @@ type VerifyGVGScheduler struct {
 	verifySuccessObjects map[uint64]struct{} // cache
 }
 
-func NewVerifyGVGScheduler(m *ManageModular, gvgID uint32, redundancyIndex int32) (*VerifyGVGScheduler, error) {
-
+func NewVerifyGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyIndex int32) (*VerifyGVGScheduler, error) {
 	return &VerifyGVGScheduler{
 		manager:              m,
+		vgfID:                vgfID,
 		gvgID:                gvgID,
 		redundancyIndex:      redundancyIndex,
 		verifyFailedObjects:  make(map[uint64]struct{}),
@@ -520,8 +517,12 @@ func (s *VerifyGVGScheduler) Start() {
 		return
 	}
 	maxSegmentSize := storageParams.GetMaxSegmentSize()
-	verifyTicker := time.NewTicker(20 * time.Second)
-	defer verifyTicker.Stop()
+	verifyTicker := time.NewTicker(10 * time.Second)
+	defer func() {
+		// todo
+		log.Infow("finished verify GVG")
+		verifyTicker.Stop()
+	}()
 
 	for {
 		select {
@@ -546,7 +547,7 @@ func (s *VerifyGVGScheduler) Start() {
 			log.Infow("list objects in GVG", "start_after", s.curStartAfter, "limit", verifyGVGQueryLimit)
 
 			// Once iterate all objects in GVG, check all recorded recover-failed objects have been recovered.
-			// If there is any object that does not exceed the max retry, will re-start from the beginning object ot verify
+			// If there is any object that does not exceed the max retry, will re-start from the beginning object in GVG.
 			if len(objects) == 0 {
 				recoverFailedObjectsCount := len(s.verifyFailedObjects)
 				needDiscontinueCount := 0
@@ -587,7 +588,21 @@ func (s *VerifyGVGScheduler) Start() {
 					}
 				}
 				if recoverFailedObjectsCount == 0 {
-					// todo send complete SwapIn
+					msgCompleteSwapIn := &types2.MsgCompleteSwapIn{
+						GlobalVirtualGroupFamilyId: s.vgfID,
+					}
+					err := SendAndConfirmCompleteSwapInTx(s.manager.baseApp, msgCompleteSwapIn)
+					if err != nil {
+						log.Errorw("failed to complete swapIn", "msg", msgCompleteSwapIn, "err", err)
+						continue
+					}
+					gvgStats.Status = spdb.Completed
+					err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
+					if err != nil {
+						log.Error("failed to update GVG stats to complete status", "gvgStats", gvgStats)
+						continue
+					}
+					break
 				}
 			}
 
@@ -625,6 +640,8 @@ func (s *VerifyGVGScheduler) Start() {
 				}
 				s.verifySuccessObjects[o.Object.ObjectInfo.Id.Uint64()] = struct{}{}
 			}
+
+			s.curStartAfter = s.curStartAfter + uint64(verifyGVGQueryLimit)
 		}
 	}
 }
@@ -649,4 +666,19 @@ func verifyIntegrityAndPieceHash(m *ManageModular, object *types.ObjectInfo, red
 		return false, nil
 	}
 	return true, nil
+}
+
+func SendAndConfirmCompleteSwapInTx(baseApp *gfspapp.GfSpBaseApp, msg *types2.MsgCompleteSwapIn) error {
+	return SendAndConfirmTx(baseApp.Consensus(),
+		func() (string, error) {
+			var (
+				txHash string
+				txErr  error
+			)
+			if txHash, txErr = baseApp.GfSpClient().CompleteSwapIn(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
+				log.Errorw("failed to send complete swap in", "complete_swap_in_msg", msg, "error", txErr)
+				return "", txErr
+			}
+			return txHash, nil
+		})
 }

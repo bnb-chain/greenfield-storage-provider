@@ -153,10 +153,3 @@ type RecoverFailedObject struct {
 	RedundancyIndex int32
 	RetryTime       int
 }
-
-type VerifyGVGProgress struct {
-	VirtualGroupID  uint32
-	RedundancyIndex int32
-	StartAfter      uint64
-	Limit           uint64
-}

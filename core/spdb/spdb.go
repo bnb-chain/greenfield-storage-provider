@@ -207,9 +207,4 @@ type ExitRecoverDB interface {
 	DeleteRecoverFailedObject(objectID uint64) (err error)
 	GetRecoverFailedObject(objectID uint64) (*RecoverFailedObject, error)
 	GetRecoverFailedObjects(retry, limit uint32) ([]*RecoverFailedObject, error)
-
-	SetVerifyGVGProgress(gvgProgress []*VerifyGVGProgress) error
-	GetVerifyGVGProgress(gvgID uint32) (*VerifyGVGProgress, error)
-	UpdateVerifyGVGProgress(gvgProgress *VerifyGVGProgress) error
-	DeleteVerifyGVGProgress(gvgID uint64) (err error)
 }

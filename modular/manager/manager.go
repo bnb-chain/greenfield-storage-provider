@@ -3,13 +3,14 @@ package manager
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"math/rand"
 	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 
 	"golang.org/x/exp/slices"
 
@@ -1011,14 +1012,14 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 		return nil, err
 	}
 	res := make([]*gfspserver.RecoverProcess, 0, len(gvgStatsList))
-	for _, gvgstats := range gvgStatsList {
+	for _, gvgStats := range gvgStatsList {
 		res = append(res, &gfspserver.RecoverProcess{
-			VirtualGroupId:       gvgstats.VirtualGroupID,
-			VirtualGroupFamilyId: gvgstats.VirtualGroupFamilyID,
-			RedundancyIndex:      gvgstats.RedundancyIndex,
-			StartAfter:           gvgstats.StartAfter,
-			Limit:                gvgstats.Limit,
-			Status:               int32(gvgstats.Status),
+			VirtualGroupId:       gvgStats.VirtualGroupID,
+			VirtualGroupFamilyId: gvgStats.VirtualGroupFamilyID,
+			RedundancyIndex:      gvgStats.RedundancyIndex,
+			StartAfter:           gvgStats.StartAfter,
+			Limit:                gvgStats.Limit,
+			Status:               int32(gvgStats.Status),
 		})
 	}
 	return res, nil

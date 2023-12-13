@@ -36,7 +36,7 @@ func (s *SpDBImpl) BatchGetRecoverGVGStats(gvgIDs []uint32) ([]*spdb.RecoverGVGS
 			VirtualGroupFamilyID: ret.VirtualGroupFamilyID,
 			VirtualGroupID:       ret.VirtualGroupID,
 			RedundancyIndex:      ret.RedundancyIndex,
-			Status:               ret.Status,
+			Status:               spdb.RecoverStatus(ret.Status),
 			Limit:                uint64(ret.Limit),
 		})
 	}
@@ -159,59 +159,4 @@ func (s *SpDBImpl) UpdateRecoverFailedObject(object *spdb.RecoverFailedObject) (
 		return fmt.Errorf("failed to VerifyGVGProgress%s", result.Error)
 	}
 	return nil
-}
-
-func (s *SpDBImpl) SetVerifyGVGProgress(gvgProgress []*spdb.VerifyGVGProgress) error {
-	saveGVGProgress := make([]*VerifyGVGProgressTable, 0)
-	for _, g := range gvgProgress {
-		gt := &VerifyGVGProgressTable{
-			VirtualGroupID:  g.VirtualGroupID,
-			RedundancyIndex: g.RedundancyIndex,
-			StartAfter:      g.StartAfter,
-			Limit:           uint32(g.Limit),
-		}
-		saveGVGProgress = append(saveGVGProgress, gt)
-	}
-
-	err := s.db.CreateInBatches(saveGVGProgress, len(saveGVGProgress)).Error
-	if err != nil && MysqlErrCode(err) == ErrDuplicateEntryCode {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("failed to set gvg recover stats record: %s", err.Error)
-	}
-	return nil
-}
-
-func (s *SpDBImpl) GetVerifyGVGProgress(gvgID uint32) (*spdb.VerifyGVGProgress, error) {
-	var queryReturn VerifyGVGProgressTable
-	if err := s.db.Model(&VerifyGVGProgressTable{}).
-		Where("virtual_group_id = ?", gvgID).
-		First(&queryReturn).Error; err != nil {
-		return nil, err
-	}
-	return &spdb.VerifyGVGProgress{
-		VirtualGroupID:  queryReturn.VirtualGroupID,
-		RedundancyIndex: queryReturn.RedundancyIndex,
-		StartAfter:      queryReturn.StartAfter,
-		Limit:           uint64(queryReturn.Limit),
-	}, nil
-}
-
-func (s *SpDBImpl) UpdateVerifyGVGProgress(gvgProgress *spdb.VerifyGVGProgress) (err error) {
-	result := s.db.Table(VerifyGVGProgressTableName).Where("virtual_group_id = ?", gvgProgress.VirtualGroupID).
-		Updates(&VerifyGVGProgressTable{
-			StartAfter: gvgProgress.StartAfter,
-		})
-	if result.Error != nil {
-		return fmt.Errorf("failed to VerifyGVGProgress%s", result.Error)
-	}
-	return nil
-}
-
-func (s *SpDBImpl) DeleteVerifyGVGProgress(gvgID uint64) (err error) {
-	err = s.db.Table(VerifyGVGProgressTableName).Delete(&VerifyGVGProgressTable{
-		VirtualGroupID: uint32(gvgID),
-	}).Error
-	return err
 }
