@@ -395,16 +395,16 @@ func (m *GfSpGCBucketMigrationTask) SetFinished(finished bool) {
 }
 
 func (m *GfSpGCBucketMigrationTask) GetGvgTotalNum() uint64 {
-	return m.GetGvgNumTotal()
+	return m.GetTotalGvgNum()
 }
 
 func (m *GfSpGCBucketMigrationTask) SetGvgTotalNum(gvgNum uint64) {
-	m.GvgNumTotal = gvgNum
+	m.TotalGvgNum = gvgNum
 }
 
 func (m *GfSpGCBucketMigrationTask) GetGvgGcNumFinished() uint64 {
-	return m.GetGvgNumGcFinished()
+	return m.GetFinishedGcGvgNum()
 }
 func (m *GfSpGCBucketMigrationTask) SetGvgGcNumFinished(gvgGcNum uint64) {
-	m.GvgNumGcFinished = gvgGcNum
+	m.FinishedGcGvgNum = gvgGcNum
 }

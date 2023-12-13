@@ -88,7 +88,7 @@ type ManagerAPI interface {
 	PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error)
-	GetMigrationBucketState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error)
+	GetBucketMigrationState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error)
 	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error)
 	NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error)
 }
