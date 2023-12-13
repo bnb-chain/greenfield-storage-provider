@@ -117,6 +117,7 @@ func (gc *GCWorker) isAllowGCCheck(objectInfo *storagetypes.ObjectInfo, bucketIn
 		log.Infow("bucket is migrating, do not need to gc check")
 		return false
 	}
+	// the buc
 	log.Debugw("the object is sealed and the bucket is not migrating, the object can gc", "object", objectInfo, "bucket", bucketInfo)
 	return true
 }
@@ -159,12 +160,32 @@ func (gc *GCWorker) checkGVGMatchSP(ctx context.Context, objectInfo *storagetype
 
 	if redundancyIndex == piecestore.PrimarySPRedundancyIndex {
 		if gvg.GetPrimarySpId() != spID {
+			swapInInfo, err := gc.e.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, 0)
+			if err != nil {
+				if err == virtualgrouptypes.ErrSwapInInfoNotExist || err == virtualgrouptypes.ErrSwapInInfoExpired {
+					return ErrInvalidRedundancyIndex
+				}
+				return nil
+			}
+			if swapInInfo.SuccessorSpId == spID && swapInInfo.TargetSpId == gvg.PrimarySpId {
+				return nil
+			}
 			log.CtxInfow(ctx, "the piece isn't in correct location, will be delete",
 				"object_info", objectInfo, "redundancy_index", redundancyIndex, "gvg", gvg, "sp_id", spID)
 			return ErrInvalidRedundancyIndex
 		}
 	} else {
 		if gvg.GetSecondarySpIds()[redundancyIndex] != spID {
+			swapInInfo, err := gc.e.baseApp.Consensus().QuerySwapInInfo(ctx, 0, gvg.Id)
+			if err != nil {
+				if err == virtualgrouptypes.ErrSwapInInfoNotExist || err == virtualgrouptypes.ErrSwapInInfoExpired {
+					return ErrInvalidRedundancyIndex
+				}
+				return nil
+			}
+			if swapInInfo.SuccessorSpId == spID && swapInInfo.TargetSpId == gvg.GetSecondarySpIds()[redundancyIndex] {
+				return nil
+			}
 			log.CtxInfow(ctx, "the piece isn't in correct location, will be delete",
 				"object_info", objectInfo, "redundancy_index", redundancyIndex, "gvg", gvg, "sp_id", spID)
 			return ErrInvalidRedundancyIndex

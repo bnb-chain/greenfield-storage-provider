@@ -157,19 +157,13 @@ func RecoverGVGAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	vgfId := gvgInfo.GetFamilyId()
-	vgfInfo, err := spClient.GetVirtualGroupFamily(ctx.Context, vgfId)
-	if err != nil {
-		return err
-	}
 	var replicateIndex int32
-	for idx, gvg := range vgfInfo.GetGlobalVirtualGroupIds() {
-		if uint64(gvg) == gvgID {
-			replicateIndex = int32(idx - 1)
-			break
+	for idx, sspID := range gvgInfo.SecondarySpIds {
+		if sspID == swapInInfo.TargetSpId {
+			replicateIndex = int32(idx)
 		}
 	}
-	// trigger
+
 	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), replicateIndex)
 }
 

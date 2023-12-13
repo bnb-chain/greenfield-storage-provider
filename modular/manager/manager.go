@@ -182,7 +182,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 
 	//go m.delayStartMigrateScheduler()
 	go m.eventLoop(ctx)
-	go m.startRecoverSchedulers(0, 0, 0)
 	return nil
 }
 

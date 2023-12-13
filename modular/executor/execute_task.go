@@ -310,7 +310,7 @@ func (e *ExecuteModular) recoverByPrimarySP(ctx context.Context, task coretask.R
 
 	pieceData, err = e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 	if err != nil {
-		log.CtxDebugw(ctx, "failed to recover secondary SP data from secondary SPs")
+		log.CtxDebugw(ctx, "failed to recover secondary SP data from primary SP")
 		return err
 	}
 	// compare integrity hash

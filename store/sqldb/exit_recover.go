@@ -18,6 +18,7 @@ func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, erro
 		VirtualGroupID:       queryReturn.VirtualGroupID,
 		RedundancyIndex:      queryReturn.RedundancyIndex,
 		Status:               spdb.RecoverStatus(queryReturn.Status),
+		StartAfter:           queryReturn.StartAfterObjectID,
 		Limit:                uint64(queryReturn.Limit),
 	}, nil
 }

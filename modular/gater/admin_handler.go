@@ -878,9 +878,10 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 	}
 
 	isSuccessor := false
-	var successorSP *sptypes.StorageProvider
-	var swapInInfo *virtualgrouptypes.SwapInInfo
-
+	var (
+		successorSP *sptypes.StorageProvider
+		swapInInfo  *virtualgrouptypes.SwapInInfo
+	)
 	log.Infow("recoveryTask", "recoveryTask", recoveryTask)
 
 	if recoveryTask.GetBySuccessorSp() {
@@ -892,9 +893,6 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		if err != nil {
 			return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
 		}
-		log.Infow("the successor sp operator address", "successorSP", successorSP.OperatorAddress)
-		log.Infow("swapInInfo", "swapInInfo", swapInInfo)
-		log.Infow("signatureAddr", "signatureAddr", signatureAddr.String())
 		if primarySp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
 			isSuccessor = true
 		}
@@ -1000,7 +998,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	for idx, sspId := range gvg.GetSecondarySpIds() {
 		ssp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspId)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed query SP by ID", "sp_id", sspId, "error", err)
+			log.CtxErrorw(ctx, "failed to query SP by ID", "sp_id", sspId, "error", err)
 			return nil, ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
 		}
 		ECIndex = int32(idx)
@@ -1011,7 +1009,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 		}
 	}
 	redundancyIdx := recoveryTask.EcIdx
-	if !isOneOfSecondary || ECIndex != recoveryTask.EcIdx || !isSuccessor {
+	if (!isOneOfSecondary && !isSuccessor) || ECIndex != recoveryTask.EcIdx {
 		log.CtxErrorw(ctx, "failed to recover", "is_one_of_secondary", isOneOfSecondary, "EC_index", recoveryTask.EcIdx, "is_successor", isSuccessor)
 		return nil, ErrRecoverySP
 	}
