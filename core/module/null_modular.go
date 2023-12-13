@@ -328,3 +328,9 @@ func (*NullReceiveModular) HandleReceivePieceTask(context.Context, task.ReceiveP
 func (*NullReceiveModular) HandleDoneReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
 }
+func (m *NullModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, error) {
+	return nil, ErrNilModular
+}
+func (m *NilModular) CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	return "nil", ErrNilModular
+}

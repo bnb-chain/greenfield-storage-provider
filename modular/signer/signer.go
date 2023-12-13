@@ -230,3 +230,7 @@ func (s *SignModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBuck
 func (s *SignModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
 	return s.client.ReserveSwapIn(ctx, SignOperator, reserveSwapIn)
 }
+
+func (s *SignModular) CompleteSwapIn(ctx context.Context, completeSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	return s.client.CompleteSwapIn(ctx, SignOperator, completeSwapIn)
+}

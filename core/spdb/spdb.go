@@ -197,6 +197,7 @@ type MigrateDB interface {
 
 type ExitRecoverDB interface {
 	GetRecoverGVGStats(gvgID uint32) (*RecoverGVGStats, error)
+	BatchGetRecoverGVGStats(gvgID []uint32) ([]*RecoverGVGStats, error)
 	SetRecoverGVGStats(stats []*RecoverGVGStats) error
 	UpdateRecoverGVGStats(stats *RecoverGVGStats) (err error)
 	DeleteRecoverGVGStats(gvgID uint32) (err error)

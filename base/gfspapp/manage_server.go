@@ -394,3 +394,13 @@ func (g *GfSpBaseApp) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, req 
 	}
 	return &gfspserver.GfSpTriggerRecoverForSuccessorSPResponse{}, nil
 }
+
+func (g *GfSpBaseApp) GfSpQueryRecoverProcess(ctx context.Context, req *gfspserver.GfSpQueryRecoverProcessRequest) (*gfspserver.GfSpQueryRecoverProcessResponse, error) {
+	gvgStats, err := g.manager.QueryRecoverProcess(ctx, req.GetVgfId(), req.GetGvgId())
+	if err != nil {
+		return nil, err
+	}
+	return &gfspserver.GfSpQueryRecoverProcessResponse{
+		RecoverProcesses: gvgStats,
+	}, nil
+}

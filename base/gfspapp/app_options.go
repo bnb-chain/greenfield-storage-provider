@@ -153,6 +153,8 @@ const (
 	SignerFailureGfSpBucketMigrateInfo      = "signer_gfsp_bucket_migrate_info_failure"
 	SignerSuccessRejectMigrateBucket        = "signer_reject_migrate_bucket_success"
 	SignerFailureRejectMigrateBucket        = "signer_reject_migrate_bucket_failure"
+	SignerSuccessSwapIn                     = "signer_swap_in_success"
+	SignerFailureSwapIn                     = "signer_swap_in_failure"
 
 	UploaderSuccessPutObject = "uploader_put_object_success"
 	UploaderFailurePutObject = "uploader_put_object_failure"
