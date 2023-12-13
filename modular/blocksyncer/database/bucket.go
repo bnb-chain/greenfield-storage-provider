@@ -48,6 +48,38 @@ func (db *DB) BatchUpdateBucketSize(ctx context.Context, buckets []*models.Bucke
 	}).Create(buckets).Error
 }
 
+func (db *DB) BatchDeletePrefixTreeNodeByBucketAndPathAndFullName(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) error {
+	shardTableName := bsdb.GetPrefixesTableName(prefixTree[0].BucketName)
+	tx := db.Db.Table(shardTableName)
+	stmt := tx.Where("bucket_name = ? AND path_name = ? and full_name = ?",
+		prefixTree[0].BucketName,
+		prefixTree[0].PathName,
+		prefixTree[0].FullName)
+
+	for _, object := range prefixTree[1:] {
+		stmt = stmt.Or("bucket_name = ? AND path_name = ? and full_name = ?",
+			object.BucketName,
+			object.PathName,
+			object.FullName)
+	}
+
+	return stmt.Unscoped().Delete(&bsdb.SlashPrefixTreeNode{}).Error
+}
+
+func (db *DB) BatchDeletePrefixTreeNodeByID(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) error {
+	shardTableName := bsdb.GetPrefixesTableName(prefixTree[0].BucketName)
+	tx := db.Db.Table(shardTableName)
+	stmt := tx.Where("id = ?",
+		prefixTree[0].ID)
+
+	for _, object := range prefixTree[1:] {
+		stmt = stmt.Or("id = ?",
+			object.ID)
+	}
+
+	return stmt.Unscoped().Delete(&bsdb.SlashPrefixTreeNode{}).Error
+}
+
 func (db *DB) GetDataMigrationRecord(ctx context.Context, processKey string) (*bsdb.DataMigrationRecord, error) {
 	var (
 		dataRecord *bsdb.DataMigrationRecord

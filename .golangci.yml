@@ -36,3 +36,6 @@ linters:
 linters-settings:
   gofmt:
     simplify: true
+  staticcheck:
+    checks:
+      - '-SA1029'
