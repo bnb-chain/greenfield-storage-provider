@@ -653,7 +653,6 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 		}
 		nodes := make([]*bsdb.SlashPrefixTreeNode, 0, len(res))
 		for _, r := range res {
-			log.Debugw("start to delete prefix tree node by id", "node full name", r.FullName)
 			nodes = append(nodes, &bsdb.SlashPrefixTreeNode{
 				ID:         r.ID,
 				FullName:   r.FullName,
@@ -664,6 +663,7 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 		if len(nodes) == 0 {
 			continue
 		}
+		log.Debugw("start to delete prefix tree node by id", "node lens", len(nodes))
 		offset := 0
 		step := 1000
 		for {
@@ -743,7 +743,6 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 			}
 			// In our case, we only consider the value 0, which indicates that there are no subfolders under this minimum subdirectory. This bucket name and path should be deleted.
 			if len(trees) == 0 {
-				log.Debugw("start to delete undeleted prefix tree node", "node full name", node.FullName)
 				deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{PathName: node.PathName, BucketName: node.BucketName, FullName: node.FullName})
 				pathParts := strings.Split(node.PathName, "/")
 				for j := len(pathParts) - 1; j > 0; j-- {
@@ -755,18 +754,16 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 							return err
 						}
 						if len(trees) <= 1 {
-							log.Debugw("start to delete undeleted prefix tree node", "node full name", trees[0].FullName)
 							deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{PathName: path, BucketName: node.BucketName, FullName: trees[0].FullName})
 						}
 					} else {
-						log.Debugw("start to delete undeleted prefix tree node", "node full name", strings.Join(pathParts[:j+1], "/")+"/")
 						deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{BucketName: node.BucketName, PathName: path, FullName: strings.Join(pathParts[:j+1], "/") + "/"})
 					}
 				}
 			}
 		}
 	}
-
+	log.Debugw("start to delete prefix tree by path and full name", "node lens", len(deletedNodes))
 	offset := 0
 	step := 1000
 	for {
