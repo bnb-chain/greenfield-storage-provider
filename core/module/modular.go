@@ -314,6 +314,8 @@ type Signer interface {
 	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
 	// ReserveSwapIn reserve swapIn
 	ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
+	// CompleteSwapIn complete swapIn
+	CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

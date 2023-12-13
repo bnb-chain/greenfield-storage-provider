@@ -863,9 +863,9 @@ func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdCl
 
 func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
-	log.Infow("signer starts to reject migrate bucket", "scope", scope)
+	log.Infow("signer starts to reserve swap in", "scope", scope)
 	if msg == nil {
-		log.CtxError(ctx, "reject migrate bucket msg pointer dangling")
+		log.CtxError(ctx, "reserve swap in msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
@@ -901,15 +901,68 @@ func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scop
 			client.operatorAccNonce = nonce
 		}
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast reject migrate bucket tx", "retry_number", i, "error", err)
+			log.CtxErrorw(ctx, "failed to broadcast reserve swap in tx", "retry_number", i, "error", err)
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
-		log.CtxDebugw(ctx, "succeed to broadcast reject migrate bucket tx", "tx_hash", txHash, "reject_migrate_bucket_msg", msgReserveSwapIn)
+		log.CtxDebugw(ctx, "succeed to broadcast reserve swap in tx", "tx_hash", txHash, "reserve_swap_in_msg", msgReserveSwapIn)
 		return txHash, nil
 	}
 
 	// failed to broadcast tx
-	ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast reject migrate bucket, error: %v", err))
+	ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast reserve swap in, error: %v", err))
+	return "", ErrRejectMigrateBucketOnChain
+}
+
+func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, scope SignType,
+	msg *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	log.Infow("signer starts to complete swap in", "scope", scope)
+	if msg == nil {
+		log.CtxError(ctx, "complete swap in msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msgCompleteSwapIn := virtualgrouptypes.NewMsgCompleteSwapIn(km.GetAddr(), msg.GetGlobalVirtualGroupFamilyId(), msg.GetGlobalVirtualGroupId())
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSwapIn}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrRejectMigrateBucketOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast complete swap in tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast complete swap in tx", "tx_hash", txHash, "complete_swap_in_msg", msgCompleteSwapIn)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast rcomplete swap in, error: %v", err))
 	return "", ErrRejectMigrateBucketOnChain
 }
