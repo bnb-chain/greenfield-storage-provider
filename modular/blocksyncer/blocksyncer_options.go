@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -154,6 +155,7 @@ func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 func (b *BlockSyncerModular) dataMigration(ctx context.Context) {
 	// update bucket size after the bucket_size column is added
 	b.syncBucketSize()
+	b.syncSlashPrefixTree()
 }
 
 // serve start BlockSyncer rpc service
@@ -593,6 +595,195 @@ func (b *BlockSyncerModular) syncBucketSize() error {
 		}
 	}
 	log.Info("succeed to sync bucket size")
+	err = db.Cast(b.parserCtx.Database).UpdateDataMigrationRecord(context.Background(), dataMigrateKey, true)
+	if err != nil {
+		log.Errorw("failed to UpdateDataMigrationRecord", "error", err, "dataMigrateKey", dataMigrateKey)
+		return err
+	}
+	return nil
+}
+
+func (b *BlockSyncerModular) syncSlashPrefixTree() error {
+	dataMigrateKey := bsdb.ProcessKeyUpdateSlashPrefixTree
+	record, err := db.Cast(b.parserCtx.Database).GetDataMigrationRecord(context.Background(), dataMigrateKey)
+	if err != nil {
+		panic("failed to get the data migration record for " + dataMigrateKey)
+	}
+	if record != nil && record.IsCompleted {
+		log.Infof(dataMigrateKey + "has already been completed. Skip it now.")
+		return nil
+	}
+	type TreeNode struct {
+		ID         uint64 `gorm:"id"`
+		BucketName string `gorm:"bucket_name"`
+		PathName   string `gorm:"path_name"`
+		FullName   string `gorm:"full_name"`
+	}
+	log.Infof("start sync slash prefix tree")
+	/*
+		Find the folder issue caused by multiple object creations within the same block height.
+
+		SELECT * FROM slash_prefix_tree_nodes_36
+		WHERE id NOT IN (
+			SELECT MIN(id)
+			FROM slash_prefix_tree_nodes_36
+			GROUP BY bucket_name, path_name, full_name
+			HAVING COUNT(*) > 1
+		)
+		AND (bucket_name, path_name, full_name) IN (
+			SELECT bucket_name, path_name, full_name
+			FROM slash_prefix_tree_nodes_36
+			GROUP BY bucket_name, path_name, full_name
+			HAVING COUNT(*) > 1
+		);
+	*/
+	for i := 0; i < ObjectsNumberOfShards; i++ {
+		tableName := "slash_prefix_tree_nodes_"
+		if i < 10 {
+			tableName += "0"
+		}
+		tableName += fmt.Sprintf("%d", i)
+		var res []*TreeNode
+		sql := "SELECT * FROM " + tableName + " WHERE id NOT IN (SELECT MIN(id) FROM " + tableName + " GROUP BY bucket_name, path_name, full_name HAVING COUNT(*) > 1) AND (bucket_name, path_name, full_name) IN (SELECT bucket_name, path_name, full_name FROM " + tableName + " GROUP BY bucket_name, path_name, full_name HAVING COUNT(*) > 1);"
+		log.Infof("sql:%s", sql)
+		err := db.Cast(b.parserCtx.Database).Db.Raw(sql).Scan(&res).Error
+		if err != nil {
+			log.Errorw("query slash prefix tree", "error", err)
+			return err
+		}
+		nodes := make([]*bsdb.SlashPrefixTreeNode, 0, len(res))
+		for _, r := range res {
+			nodes = append(nodes, &bsdb.SlashPrefixTreeNode{
+				ID:         r.ID,
+				FullName:   r.FullName,
+				PathName:   r.PathName,
+				BucketName: r.BucketName,
+			})
+		}
+		if len(nodes) == 0 {
+			continue
+		}
+		log.Debugw("start to delete prefix tree node by id", "node lens", len(nodes))
+		offset := 0
+		step := 1000
+		for {
+			left := offset
+			right := offset + step
+			if left >= len(nodes) {
+				break
+			}
+			if right > len(nodes) {
+				right = len(nodes)
+			}
+			err = db.Cast(b.parserCtx.Database).BatchDeletePrefixTreeNodeByID(context.Background(), nodes[left:right])
+			if err != nil {
+				log.Errorw("failed to delete slash prefix trees", "error", err)
+				return err
+			}
+			offset = right
+		}
+	}
+
+	/*
+		Identify the folder issue caused by multiple object deletions within a single block height not being deleted.
+
+		SELECT * FROM slash_prefix_tree_nodes_36
+		WHERE (bucket_name, path_name) NOT IN (
+			SELECT bucket_name, path_name
+		FROM slash_prefix_tree_nodes_36
+		WHERE is_object = 1
+		GROUP BY bucket_name, path_name
+		HAVING COUNT(*) = 1
+		)
+		AND (bucket_name, path_name) IN (
+			SELECT bucket_name, path_name
+		FROM slash_prefix_tree_nodes_36
+		GROUP BY bucket_name, path_name
+		HAVING COUNT(*) = 1
+		);
+	*/
+	deletedNodes := make([]*bsdb.SlashPrefixTreeNode, 0)
+	for i := 0; i < ObjectsNumberOfShards; i++ {
+		tableName := "slash_prefix_tree_nodes_"
+		if i < 10 {
+			tableName += "0"
+		}
+		tableName += fmt.Sprintf("%d", i)
+		var res []*TreeNode
+		// First, query to find the path and bucket name of folders that do not have any objects but only one folder beneath them.
+		// Then, perform checks on all the paths.
+		sql := "SELECT * FROM " + tableName + " WHERE (bucket_name, path_name) NOT IN (SELECT bucket_name, path_name FROM " + tableName + " WHERE is_object = 1 GROUP BY bucket_name, path_name HAVING COUNT(*) = 1) AND (bucket_name, path_name) IN (SELECT bucket_name, path_name FROM " + tableName + " GROUP BY bucket_name, path_name HAVING COUNT(*) = 1);"
+		log.Infof("sql:%s", sql)
+		err := db.Cast(b.parserCtx.Database).Db.Raw(sql).Scan(&res).Error
+		if err != nil {
+			log.Errorw("failed to query slash prefix tree", "error", err)
+			return err
+		}
+		nodes := make([]*bsdb.SlashPrefixTreeNode, 0, len(res))
+		for _, r := range res {
+			nodes = append(nodes, &bsdb.SlashPrefixTreeNode{
+				ID:         r.ID,
+				FullName:   r.FullName,
+				PathName:   r.PathName,
+				BucketName: r.BucketName,
+			})
+		}
+		if len(nodes) == 0 {
+			continue
+		}
+		// 1. First, check if all sub-folders also contain only one folder and no objects. If true, delete them and proceed to check the parent folder logic.
+		// 2. For parent folders, check if they too contain only one folder and no objects. Recursively perform this check up to the root ('/') folder, and then directly delete it.
+		// 3. End this loop.
+		for _, node := range nodes {
+			// The reason for using full name here is to check if the folder below is not empty
+			trees, err := db.Cast(b.parserCtx.Database).GetPrefixTreesByBucketAndPathName(context.Background(), node.BucketName, node.FullName)
+			if err != nil {
+				log.Errorw("failed to get prefix trees by bucket and path name", "error", err, "bucketName", node.BucketName, "pathName", node.PathName)
+				return err
+			}
+			// In our case, we only consider the value 0, which indicates that there are no subfolders under this minimum subdirectory. This bucket name and path should be deleted.
+			if len(trees) == 0 {
+				deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{PathName: node.PathName, BucketName: node.BucketName, FullName: node.FullName})
+				pathParts := strings.Split(node.PathName, "/")
+				for j := len(pathParts) - 1; j > 0; j-- {
+					path := strings.Join(pathParts[:j], "/") + "/"
+					if path != "/" {
+						trees, err = db.Cast(b.parserCtx.Database).GetPrefixTreesByBucketAndPathName(context.Background(), node.BucketName, path)
+						if err != nil {
+							log.Errorw("failed to get prefix trees by bucket and path name", "error", err, "bucketName", node.BucketName, "pathName", node.PathName)
+							return err
+						}
+						if len(trees) <= 1 {
+							deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{PathName: path, BucketName: node.BucketName, FullName: trees[0].FullName})
+						}
+					} else {
+						deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{BucketName: node.BucketName, PathName: path, FullName: strings.Join(pathParts[:j+1], "/") + "/"})
+					}
+				}
+			}
+		}
+	}
+	log.Debugw("start to delete prefix tree by path and full name", "node lens", len(deletedNodes))
+	offset := 0
+	step := 1000
+	for {
+		left := offset
+		right := offset + step
+		if left >= len(deletedNodes) {
+			break
+		}
+		if right > len(deletedNodes) {
+			right = len(deletedNodes)
+		}
+		err = db.Cast(b.parserCtx.Database).BatchDeletePrefixTreeNodeByBucketAndPathAndFullName(context.Background(), deletedNodes[left:right])
+		if err != nil {
+			log.Errorw("failed to delete slash prefix trees", "error", err)
+			return err
+		}
+		offset = right
+	}
+
+	log.Info("succeed to sync slash prefix tree")
 	err = db.Cast(b.parserCtx.Database).UpdateDataMigrationRecord(context.Background(), dataMigrateKey, true)
 	if err != nil {
 		log.Errorw("failed to UpdateDataMigrationRecord", "error", err, "dataMigrateKey", dataMigrateKey)
