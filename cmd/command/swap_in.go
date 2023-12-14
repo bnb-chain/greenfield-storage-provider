@@ -14,8 +14,8 @@ import (
 
 const swapInCommands = "SwapIn Commands"
 
-var ngvgIDFlag = &cli.Uint64Flag{
-	Name:     "ngvgId",
+var nGVGIDFlag = &cli.Uint64Flag{
+	Name:     "gvgId",
 	Usage:    "gvg id",
 	Aliases:  []string{"gid"},
 	Required: true,
@@ -41,7 +41,7 @@ var SwapInCmd = &cli.Command{
 	Usage:  "Successor swap in GVG/VGF",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		ngvgIDFlag,
+		nGVGIDFlag,
 		vgfIDFlag,
 		targetSPIDFlag,
 	},
@@ -51,11 +51,11 @@ var SwapInCmd = &cli.Command{
 
 var RecoverGVGCmd = &cli.Command{
 	Action: RecoverGVGAction,
-	Name:   "recoverGVG",
+	Name:   "recover-gvg",
 	Usage:  "Successor swap in GVG/VGF",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		ngvgIDFlag,
+		nGVGIDFlag,
 	},
 	Category:    swapInCommands,
 	Description: ``,
@@ -79,7 +79,7 @@ var CompleteSwapInCmd = &cli.Command{
 	Usage:  "complete swap in",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		ngvgIDFlag,
+		nGVGIDFlag,
 		vgfIDFlag,
 	},
 	Category:    swapInCommands,
@@ -92,7 +92,7 @@ var QueryRecoverProcessCmd = &cli.Command{
 	Usage:  "query recover process",
 	Flags: []cli.Flag{
 		utils.ConfigFileFlag,
-		ngvgIDFlag,
+		nGVGIDFlag,
 		vgfIDFlag,
 	},
 	Category:    swapInCommands,
@@ -106,7 +106,7 @@ func SwapInAction(ctx *cli.Context) error {
 	}
 
 	targetSpID := ctx.Uint64(targetSPIDFlag.Name)
-	gvgID := ctx.Uint64(ngvgIDFlag.Name)
+	gvgID := ctx.Uint64(nGVGIDFlag.Name)
 	gvgfID := ctx.Uint64(vgfIDFlag.Name)
 
 	reserveSwapIn := &virtualgrouptypes.MsgReserveSwapIn{
@@ -127,7 +127,7 @@ func CompleteSwapInAction(ctx *cli.Context) error {
 		return err
 	}
 
-	gvgID := ctx.Uint64(ngvgIDFlag.Name)
+	gvgID := ctx.Uint64(nGVGIDFlag.Name)
 	gvgfID := ctx.Uint64(vgfIDFlag.Name)
 
 	completeSwapIn := &virtualgrouptypes.MsgCompleteSwapIn{
@@ -159,7 +159,7 @@ func RecoverGVGAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	gvgID := ctx.Uint64(ngvgIDFlag.Name)
+	gvgID := ctx.Uint64(nGVGIDFlag.Name)
 	swapInInfo, err := chainClient.QuerySwapInInfo(ctx.Context, 0, uint32(gvgID))
 	if err != nil {
 		return err
@@ -220,24 +220,30 @@ func QueryRecoverProcessAction(ctx *cli.Context) error {
 		return err
 	}
 	spClient := utils.MakeGfSpClient(cfg)
-	gvgID := ctx.Uint64(ngvgIDFlag.Name)
+	gvgID := ctx.Uint64(nGVGIDFlag.Name)
 	gvgfID := ctx.Uint64(vgfIDFlag.Name)
-	gvgstatsList, err := spClient.QueryRecoverProcess(ctx.Context, uint32(gvgfID), uint32(gvgID))
+	gvgstatsList, executing, err := spClient.QueryRecoverProcess(ctx.Context, uint32(gvgfID), uint32(gvgID))
 	if err != nil {
 		return err
 	}
+	if executing {
+		println("Please Wait, recover executing")
+	} else {
+		println("recover progress：")
+	}
+
 	res, err := json.Marshal(gvgstatsList)
 	if err != nil {
 		return err
 	}
-	println(res)
+	println(string(res))
 	// create file
 	f, err := os.Create("recover_process.json")
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintln(f, res)
+	_, err = fmt.Fprintln(f, string(res))
 	if err != nil {
 		return err
 	}

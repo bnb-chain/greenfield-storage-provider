@@ -72,6 +72,7 @@ func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error
 		Updates(&RecoverGVGStatsTable{
 			Status:             int(stats.Status),
 			StartAfterObjectID: stats.StartAfter,
+			ObjectCount:        stats.ObjectCount,
 		})
 	if result.Error != nil {
 		return fmt.Errorf("failed to update the GVG status for recover_stats table: %s", result.Error)
@@ -159,4 +160,12 @@ func (s *SpDBImpl) UpdateRecoverFailedObject(object *spdb.RecoverFailedObject) (
 		return fmt.Errorf("failed to VerifyGVGProgress%s", result.Error)
 	}
 	return nil
+}
+
+func (s *SpDBImpl) CountRecoverFailedObject() (count int64, err error) {
+	result := s.db.Table(RecoverFailedObjectTableName).Count(&count)
+	if result.Error != nil {
+		return 0, fmt.Errorf("failed to count recover failed object%s", result.Error)
+	}
+	return
 }

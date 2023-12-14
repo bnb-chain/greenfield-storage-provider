@@ -7,6 +7,7 @@ type RecoverGVGStatsTable struct {
 	StartAfterObjectID   uint64
 	Limit                uint32
 	Status               int
+	ObjectCount          uint64
 }
 
 func (RecoverGVGStatsTable) TableName() string {
@@ -15,7 +16,7 @@ func (RecoverGVGStatsTable) TableName() string {
 
 type RecoverFailedObjectTable struct {
 	ObjectID        uint64 `gorm:"primary_key"`
-	VirtualGroupID  uint32
+	VirtualGroupID  uint32 `gorm:"index:idx_gvg"`
 	RedundancyIndex int32
 	Retry           int `gorm:"index:retry"`
 }

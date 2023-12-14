@@ -141,11 +141,14 @@ message RecoverProcess {
   uint64 start_after = 4;
   uint64 limit = 5;
   int32 status = 6;
+  uint64 object_count = 7;
+  uint64 failed_object_count = 8;
 }
 
 message GfSpQueryRecoverProcessResponse {
   base.types.gfsperrors.GfSpError err = 1;
   repeated RecoverProcess recover_processes = 2;
+  bool executing = 3;
 }
 
 service GfSpManageService {

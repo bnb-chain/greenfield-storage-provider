@@ -145,6 +145,7 @@ type RecoverGVGStats struct {
 	StartAfter           uint64
 	Limit                uint64
 	Status               RecoverStatus
+	ObjectCount          uint64
 }
 
 type RecoverFailedObject struct {

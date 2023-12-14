@@ -231,7 +231,7 @@ type Manager interface {
 	ResetRecoveryFailedList(ctx context.Context) []string
 
 	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error
-	QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, error)
+	QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error)
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
