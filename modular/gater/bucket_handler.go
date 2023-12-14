@@ -13,7 +13,6 @@ import (
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -235,15 +234,14 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 // queryBucketMigrationProgressHandler handles the query bucket migration  progress request.
 func (g *GateModular) queryBucketMigrationProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                  error
-		reqCtx               *RequestContext
-		authenticated        bool
-		bucketInfo           *storagetypes.BucketInfo
-		errDescription       string
-		taskStateDescription string
-		migrationState       int32
-		progressMeta         *gfspserver.MigrateBucketProgressMeta
-		migratedBytes        uint64
+		err            error
+		reqCtx         *RequestContext
+		authenticated  bool
+		bucketInfo     *storagetypes.BucketInfo
+		errDescription string
+		migrationState int32
+		progressMeta   *gfspserver.MigrateBucketProgressMeta
+		migratedBytes  uint64
 	)
 	startTime := time.Now()
 	defer func() {
@@ -285,30 +283,26 @@ func (g *GateModular) queryBucketMigrationProgressHandler(w http.ResponseWriter,
 
 	if progressMeta, err = g.baseApp.GfSpClient().GetMigrateBucketProgress(reqCtx.Context(), bucketInfo.Id.Uint64()); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket migration job state", "error", err)
-		if !strings.Contains(err.Error(), "no uploading record") {
+		if !strings.Contains(err.Error(), "no migrate bucket progress record") {
 			return
 		}
-		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(0))
 		err = nil
 	} else {
-		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(migrationState))
 		migrationState = int32(progressMeta.GetMigrationState())
 		migratedBytes = progressMeta.GetMigratedBytes()
 	}
 
 	var xmlInfo = struct {
-		XMLName             xml.Name `xml:"QueryMigrationProgress"`
-		Version             string   `xml:"version,attr"`
-		ProgressDescription string   `xml:"ProgressDescription"`
-		ErrorDescription    string   `xml:"ErrorDescription"`
-		MigratedBytes       uint64   `xml:"MigratedBytes"`
-		MigrationState      uint32   `xml:"MigrationState"`
+		XMLName          xml.Name `xml:"QueryMigrationProgress"`
+		Version          string   `xml:"version,attr"`
+		ErrorDescription string   `xml:"ErrorDescription"`
+		MigratedBytes    uint64   `xml:"MigratedBytes"`
+		MigrationState   uint32   `xml:"MigrationState"`
 	}{
-		Version:             GnfdResponseXMLVersion,
-		ProgressDescription: taskStateDescription,
-		ErrorDescription:    errDescription,
-		MigratedBytes:       migratedBytes,
-		MigrationState:      uint32(migrationState),
+		Version:          GnfdResponseXMLVersion,
+		ErrorDescription: errDescription,
+		MigratedBytes:    migratedBytes,
+		MigrationState:   uint32(migrationState),
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {

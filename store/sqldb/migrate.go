@@ -540,14 +540,10 @@ func (s *SpDBImpl) QueryMigrateBucketProgress(bucketID uint64) (*spdb.MigrateBuc
 	)
 
 	progress := &spdb.MigrateBucketProgressMeta{}
-
 	queryReturn = &MigrateBucketProgressTable{}
 	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
-	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if result.Error != nil {
 		return &spdb.MigrateBucketProgressMeta{}, result.Error
-	}
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, result.Error
 	}
 
 	progress.BucketID = queryReturn.BucketID

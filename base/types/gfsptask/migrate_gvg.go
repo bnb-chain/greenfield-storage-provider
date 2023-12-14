@@ -374,8 +374,8 @@ func (m *GfSpGCBucketMigrationTask) SetBucketID(bucketID uint64) {
 	m.BucketId = bucketID
 }
 
-func (m *GfSpGCBucketMigrationTask) SetLastGCObjectID(lastGCObjectID uint64) {
-	m.LastGcObjectId = lastGCObjectID
+func (m *GfSpGCBucketMigrationTask) SetLastGCObjectID(lastGcObjectId uint64) {
+	m.LastGcObjectId = lastGcObjectId
 }
 
 func (m *GfSpGCBucketMigrationTask) GetLastGCObjectID() uint64 {
