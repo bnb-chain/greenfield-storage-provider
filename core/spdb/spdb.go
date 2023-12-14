@@ -207,4 +207,5 @@ type ExitRecoverDB interface {
 	DeleteRecoverFailedObject(objectID uint64) (err error)
 	GetRecoverFailedObject(objectID uint64) (*RecoverFailedObject, error)
 	GetRecoverFailedObjects(retry, limit uint32) ([]*RecoverFailedObject, error)
+	CountRecoverFailedObject() (int64, error)
 }

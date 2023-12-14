@@ -122,7 +122,9 @@ type ManageModular struct {
 	recoverMtx      sync.RWMutex
 	recoveryTaskMap map[string]string
 
-	recoverObjectStats *ObjectsSegmentsStats // objectId -> ObjectSegmentsStats
+	recoverObjectStats      *ObjectsSegmentsStats // objectId -> ObjectSegmentsStats
+	recoverProcessCount     atomic.Int64
+	verifyTerminationSignal chan bool
 
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
@@ -978,7 +980,7 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 		log.Infow("succeed to NewRecoverVGFScheduler")
 
 		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
-
+		m.recoverProcessCount.Store(int64(len(recoverVGFScheduler.RecoverSchedulers)))
 		go recoverVGFScheduler.Start()
 		go recoverFailedObjectScheduler.Start()
 	} else {
@@ -987,29 +989,34 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 			return err
 		}
 		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
+		m.recoverProcessCount.Store(1)
 		go recoverGVGScheduler.Start()
 		go recoverFailedObjectScheduler.Start()
 	}
 	return nil
 }
 
-func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, error) {
+func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error) {
 	gvgIds := make([]uint32, 0)
 	if vgfID != 0 {
-		vgfInfo, err := m.baseApp.GfSpClient().GetVirtualGroupFamily(ctx, vgfID)
+		vgfInfo, err := m.baseApp.Consensus().QueryVirtualGroupFamily(ctx, vgfID)
 		if err != nil {
 			log.Errorw("failed to GetVirtualGroupFamily", "error", err)
-			return nil, err
+			return nil, false, err
 		}
 		gvgIds = vgfInfo.GetGlobalVirtualGroupIds()
 	} else {
 		gvgIds = append(gvgIds, gvgID)
 	}
-
 	gvgStatsList, err := m.baseApp.GfSpDB().BatchGetRecoverGVGStats(gvgIds)
 	if err != nil {
 		log.Errorw("failed to BatchGetRecoverGVGStats", "error", err)
-		return nil, err
+		return nil, false, err
+	}
+	failedCount, err := m.baseApp.GfSpDB().CountRecoverFailedObject()
+	if err != nil {
+		log.Errorw("failed to CountRecoverFailedObject", "error", err)
+		return nil, false, err
 	}
 	res := make([]*gfspserver.RecoverProcess, 0, len(gvgStatsList))
 	for _, gvgStats := range gvgStatsList {
@@ -1020,7 +1027,10 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 			StartAfter:           gvgStats.StartAfter,
 			Limit:                gvgStats.Limit,
 			Status:               int32(gvgStats.Status),
+			ObjectCount:          gvgStats.ObjectCount,
+			FailedObjectCount:    uint64(failedCount),
 		})
 	}
-	return res, nil
+	flag := m.recoverProcessCount.Load() > 0
+	return res, flag, nil
 }
