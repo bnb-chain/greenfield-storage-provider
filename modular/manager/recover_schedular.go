@@ -555,7 +555,6 @@ func (s *VerifyGVGScheduler) Start() {
 				for objectID, _ := range s.verifyFailedObjects {
 					recoverFailedObject, err := s.manager.baseApp.GfSpDB().GetRecoverFailedObject(objectID)
 					if err != nil {
-						// the object has been recovered
 						if errors.Is(err, gorm.ErrRecordNotFound) {
 							log.Infow("the object is already recovered", "object_id", objectID)
 							delete(s.verifyFailedObjects, objectID)
@@ -603,6 +602,9 @@ func (s *VerifyGVGScheduler) Start() {
 						continue
 					}
 					break
+				} else if recoverFailedObjectsCount == needDiscontinueCount {
+					log.Error("remaining objects need to be discontinue", "objects_count", needDiscontinueCount)
+					break
 				}
 			}
 
@@ -612,11 +614,6 @@ func (s *VerifyGVGScheduler) Start() {
 				_, ok := s.verifySuccessObjects[objectID]
 				if ok {
 					log.Debugw("the object has been verified previously", "object", objectID)
-					continue
-				}
-				_, ok = s.verifyFailedObjects[objectID]
-				if ok {
-					log.Debugw("the object has been verified but failed previously", "object", objectID)
 					continue
 				}
 				verified, err := verifyIntegrityAndPieceHash(s.manager, objectInfo, s.redundancyIndex, maxSegmentSize)
