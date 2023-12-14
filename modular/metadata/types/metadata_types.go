@@ -22,8 +22,10 @@ func (m GfSpGetObjectMetaResponse) MarshalXML(e *xml.Encoder, start xml.StartEle
 	// Create a new struct with Base64-encoded Checksums field
 	responseAlias := Alias(m)
 	o := responseAlias.Object
-	for i, c := range o.ObjectInfo.Checksums {
-		o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
+	if o != nil && o.ObjectInfo != nil && o.ObjectInfo.Checksums != nil {
+		for i, c := range o.ObjectInfo.Checksums {
+			o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
+		}
 	}
 	return e.EncodeElement(responseAlias, start)
 }
@@ -66,8 +68,10 @@ func (m GfSpListObjectsByIDsResponse) MarshalXML(e *xml.Encoder, start xml.Start
 	}
 
 	for k, o := range m.Objects {
-		for i, c := range o.ObjectInfo.Checksums {
-			o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
+		if o != nil && o.ObjectInfo != nil && o.ObjectInfo.Checksums != nil {
+			for i, c := range o.ObjectInfo.Checksums {
+				o.ObjectInfo.Checksums[i] = []byte(base64.StdEncoding.EncodeToString(c))
+			}
 		}
 		e.Encode(ObjectEntry{Id: k, Value: o})
 	}
