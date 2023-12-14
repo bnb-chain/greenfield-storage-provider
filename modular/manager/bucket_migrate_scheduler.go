@@ -533,13 +533,6 @@ func (s *BucketMigrateScheduler) getMigratedBytesSize(bucketID uint64) (uint64, 
 }
 
 func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
-	expected, err := s.checkBucketFromChain(bucketID, storagetypes.BUCKET_STATUS_CREATED)
-	if err != nil {
-		return err
-	}
-	if !expected {
-		return nil
-	}
 	executePlan, err := s.getExecutePlanByBucketID(bucketID)
 	// 1) Received the CompleteEvents event for the first time.
 	// 2) Subsequently received the CompleteEvents event.
@@ -562,6 +555,7 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 	s.deleteExecutePlanByBucketID(bucketID)
 	executePlan.stopSPSchedule()
 	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
+	log.Infow("succeed to done migrate bucket", "bucket_id", bucketID, "error", err)
 
 	return err
 }
@@ -678,9 +672,13 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 			return
 		}
 		if err = s.doneMigrateBucket(bucketID); err != nil {
-			log.Errorw("failed to done migrate bucket", "error", err, "EventMigrationBucket", event)
+			log.Errorw("failed to done migrate bucket", "EventMigrationBucket", event, "error", err)
 			return
 		}
+		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, MigrationFinished); err != nil {
+			return
+		}
+		log.CtxInfow(ctx, "succeed to confirm complete events", "EventMigrationBucket", event, "error", err)
 	}
 }
 
@@ -976,7 +974,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 	if !expected {
 		return nil, nil
 	}
-	if s.executePlanIDMap[event.BucketId.Uint64()] != nil {
+	if _, err = s.getExecutePlanByBucketID(event.BucketId.Uint64()); err == nil {
 		log.Debugw("the bucket is already in migrating", "migration_bucket_events", event)
 		return nil, errors.New("bucket already in migrating")
 	}
@@ -1055,9 +1053,11 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 			log.Errorw("failed to pre migrate bucket(lock src sp quota)", "bucket_id", bucketID, "error", err)
 			return nil, err
 		}
+		log.Infow("xxxx pre Migrate done")
 		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucketID, DestSPPreDeductQuotaDone); err != nil {
 			return nil, err
 		}
+		log.Infow("xxxx UpdateBucketMigrationProgress done")
 	}
 
 	if err = plan.storeToDB(); err != nil {

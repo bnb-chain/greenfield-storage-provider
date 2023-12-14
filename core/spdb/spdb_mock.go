@@ -658,18 +658,18 @@ func (mr *MockSPDBMockRecorder) InsertUploadProgress(objectID interface{}) *gomo
 }
 
 // ListBucketMigrationToConfirm mocks base method.
-func (m *MockSPDB) ListBucketMigrationToConfirm() ([]*MigrateBucketProgressMeta, error) {
+func (m *MockSPDB) ListBucketMigrationToConfirm(migrationStates []int) ([]*MigrateBucketProgressMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListBucketMigrationToConfirm")
+	ret := m.ctrl.Call(m, "ListBucketMigrationToConfirm", migrationStates)
 	ret0, _ := ret[0].([]*MigrateBucketProgressMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListBucketMigrationToConfirm indicates an expected call of ListBucketMigrationToConfirm.
-func (mr *MockSPDBMockRecorder) ListBucketMigrationToConfirm() *gomock.Call {
+func (mr *MockSPDBMockRecorder) ListBucketMigrationToConfirm(migrationStates interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketMigrationToConfirm", reflect.TypeOf((*MockSPDB)(nil).ListBucketMigrationToConfirm))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketMigrationToConfirm", reflect.TypeOf((*MockSPDB)(nil).ListBucketMigrationToConfirm), migrationStates)
 }
 
 // ListDestSPSwapOutUnits mocks base method.
@@ -2153,18 +2153,18 @@ func (mr *MockMigrateDBMockRecorder) InsertSwapOutUnit(meta interface{}) *gomock
 }
 
 // ListBucketMigrationToConfirm mocks base method.
-func (m *MockMigrateDB) ListBucketMigrationToConfirm() ([]*MigrateBucketProgressMeta, error) {
+func (m *MockMigrateDB) ListBucketMigrationToConfirm(migrationStates []int) ([]*MigrateBucketProgressMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListBucketMigrationToConfirm")
+	ret := m.ctrl.Call(m, "ListBucketMigrationToConfirm", migrationStates)
 	ret0, _ := ret[0].([]*MigrateBucketProgressMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListBucketMigrationToConfirm indicates an expected call of ListBucketMigrationToConfirm.
-func (mr *MockMigrateDBMockRecorder) ListBucketMigrationToConfirm() *gomock.Call {
+func (mr *MockMigrateDBMockRecorder) ListBucketMigrationToConfirm(migrationStates interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketMigrationToConfirm", reflect.TypeOf((*MockMigrateDB)(nil).ListBucketMigrationToConfirm))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketMigrationToConfirm", reflect.TypeOf((*MockMigrateDB)(nil).ListBucketMigrationToConfirm), migrationStates)
 }
 
 // ListDestSPSwapOutUnits mocks base method.

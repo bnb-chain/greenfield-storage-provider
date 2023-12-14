@@ -171,6 +171,12 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	if state == int(manager.SrcSPGCDoing) {
 		log.CtxInfow(ctx, "the bucket is gc, migrated to this sp should be reject", "bucket_id", bucketID)
 		return false, fmt.Errorf("the bucket is gcing, try it after gc done")
+	} else if state == int(manager.MigrationFinished) {
+		// delete the last finished migrate bucket progress record
+		if err = a.baseApp.GfSpDB().DeleteMigrateBucket(bucketID); err != nil {
+			log.CtxErrorw(ctx, "failed to delete migrate bucket state", "bucket_id", bucketID, "error", err)
+			return false, err
+		}
 	}
 
 	// check src sp has enough quota
