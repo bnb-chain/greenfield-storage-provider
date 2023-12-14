@@ -398,9 +398,9 @@ func (m *GfSpGCBucketMigrationTask) SetTotalGvgNum(gvgNum uint64) {
 	m.TotalGvgNum = gvgNum
 }
 
-func (m *GfSpGCBucketMigrationTask) GetGvgGcNumFinished() uint64 {
-	return m.GetFinishedGcGvgNum()
+func (m *GfSpGCBucketMigrationTask) GetGCFinishedGvgNum() uint64 {
+	return m.GetGcFinishedGvgNum()
 }
-func (m *GfSpGCBucketMigrationTask) SetGvgGcNumFinished(gvgGcNum uint64) {
-	m.FinishedGcGvgNum = gvgGcNum
+func (m *GfSpGCBucketMigrationTask) SetGCFinishedGvgNum(gvgGcNum uint64) {
+	m.GcFinishedGvgNum = gvgGcNum
 }

@@ -607,10 +607,10 @@ type GCBucketMigrationTask interface {
 	GetTotalGvgNum() uint64
 	// SetTotalGvgNum sets the total num of gvg
 	SetTotalGvgNum(gvgNum uint64)
-	// GetGvgGcNumFinished returns the task whether finished
-	GetGvgGcNumFinished() uint64
-	// SetGvgGcNumFinished sets the bucket migration task status when finished
-	SetGvgGcNumFinished(gvgGcNum uint64)
+	// GetGCFinishedGvgNum returns the task whether finished
+	GetGCFinishedGvgNum() uint64
+	// SetGCFinishedGvgNum sets the bucket migration task status when finished
+	SetGCFinishedGvgNum(gvgGcNum uint64)
 	// GetFinished returns the task whether finished
 	GetFinished() bool
 	// SetFinished sets the bucket migration task status when finished

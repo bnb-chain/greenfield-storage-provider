@@ -665,7 +665,7 @@ message GfSpListMigrateBucketEventsResponse {
   repeated ListMigrateBucketEvents events = 1;
 }
 
-// GfSpListMigrateBucketEventsRequest is request type for the GfSpListMigrateBucketEvents RPC method
+// GfSpListCompleteMigrationBucketEventsRequest is request type for the GfSpListCompleteMigrationBucketEvents RPC method
 message GfSpListCompleteMigrationBucketEventsRequest {
   // block_id is the unique identification for block
   uint64 block_id = 1;
@@ -673,7 +673,7 @@ message GfSpListCompleteMigrationBucketEventsRequest {
   uint32 src_sp_id = 2;
 }
 
-// GfSpListCompleteMigrationBucketResponse is response type for the GfSpListCompleteMigrationBucketEvents RPC method
+// GfSpListCompleteMigrationBucketEventsResponse is response type for the GfSpListCompleteMigrationBucketEvents RPC method
 message GfSpListCompleteMigrationBucketEventsResponse {
   // complete_event defines the complete migration bucket event
   repeated greenfield.storage.EventCompleteMigrationBucket complete_events = 1;

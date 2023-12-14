@@ -1189,7 +1189,7 @@ func (s *BucketMigrateScheduler) UpdateBucketMigrationGCProgress(ctx context.Con
 		LastGcObjectID:   gcBucketMigrationTask.GetLastGCObjectID(),
 		LastGcGvgID:      gcBucketMigrationTask.GetLastGCGvgID(),
 		TotalGvgNum:      uint32(gcBucketMigrationTask.GetTotalGvgNum()),
-		GcFinishedGvgNum: uint32(gcBucketMigrationTask.GetGvgGcNumFinished()),
+		GcFinishedGvgNum: uint32(gcBucketMigrationTask.GetGCFinishedGvgNum()),
 	}
 	if err := s.manager.baseApp.GfSpDB().UpdateBucketMigrationGCProgress(meta); err != nil {
 		log.CtxErrorw(ctx, "failed to update bucket migration gc progress", "task", gcBucketMigrationTask, "error", err)

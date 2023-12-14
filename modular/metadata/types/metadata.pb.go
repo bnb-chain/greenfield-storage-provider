@@ -4299,7 +4299,7 @@ func (m *GfSpListMigrateBucketEventsResponse) GetEvents() []*ListMigrateBucketEv
 	return nil
 }
 
-// GfSpListMigrateBucketEventsRequest is request type for the GfSpListMigrateBucketEvents RPC method
+// GfSpListCompleteMigrationBucketEventsRequest is request type for the GfSpListCompleteMigrationBucketEvents RPC method
 type GfSpListCompleteMigrationBucketEventsRequest struct {
 	// block_id is the unique identification for block
 	BlockId uint64 `protobuf:"varint,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
@@ -4358,7 +4358,7 @@ func (m *GfSpListCompleteMigrationBucketEventsRequest) GetSrcSpId() uint32 {
 	return 0
 }
 
-// GfSpListCompleteMigrationBucketResponse is response type for the GfSpListCompleteMigrationBucketEvents RPC method
+// GfSpListCompleteMigrationBucketEventsResponse is response type for the GfSpListCompleteMigrationBucketEvents RPC method
 type GfSpListCompleteMigrationBucketEventsResponse struct {
 	// complete_event defines the complete migration bucket event
 	CompleteEvents []*types.EventCompleteMigrationBucket `protobuf:"bytes,1,rep,name=complete_events,json=completeEvents,proto3" json:"complete_events,omitempty"`

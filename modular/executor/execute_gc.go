@@ -401,7 +401,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 	}
 	defer func() {
 		task.SetTotalGvgNum(gvgTotalNum)
-		task.SetGvgGcNumFinished(gcFinisheGvgNum)
+		task.SetGCFinishedGvgNum(gcFinisheGvgNum)
 		if err == nil { // succeed
 			task.SetFinished(true)
 			reportProgress()
@@ -454,7 +454,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 					task.SetLastGCObjectID(obj.GetObject().GetObjectInfo().Id.Uint64())
 					task.SetLastGCGvgID(uint64(gvg.GetId()))
 					task.SetTotalGvgNum(gvgTotalNum)
-					task.SetGvgGcNumFinished(gcFinisheGvgNum)
+					task.SetGCFinishedGvgNum(gcFinisheGvgNum)
 					if err = e.ReportTask(ctx, task); err != nil { // report task is already automatically triggered.
 						log.CtxErrorw(ctx, "failed to report bucket migration task gc progress", "task_info", task, "error", err)
 						return

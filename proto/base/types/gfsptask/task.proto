@@ -206,7 +206,7 @@ message GfSpGCBucketMigrationTask {
   // whether the gc of bucket migration succeed
   bool finished = 5;
   uint64 total_gvg_num = 6; // the bucket migration gc total gvg num
-  uint64 finished_gc_gvg_num = 7; // gc has finished gvg num
+  uint64 gc_finished_gvg_num = 7; // gc has finished gvg num
 }
 
 message GfSpBucketMigrationInfo {
