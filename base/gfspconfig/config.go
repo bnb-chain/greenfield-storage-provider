@@ -103,7 +103,7 @@ type ChainConfig struct {
 type SpAccountConfig struct {
 	SpOperatorAddress  string `comment:"required"`
 	OperatorPrivateKey string `comment:"required"`
-	FundingPrivateKey  string `comment:"required"`
+	FundingPrivateKey  string `comment:"optional"`
 	SealPrivateKey     string `comment:"required"`
 	ApprovalPrivateKey string `comment:"required"`
 	GcPrivateKey       string `comment:"required"`
@@ -156,10 +156,10 @@ type ExecutorConfig struct {
 }
 
 type P2PConfig struct {
-	P2PPrivateKey string   `comment:"required"`
-	P2PAddress    string   `comment:"required"`
-	P2PAntAddress string   `comment:"required"`
-	P2PBootstrap  []string `comment:"required"`
+	P2PPrivateKey string   `comment:"optional"`
+	P2PAddress    string   `comment:"optional"`
+	P2PAntAddress string   `comment:"optional"`
+	P2PBootstrap  []string `comment:"optional"`
 	P2PPingPeriod int      `comment:"optional"`
 }
 
