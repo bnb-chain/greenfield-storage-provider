@@ -251,14 +251,12 @@ func (plan *BucketMigrateExecutePlan) rejectBucketMigration() error {
 	return nil
 }
 
-func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(migrateExecuteUnit *BucketMigrateGVGExecuteUnit) error {
+func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(bucketID uint64, srcSPInfo *sptypes.StorageProvider) error {
 	var (
 		signature []byte
 		err       error
 		quota     gfsptask.GfSpBucketQuotaInfo
 	)
-	bucketID := migrateExecuteUnit.BucketID
-	srcSPInfo := migrateExecuteUnit.SrcSP
 	log.Infow("start to query quota from src SP", "src_sp", srcSPInfo, "bucket_id", bucketID)
 
 	// query src sp, bucket migrate quota
@@ -324,7 +322,7 @@ func (plan *BucketMigrateExecutePlan) updateMigrateGVGStatus(migrateKey string, 
 	// all migrate units success, send tx to chain
 	if len(plan.finishedGvgUnits) == len(plan.gvgUnitMap) {
 		// set bucket quota
-		if err = plan.syncBucketQuotaFromSrcSP(migrateExecuteUnit); err != nil {
+		if err = plan.syncBucketQuotaFromSrcSP(migrateExecuteUnit.BucketID, migrateExecuteUnit.SrcSP); err != nil {
 			log.Errorw("failed to update bucket quota", "error", err, "migrateExecuteUnit", migrateExecuteUnit)
 			return err
 		}
@@ -695,7 +693,8 @@ func (s *BucketMigrateScheduler) confirmEvents() {
 	logNumber := uint64(0)
 
 	for range subscribeBucketMigrateEventsTicker.C {
-		confirmEvents, listError := s.manager.baseApp.GfSpDB().ListBucketMigrationToConfirm()
+		migrationStates := []int{int(SendCompleteTxDone), int(SendRejectTxDone)}
+		confirmEvents, listError := s.manager.baseApp.GfSpDB().ListBucketMigrationToConfirm(migrationStates)
 		if listError != nil {
 			logNumber++
 			if (logNumber % printLogPerN) == 0 {
@@ -1033,6 +1032,12 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 
 	log.Debugw("produce bucket migrate execute plan list", "primarySPGVGList", primarySPGVGList, "bucket_gvg_list_len", len(primarySPGVGList), "EventMigrationBucket", event)
 	if len(plan.gvgUnitMap) == 0 {
+		// set bucket quota
+		if err = plan.syncBucketQuotaFromSrcSP(bucketID, srcSP); err != nil {
+			log.Errorw("failed to update bucket quota", "bucket_id", bucketID, "error", err)
+			return nil, err
+		}
+
 		// an empty bucket ends here, and it will not return a plan. The execution will not continue.
 		err = plan.sendCompleteMigrateBucketTx(nil)
 		if err != nil {

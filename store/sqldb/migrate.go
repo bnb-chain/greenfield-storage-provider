@@ -556,9 +556,8 @@ func (s *SpDBImpl) QueryMigrateBucketProgress(bucketID uint64) (*spdb.MigrateBuc
 	return progress, nil
 }
 
-func (s *SpDBImpl) ListBucketMigrationToConfirm() ([]*spdb.MigrateBucketProgressMeta, error) {
+func (s *SpDBImpl) ListBucketMigrationToConfirm(migrationStates []int) ([]*spdb.MigrateBucketProgressMeta, error) {
 	var queryReturns []MigrateBucketProgressTable
-	migrationStates := []int{11, 13}
 	result := s.db.Where("migration_state IN (?)", migrationStates).Find(&queryReturns)
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to list bucket migration progress table: %s", result.Error)

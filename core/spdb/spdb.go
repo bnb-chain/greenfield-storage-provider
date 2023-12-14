@@ -219,7 +219,7 @@ type MigrateDB interface {
 	// QueryMigrateBucketProgress returns the migration progress.
 	QueryMigrateBucketProgress(bucketID uint64) (*MigrateBucketProgressMeta, error)
 	// ListBucketMigrationToConfirm returns the migrate bucket id to be confirmed.
-	ListBucketMigrationToConfirm() ([]*MigrateBucketProgressMeta, error)
+	ListBucketMigrationToConfirm(migrationStates []int) ([]*MigrateBucketProgressMeta, error)
 	// DeleteMigrateBucket delete the bucket migrate status
 	DeleteMigrateBucket(bucketID uint64) error
 }
