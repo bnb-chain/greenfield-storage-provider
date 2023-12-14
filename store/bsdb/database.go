@@ -110,9 +110,9 @@ type Metadata interface {
 	// GetDefaultCollationName get the current mysql default collation name
 	GetDefaultCollationName() (string, error)
 	// GetUserGroups get groups info by a user address
-	GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
+	GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*GroupMemberMeta, error)
 	// GetGroupMembers get group members by group id
-	GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error)
+	GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*GroupMemberMeta, error)
 	// GetUserOwnedGroups retrieve groups where the user is the owner
 	GetUserOwnedGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error)
 	// ListObjectPolicies list policies by object info
