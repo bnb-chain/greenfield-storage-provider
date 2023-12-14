@@ -163,14 +163,14 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	}
 	bucketID := bucketMeta.GetBucketInfo().Id.Uint64()
 
-	// if migrating gc , reject
+	// If the destination SP is still performing garbage collection for the bucket being migrated, the migration action is not allowed.
 	if state, err = a.baseApp.GfSpDB().QueryMigrateBucketState(bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
 		return false, err
 	}
 	if state == int(manager.SrcSPGCDoing) {
-		log.CtxInfow(ctx, "the bucket has already notified", "bucket_id", bucketID)
-		return false, fmt.Errorf("the bucket is gcing")
+		log.CtxInfow(ctx, "the bucket is gc, migrated to this sp should be reject", "bucket_id", bucketID)
+		return false, fmt.Errorf("the bucket is gcing, try it after gc done")
 	}
 
 	// check src sp has enough quota

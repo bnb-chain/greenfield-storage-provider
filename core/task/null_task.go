@@ -188,5 +188,5 @@ func (*NullTask) SetLastGCObjectID(lastGCObjectID uint64)                       
 func (*NullTask) GetLastGCObjectID() uint64                                                  { return 0 }
 func (*NullTask) SetGvgGcNumFinished(gvgGcNum uint64)                                        {}
 func (*NullTask) GetGvgGcNumFinished() uint64                                                { return 0 }
-func (*NullTask) SetGvgTotalNum(gvgNum uint64)                                               {}
-func (*NullTask) GetGvgTotalNum() uint64                                                     { return 0 }
+func (*NullTask) SetTotalGvgNum(gvgNum uint64)                                               {}
+func (*NullTask) GetTotalGvgNum() uint64                                                     { return 0 }

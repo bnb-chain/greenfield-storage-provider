@@ -664,8 +664,8 @@ func (s *SpDBImpl) UpdateBucketMigrationGCProgress(progressMeta spdb.MigrateBuck
 	insertMigrateBucket = &MigrateBucketProgressTable{
 		BucketID:         bucketID,
 		MigrationState:   progressMeta.MigrationState,
-		GvgTotalNum:      progressMeta.GvgTotalNum,
-		GvgNumGcFinished: progressMeta.GvgNumGcFinished,
+		GvgTotalNum:      progressMeta.TotalGvgNum,
+		GvgNumGcFinished: progressMeta.GcFinishedGvgNum,
 		LastGCGvgID:      progressMeta.LastGCGvgID,
 		LastGCObjectID:   progressMeta.LastGCObjectID,
 	}

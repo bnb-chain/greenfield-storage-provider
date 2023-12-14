@@ -383,6 +383,7 @@ func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Conte
 		err   error
 	)
 	if quota, err = g.manager.NotifyPreMigrateBucketAndDeductQuota(ctx, req.GetBucketId()); err != nil {
+		log.CtxErrorw(ctx, "failed to notify pre migrate bucket and deduct quota", "bucket_id", req.GetBucketId(), "error", err)
 		return nil, err
 	}
 
@@ -396,6 +397,7 @@ func (g *GfSpBaseApp) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, r
 		err   error
 	)
 	if quota, err = g.manager.NotifyPostMigrateBucketAndRecoupQuota(ctx, req.GetBucketMigrationInfo()); err != nil {
+		log.CtxErrorw(ctx, "failed to notify post migrate bucket and recoup quota", "bucket_migration_info", req.GetBucketMigrationInfo(), "error", err)
 		return nil, err
 	}
 

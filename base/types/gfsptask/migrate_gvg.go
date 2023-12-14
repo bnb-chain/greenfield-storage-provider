@@ -382,23 +382,19 @@ func (m *GfSpGCBucketMigrationTask) GetLastGCObjectID() uint64 {
 	return m.GetLastGcObjectId()
 }
 
-func (m *GfSpGCBucketMigrationTask) SetLastGCGvgID(lastGCGvgID uint64) {
-	m.LastGcGvgId = lastGCGvgID
+func (m *GfSpGCBucketMigrationTask) SetLastGCGvgID(lastGcGvgID uint64) {
+	m.LastGcGvgId = lastGcGvgID
 }
 
 func (m *GfSpGCBucketMigrationTask) GetLastGCGvgID() uint64 {
-	return m.GetLastGcObjectId()
+	return m.GetLastGcGvgId()
 }
 
 func (m *GfSpGCBucketMigrationTask) SetFinished(finished bool) {
 	m.Finished = finished
 }
 
-func (m *GfSpGCBucketMigrationTask) GetGvgTotalNum() uint64 {
-	return m.GetTotalGvgNum()
-}
-
-func (m *GfSpGCBucketMigrationTask) SetGvgTotalNum(gvgNum uint64) {
+func (m *GfSpGCBucketMigrationTask) SetTotalGvgNum(gvgNum uint64) {
 	m.TotalGvgNum = gvgNum
 }
 

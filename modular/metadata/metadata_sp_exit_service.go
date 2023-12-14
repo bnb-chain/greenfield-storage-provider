@@ -264,7 +264,7 @@ func (r *MetadataModular) GfSpListCompleteMigrationBucketEvents(ctx context.Cont
 		log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
 		return nil, ErrExceedBlockHeight
 	}
-	log.Debugw("GfSpListCompleteMigrationBucketEvents", "src-sp-id", req.SrcSpId, "block-id", req.BlockId)
+	log.Debugw("GfSpListCompleteMigrationBucketEvents", "src_sp_id", req.SrcSpId, "block_id", req.BlockId)
 	filters = append(filters, model.CreateAtEqualFilter(int64(req.BlockId)))
 	if completeEvents, err = r.baseApp.GfBsDB().ListCompleteMigrationBucket(req.SrcSpId, filters...); err != nil {
 		log.CtxErrorw(ctx, "failed to list complete migrate bucket events", "error", err)

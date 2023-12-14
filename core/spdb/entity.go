@@ -138,9 +138,9 @@ type MigrateBucketProgressMeta struct {
 	SubscribedBlockHeight uint64
 	MigrationState        int
 
-	GvgTotalNum            uint32 // Total number of GVGs that need to be migrated
-	GvgNumMigratedFinished uint32 // Number of successfully migrated GVGs
-	GvgNumGcFinished       uint32 // Number of successfully gc finished GVGs
+	TotalGvgNum            uint32 // Total number of GVGs that need to be migrated
+	MigratedFinishedGvgNum uint32 // Number of successfully migrated GVGs
+	GcFinishedGvgNum       uint32 // Number of successfully gc finished GVGs
 
 	PreDeductedQuota uint64 // Quota pre-deducted by the source sp in the pre-migrate bucket phase
 	RecoupQuota      uint64 // In case of migration failure, the dest sp recoup the quota for the source sp

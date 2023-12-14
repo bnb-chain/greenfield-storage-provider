@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -16,11 +15,9 @@ import (
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"github.com/forbole/juno/v4/common"
 )
 
 type GCWorker struct {
@@ -385,7 +382,7 @@ func (e *ExecuteModular) gcMetaReadRecord(ctx context.Context, task coretask.GCM
 
 func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task coretask.GCBucketMigrationTask) {
 	var (
-		groups          []*bsdb.GlobalVirtualGroup
+		gvgList         []*virtualgrouptypes.GlobalVirtualGroup
 		err             error
 		startAfter      uint64 = 0
 		limit           uint32 = 100
@@ -403,7 +400,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 		return errors.Is(reportErr, manager.ErrCanceledTask)
 	}
 	defer func() {
-		task.SetGvgTotalNum(gvgTotalNum)
+		task.SetTotalGvgNum(gvgTotalNum)
 		task.SetGvgGcNumFinished(gcFinisheGvgNum)
 		if err == nil { // succeed
 			task.SetFinished(true)
@@ -417,7 +414,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 	}()
 
 	// list gvg
-	if groups, err = e.baseApp.GfBsDB().ListGvgByBucketID(common.BigToHash(math.NewUint(bucketID).BigInt())); err != nil {
+	if gvgList, err = e.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(ctx, bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "error", err)
 		return
 	}
@@ -428,18 +425,18 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 		return
 	}
 	vgfID := bucketInfo.GetGlobalVirtualGroupFamilyId()
-	log.CtxInfow(ctx, "begin to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgs", groups, "vgfID", vgfID, "error", err)
+	log.CtxInfow(ctx, "begin to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgs", gvgList, "vgfID", vgfID, "error", err)
 
-	gvgTotalNum = uint64(len(groups))
+	gvgTotalNum = uint64(len(gvgList))
 
-	for _, gvg := range groups {
+	for _, gvg := range gvgList {
 		if gvg.FamilyId != vgfID {
 			log.CtxErrorw(ctx, "failed to check gvg's status with chain's status, the gvg may be old data", "error", err)
 			err = errors.New("gvg family id mismatch")
 			return
 		}
 		for {
-			if objectList, err = e.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(ctx, gvg.GlobalVirtualGroupId, bucketID, startAfter, limit); err != nil {
+			if objectList, err = e.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(ctx, gvg.GetId(), bucketID, startAfter, limit); err != nil {
 				log.CtxErrorw(ctx, "failed to list objectList by gvg and bucket for gc", "error", err)
 				return
 			}
@@ -455,8 +452,8 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 					log.Infow("bucket migration gc report task", "current_gvg", gvg, "bucket_id", bucketID,
 						"last_gc_object_id", obj.GetObject().GetObjectInfo().Id.Uint64())
 					task.SetLastGCObjectID(obj.GetObject().GetObjectInfo().Id.Uint64())
-					task.SetLastGCGvgID(gvg.ID)
-					task.SetGvgTotalNum(gvgTotalNum)
+					task.SetLastGCGvgID(uint64(gvg.GetId()))
+					task.SetTotalGvgNum(gvgTotalNum)
 					task.SetGvgGcNumFinished(gcFinisheGvgNum)
 					if err = e.ReportTask(ctx, task); err != nil { // report task is already automatically triggered.
 						log.CtxErrorw(ctx, "failed to report bucket migration task gc progress", "task_info", task, "error", err)
@@ -473,7 +470,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 		}
 	}
 
-	log.CtxInfow(ctx, "succeed to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgs", groups, "vgfID", vgfID, "gc_num", gcNum)
+	log.CtxInfow(ctx, "succeed to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgs", gvgList, "vgfID", vgfID, "gc_num", gcNum)
 }
 
 func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, task coretask.GCZombiePieceTask) error {

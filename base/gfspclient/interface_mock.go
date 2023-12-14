@@ -457,21 +457,6 @@ func (mr *MockGfSpClientAPIMockRecorder) GetBucketMeta(ctx, bucketName, includeP
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMeta", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketMeta), varargs...)
 }
 
-// GetBucketMigrationState mocks base method.
-func (m *MockGfSpClientAPI) GetBucketMigrationState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketMigrationState", ctx, bucketID)
-	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetBucketMigrationState indicates an expected call of GetBucketMigrationState.
-func (mr *MockGfSpClientAPIMockRecorder) GetBucketMigrationState(ctx, bucketID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMigrationState", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketMigrationState), ctx, bucketID)
-}
-
 // GetBucketReadQuota mocks base method.
 func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
@@ -676,6 +661,21 @@ func (mr *MockGfSpClientAPIMockRecorder) GetLatestObjectID(ctx interface{}, opts
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestObjectID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetLatestObjectID), varargs...)
+}
+
+// GetMigrateBucketProgress mocks base method.
+func (m *MockGfSpClientAPI) GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMigrateBucketProgress", ctx, bucketID)
+	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMigrateBucketProgress indicates an expected call of GetMigrateBucketProgress.
+func (mr *MockGfSpClientAPIMockRecorder) GetMigrateBucketProgress(ctx, bucketID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrateBucketProgress", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetMigrateBucketProgress), ctx, bucketID)
 }
 
 // GetObject mocks base method.
@@ -2868,19 +2868,19 @@ func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
 }
 
-// GetBucketMigrationState mocks base method.
-func (m *MockManagerAPI) GetBucketMigrationState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+// GetMigrateBucketProgress mocks base method.
+func (m *MockManagerAPI) GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBucketMigrationState", ctx, bucketID)
+	ret := m.ctrl.Call(m, "GetMigrateBucketProgress", ctx, bucketID)
 	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetBucketMigrationState indicates an expected call of GetBucketMigrationState.
-func (mr *MockManagerAPIMockRecorder) GetBucketMigrationState(ctx, bucketID interface{}) *gomock.Call {
+// GetMigrateBucketProgress indicates an expected call of GetMigrateBucketProgress.
+func (mr *MockManagerAPIMockRecorder) GetMigrateBucketProgress(ctx, bucketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMigrationState", reflect.TypeOf((*MockManagerAPI)(nil).GetBucketMigrationState), ctx, bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrateBucketProgress", reflect.TypeOf((*MockManagerAPI)(nil).GetMigrateBucketProgress), ctx, bucketID)
 }
 
 // GetTasksStats mocks base method.

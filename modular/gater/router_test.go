@@ -297,6 +297,22 @@ func TestRouters(t *testing.T) {
 			wantedRouterName: getBucketMetaRouterName,
 		},
 		{
+			name:             "Get bucket migration progress router, virtual host style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationQuery),
+			shouldMatch:      true,
+			wantedRouterName: queryMigrationProgressRouterName,
+		},
+		{
+			name:             "Get bucket migration progress router, path style",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationQuery),
+			shouldMatch:      true,
+			wantedRouterName: queryMigrationProgressRouterName,
+		},
+		{
 			name:             "Challenge router",
 			router:           gwRouter,
 			method:           http.MethodGet,

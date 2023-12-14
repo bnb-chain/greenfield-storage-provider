@@ -257,7 +257,7 @@ func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, err
 	return resp.GetRecoveryFailedList(), nil
 }
 
-func (s *GfSpClient) GetBucketMigrationState(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+func (s *GfSpClient) GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
