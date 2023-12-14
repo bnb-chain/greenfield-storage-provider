@@ -623,6 +623,29 @@ func TestGateModular_GetObjectMetaHandler(t *testing.T) {
 			},
 			wantedResult: "invalid request params for query",
 		},
+
+		{
+			name: "xml response for non existing object",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(nil, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s.%s/%s?%s", scheme, mockBucketName, testDomain, mockObjectName, GetObjectMetaQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				assert.Equal(t, "<GfSpGetObjectMetaResponse></GfSpGetObjectMetaResponse>",
+					body)
+				return true
+			},
+		},
 		{
 			name: "xml response",
 			fn: func() *GateModular {
@@ -743,6 +766,57 @@ func TestGateModular_ListObjectsByIDsHandler(t *testing.T) {
 				return req
 			},
 			wantedResult: "invalid request params for query",
+		},
+		{
+			name: "xml response for 'not found object'",
+			fn: func() *GateModular {
+				testResponseData := getTestObjectsInIdMap(1)
+				testResponseData[4] = nil
+				testResponseData[5] = &types.Object{
+					ObjectInfo: nil,
+				}
+				testResponseData[6] = &types.Object{
+					ObjectInfo: &storage_types.ObjectInfo{
+						Owner:               testAccount,
+						Creator:             testAccount,
+						BucketName:          mockBucketName,
+						ObjectName:          mockObjectName + strconv.Itoa(6),
+						Id:                  math.NewUintFromBigInt(big.NewInt(int64(6))),
+						LocalVirtualGroupId: 1,
+						PayloadSize:         4802764,
+						Visibility:          storage_types.VISIBILITY_TYPE_INHERIT,
+						ContentType:         "application/octet-stream",
+						CreateAt:            1699781700,
+						ObjectStatus:        storage_types.OBJECT_STATUS_SEALED,
+						Checksums:           nil,
+					},
+
+					LockedBalance: "0x0000000000000000000000000000000000000000000000000000000000000000",
+					UpdateAt:      1280048,
+					Operator:      "0x03AbbEe8E426C9887A8ae3C34602AbCA42aeDFa0",
+					CreateTxHash:  "0x491227c644bc89f5a058d92167c00d452c63a1dd8d5776c81617a41ec76fcc8c",
+					UpdateTxHash:  "0x238737f109a40c675e1bef5ebfb2adef2cac0a723ee20fbd752e78efbf3d579e",
+					SealTxHash:    "0x238737f109a40c675e1bef5ebfb2adef2cac0a723ee20fbd752e78efbf3d579e",
+				}
+
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().ListObjectsByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(testResponseData, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				ids := "1"
+				path := fmt.Sprintf("%s%s/?%s&ids=%s", scheme, testDomain, ListObjectsByIDsQuery, ids)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				return req
+			},
+			wantedResultFn: func(body string) bool {
+				assert.Equal(t, "<GfSpListObjectsByIDsResponse><ObjectEntry><Id>4</Id></ObjectEntry><ObjectEntry><Id>5</Id><Value><LockedBalance></LockedBalance><Removed>false</Removed><UpdateAt>0</UpdateAt><DeleteAt>0</DeleteAt><DeleteReason></DeleteReason><Operator></Operator><CreateTxHash></CreateTxHash><UpdateTxHash></UpdateTxHash><SealTxHash></SealTxHash></Value></ObjectEntry><ObjectEntry><Id>6</Id><Value><ObjectInfo><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><Creator>0xF72aDa8130f934887755492879496b026665FbAB</Creator><BucketName>mock-bucket-name</BucketName><ObjectName>mock-object-name6</ObjectName><Id>6</Id><LocalVirtualGroupId>1</LocalVirtualGroupId><PayloadSize>4802764</PayloadSize><Visibility>3</Visibility><ContentType>application/octet-stream</ContentType><CreateAt>1699781700</CreateAt><ObjectStatus>1</ObjectStatus><RedundancyType>0</RedundancyType><SourceType>0</SourceType></ObjectInfo><LockedBalance>0x0000000000000000000000000000000000000000000000000000000000000000</LockedBalance><Removed>false</Removed><UpdateAt>1280048</UpdateAt><DeleteAt>0</DeleteAt><DeleteReason></DeleteReason><Operator>0x03AbbEe8E426C9887A8ae3C34602AbCA42aeDFa0</Operator><CreateTxHash>0x491227c644bc89f5a058d92167c00d452c63a1dd8d5776c81617a41ec76fcc8c</CreateTxHash><UpdateTxHash>0x238737f109a40c675e1bef5ebfb2adef2cac0a723ee20fbd752e78efbf3d579e</UpdateTxHash><SealTxHash>0x238737f109a40c675e1bef5ebfb2adef2cac0a723ee20fbd752e78efbf3d579e</SealTxHash></Value></ObjectEntry><ObjectEntry><Id>0</Id><Value><ObjectInfo><Owner>0xF72aDa8130f934887755492879496b026665FbAB</Owner><Creator>0xF72aDa8130f934887755492879496b026665FbAB</Creator><BucketName>mock-bucket-name</BucketName><ObjectName>mock-object-name0</ObjectName><Id>0</Id><LocalVirtualGroupId>1</LocalVirtualGroupId><PayloadSize>4802764</PayloadSize><Visibility>3</Visibility><ContentType>application/octet-stream</ContentType><CreateAt>1699781700</CreateAt><ObjectStatus>1</ObjectStatus><RedundancyType>0</RedundancyType><SourceType>0</SourceType><Checksums>tPsLBcgLxRVKTRJCeYw5FVj0jjqPsqFnbDCr77pf7RA=</Checksums><Checksums>7YqCbwK/qC+zaAoJvd971fuJCE0OVQ9ky8bgomUkmRI=</Checksums><Checksums>i59qS3vgvN8QIcNKOJggtN4JsZRLYt1ugeGDtP6x7Sk=</Checksums><Checksums>tBBu4BPpANbc12SO5TVeQ64DtKwl0F2inE29H9jAw54=</Checksums><Checksums>vOw+loeUIXXPEvfYNFmnElTIxj/b0dEEBBF1YbKOoEI=</Checksums><Checksums>e0nSN4a5u3EDPaAqemGDZ5gYJ0l6NUjtalmj/BH2uWE=</Checksums><Checksums>rRm6iKPMc8gZbw1WKKF2kPXveU2VFEh2izs9e8ovfwk=</Checksums></ObjectInfo><LockedBalance>0x0000000000000000000000000000000000000000000000000000000000000000</LockedBalance><Removed>false</Removed><UpdateAt>1280048</UpdateAt><DeleteAt>0</DeleteAt><DeleteReason></DeleteReason><Operator>0x03AbbEe8E426C9887A8ae3C34602AbCA42aeDFa0</Operator><CreateTxHash>0x491227c644bc89f5a058d92167c00d452c63a1dd8d5776c81617a41ec76fcc8c</CreateTxHash><UpdateTxHash>0x238737f109a40c675e1bef5ebfb2adef2cac0a723ee20fbd752e78efbf3d579e</UpdateTxHash><SealTxHash>0x238737f109a40c675e1bef5ebfb2adef2cac0a723ee20fbd752e78efbf3d579e</SealTxHash></Value></ObjectEntry></GfSpListObjectsByIDsResponse>",
+					body)
+				return true
+			},
 		},
 		{
 			name: "xml response",
