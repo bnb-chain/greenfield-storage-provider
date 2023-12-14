@@ -978,8 +978,8 @@ func (m *ManageModular) QueryBucketMigrationProgress(_ context.Context, bucketID
 		GvgNumGcFinished:       progress.GcFinishedGvgNum,
 		PreDeductedQuota:       progress.PreDeductedQuota,
 		RecoupQuota:            progress.RecoupQuota,
-		LastGcObjectId:         progress.LastGCObjectID,
-		LastGcGvgId:            progress.LastGCGvgID,
+		LastGcObjectId:         progress.LastGcObjectID,
+		LastGcGvgId:            progress.LastGcGvgID,
 		MigratedBytes:          migratedBytes,
 	}
 	return progressMeta, err

@@ -548,8 +548,8 @@ func (s *SpDBImpl) QueryMigrateBucketProgress(bucketID uint64) (*spdb.MigrateBuc
 
 	progress.BucketID = queryReturn.BucketID
 	progress.SubscribedBlockHeight = queryReturn.SubscribedBlockHeight
-	progress.LastGCObjectID = queryReturn.LastGCObjectID
-	progress.LastGCGvgID = queryReturn.LastGCGvgID
+	progress.LastGcObjectID = queryReturn.LastGcObjectID
+	progress.LastGcGvgID = queryReturn.LastGcGvgID
 	progress.RecoupQuota = queryReturn.RecoupQuota
 	progress.MigrationState = queryReturn.MigrationState
 
@@ -660,10 +660,10 @@ func (s *SpDBImpl) UpdateBucketMigrationGCProgress(progressMeta spdb.MigrateBuck
 	insertMigrateBucket = &MigrateBucketProgressTable{
 		BucketID:         bucketID,
 		MigrationState:   progressMeta.MigrationState,
-		GvgTotalNum:      progressMeta.TotalGvgNum,
-		GvgNumGcFinished: progressMeta.GcFinishedGvgNum,
-		LastGCGvgID:      progressMeta.LastGCGvgID,
-		LastGCObjectID:   progressMeta.LastGCObjectID,
+		TotalGvgNum:      progressMeta.TotalGvgNum,
+		GcFinishedGvgNum: progressMeta.GcFinishedGvgNum,
+		LastGcGvgID:      progressMeta.LastGcGvgID,
+		LastGcObjectID:   progressMeta.LastGcObjectID,
 	}
 	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
 	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -699,8 +699,8 @@ func (s *SpDBImpl) UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUn
 	queryReturn = &MigrateBucketProgressTable{}
 	insertMigrateBucket = &MigrateBucketProgressTable{
 		BucketID:               bucketID,
-		GvgTotalNum:            gvgUnits,
-		GvgNumMigratedFinished: gvgUnitsFinished,
+		TotalGvgNum:            gvgUnits,
+		MigratedFinishedGvgNum: gvgUnitsFinished,
 	}
 	result = s.db.First(queryReturn, "bucket_id = ?", bucketID)
 	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {

@@ -1186,8 +1186,8 @@ func (s *BucketMigrateScheduler) UpdateBucketMigrationGCProgress(ctx context.Con
 	meta := spdb.MigrateBucketProgressMeta{
 		BucketID:         gcBucketMigrationTask.GetBucketID(),
 		MigrationState:   int(state),
-		LastGCObjectID:   gcBucketMigrationTask.GetLastGCObjectID(),
-		LastGCGvgID:      gcBucketMigrationTask.GetLastGCGvgID(),
+		LastGcObjectID:   gcBucketMigrationTask.GetLastGCObjectID(),
+		LastGcGvgID:      gcBucketMigrationTask.GetLastGCGvgID(),
 		TotalGvgNum:      uint32(gcBucketMigrationTask.GetTotalGvgNum()),
 		GcFinishedGvgNum: uint32(gcBucketMigrationTask.GetGvgGcNumFinished()),
 	}

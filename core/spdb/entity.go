@@ -145,6 +145,6 @@ type MigrateBucketProgressMeta struct {
 	PreDeductedQuota uint64 // Quota pre-deducted by the source sp in the pre-migrate bucket phase
 	RecoupQuota      uint64 // In case of migration failure, the dest sp recoup the quota for the source sp
 
-	LastGCObjectID uint64 // After bucket migration is complete, the progress of GC, up to which object is GC performed.
-	LastGCGvgID    uint64 // which GVG is GC performed.
+	LastGcObjectID uint64 // After bucket migration is complete, the progress of GC, up to which object is GC performed.
+	LastGcGvgID    uint64 // which GVG is GC performed.
 }
