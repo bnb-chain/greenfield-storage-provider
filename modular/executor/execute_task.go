@@ -386,9 +386,18 @@ func (e *ExecuteModular) recoverBySecondarySP(ctx context.Context, task coretask
 		executeEndpoint = spInfo.Endpoint
 	}
 
+	signature, err := e.baseApp.GfSpClient().SignRecoveryTask(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign recovery task", "object", task.GetObjectInfo().GetObjectName(), "error", err)
+		return err
+	}
+	task.SetSignature(signature)
+
+	childCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	for ecIdx := 0; ecIdx < secondaryCount; ecIdx++ {
 		recoveryDataSources[ecIdx] = nil
-		go func(secondaryIndex int) {
+		go func(ctx context.Context, secondaryIndex int) {
 			secondaryEndpoint := secondaryEndpoints[secondaryIndex]
 			// if myself is secondary, bypass to send request to myself
 			if isMyselfSecondary && secondaryEndpoint == executeEndpoint {
@@ -408,7 +417,7 @@ func (e *ExecuteModular) recoverBySecondarySP(ctx context.Context, task coretask
 			if atomic.AddInt32(&totalTaskNum, -1) == 0 {
 				quitCh <- true
 			}
-		}(ecIdx)
+		}(childCtx, ecIdx)
 	}
 
 loop:
@@ -418,9 +427,11 @@ loop:
 			doneTaskNum++
 			// it is enough to recovery data with minRecoveryPieces EC data, no need to wait
 			if doneTaskNum >= minRecoveryPieces {
+				cancel()
 				break loop
 			}
 		case <-quitCh: // all the task finish
+			cancel()
 			if doneTaskNum < minRecoveryPieces { // finish task num not enough
 				log.CtxErrorw(ctx, "get piece from secondary not enough", "get secondary piece num:", doneTaskNum, "error", ErrRecoveryPieceNotEnough)
 				return ErrRecoveryPieceNotEnough
@@ -529,18 +540,12 @@ func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretas
 
 func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string) (
 	data []byte, err error) {
-	var (
-		signature []byte
-		pieceData []byte
-	)
-	signature, err = e.baseApp.GfSpClient().SignRecoveryTask(ctx, rTask)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to sign recovery task", "object", rTask.GetObjectInfo().GetObjectName(), "error", err)
-		return
-	}
-	rTask.SetSignature(signature)
+	var pieceData []byte
+	// timeout for single piece recover
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)
+	defer cancel()
 	// recovery primary sp segment or secondary piece
-	respBody, err := e.baseApp.GfSpClient().GetPieceFromECChunks(ctx, endpoint, rTask)
+	respBody, err := e.baseApp.GfSpClient().GetPieceFromECChunks(ctxWithTimeout, endpoint, rTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece from ec chunks", "objectID", rTask.GetObjectInfo().Id,
 			"segment_idx", rTask.GetSegmentIdx(), "secondary endpoint", endpoint, "error", err)
