@@ -81,7 +81,7 @@ func (r *MetadataModular) GfSpGetGroupList(ctx context.Context, req *types.GfSpG
 // GfSpGetUserGroups get groups info by a user address
 func (r *MetadataModular) GfSpGetUserGroups(ctx context.Context, req *types.GfSpGetUserGroupsRequest) (resp *types.GfSpGetUserGroupsResponse, err error) {
 	var (
-		groups []*model.Group
+		groups []*model.GroupMemberMeta
 		res    []*types.GroupMember
 		limit  int
 	)
@@ -134,7 +134,7 @@ func (r *MetadataModular) GfSpGetUserGroups(ctx context.Context, req *types.GfSp
 // GfSpGetGroupMembers get group members by group id
 func (r *MetadataModular) GfSpGetGroupMembers(ctx context.Context, req *types.GfSpGetGroupMembersRequest) (resp *types.GfSpGetGroupMembersResponse, err error) {
 	var (
-		groups []*model.Group
+		groups []*model.GroupMemberMeta
 		res    []*types.GroupMember
 		limit  int
 	)
