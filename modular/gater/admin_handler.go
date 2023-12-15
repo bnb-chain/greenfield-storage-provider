@@ -1001,11 +1001,13 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 			log.CtxErrorw(ctx, "failed to query SP by ID", "sp_id", sspId, "error", err)
 			return nil, ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
 		}
-		ECIndex = int32(idx)
+
 		if ssp.OperatorAddress == signatureAddr.String() {
 			isOneOfSecondary = true
+			ECIndex = int32(idx)
 		} else if ssp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
 			isSuccessor = true
+			ECIndex = int32(idx)
 		}
 	}
 	redundancyIdx := recoveryTask.EcIdx
