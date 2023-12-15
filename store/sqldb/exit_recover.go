@@ -18,8 +18,9 @@ func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, erro
 		VirtualGroupID:       queryReturn.VirtualGroupID,
 		RedundancyIndex:      queryReturn.RedundancyIndex,
 		Status:               spdb.RecoverStatus(queryReturn.Status),
-		StartAfter:           queryReturn.StartAfterObjectID,
+		StartAfter:           queryReturn.StartAfter,
 		Limit:                uint64(queryReturn.Limit),
+		ObjectCount:          queryReturn.ObjectCount,
 	}, nil
 }
 
@@ -36,8 +37,10 @@ func (s *SpDBImpl) BatchGetRecoverGVGStats(gvgIDs []uint32) ([]*spdb.RecoverGVGS
 			VirtualGroupFamilyID: ret.VirtualGroupFamilyID,
 			VirtualGroupID:       ret.VirtualGroupID,
 			RedundancyIndex:      ret.RedundancyIndex,
+			StartAfter:           ret.StartAfter,
 			Status:               spdb.RecoverStatus(ret.Status),
 			Limit:                uint64(ret.Limit),
+			ObjectCount:          ret.ObjectCount,
 		})
 	}
 	return res, nil
@@ -50,7 +53,7 @@ func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 			VirtualGroupFamilyID: g.VirtualGroupFamilyID,
 			VirtualGroupID:       g.VirtualGroupID,
 			RedundancyIndex:      g.RedundancyIndex,
-			StartAfterObjectID:   g.StartAfter,
+			StartAfter:           g.StartAfter,
 			Limit:                uint32(g.Limit),
 			Status:               int(g.Status),
 		}
@@ -70,9 +73,9 @@ func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error) {
 	result := s.db.Table(RecoverGVGStatsTableName).Where("virtual_group_id = ?", stats.VirtualGroupID).
 		Updates(&RecoverGVGStatsTable{
-			Status:             int(stats.Status),
-			StartAfterObjectID: stats.StartAfter,
-			ObjectCount:        stats.ObjectCount,
+			Status:      int(stats.Status),
+			StartAfter:  stats.StartAfter,
+			ObjectCount: stats.ObjectCount,
 		})
 	if result.Error != nil {
 		return fmt.Errorf("failed to update the GVG status for recover_stats table: %s", result.Error)
