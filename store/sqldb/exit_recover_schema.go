@@ -4,7 +4,7 @@ type RecoverGVGStatsTable struct {
 	VirtualGroupID       uint32 `gorm:"primary_key"`
 	VirtualGroupFamilyID uint32
 	RedundancyIndex      int32 `gorm:"index:redundancy_index"`
-	StartAfterObjectID   uint64
+	StartAfter           uint64
 	Limit                uint32
 	Status               int
 	ObjectCount          uint64
