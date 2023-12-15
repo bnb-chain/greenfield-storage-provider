@@ -3,7 +3,6 @@ package approver
 import (
 	"context"
 	"fmt"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"net/http"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 )
 
 var (
