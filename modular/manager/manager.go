@@ -124,7 +124,7 @@ type ManageModular struct {
 
 	recoverObjectStats      *ObjectsSegmentsStats // objectId -> ObjectSegmentsStats
 	recoverProcessCount     atomic.Int64
-	verifyTerminationSignal chan bool
+	verifyTerminationSignal atomic.Int64
 
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
@@ -969,7 +969,7 @@ func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID,
 
 // start the loop, failed object will be
 func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIndex int32) (err error) {
-
+	m.verifyTerminationSignal.Store(0)
 	if vgfID != 0 {
 		log.Infow("starting NewRecoverVGFScheduler")
 		recoverVGFScheduler, err := NewRecoverVGFScheduler(m, vgfID)
@@ -981,6 +981,7 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 
 		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
 		m.recoverProcessCount.Store(int64(len(recoverVGFScheduler.RecoverSchedulers)))
+		m.verifyTerminationSignal.Add(int64(len(recoverVGFScheduler.VerifySchedulers)))
 		go recoverVGFScheduler.Start()
 		go recoverFailedObjectScheduler.Start()
 	} else {
@@ -996,6 +997,7 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 			return err
 		}
 		m.recoverProcessCount.Store(1)
+		m.verifyTerminationSignal.Add(1)
 		go recoverGVGScheduler.Start()
 		go recoverFailedObjectScheduler.Start()
 		go verifyScheduler.Start()
