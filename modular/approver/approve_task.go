@@ -168,15 +168,15 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
 		return false, err
 	}
-	if state == int(storetypes.BucketMigrationState_SRC_SP_GC_DOING) {
-		log.CtxInfow(ctx, "the bucket is gc, migrated to this sp should be reject", "bucket_id", bucketID)
-		return false, fmt.Errorf("the bucket is gcing, try it after gc done")
-	} else if state == int(storetypes.BucketMigrationState_MIGRATION_FINISHED) {
+	if state == int(storetypes.BucketMigrationState_MIGRATION_FINISHED) {
 		// delete the last finished migrate bucket progress record
 		if err = a.baseApp.GfSpDB().DeleteMigrateBucket(bucketID); err != nil {
 			log.CtxErrorw(ctx, "failed to delete migrate bucket state", "bucket_id", bucketID, "error", err)
 			return false, err
 		}
+	} else if state != int(storetypes.BucketMigrationState_INIT_UNSPECIFIED) {
+		log.CtxInfow(ctx, "the bucket is migrating or gc, migrated to this sp should be reject", "bucket_id", bucketID)
+		return false, fmt.Errorf("the bucket is migrating or gc, try it after gc done")
 	}
 
 	// check src sp has enough quota
@@ -195,6 +195,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	}
 	task.GetMigrateBucketInfo().GetDstPrimarySpApproval().Sig = signature
 	_ = a.bucketQueue.Push(task)
+	log.CtxInfow(ctx, "succeed to hand migrate bucket approval", "task", task, "state", state)
 	return true, nil
 }
 

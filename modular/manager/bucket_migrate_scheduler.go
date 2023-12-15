@@ -599,7 +599,6 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 	go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID)
 
 	log.CtxInfow(ctx, "succeed to cancel migration event from memory, the bucket migration will generate a gc task", "bucket_id", bucketID)
-
 	return err
 }
 
@@ -1053,17 +1052,16 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 			log.Errorw("failed to pre migrate bucket(lock src sp quota)", "bucket_id", bucketID, "error", err)
 			return nil, err
 		}
-		log.Infow("xxxx pre Migrate done")
 		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucketID, storetypes.BucketMigrationState_DEST_SP_PRE_DEDUCT_QUOTA_DONE); err != nil {
 			return nil, err
 		}
-		log.Infow("xxxx UpdateBucketMigrationProgress done")
 	}
 
 	if err = plan.storeToDB(); err != nil {
 		log.Errorw("failed to generate migrate execute plan due to store db", "error", err)
 	}
 
+	log.Infow("succeed to produce bucket migrate execute plan list", "primary_sp_gvg_list", primarySPGVGList, "bucket_gvg_list_len", len(primarySPGVGList), "EventMigrationBucket", event)
 	return plan, err
 }
 
