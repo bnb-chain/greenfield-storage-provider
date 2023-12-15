@@ -172,7 +172,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 		// Query migration progress
 		r.NewRoute().Name(queryMigrationProgressRouterName).Methods(http.MethodGet).HandlerFunc(g.queryBucketMigrationProgressHandler).
-			Queries(GetBucketMigrationQuery, "")
+			Queries(GetBucketMigrationProgressQuery, "")
 
 		// Get Object Meta
 		r.NewRoute().Name(getObjectMetaRouterName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.getObjectMetaHandler).

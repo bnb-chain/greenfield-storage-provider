@@ -277,7 +277,7 @@ func (g *GateModular) queryBucketMigrationProgressHandler(w http.ResponseWriter,
 
 	if bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 		return
 	}
 
