@@ -190,7 +190,7 @@ func (s *ObjectsSegmentsStats) isRecoverFailed(objectID uint64) bool {
 type RecoverGVGScheduler struct {
 	manager               *ManageModular
 	mtx                   sync.RWMutex
-	currentBatchObjectIDs []uint64
+	currentBatchObjectIDs map[uint64]struct{}
 	vgfID                 uint32
 	gvgID                 uint32
 	redundancyIndex       int32
@@ -212,7 +212,7 @@ func NewRecoverGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyInd
 	}
 	return &RecoverGVGScheduler{
 		manager:               m,
-		currentBatchObjectIDs: make([]uint64, 0),
+		currentBatchObjectIDs: make(map[uint64]struct{}),
 		vgfID:                 vgfID,
 		gvgID:                 gvgID,
 		redundancyIndex:       redundancyIndex,
@@ -260,13 +260,14 @@ func (s *RecoverGVGScheduler) Start() {
 				return
 			}
 
-			if gvgStats.StartAfter == s.curStartAfter && s.curStartAfter != 0 {
-				log.Debugw("still processing the batch that after object id", "start_after", s.curStartAfter)
-				continue
-			}
+			//if gvgStats.StartAfter == s.curStartAfter && s.curStartAfter != 0 {
+			//	log.Debugw("still processing the batch that after object id", "start_after", s.curStartAfter)
+			//	continue
+			//}
 			s.curStartAfter = gvgStats.StartAfter
 			startAfter = gvgStats.StartAfter
 
+			//10 == 10
 			log.Infow("processing the batch that after object id", "start_after", s.curStartAfter)
 			objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, startAfter, uint32(limit))
 			if err != nil {
@@ -276,7 +277,7 @@ func (s *RecoverGVGScheduler) Start() {
 
 			log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects))
 
-			objectCount += uint64(len(objects))
+			//objectCount += uint64(len(objects))
 			if len(objects) == 0 {
 				log.Infow("all objects in gvg have been processed", "start_after_object_id", startAfter, "limit", limit)
 				gvgStats.Status = spdb.Processed
@@ -296,11 +297,17 @@ func (s *RecoverGVGScheduler) Start() {
 				objectInfo := object.Object.ObjectInfo
 				objectID := objectInfo.Id.Uint64()
 				segmentCount := segmentPieceCount(objectInfo.PayloadSize, maxSegmentSize)
+				_, ok := s.currentBatchObjectIDs[objectID]
+				if ok {
+					log.Infow("the object is in processing", "object_id", objectID, "segment_count", segmentCount)
+					continue
+				}
+
 				log.Infow("starting to recover object", "object_id", objectID, "segment_count", segmentCount)
 
 				curRecoveryTaskNum := s.manager.recoveryQueue.Len()
-
 				if int(segmentCount) >= recoveryCompacity {
+					objectCount++
 					o := &spdb.RecoverFailedObject{
 						ObjectID:        objectID,
 						VirtualGroupID:  object.Gvg.Id,
@@ -309,7 +316,7 @@ func (s *RecoverGVGScheduler) Start() {
 					err = s.manager.baseApp.GfSpDB().InsertRecoverFailedObject(o)
 					if err != nil {
 						log.Errorw("failed to InsertRecoverFailedObject", "error", err)
-						return
+						break
 					}
 					log.Infow("inserted recover failed object record to DB", "object_id", o.ObjectID)
 					continue
@@ -338,10 +345,13 @@ func (s *RecoverGVGScheduler) Start() {
 						}
 					}
 				}
-				s.manager.recoverObjectStats.put(objectID, segmentCount)
-				s.currentBatchObjectIDs = append(s.currentBatchObjectIDs, objectID)
+				if !s.manager.recoverObjectStats.has(objectID) {
+					s.manager.recoverObjectStats.put(objectID, segmentCount)
+				}
+				s.currentBatchObjectIDs[objectID] = struct{}{}
 			}
 
+			// if exceed the queue limit, wait for a while
 			if exceedLimit {
 				continue
 			}
@@ -359,7 +369,7 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 	for range ticker.C {
 		log.Infow("monitoring for current batch objects", "object_ids", s.currentBatchObjectIDs)
 		processed := true
-		for _, objectID := range s.currentBatchObjectIDs {
+		for objectID, _ := range s.currentBatchObjectIDs {
 			if !s.manager.recoverObjectStats.isObjectProcessed(objectID) {
 				processed = false
 				break
@@ -379,11 +389,11 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 			log.Errorw("failed to update recover gvg status")
 			continue
 		}
-		for _, objectID := range s.currentBatchObjectIDs {
+		for objectID, _ := range s.currentBatchObjectIDs {
 			log.Debugw("removing object stats", "object_id", objectID)
 			s.manager.recoverObjectStats.remove(objectID)
 		}
-		s.currentBatchObjectIDs = make([]uint64, 0)
+		s.currentBatchObjectIDs = make(map[uint64]struct{})
 		return
 	}
 }
