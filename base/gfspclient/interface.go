@@ -111,7 +111,7 @@ type MetadataAPI interface {
 	GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.VGFInfoBucket, *payment_types.StreamRecord, error)
 	GetEndpointBySpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) (string, error)
 	GetBucketReadQuota(ctx context.Context, bucket *storagetypes.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error)
-	GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (gfsptask.GfSpBucketQuotaInfo, error)
+	GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (*gfsptask.GfSpBucketQuotaInfo, error)
 	ListBucketReadRecord(ctx context.Context, bucket *storagetypes.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error)
 	GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error)
 	GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error)

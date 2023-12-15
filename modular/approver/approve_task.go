@@ -3,6 +3,7 @@ package approver
 import (
 	"context"
 	"fmt"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"net/http"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
@@ -168,10 +168,10 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
 		return false, err
 	}
-	if state == int(manager.SrcSPGCDoing) {
+	if state == int(storetypes.BucketMigrationState_SRC_SP_GC_DOING) {
 		log.CtxInfow(ctx, "the bucket is gc, migrated to this sp should be reject", "bucket_id", bucketID)
 		return false, fmt.Errorf("the bucket is gcing, try it after gc done")
-	} else if state == int(manager.MigrationFinished) {
+	} else if state == int(storetypes.BucketMigrationState_MIGRATION_FINISHED) {
 		// delete the last finished migrate bucket progress record
 		if err = a.baseApp.GfSpDB().DeleteMigrateBucket(bucketID); err != nil {
 			log.CtxErrorw(ctx, "failed to delete migrate bucket state", "bucket_id", bucketID, "error", err)

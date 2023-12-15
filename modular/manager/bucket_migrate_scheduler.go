@@ -11,11 +11,6 @@ import (
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -26,7 +21,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -187,7 +187,7 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 		vgfID uint32
 		err   error
 	)
-	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, MigratingGvgDone); err != nil {
+	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, storetypes.BucketMigrationState_MIGRATE_GVG_DONE); err != nil {
 		return err
 	}
 	// empty bucket, need to pick a vgf
@@ -221,7 +221,7 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 		log.Errorw("failed to send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "err", txErr)
 		return txErr
 	}
-	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, SendCompleteTxDone); err != nil {
+	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, storetypes.BucketMigrationState_SEND_COMPLETE_TX_DONE); err != nil {
 		return err
 	}
 	log.Infow("sent complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash)
@@ -243,7 +243,7 @@ func (plan *BucketMigrateExecutePlan) rejectBucketMigration() error {
 		return txErr
 	}
 
-	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucket.BucketInfo.Id.Uint64(), SendRejectTxDone); err != nil {
+	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucket.BucketInfo.Id.Uint64(), storetypes.BucketMigrationState_SEND_REJECT_TX_DONE); err != nil {
 		return err
 	}
 
@@ -288,7 +288,7 @@ func (plan *BucketMigrateExecutePlan) syncBucketQuotaFromSrcSP(bucketID uint64, 
 		return err
 	}
 
-	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucketID, MigratingQuotaInfoDone); err != nil {
+	if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucketID, storetypes.BucketMigrationState_MIGRATE_QUOTA_INFO_DONE); err != nil {
 		return err
 	}
 
@@ -397,7 +397,7 @@ func (plan *BucketMigrateExecutePlan) startMigrateSchedule() {
 					log.Errorw("failed to update migrate gvg status", "gvg_unit", migrateGVGUnit, "error", err)
 					return
 				}
-				if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, MigratingGvgDoing); err != nil {
+				if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, storetypes.BucketMigrationState_MIGRATE_GVG_DOING); err != nil {
 					return
 				}
 				migrateGVGUnit.MigrateStatus = Migrating
@@ -564,7 +564,7 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 	var (
 		executePlan *BucketMigrateExecutePlan
 		err         error
-		state       BucketMigrateState
+		state       storetypes.BucketMigrationState
 	)
 	ctx := context.Background()
 	if executePlan, err = s.getExecutePlanByBucketID(bucketID); err != nil {
@@ -572,9 +572,9 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 		return err
 	}
 	if reject {
-		state = WaitRejectTxEventDone
+		state = storetypes.BucketMigrationState_WAIT_REJECT_TX_EVENT_DONE
 	} else {
-		state = WaitCancelTxEventDone
+		state = storetypes.BucketMigrationState_WAIT_CANCEL_TX_EVENT_DONE
 	}
 	if err = UpdateBucketMigrationProgress(executePlan.manager.baseApp, bucketID, state); err != nil {
 		return err
@@ -593,7 +593,7 @@ func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject boo
 
 	// if bucket migration failed, gc for dest sp
 	// generate a gc bucket migration task(list objects and delete)
-	if err = UpdateBucketMigrationProgress(executePlan.manager.baseApp, bucketID, DestSPGCDoing); err != nil {
+	if err = UpdateBucketMigrationProgress(executePlan.manager.baseApp, bucketID, storetypes.BucketMigrationState_DEST_SP_GC_DOING); err != nil {
 		return err
 	}
 	go s.manager.GenerateGCBucketMigrationTask(ctx, bucketID)
@@ -658,7 +658,7 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 	)
 	bucketID := event.BucketID
 
-	if event.MigrationState != int(SendCompleteTxDone) {
+	if event.MigrationState != int(storetypes.BucketMigrationState_SEND_COMPLETE_TX_DONE) {
 		return
 	}
 	// confirm
@@ -668,14 +668,14 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 	}
 
 	if bucket.BucketInfo.GetBucketStatus() == storagetypes.BUCKET_STATUS_CREATED {
-		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, WaitCompleteTxEventDone); err != nil {
+		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_WAIT_COMPLETE_TX_EVENT_DONE); err != nil {
 			return
 		}
 		if err = s.doneMigrateBucket(bucketID); err != nil {
 			log.Errorw("failed to done migrate bucket", "EventMigrationBucket", event, "error", err)
 			return
 		}
-		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, MigrationFinished); err != nil {
+		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_MIGRATION_FINISHED); err != nil {
 			return
 		}
 		log.CtxInfow(ctx, "succeed to confirm complete events", "EventMigrationBucket", event, "error", err)
@@ -691,7 +691,7 @@ func (s *BucketMigrateScheduler) confirmEvents() {
 	logNumber := uint64(0)
 
 	for range subscribeBucketMigrateEventsTicker.C {
-		migrationStates := []int{int(SendCompleteTxDone), int(SendRejectTxDone)}
+		migrationStates := []int{int(storetypes.BucketMigrationState_SEND_COMPLETE_TX_DONE), int(storetypes.BucketMigrationState_SEND_REJECT_TX_DONE)}
 		confirmEvents, listError := s.manager.baseApp.GfSpDB().ListBucketMigrationToConfirm(migrationStates)
 		if listError != nil {
 			logNumber++
@@ -786,7 +786,7 @@ func (s *BucketMigrateScheduler) subscribeEvents() {
 				bucketID := migrateBucketEvents.BucketId.Uint64()
 				ctx := context.Background()
 
-				if err := UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, SrcSPGCDoing); err != nil {
+				if err := UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_SRC_SP_GC_DOING); err != nil {
 					return
 				}
 
@@ -1054,7 +1054,7 @@ func (s *BucketMigrateScheduler) produceBucketMigrateExecutePlan(event *storaget
 			return nil, err
 		}
 		log.Infow("xxxx pre Migrate done")
-		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucketID, DestSPPreDeductQuotaDone); err != nil {
+		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, bucketID, storetypes.BucketMigrationState_DEST_SP_PRE_DEDUCT_QUOTA_DONE); err != nil {
 			return nil, err
 		}
 		log.Infow("xxxx UpdateBucketMigrationProgress done")
@@ -1181,11 +1181,11 @@ func (s *BucketMigrateScheduler) UpdateMigrateProgress(task task.MigrateGVGTask)
 
 func (s *BucketMigrateScheduler) UpdateBucketMigrationGCProgress(ctx context.Context, gcBucketMigrationTask task.GCBucketMigrationTask) error {
 	// update gc progress
-	var state BucketMigrateState
+	var state storetypes.BucketMigrationState
 	if gcBucketMigrationTask.GetFinished() {
-		state = MigrationFinished
+		state = storetypes.BucketMigrationState_MIGRATION_FINISHED
 	} else {
-		state = SrcSPGCDoing
+		state = storetypes.BucketMigrationState_SRC_SP_GC_DOING
 	}
 
 	meta := spdb.MigrateBucketProgressMeta{
@@ -1598,7 +1598,7 @@ func SendAndConfirmCompleteMigrateBucketTx(baseApp *gfspapp.GfSpBaseApp, msg *st
 		})
 }
 
-func UpdateBucketMigrationProgress(baseApp *gfspapp.GfSpBaseApp, bucketID uint64, migrateState BucketMigrateState) error {
+func UpdateBucketMigrationProgress(baseApp *gfspapp.GfSpBaseApp, bucketID uint64, migrateState storetypes.BucketMigrationState) error {
 	if err := baseApp.GfSpDB().UpdateBucketMigrationProgress(bucketID, int(migrateState)); err != nil {
 		log.Errorw("failed to update bucket migration progress", "bucket_id", bucketID, "state", migrateState, "error", err)
 		return err

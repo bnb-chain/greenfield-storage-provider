@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -506,7 +507,7 @@ func (s *SpDBImpl) QueryMigrateBucketState(bucketID uint64) (int, error) {
 		insertMigrateBucket *MigrateBucketProgressTable
 		queryReturn         *MigrateBucketProgressTable
 		needInsert          bool
-		state               = 0
+		state               = int(types.BucketMigrationState_INIT_UNSPECIFIED)
 	)
 	queryReturn = &MigrateBucketProgressTable{}
 	insertMigrateBucket = &MigrateBucketProgressTable{

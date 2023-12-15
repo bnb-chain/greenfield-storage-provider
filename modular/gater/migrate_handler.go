@@ -369,7 +369,7 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
 		bz                  []byte
-		quota               gfsptask.GfSpBucketQuotaInfo
+		quota               *gfsptask.GfSpBucketQuotaInfo
 	)
 
 	defer func() {

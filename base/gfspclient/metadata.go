@@ -355,9 +355,9 @@ func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_typ
 }
 
 func (s *GfSpClient) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (
-	gfsptask.GfSpBucketQuotaInfo, error) {
+	*gfsptask.GfSpBucketQuotaInfo, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
-	quota := gfsptask.GfSpBucketQuotaInfo{}
+	quota := &gfsptask.GfSpBucketQuotaInfo{}
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
 		return quota, ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)

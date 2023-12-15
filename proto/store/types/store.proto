@@ -28,3 +28,30 @@ enum TaskState {
 
   TASK_STATE_OBJECT_DISCONTINUED = 16;
 }
+
+enum BucketMigrationState {
+  INIT_UNSPECIFIED = 0;
+
+  // produced execute plan and pre deduct quota
+  SRC_SP_PRE_DEDUCT_QUOTA_DONE = 1;
+  DEST_SP_PRE_DEDUCT_QUOTA_DONE = 2;
+
+  // migrating gvg task
+  MIGRATE_GVG_DOING = 5;
+  MIGRATE_GVG_DONE = 6;
+  MIGRATE_QUOTA_INFO_DONE = 7;
+
+  // confirm tx
+  SEND_COMPLETE_TX_DONE = 10;
+  WAIT_COMPLETE_TX_EVENT_DONE = 11;
+  SEND_REJECT_TX_DONE = 12;
+  WAIT_REJECT_TX_EVENT_DONE = 13;
+  WAIT_CANCEL_TX_EVENT_DONE = 14;
+
+  // gc
+  SRC_SP_GC_DOING = 20;
+  DEST_SP_GC_DOING = 21;
+
+  POST_SRC_SP_DONE = 30;
+  MIGRATION_FINISHED = 31;
+}

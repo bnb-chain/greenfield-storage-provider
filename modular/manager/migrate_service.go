@@ -6,6 +6,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
@@ -46,31 +47,31 @@ func (m *ManageModular) NotifyMigrateSwapOut(ctx context.Context, swapOut *virtu
 }
 
 // NotifyPreMigrateBucketAndDeductQuota is used to notify record bucket is migrating
-func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	var (
 		state      int
 		err        error
 		bucketSize uint64
-		quota      gfsptask.GfSpBucketQuotaInfo
+		quota      = &gfsptask.GfSpBucketQuotaInfo{}
 	)
 
 	if state, err = m.baseApp.GfSpDB().QueryMigrateBucketState(bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
-		return gfsptask.GfSpBucketQuotaInfo{}, err
+		return quota, err
 	}
-	if state == int(SrcSPPreDeductQuotaDone) {
+	if state == int(storetypes.BucketMigrationState_SRC_SP_PRE_DEDUCT_QUOTA_DONE) {
 		log.CtxInfow(ctx, "the bucket has already notified", "bucket_id", bucketID)
-		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("the bucket has already notified, pre deduct quota done")
+		return quota, fmt.Errorf("the bucket has already notified, pre deduct quota done")
 	}
 
 	// get bucket quota and check, lock quota
 	if bucketSize, err = m.getBucketTotalSize(ctx, bucketID); err != nil {
-		return gfsptask.GfSpBucketQuotaInfo{}, err
+		return quota, err
 	}
 
 	if quota, err = m.baseApp.GfSpClient().GetLatestBucketReadQuota(ctx, bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket read quota", "bucket_id", bucketID, "error", err)
-		return gfsptask.GfSpBucketQuotaInfo{}, err
+		return quota, err
 	}
 
 	// reduce quota, sql db
@@ -80,7 +81,7 @@ func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context
 	}
 
 	// update state
-	if err = m.baseApp.GfSpDB().UpdateBucketMigrationPreDeductedQuota(bucketID, bucketSize, int(SrcSPPreDeductQuotaDone)); err != nil {
+	if err = m.baseApp.GfSpDB().UpdateBucketMigrationPreDeductedQuota(bucketID, bucketSize, int(storetypes.BucketMigrationState_SRC_SP_PRE_DEDUCT_QUOTA_DONE)); err != nil {
 		log.CtxErrorw(ctx, "failed to update migrate bucket state and deduct quota", "bucket_id", bucketID, "error", err)
 		// if failed to update migrate bucket state, recoup quota and return error
 		if quotaUpdateErr := m.baseApp.GfSpClient().RecoupQuota(ctx, bucketID, bucketSize, quota.GetMonth()); quotaUpdateErr != nil {
@@ -93,35 +94,35 @@ func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context
 }
 
 // NotifyPostMigrateBucketAndRecoupQuota is used to notify src sp confirm that only one Post migrate bucket is allowed.
-func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	var (
 		err         error
 		extraQuota  uint64
 		bucketSize  uint64
 		state       int
-		latestQuota gfsptask.GfSpBucketQuotaInfo
+		latestQuota = &gfsptask.GfSpBucketQuotaInfo{}
 	)
 
 	bucketID := bmInfo.GetBucketId()
 
 	if state, err = m.baseApp.GfSpDB().QueryMigrateBucketState(bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
-		return gfsptask.GfSpBucketQuotaInfo{}, err
+		return latestQuota, err
 	}
-	if state != int(SrcSPPreDeductQuotaDone) {
-		log.CtxInfow(ctx, "the bucket has already recoup quota", "bucket_id", bucketID, "state", state, "expected_state", int(SrcSPPreDeductQuotaDone))
-		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("the bucket has already post, recoup quota done")
+	if state != int(storetypes.BucketMigrationState_SRC_SP_PRE_DEDUCT_QUOTA_DONE) {
+		log.CtxInfow(ctx, "the bucket has already recoup quota", "bucket_id", bucketID, "state", state, "expected_state", int(storetypes.BucketMigrationState_SRC_SP_PRE_DEDUCT_QUOTA_DONE))
+		return latestQuota, fmt.Errorf("the bucket has already post, recoup quota done")
 	}
 
 	if latestQuota, err = m.baseApp.GfSpClient().GetLatestBucketReadQuota(ctx, bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket read quota", "bucket_id", bucketID, "error", err)
-		return gfsptask.GfSpBucketQuotaInfo{}, err
+		return latestQuota, err
 	}
 
 	// get bucket quota and check
 	if bucketSize, err = m.getBucketTotalSize(ctx, bucketID); err != nil {
 		log.Errorf("failed to get bucket total object size", "bucket_id", bucketID, "error", err)
-		return gfsptask.GfSpBucketQuotaInfo{}, err
+		return latestQuota, err
 	}
 
 	if bmInfo.GetFinished() {
@@ -136,16 +137,16 @@ func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Contex
 			extraQuota = bucketSize - migratedBytes
 			if quotaUpdateErr := m.baseApp.GfSpClient().RecoupQuota(ctx, bmInfo.GetBucketId(), extraQuota, latestQuota.GetMonth()); quotaUpdateErr != nil {
 				log.CtxErrorw(ctx, "failed to recoup extra quota to user", "error", err)
-				return gfsptask.GfSpBucketQuotaInfo{}, err
+				return latestQuota, err
 			}
-			if err = m.baseApp.GfSpDB().UpdateBucketMigrationRecoupQuota(bucketID, extraQuota, int(MigrationFinished)); err != nil {
+			if err = m.baseApp.GfSpDB().UpdateBucketMigrationRecoupQuota(bucketID, extraQuota, int(storetypes.BucketMigrationState_MIGRATION_FINISHED)); err != nil {
 				log.CtxErrorw(ctx, "failed to update bucket migrate progress recoup quota", "error", err)
 			}
 		}
 		log.CtxDebugw(ctx, "succeed to recoup extra quota to user", "extra_quote", extraQuota)
 	}
 
-	return gfsptask.GfSpBucketQuotaInfo{}, nil
+	return latestQuota, nil
 }
 
 // getBucketTotalSize return the total size of the bucket
