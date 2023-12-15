@@ -408,7 +408,7 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 
 	log.CtxInfow(reqCtx.Context(), "succeed to get latest bucket quota", "bucket_id",
@@ -468,7 +468,7 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 
 	log.CtxInfow(reqCtx.Context(), "succeed to pre bucket migrate and deduct quota", "bucket_id",
@@ -523,7 +523,7 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 			bucketID, "error", err)
 		return
 	}
-	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 
 	log.CtxInfow(reqCtx.Context(), "succeed to post bucket migrate", "bucket_id",
@@ -592,7 +592,7 @@ func (g *GateModular) sufficientQuotaForBucketMigrationHandler(w http.ResponseWr
 		return
 	}
 
-	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	log.CtxInfow(reqCtx.Context(), "succeed to check bucket migrate quota", "bucket_id", bucketID,
 		"quota", quota, "bucket_size", bucketSize)

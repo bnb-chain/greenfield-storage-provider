@@ -232,6 +232,8 @@ const (
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
 	// GnfdPieceHashHeader defines piece hash list, which is used by challenge
 	GnfdPieceHashHeader = "X-Gnfd-Piece-Hash"
+	// GnfdQuotaInfoHeader defines quota info, which is used by sp
+	GnfdQuotaInfoHeader = "X-Gnfd-Quota-Info"
 	// GnfdUnsignedApprovalMsgHeader defines unsigned msg, which is used by get-approval
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval

@@ -415,29 +415,29 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 
 	// list gvg
 	if gvgList, err = e.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(ctx, bucketID); err != nil {
-		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "error", err)
+		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "bucket_id", bucketID, "error", err)
 		return
 	}
 
 	// current chain's gvg info compare metadata info
 	if bucketInfo, err = e.baseApp.Consensus().QueryBucketInfoById(ctx, bucketID); err != nil || bucketInfo == nil {
-		log.Errorw("failed to get bucket by bucket name", "error", err)
+		log.Errorw("failed to get bucket by bucket name", "bucket_id", bucketID, "error", err)
 		return
 	}
 	vgfID := bucketInfo.GetGlobalVirtualGroupFamilyId()
-	log.CtxInfow(ctx, "begin to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgs", gvgList, "vgfID", vgfID, "error", err)
+	log.CtxInfow(ctx, "begin to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgList", gvgList, "vgfID", vgfID, "error", err)
 
 	gvgTotalNum = uint64(len(gvgList))
 
 	for _, gvg := range gvgList {
 		if gvg.FamilyId != vgfID {
-			log.CtxErrorw(ctx, "failed to check gvg's status with chain's status, the gvg may be old data", "error", err)
+			log.CtxErrorw(ctx, "failed to check gvg's status with chain's status, the gvg may be old data", "bucket_id", bucketID, "gvg", gvg, "error", err)
 			err = errors.New("gvg family id mismatch")
 			return
 		}
 		for {
 			if objectList, err = e.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(ctx, gvg.GetId(), bucketID, startAfter, limit); err != nil {
-				log.CtxErrorw(ctx, "failed to list objectList by gvg and bucket for gc", "error", err)
+				log.CtxErrorw(ctx, "failed to list objectList by gvg and bucket for gc", "bucket_id", bucketID, "gvg", gvg, "error", err)
 				return
 			}
 			// can delete, verify
@@ -463,7 +463,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 			}
 
 			if len(objectList) < int(limit) {
-				log.CtxInfow(ctx, "succeed to finish one gvg bucket migration gc", "gvg", gvg)
+				log.CtxInfow(ctx, "succeed to finish one gvg bucket migration gc", "bucket_id", bucketID, "gvg", gvg)
 				gcFinisheGvgNum++
 				break
 			}
