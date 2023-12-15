@@ -77,6 +77,8 @@ type SignatureDB interface {
 	*/
 	// SetReplicatePieceChecksum sets(maybe overwrite) the piece hash.
 	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
+	// GetReplicatePieceChecksum gets all piece hashes.
+	GetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) ([]byte, error)
 	// GetAllReplicatePieceChecksum gets all piece hashes.
 	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
 	// GetAllReplicatePieceChecksumOptimized gets all piece hashes.

@@ -759,7 +759,7 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, task.Key().String())
 		m.recoverMtx.Unlock()
-		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
+		log.CtxInfow(ctx, "finished recovery", "task_info", task.Info())
 
 		if task.BySuccessorSP() {
 			objectID := task.GetObjectInfo().Id.Uint64()

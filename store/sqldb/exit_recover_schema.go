@@ -24,14 +24,3 @@ type RecoverFailedObjectTable struct {
 func (RecoverFailedObjectTable) TableName() string {
 	return RecoverFailedObjectTableName
 }
-
-type VerifyGVGProgressTable struct {
-	VirtualGroupID  uint32 `gorm:"primary_key"`
-	RedundancyIndex int32
-	StartAfter      uint64
-	Limit           uint32
-}
-
-func (VerifyGVGProgressTable) TableName() string {
-	return VerifyGVGProgressTableName
-}

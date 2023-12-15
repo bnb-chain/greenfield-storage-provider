@@ -48,8 +48,6 @@ const (
 	RecoverGVGStatsTableName = "recover_gvg_stats"
 
 	RecoverFailedObjectTableName = "recover_failed_object"
-
-	VerifyGVGProgressTableName = "verify_gvg_progress"
 )
 
 // define error name constant.
