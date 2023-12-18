@@ -135,13 +135,6 @@ func (s *ObjectsSegmentsStats) has(objectID uint64) bool {
 	return ok
 }
 
-func (s *ObjectsSegmentsStats) get(objectID uint64) (*ObjectSegmentsStats, bool) {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-	val, ok := s.stats[objectID]
-	return val, ok
-}
-
 func (s *ObjectsSegmentsStats) remove(objectID uint64) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -161,16 +154,6 @@ func (s *ObjectsSegmentsStats) addSegmentRecord(objectID uint64, success bool, s
 		stats.FailedSegments[segmentIdx] = struct{}{}
 	}
 	return true
-}
-
-func (s *ObjectsSegmentsStats) isObjectRecovered(objectID uint64) bool {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-	stats, ok := s.stats[objectID]
-	if !ok {
-		return true
-	}
-	return len(stats.SuccessSegments) == stats.SegmentCount
 }
 
 func (s *ObjectsSegmentsStats) isObjectProcessed(objectID uint64) bool {
@@ -195,7 +178,6 @@ func (s *ObjectsSegmentsStats) isRecoverFailed(objectID uint64) bool {
 
 type RecoverGVGScheduler struct {
 	manager               *ManageModular
-	mtx                   sync.RWMutex
 	currentBatchObjectIDs map[uint64]struct{}
 	vgfID                 uint32
 	gvgID                 uint32
@@ -246,121 +228,118 @@ func (s *RecoverGVGScheduler) Start() {
 	recoverTicker := time.NewTicker(recoverInterval)
 	defer recoverTicker.Stop()
 
-	startAfter := gvgStats.StartAfter
+	var startAfter uint64
 	limit := gvgStats.Limit
 
 	recoveryCompacity := s.manager.recoveryQueue.Cap()
 
 	objectCount := uint64(0)
-	for {
-		select {
-		case <-recoverTicker.C:
-			log.Infow("looping")
-			gvgStats, err = s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
+	for range recoverTicker.C {
+		log.Infow("looping")
+		gvgStats, err = s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
+		if err != nil {
+			log.Errorw("failed to get gvg stats", "err", err)
+			continue
+		}
+		if gvgStats.Status != spdb.Processing {
+			log.Infow("the gvg is already processed", "gvg_id", s.gvgID)
+			return
+		}
+
+		s.curStartAfter = gvgStats.StartAfter
+		startAfter = gvgStats.StartAfter
+
+		log.Infow("processing the batch that after object id", "start_after", s.curStartAfter)
+		objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, startAfter, uint32(limit))
+		if err != nil {
+			log.Errorw("failed to list objects in gvg", "start_after_object_id", startAfter, "limit", limit)
+			continue
+		}
+
+		log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects))
+
+		//objectCount += uint64(len(objects))
+		if len(objects) == 0 {
+			log.Infow("all objects in gvg have been processed", "start_after_object_id", startAfter, "limit", limit)
+			gvgStats.Status = spdb.Processed
+			gvgStats.ObjectCount = objectCount
+			log.Infow("updating GVG stats status to processed", "gvgStats", gvgStats)
+			err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
 			if err != nil {
-				log.Errorw("failed to get gvg stats", "err", err)
+				log.Error("failed to update GVG stats to processed status", "gvgStats", gvgStats)
 				continue
 			}
-			if gvgStats.Status != spdb.Processing {
-				log.Infow("the gvg is already processed", "gvg_id", s.gvgID)
-				return
-			}
+			break
+		}
 
-			s.curStartAfter = gvgStats.StartAfter
-			startAfter = gvgStats.StartAfter
-
-			log.Infow("processing the batch that after object id", "start_after", s.curStartAfter)
-			objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, startAfter, uint32(limit))
-			if err != nil {
-				log.Errorw("failed to list objects in gvg", "start_after_object_id", startAfter, "limit", limit)
+		exceedLimit := false
+	out:
+		for _, object := range objects {
+			objectInfo := object.Object.ObjectInfo
+			objectID := objectInfo.Id.Uint64()
+			segmentCount := segmentPieceCount(objectInfo.PayloadSize, maxSegmentSize)
+			_, ok := s.currentBatchObjectIDs[objectID]
+			if ok {
+				log.Infow("the object is in processing", "object_id", objectID, "segment_count", segmentCount)
 				continue
 			}
 
-			log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects))
+			log.Infow("starting to recover object", "object_id", objectID, "segment_count", segmentCount)
 
-			//objectCount += uint64(len(objects))
-			if len(objects) == 0 {
-				log.Infow("all objects in gvg have been processed", "start_after_object_id", startAfter, "limit", limit)
-				gvgStats.Status = spdb.Processed
-				gvgStats.ObjectCount = objectCount
-				log.Infow("updating GVG stats status to processed", "gvgStats", gvgStats)
-				err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
-				if err != nil {
-					log.Error("failed to update GVG stats to processed status", "gvgStats", gvgStats)
-					continue
+			curRecoveryTaskNum := s.manager.recoveryQueue.Len()
+			if int(segmentCount) >= recoveryCompacity {
+				objectCount++
+				o := &spdb.RecoverFailedObject{
+					ObjectID:        objectID,
+					VirtualGroupID:  object.Gvg.Id,
+					RedundancyIndex: gvgStats.RedundancyIndex,
 				}
+				err = s.manager.baseApp.GfSpDB().InsertRecoverFailedObject(o)
+				if err != nil {
+					log.Errorw("failed to insert recover_failed_object", "object_id", objectID, "error", err)
+					break
+				}
+				log.Infow("inserted recover failed object record to DB", "object_id", o.ObjectID)
+				continue
+			}
+
+			if curRecoveryTaskNum+int(segmentCount) >= recoveryCompacity {
+				log.Errorw("exceeding recovery limit", "object_id", objectID, "cur_task_num", curRecoveryTaskNum, "segment_num", segmentCount, "max", recoveryCompacity)
+				exceedLimit = true
 				break
 			}
 
-			exceedLimit := false
-		out:
-			for _, object := range objects {
-				objectInfo := object.Object.ObjectInfo
-				objectID := objectInfo.Id.Uint64()
-				segmentCount := segmentPieceCount(objectInfo.PayloadSize, maxSegmentSize)
-				_, ok := s.currentBatchObjectIDs[objectID]
-				if ok {
-					log.Infow("the object is in processing", "object_id", objectID, "segment_count", segmentCount)
-					continue
-				}
-
-				log.Infow("starting to recover object", "object_id", objectID, "segment_count", segmentCount)
-
-				curRecoveryTaskNum := s.manager.recoveryQueue.Len()
-				if int(segmentCount) >= recoveryCompacity {
-					objectCount++
-					o := &spdb.RecoverFailedObject{
-						ObjectID:        objectID,
-						VirtualGroupID:  object.Gvg.Id,
-						RedundancyIndex: gvgStats.RedundancyIndex,
+			for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
+				task := &gfsptask.GfSpRecoverPieceTask{}
+				task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, s.redundancyIndex, maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
+				task.SetBySuccessorSP(true)
+				task.SetGVGID(s.gvgID)
+				err = s.manager.recoveryQueue.Push(task)
+				if err != nil {
+					log.Errorw("failed to push to recovery queue", "object_id", objectInfo.Id, "segmentIdx", segmentIdx, "error", err)
+					if errors.Is(err, ErrRepeatedTask) {
+						continue
 					}
-					err = s.manager.baseApp.GfSpDB().InsertRecoverFailedObject(o)
-					if err != nil {
-						log.Errorw("failed to insert recover_failed_object", "object_id", objectID, "error", err)
-						break
-					}
-					log.Infow("inserted recover failed object record to DB", "object_id", o.ObjectID)
-					continue
-				}
-
-				if curRecoveryTaskNum+int(segmentCount) >= recoveryCompacity {
-					log.Errorw("exceeding recovery limit", "object_id", objectID, "cur_task_num", curRecoveryTaskNum, "segment_num", segmentCount, "max", recoveryCompacity)
-					exceedLimit = true
-					break
-				}
-
-				for segmentIdx := uint32(0); segmentIdx < segmentCount; segmentIdx++ {
-					task := &gfsptask.GfSpRecoverPieceTask{}
-					task.InitRecoverPieceTask(objectInfo, storageParams, coretask.DefaultSmallerPriority, segmentIdx, s.redundancyIndex, maxSegmentSize, MaxRecoveryTime, maxRecoveryRetry)
-					task.SetBySuccessorSP(true)
-					task.SetGVGID(s.gvgID)
-					err = s.manager.recoveryQueue.Push(task)
-					if err != nil {
-						log.Errorw("failed to push to recovery queue", "object_id", objectInfo.Id, "segmentIdx", segmentIdx, "error", err)
-						if errors.Is(err, ErrRepeatedTask) {
-							continue
-						}
-						if errors.Is(err, gfsptqueue.ErrTaskQueueExceed) {
-							exceedLimit = true
-							break out
-						}
+					if errors.Is(err, gfsptqueue.ErrTaskQueueExceed) {
+						exceedLimit = true
+						break out
 					}
 				}
-				if !s.manager.recoverObjectStats.has(objectID) {
-					s.manager.recoverObjectStats.put(objectID, segmentCount)
-				}
-				s.currentBatchObjectIDs[objectID] = struct{}{}
 			}
-
-			// if exceed the queue limit, wait for a while
-			if exceedLimit {
-				continue
+			if !s.manager.recoverObjectStats.has(objectID) {
+				s.manager.recoverObjectStats.put(objectID, segmentCount)
 			}
-
-			// once monitoring all objects related recovered piece tasks got response from executor, regardless success or failed,
-			// the scheduler will update the StartAfter in recover gvg stats and jump to the next batch of objects to recover
-			s.monitorBatch()
+			s.currentBatchObjectIDs[objectID] = struct{}{}
 		}
+
+		// if exceed the queue limit, wait for a while
+		if exceedLimit {
+			continue
+		}
+
+		// once monitoring all objects related recovered piece tasks got response from executor, regardless success or failed,
+		// the scheduler will update the StartAfter in recover gvg stats and jump to the next batch of objects to recover
+		s.monitorBatch()
 	}
 }
 
@@ -373,7 +352,7 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 		// todo add a reasonable timeout if cant get all objects recovered
 		exceedTimeOut := time.Since(startTime).Minutes() > monitorRecoverTimeOut
 		processed := true
-		for objectID, _ := range s.currentBatchObjectIDs {
+		for objectID := range s.currentBatchObjectIDs {
 			if !s.manager.recoverObjectStats.isObjectProcessed(objectID) {
 				if !exceedTimeOut {
 					processed = false
@@ -556,165 +535,162 @@ func (s *VerifyGVGScheduler) Start() {
 		verifyTicker.Stop()
 	}()
 
-	for {
-		select {
-		case <-verifyTicker.C:
-			log.Infow("verify gvg scheduler")
-			gvgStats, err := s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
-			if err != nil {
-				log.Errorw("failed to get recover gvg stats", "err", err)
-				continue
-			}
-			if gvgStats.Status != spdb.Processed {
-				log.Infow("Wait for all objects in GVG to be processed")
-				continue
-			}
+	for range verifyTicker.C {
+		log.Infow("verify gvg scheduler")
+		gvgStats, err := s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
+		if err != nil {
+			log.Errorw("failed to get recover gvg stats", "err", err)
+			continue
+		}
+		if gvgStats.Status != spdb.Processed {
+			log.Infow("Wait for all objects in GVG to be processed")
+			continue
+		}
 
-			objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, s.curStartAfter, verifyGVGQueryLimit)
-			if err != nil {
-				log.Errorw("failed to list object in GVG", "err", err)
-				continue
-			}
+		objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, s.curStartAfter, verifyGVGQueryLimit)
+		if err != nil {
+			log.Errorw("failed to list object in GVG", "err", err)
+			continue
+		}
 
-			log.Infow("list objects in GVG", "start_after", s.curStartAfter, "limit", verifyGVGQueryLimit)
+		log.Infow("list objects in GVG", "start_after", s.curStartAfter, "limit", verifyGVGQueryLimit)
 
-			// Once iterate all objects in GVG, check all recorded recover-failed objects have been recovered.
-			// If there is any object that does not exceed the max retry, will re-start from the beginning object in GVG.
-			if len(objects) == 0 {
-				s.curStartAfter = 0
-				recoverFailedObjectsCount := len(s.verifyFailedObjects)
-				needDiscontinueCount := 0
-				for objectID, _ := range s.verifyFailedObjects {
-					// check if verified failed object is enqueued in DB
-					recoverFailedObject, err := s.manager.baseApp.GfSpDB().GetRecoverFailedObject(objectID)
-					if err != nil {
-						log.Errorw("failed to get recover failed object", "object_id", objectID, "error", err)
-						if errors.Is(err, gorm.ErrRecordNotFound) {
-							log.Infow("the object is already recovered", "object_id", objectID)
-							delete(s.verifyFailedObjects, objectID)
-							recoverFailedObjectsCount--
-						}
-						continue
+		// Once iterate all objects in GVG, check all recorded recover-failed objects have been recovered.
+		// If there is any object that does not exceed the max retry, will re-start from the beginning object in GVG.
+		if len(objects) == 0 {
+			s.curStartAfter = 0
+			recoverFailedObjectsCount := len(s.verifyFailedObjects)
+			needDiscontinueCount := 0
+			for objectID := range s.verifyFailedObjects {
+				// check if verified failed object is enqueued in DB
+				recoverFailedObject, err := s.manager.baseApp.GfSpDB().GetRecoverFailedObject(objectID)
+				if err != nil {
+					log.Errorw("failed to get recover failed object", "object_id", objectID, "error", err)
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						log.Infow("the object is already recovered", "object_id", objectID)
+						delete(s.verifyFailedObjects, objectID)
+						recoverFailedObjectsCount--
 					}
+					continue
+				}
 
-					_, err = s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(objectID))
-					if err != nil {
-						log.Errorw("failed to get object info from chain", "object_id", objectID, "error", err)
-						if strings.Contains(err.Error(), "No such object") {
-							log.Infow("the object has been deleted from chain")
-							err = s.manager.baseApp.GfSpDB().DeleteRecoverFailedObject(objectID)
-							if err != nil {
-								log.Errorw("failed to delete recover failed object record from DB", "error", err)
-							}
-							delete(s.verifyFailedObjects, objectID)
-							recoverFailedObjectsCount--
-						}
-						continue
-					}
-					if recoverFailedObject.RetryTime < maxRecoveryRetry {
-						log.Errorw("object has not been recovered yet", "object_id", objectID, "retry", recoverFailedObject.RetryTime, "max_recovery_retry", maxRecoveryRetry)
-						continue
-					}
-					// if an object exceeds the max recover retry, will not process further, the SP should manually trigger the discontinue object tx.
-					objectMeta, err := s.manager.baseApp.GfSpClient().GetObjectByID(context.Background(), objectID)
-					if err != nil {
-						log.Errorw("failed to get object by id from meta", "object", objectMeta, "error", err)
-						continue
-					}
-
-					// confirm the object is not recovered.
-					verified, err := verifyIntegrityAndPieceHash(s.manager, objectMeta, s.redundancyIndex, maxSegmentSize)
-					if err != nil {
-						log.Errorw("failed to verify integrity and piece hash", "object", objectMeta, "error", err)
-						continue
-					}
-					if verified {
-						log.Infow("object has been recovered", "object_id", objectID)
+				_, err = s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(objectID))
+				if err != nil {
+					log.Errorw("failed to get object info from chain", "object_id", objectID, "error", err)
+					if strings.Contains(err.Error(), "No such object") {
+						log.Infow("the object has been deleted from chain")
 						err = s.manager.baseApp.GfSpDB().DeleteRecoverFailedObject(objectID)
 						if err != nil {
-							log.Errorw("failed to delete recover failed object entry", "object_id", objectID)
+							log.Errorw("failed to delete recover failed object record from DB", "error", err)
 						}
-						recoverFailedObjectsCount--
 						delete(s.verifyFailedObjects, objectID)
-					} else {
-						needDiscontinueCount++
-					}
-				}
-
-				if recoverFailedObjectsCount == 0 {
-					var msgCompleteSwapIn *types2.MsgCompleteSwapIn
-					if s.vgfID != 0 {
-						msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
-							GlobalVirtualGroupFamilyId: s.vgfID,
-						}
-					} else {
-						msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
-							GlobalVirtualGroupFamilyId: s.gvgID,
-						}
-					}
-					err := SendAndConfirmCompleteSwapInTx(s.manager.baseApp, msgCompleteSwapIn)
-					if err != nil {
-						log.Errorw("failed to send complete swap in", "complete_swap_in_msg", msgCompleteSwapIn, "error", err)
-						continue
-					}
-					log.Info("succeed to complete swap in tx")
-					if s.vgfID != 0 {
-						_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), s.vgfID, 0)
-					} else {
-						_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), 0, s.gvgID)
-					}
-					log.Debugw("query swapIn info", "vgf_id", s.vgfID, "gvg_id", s.gvgID, "error", err)
-					if err == nil {
-						continue
-					}
-					if strings.Contains(err.Error(), "swap in info not exist") {
-						gvgStats.Status = spdb.Completed
-						err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
-						if err != nil {
-							log.Error("failed to update GVG stats to complete status", "gvgStats", gvgStats)
-							continue
-						}
-						return
+						recoverFailedObjectsCount--
 					}
 					continue
-				} else if recoverFailedObjectsCount == needDiscontinueCount {
-					log.Error("remaining objects need to be discontinue", "objects_count", needDiscontinueCount)
+				}
+				if recoverFailedObject.RetryTime < maxRecoveryRetry {
+					log.Errorw("object has not been recovered yet", "object_id", objectID, "retry", recoverFailedObject.RetryTime, "max_recovery_retry", maxRecoveryRetry)
+					continue
+				}
+				// if an object exceeds the max recover retry, will not process further, the SP should manually trigger the discontinue object tx.
+				objectMeta, err := s.manager.baseApp.GfSpClient().GetObjectByID(context.Background(), objectID)
+				if err != nil {
+					log.Errorw("failed to get object by id from meta", "object", objectMeta, "error", err)
+					continue
+				}
+
+				// confirm the object is not recovered.
+				verified, err := verifyIntegrityAndPieceHash(s.manager, objectMeta, s.redundancyIndex, maxSegmentSize)
+				if err != nil {
+					log.Errorw("failed to verify integrity and piece hash", "object", objectMeta, "error", err)
+					continue
+				}
+				if verified {
+					log.Infow("object has been recovered", "object_id", objectID)
+					err = s.manager.baseApp.GfSpDB().DeleteRecoverFailedObject(objectID)
+					if err != nil {
+						log.Errorw("failed to delete recover failed object entry", "object_id", objectID)
+					}
+					recoverFailedObjectsCount--
+					delete(s.verifyFailedObjects, objectID)
+				} else {
+					needDiscontinueCount++
+				}
+			}
+
+			if recoverFailedObjectsCount == 0 {
+				var msgCompleteSwapIn *types2.MsgCompleteSwapIn
+				if s.vgfID != 0 {
+					msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
+						GlobalVirtualGroupFamilyId: s.vgfID,
+					}
+				} else {
+					msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
+						GlobalVirtualGroupFamilyId: s.gvgID,
+					}
+				}
+				err := SendAndConfirmCompleteSwapInTx(s.manager.baseApp, msgCompleteSwapIn)
+				if err != nil {
+					log.Errorw("failed to send complete swap in", "complete_swap_in_msg", msgCompleteSwapIn, "error", err)
+					continue
+				}
+				log.Info("succeed to complete swap in tx")
+				if s.vgfID != 0 {
+					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), s.vgfID, 0)
+				} else {
+					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), 0, s.gvgID)
+				}
+				log.Debugw("query swapIn info", "vgf_id", s.vgfID, "gvg_id", s.gvgID, "error", err)
+				if err == nil {
+					continue
+				}
+				if strings.Contains(err.Error(), "swap in info not exist") {
+					gvgStats.Status = spdb.Completed
+					err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
+					if err != nil {
+						log.Error("failed to update GVG stats to complete status", "gvgStats", gvgStats)
+						continue
+					}
 					return
 				}
+				continue
+			} else if recoverFailedObjectsCount == needDiscontinueCount {
+				log.Error("remaining objects need to be discontinue", "objects_count", needDiscontinueCount)
+				return
 			}
+		}
 
-			for _, o := range objects {
-				objectInfo := o.Object.ObjectInfo
-				objectID := objectInfo.Id.Uint64()
-				_, ok := s.verifySuccessObjects[objectID]
-				if ok {
-					log.Debugw("the object has been verified previously", "object", objectID)
-					continue
+		for _, o := range objects {
+			objectInfo := o.Object.ObjectInfo
+			objectID := objectInfo.Id.Uint64()
+			_, ok := s.verifySuccessObjects[objectID]
+			if ok {
+				log.Debugw("the object has been verified previously", "object", objectID)
+				continue
+			}
+			verified, err := verifyIntegrityAndPieceHash(s.manager, objectInfo, s.redundancyIndex, maxSegmentSize)
+			if err != nil {
+				log.Errorw("failed to verify integrity and piece hash", "object", objectInfo, "error", err)
+				break
+			}
+			if !verified {
+				s.verifyFailedObjects[objectID] = struct{}{}
+				log.Errorw("verified object has not been recovered yet", "object", objectInfo)
+				failedObject := &spdb.RecoverFailedObject{
+					ObjectID:        objectID,
+					VirtualGroupID:  s.gvgID,
+					RedundancyIndex: s.redundancyIndex,
 				}
-				verified, err := verifyIntegrityAndPieceHash(s.manager, objectInfo, s.redundancyIndex, maxSegmentSize)
-				if err != nil {
-					log.Errorw("failed to verify integrity and piece hash", "object", objectInfo, "error", err)
+				if err = s.manager.baseApp.GfSpDB().InsertRecoverFailedObject(failedObject); err != nil {
+					log.Errorw("failed to insert recover_failed_object", "object_id", objectID, "error", err)
 					break
 				}
-				if !verified {
-					s.verifyFailedObjects[objectID] = struct{}{}
-					log.Errorw("verified object has not been recovered yet", "object", objectInfo)
-					failedObject := &spdb.RecoverFailedObject{
-						ObjectID:        objectID,
-						VirtualGroupID:  s.gvgID,
-						RedundancyIndex: s.redundancyIndex,
-					}
-					if err = s.manager.baseApp.GfSpDB().InsertRecoverFailedObject(failedObject); err != nil {
-						log.Errorw("failed to insert recover_failed_object", "object_id", objectID, "error", err)
-						break
-					}
-					continue
-				}
-				s.verifySuccessObjects[o.Object.ObjectInfo.Id.Uint64()] = struct{}{}
+				continue
 			}
-
-			s.curStartAfter = s.curStartAfter + uint64(verifyGVGQueryLimit)
+			s.verifySuccessObjects[o.Object.ObjectInfo.Id.Uint64()] = struct{}{}
 		}
+
+		s.curStartAfter = s.curStartAfter + uint64(verifyGVGQueryLimit)
 	}
 }
 
