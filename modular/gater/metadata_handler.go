@@ -72,12 +72,12 @@ func (g *GateModular) getUserBucketsHandler(w http.ResponseWriter, r *http.Reque
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get user buckets", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -146,12 +146,12 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list objects by bucket name", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -298,12 +298,12 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get object meta", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -354,12 +354,12 @@ func (g *GateModular) getBucketMetaHandler(w http.ResponseWriter, r *http.Reques
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket meta", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -410,12 +410,12 @@ func (g *GateModular) verifyPermissionHandler(w http.ResponseWriter, r *http.Req
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to verify permission", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -499,12 +499,12 @@ func (g *GateModular) getGroupListHandler(w http.ResponseWriter, r *http.Request
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get group list", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -601,12 +601,12 @@ func (g *GateModular) listObjectsByIDsHandler(w http.ResponseWriter, r *http.Req
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list objects by ids", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -681,12 +681,12 @@ func (g *GateModular) listBucketsByIDsHandler(w http.ResponseWriter, r *http.Req
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list buckets by ids", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -757,12 +757,12 @@ func (g *GateModular) getPaymentByBucketIDHandler(w http.ResponseWriter, r *http
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get payment by bucket id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -809,12 +809,12 @@ func (g *GateModular) getPaymentByBucketNameHandler(w http.ResponseWriter, r *ht
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get payment by bucket name", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -860,12 +860,12 @@ func (g *GateModular) getBucketByBucketNameHandler(w http.ResponseWriter, r *htt
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket by bucket name", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -913,12 +913,12 @@ func (g *GateModular) getBucketByBucketIDHandler(w http.ResponseWriter, r *http.
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket by bucket id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -971,12 +971,12 @@ func (g *GateModular) listDeletedObjectsByBlockNumberRangeHandler(w http.Respons
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list deleted objects by block number range", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1039,12 +1039,12 @@ func (g *GateModular) getUserBucketsCountHandler(w http.ResponseWriter, r *http.
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get user buckets count", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1094,12 +1094,12 @@ func (g *GateModular) listExpiredBucketsBySpHandler(w http.ResponseWriter, r *ht
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list expired buckets by sp", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1172,12 +1172,12 @@ func (g *GateModular) verifyPermissionByIDHandler(w http.ResponseWriter, r *http
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to verify permission by id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1260,12 +1260,12 @@ func (g *GateModular) listVirtualGroupFamiliesBySpIDHandler(w http.ResponseWrite
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list virtual group families by sp id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1314,12 +1314,12 @@ func (g *GateModular) getVirtualGroupFamilyHandler(w http.ResponseWriter, r *htt
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get virtual group families by vgf id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1368,12 +1368,12 @@ func (g *GateModular) getGlobalVirtualGroupByGvgIDHandler(w http.ResponseWriter,
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by gvg id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1424,12 +1424,12 @@ func (g *GateModular) getGlobalVirtualGroupHandler(w http.ResponseWriter, r *htt
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get global virtual group by lvg id and bucket id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1485,12 +1485,12 @@ func (g *GateModular) listGlobalVirtualGroupsBySecondarySPHandler(w http.Respons
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by secondary sp id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1539,12 +1539,12 @@ func (g *GateModular) listGlobalVirtualGroupsByBucketHandler(w http.ResponseWrit
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list global virtual group by bucket id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1599,12 +1599,12 @@ func (g *GateModular) listObjectsInGVGAndBucketHandler(w http.ResponseWriter, r 
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1684,12 +1684,12 @@ func (g *GateModular) listObjectsByGVGAndBucketForGCHandler(w http.ResponseWrite
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg and bucket for gc", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1767,12 +1767,12 @@ func (g *GateModular) listObjectsInGVGHandler(w http.ResponseWriter, r *http.Req
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list objects by gvg id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1841,12 +1841,12 @@ func (g *GateModular) listMigrateBucketEventsHandler(w http.ResponseWriter, r *h
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1904,12 +1904,12 @@ func (g *GateModular) listSwapOutEventsHandler(w http.ResponseWriter, r *http.Re
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list swap out events", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -1966,12 +1966,12 @@ func (g *GateModular) listSpExitEventsHandler(w http.ResponseWriter, r *http.Req
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list migrate bucket events", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2032,6 +2032,7 @@ func (g *GateModular) getSPInfoHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2077,12 +2078,12 @@ func (g *GateModular) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get status", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2124,12 +2125,12 @@ func (g *GateModular) getUserGroupsHandler(w http.ResponseWriter, r *http.Reques
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get groups info by a user address", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2198,12 +2199,12 @@ func (g *GateModular) getGroupMembersHandler(w http.ResponseWriter, r *http.Requ
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get group members by group id", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2272,12 +2273,12 @@ func (g *GateModular) getUserOwnedGroupsHandler(w http.ResponseWriter, r *http.R
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to retrieve groups where the user is the owner", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2348,12 +2349,12 @@ func (g *GateModular) listObjectPoliciesHandler(w http.ResponseWriter, r *http.R
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list policies by object info", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2436,12 +2437,12 @@ func (g *GateModular) listPaymentAccountStreamsHandler(w http.ResponseWriter, r 
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list payment account streams", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2487,12 +2488,12 @@ func (g *GateModular) listUserPaymentAccountsHandler(w http.ResponseWriter, r *h
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list payment accounts by owner address", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2542,12 +2543,12 @@ func (g *GateModular) listGroupsByIDsHandler(w http.ResponseWriter, r *http.Requ
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to list groups by ids", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2618,12 +2619,12 @@ func (g *GateModular) getSPMigratingBucketNumberHandler(w http.ResponseWriter, r
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get the latest active migrating bucket by specific sp", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2676,12 +2677,12 @@ func (g *GateModular) verifyMigrateGVGPermissionHandler(w http.ResponseWriter, r
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to verify the destination sp id of bucket migration & swap out", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
@@ -2744,12 +2745,12 @@ func (g *GateModular) getBucketSizeHandler(w http.ResponseWriter, r *http.Reques
 		handlerName := mux.CurrentRoute(r).GetName()
 		if err != nil {
 			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			log.CtxErrorw(reqCtx.Context(), "failed to get bucket total object size", reqCtx.String())
 			modelgateway.MakeErrorResponse(w, err)
 			MetadataHandlerFailureMetrics(err, startTime, handlerName)
 		} else {
 			MetadataHandlerSuccessMetrics(startTime, handlerName)
 		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)

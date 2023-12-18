@@ -236,6 +236,14 @@ func (mockDownloaderServer) GfSpDeductQuotaForBucketMigrate(ctx context.Context,
 
 type mockManagerServer struct{}
 
+func (s mockManagerServer) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, request *gfspserver.GfSpTriggerRecoverForSuccessorSPRequest) (*gfspserver.GfSpTriggerRecoverForSuccessorSPResponse, error) {
+	return &gfspserver.GfSpTriggerRecoverForSuccessorSPResponse{Err: ErrExceptionsStream}, nil
+}
+
+func (s mockManagerServer) GfSpQueryRecoverProcess(ctx context.Context, request *gfspserver.GfSpQueryRecoverProcessRequest) (*gfspserver.GfSpQueryRecoverProcessResponse, error) {
+	return &gfspserver.GfSpQueryRecoverProcessResponse{Err: ErrExceptionsStream}, nil
+}
+
 func (mockManagerServer) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeginTaskRequest) (
 	*gfspserver.GfSpBeginTaskResponse, error) {
 	switch req.Request.(type) {
@@ -348,14 +356,23 @@ func (s mockManagerServer) GfSpQueryTasksStats(ctx context.Context, req *gfspser
 	}, nil
 }
 
-func (s mockManagerServer) GfSpNotifyPreMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
+func (s mockManagerServer) GfSpQueryBucketMigrationProgress(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrationProgressRequest) (*gfspserver.GfSpQueryBucketMigrationProgressResponse, error) {
+	if req == nil {
+		return nil, mockRPCErr
+	}
+	return &gfspserver.GfSpQueryBucketMigrationProgressResponse{
+		Progress: &gfspserver.MigrateBucketProgressMeta{},
+	}, nil
+}
+
+func (s mockManagerServer) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
 	if req == nil {
 		return nil, mockRPCErr
 	}
 	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{}, nil
 }
 
-func (s mockManagerServer) GfSpNotifyPostMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
+func (s mockManagerServer) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
 	if req == nil {
 		return nil, mockRPCErr
 	}

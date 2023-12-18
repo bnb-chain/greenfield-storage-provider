@@ -44,6 +44,12 @@ const (
 	SwapOutTableName = "swap_out_unit"
 	// MigrateGVGTableName defines the progress of subscribe migrate event.
 	MigrateGVGTableName = "migrate_gvg"
+	// RecoverGVGStatsTableName is for successor SP to keep track of recovering objects in a virtual group family
+	RecoverGVGStatsTableName = "recover_gvg_stats"
+
+	RecoverFailedObjectTableName = "recover_failed_object"
+	// MigrateBucketProgressTableName defines the progress of migrate bucket.
+	MigrateBucketProgressTableName = "migrate_bucket_progress"
 )
 
 // define error name constant.

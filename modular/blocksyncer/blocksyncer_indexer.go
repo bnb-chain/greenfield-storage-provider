@@ -140,9 +140,14 @@ func (i *Impl) Process(height uint64) error {
 	txCount := len(txs)
 	allSQL := make([]map[string][]interface{}, 0)
 
+	// Global context added in the module to store event information for each block height.
+	// Example: Prefix tree module stores the count of folders and object creation status within the same block height.
+	// Context information is managed using Set(), Get(), and Clear() functions.
+	// This addition introduces a new process to the procedure and enables event handlers within the same block height to communicate with each other.
+	ctx := context.Background()
 	// 1. handle events in startBlock
 	if len(beginBlockEvents) > 0 {
-		sqls, err := i.ExportEventsWithoutTx(context.Background(), block, beginBlockEvents)
+		sqls, err := i.ExportEventsWithoutTx(ctx, block, beginBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
@@ -153,7 +158,7 @@ func (i *Impl) Process(height uint64) error {
 	}
 
 	// 2. handle events in txs
-	sqls, err := i.ExportEventsInTxs(context.Background(), block, txs)
+	sqls, err := i.ExportEventsInTxs(ctx, block, txs)
 	if err != nil {
 		log.Errorf("failed to export events in txs: %s", err)
 		return err
@@ -164,7 +169,7 @@ func (i *Impl) Process(height uint64) error {
 
 	// 3. handle events in endBlock
 	if len(endBlockEvents) > 0 {
-		sqls, err = i.ExportEventsWithoutTx(context.Background(), block, endBlockEvents)
+		sqls, err = i.ExportEventsWithoutTx(ctx, block, endBlockEvents)
 		if err != nil {
 			log.Errorf("failed to export events without tx: %s", err)
 			return err
@@ -218,6 +223,13 @@ func (i *Impl) Process(height uint64) error {
 		blockMap.Delete(heightKey)
 		eventMap.Delete(heightKey)
 		txMap.Delete(heightKey)
+	}
+
+	// after each block height ends, clear the corresponding key value in ctx
+	for _, module := range i.Modules {
+		if eventModule, ok := module.(modules.EventModule); ok {
+			eventModule.ClearCtx()
+		}
 	}
 
 	return nil

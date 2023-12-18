@@ -15,8 +15,10 @@ import (
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -489,6 +491,191 @@ func TestGateModular_listBucketReadRecordHandler(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			router := mockListBucketReadRecordHandler(t, tt.fn())
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, tt.request())
+			assert.Contains(t, w.Body.String(), tt.wantedResult)
+		})
+	}
+}
+
+func mockQueryBucketMigrationProgressRoute(t *testing.T, g *GateModular) *mux.Router {
+	t.Helper()
+	router := mux.NewRouter().SkipClean(true)
+	var routers []*mux.Router
+	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())
+	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
+	for _, r := range routers {
+		r.NewRoute().Name(queryMigrationProgressRouterName).Methods(http.MethodGet).HandlerFunc(g.queryBucketMigrationProgressHandler).
+			Queries(GetBucketMigrationProgressQuery, "")
+	}
+	return router
+}
+
+func TestGateModular_queryBucketMigrationProgressHandler(t *testing.T) {
+	cases := []struct {
+		name         string
+		fn           func() *GateModular
+		request      func() *http.Request
+		wantedResult string
+	}{
+		{
+			name: "new request context error",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationProgressQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "failed to verify authentication",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationProgressQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "no permission to operate",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationProgressQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to get bucket info from consensus",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationProgressQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "failed to get bucket info from consensus",
+		},
+		{
+			name: "failed to get bucket migrate progress",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				progress := &gfspserver.MigrateBucketProgressMeta{BucketId: 2, MigrateState: uint32(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED)}
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil).Times(1)
+				clientMock.EXPECT().GetMigrateBucketProgress(gomock.Any(), gomock.Any()).Return(progress, mockErr).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationProgressQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "mock error",
+		},
+		{
+			name: "success",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				progress := &gfspserver.MigrateBucketProgressMeta{BucketId: 2, MigrateState: uint32(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED)}
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(true, nil).Times(1)
+				clientMock.EXPECT().GetMigrateBucketProgress(gomock.Any(), gomock.Any()).Return(progress, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s/%s?%s", scheme, mockBucketName, testDomain, GetBucketMigrationProgressQuery)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				return req
+			},
+			wantedResult: "",
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := mockQueryBucketMigrationProgressRoute(t, tt.fn())
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, tt.request())
 			assert.Contains(t, w.Body.String(), tt.wantedResult)

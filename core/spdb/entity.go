@@ -119,8 +119,9 @@ type MigrateGVGUnitMeta struct {
 	SrcSPID                  uint32
 	DestSPID                 uint32
 	LastMigratedObjectID     uint64
-	MigrateStatus            int // scheduler assign unit status.
-	RetryTime                int //
+	MigrateStatus            int    // scheduler assign unit status.
+	RetryTime                int    //
+	MigratedBytesSize        uint64 // migrated bytes
 }
 
 // SwapOutMeta is used to record swap out meta.
@@ -129,4 +130,46 @@ type SwapOutMeta struct {
 	IsDestSP      bool
 	SwapOutMsg    *virtualgrouptypes.MsgSwapOut
 	CompletedGVGs []uint32
+}
+
+type RecoverStatus int
+
+const (
+	Processing RecoverStatus = 0
+	Processed  RecoverStatus = 1
+	Completed  RecoverStatus = 2
+)
+
+type RecoverGVGStats struct {
+	VirtualGroupID       uint32
+	VirtualGroupFamilyID uint32
+	RedundancyIndex      int32
+	StartAfter           uint64
+	Limit                uint64
+	Status               RecoverStatus
+	ObjectCount          uint64
+}
+
+type RecoverFailedObject struct {
+	ObjectID        uint64
+	VirtualGroupID  uint32
+	RedundancyIndex int32
+	RetryTime       int
+}
+
+// MigrateBucketProgressMeta is used to record migrate bucket progress meta.
+type MigrateBucketProgressMeta struct {
+	BucketID              uint64 // as primary key
+	SubscribedBlockHeight uint64
+	MigrateState          int
+
+	TotalGvgNum            uint32 // Total number of GVGs that need to be migrated
+	MigratedFinishedGvgNum uint32 // Number of successfully migrated GVGs
+	GcFinishedGvgNum       uint32 // Number of successfully gc finished GVGs
+
+	PreDeductedQuota uint64 // Quota pre-deducted by the source sp in the pre-migrate bucket phase
+	RecoupQuota      uint64 // In case of migration failure, the dest sp recoup the quota for the source sp
+
+	LastGcObjectID uint64 // After bucket migration is complete, the progress of GC, up to which object is GC performed.
+	LastGcGvgID    uint64 // which GVG is GC performed.
 }
