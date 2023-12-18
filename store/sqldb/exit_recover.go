@@ -65,7 +65,7 @@ func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("failed to set gvg recover stats record: %s", err.Error)
+		return fmt.Errorf("failed to set gvg recover stats record: %s", err.Error())
 	}
 	return nil
 }

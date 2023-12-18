@@ -4,12 +4,11 @@ export CGO_CFLAGS="-O -D__BLST_PORTABLE__"
 export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
 
 MYSQL_USER="root"
-MYSQL_PASSWORD="1q2w3e4r*"
+MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
 TESTCOVERAGE_THRESHOLD=60
 
-#workspace=${GITHUB_WORKSPACE}
-workspace="/Users/constbh/gocode/greenfield-storage-provider"
+workspace=${GITHUB_WORKSPACE}
 
 function make_config() {
   cd ${workspace}

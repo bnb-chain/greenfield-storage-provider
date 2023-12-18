@@ -404,6 +404,21 @@ func (mr *MockConsensusMockRecorder) QueryStorageParamsByTimestamp(ctx, timestam
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryStorageParamsByTimestamp", reflect.TypeOf((*MockConsensus)(nil).QueryStorageParamsByTimestamp), ctx, timestamp)
 }
 
+// QuerySwapInInfo mocks base method.
+func (m *MockConsensus) QuerySwapInInfo(ctx context.Context, familyID, gvgID uint32) (*types2.SwapInInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySwapInInfo", ctx, familyID, gvgID)
+	ret0, _ := ret[0].(*types2.SwapInInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySwapInInfo indicates an expected call of QuerySwapInInfo.
+func (mr *MockConsensusMockRecorder) QuerySwapInInfo(ctx, familyID, gvgID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySwapInInfo", reflect.TypeOf((*MockConsensus)(nil).QuerySwapInInfo), ctx, familyID, gvgID)
+}
+
 // QueryVirtualGroupFamily mocks base method.
 func (m *MockConsensus) QueryVirtualGroupFamily(ctx context.Context, vgfID uint32) (*types2.GlobalVirtualGroupFamily, error) {
 	m.ctrl.T.Helper()
