@@ -41,7 +41,7 @@ const (
 	DefaultGlobalGCBucketMigrationParallel int = 1
 	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
 	// system.
-	DefaultGlobalRecoveryPieceParallel int = 7
+	DefaultGlobalRecoveryPieceParallel int = 100
 	// DefaultGlobalMigrateGVGParallel defines the default max parallel migrating gvg in SP system.
 	DefaultGlobalMigrateGVGParallel int = 200
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
@@ -289,8 +289,12 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 
 	manager.spBlackList = cfg.Manager.SPBlackList
 
+	manager.recoverObjectStats = NewObjectsSegmentsStats()
+
 	manager.enableTaskRetryScheduler = cfg.Manager.EnableTaskRetryScheduler
 	manager.rejectUnsealThresholdSecond = cfg.Manager.RejectUnsealThresholdSecond
+
+	manager.enableBucketMigrateCache = cfg.Manager.EnableBucketMigrateCache
 
 	return nil
 }

@@ -90,6 +90,10 @@ const (
 	ChainSuccessVerifyPutObjectPermission = "verify_put_object_permission_success"
 	// ChainFailureVerifyPutObjectPermission defines the metrics label of unsuccessfully verify put object permission
 	ChainFailureVerifyPutObjectPermission = "verify_put_object_permission_failure"
+	// ChainSuccessQuerySwapInInfo
+	ChainSuccessQuerySwapInInfo = "query_swap_in_info_success"
+	// ChainFailureQuerySwapInInfo
+	ChainFailureQuerySwapInInfo = "query_swap_in_info_failure"
 
 	// ConfirmBlockNumber defines wait block number.
 	ConfirmBlockNumber = 3
@@ -895,4 +899,37 @@ func (g *Gnfd) getLatestBlockHeight(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 	return block.SdkBlock.Header.Height, nil
+}
+
+// QuerySwapInInfo is used to chain generate a new block.
+func (g *Gnfd) QuerySwapInInfo(ctx context.Context, vgfID, gvgID uint32) (swapInInfo *virtualgrouptypes.SwapInInfo, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQuerySwapInInfo).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureQuerySwapInInfo).Observe(
+				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQuerySwapInInfo).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQuerySwapInInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.SwapInInfo(ctx,
+		&virtualgrouptypes.QuerySwapInInfoRequest{
+			GlobalVirtualGroupFamilyId: vgfID, GlobalVirtualGroupId: gvgID,
+		})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query swapIn info", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return nil, err
+	}
+	return resp.SwapInInfo, nil
 }

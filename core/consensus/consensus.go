@@ -73,6 +73,8 @@ type Consensus interface {
 	ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error)
 	// WaitForNextBlock is used to chain generate a new block.
 	WaitForNextBlock(ctx context.Context) error
+	// QuerySwapInInfo
+	QuerySwapInInfo(ctx context.Context, familyID, gvgID uint32) (*virtualgrouptypes.SwapInInfo, error)
 	// Close the Consensus interface.
 	Close() error
 }
@@ -163,4 +165,8 @@ func (*NullConsensus) ConfirmTransaction(context.Context, string) (*sdk.TxRespon
 func (*NullConsensus) WaitForNextBlock(context.Context) error {
 	return nil
 }
+func (c *NullConsensus) QuerySwapInInfo(ctx context.Context, familyID, gvgID uint32) (*virtualgrouptypes.SwapInInfo, error) {
+	return nil, nil
+}
+
 func (*NullConsensus) Close() error { return nil }

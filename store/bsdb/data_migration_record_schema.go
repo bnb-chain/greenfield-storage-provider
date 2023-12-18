@@ -1,7 +1,8 @@
 package bsdb
 
 const (
-	ProcessKeyUpdateBucketSize = "key_update_bucket_size"
+	ProcessKeyUpdateBucketSize      = "key_update_bucket_size"
+	ProcessKeyUpdateSlashPrefixTree = "key_update_slash_prefix_tree"
 )
 
 // DataMigrationRecord stores records of data migration processes.

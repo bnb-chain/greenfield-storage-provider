@@ -229,6 +229,14 @@ func (s *SignModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBuck
 	return s.client.RejectMigrateBucket(ctx, SignOperator, rejectMigrateBucket)
 }
 
+func (s *SignModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	return s.client.ReserveSwapIn(ctx, SignOperator, reserveSwapIn)
+}
+
+func (s *SignModular) CompleteSwapIn(ctx context.Context, completeSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	return s.client.CompleteSwapIn(ctx, SignOperator, completeSwapIn)
+}
+
 func (s *SignModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
 	return s.client.Deposit(ctx, SignOperator, deposit)
 }

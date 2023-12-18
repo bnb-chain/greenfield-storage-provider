@@ -25,7 +25,7 @@ var ToReadableDescription = map[readableUploadProgressType]string{
 	UploadProgressSealed:                   "object is succeed to upload and seal onto the chain",
 	UploadProgressUploadToPrimaryFailed:    "something is wrong in uploading to primary",
 	UploadProgressAllocSecondaryFailed:     "something is wrong in allocating secondary SPs",
-	UploadProgressReplicateSecondaryFailed: "something is wrong in uploading to primary",
+	UploadProgressReplicateSecondaryFailed: "something is wrong in replicating secondary SPs",
 	UploadProgressSignObjectFailed:         "something is wrong in signing the object",
 	UploadProgressSealObjectFailed:         "something is wrong in sealing object",
 	UploadProgressObjectDiscontinued:       "object has been discontinued",

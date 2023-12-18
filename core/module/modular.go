@@ -55,6 +55,8 @@ const (
 	AuthOpTypeListBucketReadRecord
 	// AuthOpTypeGetRecoveryPiece defines the GetRecoveryPiece operator
 	AuthOpTypeGetRecoveryPiece
+	// AuthOpTypeQueryBucketMigrationProgress defines the QueryBucketMigrationProgress operator
+	AuthOpTypeQueryBucketMigrationProgress
 )
 
 // Authenticator is an abstract interface to verify users authentication.
@@ -223,12 +225,17 @@ type Manager interface {
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 	// QueryTasksStats queries tasks stats from Manager server
 	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string)
-	// NotifyPreMigrateBucket is used to notify src sp pre migrate bucket.
-	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
-	// NotifyPostMigrateBucket is used to notify src sp post migrate bucket.
-	NotifyPostMigrateBucket(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) error
+	// QueryBucketMigrationProgress queries migration progress from Manager server
+	QueryBucketMigrationProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error)
+	// NotifyPreMigrateBucketAndDeductQuota is used to notify src sp pre migrate bucket and deduct quota.
+	NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error)
+	// NotifyPostMigrateBucketAndRecoupQuota is used to notify src sp post migrate bucket and recoup quota.
+	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error)
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
+
+	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error
+	QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error)
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -309,6 +316,10 @@ type Signer interface {
 	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 	// RejectMigrateBucket rejects the bucket migration by dest SP.
 	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
+	// ReserveSwapIn reserve swapIn
+	ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
+	// CompleteSwapIn complete swapIn
+	CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error)
 	// Deposit into a Global virtual group for more store size
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.

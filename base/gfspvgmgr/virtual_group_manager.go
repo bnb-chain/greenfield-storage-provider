@@ -374,8 +374,9 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 					return
 				}
 			} else {
-				if gvg, err = vgm.gfspClient.GetGlobalVirtualGroupByGvgID(context.Background(), gvgID); err != nil {
-					log.Errorw("failed to query global virtual group from meta", "error", err)
+				gvg, err = vgm.gfspClient.GetGlobalVirtualGroupByGvgID(context.Background(), gvgID)
+				if err != nil || gvg == nil {
+					log.Errorw("failed to query global virtual group from meta", "gvg_id", gvgID, "error", err)
 					return
 				}
 			}

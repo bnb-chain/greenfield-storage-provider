@@ -91,6 +91,8 @@ message GfSpRecoverPieceTask {
   uint64 piece_size = 6;
   bytes signature = 7;
   bool recovered = 8;
+  bool by_successor_sp = 9;
+  uint32 gvg_id = 10;
 }
 
 message GfSpReceivePieceTask {
@@ -201,6 +203,12 @@ message GfSpMigratePieceTask {
 message GfSpGCBucketMigrationTask {
   GfSpTask task = 1;
   uint64 bucket_id = 2;
+  uint64 last_gc_object_id = 3;
+  uint64 last_gc_gvg_id = 4;
+  // whether the gc of bucket migration succeed
+  bool finished = 5;
+  uint64 total_gvg_num = 6; // the bucket migration gc total gvg num
+  uint64 gc_finished_gvg_num = 7; // gc has finished gvg num
 }
 
 message GfSpBucketMigrationInfo {

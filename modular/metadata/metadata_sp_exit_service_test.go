@@ -832,3 +832,60 @@ func TestMetadataModularGfSpGfSpListSpExitEvents_Fail3(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 }
+
+func TestMetadataModularGfSpListCompleteMigrationBucketEvents_Success(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
+		func() (int64, error) {
+			return 100000, nil
+		},
+	).Times(1)
+	m.EXPECT().ListCompleteMigrationBucket(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventCompleteMigrationBucket, error) {
+			return []*bsdb.EventCompleteMigrationBucket{
+				&bsdb.EventCompleteMigrationBucket{
+					ID:                         0,
+					BucketID:                   common.HexToHash("1"),
+					Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+					BucketName:                 "",
+					GlobalVirtualGroupFamilyId: 0,
+					SrcPrimarySpId:             1,
+					CreateAt:                   2,
+					CreateTxHash:               common.HexToHash("1"),
+					CreateTime:                 2,
+				},
+			}, nil
+		},
+	).Times(1)
+	res, err := a.GfSpListCompleteMigrationBucketEvents(context.Background(), &types.GfSpListCompleteMigrationBucketEventsRequest{
+		BlockId: 999,
+		SrcSpId: 1,
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(res.CompleteEvents))
+}
+
+func TestMetadataModularGfSpListCompleteMigrationBucketEvents_Fail(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
+		func() (int64, error) {
+			return 100000, nil
+		},
+	).Times(1)
+	m.EXPECT().ListCompleteMigrationBucket(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventCompleteMigrationBucket, error) {
+			return nil, ErrExceedRequest
+		},
+	).Times(1)
+	_, err := a.GfSpListCompleteMigrationBucketEvents(context.Background(), &types.GfSpListCompleteMigrationBucketEventsRequest{
+		BlockId: 999,
+		SrcSpId: 1,
+	})
+	assert.NotNil(t, err)
+}

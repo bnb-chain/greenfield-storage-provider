@@ -890,7 +890,8 @@ func (m *GfSpNotifyPreMigrateBucketRequest) GetBucketId() uint64 {
 }
 
 type GfSpNotifyPreMigrateBucketResponse struct {
-	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	Err   *gfsperrors.GfSpError         `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	Quota *gfsptask.GfSpBucketQuotaInfo `protobuf:"bytes,2,opt,name=quota,proto3" json:"quota,omitempty"`
 }
 
 func (m *GfSpNotifyPreMigrateBucketResponse) Reset()         { *m = GfSpNotifyPreMigrateBucketResponse{} }
@@ -929,6 +930,13 @@ var xxx_messageInfo_GfSpNotifyPreMigrateBucketResponse proto.InternalMessageInfo
 func (m *GfSpNotifyPreMigrateBucketResponse) GetErr() *gfsperrors.GfSpError {
 	if m != nil {
 		return m.Err
+	}
+	return nil
+}
+
+func (m *GfSpNotifyPreMigrateBucketResponse) GetQuota() *gfsptask.GfSpBucketQuotaInfo {
+	if m != nil {
+		return m.Quota
 	}
 	return nil
 }
@@ -987,7 +995,8 @@ func (m *GfSpNotifyPostMigrateBucketRequest) GetBucketMigrationInfo() *gfsptask.
 }
 
 type GfSpNotifyPostMigrateBucketResponse struct {
-	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	Err   *gfsperrors.GfSpError         `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	Quota *gfsptask.GfSpBucketQuotaInfo `protobuf:"bytes,2,opt,name=quota,proto3" json:"quota,omitempty"`
 }
 
 func (m *GfSpNotifyPostMigrateBucketResponse) Reset()         { *m = GfSpNotifyPostMigrateBucketResponse{} }
@@ -1026,6 +1035,13 @@ var xxx_messageInfo_GfSpNotifyPostMigrateBucketResponse proto.InternalMessageInf
 func (m *GfSpNotifyPostMigrateBucketResponse) GetErr() *gfsperrors.GfSpError {
 	if m != nil {
 		return m.Err
+	}
+	return nil
+}
+
+func (m *GfSpNotifyPostMigrateBucketResponse) GetQuota() *gfsptask.GfSpBucketQuotaInfo {
+	if m != nil {
+		return m.Quota
 	}
 	return nil
 }
@@ -1210,6 +1226,222 @@ func (m *TasksStats) GetRecoveryFailedList() []string {
 	return nil
 }
 
+type GfSpQueryBucketMigrationProgressRequest struct {
+	BucketId uint64 `protobuf:"varint,1,opt,name=bucket_id,json=bucketId,proto3" json:"bucket_id,omitempty"`
+}
+
+func (m *GfSpQueryBucketMigrationProgressRequest) Reset() {
+	*m = GfSpQueryBucketMigrationProgressRequest{}
+}
+func (m *GfSpQueryBucketMigrationProgressRequest) String() string { return proto.CompactTextString(m) }
+func (*GfSpQueryBucketMigrationProgressRequest) ProtoMessage()    {}
+func (*GfSpQueryBucketMigrationProgressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{17}
+}
+func (m *GfSpQueryBucketMigrationProgressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpQueryBucketMigrationProgressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpQueryBucketMigrationProgressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpQueryBucketMigrationProgressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpQueryBucketMigrationProgressRequest.Merge(m, src)
+}
+func (m *GfSpQueryBucketMigrationProgressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpQueryBucketMigrationProgressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpQueryBucketMigrationProgressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpQueryBucketMigrationProgressRequest proto.InternalMessageInfo
+
+func (m *GfSpQueryBucketMigrationProgressRequest) GetBucketId() uint64 {
+	if m != nil {
+		return m.BucketId
+	}
+	return 0
+}
+
+type GfSpQueryBucketMigrationProgressResponse struct {
+	Progress *MigrateBucketProgressMeta `protobuf:"bytes,1,opt,name=progress,proto3" json:"progress,omitempty"`
+}
+
+func (m *GfSpQueryBucketMigrationProgressResponse) Reset() {
+	*m = GfSpQueryBucketMigrationProgressResponse{}
+}
+func (m *GfSpQueryBucketMigrationProgressResponse) String() string { return proto.CompactTextString(m) }
+func (*GfSpQueryBucketMigrationProgressResponse) ProtoMessage()    {}
+func (*GfSpQueryBucketMigrationProgressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{18}
+}
+func (m *GfSpQueryBucketMigrationProgressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpQueryBucketMigrationProgressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpQueryBucketMigrationProgressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpQueryBucketMigrationProgressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpQueryBucketMigrationProgressResponse.Merge(m, src)
+}
+func (m *GfSpQueryBucketMigrationProgressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpQueryBucketMigrationProgressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpQueryBucketMigrationProgressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpQueryBucketMigrationProgressResponse proto.InternalMessageInfo
+
+func (m *GfSpQueryBucketMigrationProgressResponse) GetProgress() *MigrateBucketProgressMeta {
+	if m != nil {
+		return m.Progress
+	}
+	return nil
+}
+
+type MigrateBucketProgressMeta struct {
+	BucketId               uint64 `protobuf:"varint,1,opt,name=bucket_id,json=bucketId,proto3" json:"bucket_id,omitempty"`
+	SubscribedBlockHeight  uint64 `protobuf:"varint,2,opt,name=subscribed_block_height,json=subscribedBlockHeight,proto3" json:"subscribed_block_height,omitempty"`
+	MigrateState           uint32 `protobuf:"varint,3,opt,name=migrate_state,json=migrateState,proto3" json:"migrate_state,omitempty"`
+	TotalGvgNum            uint32 `protobuf:"varint,4,opt,name=total_gvg_num,json=totalGvgNum,proto3" json:"total_gvg_num,omitempty"`
+	MigratedFinishedGvgNum uint32 `protobuf:"varint,5,opt,name=migrated_finished_gvg_num,json=migratedFinishedGvgNum,proto3" json:"migrated_finished_gvg_num,omitempty"`
+	GcFinishedGvgNum       uint32 `protobuf:"varint,6,opt,name=gc_finished_gvg_num,json=gcFinishedGvgNum,proto3" json:"gc_finished_gvg_num,omitempty"`
+	PreDeductedQuota       uint64 `protobuf:"varint,7,opt,name=pre_deducted_quota,json=preDeductedQuota,proto3" json:"pre_deducted_quota,omitempty"`
+	RecoupQuota            uint64 `protobuf:"varint,8,opt,name=recoup_quota,json=recoupQuota,proto3" json:"recoup_quota,omitempty"`
+	LastGcObjectId         uint64 `protobuf:"varint,9,opt,name=last_gc_object_id,json=lastGcObjectId,proto3" json:"last_gc_object_id,omitempty"`
+	LastGcGvgId            uint64 `protobuf:"varint,10,opt,name=last_gc_gvg_id,json=lastGcGvgId,proto3" json:"last_gc_gvg_id,omitempty"`
+	MigratedBytes          uint64 `protobuf:"varint,11,opt,name=migrated_bytes,json=migratedBytes,proto3" json:"migrated_bytes,omitempty"`
+}
+
+func (m *MigrateBucketProgressMeta) Reset()         { *m = MigrateBucketProgressMeta{} }
+func (m *MigrateBucketProgressMeta) String() string { return proto.CompactTextString(m) }
+func (*MigrateBucketProgressMeta) ProtoMessage()    {}
+func (*MigrateBucketProgressMeta) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{19}
+}
+func (m *MigrateBucketProgressMeta) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MigrateBucketProgressMeta) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MigrateBucketProgressMeta.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MigrateBucketProgressMeta) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MigrateBucketProgressMeta.Merge(m, src)
+}
+func (m *MigrateBucketProgressMeta) XXX_Size() int {
+	return m.Size()
+}
+func (m *MigrateBucketProgressMeta) XXX_DiscardUnknown() {
+	xxx_messageInfo_MigrateBucketProgressMeta.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MigrateBucketProgressMeta proto.InternalMessageInfo
+
+func (m *MigrateBucketProgressMeta) GetBucketId() uint64 {
+	if m != nil {
+		return m.BucketId
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetSubscribedBlockHeight() uint64 {
+	if m != nil {
+		return m.SubscribedBlockHeight
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetMigrateState() uint32 {
+	if m != nil {
+		return m.MigrateState
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetTotalGvgNum() uint32 {
+	if m != nil {
+		return m.TotalGvgNum
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetMigratedFinishedGvgNum() uint32 {
+	if m != nil {
+		return m.MigratedFinishedGvgNum
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetGcFinishedGvgNum() uint32 {
+	if m != nil {
+		return m.GcFinishedGvgNum
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetPreDeductedQuota() uint64 {
+	if m != nil {
+		return m.PreDeductedQuota
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetRecoupQuota() uint64 {
+	if m != nil {
+		return m.RecoupQuota
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetLastGcObjectId() uint64 {
+	if m != nil {
+		return m.LastGcObjectId
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetLastGcGvgId() uint64 {
+	if m != nil {
+		return m.LastGcGvgId
+	}
+	return 0
+}
+
+func (m *MigrateBucketProgressMeta) GetMigratedBytes() uint64 {
+	if m != nil {
+		return m.MigratedBytes
+	}
+	return 0
+}
+
 type GfSpResetRecoveryFailedListRequest struct {
 }
 
@@ -1217,7 +1449,7 @@ func (m *GfSpResetRecoveryFailedListRequest) Reset()         { *m = GfSpResetRec
 func (m *GfSpResetRecoveryFailedListRequest) String() string { return proto.CompactTextString(m) }
 func (*GfSpResetRecoveryFailedListRequest) ProtoMessage()    {}
 func (*GfSpResetRecoveryFailedListRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7801aa704e62bc53, []int{17}
+	return fileDescriptor_7801aa704e62bc53, []int{20}
 }
 func (m *GfSpResetRecoveryFailedListRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1254,7 +1486,7 @@ func (m *GfSpResetRecoveryFailedListResponse) Reset()         { *m = GfSpResetRe
 func (m *GfSpResetRecoveryFailedListResponse) String() string { return proto.CompactTextString(m) }
 func (*GfSpResetRecoveryFailedListResponse) ProtoMessage()    {}
 func (*GfSpResetRecoveryFailedListResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7801aa704e62bc53, []int{18}
+	return fileDescriptor_7801aa704e62bc53, []int{21}
 }
 func (m *GfSpResetRecoveryFailedListResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1290,6 +1522,402 @@ func (m *GfSpResetRecoveryFailedListResponse) GetRecoveryFailedList() []string {
 	return nil
 }
 
+type GfSpTriggerRecoverForSuccessorSPRequest struct {
+	VgfId          uint32 `protobuf:"varint,1,opt,name=vgf_id,json=vgfId,proto3" json:"vgf_id,omitempty"`
+	GvgId          uint32 `protobuf:"varint,2,opt,name=gvg_id,json=gvgId,proto3" json:"gvg_id,omitempty"`
+	ReplicateIndex int32  `protobuf:"varint,3,opt,name=replicate_index,json=replicateIndex,proto3" json:"replicate_index,omitempty"`
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) Reset() {
+	*m = GfSpTriggerRecoverForSuccessorSPRequest{}
+}
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) String() string { return proto.CompactTextString(m) }
+func (*GfSpTriggerRecoverForSuccessorSPRequest) ProtoMessage()    {}
+func (*GfSpTriggerRecoverForSuccessorSPRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{22}
+}
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPRequest.Merge(m, src)
+}
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPRequest proto.InternalMessageInfo
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) GetVgfId() uint32 {
+	if m != nil {
+		return m.VgfId
+	}
+	return 0
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) GetGvgId() uint32 {
+	if m != nil {
+		return m.GvgId
+	}
+	return 0
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) GetReplicateIndex() int32 {
+	if m != nil {
+		return m.ReplicateIndex
+	}
+	return 0
+}
+
+type GfSpTriggerRecoverForSuccessorSPResponse struct {
+	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) Reset() {
+	*m = GfSpTriggerRecoverForSuccessorSPResponse{}
+}
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) String() string { return proto.CompactTextString(m) }
+func (*GfSpTriggerRecoverForSuccessorSPResponse) ProtoMessage()    {}
+func (*GfSpTriggerRecoverForSuccessorSPResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{23}
+}
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPResponse.Merge(m, src)
+}
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpTriggerRecoverForSuccessorSPResponse proto.InternalMessageInfo
+
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) GetErr() *gfsperrors.GfSpError {
+	if m != nil {
+		return m.Err
+	}
+	return nil
+}
+
+type GfSpQueryRecoverProcessRequest struct {
+	VgfId uint32 `protobuf:"varint,1,opt,name=vgf_id,json=vgfId,proto3" json:"vgf_id,omitempty"`
+	GvgId uint32 `protobuf:"varint,2,opt,name=gvg_id,json=gvgId,proto3" json:"gvg_id,omitempty"`
+}
+
+func (m *GfSpQueryRecoverProcessRequest) Reset()         { *m = GfSpQueryRecoverProcessRequest{} }
+func (m *GfSpQueryRecoverProcessRequest) String() string { return proto.CompactTextString(m) }
+func (*GfSpQueryRecoverProcessRequest) ProtoMessage()    {}
+func (*GfSpQueryRecoverProcessRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{24}
+}
+func (m *GfSpQueryRecoverProcessRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpQueryRecoverProcessRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpQueryRecoverProcessRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpQueryRecoverProcessRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpQueryRecoverProcessRequest.Merge(m, src)
+}
+func (m *GfSpQueryRecoverProcessRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpQueryRecoverProcessRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpQueryRecoverProcessRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpQueryRecoverProcessRequest proto.InternalMessageInfo
+
+func (m *GfSpQueryRecoverProcessRequest) GetVgfId() uint32 {
+	if m != nil {
+		return m.VgfId
+	}
+	return 0
+}
+
+func (m *GfSpQueryRecoverProcessRequest) GetGvgId() uint32 {
+	if m != nil {
+		return m.GvgId
+	}
+	return 0
+}
+
+type FailedRecoverObject struct {
+	ObjectId        uint64 `protobuf:"varint,1,opt,name=object_id,json=objectId,proto3" json:"object_id,omitempty"`
+	VirtualGroupId  uint32 `protobuf:"varint,2,opt,name=virtual_group_id,json=virtualGroupId,proto3" json:"virtual_group_id,omitempty"`
+	RedundancyIndex int32  `protobuf:"varint,3,opt,name=redundancy_index,json=redundancyIndex,proto3" json:"redundancy_index,omitempty"`
+	RetryTime       int32  `protobuf:"varint,4,opt,name=retry_time,json=retryTime,proto3" json:"retry_time,omitempty"`
+}
+
+func (m *FailedRecoverObject) Reset()         { *m = FailedRecoverObject{} }
+func (m *FailedRecoverObject) String() string { return proto.CompactTextString(m) }
+func (*FailedRecoverObject) ProtoMessage()    {}
+func (*FailedRecoverObject) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{25}
+}
+func (m *FailedRecoverObject) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FailedRecoverObject) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FailedRecoverObject.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FailedRecoverObject) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FailedRecoverObject.Merge(m, src)
+}
+func (m *FailedRecoverObject) XXX_Size() int {
+	return m.Size()
+}
+func (m *FailedRecoverObject) XXX_DiscardUnknown() {
+	xxx_messageInfo_FailedRecoverObject.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FailedRecoverObject proto.InternalMessageInfo
+
+func (m *FailedRecoverObject) GetObjectId() uint64 {
+	if m != nil {
+		return m.ObjectId
+	}
+	return 0
+}
+
+func (m *FailedRecoverObject) GetVirtualGroupId() uint32 {
+	if m != nil {
+		return m.VirtualGroupId
+	}
+	return 0
+}
+
+func (m *FailedRecoverObject) GetRedundancyIndex() int32 {
+	if m != nil {
+		return m.RedundancyIndex
+	}
+	return 0
+}
+
+func (m *FailedRecoverObject) GetRetryTime() int32 {
+	if m != nil {
+		return m.RetryTime
+	}
+	return 0
+}
+
+type RecoverProcess struct {
+	VirtualGroupId         uint32                 `protobuf:"varint,1,opt,name=virtual_group_id,json=virtualGroupId,proto3" json:"virtual_group_id,omitempty"`
+	VirtualGroupFamilyId   uint32                 `protobuf:"varint,2,opt,name=virtual_group_family_id,json=virtualGroupFamilyId,proto3" json:"virtual_group_family_id,omitempty"`
+	RedundancyIndex        int32                  `protobuf:"varint,3,opt,name=redundancy_index,json=redundancyIndex,proto3" json:"redundancy_index,omitempty"`
+	StartAfter             uint64                 `protobuf:"varint,4,opt,name=start_after,json=startAfter,proto3" json:"start_after,omitempty"`
+	Limit                  uint64                 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	Status                 int32                  `protobuf:"varint,6,opt,name=status,proto3" json:"status,omitempty"`
+	ObjectCount            uint64                 `protobuf:"varint,7,opt,name=object_count,json=objectCount,proto3" json:"object_count,omitempty"`
+	FailedObjectTotalCount uint64                 `protobuf:"varint,8,opt,name=failed_object_total_count,json=failedObjectTotalCount,proto3" json:"failed_object_total_count,omitempty"`
+	RecoverFailedObject    []*FailedRecoverObject `protobuf:"bytes,9,rep,name=recover_failed_object,json=recoverFailedObject,proto3" json:"recover_failed_object,omitempty"`
+}
+
+func (m *RecoverProcess) Reset()         { *m = RecoverProcess{} }
+func (m *RecoverProcess) String() string { return proto.CompactTextString(m) }
+func (*RecoverProcess) ProtoMessage()    {}
+func (*RecoverProcess) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{26}
+}
+func (m *RecoverProcess) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RecoverProcess) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RecoverProcess.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RecoverProcess) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RecoverProcess.Merge(m, src)
+}
+func (m *RecoverProcess) XXX_Size() int {
+	return m.Size()
+}
+func (m *RecoverProcess) XXX_DiscardUnknown() {
+	xxx_messageInfo_RecoverProcess.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RecoverProcess proto.InternalMessageInfo
+
+func (m *RecoverProcess) GetVirtualGroupId() uint32 {
+	if m != nil {
+		return m.VirtualGroupId
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetVirtualGroupFamilyId() uint32 {
+	if m != nil {
+		return m.VirtualGroupFamilyId
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetRedundancyIndex() int32 {
+	if m != nil {
+		return m.RedundancyIndex
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetStartAfter() uint64 {
+	if m != nil {
+		return m.StartAfter
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetLimit() uint64 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetStatus() int32 {
+	if m != nil {
+		return m.Status
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetObjectCount() uint64 {
+	if m != nil {
+		return m.ObjectCount
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetFailedObjectTotalCount() uint64 {
+	if m != nil {
+		return m.FailedObjectTotalCount
+	}
+	return 0
+}
+
+func (m *RecoverProcess) GetRecoverFailedObject() []*FailedRecoverObject {
+	if m != nil {
+		return m.RecoverFailedObject
+	}
+	return nil
+}
+
+type GfSpQueryRecoverProcessResponse struct {
+	Err              *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	RecoverProcesses []*RecoverProcess     `protobuf:"bytes,2,rep,name=recover_processes,json=recoverProcesses,proto3" json:"recover_processes,omitempty"`
+	Executing        bool                  `protobuf:"varint,3,opt,name=executing,proto3" json:"executing,omitempty"`
+}
+
+func (m *GfSpQueryRecoverProcessResponse) Reset()         { *m = GfSpQueryRecoverProcessResponse{} }
+func (m *GfSpQueryRecoverProcessResponse) String() string { return proto.CompactTextString(m) }
+func (*GfSpQueryRecoverProcessResponse) ProtoMessage()    {}
+func (*GfSpQueryRecoverProcessResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7801aa704e62bc53, []int{27}
+}
+func (m *GfSpQueryRecoverProcessResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GfSpQueryRecoverProcessResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GfSpQueryRecoverProcessResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GfSpQueryRecoverProcessResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GfSpQueryRecoverProcessResponse.Merge(m, src)
+}
+func (m *GfSpQueryRecoverProcessResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GfSpQueryRecoverProcessResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GfSpQueryRecoverProcessResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GfSpQueryRecoverProcessResponse proto.InternalMessageInfo
+
+func (m *GfSpQueryRecoverProcessResponse) GetErr() *gfsperrors.GfSpError {
+	if m != nil {
+		return m.Err
+	}
+	return nil
+}
+
+func (m *GfSpQueryRecoverProcessResponse) GetRecoverProcesses() []*RecoverProcess {
+	if m != nil {
+		return m.RecoverProcesses
+	}
+	return nil
+}
+
+func (m *GfSpQueryRecoverProcessResponse) GetExecuting() bool {
+	if m != nil {
+		return m.Executing
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*GfSpBeginTaskRequest)(nil), "base.types.gfspserver.GfSpBeginTaskRequest")
 	proto.RegisterType((*GfSpBeginTaskResponse)(nil), "base.types.gfspserver.GfSpBeginTaskResponse")
@@ -1308,8 +1936,17 @@ func init() {
 	proto.RegisterType((*GfSpQueryTasksStatsRequest)(nil), "base.types.gfspserver.GfSpQueryTasksStatsRequest")
 	proto.RegisterType((*GfSpQueryTasksStatsResponse)(nil), "base.types.gfspserver.GfSpQueryTasksStatsResponse")
 	proto.RegisterType((*TasksStats)(nil), "base.types.gfspserver.TasksStats")
+	proto.RegisterType((*GfSpQueryBucketMigrationProgressRequest)(nil), "base.types.gfspserver.GfSpQueryBucketMigrationProgressRequest")
+	proto.RegisterType((*GfSpQueryBucketMigrationProgressResponse)(nil), "base.types.gfspserver.GfSpQueryBucketMigrationProgressResponse")
+	proto.RegisterType((*MigrateBucketProgressMeta)(nil), "base.types.gfspserver.MigrateBucketProgressMeta")
 	proto.RegisterType((*GfSpResetRecoveryFailedListRequest)(nil), "base.types.gfspserver.GfSpResetRecoveryFailedListRequest")
 	proto.RegisterType((*GfSpResetRecoveryFailedListResponse)(nil), "base.types.gfspserver.GfSpResetRecoveryFailedListResponse")
+	proto.RegisterType((*GfSpTriggerRecoverForSuccessorSPRequest)(nil), "base.types.gfspserver.GfSpTriggerRecoverForSuccessorSPRequest")
+	proto.RegisterType((*GfSpTriggerRecoverForSuccessorSPResponse)(nil), "base.types.gfspserver.GfSpTriggerRecoverForSuccessorSPResponse")
+	proto.RegisterType((*GfSpQueryRecoverProcessRequest)(nil), "base.types.gfspserver.GfSpQueryRecoverProcessRequest")
+	proto.RegisterType((*FailedRecoverObject)(nil), "base.types.gfspserver.FailedRecoverObject")
+	proto.RegisterType((*RecoverProcess)(nil), "base.types.gfspserver.RecoverProcess")
+	proto.RegisterType((*GfSpQueryRecoverProcessResponse)(nil), "base.types.gfspserver.GfSpQueryRecoverProcessResponse")
 }
 
 func init() {
@@ -1317,95 +1954,138 @@ func init() {
 }
 
 var fileDescriptor_7801aa704e62bc53 = []byte{
-	// 1393 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x5f, 0x6f, 0xdc, 0x44,
-	0x10, 0x3f, 0x37, 0x7f, 0x6f, 0xf2, 0xa7, 0xed, 0x36, 0xa9, 0xc2, 0xb5, 0x5c, 0x13, 0x07, 0xd4,
-	0xbf, 0xb9, 0xa3, 0x01, 0x51, 0xe0, 0x01, 0xd1, 0x14, 0x7a, 0x54, 0x34, 0x34, 0x38, 0x6d, 0xa0,
-	0x95, 0x90, 0xbb, 0xe7, 0xdb, 0x73, 0x97, 0xf8, 0x6c, 0xb3, 0x6b, 0x5f, 0x1b, 0x1e, 0xf8, 0x06,
-	0x48, 0x95, 0x10, 0x7c, 0x01, 0xbe, 0x06, 0x1f, 0x80, 0xc7, 0x3e, 0xc2, 0x1b, 0x6a, 0x25, 0xbe,
-	0x00, 0x2f, 0x3c, 0xa2, 0xdd, 0xb5, 0xef, 0x6c, 0xdf, 0xd9, 0x97, 0x26, 0x0d, 0x12, 0x2f, 0x17,
-	0x67, 0x76, 0x7e, 0xbf, 0x99, 0xdd, 0x99, 0x9d, 0x19, 0x1b, 0xf4, 0x26, 0xe6, 0xa4, 0x1e, 0xec,
-	0xf9, 0x84, 0xd7, 0xed, 0x36, 0xf7, 0x39, 0x61, 0x5d, 0xc2, 0xea, 0x1d, 0xec, 0x62, 0x9b, 0xd4,
-	0x7c, 0xe6, 0x05, 0x1e, 0x5a, 0x14, 0x3a, 0x35, 0xa9, 0x53, 0xeb, 0xeb, 0x54, 0x56, 0x32, 0x50,
-	0xc2, 0x98, 0xc7, 0x78, 0x5d, 0xfe, 0x51, 0xc8, 0xca, 0x72, 0x46, 0xc5, 0xa1, 0x1d, 0x1a, 0xd4,
-	0xe5, 0x6f, 0xa4, 0x51, 0xcd, 0x68, 0x04, 0x98, 0xef, 0xd6, 0xc5, 0x4f, 0xcc, 0x60, 0x33, 0x42,
-	0xdc, 0x36, 0x25, 0x4e, 0xab, 0xde, 0xa5, 0x2c, 0x08, 0xb1, 0x63, 0x33, 0x2f, 0xf4, 0xeb, 0xc1,
-	0x13, 0xa5, 0xa1, 0xff, 0xad, 0xc1, 0x42, 0xa3, 0xbd, 0xed, 0x6f, 0x10, 0x9b, 0xba, 0x77, 0x31,
-	0xdf, 0x35, 0xc8, 0xb7, 0x21, 0xe1, 0x01, 0xba, 0x0f, 0x28, 0xf4, 0x1d, 0x0f, 0xb7, 0x4c, 0xaf,
-	0xf9, 0x0d, 0xb1, 0x02, 0x53, 0xd0, 0x2e, 0x69, 0xcb, 0xda, 0x85, 0x99, 0xf5, 0x8b, 0xb5, 0xcc,
-	0x9e, 0xa4, 0x49, 0x41, 0x73, 0x4f, 0x42, 0xee, 0x48, 0x84, 0x60, 0xfb, 0xb4, 0x64, 0x9c, 0x08,
-	0x33, 0x32, 0x14, 0xc2, 0x59, 0x46, 0x78, 0xd8, 0xc1, 0x4d, 0x87, 0x98, 0x43, 0x8c, 0x1c, 0x93,
-	0x46, 0xd6, 0x73, 0x8d, 0x18, 0x31, 0x78, 0x88, 0xb5, 0xd7, 0x58, 0xde, 0xe2, 0x46, 0x19, 0xa6,
-	0x98, 0xda, 0x9c, 0xfe, 0x19, 0x2c, 0x66, 0x36, 0xcd, 0x7d, 0xcf, 0xe5, 0x04, 0xad, 0xc3, 0x18,
-	0x61, 0x2c, 0xda, 0xe6, 0x72, 0xd6, 0x03, 0x15, 0x23, 0xe9, 0xc3, 0x27, 0xe2, 0xd1, 0x10, 0xca,
-	0xfa, 0x5d, 0x40, 0x42, 0x72, 0x9d, 0xef, 0x26, 0xcf, 0xef, 0x43, 0x00, 0xd7, 0x6b, 0x11, 0x53,
-	0x86, 0x2b, 0x22, 0x3c, 0x97, 0x25, 0x54, 0xb1, 0x14, 0xe8, 0xdb, 0xe2, 0xc9, 0x28, 0x0b, 0x88,
-	0x7c, 0xd4, 0xff, 0x99, 0x84, 0x53, 0x29, 0xda, 0x83, 0x7b, 0x88, 0x4c, 0x58, 0x60, 0xc4, 0x77,
-	0xa8, 0x85, 0x03, 0x62, 0xfa, 0x94, 0x58, 0x24, 0x79, 0xd0, 0x97, 0x0b, 0x0e, 0x3a, 0x02, 0x6d,
-	0x09, 0x4c, 0x74, 0xc2, 0x88, 0x0d, 0x48, 0xd1, 0x36, 0x9c, 0xe0, 0x04, 0x3b, 0xa9, 0x28, 0x8e,
-	0x49, 0xf2, 0xf3, 0xb9, 0xe4, 0xdb, 0x04, 0x3b, 0xa9, 0xd0, 0xcd, 0xf3, 0x94, 0x44, 0x64, 0x20,
-	0x23, 0x16, 0xa1, 0xdd, 0x94, 0xcf, 0xe3, 0x23, 0x32, 0xd0, 0x50, 0x90, 0xa4, 0xc7, 0x27, 0x58,
-	0x46, 0x86, 0x36, 0x61, 0xde, 0xb6, 0x52, 0xde, 0x4e, 0x48, 0xda, 0x37, 0x73, 0x69, 0x1b, 0x37,
-	0x52, 0xbe, 0xce, 0xda, 0x56, 0xc2, 0xd3, 0xaf, 0x61, 0xc1, 0xb6, 0xcc, 0xef, 0xbc, 0x4e, 0x93,
-	0xa6, 0x7c, 0x9d, 0x94, 0xa4, 0x97, 0x0a, 0x48, 0x1f, 0x48, 0x4c, 0xd2, 0xd9, 0x93, 0xb6, 0x95,
-	0x11, 0xa2, 0x06, 0xcc, 0xda, 0x96, 0xd9, 0x21, 0x01, 0x56, 0xb4, 0x53, 0x92, 0x76, 0xb5, 0x80,
-	0x76, 0x93, 0x04, 0x38, 0xe2, 0x03, 0xdb, 0x8a, 0xff, 0x8b, 0x4e, 0xd4, 0xeb, 0x12, 0x96, 0xf4,
-	0x72, 0x7a, 0xf4, 0x89, 0x0a, 0x48, 0xf6, 0x44, 0x53, 0x32, 0x91, 0x01, 0x1d, 0x6a, 0x33, 0x91,
-	0x60, 0x76, 0xd7, 0x56, 0xc4, 0xe5, 0x11, 0x19, 0xb0, 0xa9, 0x00, 0x8d, 0x9d, 0x46, 0x9c, 0x01,
-	0x11, 0x45, 0xa3, 0x6b, 0x4b, 0x52, 0x0a, 0x4b, 0xb6, 0x65, 0x36, 0x43, 0x6b, 0x97, 0x04, 0xa6,
-	0x5a, 0xa3, 0x9e, 0xab, 0xc8, 0x41, 0x92, 0xd7, 0x0a, 0x0e, 0x61, 0x43, 0xe2, 0x36, 0x63, 0x58,
-	0x64, 0x63, 0xd1, 0xb6, 0x86, 0x2c, 0x6c, 0x00, 0x4c, 0xb3, 0xe8, 0x8a, 0xe9, 0x7f, 0x94, 0x55,
-	0x79, 0x30, 0x88, 0xef, 0xb1, 0xe0, 0x3f, 0x2a, 0x8a, 0xff, 0xcf, 0x3b, 0x3a, 0x78, 0x91, 0xc6,
-	0x8f, 0xe2, 0x22, 0x4d, 0x1c, 0xcd, 0x45, 0x9a, 0x3c, 0xe8, 0x45, 0x32, 0x61, 0xa1, 0xe5, 0x3d,
-	0x76, 0x07, 0x32, 0x61, 0x6a, 0x44, 0xb0, 0x3e, 0x8e, 0x40, 0xa9, 0x23, 0x40, 0xad, 0x01, 0xa9,
-	0x30, 0x60, 0x3d, 0xc2, 0x8e, 0x43, 0x5c, 0x9b, 0x0c, 0xde, 0xd5, 0x7c, 0x03, 0x37, 0x62, 0x50,
-	0x2a, 0x1b, 0xac, 0x01, 0x69, 0x4e, 0x71, 0x2d, 0xbf, 0x8a, 0xe2, 0x3a, 0xaa, 0xbd, 0xc3, 0x91,
-	0xb4, 0xf7, 0x9c, 0xe2, 0x36, 0x73, 0x54, 0xc5, 0x6d, 0xf6, 0x28, 0x8b, 0xdb, 0xdc, 0xab, 0x2d,
-	0x6e, 0x89, 0xc9, 0xe7, 0x36, 0x9c, 0xce, 0x96, 0xb6, 0x43, 0x8c, 0x3e, 0x3f, 0x69, 0xb0, 0x22,
-	0x44, 0x5b, 0xd4, 0xda, 0xdd, 0x51, 0xf3, 0x65, 0x43, 0xcc, 0x97, 0x37, 0x71, 0x87, 0x3a, 0x7b,
-	0x71, 0xd5, 0xf4, 0xe1, 0x8c, 0xc5, 0x88, 0x38, 0xbd, 0x68, 0xb7, 0xd8, 0xf7, 0x99, 0xd7, 0xc5,
-	0x4e, 0xb2, 0x7c, 0x5e, 0xcd, 0xcf, 0x69, 0x89, 0x55, 0xfb, 0xba, 0x1e, 0x21, 0xa5, 0xe7, 0x4b,
-	0x56, 0xce, 0x8a, 0xee, 0x81, 0x5e, 0xe4, 0xd6, 0x21, 0x46, 0xa9, 0x45, 0x98, 0xec, 0xda, 0x6d,
-	0x93, 0xb6, 0x64, 0x61, 0x9e, 0x33, 0x26, 0xba, 0x76, 0xfb, 0x56, 0x4b, 0xc7, 0x70, 0x4e, 0x28,
-	0x7e, 0xee, 0x05, 0xb4, 0xbd, 0x17, 0x85, 0x7e, 0xfb, 0x31, 0xf6, 0xef, 0x84, 0x41, 0x7f, 0x20,
-	0x9c, 0xe6, 0x8f, 0xb1, 0x6f, 0x7a, 0x61, 0x3c, 0x0e, 0xae, 0xd6, 0xfa, 0xe3, 0x79, 0x2d, 0x39,
-	0x9e, 0xd7, 0x36, 0xb9, 0x1d, 0xa3, 0xa7, 0xb8, 0x7a, 0xd0, 0x77, 0x60, 0x39, 0xdf, 0xc4, 0x21,
-	0x62, 0xf8, 0x91, 0x0a, 0xa1, 0xe2, 0xdd, 0x62, 0x24, 0xa2, 0x56, 0xa7, 0x1a, 0x3b, 0x7f, 0x06,
-	0xca, 0x51, 0xec, 0x68, 0x4b, 0xd2, 0x8f, 0x1b, 0xd3, 0x4a, 0x70, 0xab, 0xa5, 0x7f, 0xa5, 0x4e,
-	0x3b, 0x8f, 0xe1, 0x10, 0xbe, 0xfd, 0xa2, 0xa5, 0xa8, 0x3d, 0x1e, 0xbc, 0xb4, 0x77, 0xe8, 0x21,
-	0x2c, 0x0e, 0x5c, 0x32, 0xea, 0xb6, 0xbd, 0xa8, 0xb3, 0x5e, 0xc9, 0xcd, 0xbb, 0xcc, 0x4d, 0xba,
-	0xe5, 0xb6, 0x3d, 0xe3, 0x54, 0x73, 0x50, 0xa8, 0xdf, 0x87, 0xd5, 0x42, 0x27, 0x0f, 0x71, 0x00,
-	0x67, 0xa1, 0x22, 0x24, 0x5f, 0x84, 0x84, 0xed, 0x89, 0xcc, 0xe6, 0xdb, 0x01, 0x0e, 0x78, 0xb4,
-	0x6f, 0x7d, 0x07, 0xce, 0x0c, 0x5d, 0x8d, 0x0c, 0x5e, 0x83, 0x09, 0x2e, 0x04, 0x91, 0xc9, 0x95,
-	0xda, 0xd0, 0x37, 0xd1, 0x5a, 0x02, 0xa9, 0xf4, 0xf5, 0xbf, 0x8e, 0x01, 0xf4, 0xa5, 0x68, 0x05,
-	0x66, 0xa3, 0x32, 0x6e, 0x79, 0xa1, 0xab, 0xb2, 0x77, 0xce, 0x98, 0x51, 0xb2, 0x1b, 0x42, 0x84,
-	0xce, 0xc3, 0xf1, 0xfe, 0xf4, 0xa2, 0xb4, 0xd4, 0xfd, 0x98, 0xef, 0x89, 0x95, 0xe2, 0xeb, 0x00,
-	0x72, 0x0a, 0x51, 0x3a, 0x63, 0x52, 0xa7, 0x2c, 0x24, 0x6a, 0xf9, 0x1d, 0x38, 0x3d, 0xd0, 0x3b,
-	0x94, 0xea, 0xb8, 0x54, 0x5d, 0xc8, 0xd4, 0x7f, 0x85, 0x5a, 0x85, 0xb9, 0x0e, 0x7e, 0x12, 0xe9,
-	0x53, 0xd7, 0x96, 0xf3, 0xc2, 0x9c, 0x31, 0xdb, 0xc1, 0x4f, 0xee, 0xc5, 0x32, 0x74, 0x09, 0x4e,
-	0x26, 0x8b, 0xb8, 0x62, 0x9d, 0x94, 0x8a, 0xc7, 0xfb, 0xa5, 0x39, 0xe1, 0x86, 0x6c, 0x02, 0x7b,
-	0xa6, 0xcf, 0x3c, 0x8b, 0x70, 0x1e, 0x01, 0xa6, 0x62, 0x37, 0xd4, 0xea, 0x96, 0x5a, 0x54, 0xa8,
-	0xb7, 0xa0, 0x27, 0x37, 0xdb, 0x98, 0x3a, 0xa4, 0x65, 0x3a, 0x94, 0x07, 0x4b, 0xd3, 0xcb, 0x63,
-	0x17, 0xca, 0x46, 0xdc, 0x9d, 0xf6, 0x6e, 0xca, 0xa5, 0xdb, 0x94, 0x07, 0xfa, 0x1b, 0x2a, 0xbd,
-	0x0d, 0xc2, 0x45, 0x9e, 0x64, 0x97, 0xe3, 0x30, 0x7f, 0xa9, 0xf2, 0x2b, 0x57, 0x2b, 0x0a, 0x77,
-	0x9e, 0x79, 0x2d, 0xcf, 0xfc, 0xfa, 0xaf, 0x65, 0x38, 0x29, 0x7b, 0x95, 0xfc, 0x5e, 0xb1, 0x4d,
-	0x58, 0x97, 0x5a, 0x04, 0x39, 0x30, 0x97, 0x7a, 0x39, 0x46, 0x97, 0x73, 0x12, 0x67, 0xd8, 0x77,
-	0x83, 0xca, 0x95, 0xfd, 0x29, 0x47, 0xa3, 0x76, 0x09, 0xb5, 0x61, 0x26, 0xf1, 0x9a, 0x8b, 0x2e,
-	0x16, 0xc0, 0xd3, 0x6f, 0xd8, 0x95, 0x4b, 0xfb, 0x51, 0xed, 0xd9, 0xf1, 0x60, 0x3e, 0xdd, 0xf8,
-	0x50, 0x91, 0xa7, 0x03, 0xa3, 0x7f, 0x65, 0x6d, 0x9f, 0xda, 0x3d, 0x83, 0x3f, 0x6a, 0xea, 0xee,
-	0x0e, 0x6f, 0x42, 0xe8, 0xbd, 0x02, 0xbe, 0xc2, 0x76, 0x5a, 0x79, 0xff, 0x00, 0xc8, 0x9e, 0x57,
-	0x3f, 0x68, 0xb0, 0x94, 0xd7, 0x46, 0xd0, 0xbb, 0x05, 0xcc, 0x05, 0xad, 0xad, 0x72, 0xed, 0xa5,
-	0x71, 0x3d, 0x7f, 0xbe, 0x57, 0x5f, 0x39, 0x32, 0x25, 0x0c, 0x5d, 0x2d, 0x60, 0x1c, 0x5e, 0x0c,
-	0x2b, 0xeb, 0x2f, 0x03, 0x49, 0x9e, 0xc7, 0xc2, 0xb0, 0xe6, 0x55, 0x18, 0x9f, 0xc2, 0x5e, 0x59,
-	0x18, 0x9f, 0xe2, 0x1e, 0xa9, 0x97, 0xd0, 0x53, 0x4d, 0xbd, 0x7b, 0x0e, 0x34, 0x13, 0xb4, 0x0f,
-	0xda, 0x9c, 0xfe, 0x58, 0xf9, 0xe0, 0x20, 0xd0, 0x9e, 0x4b, 0x3f, 0x6b, 0xaa, 0xcd, 0xe4, 0xd4,
-	0x9f, 0x42, 0xc7, 0x8a, 0x2b, 0x5b, 0xa1, 0x63, 0x23, 0xca, 0x9d, 0x5e, 0xda, 0x78, 0xf8, 0xdb,
-	0xf3, 0xaa, 0xf6, 0xec, 0x79, 0x55, 0xfb, 0xf3, 0x79, 0x55, 0x7b, 0xfa, 0xa2, 0x5a, 0x7a, 0xf6,
-	0xa2, 0x5a, 0xfa, 0xfd, 0x45, 0xb5, 0xf4, 0xe0, 0xa6, 0x4d, 0x83, 0x47, 0x61, 0xb3, 0x66, 0x79,
-	0x9d, 0x7a, 0xd3, 0x6d, 0xae, 0x59, 0x8f, 0x30, 0x75, 0xeb, 0xfd, 0x69, 0x6b, 0x8d, 0x07, 0x1e,
-	0xc3, 0x36, 0x59, 0x13, 0x33, 0x23, 0x6d, 0x11, 0x56, 0x1f, 0xfa, 0x21, 0xb7, 0x39, 0x29, 0x3f,
-	0x92, 0xbe, 0xfd, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x48, 0x96, 0xe3, 0x23, 0xe8, 0x15, 0x00,
-	0x00,
+	// 2095 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcd, 0x6f, 0x1c, 0x49,
+	0x15, 0x77, 0xc7, 0x33, 0xb6, 0xe7, 0xf9, 0x23, 0x76, 0xf9, 0x23, 0xce, 0x24, 0x38, 0x4e, 0x9b,
+	0x28, 0x4e, 0x36, 0x9e, 0xd9, 0x35, 0x6c, 0x76, 0xc3, 0x21, 0x60, 0x67, 0xf1, 0xac, 0x45, 0x9c,
+	0xf5, 0xb6, 0xb3, 0x41, 0xac, 0xc4, 0xf6, 0xf6, 0x74, 0xd7, 0xb4, 0x0b, 0xcf, 0x74, 0xf7, 0x56,
+	0x75, 0x4f, 0x6c, 0x0e, 0x88, 0x33, 0x12, 0x12, 0x12, 0x02, 0xc1, 0x05, 0x09, 0x21, 0x90, 0xf8,
+	0x1b, 0xf8, 0x03, 0xe0, 0xb8, 0x47, 0xb8, 0xa1, 0x44, 0xe2, 0xc2, 0x91, 0x0b, 0x47, 0x54, 0x1f,
+	0x3d, 0x33, 0xdd, 0x33, 0xdd, 0xe3, 0x8f, 0x18, 0xc4, 0xc5, 0x9e, 0x79, 0xf5, 0xde, 0xab, 0x5f,
+	0xbf, 0x7a, 0xef, 0xd5, 0xef, 0xf5, 0x80, 0x5e, 0xb7, 0x18, 0xae, 0x86, 0x27, 0x01, 0x66, 0x55,
+	0xb7, 0xc1, 0x02, 0x86, 0x69, 0x1b, 0xd3, 0x6a, 0xcb, 0xf2, 0x2c, 0x17, 0x57, 0x02, 0xea, 0x87,
+	0x3e, 0x5a, 0xe4, 0x3a, 0x15, 0xa1, 0x53, 0xe9, 0xea, 0x94, 0x6f, 0xa7, 0x4c, 0x31, 0xa5, 0x3e,
+	0x65, 0x55, 0xf1, 0x4f, 0x5a, 0x96, 0x57, 0x53, 0x2a, 0x4d, 0xd2, 0x22, 0x61, 0x55, 0xfc, 0x55,
+	0x1a, 0x2b, 0x29, 0x8d, 0xd0, 0x62, 0x47, 0x55, 0xfe, 0x27, 0xf6, 0xe0, 0x52, 0x8c, 0xbd, 0x06,
+	0xc1, 0x4d, 0xa7, 0xda, 0x26, 0x34, 0x8c, 0xac, 0xa6, 0x4b, 0xfd, 0x28, 0xa8, 0x86, 0xc7, 0x52,
+	0x43, 0xff, 0x97, 0x06, 0x0b, 0xb5, 0xc6, 0x41, 0xb0, 0x8d, 0x5d, 0xe2, 0x3d, 0xb7, 0xd8, 0x91,
+	0x81, 0xbf, 0x88, 0x30, 0x0b, 0xd1, 0xf7, 0x00, 0x45, 0x41, 0xd3, 0xb7, 0x1c, 0xd3, 0xaf, 0xff,
+	0x00, 0xdb, 0xa1, 0xc9, 0xdd, 0x2e, 0x6b, 0xab, 0xda, 0xfa, 0xe4, 0xe6, 0xbd, 0x4a, 0xea, 0x99,
+	0xc4, 0x96, 0xdc, 0xcd, 0x27, 0xc2, 0xe4, 0x23, 0x61, 0xc1, 0xbd, 0x7d, 0x38, 0x62, 0xcc, 0x46,
+	0x29, 0x19, 0x8a, 0xe0, 0x26, 0xc5, 0x2c, 0x6a, 0x59, 0xf5, 0x26, 0x36, 0x07, 0x6c, 0x72, 0x45,
+	0x6c, 0xb2, 0x99, 0xb9, 0x89, 0x11, 0x1b, 0x0f, 0xd8, 0xed, 0x3a, 0xcd, 0x5a, 0xdc, 0x2e, 0xc1,
+	0x38, 0x95, 0x0f, 0xa7, 0x7f, 0x07, 0x16, 0x53, 0x0f, 0xcd, 0x02, 0xdf, 0x63, 0x18, 0x6d, 0xc2,
+	0x28, 0xa6, 0x54, 0x3d, 0xe6, 0x6a, 0x1a, 0x81, 0x3c, 0x23, 0x81, 0xe1, 0xdb, 0xfc, 0xa3, 0xc1,
+	0x95, 0xf5, 0xe7, 0x80, 0xb8, 0x64, 0x8b, 0x1d, 0xf5, 0xc6, 0xef, 0x31, 0x80, 0xe7, 0x3b, 0xd8,
+	0x14, 0xc7, 0xa5, 0x1c, 0xde, 0x4a, 0x3b, 0x94, 0x67, 0xc9, 0xad, 0x9f, 0xf2, 0x4f, 0x46, 0x89,
+	0x9b, 0x88, 0x8f, 0xfa, 0xbf, 0xc7, 0x60, 0x3e, 0xe1, 0xf6, 0xfc, 0x08, 0x91, 0x09, 0x0b, 0x14,
+	0x07, 0x4d, 0x62, 0x5b, 0x21, 0x36, 0x03, 0x82, 0x6d, 0xdc, 0x1b, 0xe8, 0xb7, 0x72, 0x02, 0xad,
+	0x8c, 0xf6, 0xb9, 0x8d, 0x8a, 0x30, 0xa2, 0x7d, 0x52, 0x74, 0x00, 0xb3, 0x0c, 0x5b, 0xcd, 0xc4,
+	0x29, 0x8e, 0x0a, 0xe7, 0x77, 0x33, 0x9d, 0x1f, 0x60, 0xab, 0x99, 0x38, 0xba, 0x19, 0x96, 0x90,
+	0xf0, 0x0c, 0xa4, 0xd8, 0xc6, 0xa4, 0x9d, 0xc0, 0x5c, 0x18, 0x92, 0x81, 0x86, 0x34, 0xe9, 0x45,
+	0x3c, 0x4b, 0x53, 0x32, 0xb4, 0x07, 0x33, 0xae, 0x9d, 0x40, 0x5b, 0x14, 0x6e, 0xef, 0x64, 0xba,
+	0xad, 0x3d, 0x49, 0x60, 0x9d, 0x72, 0xed, 0x1e, 0xa4, 0xdf, 0x87, 0x05, 0xd7, 0x36, 0x7f, 0xe8,
+	0xb7, 0xea, 0x24, 0x81, 0x75, 0x4c, 0x38, 0xbd, 0x9f, 0xe3, 0xf4, 0x53, 0x61, 0xd3, 0x0b, 0x76,
+	0xce, 0xb5, 0x53, 0x42, 0x54, 0x83, 0x29, 0xd7, 0x36, 0x5b, 0x38, 0xb4, 0xa4, 0xdb, 0x71, 0xe1,
+	0x76, 0x2d, 0xc7, 0xed, 0x1e, 0x0e, 0x2d, 0xe5, 0x0f, 0x5c, 0x3b, 0xfe, 0xa6, 0x22, 0xea, 0xb7,
+	0x31, 0xed, 0x45, 0x39, 0x31, 0x3c, 0xa2, 0xdc, 0x24, 0x1d, 0xd1, 0x84, 0x8c, 0x67, 0x40, 0x8b,
+	0xb8, 0x94, 0x27, 0x98, 0xdb, 0x76, 0xa5, 0xe3, 0xd2, 0x90, 0x0c, 0xd8, 0x93, 0x06, 0xb5, 0x17,
+	0xb5, 0x38, 0x03, 0x94, 0x8b, 0x5a, 0xdb, 0x15, 0x4e, 0x09, 0x2c, 0xbb, 0xb6, 0x59, 0x8f, 0xec,
+	0x23, 0x1c, 0x9a, 0x72, 0x8d, 0xf8, 0x9e, 0x74, 0x0e, 0xc2, 0x79, 0x25, 0x27, 0x08, 0xdb, 0xc2,
+	0x6e, 0x2f, 0x36, 0x53, 0x7b, 0x2c, 0xba, 0xf6, 0x80, 0x85, 0x6d, 0x80, 0x09, 0xaa, 0x4a, 0x4c,
+	0xff, 0x5b, 0x49, 0xb6, 0x07, 0x03, 0x07, 0x3e, 0x0d, 0xff, 0x4b, 0x4d, 0xf1, 0xff, 0xb3, 0x46,
+	0xfb, 0x0b, 0xa9, 0x70, 0x19, 0x85, 0x54, 0xbc, 0x9c, 0x42, 0x1a, 0x3b, 0x6f, 0x21, 0x99, 0xb0,
+	0xe0, 0xf8, 0x2f, 0xbd, 0xbe, 0x4c, 0x18, 0x1f, 0x72, 0x58, 0x1f, 0x28, 0xa3, 0x44, 0x08, 0x90,
+	0xd3, 0x27, 0xe5, 0x1b, 0xd8, 0x87, 0x56, 0xb3, 0x89, 0x3d, 0x17, 0xf7, 0xd7, 0x6a, 0xf6, 0x06,
+	0x4f, 0x62, 0xa3, 0x44, 0x36, 0xd8, 0x7d, 0xd2, 0x8c, 0xe6, 0x5a, 0x7a, 0x13, 0xcd, 0x75, 0xd8,
+	0xf5, 0x0e, 0x97, 0x72, 0xbd, 0x67, 0x34, 0xb7, 0xc9, 0xcb, 0x6a, 0x6e, 0x53, 0x97, 0xd9, 0xdc,
+	0xa6, 0xdf, 0x6c, 0x73, 0xeb, 0x61, 0x3e, 0x4f, 0x61, 0x29, 0xdd, 0xda, 0x2e, 0x40, 0x7d, 0x7e,
+	0xa1, 0xc1, 0x6d, 0x2e, 0xda, 0x27, 0xf6, 0xd1, 0x0b, 0xc9, 0x2f, 0x6b, 0x9c, 0x5f, 0xee, 0x58,
+	0x2d, 0xd2, 0x3c, 0x89, 0xbb, 0x66, 0x00, 0x37, 0x6c, 0x8a, 0x79, 0xf4, 0xd4, 0xd3, 0x5a, 0x41,
+	0x40, 0xfd, 0xb6, 0xd5, 0xec, 0x6d, 0x9f, 0xef, 0x64, 0xe7, 0xb4, 0xb0, 0x95, 0xcf, 0xb5, 0xa5,
+	0x2c, 0x05, 0xf2, 0x65, 0x3b, 0x63, 0x45, 0xf7, 0x41, 0xcf, 0x83, 0x75, 0x01, 0x2a, 0xb5, 0x08,
+	0x63, 0x6d, 0xb7, 0x61, 0x12, 0x47, 0x34, 0xe6, 0x69, 0xa3, 0xd8, 0x76, 0x1b, 0xbb, 0x8e, 0x6e,
+	0xc1, 0x2d, 0xae, 0xf8, 0xcc, 0x0f, 0x49, 0xe3, 0x44, 0x1d, 0xfd, 0xc1, 0x4b, 0x2b, 0xf8, 0x28,
+	0x0a, 0xbb, 0x84, 0x70, 0x82, 0xbd, 0xb4, 0x02, 0xd3, 0x8f, 0x62, 0x3a, 0xb8, 0x56, 0xe9, 0xd2,
+	0xf3, 0x4a, 0x2f, 0x3d, 0xaf, 0xec, 0x31, 0x37, 0xb6, 0x1e, 0x67, 0xf2, 0x83, 0xfe, 0x02, 0x56,
+	0xb3, 0xb7, 0xb8, 0xc0, 0x19, 0x7e, 0x4b, 0x1e, 0xa1, 0xf4, 0xbb, 0x4f, 0xb1, 0x72, 0x2d, 0xa3,
+	0x1a, 0x83, 0xbf, 0x01, 0x25, 0x75, 0x76, 0xc4, 0x11, 0xee, 0x0b, 0xc6, 0x84, 0x14, 0xec, 0x3a,
+	0xfa, 0xaf, 0x34, 0x19, 0xee, 0x2c, 0x17, 0x17, 0x08, 0xf7, 0x63, 0x28, 0x7e, 0x11, 0xf9, 0xa1,
+	0xa5, 0xae, 0xc1, 0xf5, 0xcc, 0x24, 0x91, 0x7b, 0x7d, 0xcc, 0x75, 0x77, 0xbd, 0x86, 0x6f, 0x48,
+	0x33, 0xfd, 0x77, 0x49, 0x68, 0x3e, 0x0b, 0xcf, 0xfc, 0x78, 0xe8, 0x73, 0x58, 0xec, 0xab, 0x52,
+	0xe2, 0x35, 0x7c, 0x85, 0xe9, 0xc1, 0x10, 0x4c, 0x9d, 0x52, 0x14, 0xb8, 0xe6, 0xeb, 0xfd, 0x42,
+	0xfd, 0xd7, 0x1a, 0xac, 0xe5, 0xa2, 0xfc, 0x1f, 0x46, 0xf0, 0x26, 0x94, 0xf9, 0xea, 0xc7, 0x11,
+	0xa6, 0x27, 0xbc, 0xb6, 0xd8, 0x41, 0x68, 0x85, 0x4c, 0x05, 0x4e, 0x7f, 0x01, 0x37, 0x06, 0xae,
+	0x2a, 0xc0, 0xef, 0x41, 0x91, 0x71, 0x81, 0x82, 0x7c, 0xbb, 0x32, 0x70, 0x16, 0xae, 0xf4, 0x58,
+	0x4a, 0x7d, 0xfd, 0x1f, 0x57, 0x00, 0xba, 0x52, 0x74, 0x1b, 0xa6, 0xd4, 0x45, 0x62, 0xfb, 0x91,
+	0x27, 0xeb, 0x67, 0xda, 0x98, 0x94, 0xb2, 0x27, 0x5c, 0x84, 0xee, 0xc2, 0xd5, 0x2e, 0x7f, 0x92,
+	0x5a, 0xb2, 0x42, 0x67, 0x3a, 0x62, 0xa9, 0xf8, 0x15, 0x00, 0xc1, 0x83, 0xa4, 0xce, 0xa8, 0xd0,
+	0x29, 0x71, 0x89, 0x5c, 0xfe, 0x3a, 0x2c, 0xf5, 0xdd, 0x5e, 0x52, 0xb5, 0x20, 0x54, 0x17, 0x52,
+	0x37, 0x90, 0xb4, 0x5a, 0x83, 0xe9, 0x96, 0x75, 0xac, 0xf4, 0x89, 0xe7, 0x0a, 0xc6, 0x32, 0x6d,
+	0x4c, 0xb5, 0xac, 0xe3, 0x4f, 0x62, 0x19, 0xba, 0x0f, 0x73, 0xbd, 0xd7, 0x88, 0xf4, 0x3a, 0x26,
+	0x14, 0xaf, 0x76, 0x2f, 0x87, 0x1e, 0x18, 0xe2, 0x1a, 0x3a, 0x31, 0x03, 0xea, 0xdb, 0x98, 0x31,
+	0x65, 0x30, 0x1e, 0xc3, 0x90, 0xab, 0xfb, 0x72, 0x51, 0x5a, 0xbd, 0x0d, 0x1d, 0xb9, 0xd9, 0xb0,
+	0x48, 0x13, 0x3b, 0x66, 0x93, 0xb0, 0x70, 0x79, 0x62, 0x75, 0x74, 0xbd, 0x64, 0xc4, 0xf7, 0xe3,
+	0xc9, 0x8e, 0x58, 0x7a, 0x4a, 0x58, 0xa8, 0xef, 0xc0, 0xdd, 0xce, 0x01, 0xa6, 0xf2, 0x75, 0x9f,
+	0xfa, 0x2e, 0xc5, 0x8c, 0x9d, 0xaa, 0x07, 0x1c, 0xc3, 0xfa, 0x70, 0x3f, 0x2a, 0x2b, 0x9e, 0xc2,
+	0x44, 0xa0, 0x64, 0x2a, 0x31, 0xde, 0xce, 0x48, 0x8c, 0x44, 0x19, 0xc4, 0x7e, 0x38, 0x0b, 0x33,
+	0x3a, 0x1e, 0xf4, 0x7f, 0x8e, 0xc2, 0xf5, 0x4c, 0xbd, 0xfc, 0xca, 0x7e, 0x08, 0xd7, 0x58, 0x54,
+	0x67, 0x36, 0x25, 0x75, 0xec, 0x98, 0xf5, 0xa6, 0x6f, 0x1f, 0x99, 0x87, 0x98, 0xb8, 0x87, 0x32,
+	0x77, 0x0a, 0xc6, 0x62, 0x77, 0x79, 0x9b, 0xaf, 0x7e, 0x28, 0x16, 0xc5, 0x69, 0xab, 0x83, 0xe4,
+	0xe9, 0x8a, 0x55, 0x16, 0x4d, 0x29, 0x21, 0xcf, 0x59, 0x8c, 0x74, 0x98, 0x0e, 0xfd, 0xd0, 0x6a,
+	0x8a, 0xb3, 0xf6, 0xa2, 0x96, 0xca, 0x9f, 0x49, 0x21, 0xac, 0xb5, 0xdd, 0x67, 0x51, 0x0b, 0x3d,
+	0x82, 0xeb, 0xca, 0xc6, 0x31, 0x1b, 0xc4, 0x23, 0xec, 0x10, 0x3b, 0x1d, 0x7d, 0x99, 0x42, 0x4b,
+	0xb1, 0xc2, 0x8e, 0x5a, 0x57, 0xa6, 0x1b, 0x30, 0xef, 0xda, 0xfd, 0x46, 0x32, 0x9d, 0x66, 0x5d,
+	0x3b, 0xa5, 0xfe, 0x00, 0x50, 0x40, 0xb1, 0xe9, 0x60, 0x27, 0xb2, 0xf9, 0x6e, 0xb2, 0x27, 0x8c,
+	0x8b, 0xa7, 0x9c, 0x0d, 0x28, 0xfe, 0x40, 0x2d, 0x88, 0xfa, 0xe7, 0xf5, 0xc6, 0x73, 0x25, 0x0a,
+	0x94, 0xde, 0x84, 0xd0, 0x9b, 0x94, 0x32, 0xa9, 0x72, 0x0f, 0xe6, 0x9a, 0x16, 0x0b, 0xcd, 0x2e,
+	0xfd, 0x27, 0x8e, 0xe0, 0x8f, 0x05, 0x63, 0x86, 0x2f, 0xd4, 0x14, 0xaf, 0xdf, 0x75, 0xd0, 0x1a,
+	0xcc, 0xc4, 0xaa, 0x1c, 0x26, 0x71, 0x04, 0x05, 0x2c, 0x18, 0x93, 0x52, 0xaf, 0xd6, 0x76, 0x77,
+	0x1d, 0x74, 0x07, 0x66, 0x3a, 0xa1, 0xa8, 0x9f, 0x84, 0x98, 0x09, 0xea, 0x56, 0x30, 0xe2, 0x48,
+	0x3b, 0xdb, 0x5c, 0xa8, 0x7f, 0x55, 0xf6, 0x73, 0x03, 0x33, 0xde, 0x17, 0xd3, 0xe9, 0x1c, 0xb7,
+	0xa5, 0xef, 0xca, 0x7e, 0x9a, 0xa9, 0xa5, 0x12, 0x31, 0xab, 0x5c, 0xb4, 0xcc, 0x72, 0xf9, 0xb1,
+	0x26, 0xeb, 0xe5, 0x39, 0x25, 0xae, 0x8b, 0xa9, 0xf2, 0xbd, 0xe3, 0xd3, 0x83, 0xc8, 0xe6, 0x65,
+	0xe8, 0xd3, 0x83, 0xfd, 0xb8, 0x5e, 0xba, 0x54, 0x41, 0xeb, 0xa1, 0x0a, 0x5c, 0xac, 0xa2, 0xa0,
+	0x18, 0x84, 0x2b, 0x9e, 0x3f, 0xd1, 0xbf, 0x88, 0xe7, 0xe0, 0x63, 0x91, 0x55, 0xc5, 0x9e, 0xfe,
+	0xb5, 0xcb, 0xa5, 0xfa, 0x67, 0xb2, 0xd2, 0xf2, 0x11, 0x5c, 0x80, 0x0f, 0x3c, 0x83, 0x95, 0x4e,
+	0x25, 0xc7, 0xec, 0x58, 0xf6, 0x98, 0x73, 0x3d, 0x98, 0xfe, 0x07, 0x0d, 0xe6, 0x65, 0x04, 0x95,
+	0x37, 0x99, 0x17, 0xbc, 0x32, 0xbb, 0x89, 0xa3, 0x2a, 0xd3, 0x8f, 0x53, 0x66, 0x1d, 0x66, 0x15,
+	0x21, 0x32, 0x05, 0x23, 0xea, 0x7a, 0x9d, 0x69, 0xf7, 0x10, 0xba, 0x5d, 0x07, 0xdd, 0x83, 0x59,
+	0x8a, 0x9d, 0xc8, 0x73, 0x2c, 0xcf, 0x3e, 0x49, 0x04, 0xee, 0x6a, 0x57, 0x2e, 0x22, 0xc7, 0x3b,
+	0x3f, 0xc5, 0x21, 0x3d, 0x31, 0x43, 0xd2, 0xc2, 0xa2, 0x1c, 0x8b, 0x46, 0x49, 0x48, 0x9e, 0x93,
+	0x16, 0xd6, 0xff, 0x38, 0x0a, 0x33, 0xc9, 0x07, 0x1e, 0x08, 0x43, 0x1b, 0x08, 0xe3, 0x5d, 0xb8,
+	0x96, 0xd4, 0x6c, 0x08, 0xae, 0xd9, 0xc5, 0xbd, 0xd0, 0xee, 0x23, 0xa2, 0x67, 0x43, 0x7f, 0x0b,
+	0x26, 0x59, 0x68, 0xd1, 0xd0, 0xb4, 0x1a, 0x21, 0xa6, 0x02, 0x7e, 0xc1, 0x00, 0x21, 0xda, 0xe2,
+	0x12, 0xb4, 0x00, 0x45, 0xf9, 0xb2, 0xb1, 0x28, 0x96, 0xe4, 0x17, 0xb4, 0x04, 0x63, 0xbc, 0x47,
+	0x45, 0x4c, 0xb4, 0x86, 0xa2, 0xa1, 0xbe, 0xf1, 0x12, 0x57, 0xe1, 0xef, 0x5e, 0x2b, 0x05, 0x63,
+	0x52, 0xca, 0xe4, 0x6d, 0xf2, 0x08, 0xae, 0xab, 0xaa, 0x88, 0xc7, 0x37, 0xd1, 0xcf, 0xa4, 0xbe,
+	0x6c, 0x09, 0x4b, 0x52, 0x41, 0x8d, 0x61, 0x7c, 0x59, 0x9a, 0x7e, 0x06, 0x8b, 0xf1, 0x30, 0x96,
+	0x70, 0xb1, 0x5c, 0x5a, 0x1d, 0x1d, 0x34, 0xc9, 0xab, 0x7e, 0x3f, 0x20, 0x4f, 0x8c, 0x79, 0xe5,
+	0x68, 0xa7, 0x67, 0x27, 0xfd, 0xcf, 0x9a, 0x24, 0xdc, 0x03, 0xb3, 0xf4, 0x02, 0x6c, 0xc9, 0x80,
+	0xb9, 0xce, 0x10, 0x29, 0xdd, 0x61, 0xb6, 0x7c, 0x45, 0x60, 0xbe, 0x93, 0x81, 0x39, 0xb5, 0x7b,
+	0x67, 0x7a, 0x8c, 0xcd, 0xd1, 0x4d, 0x28, 0xe1, 0x63, 0x6c, 0x47, 0x21, 0xe7, 0x05, 0xfc, 0x70,
+	0x27, 0x8c, 0xae, 0x60, 0xf3, 0x4f, 0xd3, 0x30, 0x27, 0xe6, 0x45, 0xf1, 0x9b, 0xc1, 0x01, 0xa6,
+	0x6d, 0x62, 0x63, 0xd4, 0x84, 0xe9, 0xc4, 0x0b, 0x6a, 0xf4, 0x56, 0xc6, 0xee, 0x83, 0xde, 0xdd,
+	0x97, 0x1f, 0x9c, 0x4e, 0x59, 0xbd, 0xee, 0x1a, 0x41, 0x0d, 0x98, 0xec, 0x79, 0xd5, 0x8c, 0xee,
+	0xe5, 0x98, 0x27, 0xdf, 0x72, 0x97, 0xef, 0x9f, 0x46, 0xb5, 0xb3, 0x8f, 0x0f, 0x33, 0xc9, 0xe1,
+	0x13, 0xe5, 0x21, 0xed, 0x7b, 0xfd, 0x56, 0xde, 0x38, 0xa5, 0x76, 0x67, 0xc3, 0x9f, 0x6b, 0x92,
+	0xbd, 0x0e, 0x1e, 0x04, 0xd1, 0xfb, 0x39, 0xfe, 0x72, 0x47, 0xda, 0xf2, 0xa3, 0x73, 0x58, 0x76,
+	0x50, 0xfd, 0x54, 0x83, 0xe5, 0xac, 0x51, 0x0e, 0x3d, 0xcc, 0xf1, 0x9c, 0x33, 0x5e, 0x96, 0xdf,
+	0x3b, 0xb3, 0x5d, 0x07, 0xcf, 0x8f, 0xe4, 0x2f, 0x0d, 0x29, 0x12, 0x8f, 0xde, 0xc9, 0xf1, 0x38,
+	0x78, 0x1c, 0x28, 0x6f, 0x9e, 0xc5, 0xa4, 0xb3, 0xff, 0xef, 0x35, 0x39, 0xda, 0xe6, 0x91, 0x47,
+	0xf4, 0x78, 0x98, 0xeb, 0x7c, 0xf6, 0x5a, 0xfe, 0xe6, 0xb9, 0xed, 0x3b, 0x38, 0x7f, 0xab, 0xc9,
+	0xab, 0x77, 0xf0, 0x9c, 0xbb, 0xe5, 0x39, 0x92, 0x44, 0x49, 0x7e, 0xf4, 0xfe, 0xd0, 0xf3, 0xc8,
+	0x98, 0xb5, 0x73, 0x73, 0x2b, 0x7f, 0xc4, 0xd6, 0x47, 0xd0, 0x6f, 0xb2, 0x46, 0xc9, 0x2d, 0x4f,
+	0xf4, 0xd5, 0x98, 0xbe, 0x9d, 0x62, 0x93, 0x8c, 0x61, 0xb9, 0xfc, 0x8d, 0xf3, 0x98, 0x76, 0x00,
+	0xfe, 0x52, 0x93, 0x23, 0x63, 0x06, 0x37, 0xcb, 0x05, 0x96, 0xcf, 0xfa, 0x72, 0x81, 0x0d, 0xa1,
+	0x82, 0x3d, 0x59, 0x98, 0x47, 0xac, 0x72, 0xb3, 0xf0, 0x14, 0x9c, 0x30, 0x37, 0x0b, 0x4f, 0xc3,
+	0xe8, 0xf4, 0x11, 0xf4, 0x13, 0x0d, 0xae, 0x65, 0x5c, 0x7d, 0xe8, 0xdd, 0x61, 0x49, 0x3e, 0x90,
+	0xd0, 0x95, 0x1f, 0x9e, 0xd5, 0x2c, 0x06, 0xb3, 0xfd, 0xf9, 0x5f, 0x5e, 0xad, 0x68, 0x5f, 0xbe,
+	0x5a, 0xd1, 0xfe, 0xfe, 0x6a, 0x45, 0xfb, 0xd9, 0xeb, 0x95, 0x91, 0x2f, 0x5f, 0xaf, 0x8c, 0xfc,
+	0xf5, 0xf5, 0xca, 0xc8, 0xa7, 0x3b, 0x2e, 0x09, 0x0f, 0xa3, 0x7a, 0xc5, 0xf6, 0x5b, 0xd5, 0xba,
+	0x57, 0xdf, 0xb0, 0x0f, 0x2d, 0xe2, 0x55, 0xbb, 0x2f, 0xbc, 0x36, 0x58, 0xe8, 0x53, 0xcb, 0xc5,
+	0x1b, 0x01, 0xf5, 0xdb, 0xc4, 0xc1, 0xb4, 0x3a, 0xf0, 0xb7, 0xf4, 0xfa, 0x98, 0xf8, 0x9d, 0xfa,
+	0x6b, 0xff, 0x09, 0x00, 0x00, 0xff, 0xff, 0x0d, 0xc4, 0xfb, 0x7c, 0x6b, 0x1f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1426,9 +2106,12 @@ type GfSpManageServiceClient interface {
 	GfSpPickVirtualGroupFamily(ctx context.Context, in *GfSpPickVirtualGroupFamilyRequest, opts ...grpc.CallOption) (*GfSpPickVirtualGroupFamilyResponse, error)
 	GfSpNotifyMigrateSwapOut(ctx context.Context, in *GfSpNotifyMigrateSwapOutRequest, opts ...grpc.CallOption) (*GfSpNotifyMigrateSwapOutResponse, error)
 	GfSpQueryTasksStats(ctx context.Context, in *GfSpQueryTasksStatsRequest, opts ...grpc.CallOption) (*GfSpQueryTasksStatsResponse, error)
-	GfSpNotifyPreMigrate(ctx context.Context, in *GfSpNotifyPreMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPreMigrateBucketResponse, error)
-	GfSpNotifyPostMigrate(ctx context.Context, in *GfSpNotifyPostMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPostMigrateBucketResponse, error)
+	GfSpQueryBucketMigrationProgress(ctx context.Context, in *GfSpQueryBucketMigrationProgressRequest, opts ...grpc.CallOption) (*GfSpQueryBucketMigrationProgressResponse, error)
+	GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, in *GfSpNotifyPreMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPreMigrateBucketResponse, error)
+	GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, in *GfSpNotifyPostMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPostMigrateBucketResponse, error)
 	GfSpResetRecoveryFailedList(ctx context.Context, in *GfSpResetRecoveryFailedListRequest, opts ...grpc.CallOption) (*GfSpResetRecoveryFailedListResponse, error)
+	GfSpTriggerRecoverForSuccessorSP(ctx context.Context, in *GfSpTriggerRecoverForSuccessorSPRequest, opts ...grpc.CallOption) (*GfSpTriggerRecoverForSuccessorSPResponse, error)
+	GfSpQueryRecoverProcess(ctx context.Context, in *GfSpQueryRecoverProcessRequest, opts ...grpc.CallOption) (*GfSpQueryRecoverProcessResponse, error)
 }
 
 type gfSpManageServiceClient struct {
@@ -1493,18 +2176,27 @@ func (c *gfSpManageServiceClient) GfSpQueryTasksStats(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *gfSpManageServiceClient) GfSpNotifyPreMigrate(ctx context.Context, in *GfSpNotifyPreMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPreMigrateBucketResponse, error) {
-	out := new(GfSpNotifyPreMigrateBucketResponse)
-	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpManageService/GfSpNotifyPreMigrate", in, out, opts...)
+func (c *gfSpManageServiceClient) GfSpQueryBucketMigrationProgress(ctx context.Context, in *GfSpQueryBucketMigrationProgressRequest, opts ...grpc.CallOption) (*GfSpQueryBucketMigrationProgressResponse, error) {
+	out := new(GfSpQueryBucketMigrationProgressResponse)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpManageService/GfSpQueryBucketMigrationProgress", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *gfSpManageServiceClient) GfSpNotifyPostMigrate(ctx context.Context, in *GfSpNotifyPostMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPostMigrateBucketResponse, error) {
+func (c *gfSpManageServiceClient) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, in *GfSpNotifyPreMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPreMigrateBucketResponse, error) {
+	out := new(GfSpNotifyPreMigrateBucketResponse)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpManageService/GfSpNotifyPreMigrateBucketAndDeductQuota", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gfSpManageServiceClient) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, in *GfSpNotifyPostMigrateBucketRequest, opts ...grpc.CallOption) (*GfSpNotifyPostMigrateBucketResponse, error) {
 	out := new(GfSpNotifyPostMigrateBucketResponse)
-	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpManageService/GfSpNotifyPostMigrate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpManageService/GfSpNotifyPostMigrateAndRecoupQuota", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1520,6 +2212,24 @@ func (c *gfSpManageServiceClient) GfSpResetRecoveryFailedList(ctx context.Contex
 	return out, nil
 }
 
+func (c *gfSpManageServiceClient) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, in *GfSpTriggerRecoverForSuccessorSPRequest, opts ...grpc.CallOption) (*GfSpTriggerRecoverForSuccessorSPResponse, error) {
+	out := new(GfSpTriggerRecoverForSuccessorSPResponse)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpManageService/GfSpTriggerRecoverForSuccessorSP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gfSpManageServiceClient) GfSpQueryRecoverProcess(ctx context.Context, in *GfSpQueryRecoverProcessRequest, opts ...grpc.CallOption) (*GfSpQueryRecoverProcessResponse, error) {
+	out := new(GfSpQueryRecoverProcessResponse)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpManageService/GfSpQueryRecoverProcess", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GfSpManageServiceServer is the server API for GfSpManageService service.
 type GfSpManageServiceServer interface {
 	GfSpBeginTask(context.Context, *GfSpBeginTaskRequest) (*GfSpBeginTaskResponse, error)
@@ -1528,9 +2238,12 @@ type GfSpManageServiceServer interface {
 	GfSpPickVirtualGroupFamily(context.Context, *GfSpPickVirtualGroupFamilyRequest) (*GfSpPickVirtualGroupFamilyResponse, error)
 	GfSpNotifyMigrateSwapOut(context.Context, *GfSpNotifyMigrateSwapOutRequest) (*GfSpNotifyMigrateSwapOutResponse, error)
 	GfSpQueryTasksStats(context.Context, *GfSpQueryTasksStatsRequest) (*GfSpQueryTasksStatsResponse, error)
-	GfSpNotifyPreMigrate(context.Context, *GfSpNotifyPreMigrateBucketRequest) (*GfSpNotifyPreMigrateBucketResponse, error)
-	GfSpNotifyPostMigrate(context.Context, *GfSpNotifyPostMigrateBucketRequest) (*GfSpNotifyPostMigrateBucketResponse, error)
+	GfSpQueryBucketMigrationProgress(context.Context, *GfSpQueryBucketMigrationProgressRequest) (*GfSpQueryBucketMigrationProgressResponse, error)
+	GfSpNotifyPreMigrateBucketAndDeductQuota(context.Context, *GfSpNotifyPreMigrateBucketRequest) (*GfSpNotifyPreMigrateBucketResponse, error)
+	GfSpNotifyPostMigrateAndRecoupQuota(context.Context, *GfSpNotifyPostMigrateBucketRequest) (*GfSpNotifyPostMigrateBucketResponse, error)
 	GfSpResetRecoveryFailedList(context.Context, *GfSpResetRecoveryFailedListRequest) (*GfSpResetRecoveryFailedListResponse, error)
+	GfSpTriggerRecoverForSuccessorSP(context.Context, *GfSpTriggerRecoverForSuccessorSPRequest) (*GfSpTriggerRecoverForSuccessorSPResponse, error)
+	GfSpQueryRecoverProcess(context.Context, *GfSpQueryRecoverProcessRequest) (*GfSpQueryRecoverProcessResponse, error)
 }
 
 // UnimplementedGfSpManageServiceServer can be embedded to have forward compatible implementations.
@@ -1555,14 +2268,23 @@ func (*UnimplementedGfSpManageServiceServer) GfSpNotifyMigrateSwapOut(ctx contex
 func (*UnimplementedGfSpManageServiceServer) GfSpQueryTasksStats(ctx context.Context, req *GfSpQueryTasksStatsRequest) (*GfSpQueryTasksStatsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GfSpQueryTasksStats not implemented")
 }
-func (*UnimplementedGfSpManageServiceServer) GfSpNotifyPreMigrate(ctx context.Context, req *GfSpNotifyPreMigrateBucketRequest) (*GfSpNotifyPreMigrateBucketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GfSpNotifyPreMigrate not implemented")
+func (*UnimplementedGfSpManageServiceServer) GfSpQueryBucketMigrationProgress(ctx context.Context, req *GfSpQueryBucketMigrationProgressRequest) (*GfSpQueryBucketMigrationProgressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GfSpQueryBucketMigrationProgress not implemented")
 }
-func (*UnimplementedGfSpManageServiceServer) GfSpNotifyPostMigrate(ctx context.Context, req *GfSpNotifyPostMigrateBucketRequest) (*GfSpNotifyPostMigrateBucketResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GfSpNotifyPostMigrate not implemented")
+func (*UnimplementedGfSpManageServiceServer) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *GfSpNotifyPreMigrateBucketRequest) (*GfSpNotifyPreMigrateBucketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GfSpNotifyPreMigrateBucketAndDeductQuota not implemented")
+}
+func (*UnimplementedGfSpManageServiceServer) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, req *GfSpNotifyPostMigrateBucketRequest) (*GfSpNotifyPostMigrateBucketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GfSpNotifyPostMigrateAndRecoupQuota not implemented")
 }
 func (*UnimplementedGfSpManageServiceServer) GfSpResetRecoveryFailedList(ctx context.Context, req *GfSpResetRecoveryFailedListRequest) (*GfSpResetRecoveryFailedListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GfSpResetRecoveryFailedList not implemented")
+}
+func (*UnimplementedGfSpManageServiceServer) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, req *GfSpTriggerRecoverForSuccessorSPRequest) (*GfSpTriggerRecoverForSuccessorSPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GfSpTriggerRecoverForSuccessorSP not implemented")
+}
+func (*UnimplementedGfSpManageServiceServer) GfSpQueryRecoverProcess(ctx context.Context, req *GfSpQueryRecoverProcessRequest) (*GfSpQueryRecoverProcessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GfSpQueryRecoverProcess not implemented")
 }
 
 func RegisterGfSpManageServiceServer(s grpc1.Server, srv GfSpManageServiceServer) {
@@ -1677,38 +2399,56 @@ func _GfSpManageService_GfSpQueryTasksStats_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GfSpManageService_GfSpNotifyPreMigrate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GfSpManageService_GfSpQueryBucketMigrationProgress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GfSpQueryBucketMigrationProgressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GfSpManageServiceServer).GfSpQueryBucketMigrationProgress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.types.gfspserver.GfSpManageService/GfSpQueryBucketMigrationProgress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GfSpManageServiceServer).GfSpQueryBucketMigrationProgress(ctx, req.(*GfSpQueryBucketMigrationProgressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GfSpManageService_GfSpNotifyPreMigrateBucketAndDeductQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GfSpNotifyPreMigrateBucketRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GfSpManageServiceServer).GfSpNotifyPreMigrate(ctx, in)
+		return srv.(GfSpManageServiceServer).GfSpNotifyPreMigrateBucketAndDeductQuota(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/base.types.gfspserver.GfSpManageService/GfSpNotifyPreMigrate",
+		FullMethod: "/base.types.gfspserver.GfSpManageService/GfSpNotifyPreMigrateBucketAndDeductQuota",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GfSpManageServiceServer).GfSpNotifyPreMigrate(ctx, req.(*GfSpNotifyPreMigrateBucketRequest))
+		return srv.(GfSpManageServiceServer).GfSpNotifyPreMigrateBucketAndDeductQuota(ctx, req.(*GfSpNotifyPreMigrateBucketRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GfSpManageService_GfSpNotifyPostMigrate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GfSpManageService_GfSpNotifyPostMigrateAndRecoupQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GfSpNotifyPostMigrateBucketRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GfSpManageServiceServer).GfSpNotifyPostMigrate(ctx, in)
+		return srv.(GfSpManageServiceServer).GfSpNotifyPostMigrateAndRecoupQuota(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/base.types.gfspserver.GfSpManageService/GfSpNotifyPostMigrate",
+		FullMethod: "/base.types.gfspserver.GfSpManageService/GfSpNotifyPostMigrateAndRecoupQuota",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GfSpManageServiceServer).GfSpNotifyPostMigrate(ctx, req.(*GfSpNotifyPostMigrateBucketRequest))
+		return srv.(GfSpManageServiceServer).GfSpNotifyPostMigrateAndRecoupQuota(ctx, req.(*GfSpNotifyPostMigrateBucketRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1727,6 +2467,42 @@ func _GfSpManageService_GfSpResetRecoveryFailedList_Handler(srv interface{}, ctx
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GfSpManageServiceServer).GfSpResetRecoveryFailedList(ctx, req.(*GfSpResetRecoveryFailedListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GfSpManageService_GfSpTriggerRecoverForSuccessorSP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GfSpTriggerRecoverForSuccessorSPRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GfSpManageServiceServer).GfSpTriggerRecoverForSuccessorSP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.types.gfspserver.GfSpManageService/GfSpTriggerRecoverForSuccessorSP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GfSpManageServiceServer).GfSpTriggerRecoverForSuccessorSP(ctx, req.(*GfSpTriggerRecoverForSuccessorSPRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GfSpManageService_GfSpQueryRecoverProcess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GfSpQueryRecoverProcessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GfSpManageServiceServer).GfSpQueryRecoverProcess(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.types.gfspserver.GfSpManageService/GfSpQueryRecoverProcess",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GfSpManageServiceServer).GfSpQueryRecoverProcess(ctx, req.(*GfSpQueryRecoverProcessRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1760,16 +2536,28 @@ var _GfSpManageService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _GfSpManageService_GfSpQueryTasksStats_Handler,
 		},
 		{
-			MethodName: "GfSpNotifyPreMigrate",
-			Handler:    _GfSpManageService_GfSpNotifyPreMigrate_Handler,
+			MethodName: "GfSpQueryBucketMigrationProgress",
+			Handler:    _GfSpManageService_GfSpQueryBucketMigrationProgress_Handler,
 		},
 		{
-			MethodName: "GfSpNotifyPostMigrate",
-			Handler:    _GfSpManageService_GfSpNotifyPostMigrate_Handler,
+			MethodName: "GfSpNotifyPreMigrateBucketAndDeductQuota",
+			Handler:    _GfSpManageService_GfSpNotifyPreMigrateBucketAndDeductQuota_Handler,
+		},
+		{
+			MethodName: "GfSpNotifyPostMigrateAndRecoupQuota",
+			Handler:    _GfSpManageService_GfSpNotifyPostMigrateAndRecoupQuota_Handler,
 		},
 		{
 			MethodName: "GfSpResetRecoveryFailedList",
 			Handler:    _GfSpManageService_GfSpResetRecoveryFailedList_Handler,
+		},
+		{
+			MethodName: "GfSpTriggerRecoverForSuccessorSP",
+			Handler:    _GfSpManageService_GfSpTriggerRecoverForSuccessorSP_Handler,
+		},
+		{
+			MethodName: "GfSpQueryRecoverProcess",
+			Handler:    _GfSpManageService_GfSpQueryRecoverProcess_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2686,6 +3474,18 @@ func (m *GfSpNotifyPreMigrateBucketResponse) MarshalToSizedBuffer(dAtA []byte) (
 	_ = i
 	var l int
 	_ = l
+	if m.Quota != nil {
+		{
+			size, err := m.Quota.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintManage(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
 	if m.Err != nil {
 		{
 			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
@@ -2761,6 +3561,18 @@ func (m *GfSpNotifyPostMigrateBucketResponse) MarshalToSizedBuffer(dAtA []byte) 
 	_ = i
 	var l int
 	_ = l
+	if m.Quota != nil {
+		{
+			size, err := m.Quota.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintManage(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
 	if m.Err != nil {
 		{
 			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
@@ -2901,6 +3713,147 @@ func (m *TasksStats) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *GfSpQueryBucketMigrationProgressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpQueryBucketMigrationProgressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpQueryBucketMigrationProgressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BucketId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.BucketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GfSpQueryBucketMigrationProgressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpQueryBucketMigrationProgressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpQueryBucketMigrationProgressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Progress != nil {
+		{
+			size, err := m.Progress.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintManage(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MigrateBucketProgressMeta) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MigrateBucketProgressMeta) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MigrateBucketProgressMeta) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MigratedBytes != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.MigratedBytes))
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.LastGcGvgId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.LastGcGvgId))
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.LastGcObjectId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.LastGcObjectId))
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.RecoupQuota != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.RecoupQuota))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.PreDeductedQuota != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.PreDeductedQuota))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.GcFinishedGvgNum != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.GcFinishedGvgNum))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.MigratedFinishedGvgNum != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.MigratedFinishedGvgNum))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.TotalGvgNum != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.TotalGvgNum))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.MigrateState != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.MigrateState))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.SubscribedBlockHeight != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.SubscribedBlockHeight))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.BucketId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.BucketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *GfSpResetRecoveryFailedListRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2952,6 +3905,291 @@ func (m *GfSpResetRecoveryFailedListResponse) MarshalToSizedBuffer(dAtA []byte) 
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ReplicateIndex != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.ReplicateIndex))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.GvgId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.GvgId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.VgfId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.VgfId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Err != nil {
+		{
+			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintManage(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GfSpQueryRecoverProcessRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpQueryRecoverProcessRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpQueryRecoverProcessRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.GvgId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.GvgId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.VgfId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.VgfId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *FailedRecoverObject) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FailedRecoverObject) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FailedRecoverObject) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.RetryTime != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.RetryTime))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.RedundancyIndex != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.RedundancyIndex))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.VirtualGroupId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.VirtualGroupId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.ObjectId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.ObjectId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RecoverProcess) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RecoverProcess) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RecoverProcess) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RecoverFailedObject) > 0 {
+		for iNdEx := len(m.RecoverFailedObject) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RecoverFailedObject[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintManage(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if m.FailedObjectTotalCount != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.FailedObjectTotalCount))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.ObjectCount != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.ObjectCount))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.Status != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.Status))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.Limit != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.Limit))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.StartAfter != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.StartAfter))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.RedundancyIndex != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.RedundancyIndex))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.VirtualGroupFamilyId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.VirtualGroupFamilyId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.VirtualGroupId != 0 {
+		i = encodeVarintManage(dAtA, i, uint64(m.VirtualGroupId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GfSpQueryRecoverProcessResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GfSpQueryRecoverProcessResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GfSpQueryRecoverProcessResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Executing {
+		i--
+		if m.Executing {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.RecoverProcesses) > 0 {
+		for iNdEx := len(m.RecoverProcesses) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RecoverProcesses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintManage(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.Err != nil {
+		{
+			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintManage(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -3411,6 +4649,10 @@ func (m *GfSpNotifyPreMigrateBucketResponse) Size() (n int) {
 		l = m.Err.Size()
 		n += 1 + l + sovManage(uint64(l))
 	}
+	if m.Quota != nil {
+		l = m.Quota.Size()
+		n += 1 + l + sovManage(uint64(l))
+	}
 	return n
 }
 
@@ -3438,6 +4680,10 @@ func (m *GfSpNotifyPostMigrateBucketResponse) Size() (n int) {
 	_ = l
 	if m.Err != nil {
 		l = m.Err.Size()
+		n += 1 + l + sovManage(uint64(l))
+	}
+	if m.Quota != nil {
+		l = m.Quota.Size()
 		n += 1 + l + sovManage(uint64(l))
 	}
 	return n
@@ -3501,6 +4747,73 @@ func (m *TasksStats) Size() (n int) {
 	return n
 }
 
+func (m *GfSpQueryBucketMigrationProgressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BucketId != 0 {
+		n += 1 + sovManage(uint64(m.BucketId))
+	}
+	return n
+}
+
+func (m *GfSpQueryBucketMigrationProgressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Progress != nil {
+		l = m.Progress.Size()
+		n += 1 + l + sovManage(uint64(l))
+	}
+	return n
+}
+
+func (m *MigrateBucketProgressMeta) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BucketId != 0 {
+		n += 1 + sovManage(uint64(m.BucketId))
+	}
+	if m.SubscribedBlockHeight != 0 {
+		n += 1 + sovManage(uint64(m.SubscribedBlockHeight))
+	}
+	if m.MigrateState != 0 {
+		n += 1 + sovManage(uint64(m.MigrateState))
+	}
+	if m.TotalGvgNum != 0 {
+		n += 1 + sovManage(uint64(m.TotalGvgNum))
+	}
+	if m.MigratedFinishedGvgNum != 0 {
+		n += 1 + sovManage(uint64(m.MigratedFinishedGvgNum))
+	}
+	if m.GcFinishedGvgNum != 0 {
+		n += 1 + sovManage(uint64(m.GcFinishedGvgNum))
+	}
+	if m.PreDeductedQuota != 0 {
+		n += 1 + sovManage(uint64(m.PreDeductedQuota))
+	}
+	if m.RecoupQuota != 0 {
+		n += 1 + sovManage(uint64(m.RecoupQuota))
+	}
+	if m.LastGcObjectId != 0 {
+		n += 1 + sovManage(uint64(m.LastGcObjectId))
+	}
+	if m.LastGcGvgId != 0 {
+		n += 1 + sovManage(uint64(m.LastGcGvgId))
+	}
+	if m.MigratedBytes != 0 {
+		n += 1 + sovManage(uint64(m.MigratedBytes))
+	}
+	return n
+}
+
 func (m *GfSpResetRecoveryFailedListRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -3521,6 +4834,134 @@ func (m *GfSpResetRecoveryFailedListResponse) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovManage(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.VgfId != 0 {
+		n += 1 + sovManage(uint64(m.VgfId))
+	}
+	if m.GvgId != 0 {
+		n += 1 + sovManage(uint64(m.GvgId))
+	}
+	if m.ReplicateIndex != 0 {
+		n += 1 + sovManage(uint64(m.ReplicateIndex))
+	}
+	return n
+}
+
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Err != nil {
+		l = m.Err.Size()
+		n += 1 + l + sovManage(uint64(l))
+	}
+	return n
+}
+
+func (m *GfSpQueryRecoverProcessRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.VgfId != 0 {
+		n += 1 + sovManage(uint64(m.VgfId))
+	}
+	if m.GvgId != 0 {
+		n += 1 + sovManage(uint64(m.GvgId))
+	}
+	return n
+}
+
+func (m *FailedRecoverObject) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ObjectId != 0 {
+		n += 1 + sovManage(uint64(m.ObjectId))
+	}
+	if m.VirtualGroupId != 0 {
+		n += 1 + sovManage(uint64(m.VirtualGroupId))
+	}
+	if m.RedundancyIndex != 0 {
+		n += 1 + sovManage(uint64(m.RedundancyIndex))
+	}
+	if m.RetryTime != 0 {
+		n += 1 + sovManage(uint64(m.RetryTime))
+	}
+	return n
+}
+
+func (m *RecoverProcess) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.VirtualGroupId != 0 {
+		n += 1 + sovManage(uint64(m.VirtualGroupId))
+	}
+	if m.VirtualGroupFamilyId != 0 {
+		n += 1 + sovManage(uint64(m.VirtualGroupFamilyId))
+	}
+	if m.RedundancyIndex != 0 {
+		n += 1 + sovManage(uint64(m.RedundancyIndex))
+	}
+	if m.StartAfter != 0 {
+		n += 1 + sovManage(uint64(m.StartAfter))
+	}
+	if m.Limit != 0 {
+		n += 1 + sovManage(uint64(m.Limit))
+	}
+	if m.Status != 0 {
+		n += 1 + sovManage(uint64(m.Status))
+	}
+	if m.ObjectCount != 0 {
+		n += 1 + sovManage(uint64(m.ObjectCount))
+	}
+	if m.FailedObjectTotalCount != 0 {
+		n += 1 + sovManage(uint64(m.FailedObjectTotalCount))
+	}
+	if len(m.RecoverFailedObject) > 0 {
+		for _, e := range m.RecoverFailedObject {
+			l = e.Size()
+			n += 1 + l + sovManage(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *GfSpQueryRecoverProcessResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Err != nil {
+		l = m.Err.Size()
+		n += 1 + l + sovManage(uint64(l))
+	}
+	if len(m.RecoverProcesses) > 0 {
+		for _, e := range m.RecoverProcesses {
+			l = e.Size()
+			n += 1 + l + sovManage(uint64(l))
+		}
+	}
+	if m.Executing {
+		n += 2
 	}
 	return n
 }
@@ -5312,6 +6753,42 @@ func (m *GfSpNotifyPreMigrateBucketResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Quota", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthManage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthManage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Quota == nil {
+				m.Quota = &gfsptask.GfSpBucketQuotaInfo{}
+			}
+			if err := m.Quota.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipManage(dAtA[iNdEx:])
@@ -5500,6 +6977,42 @@ func (m *GfSpNotifyPostMigrateBucketResponse) Unmarshal(dAtA []byte) error {
 				m.Err = &gfsperrors.GfSpError{}
 			}
 			if err := m.Err.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Quota", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthManage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthManage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Quota == nil {
+				m.Quota = &gfsptask.GfSpBucketQuotaInfo{}
+			}
+			if err := m.Quota.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5875,6 +7388,420 @@ func (m *TasksStats) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *GfSpQueryBucketMigrationProgressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpQueryBucketMigrationProgressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpQueryBucketMigrationProgressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BucketId", wireType)
+			}
+			m.BucketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BucketId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GfSpQueryBucketMigrationProgressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpQueryBucketMigrationProgressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpQueryBucketMigrationProgressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Progress", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthManage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthManage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Progress == nil {
+				m.Progress = &MigrateBucketProgressMeta{}
+			}
+			if err := m.Progress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MigrateBucketProgressMeta) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MigrateBucketProgressMeta: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MigrateBucketProgressMeta: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BucketId", wireType)
+			}
+			m.BucketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BucketId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubscribedBlockHeight", wireType)
+			}
+			m.SubscribedBlockHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SubscribedBlockHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MigrateState", wireType)
+			}
+			m.MigrateState = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MigrateState |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalGvgNum", wireType)
+			}
+			m.TotalGvgNum = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TotalGvgNum |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MigratedFinishedGvgNum", wireType)
+			}
+			m.MigratedFinishedGvgNum = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MigratedFinishedGvgNum |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GcFinishedGvgNum", wireType)
+			}
+			m.GcFinishedGvgNum = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GcFinishedGvgNum |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PreDeductedQuota", wireType)
+			}
+			m.PreDeductedQuota = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PreDeductedQuota |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecoupQuota", wireType)
+			}
+			m.RecoupQuota = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RecoupQuota |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastGcObjectId", wireType)
+			}
+			m.LastGcObjectId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastGcObjectId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastGcGvgId", wireType)
+			}
+			m.LastGcGvgId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastGcGvgId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MigratedBytes", wireType)
+			}
+			m.MigratedBytes = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MigratedBytes |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *GfSpResetRecoveryFailedListRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -5986,6 +7913,789 @@ func (m *GfSpResetRecoveryFailedListResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.RecoveryFailedList = append(m.RecoveryFailedList, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GfSpTriggerRecoverForSuccessorSPRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpTriggerRecoverForSuccessorSPRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpTriggerRecoverForSuccessorSPRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VgfId", wireType)
+			}
+			m.VgfId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VgfId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GvgId", wireType)
+			}
+			m.GvgId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GvgId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReplicateIndex", wireType)
+			}
+			m.ReplicateIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ReplicateIndex |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GfSpTriggerRecoverForSuccessorSPResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpTriggerRecoverForSuccessorSPResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpTriggerRecoverForSuccessorSPResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthManage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthManage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Err == nil {
+				m.Err = &gfsperrors.GfSpError{}
+			}
+			if err := m.Err.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GfSpQueryRecoverProcessRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpQueryRecoverProcessRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpQueryRecoverProcessRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VgfId", wireType)
+			}
+			m.VgfId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VgfId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GvgId", wireType)
+			}
+			m.GvgId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GvgId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FailedRecoverObject) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FailedRecoverObject: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FailedRecoverObject: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectId", wireType)
+			}
+			m.ObjectId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ObjectId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VirtualGroupId", wireType)
+			}
+			m.VirtualGroupId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VirtualGroupId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedundancyIndex", wireType)
+			}
+			m.RedundancyIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RedundancyIndex |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetryTime", wireType)
+			}
+			m.RetryTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RetryTime |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RecoverProcess) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RecoverProcess: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RecoverProcess: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VirtualGroupId", wireType)
+			}
+			m.VirtualGroupId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VirtualGroupId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VirtualGroupFamilyId", wireType)
+			}
+			m.VirtualGroupFamilyId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VirtualGroupFamilyId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedundancyIndex", wireType)
+			}
+			m.RedundancyIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RedundancyIndex |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartAfter", wireType)
+			}
+			m.StartAfter = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartAfter |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
+			}
+			m.Limit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Limit |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectCount", wireType)
+			}
+			m.ObjectCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ObjectCount |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FailedObjectTotalCount", wireType)
+			}
+			m.FailedObjectTotalCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FailedObjectTotalCount |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecoverFailedObject", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthManage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthManage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecoverFailedObject = append(m.RecoverFailedObject, &FailedRecoverObject{})
+			if err := m.RecoverFailedObject[len(m.RecoverFailedObject)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipManage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthManage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GfSpQueryRecoverProcessResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowManage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GfSpQueryRecoverProcessResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GfSpQueryRecoverProcessResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthManage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthManage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Err == nil {
+				m.Err = &gfsperrors.GfSpError{}
+			}
+			if err := m.Err.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecoverProcesses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthManage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthManage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RecoverProcesses = append(m.RecoverProcesses, &RecoverProcess{})
+			if err := m.RecoverProcesses[len(m.RecoverProcesses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Executing", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowManage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Executing = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipManage(dAtA[iNdEx:])
