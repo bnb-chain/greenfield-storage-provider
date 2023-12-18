@@ -626,8 +626,6 @@ func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.Rec
 
 	pieceChecksum := hash.GenerateChecksum(pieceData)
 
-	log.Debugw("SetReplicatePieceChecksum pieceChecksums", "segmentIdx", segmentIdx, "redundancyIdx", redundancyIdx)
-
 	if err := e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum); err != nil {
 		log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", objectID,
 			"segment_index", segmentIdx, "redundancy_index", redundancyIdx, "error", err)
@@ -638,12 +636,10 @@ func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.Rec
 	segmentCount := e.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 
-	log.Debugw("GetAllReplicatePieceChecksumOptimized pieceChecksums", "")
 	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(task.GetObjectInfo().Id.Uint64(), task.GetEcIdx(), segmentCount)
 	if err != nil {
 		return err
 	}
-	log.Debugw("pieceChecksums pieceChecksums", "len(pieceChecksums)", len(pieceChecksums), "segmentCount", segmentCount)
 	if len(pieceChecksums) == int(segmentCount) {
 		integrityChecksum := hash.GenerateIntegrityHash(pieceChecksums)
 		integrityMeta := &spdb.IntegrityMeta{
