@@ -477,17 +477,17 @@ func (s *BucketMigrateScheduler) Start() error {
 }
 
 func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
-	var bucketInfo *types.Bucket
+	var bucketInfo *storagetypes.BucketInfo
 
 	if s.enableBucketCache {
 		return s.checkBucketFromChainAndCache(bucketID, expectedStatus)
 	}
 
 	// check the chain's bucket is migrating
-	if bucketInfo, err = s.manager.baseApp.GfSpClient().GetBucketByBucketID(context.Background(), int64(bucketID), true); err != nil {
+	if bucketInfo, err = s.manager.baseApp.Consensus().QueryBucketInfoById(context.Background(), bucketID); err != nil {
 		return false, err
 	}
-	if bucketInfo.GetBucketInfo().GetBucketStatus() != expectedStatus {
+	if bucketInfo.GetBucketStatus() != expectedStatus {
 		log.Debugw("the bucket status is not same, the event will skip", "bucketInfo", bucketInfo, "expectedStatus", expectedStatus)
 		return false, nil
 	}
