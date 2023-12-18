@@ -288,7 +288,7 @@ func (g *GateModular) queryBucketMigrationProgressHandler(w http.ResponseWriter,
 		}
 		err = nil
 	} else {
-		migrationState = int32(progressMeta.GetMigrationState())
+		migrationState = int32(progressMeta.GetMigrateState())
 		migratedBytes = progressMeta.GetMigratedBytes()
 	}
 

@@ -552,7 +552,7 @@ func (s *SpDBImpl) QueryMigrateBucketProgress(bucketID uint64) (*spdb.MigrateBuc
 	progress.LastGcObjectID = queryReturn.LastGcObjectID
 	progress.LastGcGvgID = queryReturn.LastGcGvgID
 	progress.RecoupQuota = queryReturn.RecoupQuota
-	progress.MigrationState = queryReturn.MigrationState
+	progress.MigrateState = queryReturn.MigrationState
 
 	return progress, nil
 }
@@ -568,7 +568,7 @@ func (s *SpDBImpl) ListBucketMigrationToConfirm(migrationStates []int) ([]*spdb.
 		returns = append(returns, &spdb.MigrateBucketProgressMeta{
 			BucketID:              queryReturn.BucketID,
 			SubscribedBlockHeight: queryReturn.SubscribedBlockHeight,
-			MigrationState:        queryReturn.MigrationState,
+			MigrateState:          queryReturn.MigrationState,
 		})
 	}
 	return returns, nil
@@ -659,7 +659,7 @@ func (s *SpDBImpl) UpdateBucketMigrationGCProgress(progressMeta spdb.MigrateBuck
 	queryReturn = &MigrateBucketProgressTable{}
 	insertMigrateBucket = &MigrateBucketProgressTable{
 		BucketID:         bucketID,
-		MigrationState:   progressMeta.MigrationState,
+		MigrationState:   progressMeta.MigrateState,
 		TotalGvgNum:      progressMeta.TotalGvgNum,
 		GcFinishedGvgNum: progressMeta.GcFinishedGvgNum,
 		LastGcGvgID:      progressMeta.LastGcGvgID,

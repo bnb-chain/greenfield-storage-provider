@@ -126,7 +126,7 @@ message GfSpQueryBucketMigrationProgressResponse {
 message MigrateBucketProgressMeta {
   uint64 bucket_id = 1;
   uint64 subscribed_block_height = 2;
-  uint32 migration_state = 3;
+  uint32 migrate_state = 3;
 
   uint32 total_gvg_num = 4; // Total number of GVGs that need to be migrated
   uint32 migrated_finished_gvg_num = 5; // Number of successfully migrated GVGs

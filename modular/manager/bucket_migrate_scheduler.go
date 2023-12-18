@@ -675,7 +675,7 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 	)
 	bucketID := event.BucketID
 
-	if event.MigrationState != int(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_SEND_COMPLETE_TX_DONE) {
+	if event.MigrateState != int(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_SEND_COMPLETE_TX_DONE) {
 		return
 	}
 	// confirm
@@ -1213,7 +1213,7 @@ func (s *BucketMigrateScheduler) UpdateBucketMigrationGCProgress(ctx context.Con
 
 	meta := spdb.MigrateBucketProgressMeta{
 		BucketID:         gcBucketMigrationTask.GetBucketID(),
-		MigrationState:   int(state),
+		MigrateState:     int(state),
 		LastGcObjectID:   gcBucketMigrationTask.GetLastGCObjectID(),
 		LastGcGvgID:      gcBucketMigrationTask.GetLastGCGvgID(),
 		TotalGvgNum:      uint32(gcBucketMigrationTask.GetTotalGvgNum()),

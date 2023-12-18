@@ -136,7 +136,7 @@ type SwapOutMeta struct {
 type MigrateBucketProgressMeta struct {
 	BucketID              uint64 // as primary key
 	SubscribedBlockHeight uint64
-	MigrationState        int
+	MigrateState          int
 
 	TotalGvgNum            uint32 // Total number of GVGs that need to be migrated
 	MigratedFinishedGvgNum uint32 // Number of successfully migrated GVGs

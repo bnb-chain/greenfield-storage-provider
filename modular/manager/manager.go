@@ -972,7 +972,7 @@ func (m *ManageModular) QueryBucketMigrationProgress(_ context.Context, bucketID
 	progressMeta := &gfspserver.MigrateBucketProgressMeta{
 		BucketId:               progress.BucketID,
 		SubscribedBlockHeight:  progress.SubscribedBlockHeight,
-		MigrationState:         uint32(progress.MigrationState),
+		MigrateState:           uint32(progress.MigrateState),
 		TotalGvgNum:            progress.TotalGvgNum,
 		MigratedFinishedGvgNum: progress.MigratedFinishedGvgNum,
 		GcFinishedGvgNum:       progress.GcFinishedGvgNum,
