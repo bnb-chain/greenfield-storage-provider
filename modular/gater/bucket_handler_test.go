@@ -617,7 +617,7 @@ func TestGateModular_queryBucketMigrationProgressHandler(t *testing.T) {
 			fn: func() *GateModular {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
-				progress := &gfspserver.MigrateBucketProgressMeta{BucketId: 2, MigrationState: uint32(storetypes.BucketMigrationState_MIGRATION_FINISHED)}
+				progress := &gfspserver.MigrateBucketProgressMeta{BucketId: 2, MigrationState: uint32(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED)}
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)
@@ -647,7 +647,7 @@ func TestGateModular_queryBucketMigrationProgressHandler(t *testing.T) {
 			fn: func() *GateModular {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
-				progress := &gfspserver.MigrateBucketProgressMeta{BucketId: 2, MigrationState: uint32(storetypes.BucketMigrationState_MIGRATION_FINISHED)}
+				progress := &gfspserver.MigrateBucketProgressMeta{BucketId: 2, MigrationState: uint32(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED)}
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil).Times(1)

@@ -507,7 +507,7 @@ func (s *SpDBImpl) QueryMigrateBucketState(bucketID uint64) (int, error) {
 		insertMigrateBucket *MigrateBucketProgressTable
 		queryReturn         *MigrateBucketProgressTable
 		needInsert          bool
-		state               = int(types.BucketMigrationState_INIT_UNSPECIFIED)
+		state               = int(types.BucketMigrationState_BUCKET_MIGRATION_STATE_INIT_UNSPECIFIED)
 	)
 	queryReturn = &MigrateBucketProgressTable{}
 	insertMigrateBucket = &MigrateBucketProgressTable{

@@ -168,13 +168,13 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
 		return false, err
 	}
-	if state == int(storetypes.BucketMigrationState_MIGRATION_FINISHED) {
+	if state == int(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED) {
 		// delete the last finished migrate bucket progress record
 		if err = a.baseApp.GfSpDB().DeleteMigrateBucket(bucketID); err != nil {
 			log.CtxErrorw(ctx, "failed to delete migrate bucket state", "bucket_id", bucketID, "error", err)
 			return false, err
 		}
-	} else if state != int(storetypes.BucketMigrationState_INIT_UNSPECIFIED) {
+	} else if state != int(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_INIT_UNSPECIFIED) {
 		log.CtxInfow(ctx, "the bucket is migrating or gc, migrated to this sp should be reject", "bucket_id", bucketID)
 		return false, fmt.Errorf("the bucket is migrating or gc, try it after gc done")
 	}
