@@ -154,6 +154,32 @@ func (s *SpDBImpl) GetRecoverFailedObjects(retry, limit uint32) ([]*spdb.Recover
 	return returnObjects, nil
 }
 
+func (s *SpDBImpl) GetRecoverFailedObjectsByRetryTime(retry uint32) ([]*spdb.RecoverFailedObject, error) {
+	var (
+		recoverObjects []*RecoverFailedObjectTable
+		returnObjects  []*spdb.RecoverFailedObject
+		err            error
+	)
+
+	err = s.db.Table(RecoverFailedObjectTableName).
+		Select("*").
+		Where("retry >= ?", retry).
+		Order("object_id asc").
+		Find(&recoverObjects).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, object := range recoverObjects {
+		returnObjects = append(returnObjects, &spdb.RecoverFailedObject{
+			ObjectID:        object.ObjectID,
+			VirtualGroupID:  object.VirtualGroupID,
+			RedundancyIndex: object.RedundancyIndex,
+			RetryTime:       object.Retry,
+		})
+	}
+	return returnObjects, nil
+}
+
 func (s *SpDBImpl) UpdateRecoverFailedObject(object *spdb.RecoverFailedObject) (err error) {
 	result := s.db.Table(RecoverFailedObjectTableName).Where("object_id = ?", object.ObjectID).
 		Updates(&RecoverFailedObjectTable{

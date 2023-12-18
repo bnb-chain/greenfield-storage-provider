@@ -1022,22 +1022,40 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 		log.Errorw("failed to BatchGetRecoverGVGStats", "error", err)
 		return nil, false, err
 	}
+	// get failed total count
 	failedCount, err := m.baseApp.GfSpDB().CountRecoverFailedObject()
 	if err != nil {
 		log.Errorw("failed to CountRecoverFailedObject", "error", err)
 		return nil, false, err
 	}
+	// get record retry time > 5
+	failedRecords, err := m.baseApp.GfSpDB().GetRecoverFailedObjectsByRetryTime(5)
+	if err != nil {
+		log.Errorw("failed to CountRecoverFailedObject", "error", err)
+		return nil, false, err
+	}
+	failedObjects := make([]*gfspserver.FailedRecoverObject, 0, len(failedRecords))
+	for _, r := range failedRecords {
+		failedObjects = append(failedObjects, &gfspserver.FailedRecoverObject{
+			ObjectId:        r.ObjectID,
+			VirtualGroupId:  r.VirtualGroupID,
+			RedundancyIndex: r.RedundancyIndex,
+			RetryTime:       int32(r.RetryTime),
+		})
+	}
+
 	res := make([]*gfspserver.RecoverProcess, 0, len(gvgStatsList))
 	for _, gvgStats := range gvgStatsList {
 		res = append(res, &gfspserver.RecoverProcess{
-			VirtualGroupId:       gvgStats.VirtualGroupID,
-			VirtualGroupFamilyId: gvgStats.VirtualGroupFamilyID,
-			RedundancyIndex:      gvgStats.RedundancyIndex,
-			StartAfter:           gvgStats.StartAfter,
-			Limit:                gvgStats.Limit,
-			Status:               int32(gvgStats.Status),
-			ObjectCount:          gvgStats.ObjectCount,
-			FailedObjectCount:    uint64(failedCount),
+			VirtualGroupId:         gvgStats.VirtualGroupID,
+			VirtualGroupFamilyId:   gvgStats.VirtualGroupFamilyID,
+			RedundancyIndex:        gvgStats.RedundancyIndex,
+			StartAfter:             gvgStats.StartAfter,
+			Limit:                  gvgStats.Limit,
+			Status:                 int32(gvgStats.Status),
+			ObjectCount:            gvgStats.ObjectCount,
+			FailedObjectTotalCount: uint64(failedCount),
+			RecoverFailedObject:    failedObjects,
 		})
 	}
 	flag := m.recoverProcessCount.Load() > 0
