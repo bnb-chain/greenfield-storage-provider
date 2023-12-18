@@ -882,8 +882,6 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		successorSP *sptypes.StorageProvider
 		swapInInfo  *virtualgrouptypes.SwapInInfo
 	)
-	log.Infow("recoveryTask", "recoveryTask", recoveryTask)
-
 	if recoveryTask.GetBySuccessorSp() {
 		swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, 0)
 		if err != nil {
@@ -1005,7 +1003,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 		if ssp.OperatorAddress == signatureAddr.String() {
 			isOneOfSecondary = true
 			ECIndex = int32(idx)
-		} else if ssp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
+		} else if recoveryTask.GetBySuccessorSp() && ssp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
 			isSuccessor = true
 			ECIndex = int32(idx)
 		}
