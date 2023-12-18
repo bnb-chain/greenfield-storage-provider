@@ -423,7 +423,6 @@ type BucketMigrateScheduler struct {
 	executePlanIDMap            map[uint64]*BucketMigrateExecutePlan // bucketID -> BucketMigrateExecutePlan
 	bucketCache                 *BucketCache
 	mutex                       sync.RWMutex // Protects the executePlanIDMap fields
-	enableBucketCache           bool
 }
 
 // NewBucketMigrateScheduler returns a bucket migrate scheduler instance.
@@ -479,7 +478,7 @@ func (s *BucketMigrateScheduler) Start() error {
 func (s *BucketMigrateScheduler) checkBucketFromChain(bucketID uint64, expectedStatus storagetypes.BucketStatus) (expected bool, err error) {
 	var bucketInfo *storagetypes.BucketInfo
 
-	if s.enableBucketCache {
+	if s.manager.enableBucketMigrateCache {
 		return s.checkBucketFromChainAndCache(bucketID, expectedStatus)
 	}
 

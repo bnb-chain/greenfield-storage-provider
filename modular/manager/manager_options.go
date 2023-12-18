@@ -292,5 +292,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.enableTaskRetryScheduler = cfg.Manager.EnableTaskRetryScheduler
 	manager.rejectUnsealThresholdSecond = cfg.Manager.RejectUnsealThresholdSecond
 
+	manager.enableBucketMigrateCache = cfg.Manager.EnableBucketMigrateCache
+
 	return nil
 }

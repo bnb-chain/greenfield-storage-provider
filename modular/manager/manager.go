@@ -99,10 +99,11 @@ type ManageModular struct {
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
 
-	spID                   uint32
-	virtualGroupManager    vgmgr.VirtualGroupManager
-	bucketMigrateScheduler *BucketMigrateScheduler
-	spExitScheduler        *SPExitScheduler
+	spID                     uint32
+	virtualGroupManager      vgmgr.VirtualGroupManager
+	bucketMigrateScheduler   *BucketMigrateScheduler
+	spExitScheduler          *SPExitScheduler
+	enableBucketMigrateCache bool
 
 	subscribeSPExitEventInterval        uint
 	subscribeBucketMigrateEventInterval uint
