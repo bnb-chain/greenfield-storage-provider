@@ -31,7 +31,7 @@ func (s *BasicTestSuite) Test_BlockSyncer() {
 
 	time.Sleep(time.Second * 20)
 
-	err := test.Verify()
+	err := test.Verify(s.T())
 	s.Equal(nil, err)
 }
 

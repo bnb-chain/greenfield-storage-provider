@@ -4,20 +4,20 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GfSpGetPaymentByBucketName get bucket payment info by a bucket name
 func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *types.GfSpGetPaymentByBucketNameRequest) (resp *types.GfSpGetPaymentByBucketNameResponse, err error) {
 	var (
 		streamRecord *model.StreamRecord
-		res          *payment_types.StreamRecord
+		res          *paymenttypes.StreamRecord
 	)
 
 	ctx = log.Context(ctx, req)
@@ -29,14 +29,14 @@ func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 	}
 
 	if streamRecord != nil {
-		res = &payment_types.StreamRecord{
+		res = &paymenttypes.StreamRecord{
 			Account:           streamRecord.Account.String(),
 			CrudTimestamp:     streamRecord.CrudTimestamp,
 			NetflowRate:       math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
 			StaticBalance:     math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
 			BufferBalance:     math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
 			LockBalance:       math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
-			Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
+			Status:            paymenttypes.StreamAccountStatus(paymenttypes.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp:   streamRecord.SettleTimestamp,
 			OutFlowCount:      streamRecord.OutFlowCount,
 			FrozenNetflowRate: math.NewIntFromBigInt(streamRecord.FrozenNetflowRate.Raw()),
@@ -52,7 +52,7 @@ func (r *MetadataModular) GfSpGetPaymentByBucketName(ctx context.Context, req *t
 func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *types.GfSpGetPaymentByBucketIDRequest) (resp *types.GfSpGetPaymentByBucketIDResponse, err error) {
 	var (
 		streamRecord *model.StreamRecord
-		res          *payment_types.StreamRecord
+		res          *paymenttypes.StreamRecord
 	)
 
 	ctx = log.Context(ctx, req)
@@ -64,14 +64,14 @@ func (r *MetadataModular) GfSpGetPaymentByBucketID(ctx context.Context, req *typ
 	}
 
 	if streamRecord != nil {
-		res = &payment_types.StreamRecord{
+		res = &paymenttypes.StreamRecord{
 			Account:           streamRecord.Account.String(),
 			CrudTimestamp:     streamRecord.CrudTimestamp,
 			NetflowRate:       math.NewIntFromBigInt(streamRecord.NetflowRate.Raw()),
 			StaticBalance:     math.NewIntFromBigInt(streamRecord.StaticBalance.Raw()),
 			BufferBalance:     math.NewIntFromBigInt(streamRecord.BufferBalance.Raw()),
 			LockBalance:       math.NewIntFromBigInt(streamRecord.LockBalance.Raw()),
-			Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[streamRecord.Status]),
+			Status:            paymenttypes.StreamAccountStatus(paymenttypes.StreamAccountStatus_value[streamRecord.Status]),
 			SettleTimestamp:   streamRecord.SettleTimestamp,
 			OutFlowCount:      streamRecord.OutFlowCount,
 			FrozenNetflowRate: math.NewIntFromBigInt(streamRecord.FrozenNetflowRate.Raw()),
@@ -101,17 +101,18 @@ func (r *MetadataModular) GfSpListPaymentAccountStreams(ctx context.Context, req
 	res = make([]*types.Bucket, len(buckets))
 	for i, bucket := range buckets {
 		res[i] = &types.Bucket{
-			BucketInfo: &storage_types.BucketInfo{
+			BucketInfo: &storagetypes.BucketInfo{
 				Owner:                      bucket.Owner.String(),
 				BucketName:                 bucket.BucketName,
-				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Visibility:                 storagetypes.VisibilityType(storagetypes.VisibilityType_value[bucket.Visibility]),
 				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
-				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				SourceType:                 storagetypes.SourceType(storagetypes.SourceType_value[bucket.SourceType]),
 				CreateAt:                   bucket.CreateTime,
 				PaymentAddress:             bucket.PaymentAddress.String(),
 				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
 				ChargedReadQuota:           bucket.ChargedReadQuota,
-				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+				BucketStatus:               storagetypes.BucketStatus(storagetypes.BucketStatus_value[bucket.Status]),
+				Tags:                       bucket.GetResourceTags(),
 			},
 			Removed:      bucket.Removed,
 			DeleteAt:     bucket.DeleteAt,
@@ -147,14 +148,14 @@ func (r *MetadataModular) GfSpListUserPaymentAccounts(ctx context.Context, req *
 	res = make([]*types.PaymentAccountMeta, len(accounts))
 	for i, account := range accounts {
 		res[i] = &types.PaymentAccountMeta{
-			StreamRecord: &payment_types.StreamRecord{
+			StreamRecord: &paymenttypes.StreamRecord{
 				Account:           account.Account.String(),
 				CrudTimestamp:     account.CrudTimestamp,
 				NetflowRate:       math.NewIntFromBigInt(account.NetflowRate.Raw()),
 				StaticBalance:     math.NewIntFromBigInt(account.StaticBalance.Raw()),
 				BufferBalance:     math.NewIntFromBigInt(account.BufferBalance.Raw()),
 				LockBalance:       math.NewIntFromBigInt(account.LockBalance.Raw()),
-				Status:            payment_types.StreamAccountStatus(payment_types.StreamAccountStatus_value[account.Status]),
+				Status:            paymenttypes.StreamAccountStatus(paymenttypes.StreamAccountStatus_value[account.Status]),
 				SettleTimestamp:   account.SettleTimestamp,
 				OutFlowCount:      account.OutFlowCount,
 				FrozenNetflowRate: math.NewIntFromBigInt(account.FrozenNetflowRate.Raw()),

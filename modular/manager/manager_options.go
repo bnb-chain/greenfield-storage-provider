@@ -41,7 +41,7 @@ const (
 	DefaultGlobalGCBucketMigrationParallel int = 1
 	// 	DefaultGlobalRecoveryPieceParallel defines the default max parallel recovery objects in SP
 	// system.
-	DefaultGlobalRecoveryPieceParallel int = 7
+	DefaultGlobalRecoveryPieceParallel int = 100
 	// DefaultGlobalMigrateGVGParallel defines the default max parallel migrating gvg in SP system.
 	DefaultGlobalMigrateGVGParallel int = 200
 	// DefaultGlobalDownloadObjectTaskCacheSize defines the default max cache the download
@@ -266,7 +266,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 
-	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus(), manager.enableHealthyChecker); err != nil {
+	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus(), manager.baseApp.GfSpClient(), manager.enableHealthyChecker); err != nil {
 		return err
 	}
 	if cfg.Manager.SubscribeSPExitEventIntervalMillisecond == 0 {
@@ -288,6 +288,13 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.recoveryTaskMap = make(map[string]string)
 
 	manager.spBlackList = cfg.Manager.SPBlackList
+
+	manager.recoverObjectStats = NewObjectsSegmentsStats()
+
+	manager.enableTaskRetryScheduler = cfg.Manager.EnableTaskRetryScheduler
+	manager.rejectUnsealThresholdSecond = cfg.Manager.RejectUnsealThresholdSecond
+
+	manager.enableBucketMigrateCache = cfg.Manager.EnableBucketMigrateCache
 
 	return nil
 }

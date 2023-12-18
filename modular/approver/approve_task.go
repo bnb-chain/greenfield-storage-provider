@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 )
 
 var (
@@ -135,6 +136,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		err           error
 		signature     []byte
 		currentHeight uint64
+		state         int
 	)
 	if task == nil || task.GetMigrateBucketInfo() == nil {
 		log.CtxErrorw(ctx, "failed to migrate bucket approval due to pointer nil")
@@ -154,6 +156,29 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		return true, nil
 	}
 
+	migrateBucketMsg := task.GetMigrateBucketInfo()
+	bucketMeta, _, err := a.baseApp.GfSpClient().GetBucketMeta(ctx, migrateBucketMsg.GetBucketName(), true)
+	if err != nil {
+		return false, err
+	}
+	bucketID := bucketMeta.GetBucketInfo().Id.Uint64()
+
+	// If the destination SP is still performing garbage collection for the bucket being migrated, the migration action is not allowed.
+	if state, err = a.baseApp.GfSpDB().QueryMigrateBucketState(bucketID); err != nil {
+		log.CtxErrorw(ctx, "failed to query migrate bucket state", "error", err)
+		return false, err
+	}
+	if state == int(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED) {
+		// delete the last finished migrate bucket progress record
+		if err = a.baseApp.GfSpDB().DeleteMigrateBucket(bucketID); err != nil {
+			log.CtxErrorw(ctx, "failed to delete migrate bucket state", "bucket_id", bucketID, "error", err)
+			return false, err
+		}
+	} else if state != int(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_INIT_UNSPECIFIED) {
+		log.CtxInfow(ctx, "the bucket is migrating or gc, migrated to this sp should be reject", "bucket_id", bucketID)
+		return false, fmt.Errorf("the bucket is migrating or gc, try it after gc done")
+	}
+
 	// check src sp has enough quota
 	allow, err := a.migrateBucketQuotaCheck(ctx, task)
 	if err != nil || !allow {
@@ -170,6 +195,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 	}
 	task.GetMigrateBucketInfo().GetDstPrimarySpApproval().Sig = signature
 	_ = a.bucketQueue.Push(task)
+	log.CtxInfow(ctx, "succeed to hand migrate bucket approval", "task", task, "state", state)
 	return true, nil
 }
 

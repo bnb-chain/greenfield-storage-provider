@@ -86,7 +86,7 @@ func (m *GfSpGCObjectTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpGCObjectTask) SetRetry(retry int) {
+func (m *GfSpGCObjectTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -240,7 +240,7 @@ func (m *GfSpGCZombiePieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpGCZombiePieceTask) SetRetry(retry int) {
+func (m *GfSpGCZombiePieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -375,7 +375,7 @@ func (m *GfSpGCMetaTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpGCMetaTask) SetRetry(retry int) {
+func (m *GfSpGCMetaTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 

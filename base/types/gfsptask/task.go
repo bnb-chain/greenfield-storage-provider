@@ -51,8 +51,8 @@ func (m *GfSpTask) IncRetry() {
 	m.Retry++
 }
 
-func (m *GfSpTask) SetRetry(retry int) {
-	m.Retry = int64(retry)
+func (m *GfSpTask) SetRetry(retry int64) {
+	m.Retry = retry
 }
 
 func (m *GfSpTask) ExceedRetry() bool {

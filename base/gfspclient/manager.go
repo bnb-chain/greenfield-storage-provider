@@ -201,46 +201,46 @@ func (s *GfSpClient) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats,
 	return resp.GetStats(), nil
 }
 
-func (s *GfSpClient) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error {
+func (s *GfSpClient) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpNotifyPreMigrateBucketRequest{
 		BucketId: bucketID,
 	}
-	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPreMigrate(ctx, req)
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPreMigrateBucketAndDeductQuota(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to notify pre migrate bucket", "request", req, "error", err)
-		return ErrRPCUnknownWithDetail("client failed to notify pre migrate bucket, error: ", err)
+		log.CtxErrorw(ctx, "client failed to notify pre migrate bucket and deduct quota", "request", req, "error", err)
+		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to notify pre migrate bucket, error: ", err)
 	}
 	if resp.GetErr() != nil {
-		log.CtxErrorw(ctx, "failed to notify pre migrate bucket", "request", req, "error", resp.GetErr())
-		return resp.GetErr()
+		log.CtxErrorw(ctx, "failed to notify pre migrate bucket and deduct quota", "request", req, "error", resp.GetErr())
+		return &gfsptask.GfSpBucketQuotaInfo{}, resp.GetErr()
 	}
-	return nil
+	return resp.Quota, nil
 }
 
-func (s *GfSpClient) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error {
+func (s *GfSpClient) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
-		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
 	}
 	req := &gfspserver.GfSpNotifyPostMigrateBucketRequest{
 		BucketMigrationInfo: bmInfo,
 	}
-	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPostMigrate(ctx, req)
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpNotifyPostMigrateAndRecoupQuota(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to notify post migrate bucket", "request", req, "error", err)
-		return ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: ", err)
+		log.CtxErrorw(ctx, "client failed to notify post migrate bucket and recoup quota", "request", req, "error", err)
+		return &gfsptask.GfSpBucketQuotaInfo{}, ErrRPCUnknownWithDetail("client failed to notify post migrate bucket and recoup quota, error: ", err)
 	}
 	if resp.GetErr() != nil {
-		log.CtxErrorw(ctx, "failed to notify post migrate bucket", "request", req, "error", resp.GetErr())
-		return resp.GetErr()
+		log.CtxErrorw(ctx, "failed to notify post migrate bucket and recoup quota", "request", req, "error", resp.GetErr())
+		return &gfsptask.GfSpBucketQuotaInfo{}, resp.GetErr()
 	}
-	return nil
+	return resp.Quota, nil
 }
 
 func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, error) {
@@ -255,4 +255,61 @@ func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, err
 		return nil, ErrRPCUnknownWithDetail("client failed to reset manager's recovery failed list, error: ", err)
 	}
 	return resp.GetRecoveryFailedList(), nil
+}
+
+func (s *GfSpClient) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, replicateIndex int32) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpTriggerRecoverForSuccessorSP(ctx, &gfspserver.GfSpTriggerRecoverForSuccessorSPRequest{
+		VgfId: vgfID, GvgId: gvgID, ReplicateIndex: replicateIndex,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to trigger recover objects for successor SP", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to trigger recover objects for successor SP", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return resp.GetErr()
+	}
+	return nil
+}
+
+func (s *GfSpClient) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, false, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryRecoverProcess(ctx, &gfspserver.GfSpQueryRecoverProcessRequest{
+		VgfId: vgfID, GvgId: gvgID,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query recover process", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return nil, false, ErrRPCUnknownWithDetail("client failed to query recover process, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to query recover process", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return nil, false, resp.GetErr()
+	}
+	return resp.GetRecoverProcesses(), resp.Executing, nil
+}
+
+func (s *GfSpClient) GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	req := &gfspserver.GfSpQueryBucketMigrationProgressRequest{
+		BucketId: bucketID,
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryBucketMigrationProgress(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query bucket migration's progress", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to query bucket migration's progress, error: ", err)
+	}
+	return resp.GetProgress(), nil
 }

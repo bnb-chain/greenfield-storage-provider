@@ -632,3 +632,53 @@ func TestGfSpBaseApp_GfSpNotifyMigrateSwapOutFailure(t *testing.T) {
 	assert.Equal(t, mockErr, err)
 	assert.Nil(t, result)
 }
+
+func TestGfSpBaseApp_GfSpNotifyPreMigrateBucketAndDeductQuotaSuccess(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	m := module.NewMockManager(ctrl)
+	g.manager = m
+	quota := &gfsptask.GfSpBucketQuotaInfo{BucketId: 2}
+	m.EXPECT().NotifyPreMigrateBucketAndDeductQuota(gomock.Any(), gomock.Any()).Return(quota, nil).Times(1)
+	req := &gfspserver.GfSpNotifyPreMigrateBucketRequest{BucketId: 2}
+	result, err := g.GfSpNotifyPreMigrateBucketAndDeductQuota(context.TODO(), req)
+	assert.Nil(t, err)
+	assert.Equal(t, &gfspserver.GfSpNotifyPreMigrateBucketResponse{Err: nil, Quota: quota}, result)
+}
+
+func TestGfSpBaseApp_GfSpNotifyPreMigrateBucketAndDeductQuotaFailure(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	m := module.NewMockManager(ctrl)
+	g.manager = m
+	m.EXPECT().NotifyPreMigrateBucketAndDeductQuota(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+	req := &gfspserver.GfSpNotifyPreMigrateBucketRequest{BucketId: 2}
+	result, err := g.GfSpNotifyPreMigrateBucketAndDeductQuota(context.TODO(), req)
+	assert.Equal(t, mockErr, err)
+	assert.Nil(t, result)
+}
+
+func TestGfSpBaseApp_GfSpNotifyPostMigrateBucketAndRecoupQuotaSuccess(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	m := module.NewMockManager(ctrl)
+	g.manager = m
+	quota := &gfsptask.GfSpBucketQuotaInfo{BucketId: 2}
+	m.EXPECT().NotifyPostMigrateBucketAndRecoupQuota(gomock.Any(), gomock.Any()).Return(quota, nil).Times(1)
+	req := &gfspserver.GfSpNotifyPostMigrateBucketRequest{BucketId: 2}
+	result, err := g.GfSpNotifyPostMigrateAndRecoupQuota(context.TODO(), req)
+	assert.Nil(t, err)
+	assert.Equal(t, &gfspserver.GfSpNotifyPostMigrateBucketResponse{Quota: quota}, result)
+}
+
+func TestGfSpBaseApp_GfSpPostMigrateBucketAndRecoupQuotaFailure(t *testing.T) {
+	g := setup(t)
+	ctrl := gomock.NewController(t)
+	m := module.NewMockManager(ctrl)
+	g.manager = m
+	m.EXPECT().NotifyPostMigrateBucketAndRecoupQuota(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+	req := &gfspserver.GfSpNotifyPostMigrateBucketRequest{BucketId: 2}
+	result, err := g.GfSpNotifyPostMigrateAndRecoupQuota(context.TODO(), req)
+	assert.Equal(t, mockErr, err)
+	assert.Nil(t, result)
+}

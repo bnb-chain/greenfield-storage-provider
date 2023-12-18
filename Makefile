@@ -50,6 +50,7 @@ lint:
 mock-gen:
 	mockgen -source=core/spdb/spdb.go -destination=core/spdb/spdb_mock.go -package=spdb
 	mockgen -source=store/bsdb/database.go -destination=store/bsdb/database_mock.go -package=bsdb
+	mockgen -source=core/task/task.go -destination=core/task/task_mock.go -package=task
 
 # only run unit tests, exclude e2e tests
 test:

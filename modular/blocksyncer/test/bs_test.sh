@@ -29,7 +29,7 @@ function make_config() {
   sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/localhost:8080'\]/g" config.toml
 
   # blocksyncer
-  sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\]/g" config.toml
+  sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\,\'general\'\]/g" config.toml
   WORKERS=10
   sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml
 

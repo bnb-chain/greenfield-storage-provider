@@ -7,8 +7,11 @@ import (
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 )
 
-type MigrateStatus int32
+type (
+	MigrateStatus int32
+)
 
+// MigrateGVGTable status
 // migrate: WaitForMigrate(created)->Migrating(schedule success)->Migrated(executor report success).
 var (
 	WaitForMigrate MigrateStatus = 0

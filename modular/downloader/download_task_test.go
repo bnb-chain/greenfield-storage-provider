@@ -163,18 +163,20 @@ func TestPreDownloadObject(t *testing.T) {
 
 	// failed due to object unsealed
 	mockTask1 := &gfsptask.GfSpDownloadObjectTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{},
+		ObjectInfo: &storagetypes.ObjectInfo{
+			Id: sdkmath.NewUint(100),
+		},
 		StorageParams: &storagetypes.Params{},
 	}
-	err = d.PreDownloadObject(context.TODO(), mockTask1)
-
-	assert.NotNil(t, err)
-
-	// failed due to query spdb traffic failed
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	d.baseApp.SetGfSpDB(mockSPDB)
+	mockSPDB.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail to get hash")).Times(1)
+	err = d.PreDownloadObject(context.TODO(), mockTask1)
+	assert.NotNil(t, err)
+
+	// failed due to query spdb traffic failed
 	mockGRPCAPI := gfspclient.NewMockGfSpClientAPI(ctrl)
 	d.baseApp.SetGfSpClient(mockGRPCAPI)
 	mockGRPCAPI.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -183,7 +185,6 @@ func TestPreDownloadObject(t *testing.T) {
 		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
 			return &payment_types.StreamRecord{}, nil
 		}).AnyTimes()
-
 	mockSPDB.EXPECT().GetBucketTraffic(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to get bucket traffic")).Times(1)
 
 	mockTask2 := &gfsptask.GfSpDownloadObjectTask{
@@ -285,18 +286,19 @@ func TestPreDownloadPiece(t *testing.T) {
 	err := d.PreDownloadPiece(context.TODO(), nil)
 	assert.NotNil(t, err)
 
-	// failed due to object unsealed
+	mockSPDB := spdb.NewMockSPDB(ctrl)
+	d.baseApp.SetGfSpDB(mockSPDB)
+
+	// failed due to get hash failed
+	mockSPDB.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail to get hash")).Times(1)
 	mockTask1 := &gfsptask.GfSpDownloadPieceTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{},
+		ObjectInfo:    &storagetypes.ObjectInfo{Id: sdkmath.NewUint(100)},
 		StorageParams: &storagetypes.Params{},
 	}
 	err = d.PreDownloadPiece(context.TODO(), mockTask1)
 	assert.NotNil(t, err)
 
 	// failed due to query spdb traffic failed
-	mockSPDB := spdb.NewMockSPDB(ctrl)
-	d.baseApp.SetGfSpDB(mockSPDB)
-
 	mockGRPCAPI.EXPECT().GetPaymentByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*payment_types.StreamRecord, error) {
 			return &payment_types.StreamRecord{}, nil

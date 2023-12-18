@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 	"github.com/forbole/juno/v4/common"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // GfSpGetGroupList get group list by queryName/prefix/sourceType
@@ -57,6 +57,7 @@ func (r *MetadataModular) GfSpGetGroupList(ctx context.Context, req *types.GfSpG
 					SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
 					Id:         math.NewUintFromBigInt(group.GroupID.Big()),
 					Extra:      group.Extra,
+					Tags:       group.GetResourceTags(),
 				},
 				Operator:        group.Operator.String(),
 				CreateAt:        group.CreateAt,
@@ -112,6 +113,7 @@ func (r *MetadataModular) GfSpGetUserGroups(ctx context.Context, req *types.GfSp
 				SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
 				Id:         math.NewUintFromBigInt(group.GroupID.Big()),
 				Extra:      group.Extra,
+				Tags:       group.GetResourceTags(),
 			},
 			AccountId:      group.AccountID.String(),
 			Operator:       group.Operator.String(),
@@ -169,6 +171,7 @@ func (r *MetadataModular) GfSpGetGroupMembers(ctx context.Context, req *types.Gf
 				SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
 				Id:         math.NewUintFromBigInt(group.GroupID.Big()),
 				Extra:      group.Extra,
+				Tags:       group.GetResourceTags(),
 			},
 			AccountId:      group.AccountID.String(),
 			Operator:       group.Operator.String(),
@@ -221,6 +224,7 @@ func (r *MetadataModular) GfSpGetUserOwnedGroups(ctx context.Context, req *types
 				SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
 				Id:         math.NewUintFromBigInt(group.GroupID.Big()),
 				Extra:      group.Extra,
+				Tags:       group.GetResourceTags(),
 			},
 			AccountId:      group.AccountID.String(),
 			Operator:       group.Operator.String(),
@@ -270,6 +274,7 @@ func (r *MetadataModular) GfSpListGroupsByIDs(ctx context.Context, req *types.Gf
 				SourceType: storage_types.SourceType(storage_types.SourceType_value[group.SourceType]),
 				Id:         math.NewUintFromBigInt(group.GroupID.Big()),
 				Extra:      group.Extra,
+				Tags:       group.GetResourceTags(),
 			},
 			Operator:   group.Operator.String(),
 			CreateAt:   group.CreateAt,

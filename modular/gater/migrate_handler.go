@@ -368,6 +368,8 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 		bucketID            uint64
 		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
+		bz                  []byte
+		quota               *gfsptask.GfSpBucketQuotaInfo
 	)
 
 	defer func() {
@@ -394,22 +396,19 @@ func (g *GateModular) getLatestBucketQuotaHandler(w http.ResponseWriter, r *http
 	}
 
 	bucketID = bucketMigrationInfo.GetBucketId()
-	quota, err := g.baseApp.GfSpClient().GetLatestBucketReadQuota(
-		reqCtx.Context(), bucketID)
-	if err != nil {
+	if quota, err = g.baseApp.GfSpClient().GetLatestBucketReadQuota(reqCtx.Context(), bucketID); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "bucket_id",
 			bucketID, "error", err)
 		return
 	}
 
-	bz, err := quota.Marshal()
-	if err != nil {
+	if bz, err = quota.Marshal(); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to marshal", "bucket_id",
 			bucketID, "error", err)
 		return
 	}
 
-	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 
 	log.CtxInfow(reqCtx.Context(), "succeed to get latest bucket quota", "bucket_id",
@@ -425,6 +424,8 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 		bucketSize          uint64
 		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
+		quota               *gfsptask.GfSpBucketQuotaInfo
+		bz                  []byte
 	)
 
 	defer func() {
@@ -451,44 +452,23 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	bucketID = bucketMigrationInfo.GetBucketId()
-	err = g.baseApp.GfSpClient().NotifyPreMigrateBucket(reqCtx.Context(), bucketID)
-	if err != nil {
+	if quota, err = g.baseApp.GfSpClient().NotifyPreMigrateBucketAndDeductQuota(reqCtx.Context(), bucketID); err != nil || quota == nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to pre migrate bucket, the bucket may already notified", "bucket_id",
 			bucketID, "error", err)
+		// if the bucket has already pre notified ignore the error
+		if strings.Contains(err.Error(), "the bucket has already notified") {
+			err = nil
+		}
 		return
 	}
 
-	// get bucket quota and check, lock quota
-	bucketSize, err = g.getBucketTotalSize(reqCtx.Context(), bucketID)
-	if err != nil {
-		return
-	}
-
-	quota, err := g.baseApp.GfSpClient().GetLatestBucketReadQuota(
-		reqCtx.Context(), bucketID)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "bucket_id",
-			bucketID, "error", err)
-		return
-	}
-
-	// reduce quota, sql db
-	err = g.baseApp.GfSpClient().DeductQuotaForBucketMigrate(
-		reqCtx.Context(), bucketID, bucketSize, quota.GetMonth())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "bucket_id",
-			bucketID, "error", err)
-		return
-	}
-
-	bz, err := quota.Marshal()
-	if err != nil {
+	if bz, err = quota.Marshal(); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to marshal", "bucket_id",
 			bucketID, "error", err)
 		return
 	}
 
-	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 
 	log.CtxInfow(reqCtx.Context(), "succeed to pre bucket migrate and deduct quota", "bucket_id",
@@ -498,13 +478,13 @@ func (g *GateModular) preMigrateBucketHandler(w http.ResponseWriter, r *http.Req
 // postMigrateBucketHandler notifying the source sp about the completion of migration bucket
 func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                 error
-		reqCtx              *RequestContext
-		bucketID            uint64
-		bucketSize          uint64
+		err      error
+		reqCtx   *RequestContext
+		bucketID uint64
+
 		bucketMigrationInfo *gfsptask.GfSpBucketMigrationInfo
 		allowMigrate        bool
-		extraQuota          uint64
+		latestQuota         *gfsptask.GfSpBucketQuotaInfo
 	)
 
 	defer func() {
@@ -531,51 +511,19 @@ func (g *GateModular) postMigrateBucketHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	bucketID = bucketMigrationInfo.GetBucketId()
-	err = g.baseApp.GfSpClient().NotifyPostMigrateBucket(reqCtx.Context(), bucketMigrationInfo)
-	if err != nil {
+	if latestQuota, err = g.baseApp.GfSpClient().NotifyPostMigrateBucketAndRecoupQuota(reqCtx.Context(), bucketMigrationInfo); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "post migrate bucket error, the bucket may already notified", "bucket_id",
 			bucketID, "error", err)
 		return
 	}
 
-	latestQuota, err := g.baseApp.GfSpClient().GetLatestBucketReadQuota(
-		reqCtx.Context(), bucketID)
+	bz, err := latestQuota.Marshal()
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get bucket read quota", "bucket_id",
+		log.CtxErrorw(reqCtx.Context(), "failed to marshal", "bucket_id",
 			bucketID, "error", err)
 		return
 	}
-
-	if bucketMigrationInfo.GetFinished() {
-		bz, err := latestQuota.Marshal()
-		if err != nil {
-			log.CtxErrorw(reqCtx.Context(), "failed to marshal", "bucket_id",
-				bucketID, "error", err)
-			return
-		}
-		w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
-	} else {
-		// get bucket quota and check TODO month check
-		bucketSize, err = g.getBucketTotalSize(reqCtx.Context(), bucketID)
-		if err != nil {
-			return
-		}
-		migratedBytes := bucketMigrationInfo.GetMigratedBytesSize()
-		if migratedBytes >= bucketSize {
-			// If the data migrated surpasses the total bucket size, quota recoup is skipped.
-			// This situation may arise due to deletions in the bucket migration process.
-			log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
-		} else {
-			extraQuota = bucketSize - migratedBytes
-			quotaUpdateErr := g.baseApp.GfSpClient().RecoupQuota(reqCtx.Context(), bucketMigrationInfo.GetBucketId(), extraQuota, latestQuota.GetMonth())
-			// no need to return the db error to user
-			if quotaUpdateErr != nil {
-				log.CtxErrorw(reqCtx.Context(), "failed to recoup extra quota to user", "error", err)
-			}
-		}
-		log.CtxDebugw(reqCtx.Context(), "succeed to recoup extra quota to user", "extra_quote", extraQuota)
-	}
-
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 
 	log.CtxInfow(reqCtx.Context(), "succeed to post bucket migrate", "bucket_id",
@@ -644,7 +592,7 @@ func (g *GateModular) sufficientQuotaForBucketMigrationHandler(w http.ResponseWr
 		return
 	}
 
-	w.Header().Set(GnfdSignedApprovalMsgHeader, hex.EncodeToString(bz))
+	w.Header().Set(GnfdQuotaInfoHeader, hex.EncodeToString(bz))
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	log.CtxInfow(reqCtx.Context(), "succeed to check bucket migrate quota", "bucket_id", bucketID,
 		"quota", quota, "bucket_size", bucketSize)

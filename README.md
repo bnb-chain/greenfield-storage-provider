@@ -652,7 +652,7 @@ The correct configuration should not include the protocol prefix `https://`.
 Here is block_syncer config.
 The configuration of BsDBWriteAddress can be the same as the BSDB.Address module here. To enhance performance, you can set up the write database address here and the corresponding read database address in BSDB.
 ```
-Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree', 'virtual_group','sp_exit_events','object_id_map']
+Modules = ['epoch','bucket','object','payment','group','permission','storage_provider','prefix_tree', 'virtual_group','sp_exit_events','object_id_map','general']
 BsDBWriteAddress = 'localhost:3306'
 Workers = 50
 ```

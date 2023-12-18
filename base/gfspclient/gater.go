@@ -67,6 +67,8 @@ const (
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
+	// GnfdQuotaInfoHeader defines quota info, which is used by sp
+	GnfdQuotaInfoHeader = "X-Gnfd-Quota-Info"
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask,
@@ -243,13 +245,13 @@ func (s *GfSpClient) QueryLatestBucketQuota(ctx context.Context, endpoint string
 		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("failed to query latest bucket quota, bucket(%s), status_code(%d), endpoint(%s)", queryMsg, resp.StatusCode, endpoint)
 	}
 
-	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	quotaInfoMsg, err := hex.DecodeString(resp.Header.Get(GnfdQuotaInfoHeader))
 	if err != nil {
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
 	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
-	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+	if err = proto.Unmarshal(quotaInfoMsg, &quotaResult); err != nil {
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
@@ -280,13 +282,13 @@ func (s *GfSpClient) PreMigrateBucket(ctx context.Context, srcSPEndpoint string,
 		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("failed to pre migrate bucket, bucket_migration_info(%s), status_code(%d), endpoint(%s)", preMsg, resp.StatusCode, srcSPEndpoint)
 	}
 
-	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	quotaInfoMsg, err := hex.DecodeString(resp.Header.Get(GnfdQuotaInfoHeader))
 	if err != nil {
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
 	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
-	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+	if err = proto.Unmarshal(quotaInfoMsg, &quotaResult); err != nil {
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
@@ -319,13 +321,13 @@ func (s *GfSpClient) PostMigrateBucket(ctx context.Context, srcSPEndpoint string
 		return gfsptask.GfSpBucketQuotaInfo{}, fmt.Errorf("failed to post migrate bucket to src sp, bucket(%d), status_code(%d), endpoint(%s)", bucketID, resp.StatusCode, srcSPEndpoint)
 	}
 
-	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	quotaInfoMsg, err := hex.DecodeString(resp.Header.Get(GnfdQuotaInfoHeader))
 	if err != nil {
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
 	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
-	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+	if err = proto.Unmarshal(quotaInfoMsg, &quotaResult); err != nil {
 		return gfsptask.GfSpBucketQuotaInfo{}, err
 	}
 
@@ -358,13 +360,13 @@ func (s *GfSpClient) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, 
 			bucketID, resp.StatusCode, srcSPEndpoint)
 	}
 
-	signedMsg, err := hex.DecodeString(resp.Header.Get(GnfdSignedApprovalMsgHeader))
+	quotaInfoMsg, err := hex.DecodeString(resp.Header.Get(GnfdQuotaInfoHeader))
 	if err != nil {
 		return err
 	}
 
 	quotaResult := gfsptask.GfSpBucketQuotaInfo{}
-	if err = proto.Unmarshal(signedMsg, &quotaResult); err != nil {
+	if err = proto.Unmarshal(quotaInfoMsg, &quotaResult); err != nil {
 		return err
 	}
 

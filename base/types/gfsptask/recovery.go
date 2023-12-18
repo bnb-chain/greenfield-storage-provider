@@ -93,7 +93,7 @@ func (m *GfSpRecoverPieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpRecoverPieceTask) SetRetry(retry int) {
+func (m *GfSpRecoverPieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -181,6 +181,22 @@ func (m *GfSpRecoverPieceTask) SetPieceSize(size uint64) {
 
 func (m *GfSpRecoverPieceTask) SetRecoverDone() {
 	m.Recovered = true
+}
+
+func (m *GfSpRecoverPieceTask) SetBySuccessorSP(bySuccessor bool) {
+	m.BySuccessorSp = bySuccessor
+}
+
+func (m *GfSpRecoverPieceTask) BySuccessorSP() bool {
+	return m.BySuccessorSp
+}
+
+func (m *GfSpRecoverPieceTask) SetGVGID(gvgID uint32) {
+	m.GvgId = gvgID
+}
+
+func (m *GfSpRecoverPieceTask) GetGVGID() uint32 {
+	return m.GvgId
 }
 
 func (m *GfSpRecoverPieceTask) GetSignBytes() []byte {
