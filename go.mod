@@ -10,7 +10,7 @@ require (
 	github.com/aliyun/credentials-go v1.3.0
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v1.0.2-0.20231206030704-1d61fbd497c8
+	github.com/bnb-chain/greenfield v1.1.2-0.20231218072814-91611a926302
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230906132736-eb2f0efea228
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.2
@@ -306,7 +306,7 @@ replace (
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.0-20231030090949-99ef7dbd1e62
 	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v1.0.2-0.20231129013257-1e407f209b02
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v1.0.2-0.20231214052136-c20e9a5452b6
 	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1
 	github.com/forbole/juno/v4 => github.com/bnb-chain/juno/v4 v4.0.0-20231027060606-82070b5da95a
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
