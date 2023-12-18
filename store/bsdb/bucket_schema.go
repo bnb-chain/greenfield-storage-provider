@@ -1,8 +1,14 @@
 package bsdb
 
 import (
+	"encoding/json"
+
 	"github.com/forbole/juno/v4/common"
 	"github.com/shopspring/decimal"
+	"gorm.io/datatypes"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 // Bucket is the structure for user bucket
@@ -53,11 +59,25 @@ type Bucket struct {
 	UpdateTxHash common.Hash `gorm:"update_tx_hash"`
 	// UpdateTime defines the timestamp when the bucket update.
 	UpdateTime int64 `gorm:"column:update_time"`
+	// Tags
+	Tags datatypes.JSON `gorm:"column:tags;TYPE:json"` // tags
 }
 
 // TableName is used to set Bucket table name in database
 func (b *Bucket) TableName() string {
 	return BucketTableName
+}
+
+// GetResourceTags is used to convert the db tags string to *storage_types.ResourceTags type
+func (b *Bucket) GetResourceTags() *storagetypes.ResourceTags {
+	tags := &storagetypes.ResourceTags{}
+	if b.Tags != nil {
+		tagUnmarshalErr := json.Unmarshal(b.Tags, tags)
+		if tagUnmarshalErr != nil {
+			log.Warnw("failed to Unmarshal bucket tags", "error", tagUnmarshalErr)
+		}
+	}
+	return tags
 }
 
 // BucketFullMeta is the structure for user bucket with its related info

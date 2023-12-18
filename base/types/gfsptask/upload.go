@@ -93,7 +93,7 @@ func (m *GfSpUploadObjectTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpUploadObjectTask) SetRetry(retry int) {
+func (m *GfSpUploadObjectTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -255,7 +255,7 @@ func (m *GfSpResumableUploadObjectTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpResumableUploadObjectTask) SetRetry(retry int) {
+func (m *GfSpResumableUploadObjectTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -405,7 +405,7 @@ func (m *GfSpReplicatePieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpReplicatePieceTask) SetRetry(retry int) {
+func (m *GfSpReplicatePieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -590,7 +590,7 @@ func (m *GfSpSealObjectTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpSealObjectTask) SetRetry(retry int) {
+func (m *GfSpSealObjectTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 
@@ -760,7 +760,7 @@ func (m *GfSpReceivePieceTask) IncRetry() {
 	m.GetTask().IncRetry()
 }
 
-func (m *GfSpReceivePieceTask) SetRetry(retry int) {
+func (m *GfSpReceivePieceTask) SetRetry(retry int64) {
 	m.GetTask().SetRetry(retry)
 }
 

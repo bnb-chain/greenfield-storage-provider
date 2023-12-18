@@ -266,7 +266,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.challengeQueue = cfg.Customize.NewStrategyTQueueFunc(
 		manager.Name()+"-cache-challenge-piece", cfg.Parallel.GlobalChallengePieceTaskCacheSize)
 
-	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus(), manager.enableHealthyChecker); err != nil {
+	if manager.virtualGroupManager, err = cfg.Customize.NewVirtualGroupManagerFunc(manager.baseApp.OperatorAddress(), manager.baseApp.Consensus(), manager.baseApp.GfSpClient(), manager.enableHealthyChecker); err != nil {
 		return err
 	}
 	if cfg.Manager.SubscribeSPExitEventIntervalMillisecond == 0 {
@@ -290,6 +290,11 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.spBlackList = cfg.Manager.SPBlackList
 
 	manager.recoverObjectStats = NewObjectsSegmentsStats()
+
+	manager.enableTaskRetryScheduler = cfg.Manager.EnableTaskRetryScheduler
+	manager.rejectUnsealThresholdSecond = cfg.Manager.RejectUnsealThresholdSecond
+
+	manager.enableBucketMigrateCache = cfg.Manager.EnableBucketMigrateCache
 
 	return nil
 }

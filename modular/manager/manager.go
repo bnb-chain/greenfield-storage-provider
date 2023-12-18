@@ -10,11 +10,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -77,9 +76,6 @@ type ManageModular struct {
 	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueueMux     sync.Mutex
 
-	// src sp used TODO: these should be persisted
-	migratingBuckets map[uint64]struct{}
-
 	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
@@ -103,10 +99,11 @@ type ManageModular struct {
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
 
-	spID                   uint32
-	virtualGroupManager    vgmgr.VirtualGroupManager
-	bucketMigrateScheduler *BucketMigrateScheduler
-	spExitScheduler        *SPExitScheduler
+	spID                     uint32
+	virtualGroupManager      vgmgr.VirtualGroupManager
+	bucketMigrateScheduler   *BucketMigrateScheduler
+	spExitScheduler          *SPExitScheduler
+	enableBucketMigrateCache bool
 
 	subscribeSPExitEventInterval        uint
 	subscribeBucketMigrateEventInterval uint
@@ -129,6 +126,10 @@ type ManageModular struct {
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
 	enableHealthyChecker bool
+
+	enableTaskRetryScheduler    bool
+	rejectUnsealThresholdSecond uint64
+	taskRetryScheduler          *TaskRetryScheduler
 }
 
 func (m *ManageModular) Name() string {
@@ -159,8 +160,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.gcBucketMigrationQueue.SetRetireTaskStrategy(m.ResetGCBucketMigrationQueue)
 	m.gcBucketMigrationQueue.SetFilterTaskStrategy(m.FilterGCTask)
 
-	m.migratingBuckets = make(map[uint64]struct{})
-
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
 		return err
@@ -183,10 +182,19 @@ func (m *ManageModular) Start(ctx context.Context) error {
 			}
 		}
 	}
-
-	//go m.delayStartMigrateScheduler()
+	m.startTaskRetryScheduler()
+	go m.delayStartMigrateScheduler()
 	go m.eventLoop(ctx)
 	return nil
+}
+
+func (m *ManageModular) startTaskRetryScheduler() {
+	if !m.enableTaskRetryScheduler {
+		log.Info("Skip to start task retry scheduler")
+		return
+	}
+	m.taskRetryScheduler = NewTaskRetryScheduler(m)
+	m.taskRetryScheduler.Start()
 }
 
 func (m *ManageModular) delayStartMigrateScheduler() {
@@ -198,12 +206,6 @@ func (m *ManageModular) delayStartMigrateScheduler() {
 		if m.bucketMigrateScheduler == nil {
 			if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
 				log.Errorw("failed to new bucket migrate scheduler", "error", err)
-				continue
-			}
-		}
-		if m.spExitScheduler == nil {
-			if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
-				log.Errorw("failed to new sp exit scheduler", "error", err)
 				continue
 			}
 		}
@@ -413,9 +415,8 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
 			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
-		replicateTask.SetSecondaryAddresses(meta.SecondaryEndpoints)
-		replicateTask.SetSecondarySignatures(meta.SecondarySignatures)
 		replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
+		replicateTask.SetSecondaryAddresses(meta.SecondaryEndpoints)
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
@@ -772,7 +773,7 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"upload[%d], resumableUpload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
+		"current inner status, upload[%d], resumableUpload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
 		m.uploadQueue.Len(), m.resumableUploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
 		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
@@ -956,6 +957,37 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	recoveryProcessCount = len(m.recoveryTaskMap)
 	recoveryFailedList = m.recoveryFailedList
 	return
+}
+
+func (m *ManageModular) QueryBucketMigrationProgress(_ context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	var (
+		progress      *spdb.MigrateBucketProgressMeta
+		err           error
+		migratedBytes uint64
+	)
+
+	if progress, err = m.baseApp.GfSpDB().QueryMigrateBucketProgress(bucketID); err != nil {
+		return nil, err
+	}
+
+	if migratedBytes, err = m.bucketMigrateScheduler.getMigratedBytesSize(bucketID); err != nil {
+		return nil, err
+	}
+
+	progressMeta := &gfspserver.MigrateBucketProgressMeta{
+		BucketId:               progress.BucketID,
+		SubscribedBlockHeight:  progress.SubscribedBlockHeight,
+		MigrateState:           uint32(progress.MigrateState),
+		TotalGvgNum:            progress.TotalGvgNum,
+		MigratedFinishedGvgNum: progress.MigratedFinishedGvgNum,
+		GcFinishedGvgNum:       progress.GcFinishedGvgNum,
+		PreDeductedQuota:       progress.PreDeductedQuota,
+		RecoupQuota:            progress.RecoupQuota,
+		LastGcObjectId:         progress.LastGcObjectID,
+		LastGcGvgId:            progress.LastGcGvgID,
+		MigratedBytes:          migratedBytes,
+	}
+	return progressMeta, err
 }
 
 func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {

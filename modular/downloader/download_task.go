@@ -32,6 +32,7 @@ var (
 	ErrNoSuchPiece       = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30006, "request params invalid, no such piece")
 	ErrKeyFormat         = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30007, "invalid key format")
 	ErrAccountFrozen     = gfsperrors.Register(module.DownloadModularName, http.StatusNotAcceptable, 30008, "stream account has been frozen")
+	ErrDownloadStatus    = gfsperrors.Register(module.DownloadModularName, http.StatusBadRequest, 30009, "object cannot be downloaded")
 )
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
@@ -57,9 +58,17 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		log.CtxErrorw(ctx, "failed pre download object due to pointer dangling")
 		return ErrDanglingPointer
 	}
-	if downloadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.CtxErrorw(ctx, "failed to pre download object due to object unsealed")
-		return ErrObjectUnsealed
+	if downloadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED &&
+		downloadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+		log.CtxErrorw(ctx, "failed to pre download object due to object is not in sealed or created")
+		return ErrDownloadStatus
+	}
+	if downloadObjectTask.GetObjectInfo().GetObjectStatus() == storagetypes.OBJECT_STATUS_CREATED {
+		_, err = d.baseApp.GfSpDB().GetObjectIntegrity(downloadObjectTask.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to pre download piece due to get object integrity", "error", err)
+			return ErrDownloadStatus
+		}
 	}
 
 	bucketName := downloadObjectTask.GetBucketInfo().GetBucketName()
@@ -256,9 +265,17 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 		return ErrDanglingPointer
 	}
 
-	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-		log.CtxErrorw(ctx, "failed to pre download piece due to object unsealed")
-		return ErrObjectUnsealed
+	if downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED &&
+		downloadPieceTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+		log.CtxErrorw(ctx, "failed to pre download piece due to object is not in sealed or created")
+		return ErrDownloadStatus
+	}
+	if downloadPieceTask.GetObjectInfo().GetObjectStatus() == storagetypes.OBJECT_STATUS_CREATED {
+		_, err = d.baseApp.GfSpDB().GetObjectIntegrity(downloadPieceTask.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to pre download piece due to get object integrity", "error", err)
+			return ErrDownloadStatus
+		}
 	}
 
 	// if it is a request from the primary SP of the object, no need to check quota

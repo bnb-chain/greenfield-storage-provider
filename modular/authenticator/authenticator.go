@@ -198,6 +198,16 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrNoSuchBucket
 		}
 		return true, nil
+	case coremodule.AuthOpTypeQueryBucketMigrationProgress:
+		queryTime := time.Now()
+		bucketInfo, _ := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_migrate_bucket_progress_query_bucket_time").Observe(time.Since(queryTime).Seconds())
+		if bucketInfo == nil {
+			log.CtxErrorw(ctx, "failed to verify authentication of asking query migrate bucket "+
+				"progress, bucket not existed", "bucket", bucket)
+			return false, ErrNoSuchBucket
+		}
+		return true, nil
 	case coremodule.AuthOpAskCreateObjectApproval:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, _ := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
@@ -256,7 +266,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		return allow, nil
 	case coremodule.AuthOpTypeGetUploadingState:
 		queryTime := time.Now()
-		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
+		bucketInfo, _, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
@@ -282,18 +292,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-			log.CtxErrorw(ctx, "object state should be OBJECT_STATUS_CREATED", "state", objectInfo.GetObjectStatus())
-			return false, ErrUnexpectedObjectStatusWithDetail(objectInfo.ObjectName, storagetypes.OBJECT_STATUS_CREATED, objectInfo.GetObjectStatus())
-		}
-		permissionTime := time.Now()
-		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
-		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
-			return false, err
-		}
-		return allow, nil
+		return true, nil
 	case coremodule.AuthOpTypeGetObject:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)
@@ -322,9 +321,10 @@ func (a *AuthenticationModular) VerifyAuthentication(
 				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED {
-			log.CtxErrorw(ctx, "object state is not sealed", "state", objectInfo.GetObjectStatus())
-			return false, ErrNotSealedState
+		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_SEALED &&
+			objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+			log.CtxErrorw(ctx, "object state is not sealed or created", "state", objectInfo.GetObjectStatus())
+			return false, ErrNoPermission
 		}
 		streamTime := time.Now()
 		streamRecord, err := a.baseApp.Consensus().QueryPaymentStreamRecord(ctx, bucketInfo.GetPaymentAddress())

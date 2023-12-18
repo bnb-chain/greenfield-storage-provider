@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -18,7 +19,15 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+)
+
+var (
+	rtyAttNum = uint(3)
+	rtyAttem  = retry.Attempts(rtyAttNum)
+	rtyDelay  = retry.Delay(time.Millisecond * 500)
+	rtyErr    = retry.LastErrorOnly(true)
 )
 
 var (
@@ -95,7 +104,16 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_end_from_task_create").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		go func() {
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
-			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
+			if err = retry.Do(func() error {
+				return u.baseApp.GfSpClient().ReportTask(context.Background(), uploadObjectTask)
+			}, rtyAttem,
+				rtyDelay,
+				rtyErr,
+				retry.OnRetry(func(n uint, err error) {
+					log.CtxErrorw(ctx, "failed to report upload object task", "error", err, "attempt", n, "max_attempts", rtyAttNum)
+				})); err != nil {
+				log.CtxErrorw(ctx, "failed to report upload object task", "error", err)
+			}
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		}()
 	}()
@@ -147,6 +165,14 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 				return ErrGfSpDBWithDetail("failed to write integrity hash to db, error: " + err.Error())
+			}
+			err = u.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
+				ObjectID:  uploadObjectTask.GetObjectInfo().Id.Uint64(),
+				TaskState: types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
+			})
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to update upload progress", "error", err)
+				return ErrGfSpDBWithDetail("failed to update upload progress, error: " + err.Error())
 			}
 			log.CtxDebugw(ctx, "succeed to upload payload to piece store")
 			return nil
@@ -224,7 +250,16 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 			"read_size", readSize, "error", err)
 		go func() {
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_before_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
-			_ = u.baseApp.GfSpClient().ReportTask(context.Background(), task)
+			if err = retry.Do(func() error {
+				return u.baseApp.GfSpClient().ReportTask(context.Background(), task)
+			}, rtyAttem,
+				rtyDelay,
+				rtyErr,
+				retry.OnRetry(func(n uint, err error) {
+					log.CtxErrorw(ctx, "failed to report upload object task", "error", err, "attempt", n, "max_attempts", rtyAttNum)
+				})); err != nil {
+				log.CtxErrorw(ctx, "failed to report upload object task", "error", err)
+			}
 			metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_after_report_manager_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		}()
 	}()
@@ -272,6 +307,14 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to write integrity hash to db", "error", err)
 					return ErrGfSpDBWithDetail("failed to write integrity hash to db, error: " + err.Error())
+				}
+				err = u.baseApp.GfSpDB().UpdateUploadProgress(&corespdb.UploadObjectMeta{
+					ObjectID:  task.GetObjectInfo().Id.Uint64(),
+					TaskState: types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
+				})
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to update upload progress", "error", err)
+					return ErrGfSpDBWithDetail("failed to update upload progress, error: " + err.Error())
 				}
 			}
 

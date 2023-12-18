@@ -55,7 +55,7 @@ type Task interface {
 	// GetRetry returns the retry counter of the task.
 	GetRetry() int64
 	// SetRetry sets the retry counter of the task.
-	SetRetry(int)
+	SetRetry(int64)
 	// IncRetry increases the retry counter of the task. Each task has the max retry
 	// times, if retry counter exceed the max retry, the task should be canceled.
 	IncRetry()
@@ -599,4 +599,24 @@ type GCBucketMigrationTask interface {
 	GetBucketID() uint64
 	// SetBucketID sets the bucketID
 	SetBucketID(uint64)
+	// GetLastGCObjectID returns the last gc object id
+	GetLastGCObjectID() uint64
+	// SetLastGCObjectID sets the last gc object id
+	SetLastGCObjectID(uint64)
+	// GetLastGCGvgID returns the last gc gvg id
+	GetLastGCGvgID() uint64
+	// SetLastGCGvgID sets the last gc gvg id
+	SetLastGCGvgID(uint64)
+	// GetTotalGvgNum returns the total num of gvg
+	GetTotalGvgNum() uint64
+	// SetTotalGvgNum sets the total num of gvg
+	SetTotalGvgNum(gvgNum uint64)
+	// GetGCFinishedGvgNum returns the task whether finished
+	GetGCFinishedGvgNum() uint64
+	// SetGCFinishedGvgNum sets the bucket migration task status when finished
+	SetGCFinishedGvgNum(gvgGcNum uint64)
+	// GetFinished returns the task whether finished
+	GetFinished() bool
+	// SetFinished sets the bucket migration task status when finished
+	SetFinished(bool)
 }

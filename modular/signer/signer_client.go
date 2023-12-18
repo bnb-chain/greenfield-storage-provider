@@ -829,6 +829,112 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context
 	return "", ErrRejectMigrateBucketOnChain
 }
 
+func (client *GreenfieldChainSignClient) Deposit(ctx context.Context, scope SignType,
+	msg *virtualgrouptypes.MsgDeposit) (string, error) {
+	log.Infow("signer starts to make deposit into GVG", "scope", scope)
+	if msg == nil {
+		log.CtxError(ctx, "deposit msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msgDeposit := virtualgrouptypes.NewMsgDeposit(km.GetAddr(), msg.GlobalVirtualGroupId, msg.Deposit)
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgDeposit}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrDepositOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrDepositOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast deposit tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast deposit tx", "tx_hash", txHash, "deposit_msg", msgDeposit)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrDepositOnChain.SetError(fmt.Errorf("failed to broadcast deposit, error: %v", err))
+	return "", ErrDepositOnChain
+}
+
+func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Context, scope SignType,
+	msg *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
+	log.Infow("signer starts to delete GVG", "scope", scope)
+	if msg == nil {
+		log.CtxError(ctx, "delete GVG msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msgDeleteGlobalVirtualGroup := virtualgrouptypes.NewMsgDeleteGlobalVirtualGroup(km.GetAddr(), msg.GetGlobalVirtualGroupId())
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgDeleteGlobalVirtualGroup}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrDeleteGVGOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast delete GVG tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast delete GVG tx", "tx_hash", txHash, "reject_migrate_bucket_msg", msgDeleteGlobalVirtualGroup)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to broadcast delete GVG, error: %v", err))
+	return "", ErrDeleteGVGOnChain
+}
+
 func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.GreenfieldClient) (uint64, error) {
 	err := client.signer.baseApp.Consensus().WaitForNextBlock(ctx)
 	if err != nil {

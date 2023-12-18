@@ -127,6 +127,7 @@ func TestUploadModular_HandleUploadObjectTaskSuccess1(t *testing.T) {
 	m3 := corespdb.NewMockSPDB(ctrl)
 	u.baseApp.SetGfSpDB(m3)
 	m3.EXPECT().SetObjectIntegrity(gomock.Any()).Return(nil).AnyTimes()
+	m3.EXPECT().UpdateUploadProgress(gomock.Any()).Return(nil).AnyTimes()
 
 	m4 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m4)

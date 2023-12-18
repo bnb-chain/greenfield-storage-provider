@@ -9,6 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/events"
+	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/general"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/group"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/object"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/objectidmap"
@@ -54,5 +55,6 @@ func (r *BlockSyncerRegistrar) BuildModules(ctx registrar.Context) modules.Modul
 		//vg event module
 		events.NewModule(db),
 		objectidmap.NewModule(db),
+		general.NewModule(db),
 	}
 }

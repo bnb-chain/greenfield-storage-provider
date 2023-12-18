@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -16,11 +15,9 @@ import (
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"github.com/forbole/juno/v4/common"
 )
 
 type GCWorker struct {
@@ -405,13 +402,16 @@ func (e *ExecuteModular) gcMetaReadRecord(ctx context.Context, task coretask.GCM
 }
 
 func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task coretask.GCBucketMigrationTask) {
-	// TODO gc progress persist in db
 	var (
-		groups     []*bsdb.GlobalVirtualGroup
-		err        error
-		startAfter uint64 = 0
-		limit      uint32
-		objects    []*metadatatypes.ObjectDetails
+		gvgList         []*virtualgrouptypes.GlobalVirtualGroup
+		err             error
+		startAfter      uint64 = 0
+		limit           uint32 = 100
+		objectList      []*metadatatypes.ObjectDetails
+		gcNum           uint64 = 0
+		bucketInfo      *storagetypes.BucketInfo
+		gcFinisheGvgNum uint64 = 0
+		gvgTotalNum     uint64 = 0
 	)
 	bucketID := task.GetBucketID()
 
@@ -421,51 +421,78 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 		return errors.Is(reportErr, manager.ErrCanceledTask)
 	}
 	defer func() {
+		task.SetTotalGvgNum(gvgTotalNum)
+		task.SetGCFinishedGvgNum(gcFinisheGvgNum)
 		if err == nil { // succeed
+			task.SetFinished(true)
 			reportProgress()
 		} else { // failed
 			task.SetError(err)
 			reportProgress()
 		}
-		log.CtxDebugw(ctx, "succeed to report gc bucket migration task", "task_info", task.Info(), "bucket_id", bucketID, "error", err)
+		log.CtxDebugw(ctx, "succeed to report gc bucket migration task", "task_info", task.Info(),
+			"bucket_id", bucketID, "gc_num", gcNum, "error", err)
 	}()
 
 	// list gvg
-	groups, err = e.baseApp.GfBsDB().ListGvgByBucketID(common.BigToHash(math.NewUint(bucketID).BigInt()))
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "error", err)
+	if gvgList, err = e.baseApp.GfSpClient().ListGlobalVirtualGroupsByBucket(ctx, bucketID); err != nil {
+		log.CtxErrorw(ctx, "failed to list global virtual group by bucket id", "bucket_id", bucketID, "error", err)
 		return
 	}
 
 	// current chain's gvg info compare metadata info
-	bucketInfo, err := e.baseApp.Consensus().QueryBucketInfoById(ctx, bucketID)
-	if err != nil || bucketInfo == nil {
-		log.Errorw("failed to get bucket by bucket name", "error", err)
+	if bucketInfo, err = e.baseApp.Consensus().QueryBucketInfoById(ctx, bucketID); err != nil || bucketInfo == nil {
+		log.Errorw("failed to get bucket by bucket name", "bucket_id", bucketID, "error", err)
 		return
 	}
 	vgfID := bucketInfo.GetGlobalVirtualGroupFamilyId()
-	log.CtxInfow(ctx, "begin to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgs", groups, "vgfID", vgfID, "error", err)
+	log.CtxInfow(ctx, "begin to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgList", gvgList, "vgfID", vgfID, "error", err)
 
-	for _, gvg := range groups {
+	gvgTotalNum = uint64(len(gvgList))
+
+	for _, gvg := range gvgList {
 		if gvg.FamilyId != vgfID {
-			log.CtxErrorw(ctx, "failed to check gvg's status with chain's status, the gvg may be old data", "error", err)
+			log.CtxErrorw(ctx, "failed to check gvg's status with chain's status, the gvg may be old data", "bucket_id", bucketID, "gvg", gvg, "error", err)
 			err = errors.New("gvg family id mismatch")
 			return
 		}
-		objects, err = e.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(ctx, gvg.GlobalVirtualGroupId, bucketID, startAfter, limit)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to list objects by gvg and bucket for gc", "error", err)
-			return
-		}
-		// can delete, verify
-		for _, obj := range objects {
-			objectInfo := obj.GetObject().GetObjectInfo()
-			if e.gcWorker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
-				err = e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
-				log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)
+		for {
+			if objectList, err = e.baseApp.GfSpClient().ListObjectsByGVGAndBucketForGC(ctx, gvg.GetId(), bucketID, startAfter, limit); err != nil {
+				log.CtxErrorw(ctx, "failed to list objectList by gvg and bucket for gc", "bucket_id", bucketID, "gvg", gvg, "error", err)
+				return
+			}
+			// can delete, verify
+			for index, obj := range objectList {
+				gcNum++
+				objectInfo := obj.GetObject().GetObjectInfo()
+				startAfter = obj.GetObject().GetObjectInfo().Id.Uint64()
+				if e.gcWorker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
+					err = e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
+					log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)
+				}
+				if gcNum%reportProgressPerN == 0 || index == len(objectList)-1 {
+					log.Infow("bucket migration gc report task", "current_gvg", gvg, "bucket_id", bucketID,
+						"last_gc_object_id", obj.GetObject().GetObjectInfo().Id.Uint64())
+					task.SetLastGCObjectID(obj.GetObject().GetObjectInfo().Id.Uint64())
+					task.SetLastGCGvgID(uint64(gvg.GetId()))
+					task.SetTotalGvgNum(gvgTotalNum)
+					task.SetGCFinishedGvgNum(gcFinisheGvgNum)
+					if err = e.ReportTask(ctx, task); err != nil { // report task is already automatically triggered.
+						log.CtxErrorw(ctx, "failed to report bucket migration task gc progress", "task_info", task, "error", err)
+						return
+					}
+				}
+			}
+
+			if len(objectList) < int(limit) {
+				log.CtxInfow(ctx, "succeed to finish one gvg bucket migration gc", "bucket_id", bucketID, "gvg", gvg)
+				gcFinisheGvgNum++
+				break
 			}
 		}
 	}
+
+	log.CtxInfow(ctx, "succeed to gc bucket migration by bucket id", "bucket_id", bucketID, "gvgs", gvgList, "vgfID", vgfID, "gc_num", gcNum)
 }
 
 func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, task coretask.GCZombiePieceTask) error {

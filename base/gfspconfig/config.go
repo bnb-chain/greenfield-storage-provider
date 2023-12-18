@@ -103,7 +103,7 @@ type ChainConfig struct {
 type SpAccountConfig struct {
 	SpOperatorAddress  string `comment:"required"`
 	OperatorPrivateKey string `comment:"required"`
-	FundingPrivateKey  string `comment:"required"`
+	FundingPrivateKey  string `comment:"optional"`
 	SealPrivateKey     string `comment:"required"`
 	ApprovalPrivateKey string `comment:"required"`
 	GcPrivateKey       string `comment:"required"`
@@ -156,10 +156,10 @@ type ExecutorConfig struct {
 }
 
 type P2PConfig struct {
-	P2PPrivateKey string   `comment:"required"`
-	P2PAddress    string   `comment:"required"`
-	P2PAntAddress string   `comment:"required"`
-	P2PBootstrap  []string `comment:"required"`
+	P2PPrivateKey string   `comment:"optional"`
+	P2PAddress    string   `comment:"optional"`
+	P2PAntAddress string   `comment:"optional"`
+	P2PBootstrap  []string `comment:"optional"`
 	P2PPingPeriod int      `comment:"optional"`
 }
 
@@ -276,4 +276,16 @@ type ManagerConfig struct {
 	SubscribeBucketMigrateEventIntervalMillisecond uint     `comment:"optional"`
 	GVGPreferSPList                                []uint32 `comment:"optional"`
 	SPBlackList                                    []uint32 `comment:"optional"`
+
+	// EnableTaskRetryScheduler is used to enable task retry scheduler.
+	EnableTaskRetryScheduler bool `comment:"optional"`
+
+	// RejectUnsealThresholdSecond is as the following meanings:
+	// retry replicate and seal task when the task's create_timestamp + RejectUnsealThresholdSecond > now.time();
+	// retry reject unseal when the task's create_timestamp + RejectUnsealThresholdSecond <= now.time() &&
+	// create_timestamp + 2*RejectUnsealThresholdSecond > now.time().
+	RejectUnsealThresholdSecond uint64 `comment:"optional"`
+
+	// EnableBucketMigrateCache is used to enable bucket migrate's bucket cache.
+	EnableBucketMigrateCache bool `comment:"optional"`
 }

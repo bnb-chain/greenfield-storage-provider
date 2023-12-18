@@ -9,7 +9,7 @@ type UploadObjectProgressTable struct {
 	ErrorDescription      string
 	SecondaryEndpoints    string
 	SecondarySignatures   string
-	CreateTimestampSecond int64
+	CreateTimestampSecond int64 `gorm:"index:create_timestamp_index"`
 	UpdateTimestampSecond int64 `gorm:"index:update_timestamp_index"`
 }
 

@@ -360,22 +360,48 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 	}, nil
 }
 
-func (g *GfSpBaseApp) GfSpNotifyPreMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (
-	*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
-	if err := g.manager.NotifyPreMigrateBucket(ctx, req.GetBucketId()); err != nil {
+func (g *GfSpBaseApp) GfSpQueryBucketMigrationProgress(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrationProgressRequest) (
+	*gfspserver.GfSpQueryBucketMigrationProgressResponse, error) {
+	var (
+		progress *gfspserver.MigrateBucketProgressMeta
+		err      error
+	)
+	if progress, err = g.manager.QueryBucketMigrationProgress(ctx, req.GetBucketId()); err != nil {
+		log.CtxErrorw(ctx, "failed to query bucket migration progress", "bucket_id", req.GetBucketId(), "error", err)
 		return nil, err
 	}
 
-	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{}, nil
+	return &gfspserver.GfSpQueryBucketMigrationProgressResponse{
+		Progress: progress,
+	}, nil
 }
 
-func (g *GfSpBaseApp) GfSpNotifyPostMigrate(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (
-	*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
-	if err := g.manager.NotifyPostMigrateBucket(ctx, req.GetBucketMigrationInfo()); err != nil {
+func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (
+	*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
+	var (
+		quota *gfsptask.GfSpBucketQuotaInfo
+		err   error
+	)
+	if quota, err = g.manager.NotifyPreMigrateBucketAndDeductQuota(ctx, req.GetBucketId()); err != nil {
+		log.CtxErrorw(ctx, "failed to notify pre migrate bucket and deduct quota", "bucket_id", req.GetBucketId(), "error", err)
 		return nil, err
 	}
 
-	return &gfspserver.GfSpNotifyPostMigrateBucketResponse{}, nil
+	return &gfspserver.GfSpNotifyPreMigrateBucketResponse{Quota: quota}, nil
+}
+
+func (g *GfSpBaseApp) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (
+	*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
+	var (
+		quota *gfsptask.GfSpBucketQuotaInfo
+		err   error
+	)
+	if quota, err = g.manager.NotifyPostMigrateBucketAndRecoupQuota(ctx, req.GetBucketMigrationInfo()); err != nil {
+		log.CtxErrorw(ctx, "failed to notify post migrate bucket and recoup quota", "bucket_migration_info", req.GetBucketMigrationInfo(), "error", err)
+		return nil, err
+	}
+
+	return &gfspserver.GfSpNotifyPostMigrateBucketResponse{Quota: quota}, nil
 }
 
 func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspserver.GfSpResetRecoveryFailedListRequest) (

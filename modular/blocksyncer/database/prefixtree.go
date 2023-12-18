@@ -3,10 +3,10 @@ package database
 import (
 	"context"
 
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
-
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
 // CreatePrefixTree create prefix tree nodes by input slice
@@ -47,6 +47,30 @@ func (db *DB) GetPrefixTree(ctx context.Context, fullName, bucketName string) (*
 	shardTableName := bsdb.GetPrefixesTableName(bucketName)
 	err := db.Db.WithContext(ctx).Table(shardTableName).
 		Where("full_name = ? AND bucket_name = ? AND is_object = ?", fullName, bucketName, false).Take(&prefixTreeNode).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return prefixTreeNode, nil
+}
+
+// GetPrefixTreesByBucketAndPathName get prefix tree node by bucket name and path name
+func (db *DB) GetPrefixTreesByBucketAndPathName(ctx context.Context, bucketName, pathName string) ([]*bsdb.SlashPrefixTreeNode, error) {
+	var prefixTreeNode []*bsdb.SlashPrefixTreeNode
+	shardTableName := bsdb.GetPrefixesTableName(bucketName)
+	err := db.Db.WithContext(ctx).Table(shardTableName).
+		Where("bucket_name = ? AND path_name = ?", bucketName, pathName).Find(&prefixTreeNode).Error
+	return prefixTreeNode, err
+}
+
+// GetPrefixTreesByBucketAndPathNameAndFullName get prefix tree node by bucket name and path name and full name
+func (db *DB) GetPrefixTreesByBucketAndPathNameAndFullName(ctx context.Context, bucketName, pathName, fullName string) (*bsdb.SlashPrefixTreeNode, error) {
+	var prefixTreeNode *bsdb.SlashPrefixTreeNode
+	shardTableName := bsdb.GetPrefixesTableName(bucketName)
+	err := db.Db.WithContext(ctx).Table(shardTableName).
+		Where("bucket_name = ? AND path_name = ? and full_name = ?", bucketName, pathName, fullName).Take(&prefixTreeNode).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil

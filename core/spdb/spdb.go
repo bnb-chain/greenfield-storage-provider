@@ -38,6 +38,15 @@ type UploadObjectProgressDB interface {
 	// GetUploadMetasToSeal queries the latest replicate_done/seal_doing object to continue seal.
 	// It is only used in startup.
 	GetUploadMetasToSeal(limit int, timeout int64) ([]*UploadObjectMeta, error)
+	// GetUploadMetasToReplicateByStartTS queries the upload_done/replicate_doing object to continue replicate.
+	// It is used in task retry scheduler.
+	GetUploadMetasToReplicateByStartTS(limit int, startTimeStamp int64) ([]*UploadObjectMeta, error)
+	// GetUploadMetasToSealByStartTS queries the replicate_done/seal_doing object to continue seal.
+	// It is used in task retry scheduler.
+	GetUploadMetasToSealByStartTS(limit int, startTimeStamp int64) ([]*UploadObjectMeta, error)
+	// GetUploadMetasToRejectUnsealByRangeTS queries the upload_done/replicate_doing object to reject.
+	// It is used in task retry scheduler.
+	GetUploadMetasToRejectUnsealByRangeTS(limit int, startTimeStamp int64, endTimeStamp int64) ([]*UploadObjectMeta, error)
 	// InsertPutEvent inserts a new upload event progress.
 	InsertPutEvent(task coretask.Task) error
 }
@@ -165,6 +174,8 @@ type MigrateDB interface {
 	QuerySwapOutSubscribeProgress() (uint64, error)
 	// UpdateBucketMigrateSubscribeProgress includes insert and update.
 	UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error
+	// UpdateBucketMigrateGCSubscribeProgress includes insert and update.
+	UpdateBucketMigrateGCSubscribeProgress(blockHeight uint64) error
 	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
 	QueryBucketMigrateSubscribeProgress() (uint64, error)
 
@@ -181,20 +192,39 @@ type MigrateDB interface {
 	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
 	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
-
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
 	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
 	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
 	// UpdateMigrateGVGRetryCount updates gvg unit retry time
 	UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error
-
+	// UpdateMigrateGVGMigratedBytesSize updates gvg unit retry time
+	UpdateMigrateGVGMigratedBytesSize(migrateKey string, migratedBytes uint64) error
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
 	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
+
+	// UpdateBucketMigrationProgress update MigrateBucketProgress migrate state.
+	UpdateBucketMigrationProgress(bucketID uint64, migrateState int) error
+	// UpdateBucketMigrationPreDeductedQuota update pre-deducted quota and migration state when src sp receives a preMigrateBucket request.
+	UpdateBucketMigrationPreDeductedQuota(bucketID uint64, deductedQuota uint64, state int) error
+	// UpdateBucketMigrationRecoupQuota update RecoupQuota and the corresponding state in MigrateBucketProgress.
+	UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error
+	// UpdateBucketMigrationGCProgress update bucket migration gc progress
+	UpdateBucketMigrationGCProgress(progressMeta MigrateBucketProgressMeta) error
+	// UpdateBucketMigrationMigratingProgress update bucket migration migrating progress
+	UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error
+	// QueryMigrateBucketState returns the migrate state.
+	QueryMigrateBucketState(bucketID uint64) (int, error)
+	// QueryMigrateBucketProgress returns the migration progress.
+	QueryMigrateBucketProgress(bucketID uint64) (*MigrateBucketProgressMeta, error)
+	// ListBucketMigrationToConfirm returns the migrate bucket id to be confirmed.
+	ListBucketMigrationToConfirm(migrationStates []int) ([]*MigrateBucketProgressMeta, error)
+	// DeleteMigrateBucket delete the bucket migrate status
+	DeleteMigrateBucket(bucketID uint64) error
 }
 
 type ExitRecoverDB interface {

@@ -196,6 +196,21 @@ func (mr *MockGfSpClientAPIMockRecorder) CompleteSPExit(ctx, completeSPExit any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSPExit", reflect.TypeOf((*MockGfSpClientAPI)(nil).CompleteSPExit), ctx, completeSPExit)
 }
 
+// CompleteSwapIn mocks base method.
+func (m *MockGfSpClientAPI) CompleteSwapIn(ctx context.Context, completeSwpIn *types4.MsgCompleteSwapIn) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteSwapIn", ctx, completeSwpIn)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CompleteSwapIn indicates an expected call of CompleteSwapIn.
+func (mr *MockGfSpClientAPIMockRecorder) CompleteSwapIn(ctx, completeSwpIn any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSwapIn", reflect.TypeOf((*MockGfSpClientAPI)(nil).CompleteSwapIn), ctx, completeSwpIn)
+}
+
 // CompleteSwapOut mocks base method.
 func (m *MockGfSpClientAPI) CompleteSwapOut(ctx context.Context, completeSwapOut *types4.MsgCompleteSwapOut) (string, error) {
 	m.ctrl.T.Helper()
@@ -290,6 +305,36 @@ func (mr *MockGfSpClientAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucket
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, bucketID, deductQuota, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeductQuotaForBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeductQuotaForBucketMigrate), varargs...)
+}
+
+// DeleteGlobalVirtualGroup mocks base method.
+func (m *MockGfSpClientAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGlobalVirtualGroup", ctx, deleteGVG)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteGlobalVirtualGroup indicates an expected call of DeleteGlobalVirtualGroup.
+func (mr *MockGfSpClientAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGlobalVirtualGroup", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeleteGlobalVirtualGroup), ctx, deleteGVG)
+}
+
+// Deposit mocks base method.
+func (m *MockGfSpClientAPI) Deposit(ctx context.Context, deposit *types4.MsgDeposit) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deposit", ctx, deposit)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deposit indicates an expected call of Deposit.
+func (mr *MockGfSpClientAPIMockRecorder) Deposit(ctx, deposit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deposit", reflect.TypeOf((*MockGfSpClientAPI)(nil).Deposit), ctx, deposit)
 }
 
 // DiscontinueBucket mocks base method.
@@ -594,14 +639,14 @@ func (mr *MockGfSpClientAPIMockRecorder) GetGroupMembers(ctx, groupID, startAfte
 }
 
 // GetLatestBucketReadQuota mocks base method.
-func (m *MockGfSpClientAPI) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockGfSpClientAPI) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetLatestBucketReadQuota", varargs...)
-	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
+	ret0, _ := ret[0].(*gfsptask.GfSpBucketQuotaInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -631,6 +676,21 @@ func (mr *MockGfSpClientAPIMockRecorder) GetLatestObjectID(ctx any, opts ...any)
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestObjectID", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetLatestObjectID), varargs...)
+}
+
+// GetMigrateBucketProgress mocks base method.
+func (m *MockGfSpClientAPI) GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMigrateBucketProgress", ctx, bucketID)
+	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMigrateBucketProgress indicates an expected call of GetMigrateBucketProgress.
+func (mr *MockGfSpClientAPIMockRecorder) GetMigrateBucketProgress(ctx, bucketID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrateBucketProgress", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetMigrateBucketProgress), ctx, bucketID)
 }
 
 // GetObject mocks base method.
@@ -1069,6 +1129,26 @@ func (mr *MockGfSpClientAPIMockRecorder) ListBucketsByIDs(ctx, bucketIDs, includ
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByIDs", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListBucketsByIDs), varargs...)
 }
 
+// ListCompleteMigrationBucketEvents mocks base method.
+func (m *MockGfSpClientAPI) ListCompleteMigrationBucketEvents(ctx context.Context, blockID uint64, srcSpID uint32, opts ...grpc.DialOption) ([]*types3.EventCompleteMigrationBucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, blockID, srcSpID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListCompleteMigrationBucketEvents", varargs...)
+	ret0, _ := ret[0].([]*types3.EventCompleteMigrationBucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListCompleteMigrationBucketEvents indicates an expected call of ListCompleteMigrationBucketEvents.
+func (mr *MockGfSpClientAPIMockRecorder) ListCompleteMigrationBucketEvents(ctx, blockID, srcSpID any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, blockID, srcSpID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCompleteMigrationBucketEvents", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListCompleteMigrationBucketEvents), varargs...)
+}
+
 // ListDeletedObjectsByBlockNumberRange mocks base method.
 func (m *MockGfSpClientAPI) ListDeletedObjectsByBlockNumberRange(ctx context.Context, spOperatorAddress string, startBlockNumber, endBlockNumber uint64, includePrivate bool, opts ...grpc.DialOption) ([]*types.Object, uint64, error) {
 	m.ctrl.T.Helper()
@@ -1482,32 +1562,34 @@ func (mr *MockGfSpClientAPIMockRecorder) NotifyMigrateSwapOut(ctx, swapOut any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyMigrateSwapOut", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyMigrateSwapOut), ctx, swapOut)
 }
 
-// NotifyPostMigrateBucket mocks base method.
-func (m *MockGfSpClientAPI) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error {
+// NotifyPostMigrateBucketAndRecoupQuota mocks base method.
+func (m *MockGfSpClientAPI) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bmInfo)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "NotifyPostMigrateBucketAndRecoupQuota", ctx, bmInfo)
+	ret0, _ := ret[0].(*gfsptask.GfSpBucketQuotaInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// NotifyPostMigrateBucket indicates an expected call of NotifyPostMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) NotifyPostMigrateBucket(ctx, bmInfo any) *gomock.Call {
+// NotifyPostMigrateBucketAndRecoupQuota indicates an expected call of NotifyPostMigrateBucketAndRecoupQuota.
+func (mr *MockGfSpClientAPIMockRecorder) NotifyPostMigrateBucketAndRecoupQuota(ctx, bmInfo any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyPostMigrateBucket), ctx, bmInfo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucketAndRecoupQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyPostMigrateBucketAndRecoupQuota), ctx, bmInfo)
 }
 
-// NotifyPreMigrateBucket mocks base method.
-func (m *MockGfSpClientAPI) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error {
+// NotifyPreMigrateBucketAndDeductQuota mocks base method.
+func (m *MockGfSpClientAPI) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPreMigrateBucket", ctx, bucketID)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "NotifyPreMigrateBucketAndDeductQuota", ctx, bucketID)
+	ret0, _ := ret[0].(*gfsptask.GfSpBucketQuotaInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// NotifyPreMigrateBucket indicates an expected call of NotifyPreMigrateBucket.
-func (mr *MockGfSpClientAPIMockRecorder) NotifyPreMigrateBucket(ctx, bucketID any) *gomock.Call {
+// NotifyPreMigrateBucketAndDeductQuota indicates an expected call of NotifyPreMigrateBucketAndDeductQuota.
+func (mr *MockGfSpClientAPIMockRecorder) NotifyPreMigrateBucketAndDeductQuota(ctx, bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucket", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyPreMigrateBucket), ctx, bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucketAndDeductQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).NotifyPreMigrateBucketAndDeductQuota), ctx, bucketID)
 }
 
 // P2PConn mocks base method.
@@ -2816,6 +2898,21 @@ func (mr *MockManagerAPIMockRecorder) CreateUploadObject(ctx, task any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUploadObject", reflect.TypeOf((*MockManagerAPI)(nil).CreateUploadObject), ctx, task)
 }
 
+// GetMigrateBucketProgress mocks base method.
+func (m *MockManagerAPI) GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMigrateBucketProgress", ctx, bucketID)
+	ret0, _ := ret[0].(*gfspserver.MigrateBucketProgressMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMigrateBucketProgress indicates an expected call of GetMigrateBucketProgress.
+func (mr *MockManagerAPIMockRecorder) GetMigrateBucketProgress(ctx, bucketID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrateBucketProgress", reflect.TypeOf((*MockManagerAPI)(nil).GetMigrateBucketProgress), ctx, bucketID)
+}
+
 // GetTasksStats mocks base method.
 func (m *MockManagerAPI) GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error) {
 	m.ctrl.T.Helper()
@@ -2845,32 +2942,34 @@ func (mr *MockManagerAPIMockRecorder) NotifyMigrateSwapOut(ctx, swapOut any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyMigrateSwapOut", reflect.TypeOf((*MockManagerAPI)(nil).NotifyMigrateSwapOut), ctx, swapOut)
 }
 
-// NotifyPostMigrateBucket mocks base method.
-func (m *MockManagerAPI) NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error {
+// NotifyPostMigrateBucketAndRecoupQuota mocks base method.
+func (m *MockManagerAPI) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPostMigrateBucket", ctx, bmInfo)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "NotifyPostMigrateBucketAndRecoupQuota", ctx, bmInfo)
+	ret0, _ := ret[0].(*gfsptask.GfSpBucketQuotaInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// NotifyPostMigrateBucket indicates an expected call of NotifyPostMigrateBucket.
-func (mr *MockManagerAPIMockRecorder) NotifyPostMigrateBucket(ctx, bmInfo any) *gomock.Call {
+// NotifyPostMigrateBucketAndRecoupQuota indicates an expected call of NotifyPostMigrateBucketAndRecoupQuota.
+func (mr *MockManagerAPIMockRecorder) NotifyPostMigrateBucketAndRecoupQuota(ctx, bmInfo any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucket", reflect.TypeOf((*MockManagerAPI)(nil).NotifyPostMigrateBucket), ctx, bmInfo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPostMigrateBucketAndRecoupQuota", reflect.TypeOf((*MockManagerAPI)(nil).NotifyPostMigrateBucketAndRecoupQuota), ctx, bmInfo)
 }
 
-// NotifyPreMigrateBucket mocks base method.
-func (m *MockManagerAPI) NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error {
+// NotifyPreMigrateBucketAndDeductQuota mocks base method.
+func (m *MockManagerAPI) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NotifyPreMigrateBucket", ctx, bucketID)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "NotifyPreMigrateBucketAndDeductQuota", ctx, bucketID)
+	ret0, _ := ret[0].(*gfsptask.GfSpBucketQuotaInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// NotifyPreMigrateBucket indicates an expected call of NotifyPreMigrateBucket.
-func (mr *MockManagerAPIMockRecorder) NotifyPreMigrateBucket(ctx, bucketID any) *gomock.Call {
+// NotifyPreMigrateBucketAndDeductQuota indicates an expected call of NotifyPreMigrateBucketAndDeductQuota.
+func (mr *MockManagerAPIMockRecorder) NotifyPreMigrateBucketAndDeductQuota(ctx, bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucket", reflect.TypeOf((*MockManagerAPI)(nil).NotifyPreMigrateBucket), ctx, bucketID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyPreMigrateBucketAndDeductQuota", reflect.TypeOf((*MockManagerAPI)(nil).NotifyPreMigrateBucketAndDeductQuota), ctx, bucketID)
 }
 
 // PickVirtualGroupFamilyID mocks base method.
@@ -3131,14 +3230,14 @@ func (mr *MockMetadataAPIMockRecorder) GetGroupMembers(ctx, groupID, startAfter,
 }
 
 // GetLatestBucketReadQuota mocks base method.
-func (m *MockMetadataAPI) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (gfsptask.GfSpBucketQuotaInfo, error) {
+func (m *MockMetadataAPI) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (*gfsptask.GfSpBucketQuotaInfo, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, bucketID}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetLatestBucketReadQuota", varargs...)
-	ret0, _ := ret[0].(gfsptask.GfSpBucketQuotaInfo)
+	ret0, _ := ret[0].(*gfsptask.GfSpBucketQuotaInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3490,6 +3589,26 @@ func (mr *MockMetadataAPIMockRecorder) ListBucketsByIDs(ctx, bucketIDs, includeR
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, bucketIDs, includeRemoved}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByIDs", reflect.TypeOf((*MockMetadataAPI)(nil).ListBucketsByIDs), varargs...)
+}
+
+// ListCompleteMigrationBucketEvents mocks base method.
+func (m *MockMetadataAPI) ListCompleteMigrationBucketEvents(ctx context.Context, blockID uint64, srcSpID uint32, opts ...grpc.DialOption) ([]*types3.EventCompleteMigrationBucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, blockID, srcSpID}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListCompleteMigrationBucketEvents", varargs...)
+	ret0, _ := ret[0].([]*types3.EventCompleteMigrationBucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListCompleteMigrationBucketEvents indicates an expected call of ListCompleteMigrationBucketEvents.
+func (mr *MockMetadataAPIMockRecorder) ListCompleteMigrationBucketEvents(ctx, blockID, srcSpID any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, blockID, srcSpID}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCompleteMigrationBucketEvents", reflect.TypeOf((*MockMetadataAPI)(nil).ListCompleteMigrationBucketEvents), varargs...)
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.
@@ -4196,6 +4315,21 @@ func (mr *MockSignerAPIMockRecorder) CompleteSPExit(ctx, completeSPExit any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSPExit", reflect.TypeOf((*MockSignerAPI)(nil).CompleteSPExit), ctx, completeSPExit)
 }
 
+// CompleteSwapIn mocks base method.
+func (m *MockSignerAPI) CompleteSwapIn(ctx context.Context, completeSwpIn *types4.MsgCompleteSwapIn) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteSwapIn", ctx, completeSwpIn)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CompleteSwapIn indicates an expected call of CompleteSwapIn.
+func (mr *MockSignerAPIMockRecorder) CompleteSwapIn(ctx, completeSwpIn any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSwapIn", reflect.TypeOf((*MockSignerAPI)(nil).CompleteSwapIn), ctx, completeSwpIn)
+}
+
 // CompleteSwapOut mocks base method.
 func (m *MockSignerAPI) CompleteSwapOut(ctx context.Context, completeSwapOut *types4.MsgCompleteSwapOut) (string, error) {
 	m.ctrl.T.Helper()
@@ -4223,6 +4357,36 @@ func (m *MockSignerAPI) CreateGlobalVirtualGroup(ctx context.Context, group *gfs
 func (mr *MockSignerAPIMockRecorder) CreateGlobalVirtualGroup(ctx, group any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSignerAPI)(nil).CreateGlobalVirtualGroup), ctx, group)
+}
+
+// DeleteGlobalVirtualGroup mocks base method.
+func (m *MockSignerAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteGlobalVirtualGroup", ctx, deleteGVG)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteGlobalVirtualGroup indicates an expected call of DeleteGlobalVirtualGroup.
+func (mr *MockSignerAPIMockRecorder) DeleteGlobalVirtualGroup(ctx, deleteGVG any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGlobalVirtualGroup", reflect.TypeOf((*MockSignerAPI)(nil).DeleteGlobalVirtualGroup), ctx, deleteGVG)
+}
+
+// Deposit mocks base method.
+func (m *MockSignerAPI) Deposit(ctx context.Context, deposit *types4.MsgDeposit) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deposit", ctx, deposit)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deposit indicates an expected call of Deposit.
+func (mr *MockSignerAPIMockRecorder) Deposit(ctx, deposit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deposit", reflect.TypeOf((*MockSignerAPI)(nil).Deposit), ctx, deposit)
 }
 
 // DiscontinueBucket mocks base method.

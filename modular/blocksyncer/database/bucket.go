@@ -36,11 +36,48 @@ func (db *DB) UpdateBucketToSQL(ctx context.Context, bucket *models.Bucket) (str
 	return stat.SQL.String(), stat.Vars
 }
 
+func (db *DB) UpdateBucketByNameToSQL(ctx context.Context, bucket *models.Bucket) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Bucket{}).TableName()).Where("bucket_name= ? AND removed=false", bucket.BucketName).Updates(bucket).Statement
+	return stat.SQL.String(), stat.Vars
+}
+
 func (db *DB) BatchUpdateBucketSize(ctx context.Context, buckets []*models.Bucket) error {
 	return db.Db.Table((&models.Bucket{}).TableName()).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bucket_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"storage_size", "charge_size"}),
 	}).Create(buckets).Error
+}
+
+func (db *DB) BatchDeletePrefixTreeNodeByBucketAndPathAndFullName(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) error {
+	shardTableName := bsdb.GetPrefixesTableName(prefixTree[0].BucketName)
+	tx := db.Db.Table(shardTableName)
+	stmt := tx.Where("bucket_name = ? AND path_name = ? and full_name = ?",
+		prefixTree[0].BucketName,
+		prefixTree[0].PathName,
+		prefixTree[0].FullName)
+
+	for _, object := range prefixTree[1:] {
+		stmt = stmt.Or("bucket_name = ? AND path_name = ? and full_name = ?",
+			object.BucketName,
+			object.PathName,
+			object.FullName)
+	}
+
+	return stmt.Unscoped().Delete(&bsdb.SlashPrefixTreeNode{}).Error
+}
+
+func (db *DB) BatchDeletePrefixTreeNodeByID(ctx context.Context, prefixTree []*bsdb.SlashPrefixTreeNode) error {
+	shardTableName := bsdb.GetPrefixesTableName(prefixTree[0].BucketName)
+	tx := db.Db.Table(shardTableName)
+	stmt := tx.Where("id = ?",
+		prefixTree[0].ID)
+
+	for _, object := range prefixTree[1:] {
+		stmt = stmt.Or("id = ?",
+			object.ID)
+	}
+
+	return stmt.Unscoped().Delete(&bsdb.SlashPrefixTreeNode{}).Error
 }
 
 func (db *DB) GetDataMigrationRecord(ctx context.Context, processKey string) (*bsdb.DataMigrationRecord, error) {

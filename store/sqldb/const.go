@@ -48,6 +48,8 @@ const (
 	RecoverGVGStatsTableName = "recover_gvg_stats"
 
 	RecoverFailedObjectTableName = "recover_failed_object"
+	// MigrateBucketProgressTableName defines the progress of migrate bucket.
+	MigrateBucketProgressTableName = "migrate_bucket_progress"
 )
 
 // define error name constant.

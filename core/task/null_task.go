@@ -48,7 +48,7 @@ func (*NullTask) Expired() bool                           { return false }
 func (*NullTask) ExceedTimeout() bool                     { return false }
 func (*NullTask) GetPriority() TPriority                  { return 0 }
 func (*NullTask) SetPriority(TPriority)                   {}
-func (*NullTask) SetRetry(int)                            {}
+func (*NullTask) SetRetry(int64)                          {}
 func (*NullTask) IncRetry()                               {}
 func (*NullTask) ExceedRetry() bool                       { return false }
 func (*NullTask) GetRetry() int64                         { return 0 }
@@ -188,3 +188,11 @@ func (*NullTask) SetStartObjectID(uint64)                                       
 func (*NullTask) GetStartObjectId() uint64                                                   { return 0 }
 func (*NullTask) SetEndObjectID(uint64)                                                      {}
 func (*NullTask) GetEndObjectId() uint64                                                     { return 0 }
+func (*NullTask) SetLastGCGvgID(lastGCGvgID uint64)                                          {}
+func (*NullTask) GetLastGCGvgID() uint64                                                     { return 0 }
+func (*NullTask) SetLastGCObjectID(lastGCObjectID uint64)                                    {}
+func (*NullTask) GetLastGCObjectID() uint64                                                  { return 0 }
+func (*NullTask) SetGCFinishedGvgNum(gvgGcNum uint64)                                        {}
+func (*NullTask) GetGCFinishedGvgNum() uint64                                                { return 0 }
+func (*NullTask) SetTotalGvgNum(gvgNum uint64)                                               {}
+func (*NullTask) GetTotalGvgNum() uint64                                                     { return 0 }
