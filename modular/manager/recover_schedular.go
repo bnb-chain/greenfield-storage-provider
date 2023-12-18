@@ -266,10 +266,6 @@ func (s *RecoverGVGScheduler) Start() {
 				return
 			}
 
-			//if gvgStats.StartAfter == s.curStartAfter && s.curStartAfter != 0 {
-			//	log.Debugw("still processing the batch that after object id", "start_after", s.curStartAfter)
-			//	continue
-			//}
 			s.curStartAfter = gvgStats.StartAfter
 			startAfter = gvgStats.StartAfter
 
@@ -646,8 +642,15 @@ func (s *VerifyGVGScheduler) Start() {
 				}
 
 				if recoverFailedObjectsCount == 0 {
-					msgCompleteSwapIn := &types2.MsgCompleteSwapIn{
-						GlobalVirtualGroupFamilyId: s.vgfID,
+					var msgCompleteSwapIn *types2.MsgCompleteSwapIn
+					if s.vgfID != 0 {
+						msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
+							GlobalVirtualGroupFamilyId: s.vgfID,
+						}
+					} else {
+						msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
+							GlobalVirtualGroupFamilyId: s.gvgID,
+						}
 					}
 					err := SendAndConfirmCompleteSwapInTx(s.manager.baseApp, msgCompleteSwapIn)
 					if err != nil {
