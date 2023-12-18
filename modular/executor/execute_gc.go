@@ -444,6 +444,7 @@ func (e *ExecuteModular) HandleGCBucketMigrationBucket(ctx context.Context, task
 			for index, obj := range objectList {
 				gcNum++
 				objectInfo := obj.GetObject().GetObjectInfo()
+				startAfter = obj.GetObject().GetObjectInfo().Id.Uint64()
 				if e.gcWorker.checkGVGMatchSP(ctx, objectInfo, piecestore.PrimarySPRedundancyIndex) == ErrInvalidRedundancyIndex {
 					err = e.gcWorker.deleteObjectSegmentsAndIntegrity(ctx, objectInfo)
 					log.CtxInfow(ctx, "succeed to delete objects by gvg and bucket for gc", "object", objectInfo, "error", err)

@@ -125,9 +125,9 @@ func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Contex
 		return latestQuota, err
 	}
 
-	if bmInfo.GetFinished() {
-		// bucket migration gc trigger by bucket migration complete event in src sp
-	} else {
+	// If dest sp notify src sp migration succeed, bucket migration gc trigger by bucket migration complete event in src sp
+	// otherwise, the src sp will recoup quota
+	if !bmInfo.GetFinished() {
 		migratedBytes := bmInfo.GetMigratedBytesSize()
 		if migratedBytes >= bucketSize {
 			// If the data migrated surpasses the total bucket size, quota recoup is skipped.

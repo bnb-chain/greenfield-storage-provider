@@ -283,7 +283,7 @@ func (g *GateModular) queryBucketMigrationProgressHandler(w http.ResponseWriter,
 
 	if progressMeta, err = g.baseApp.GfSpClient().GetMigrateBucketProgress(reqCtx.Context(), bucketInfo.Id.Uint64()); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket migration job state", "error", err)
-		if !strings.Contains(err.Error(), "no migrate bucket progress record") {
+		if !strings.Contains(err.Error(), "record not found") {
 			return
 		}
 		err = nil
