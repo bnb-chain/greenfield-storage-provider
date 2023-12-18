@@ -54,7 +54,7 @@ func CompleteSpExitAction(ctx *cli.Context) error {
 
 	msg := &virtualgrouptypes.MsgCompleteStorageProviderExit{
 		StorageProvider: cfg.SpAccount.SpOperatorAddress,
-		Operator:        cfg.SpAccount.OperatorPrivateKey,
+		Operator:        cfg.SpAccount.SpOperatorAddress,
 	}
 
 	spClient := utils.MakeGfSpClient(cfg)

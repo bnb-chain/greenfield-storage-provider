@@ -726,23 +726,26 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 		log.CtxError(ctx, "complete sp exit msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to get private key", "error", err)
-		return "", ErrSignMsg
-	}
+	//km, err := client.greenfieldClients[scope].GetKeyManager()
+	//if err != nil {
+	//	log.CtxErrorw(ctx, "failed to get private key", "error", err)
+	//	return "", ErrSignMsg
+	//}
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
 
-	msgCompleteSPExit := virtualgrouptypes.NewMsgCompleteStorageProviderExit(km.GetAddr())
+	msgCompleteSPExit := &virtualgrouptypes.MsgCompleteStorageProviderExit{
+		StorageProvider: completeSPExit.StorageProvider,
+		Operator:        completeSPExit.Operator,
+	}
 
 	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
 
 	var (
-		txHash   string
-		nonce    uint64
-		nonceErr error
+		txHash        string
+		nonce         uint64
+		err, nonceErr error
 	)
 	for i := 0; i < BroadcastTxRetry; i++ {
 		nonce = client.operatorAccNonce
