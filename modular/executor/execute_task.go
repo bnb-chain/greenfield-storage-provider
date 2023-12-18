@@ -654,7 +654,9 @@ func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.Rec
 			IntegrityChecksum: integrityChecksum,
 			PieceChecksumList: pieceChecksums,
 		}
-		err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
+		if err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta); err != nil {
+			return err
+		}
 	}
 	return nil
 }
