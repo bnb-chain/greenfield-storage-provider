@@ -307,6 +307,12 @@ func (e *ExecuteModular) recoverByPrimarySP(ctx context.Context, task coretask.R
 	if err != nil {
 		return err
 	}
+	signature, err := e.baseApp.GfSpClient().SignRecoveryTask(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign recovery task", "object", task.GetObjectInfo().GetObjectName(), "error", err)
+		return err
+	}
+	task.SetSignature(signature)
 
 	pieceData, err = e.doRecoveryPiece(ctx, task, primarySPEndpoint)
 	if err != nil {
