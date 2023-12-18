@@ -285,4 +285,7 @@ type ManagerConfig struct {
 	// retry reject unseal when the task's create_timestamp + RejectUnsealThresholdSecond <= now.time() &&
 	// create_timestamp + 2*RejectUnsealThresholdSecond > now.time().
 	RejectUnsealThresholdSecond uint64 `comment:"optional"`
+
+	// EnableBucketMigrateCache is used to enable bucket migrate's bucket cache.
+	EnableBucketMigrateCache bool `comment:"optional"`
 }

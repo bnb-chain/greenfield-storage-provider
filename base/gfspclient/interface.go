@@ -88,8 +88,9 @@ type ManagerAPI interface {
 	PickVirtualGroupFamilyID(ctx context.Context, task coretask.ApprovalCreateBucketTask) (uint32, error)
 	NotifyMigrateSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) error
 	GetTasksStats(ctx context.Context) (*gfspserver.TasksStats, error)
-	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
-	NotifyPostMigrateBucket(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) error
+	GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error)
+	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmInfo *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error)
+	NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error)
 }
 
 // MetadataAPI for mock sue
@@ -110,7 +111,7 @@ type MetadataAPI interface {
 	GetBucketMeta(ctx context.Context, bucketName string, includePrivate bool, opts ...grpc.DialOption) (*types.VGFInfoBucket, *payment_types.StreamRecord, error)
 	GetEndpointBySpID(ctx context.Context, spID uint32, opts ...grpc.DialOption) (string, error)
 	GetBucketReadQuota(ctx context.Context, bucket *storagetypes.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error)
-	GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (gfsptask.GfSpBucketQuotaInfo, error)
+	GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (*gfsptask.GfSpBucketQuotaInfo, error)
 	ListBucketReadRecord(ctx context.Context, bucket *storagetypes.BucketInfo, startTimestampUs, endTimestampUs, maxRecordNum int64, opts ...grpc.DialOption) ([]*types.ReadRecord, int64, error)
 	GetUploadObjectState(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (int32, string, error)
 	GetUploadObjectSegment(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (uint32, error)
@@ -127,6 +128,7 @@ type MetadataAPI interface {
 	ListGlobalVirtualGroupsByBucket(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
 	ListGlobalVirtualGroupsBySecondarySP(ctx context.Context, spID uint32, opts ...grpc.DialOption) ([]*virtualgrouptypes.GlobalVirtualGroup, error)
 	ListMigrateBucketEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListMigrateBucketEvents, error)
+	ListCompleteMigrationBucketEvents(ctx context.Context, blockID uint64, srcSpID uint32, opts ...grpc.DialOption) ([]*storagetypes.EventCompleteMigrationBucket, error)
 	ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListSwapOutEvents, error)
 	ListSpExitEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) (*types.ListSpExitEvents, error)
 	GetObjectByID(ctx context.Context, objectID uint64, opts ...grpc.DialOption) (*storagetypes.ObjectInfo, error)

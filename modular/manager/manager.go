@@ -13,6 +13,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -75,9 +76,6 @@ type ManageModular struct {
 	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueueMux     sync.Mutex
 
-	// src sp used TODO: these should be persisted
-	migratingBuckets map[uint64]struct{}
-
 	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
@@ -101,10 +99,11 @@ type ManageModular struct {
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
 
-	spID                   uint32
-	virtualGroupManager    vgmgr.VirtualGroupManager
-	bucketMigrateScheduler *BucketMigrateScheduler
-	spExitScheduler        *SPExitScheduler
+	spID                     uint32
+	virtualGroupManager      vgmgr.VirtualGroupManager
+	bucketMigrateScheduler   *BucketMigrateScheduler
+	spExitScheduler          *SPExitScheduler
+	enableBucketMigrateCache bool
 
 	subscribeSPExitEventInterval        uint
 	subscribeBucketMigrateEventInterval uint
@@ -153,8 +152,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 	m.gcBucketMigrationQueue.SetRetireTaskStrategy(m.ResetGCBucketMigrationQueue)
 	m.gcBucketMigrationQueue.SetFilterTaskStrategy(m.FilterGCTask)
-
-	m.migratingBuckets = make(map[uint64]struct{})
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -956,6 +953,37 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	recoveryProcessCount = len(m.recoveryTaskMap)
 	recoveryFailedList = m.recoveryFailedList
 	return
+}
+
+func (m *ManageModular) QueryBucketMigrationProgress(_ context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	var (
+		progress      *spdb.MigrateBucketProgressMeta
+		err           error
+		migratedBytes uint64
+	)
+
+	if progress, err = m.baseApp.GfSpDB().QueryMigrateBucketProgress(bucketID); err != nil {
+		return nil, err
+	}
+
+	if migratedBytes, err = m.bucketMigrateScheduler.getMigratedBytesSize(bucketID); err != nil {
+		return nil, err
+	}
+
+	progressMeta := &gfspserver.MigrateBucketProgressMeta{
+		BucketId:               progress.BucketID,
+		SubscribedBlockHeight:  progress.SubscribedBlockHeight,
+		MigrateState:           uint32(progress.MigrateState),
+		TotalGvgNum:            progress.TotalGvgNum,
+		MigratedFinishedGvgNum: progress.MigratedFinishedGvgNum,
+		GcFinishedGvgNum:       progress.GcFinishedGvgNum,
+		PreDeductedQuota:       progress.PreDeductedQuota,
+		RecoupQuota:            progress.RecoupQuota,
+		LastGcObjectId:         progress.LastGcObjectID,
+		LastGcGvgId:            progress.LastGcGvgID,
+		MigratedBytes:          migratedBytes,
+	}
+	return progressMeta, err
 }
 
 func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {

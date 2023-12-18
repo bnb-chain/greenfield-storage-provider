@@ -71,6 +71,8 @@ const (
 	ListObjectsIncludeRemovedQuery = "include-removed"
 	// GetBucketMetaQuery defines get bucket metadata query, which is used to route request
 	GetBucketMetaQuery = "bucket-meta"
+	// GetBucketMigrationProgressQuery defines get bucket metadata query, which is used to route request
+	GetBucketMigrationProgressQuery = "bucket-migration-progress"
 	// GetObjectMetaQuery defines get object metadata query, which is used to route request
 	GetObjectMetaQuery = "object-meta"
 	// GetGroupListSourceTypeQuery defines get group list source type query, which is used to route request
@@ -230,6 +232,8 @@ const (
 	GnfdIntegrityHashHeader = "X-Gnfd-Integrity-Hash"
 	// GnfdPieceHashHeader defines piece hash list, which is used by challenge
 	GnfdPieceHashHeader = "X-Gnfd-Piece-Hash"
+	// GnfdQuotaInfoHeader defines quota info, which is used by sp
+	GnfdQuotaInfoHeader = "X-Gnfd-Quota-Info"
 	// GnfdUnsignedApprovalMsgHeader defines unsigned msg, which is used by get-approval
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval

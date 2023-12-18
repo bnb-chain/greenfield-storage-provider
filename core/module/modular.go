@@ -55,6 +55,8 @@ const (
 	AuthOpTypeListBucketReadRecord
 	// AuthOpTypeGetRecoveryPiece defines the GetRecoveryPiece operator
 	AuthOpTypeGetRecoveryPiece
+	// AuthOpTypeQueryBucketMigrationProgress defines the QueryBucketMigrationProgress operator
+	AuthOpTypeQueryBucketMigrationProgress
 )
 
 // Authenticator is an abstract interface to verify users authentication.
@@ -223,10 +225,12 @@ type Manager interface {
 	HandleMigrateGVGTask(ctx context.Context, task task.MigrateGVGTask) error
 	// QueryTasksStats queries tasks stats from Manager server
 	QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string)
-	// NotifyPreMigrateBucket is used to notify src sp pre migrate bucket.
-	NotifyPreMigrateBucket(ctx context.Context, bucketID uint64) error
-	// NotifyPostMigrateBucket is used to notify src sp post migrate bucket.
-	NotifyPostMigrateBucket(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) error
+	// QueryBucketMigrationProgress queries migration progress from Manager server
+	QueryBucketMigrationProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error)
+	// NotifyPreMigrateBucketAndDeductQuota is used to notify src sp pre migrate bucket and deduct quota.
+	NotifyPreMigrateBucketAndDeductQuota(ctx context.Context, bucketID uint64) (*gfsptask.GfSpBucketQuotaInfo, error)
+	// NotifyPostMigrateBucketAndRecoupQuota is used to notify src sp post migrate bucket and recoup quota.
+	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error)
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
 }
