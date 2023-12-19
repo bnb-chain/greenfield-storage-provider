@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 
@@ -17,12 +18,13 @@ var SpExitCmd = &cli.Command{
 		utils.ConfigFileFlag,
 	},
 	Category:    spExitCommands,
-	Description: ``,
+	Description: `Running this command sends exit tx to the chain and cannot be canceled after execution`,
 }
 
 func SpExitAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 
@@ -31,8 +33,13 @@ func SpExitAction(ctx *cli.Context) error {
 	}
 
 	spClient := utils.MakeGfSpClient(cfg)
-	_, err = spClient.SpExit(ctx.Context, msg)
-	return err
+	tx, err := spClient.SpExit(ctx.Context, msg)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	fmt.Printf("tx successfully! tx_hash:%s", tx)
+	return nil
 }
 
 var CompleteSpExitCmd = &cli.Command{
@@ -43,12 +50,13 @@ var CompleteSpExitCmd = &cli.Command{
 		utils.ConfigFileFlag,
 	},
 	Category:    spExitCommands,
-	Description: ``,
+	Description: `When Successor has recovered all resources, you can use this CMD to complete the exit`,
 }
 
 func CompleteSpExitAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 
@@ -58,6 +66,11 @@ func CompleteSpExitAction(ctx *cli.Context) error {
 	}
 
 	spClient := utils.MakeGfSpClient(cfg)
-	_, err = spClient.CompleteSpExit(ctx.Context, msg)
-	return err
+	tx, err := spClient.CompleteSpExit(ctx.Context, msg)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	fmt.Printf("tx successfully! tx_hash:%s", tx)
+	return nil
 }

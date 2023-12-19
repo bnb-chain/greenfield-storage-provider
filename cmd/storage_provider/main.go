@@ -131,7 +131,7 @@ func init() {
 		command.SetQuotaCmd,
 		// block syncer
 		bs_data_migration.BsDataMigrationCmd,
-		// sp exit v2
+		// be related to sp exit
 		command.SpExitCmd,
 		command.CompleteSpExitCmd,
 		command.SwapInCmd,

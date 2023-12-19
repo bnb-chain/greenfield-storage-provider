@@ -294,7 +294,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	case *gfspserver.GfSpSignRequest_ReserveSwapIn:
 		txHash, err = g.signer.ReserveSwapIn(ctx, t.ReserveSwapIn)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign reject migrate bucket", "error", err)
+			log.CtxErrorw(ctx, "failed to reserve swap in", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureSwapIn).Inc()
 			metrics.ReqTime.WithLabelValues(SignerFailureSwapIn).Observe(time.Since(startTime).Seconds())
 		} else {
@@ -304,12 +304,12 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	case *gfspserver.GfSpSignRequest_CompleteSwapIn:
 		txHash, err = g.signer.CompleteSwapIn(ctx, t.CompleteSwapIn)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to sign reject migrate bucket", "error", err)
-			metrics.ReqCounter.WithLabelValues(SignerFailureSwapIn).Inc()
-			metrics.ReqTime.WithLabelValues(SignerFailureSwapIn).Observe(time.Since(startTime).Seconds())
+			log.CtxErrorw(ctx, "failed to complete swap in", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteSwapIn).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureCompleteSwapIn).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SignerSuccessSwapIn).Inc()
-			metrics.ReqTime.WithLabelValues(SignerSuccessSwapIn).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessCompleteSwapIn).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteSwapIn).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_Deposit:
 		txHash, err = g.signer.Deposit(ctx, t.Deposit)

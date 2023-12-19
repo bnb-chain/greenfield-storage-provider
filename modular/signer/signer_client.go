@@ -726,11 +726,6 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 		log.CtxError(ctx, "complete sp exit msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	//km, err := client.greenfieldClients[scope].GetKeyManager()
-	//if err != nil {
-	//	log.CtxErrorw(ctx, "failed to get private key", "error", err)
-	//	return "", ErrSignMsg
-	//}
 
 	client.opLock.Lock()
 	defer client.opLock.Unlock()
@@ -1004,8 +999,8 @@ func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scop
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
-				ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
-				return "", ErrRejectMigrateBucketOnChain
+				ErrReserveSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrReserveSwapIn
 			}
 			client.operatorAccNonce = nonce
 		}
@@ -1019,8 +1014,8 @@ func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scop
 	}
 
 	// failed to broadcast tx
-	ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast reserve swap in, error: %v", err))
-	return "", ErrRejectMigrateBucketOnChain
+	ErrReserveSwapIn.SetError(fmt.Errorf("failed to broadcast reserve swap in, error: %v", err))
+	return "", ErrReserveSwapIn
 }
 
 func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, scope SignType,
@@ -1057,8 +1052,8 @@ func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, sco
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
-				ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
-				return "", ErrRejectMigrateBucketOnChain
+				ErrCompleteSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrCompleteSwapIn
 			}
 			client.operatorAccNonce = nonce
 		}
@@ -1072,6 +1067,6 @@ func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, sco
 	}
 
 	// failed to broadcast tx
-	ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to broadcast rcomplete swap in, error: %v", err))
-	return "", ErrRejectMigrateBucketOnChain
+	ErrCompleteSwapIn.SetError(fmt.Errorf("failed to broadcast rcomplete swap in, error: %v", err))
+	return "", ErrCompleteSwapIn
 }

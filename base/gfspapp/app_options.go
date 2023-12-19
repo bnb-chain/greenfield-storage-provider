@@ -155,6 +155,8 @@ const (
 	SignerFailureRejectMigrateBucket        = "signer_reject_migrate_bucket_failure"
 	SignerSuccessSwapIn                     = "signer_swap_in_success"
 	SignerFailureSwapIn                     = "signer_swap_in_failure"
+	SignerSuccessCompleteSwapIn             = "signer_complete_swap_in_success"
+	SignerFailureCompleteSwapIn             = "signer_complete_swap_in_failure"
 
 	SignerSuccessDeposit = "signer_deposit_success"
 	SignerFailureDeposit = "signer_deposit_failure"
