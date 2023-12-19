@@ -336,7 +336,7 @@ func (e *ExecuteModular) recoverByPrimarySP(ctx context.Context, task coretask.R
 	if task.BySuccessorSP() {
 		err = e.setPieceMetadata(ctx, task, pieceData)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to set piece meta data to DB", "objectName:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx(), "redundancy_idx", task.GetEcIdx(), "error", err)
+			log.CtxErrorw(ctx, "failed to set piece meta data to DB", "object_name:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx(), "redundancy_idx", task.GetEcIdx(), "error", err)
 			return err
 		}
 	}
@@ -492,11 +492,11 @@ loop:
 	if task.BySuccessorSP() {
 		err = e.setPieceMetadata(ctx, task, recoveredPieceData)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to set piece meta data to DB", "objectName:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx(), "error", err)
+			log.CtxErrorw(ctx, "failed to set piece meta data to DB", "object_name:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx(), "error", err)
 			return err
 		}
 	}
-	log.CtxDebugw(ctx, "finish recovery from secondary SPs", "objectName:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx())
+	log.CtxDebugw(ctx, "finish recovery from secondary SPs", "object_name:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx())
 	return nil
 }
 

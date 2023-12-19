@@ -143,6 +143,7 @@ func recoverObject(bucketName string, objectName string, cfg *gfspconfig.GfSpCon
 	} else {
 		replicateIdx, err = getReplicateIdxBySP(bucketInfo, objectInfo, cfg)
 		if err != nil {
+			fmt.Printf("get replicate idx by sp failed, err=%s", err.Error())
 			return err
 		}
 	}

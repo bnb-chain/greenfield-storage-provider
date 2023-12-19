@@ -73,7 +73,7 @@ type Consensus interface {
 	ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error)
 	// WaitForNextBlock is used to chain generate a new block.
 	WaitForNextBlock(ctx context.Context) error
-	// QuerySwapInInfo
+	// QuerySwapInInfo is used to query the onchain swapIn info
 	QuerySwapInInfo(ctx context.Context, familyID, gvgID uint32) (*virtualgrouptypes.SwapInInfo, error)
 	// Close the Consensus interface.
 	Close() error

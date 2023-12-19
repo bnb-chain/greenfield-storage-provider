@@ -11,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
@@ -22,10 +23,9 @@ import (
 )
 
 const (
-	recoverBatchSize         = 5
-	maxRecoveryRetry         = 5
-	MaxRecoveryTime          = 50
-	primarySPRedundancyIndex = -1
+	recoverBatchSize = 5
+	maxRecoveryRetry = 5
+	MaxRecoveryTime  = 50
 
 	recoverInterval     = 5 * time.Second
 	verifyInterval      = 1 * time.Minute
@@ -33,7 +33,7 @@ const (
 
 	recoverFailedObjectInterval = 10 * time.Second
 
-	monitorRecoverTimeOut = float64(10) // 110minute
+	monitorRecoverTimeOut = float64(10) // 10 minute
 )
 
 type RecoverVGFScheduler struct {
@@ -45,7 +45,7 @@ type RecoverVGFScheduler struct {
 func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFScheduler, error) {
 	vgf, err := m.baseApp.Consensus().QueryVirtualGroupFamily(context.Background(), vgfID)
 	if err != nil {
-		log.Errorw("failed to GetVirtualGroupFamily", "error", err)
+		log.Errorw("failed to query virtual group family", "vgf_id", vgfID, "error", err)
 		return nil, err
 	}
 	if vgf == nil {
@@ -60,27 +60,28 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 		recoveryGVG = append(recoveryGVG, &spdb.RecoverGVGStats{
 			VirtualGroupFamilyID: vgfID,
 			VirtualGroupID:       gvgID,
-			RedundancyIndex:      primarySPRedundancyIndex,
+			RedundancyIndex:      piecestore.PrimarySPRedundancyIndex,
 			StartAfter:           0,
 			Limit:                recoverBatchSize,
 			ObjectCount:          0,
 		})
-		gvgScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, primarySPRedundancyIndex)
+		gvgScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, piecestore.PrimarySPRedundancyIndex)
 		if err != nil {
-			log.Errorw("failed to create RecoverGVGScheduler")
+			log.Errorw("failed to create RecoverGVGScheduler", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
 			return nil, err
 		}
 		gvgSchedulers = append(gvgSchedulers, gvgScheduler)
 
-		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, primarySPRedundancyIndex)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, piecestore.PrimarySPRedundancyIndex)
 		if err != nil {
-			log.Errorw("failed to create VerifyGVGScheduler")
+			log.Errorw("failed to create VerifyGVGScheduler", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
 			return nil, err
 		}
 		verifySchedulers = append(verifySchedulers, verifyScheduler)
 	}
 	err = m.baseApp.GfSpDB().SetRecoverGVGStats(recoveryGVG)
 	if err != nil {
+		log.Errorw("failed to set recover gvg stats", "vgf_id", vgfID, "error", err)
 		return nil, err
 	}
 	return &RecoverVGFScheduler{
@@ -104,7 +105,7 @@ func (s *RecoverVGFScheduler) Start() {
 type ObjectSegmentsStats struct {
 	SegmentCount    int
 	FailedSegments  vgmgr.IDSet
-	SuccessSegments vgmgr.IDSet
+	SucceedSegments vgmgr.IDSet
 }
 
 type ObjectsSegmentsStats struct {
@@ -124,7 +125,7 @@ func (s *ObjectsSegmentsStats) put(objectID uint64, segmentCount uint32) {
 	s.stats[objectID] = &ObjectSegmentsStats{
 		SegmentCount:    int(segmentCount),
 		FailedSegments:  make(map[uint32]struct{}),
-		SuccessSegments: make(map[uint32]struct{}),
+		SucceedSegments: make(map[uint32]struct{}),
 	}
 }
 
@@ -149,7 +150,7 @@ func (s *ObjectsSegmentsStats) addSegmentRecord(objectID uint64, success bool, s
 		return false
 	}
 	if success {
-		stats.SuccessSegments[segmentIdx] = struct{}{}
+		stats.SucceedSegments[segmentIdx] = struct{}{}
 	} else {
 		stats.FailedSegments[segmentIdx] = struct{}{}
 	}
@@ -163,7 +164,7 @@ func (s *ObjectsSegmentsStats) isObjectProcessed(objectID uint64) bool {
 	if !ok {
 		return false
 	}
-	return len(stats.SuccessSegments)+len(stats.FailedSegments) == stats.SegmentCount
+	return len(stats.SucceedSegments)+len(stats.FailedSegments) == stats.SegmentCount
 }
 
 func (s *ObjectsSegmentsStats) isRecoverFailed(objectID uint64) bool {
@@ -173,7 +174,7 @@ func (s *ObjectsSegmentsStats) isRecoverFailed(objectID uint64) bool {
 	if !ok {
 		return true
 	}
-	return len(stats.SuccessSegments)+len(stats.FailedSegments) == stats.SegmentCount && len(stats.FailedSegments) > 0
+	return len(stats.SucceedSegments)+len(stats.FailedSegments) == stats.SegmentCount && len(stats.FailedSegments) > 0
 }
 
 type RecoverGVGScheduler struct {

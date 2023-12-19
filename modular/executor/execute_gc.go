@@ -114,7 +114,6 @@ func (gc *GCWorker) isAllowGCCheck(objectInfo *storagetypes.ObjectInfo, bucketIn
 		log.Infow("bucket is migrating, do not need to gc check")
 		return false
 	}
-	// the buc
 	log.Debugw("the object is sealed and the bucket is not migrating, the object can gc", "object", objectInfo, "bucket", bucketInfo)
 	return true
 }
@@ -157,9 +156,9 @@ func (gc *GCWorker) checkGVGMatchSP(ctx context.Context, objectInfo *storagetype
 
 	if redundancyIndex == piecestore.PrimarySPRedundancyIndex {
 		if gvg.GetPrimarySpId() != spID {
-			swapInInfo, err := gc.e.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, 0)
+			swapInInfo, err := gc.e.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, virtualgrouptypes.NoSpecifiedGVGId)
 			if err != nil {
-				if err == virtualgrouptypes.ErrSwapInInfoNotExist || err == virtualgrouptypes.ErrSwapInInfoExpired {
+				if strings.Contains(err.Error(), "swap in info not exist") {
 					return ErrInvalidRedundancyIndex
 				}
 				return nil
@@ -175,7 +174,7 @@ func (gc *GCWorker) checkGVGMatchSP(ctx context.Context, objectInfo *storagetype
 		if gvg.GetSecondarySpIds()[redundancyIndex] != spID {
 			swapInInfo, err := gc.e.baseApp.Consensus().QuerySwapInInfo(ctx, 0, gvg.Id)
 			if err != nil {
-				if err == virtualgrouptypes.ErrSwapInInfoNotExist || err == virtualgrouptypes.ErrSwapInInfoExpired {
+				if strings.Contains(err.Error(), "swap in info not exist") {
 					return ErrInvalidRedundancyIndex
 				}
 				return nil

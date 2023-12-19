@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -1003,14 +1004,11 @@ func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID,
 func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIndex int32) (err error) {
 	m.verifyTerminationSignal.Store(0)
 	if vgfID != 0 {
-		log.Infow("starting NewRecoverVGFScheduler")
 		recoverVGFScheduler, err := NewRecoverVGFScheduler(m, vgfID)
 		if err != nil {
 			log.Errorw("failed to NewRecoverVGFScheduler", "error", err)
 			return err
 		}
-		log.Infow("succeed to NewRecoverVGFScheduler")
-
 		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
 		m.recoverProcessCount.Store(int64(len(recoverVGFScheduler.RecoverSchedulers)))
 		m.verifyTerminationSignal.Add(int64(len(recoverVGFScheduler.VerifySchedulers)))
@@ -1023,7 +1021,7 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 			return err
 		}
 		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
-		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, primarySPRedundancyIndex)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, piecestore.PrimarySPRedundancyIndex)
 		if err != nil {
 			log.Errorw("failed to create VerifyGVGScheduler", "error", err)
 			return err
