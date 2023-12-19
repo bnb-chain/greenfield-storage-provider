@@ -624,18 +624,9 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 		Find the folder issue caused by multiple object creations within the same block height.
 
 		SELECT * FROM slash_prefix_tree_nodes_36
-		WHERE id NOT IN (
-			SELECT MIN(id)
-			FROM slash_prefix_tree_nodes_36
-			GROUP BY bucket_name, path_name, full_name
-			HAVING COUNT(*) > 1
+		WHERE  id NOT IN  (
+			SELECT MIN(id) FROM slash_prefix_tree_nodes_36 GROUP BY bucket_name, path_name, full_name
 		)
-		AND (bucket_name, path_name, full_name) IN (
-			SELECT bucket_name, path_name, full_name
-			FROM slash_prefix_tree_nodes_36
-			GROUP BY bucket_name, path_name, full_name
-			HAVING COUNT(*) > 1
-		);
 	*/
 	for i := 0; i < ObjectsNumberOfShards; i++ {
 		tableName := "slash_prefix_tree_nodes_"
@@ -644,7 +635,7 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 		}
 		tableName += fmt.Sprintf("%d", i)
 		var res []*TreeNode
-		sql := "SELECT * FROM " + tableName + " WHERE id NOT IN (SELECT MIN(id) FROM " + tableName + " GROUP BY bucket_name, path_name, full_name HAVING COUNT(*) > 1) AND (bucket_name, path_name, full_name) IN (SELECT bucket_name, path_name, full_name FROM " + tableName + " GROUP BY bucket_name, path_name, full_name HAVING COUNT(*) > 1);"
+		sql := "SELECT * FROM " + tableName + " WHERE id NOT IN (SELECT MIN(id) FROM " + tableName + " GROUP BY bucket_name, path_name, full_name);"
 		log.Infof("sql:%s", sql)
 		err := db.Cast(b.parserCtx.Database).Db.Raw(sql).Scan(&res).Error
 		if err != nil {
@@ -687,20 +678,11 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 	/*
 		Identify the folder issue caused by multiple object deletions within a single block height not being deleted.
 
-		SELECT * FROM slash_prefix_tree_nodes_36
-		WHERE (bucket_name, path_name) NOT IN (
-			SELECT bucket_name, path_name
-		FROM slash_prefix_tree_nodes_36
-		WHERE is_object = 1
-		GROUP BY bucket_name, path_name
-		HAVING COUNT(*) = 1
+		SELECT *  FROM slash_prefix_tree_nodes_36
+		WHERE (bucket_name, path_name) IN(
+			SELECT bucket_name, path_name FROM slash_prefix_tree_nodes_36 GROUP BY bucket_name, path_name HAVING COUNT(*) = 1
 		)
-		AND (bucket_name, path_name) IN (
-			SELECT bucket_name, path_name
-		FROM slash_prefix_tree_nodes_36
-		GROUP BY bucket_name, path_name
-		HAVING COUNT(*) = 1
-		);
+		AND is_folder =1
 	*/
 	deletedNodes := make([]*bsdb.SlashPrefixTreeNode, 0)
 	for i := 0; i < ObjectsNumberOfShards; i++ {
@@ -712,7 +694,7 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 		var res []*TreeNode
 		// First, query to find the path and bucket name of folders that do not have any objects but only one folder beneath them.
 		// Then, perform checks on all the paths.
-		sql := "SELECT * FROM " + tableName + " WHERE (bucket_name, path_name) NOT IN (SELECT bucket_name, path_name FROM " + tableName + " WHERE is_object = 1 GROUP BY bucket_name, path_name HAVING COUNT(*) = 1) AND (bucket_name, path_name) IN (SELECT bucket_name, path_name FROM " + tableName + " GROUP BY bucket_name, path_name HAVING COUNT(*) = 1);"
+		sql := "SELECT * FROM " + tableName + " WHERE (bucket_name, path_name) IN (SELECT bucket_name, path_name FROM " + tableName + " GROUP BY bucket_name, path_name HAVING COUNT(*) = 1) AND is_folder = 1;"
 		log.Infof("sql:%s", sql)
 		err := db.Cast(b.parserCtx.Database).Db.Raw(sql).Scan(&res).Error
 		if err != nil {
@@ -754,7 +736,9 @@ func (b *BlockSyncerModular) syncSlashPrefixTree() error {
 							return err
 						}
 						if len(trees) <= 1 {
-							deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{PathName: path, BucketName: node.BucketName, FullName: trees[0].FullName})
+							subPathParts := strings.Split(path, "/")
+							subPath := strings.Join(subPathParts[:len(subPathParts)-2], "/") + "/"
+							deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{PathName: subPath, BucketName: node.BucketName, FullName: path})
 						}
 					} else {
 						deletedNodes = append(deletedNodes, &bsdb.SlashPrefixTreeNode{BucketName: node.BucketName, PathName: path, FullName: strings.Join(pathParts[:j+1], "/") + "/"})
