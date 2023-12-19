@@ -139,6 +139,8 @@ func init() {
 		command.RecoverGVGCmd,
 		command.RecoverVGFCmd,
 		command.QueryRecoverProcessCmd,
+		command.ListGlobalVirtualGroupsBySecondarySPCmd,
+		command.ListVirtualGroupFamiliesBySpIDCmd,
 	}
 	registerModular()
 }

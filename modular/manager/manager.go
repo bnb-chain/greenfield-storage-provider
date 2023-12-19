@@ -1068,12 +1068,19 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 	}
 	failedObjects := make([]*gfspserver.FailedRecoverObject, 0, len(failedRecords))
 	for _, r := range failedRecords {
-		failedObjects = append(failedObjects, &gfspserver.FailedRecoverObject{
-			ObjectId:        r.ObjectID,
-			VirtualGroupId:  r.VirtualGroupID,
-			RedundancyIndex: r.RedundancyIndex,
-			RetryTime:       int32(r.RetryTime),
-		})
+		meta, err := m.baseApp.GfSpDB().GetObjectIntegrity(r.ObjectID, r.RedundancyIndex)
+		if err != nil {
+			log.Errorw("failed to GetObjectIntegrity", "error", err)
+			return nil, false, err
+		}
+		if meta != nil {
+			failedObjects = append(failedObjects, &gfspserver.FailedRecoverObject{
+				ObjectId:        r.ObjectID,
+				VirtualGroupId:  r.VirtualGroupID,
+				RedundancyIndex: r.RedundancyIndex,
+				RetryTime:       int32(r.RetryTime),
+			})
+		}
 	}
 
 	res := make([]*gfspserver.RecoverProcess, 0, len(gvgStatsList))

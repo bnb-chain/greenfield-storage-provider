@@ -99,6 +99,30 @@ var QueryRecoverProcessCmd = &cli.Command{
 	Description: ``,
 }
 
+var ListGlobalVirtualGroupsBySecondarySPCmd = &cli.Command{
+	Action: ListGlobalVirtualGroupsBySecondarySPAction,
+	Name:   "query-gvg-by-sp",
+	Usage:  "get GlobalVirtualGroups List By SecondarySP",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		targetSPIDFlag,
+	},
+	Category:    swapInCommands,
+	Description: ``,
+}
+
+var ListVirtualGroupFamiliesBySpIDCmd = &cli.Command{
+	Action: ListVirtualGroupFamiliesBySpIDAction,
+	Name:   "query-vgf-by-sp",
+	Usage:  "get VirtualGroupFamily List By SpID",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		targetSPIDFlag,
+	},
+	Category:    swapInCommands,
+	Description: ``,
+}
+
 func SwapInAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
@@ -247,5 +271,43 @@ func QueryRecoverProcessAction(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func ListGlobalVirtualGroupsBySecondarySPAction(ctx *cli.Context) error {
+	cfg, err := utils.MakeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	spClient := utils.MakeGfSpClient(cfg)
+	spID := ctx.Uint64(targetSPIDFlag.Name)
+	res, err := spClient.ListGlobalVirtualGroupsBySecondarySP(ctx.Context, uint32(spID))
+	if err != nil {
+		return err
+	}
+	resJson, err := json.Marshal(res)
+	if err != nil {
+		return err
+	}
+	println(string(resJson))
+	return nil
+}
+
+func ListVirtualGroupFamiliesBySpIDAction(ctx *cli.Context) error {
+	cfg, err := utils.MakeConfig(ctx)
+	if err != nil {
+		return err
+	}
+	spClient := utils.MakeGfSpClient(cfg)
+	spID := ctx.Uint64(targetSPIDFlag.Name)
+	res, err := spClient.ListVirtualGroupFamiliesSpID(ctx.Context, uint32(spID))
+	if err != nil {
+		return err
+	}
+	resJson, err := json.Marshal(res)
+	if err != nil {
+		return err
+	}
+	println(string(resJson))
 	return nil
 }
