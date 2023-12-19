@@ -90,9 +90,9 @@ const (
 	ChainSuccessVerifyPutObjectPermission = "verify_put_object_permission_success"
 	// ChainFailureVerifyPutObjectPermission defines the metrics label of unsuccessfully verify put object permission
 	ChainFailureVerifyPutObjectPermission = "verify_put_object_permission_failure"
-	// ChainSuccessQuerySwapInInfo
+	// ChainSuccessQuerySwapInInfo defines the metrics label of successfully query swap in info
 	ChainSuccessQuerySwapInInfo = "query_swap_in_info_success"
-	// ChainFailureQuerySwapInInfo
+	// ChainFailureQuerySwapInInfo defines the metrics label of unsuccessfully query swap in info
 	ChainFailureQuerySwapInInfo = "query_swap_in_info_failure"
 
 	// ConfirmBlockNumber defines wait block number.
@@ -901,7 +901,7 @@ func (g *Gnfd) getLatestBlockHeight(ctx context.Context) (int64, error) {
 	return block.SdkBlock.Header.Height, nil
 }
 
-// QuerySwapInInfo is used to chain generate a new block.
+// QuerySwapInInfo is used to chain get swapIn info
 func (g *Gnfd) QuerySwapInInfo(ctx context.Context, vgfID, gvgID uint32) (swapInInfo *virtualgrouptypes.SwapInInfo, err error) {
 	startTime := time.Now()
 	defer func() {

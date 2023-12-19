@@ -233,8 +233,9 @@ type Manager interface {
 	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error)
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
-
+	// TriggerRecoverForSuccessorSP is used to trigger recover process
 	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error
+	// QueryRecoverProcess is used to get recover process
 	QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error)
 }
 

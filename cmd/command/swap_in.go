@@ -16,21 +16,21 @@ const swapInCommands = "SwapIn Commands"
 
 var gvgIDFlag = &cli.Uint64Flag{
 	Name:     "gvgId",
-	Usage:    "gvg id",
+	Usage:    "assign global virtual group id",
 	Aliases:  []string{"gid"},
 	Required: true,
 }
 
 var vgfIDFlag = &cli.Uint64Flag{
 	Name:     "vgf",
-	Usage:    "",
+	Usage:    "assign global virtual group family id",
 	Aliases:  []string{"f"},
 	Required: true,
 }
 
 var targetSPIDFlag = &cli.Uint64Flag{
 	Name:     "targetSP",
-	Usage:    "target sp",
+	Usage:    "assign target sp",
 	Aliases:  []string{"sp"},
 	Required: true,
 }
@@ -45,8 +45,9 @@ var SwapInCmd = &cli.Command{
 		vgfIDFlag,
 		targetSPIDFlag,
 	},
-	Category:    swapInCommands,
-	Description: ``,
+	Category: swapInCommands,
+	Description: `You can use this command if you know that an sp is exiting and are ready to take over` +
+		`This command is for the transaction that sends a Swap In the chain`,
 }
 
 var RecoverGVGCmd = &cli.Command{
@@ -57,8 +58,10 @@ var RecoverGVGCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		gvgIDFlag,
 	},
-	Category:    swapInCommands,
-	Description: ``,
+	Category: swapInCommands,
+	Description: `After determining a successful successor you can use the "recover-gvg" CMD` +
+		`This command notifies sp and causes sp to recover resource` +
+		`Resources include all resources that exit sp serves as the secondary sp in gvg`,
 }
 
 var RecoverVGFCmd = &cli.Command{
@@ -69,8 +72,10 @@ var RecoverVGFCmd = &cli.Command{
 		utils.ConfigFileFlag,
 		vgfIDFlag,
 	},
-	Category:    swapInCommands,
-	Description: ``,
+	Category: swapInCommands,
+	Description: `After determining a successful successor you can use the "recover-gvg" CMD` +
+		`This command notifies sp and causes sp to recover resource` +
+		`Resources include all resources that exit sp serves as the primary sp in gvg family`,
 }
 
 var CompleteSwapInCmd = &cli.Command{
@@ -83,7 +88,7 @@ var CompleteSwapInCmd = &cli.Command{
 		vgfIDFlag,
 	},
 	Category:    swapInCommands,
-	Description: ``,
+	Description: `After confirming that the recover resource is complete, send a complete swap in to the chain using the completeSwapIn command`,
 }
 
 var QueryRecoverProcessCmd = &cli.Command{
@@ -96,12 +101,37 @@ var QueryRecoverProcessCmd = &cli.Command{
 		vgfIDFlag,
 	},
 	Category:    swapInCommands,
-	Description: ``,
+	Description: `It is used to query the recovery resource progress. The progress is displayed in std and recover_process.json`,
+}
+
+var ListGlobalVirtualGroupsBySecondarySPCmd = &cli.Command{
+	Action: ListGlobalVirtualGroupsBySecondarySPAction,
+	Name:   "query-gvg-by-sp",
+	Usage:  "get GlobalVirtualGroups List By SecondarySP",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		targetSPIDFlag,
+	},
+	Category:    swapInCommands,
+	Description: `get GlobalVirtualGroups List By SecondarySP`,
+}
+
+var ListVirtualGroupFamiliesBySpIDCmd = &cli.Command{
+	Action: ListVirtualGroupFamiliesBySpIDAction,
+	Name:   "query-vgf-by-sp",
+	Usage:  "get VirtualGroupFamily List By SpID",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		targetSPIDFlag,
+	},
+	Category:    swapInCommands,
+	Description: `get VirtualGroupFamily List By SpID`,
 }
 
 func SwapInAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 
@@ -117,13 +147,19 @@ func SwapInAction(ctx *cli.Context) error {
 	}
 
 	spClient := utils.MakeGfSpClient(cfg)
-	_, err = spClient.ReserveSwapIn(ctx.Context, reserveSwapIn)
-	return err
+	tx, err := spClient.ReserveSwapIn(ctx.Context, reserveSwapIn)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	fmt.Printf("tx successfully! tx_hash:%s", tx)
+	return nil
 }
 
 func CompleteSwapInAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 
@@ -137,19 +173,26 @@ func CompleteSwapInAction(ctx *cli.Context) error {
 	}
 
 	spClient := utils.MakeGfSpClient(cfg)
-	_, err = spClient.CompleteSwapIn(ctx.Context, completeSwapIn)
-	return err
+	tx, err := spClient.CompleteSwapIn(ctx.Context, completeSwapIn)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	fmt.Printf("tx successfully! tx_hash:%s", tx)
+	return nil
 }
 
 func RecoverGVGAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 
 	// get client
 	chainClient, err := utils.MakeGnfd(cfg)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	spClient := utils.MakeGfSpClient(cfg)
@@ -157,20 +200,24 @@ func RecoverGVGAction(ctx *cli.Context) error {
 	// check swapIn info
 	sp, err := chainClient.QuerySP(ctx.Context, cfg.SpAccount.SpOperatorAddress)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	gvgID := ctx.Uint64(gvgIDFlag.Name)
 	swapInInfo, err := chainClient.QuerySwapInInfo(ctx.Context, 0, uint32(gvgID))
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	if swapInInfo.GetSuccessorSpId() != sp.GetId() {
+		println("sp is not successor sp")
 		return errors.New("sp is not successor sp")
 	}
 
 	//get replicateIndex
 	gvgInfo, err := spClient.GetGlobalVirtualGroupByGvgID(ctx.Context, uint32(gvgID))
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	var replicateIndex int32
@@ -180,18 +227,26 @@ func RecoverGVGAction(ctx *cli.Context) error {
 		}
 	}
 
-	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), replicateIndex)
+	err = spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), replicateIndex)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	println("Trigger successfully! please waiting process")
+	return nil
 }
 
 func RecoverVGFAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 
 	// get client
 	chainClient, err := utils.MakeGnfd(cfg)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	spClient := utils.MakeGfSpClient(cfg)
@@ -199,24 +254,34 @@ func RecoverVGFAction(ctx *cli.Context) error {
 	// check swapIn info
 	sp, err := chainClient.QuerySP(ctx.Context, cfg.SpAccount.SpOperatorAddress)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	vgfID := ctx.Uint64(vgfIDFlag.Name)
 	swapInInfo, err := chainClient.QuerySwapInInfo(ctx.Context, uint32(vgfID), 0)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	if swapInInfo.GetSuccessorSpId() != sp.GetId() {
+		println("sp is not successor sp")
 		return errors.New("sp is not successor sp")
 	}
 
 	// trigger
-	return spClient.TriggerRecoverForSuccessorSP(ctx.Context, uint32(vgfID), 0, -1)
+	err = spClient.TriggerRecoverForSuccessorSP(ctx.Context, uint32(vgfID), 0, -1)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	println("Trigger successfully! please waiting process")
+	return nil
 }
 
 func QueryRecoverProcessAction(ctx *cli.Context) error {
 	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	spClient := utils.MakeGfSpClient(cfg)
@@ -224,6 +289,7 @@ func QueryRecoverProcessAction(ctx *cli.Context) error {
 	gvgfID := ctx.Uint64(vgfIDFlag.Name)
 	gvgstatsList, executing, err := spClient.QueryRecoverProcess(ctx.Context, uint32(gvgfID), uint32(gvgID))
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	if executing {
@@ -234,18 +300,65 @@ func QueryRecoverProcessAction(ctx *cli.Context) error {
 
 	res, err := json.Marshal(gvgstatsList)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	println(string(res))
 	// create file
 	f, err := os.Create("recover_process.json")
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 
 	_, err = fmt.Fprintln(f, string(res))
 	if err != nil {
+		println(err.Error())
 		return err
 	}
+	return nil
+}
+
+func ListGlobalVirtualGroupsBySecondarySPAction(ctx *cli.Context) error {
+	cfg, err := utils.MakeConfig(ctx)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	spClient := utils.MakeGfSpClient(cfg)
+	spID := ctx.Uint64(targetSPIDFlag.Name)
+	res, err := spClient.ListGlobalVirtualGroupsBySecondarySP(ctx.Context, uint32(spID))
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	resJson, err := json.Marshal(res)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	println(string(resJson))
+	return nil
+}
+
+func ListVirtualGroupFamiliesBySpIDAction(ctx *cli.Context) error {
+	cfg, err := utils.MakeConfig(ctx)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	spClient := utils.MakeGfSpClient(cfg)
+	spID := ctx.Uint64(targetSPIDFlag.Name)
+	res, err := spClient.ListVirtualGroupFamiliesSpID(ctx.Context, uint32(spID))
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	resJson, err := json.Marshal(res)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	println(string(resJson))
 	return nil
 }

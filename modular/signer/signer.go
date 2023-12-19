@@ -36,6 +36,8 @@ var (
 	ErrRejectMigrateBucketOnChain   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket failed")
 	ErrDepositOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120014, "send deposit failed")
 	ErrDeleteGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120015, "send delete GVG failed")
+	ErrReserveSwapIn                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120016, "send reserve swap in failed")
+	ErrCompleteSwapIn               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120016, "send complete swap in failed")
 )
 
 var _ module.Signer = &SignModular{}

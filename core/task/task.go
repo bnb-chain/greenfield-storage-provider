@@ -542,7 +542,7 @@ type RecoveryPieceTask interface {
 	SetRecoverDone()
 	// BySuccessorSP returns whether the task is initial by a successor SP
 	BySuccessorSP() bool
-	//
+	// GetGVGID return gvg id
 	GetGVGID() uint32
 }
 
