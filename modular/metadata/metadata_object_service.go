@@ -189,7 +189,7 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object by object name", "error", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNoSuchBucket
+			return nil, ErrNoSuchObject
 		}
 		return nil, err
 	}

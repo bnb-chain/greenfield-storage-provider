@@ -51,7 +51,7 @@ func (m *MockMetadata) GetBucketByID(bucketID int64, includePrivate bool) (*Buck
 }
 
 // GetBucketByID indicates an expected call of GetBucketByID.
-func (mr *MockMetadataMockRecorder) GetBucketByID(bucketID, includePrivate interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetBucketByID(bucketID, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByID", reflect.TypeOf((*MockMetadata)(nil).GetBucketByID), bucketID, includePrivate)
 }
@@ -66,7 +66,7 @@ func (m *MockMetadata) GetBucketByName(bucketName string, includePrivate bool) (
 }
 
 // GetBucketByName indicates an expected call of GetBucketByName.
-func (mr *MockMetadataMockRecorder) GetBucketByName(bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetBucketByName(bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketByName), bucketName, includePrivate)
 }
@@ -81,7 +81,7 @@ func (m *MockMetadata) GetBucketMetaByName(bucketName string, includePrivate boo
 }
 
 // GetBucketMetaByName indicates an expected call of GetBucketMetaByName.
-func (mr *MockMetadataMockRecorder) GetBucketMetaByName(bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetBucketMetaByName(bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketMetaByName), bucketName, includePrivate)
 }
@@ -96,7 +96,7 @@ func (m *MockMetadata) GetBucketSizeByID(bucketID uint64) (decimal.Decimal, erro
 }
 
 // GetBucketSizeByID indicates an expected call of GetBucketSizeByID.
-func (mr *MockMetadataMockRecorder) GetBucketSizeByID(bucketID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetBucketSizeByID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSizeByID", reflect.TypeOf((*MockMetadata)(nil).GetBucketSizeByID), bucketID)
 }
@@ -111,7 +111,7 @@ func (m *MockMetadata) GetDataMigrationRecordByProcessKey(processKey string) (*D
 }
 
 // GetDataMigrationRecordByProcessKey indicates an expected call of GetDataMigrationRecordByProcessKey.
-func (mr *MockMetadataMockRecorder) GetDataMigrationRecordByProcessKey(processKey interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetDataMigrationRecordByProcessKey(processKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataMigrationRecordByProcessKey", reflect.TypeOf((*MockMetadata)(nil).GetDataMigrationRecordByProcessKey), processKey)
 }
@@ -171,7 +171,7 @@ func (m *MockMetadata) GetEventMigrationBucketByBucketID(bucketID common.Hash) (
 }
 
 // GetEventMigrationBucketByBucketID indicates an expected call of GetEventMigrationBucketByBucketID.
-func (mr *MockMetadataMockRecorder) GetEventMigrationBucketByBucketID(bucketID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetEventMigrationBucketByBucketID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventMigrationBucketByBucketID", reflect.TypeOf((*MockMetadata)(nil).GetEventMigrationBucketByBucketID), bucketID)
 }
@@ -186,7 +186,7 @@ func (m *MockMetadata) GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, erro
 }
 
 // GetEventSwapOutByGvgID indicates an expected call of GetEventSwapOutByGvgID.
-func (mr *MockMetadataMockRecorder) GetEventSwapOutByGvgID(gvgID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetEventSwapOutByGvgID(gvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventSwapOutByGvgID", reflect.TypeOf((*MockMetadata)(nil).GetEventSwapOutByGvgID), gvgID)
 }
@@ -201,7 +201,7 @@ func (m *MockMetadata) GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtua
 }
 
 // GetGlobalVirtualGroupByGvgID indicates an expected call of GetGlobalVirtualGroupByGvgID.
-func (mr *MockMetadataMockRecorder) GetGlobalVirtualGroupByGvgID(gvgID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetGlobalVirtualGroupByGvgID(gvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroupByGvgID", reflect.TypeOf((*MockMetadata)(nil).GetGlobalVirtualGroupByGvgID), gvgID)
 }
@@ -216,22 +216,22 @@ func (m *MockMetadata) GetGroupByID(groupID int64, includeRemoved bool) (*Group,
 }
 
 // GetGroupByID indicates an expected call of GetGroupByID.
-func (mr *MockMetadataMockRecorder) GetGroupByID(groupID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetGroupByID(groupID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupByID", reflect.TypeOf((*MockMetadata)(nil).GetGroupByID), groupID, includeRemoved)
 }
 
 // GetGroupMembers mocks base method.
-func (m *MockMetadata) GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error) {
+func (m *MockMetadata) GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*GroupMemberMeta, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGroupMembers", groupID, startAfter, limit)
-	ret0, _ := ret[0].([]*Group)
+	ret0, _ := ret[0].([]*GroupMemberMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetGroupMembers indicates an expected call of GetGroupMembers.
-func (mr *MockMetadataMockRecorder) GetGroupMembers(groupID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetGroupMembers(groupID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembers", reflect.TypeOf((*MockMetadata)(nil).GetGroupMembers), groupID, startAfter, limit)
 }
@@ -246,7 +246,7 @@ func (m *MockMetadata) GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCou
 }
 
 // GetGroupMembersCount indicates an expected call of GetGroupMembersCount.
-func (mr *MockMetadataMockRecorder) GetGroupMembersCount(groupIDs interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetGroupMembersCount(groupIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembersCount", reflect.TypeOf((*MockMetadata)(nil).GetGroupMembersCount), groupIDs)
 }
@@ -261,7 +261,7 @@ func (m *MockMetadata) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, a
 }
 
 // GetGroupsByGroupIDAndAccount indicates an expected call of GetGroupsByGroupIDAndAccount.
-func (mr *MockMetadataMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupsByGroupIDAndAccount", reflect.TypeOf((*MockMetadata)(nil).GetGroupsByGroupIDAndAccount), groupIDList, account, includeRemoved)
 }
@@ -276,7 +276,7 @@ func (m *MockMetadata) GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32
 }
 
 // GetGvgByBucketAndLvgID indicates an expected call of GetGvgByBucketAndLvgID.
-func (mr *MockMetadataMockRecorder) GetGvgByBucketAndLvgID(bucketID, lvgID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetGvgByBucketAndLvgID(bucketID, lvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGvgByBucketAndLvgID", reflect.TypeOf((*MockMetadata)(nil).GetGvgByBucketAndLvgID), bucketID, lvgID)
 }
@@ -321,7 +321,7 @@ func (m *MockMetadata) GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32
 }
 
 // GetLvgByBucketAndLvgID indicates an expected call of GetLvgByBucketAndLvgID.
-func (mr *MockMetadataMockRecorder) GetLvgByBucketAndLvgID(bucketID, lvgID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetLvgByBucketAndLvgID(bucketID, lvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLvgByBucketAndLvgID", reflect.TypeOf((*MockMetadata)(nil).GetLvgByBucketAndLvgID), bucketID, lvgID)
 }
@@ -336,7 +336,7 @@ func (m *MockMetadata) GetMigrateBucketEventByBucketID(bucketID common.Hash) (*E
 }
 
 // GetMigrateBucketEventByBucketID indicates an expected call of GetMigrateBucketEventByBucketID.
-func (mr *MockMetadataMockRecorder) GetMigrateBucketEventByBucketID(bucketID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetMigrateBucketEventByBucketID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrateBucketEventByBucketID", reflect.TypeOf((*MockMetadata)(nil).GetMigrateBucketEventByBucketID), bucketID)
 }
@@ -366,7 +366,7 @@ func (m *MockMetadata) GetObjectByID(objectID int64, includeRemoved bool) (*Obje
 }
 
 // GetObjectByID indicates an expected call of GetObjectByID.
-func (mr *MockMetadataMockRecorder) GetObjectByID(objectID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetObjectByID(objectID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByID", reflect.TypeOf((*MockMetadata)(nil).GetObjectByID), objectID, includeRemoved)
 }
@@ -381,7 +381,7 @@ func (m *MockMetadata) GetObjectByName(objectName, bucketName string, includePri
 }
 
 // GetObjectByName indicates an expected call of GetObjectByName.
-func (mr *MockMetadataMockRecorder) GetObjectByName(objectName, bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetObjectByName(objectName, bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockMetadata)(nil).GetObjectByName), objectName, bucketName, includePrivate)
 }
@@ -396,7 +396,7 @@ func (m *MockMetadata) GetPaymentByBucketID(bucketID int64, includePrivate bool)
 }
 
 // GetPaymentByBucketID indicates an expected call of GetPaymentByBucketID.
-func (mr *MockMetadataMockRecorder) GetPaymentByBucketID(bucketID, includePrivate interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPaymentByBucketID(bucketID, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockMetadata)(nil).GetPaymentByBucketID), bucketID, includePrivate)
 }
@@ -411,7 +411,7 @@ func (m *MockMetadata) GetPaymentByBucketName(bucketName string, includePrivate 
 }
 
 // GetPaymentByBucketName indicates an expected call of GetPaymentByBucketName.
-func (mr *MockMetadataMockRecorder) GetPaymentByBucketName(bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPaymentByBucketName(bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockMetadata)(nil).GetPaymentByBucketName), bucketName, includePrivate)
 }
@@ -426,7 +426,7 @@ func (m *MockMetadata) GetPaymentByPaymentAddress(address common.Address) (*Stre
 }
 
 // GetPaymentByPaymentAddress indicates an expected call of GetPaymentByPaymentAddress.
-func (mr *MockMetadataMockRecorder) GetPaymentByPaymentAddress(address interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPaymentByPaymentAddress(address any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByPaymentAddress", reflect.TypeOf((*MockMetadata)(nil).GetPaymentByPaymentAddress), address)
 }
@@ -441,7 +441,7 @@ func (m *MockMetadata) GetPermissionByResourceAndPrincipal(resourceType, princip
 }
 
 // GetPermissionByResourceAndPrincipal indicates an expected call of GetPermissionByResourceAndPrincipal.
-func (mr *MockMetadataMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockMetadata)(nil).GetPermissionByResourceAndPrincipal), resourceType, principalType, principalValue, resourceID)
 }
@@ -456,7 +456,7 @@ func (m *MockMetadata) GetPermissionsByResourceAndPrincipleType(resourceType, pr
 }
 
 // GetPermissionsByResourceAndPrincipleType indicates an expected call of GetPermissionsByResourceAndPrincipleType.
-func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockMetadata)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
 }
@@ -471,7 +471,7 @@ func (m *MockMetadata) GetPrimarySPStreamRecordBySpID(spID uint32) ([]*PrimarySp
 }
 
 // GetPrimarySPStreamRecordBySpID indicates an expected call of GetPrimarySPStreamRecordBySpID.
-func (mr *MockMetadataMockRecorder) GetPrimarySPStreamRecordBySpID(spID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetPrimarySPStreamRecordBySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimarySPStreamRecordBySpID", reflect.TypeOf((*MockMetadata)(nil).GetPrimarySPStreamRecordBySpID), spID)
 }
@@ -486,7 +486,7 @@ func (m *MockMetadata) GetSPByAddress(operatorAddress common.Address) (*StorageP
 }
 
 // GetSPByAddress indicates an expected call of GetSPByAddress.
-func (mr *MockMetadataMockRecorder) GetSPByAddress(operatorAddress interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetSPByAddress(operatorAddress any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPByAddress", reflect.TypeOf((*MockMetadata)(nil).GetSPByAddress), operatorAddress)
 }
@@ -501,7 +501,7 @@ func (m *MockMetadata) GetSecondarySPStreamRecordBySpID(spID uint32) ([]*Seconda
 }
 
 // GetSecondarySPStreamRecordBySpID indicates an expected call of GetSecondarySPStreamRecordBySpID.
-func (mr *MockMetadataMockRecorder) GetSecondarySPStreamRecordBySpID(spID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetSecondarySPStreamRecordBySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecondarySPStreamRecordBySpID", reflect.TypeOf((*MockMetadata)(nil).GetSecondarySPStreamRecordBySpID), spID)
 }
@@ -530,7 +530,7 @@ func (m *MockMetadata) GetStatementsByPolicyID(policyIDList []common.Hash, inclu
 }
 
 // GetStatementsByPolicyID indicates an expected call of GetStatementsByPolicyID.
-func (mr *MockMetadataMockRecorder) GetStatementsByPolicyID(policyIDList, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetStatementsByPolicyID(policyIDList, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementsByPolicyID", reflect.TypeOf((*MockMetadata)(nil).GetStatementsByPolicyID), policyIDList, includeRemoved)
 }
@@ -560,7 +560,7 @@ func (m *MockMetadata) GetUserBuckets(accountID common.Address, includeRemoved b
 }
 
 // GetUserBuckets indicates an expected call of GetUserBuckets.
-func (mr *MockMetadataMockRecorder) GetUserBuckets(accountID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetUserBuckets(accountID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockMetadata)(nil).GetUserBuckets), accountID, includeRemoved)
 }
@@ -575,22 +575,22 @@ func (m *MockMetadata) GetUserBucketsCount(accountID common.Address, includeRemo
 }
 
 // GetUserBucketsCount indicates an expected call of GetUserBucketsCount.
-func (mr *MockMetadataMockRecorder) GetUserBucketsCount(accountID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetUserBucketsCount(accountID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockMetadata)(nil).GetUserBucketsCount), accountID, includeRemoved)
 }
 
 // GetUserGroups mocks base method.
-func (m *MockMetadata) GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error) {
+func (m *MockMetadata) GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*GroupMemberMeta, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserGroups", accountID, startAfter, limit)
-	ret0, _ := ret[0].([]*Group)
+	ret0, _ := ret[0].([]*GroupMemberMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserGroups indicates an expected call of GetUserGroups.
-func (mr *MockMetadataMockRecorder) GetUserGroups(accountID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetUserGroups(accountID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockMetadata)(nil).GetUserGroups), accountID, startAfter, limit)
 }
@@ -605,7 +605,7 @@ func (m *MockMetadata) GetUserOwnedGroups(accountID common.Address, startAfter c
 }
 
 // GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
-func (mr *MockMetadataMockRecorder) GetUserOwnedGroups(accountID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetUserOwnedGroups(accountID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockMetadata)(nil).GetUserOwnedGroups), accountID, startAfter, limit)
 }
@@ -620,7 +620,7 @@ func (m *MockMetadata) GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*GlobalVirt
 }
 
 // GetVirtualGroupFamiliesByVgfID indicates an expected call of GetVirtualGroupFamiliesByVgfID.
-func (mr *MockMetadataMockRecorder) GetVirtualGroupFamiliesByVgfID(vgfID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) GetVirtualGroupFamiliesByVgfID(vgfID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualGroupFamiliesByVgfID", reflect.TypeOf((*MockMetadata)(nil).GetVirtualGroupFamiliesByVgfID), vgfID)
 }
@@ -635,7 +635,7 @@ func (m *MockMetadata) ListBucketsByIDs(ids []common.Hash, includeRemoved bool) 
 }
 
 // ListBucketsByIDs indicates an expected call of ListBucketsByIDs.
-func (mr *MockMetadataMockRecorder) ListBucketsByIDs(ids, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListBucketsByIDs(ids, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByIDs", reflect.TypeOf((*MockMetadata)(nil).ListBucketsByIDs), ids, includeRemoved)
 }
@@ -650,7 +650,7 @@ func (m *MockMetadata) ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Has
 }
 
 // ListBucketsByVgfID indicates an expected call of ListBucketsByVgfID.
-func (mr *MockMetadataMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByVgfID", reflect.TypeOf((*MockMetadata)(nil).ListBucketsByVgfID), vgfIDs, startAfter, limit)
 }
@@ -685,7 +685,7 @@ func (m *MockMetadata) ListDeletedObjectsByBlockNumberRange(startBlockNumber, en
 }
 
 // ListDeletedObjectsByBlockNumberRange indicates an expected call of ListDeletedObjectsByBlockNumberRange.
-func (mr *MockMetadataMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockMetadata)(nil).ListDeletedObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, includePrivate)
 }
@@ -700,7 +700,7 @@ func (m *MockMetadata) ListExpiredBucketsBySp(createAt int64, primarySpID uint32
 }
 
 // ListExpiredBucketsBySp indicates an expected call of ListExpiredBucketsBySp.
-func (mr *MockMetadataMockRecorder) ListExpiredBucketsBySp(createAt, primarySpID, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListExpiredBucketsBySp(createAt, primarySpID, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockMetadata)(nil).ListExpiredBucketsBySp), createAt, primarySpID, limit)
 }
@@ -715,7 +715,7 @@ func (m *MockMetadata) ListGroupsByIDs(ids []common.Hash) ([]*Group, error) {
 }
 
 // ListGroupsByIDs indicates an expected call of ListGroupsByIDs.
-func (mr *MockMetadataMockRecorder) ListGroupsByIDs(ids interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListGroupsByIDs(ids any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByIDs", reflect.TypeOf((*MockMetadata)(nil).ListGroupsByIDs), ids)
 }
@@ -731,7 +731,7 @@ func (m *MockMetadata) ListGroupsByNameAndSourceType(name, prefix, sourceType st
 }
 
 // ListGroupsByNameAndSourceType indicates an expected call of ListGroupsByNameAndSourceType.
-func (mr *MockMetadataMockRecorder) ListGroupsByNameAndSourceType(name, prefix, sourceType, limit, offset, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListGroupsByNameAndSourceType(name, prefix, sourceType, limit, offset, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByNameAndSourceType", reflect.TypeOf((*MockMetadata)(nil).ListGroupsByNameAndSourceType), name, prefix, sourceType, limit, offset, includeRemoved)
 }
@@ -746,7 +746,7 @@ func (m *MockMetadata) ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtual
 }
 
 // ListGvgByBucketID indicates an expected call of ListGvgByBucketID.
-func (mr *MockMetadataMockRecorder) ListGvgByBucketID(bucketID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListGvgByBucketID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGvgByBucketID", reflect.TypeOf((*MockMetadata)(nil).ListGvgByBucketID), bucketID)
 }
@@ -761,7 +761,7 @@ func (m *MockMetadata) ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup,
 }
 
 // ListGvgByPrimarySpID indicates an expected call of ListGvgByPrimarySpID.
-func (mr *MockMetadataMockRecorder) ListGvgByPrimarySpID(spID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListGvgByPrimarySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGvgByPrimarySpID", reflect.TypeOf((*MockMetadata)(nil).ListGvgByPrimarySpID), spID)
 }
@@ -776,7 +776,7 @@ func (m *MockMetadata) ListGvgBySecondarySpID(spID uint32) ([]*GlobalVirtualGrou
 }
 
 // ListGvgBySecondarySpID indicates an expected call of ListGvgBySecondarySpID.
-func (mr *MockMetadataMockRecorder) ListGvgBySecondarySpID(spID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListGvgBySecondarySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGvgBySecondarySpID", reflect.TypeOf((*MockMetadata)(nil).ListGvgBySecondarySpID), spID)
 }
@@ -791,7 +791,7 @@ func (m *MockMetadata) ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []ui
 }
 
 // ListLvgByGvgAndBucketID indicates an expected call of ListLvgByGvgAndBucketID.
-func (mr *MockMetadataMockRecorder) ListLvgByGvgAndBucketID(bucketID, gvgIDs interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListLvgByGvgAndBucketID(bucketID, gvgIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLvgByGvgAndBucketID", reflect.TypeOf((*MockMetadata)(nil).ListLvgByGvgAndBucketID), bucketID, gvgIDs)
 }
@@ -806,7 +806,7 @@ func (m *MockMetadata) ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, er
 }
 
 // ListLvgByGvgID indicates an expected call of ListLvgByGvgID.
-func (mr *MockMetadataMockRecorder) ListLvgByGvgID(gvgIDs interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListLvgByGvgID(gvgIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLvgByGvgID", reflect.TypeOf((*MockMetadata)(nil).ListLvgByGvgID), gvgIDs)
 }
@@ -814,7 +814,7 @@ func (mr *MockMetadataMockRecorder) ListLvgByGvgID(gvgIDs interface{}) *gomock.C
 // ListMigrateBucketEvents mocks base method.
 func (m *MockMetadata) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, []*EventRejectMigrateBucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{spID}
+	varargs := []any{spID}
 	for _, a := range filters {
 		varargs = append(varargs, a)
 	}
@@ -828,9 +828,9 @@ func (m *MockMetadata) ListMigrateBucketEvents(spID uint32, filters ...func(*gor
 }
 
 // ListMigrateBucketEvents indicates an expected call of ListMigrateBucketEvents.
-func (mr *MockMetadataMockRecorder) ListMigrateBucketEvents(spID interface{}, filters ...interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListMigrateBucketEvents(spID any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{spID}, filters...)
+	varargs := append([]any{spID}, filters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockMetadata)(nil).ListMigrateBucketEvents), varargs...)
 }
 
@@ -844,7 +844,7 @@ func (m *MockMetadata) ListObjectPolicies(objectID common.Hash, actionType types
 }
 
 // ListObjectPolicies indicates an expected call of ListObjectPolicies.
-func (mr *MockMetadataMockRecorder) ListObjectPolicies(objectID, actionType, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectPolicies(objectID, actionType, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockMetadata)(nil).ListObjectPolicies), objectID, actionType, startAfter, limit)
 }
@@ -859,7 +859,7 @@ func (m *MockMetadata) ListObjectsByBucketName(bucketName, continuationToken, pr
 }
 
 // ListObjectsByBucketName indicates an expected call of ListObjectsByBucketName.
-func (mr *MockMetadataMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
 }
@@ -875,7 +875,7 @@ func (m *MockMetadata) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgI
 }
 
 // ListObjectsByGVGAndBucketForGC indicates an expected call of ListObjectsByGVGAndBucketForGC.
-func (mr *MockMetadataMockRecorder) ListObjectsByGVGAndBucketForGC(bucketID, gvgID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectsByGVGAndBucketForGC(bucketID, gvgID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByGVGAndBucketForGC", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByGVGAndBucketForGC), bucketID, gvgID, startAfter, limit)
 }
@@ -890,7 +890,7 @@ func (m *MockMetadata) ListObjectsByIDs(ids []common.Hash, includeRemoved bool) 
 }
 
 // ListObjectsByIDs indicates an expected call of ListObjectsByIDs.
-func (mr *MockMetadataMockRecorder) ListObjectsByIDs(ids, includeRemoved interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectsByIDs(ids, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByIDs", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByIDs), ids, includeRemoved)
 }
@@ -898,7 +898,7 @@ func (mr *MockMetadataMockRecorder) ListObjectsByIDs(ids, includeRemoved interfa
 // ListObjectsByLVGID mocks base method.
 func (m *MockMetadata) ListObjectsByLVGID(lvgIDs []uint32, bucketID, startAfter common.Hash, limit int, filters ...func(*gorm.DB) *gorm.DB) ([]*Object, *Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{lvgIDs, bucketID, startAfter, limit}
+	varargs := []any{lvgIDs, bucketID, startAfter, limit}
 	for _, a := range filters {
 		varargs = append(varargs, a)
 	}
@@ -910,9 +910,9 @@ func (m *MockMetadata) ListObjectsByLVGID(lvgIDs []uint32, bucketID, startAfter 
 }
 
 // ListObjectsByLVGID indicates an expected call of ListObjectsByLVGID.
-func (mr *MockMetadataMockRecorder) ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit interface{}, filters ...interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{lvgIDs, bucketID, startAfter, limit}, filters...)
+	varargs := append([]any{lvgIDs, bucketID, startAfter, limit}, filters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByLVGID", reflect.TypeOf((*MockMetadata)(nil).ListObjectsByLVGID), varargs...)
 }
 
@@ -927,7 +927,7 @@ func (m *MockMetadata) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, li
 }
 
 // ListObjectsInGVG indicates an expected call of ListObjectsInGVG.
-func (mr *MockMetadataMockRecorder) ListObjectsInGVG(gvgID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectsInGVG(gvgID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVG", reflect.TypeOf((*MockMetadata)(nil).ListObjectsInGVG), gvgID, startAfter, limit)
 }
@@ -943,7 +943,7 @@ func (m *MockMetadata) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uin
 }
 
 // ListObjectsInGVGAndBucket indicates an expected call of ListObjectsInGVGAndBucket.
-func (mr *MockMetadataMockRecorder) ListObjectsInGVGAndBucket(bucketID, gvgID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListObjectsInGVGAndBucket(bucketID, gvgID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVGAndBucket", reflect.TypeOf((*MockMetadata)(nil).ListObjectsInGVGAndBucket), bucketID, gvgID, startAfter, limit)
 }
@@ -958,7 +958,7 @@ func (m *MockMetadata) ListPaymentAccountStreams(paymentAccount common.Address) 
 }
 
 // ListPaymentAccountStreams indicates an expected call of ListPaymentAccountStreams.
-func (mr *MockMetadataMockRecorder) ListPaymentAccountStreams(paymentAccount interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListPaymentAccountStreams(paymentAccount any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAccountStreams", reflect.TypeOf((*MockMetadata)(nil).ListPaymentAccountStreams), paymentAccount)
 }
@@ -974,7 +974,7 @@ func (m *MockMetadata) ListSpExitEvents(blockID uint64, spID uint32) (*EventStor
 }
 
 // ListSpExitEvents indicates an expected call of ListSpExitEvents.
-func (mr *MockMetadataMockRecorder) ListSpExitEvents(blockID, spID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListSpExitEvents(blockID, spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockMetadata)(nil).ListSpExitEvents), blockID, spID)
 }
@@ -991,7 +991,7 @@ func (m *MockMetadata) ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventS
 }
 
 // ListSwapOutEvents indicates an expected call of ListSwapOutEvents.
-func (mr *MockMetadataMockRecorder) ListSwapOutEvents(blockID, spID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListSwapOutEvents(blockID, spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSwapOutEvents", reflect.TypeOf((*MockMetadata)(nil).ListSwapOutEvents), blockID, spID)
 }
@@ -1006,7 +1006,7 @@ func (m *MockMetadata) ListUserPaymentAccounts(accountID common.Address) ([]*Str
 }
 
 // ListUserPaymentAccounts indicates an expected call of ListUserPaymentAccounts.
-func (mr *MockMetadataMockRecorder) ListUserPaymentAccounts(accountID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListUserPaymentAccounts(accountID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserPaymentAccounts", reflect.TypeOf((*MockMetadata)(nil).ListUserPaymentAccounts), accountID)
 }
@@ -1021,7 +1021,7 @@ func (m *MockMetadata) ListVgfByGvgID(gvgIDs []uint32) ([]*GlobalVirtualGroupFam
 }
 
 // ListVgfByGvgID indicates an expected call of ListVgfByGvgID.
-func (mr *MockMetadataMockRecorder) ListVgfByGvgID(gvgIDs interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListVgfByGvgID(gvgIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVgfByGvgID", reflect.TypeOf((*MockMetadata)(nil).ListVgfByGvgID), gvgIDs)
 }
@@ -1036,7 +1036,7 @@ func (m *MockMetadata) ListVirtualGroupFamiliesBySpID(spID uint32) ([]*GlobalVir
 }
 
 // ListVirtualGroupFamiliesBySpID indicates an expected call of ListVirtualGroupFamiliesBySpID.
-func (mr *MockMetadataMockRecorder) ListVirtualGroupFamiliesBySpID(spID interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListVirtualGroupFamiliesBySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesBySpID", reflect.TypeOf((*MockMetadata)(nil).ListVirtualGroupFamiliesBySpID), spID)
 }
@@ -1051,7 +1051,7 @@ func (m *MockMetadata) ListVirtualGroupFamiliesByVgfIDs(vgfIDs []uint32) ([]*Glo
 }
 
 // ListVirtualGroupFamiliesByVgfIDs indicates an expected call of ListVirtualGroupFamiliesByVgfIDs.
-func (mr *MockMetadataMockRecorder) ListVirtualGroupFamiliesByVgfIDs(vgfIDs interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListVirtualGroupFamiliesByVgfIDs(vgfIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesByVgfIDs", reflect.TypeOf((*MockMetadata)(nil).ListVirtualGroupFamiliesByVgfIDs), vgfIDs)
 }
@@ -1089,7 +1089,7 @@ func (m *MockBSDB) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, 
 }
 
 // GetBucketByID indicates an expected call of GetBucketByID.
-func (mr *MockBSDBMockRecorder) GetBucketByID(bucketID, includePrivate interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetBucketByID(bucketID, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByID", reflect.TypeOf((*MockBSDB)(nil).GetBucketByID), bucketID, includePrivate)
 }
@@ -1104,7 +1104,7 @@ func (m *MockBSDB) GetBucketByName(bucketName string, includePrivate bool) (*Buc
 }
 
 // GetBucketByName indicates an expected call of GetBucketByName.
-func (mr *MockBSDBMockRecorder) GetBucketByName(bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetBucketByName(bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketByName), bucketName, includePrivate)
 }
@@ -1119,7 +1119,7 @@ func (m *MockBSDB) GetBucketMetaByName(bucketName string, includePrivate bool) (
 }
 
 // GetBucketMetaByName indicates an expected call of GetBucketMetaByName.
-func (mr *MockBSDBMockRecorder) GetBucketMetaByName(bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetBucketMetaByName(bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketMetaByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketMetaByName), bucketName, includePrivate)
 }
@@ -1134,7 +1134,7 @@ func (m *MockBSDB) GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error) {
 }
 
 // GetBucketSizeByID indicates an expected call of GetBucketSizeByID.
-func (mr *MockBSDBMockRecorder) GetBucketSizeByID(bucketID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetBucketSizeByID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketSizeByID", reflect.TypeOf((*MockBSDB)(nil).GetBucketSizeByID), bucketID)
 }
@@ -1149,7 +1149,7 @@ func (m *MockBSDB) GetDataMigrationRecordByProcessKey(processKey string) (*DataM
 }
 
 // GetDataMigrationRecordByProcessKey indicates an expected call of GetDataMigrationRecordByProcessKey.
-func (mr *MockBSDBMockRecorder) GetDataMigrationRecordByProcessKey(processKey interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetDataMigrationRecordByProcessKey(processKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataMigrationRecordByProcessKey", reflect.TypeOf((*MockBSDB)(nil).GetDataMigrationRecordByProcessKey), processKey)
 }
@@ -1209,7 +1209,7 @@ func (m *MockBSDB) GetEventMigrationBucketByBucketID(bucketID common.Hash) (*Eve
 }
 
 // GetEventMigrationBucketByBucketID indicates an expected call of GetEventMigrationBucketByBucketID.
-func (mr *MockBSDBMockRecorder) GetEventMigrationBucketByBucketID(bucketID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetEventMigrationBucketByBucketID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventMigrationBucketByBucketID", reflect.TypeOf((*MockBSDB)(nil).GetEventMigrationBucketByBucketID), bucketID)
 }
@@ -1224,7 +1224,7 @@ func (m *MockBSDB) GetEventSwapOutByGvgID(gvgID uint32) (*EventSwapOut, error) {
 }
 
 // GetEventSwapOutByGvgID indicates an expected call of GetEventSwapOutByGvgID.
-func (mr *MockBSDBMockRecorder) GetEventSwapOutByGvgID(gvgID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetEventSwapOutByGvgID(gvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventSwapOutByGvgID", reflect.TypeOf((*MockBSDB)(nil).GetEventSwapOutByGvgID), gvgID)
 }
@@ -1239,7 +1239,7 @@ func (m *MockBSDB) GetGlobalVirtualGroupByGvgID(gvgID uint32) (*GlobalVirtualGro
 }
 
 // GetGlobalVirtualGroupByGvgID indicates an expected call of GetGlobalVirtualGroupByGvgID.
-func (mr *MockBSDBMockRecorder) GetGlobalVirtualGroupByGvgID(gvgID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetGlobalVirtualGroupByGvgID(gvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroupByGvgID", reflect.TypeOf((*MockBSDB)(nil).GetGlobalVirtualGroupByGvgID), gvgID)
 }
@@ -1254,22 +1254,22 @@ func (m *MockBSDB) GetGroupByID(groupID int64, includeRemoved bool) (*Group, err
 }
 
 // GetGroupByID indicates an expected call of GetGroupByID.
-func (mr *MockBSDBMockRecorder) GetGroupByID(groupID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetGroupByID(groupID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupByID", reflect.TypeOf((*MockBSDB)(nil).GetGroupByID), groupID, includeRemoved)
 }
 
 // GetGroupMembers mocks base method.
-func (m *MockBSDB) GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error) {
+func (m *MockBSDB) GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*GroupMemberMeta, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGroupMembers", groupID, startAfter, limit)
-	ret0, _ := ret[0].([]*Group)
+	ret0, _ := ret[0].([]*GroupMemberMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetGroupMembers indicates an expected call of GetGroupMembers.
-func (mr *MockBSDBMockRecorder) GetGroupMembers(groupID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetGroupMembers(groupID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembers", reflect.TypeOf((*MockBSDB)(nil).GetGroupMembers), groupID, startAfter, limit)
 }
@@ -1284,7 +1284,7 @@ func (m *MockBSDB) GetGroupMembersCount(groupIDs []common.Hash) ([]*GroupCount, 
 }
 
 // GetGroupMembersCount indicates an expected call of GetGroupMembersCount.
-func (mr *MockBSDBMockRecorder) GetGroupMembersCount(groupIDs interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetGroupMembersCount(groupIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupMembersCount", reflect.TypeOf((*MockBSDB)(nil).GetGroupMembersCount), groupIDs)
 }
@@ -1299,7 +1299,7 @@ func (m *MockBSDB) GetGroupsByGroupIDAndAccount(groupIDList []common.Hash, accou
 }
 
 // GetGroupsByGroupIDAndAccount indicates an expected call of GetGroupsByGroupIDAndAccount.
-func (mr *MockBSDBMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetGroupsByGroupIDAndAccount(groupIDList, account, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroupsByGroupIDAndAccount", reflect.TypeOf((*MockBSDB)(nil).GetGroupsByGroupIDAndAccount), groupIDList, account, includeRemoved)
 }
@@ -1314,7 +1314,7 @@ func (m *MockBSDB) GetGvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*
 }
 
 // GetGvgByBucketAndLvgID indicates an expected call of GetGvgByBucketAndLvgID.
-func (mr *MockBSDBMockRecorder) GetGvgByBucketAndLvgID(bucketID, lvgID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetGvgByBucketAndLvgID(bucketID, lvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGvgByBucketAndLvgID", reflect.TypeOf((*MockBSDB)(nil).GetGvgByBucketAndLvgID), bucketID, lvgID)
 }
@@ -1359,7 +1359,7 @@ func (m *MockBSDB) GetLvgByBucketAndLvgID(bucketID common.Hash, lvgID uint32) (*
 }
 
 // GetLvgByBucketAndLvgID indicates an expected call of GetLvgByBucketAndLvgID.
-func (mr *MockBSDBMockRecorder) GetLvgByBucketAndLvgID(bucketID, lvgID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetLvgByBucketAndLvgID(bucketID, lvgID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLvgByBucketAndLvgID", reflect.TypeOf((*MockBSDB)(nil).GetLvgByBucketAndLvgID), bucketID, lvgID)
 }
@@ -1374,7 +1374,7 @@ func (m *MockBSDB) GetMigrateBucketEventByBucketID(bucketID common.Hash) (*Event
 }
 
 // GetMigrateBucketEventByBucketID indicates an expected call of GetMigrateBucketEventByBucketID.
-func (mr *MockBSDBMockRecorder) GetMigrateBucketEventByBucketID(bucketID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetMigrateBucketEventByBucketID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrateBucketEventByBucketID", reflect.TypeOf((*MockBSDB)(nil).GetMigrateBucketEventByBucketID), bucketID)
 }
@@ -1404,7 +1404,7 @@ func (m *MockBSDB) GetObjectByID(objectID int64, includeRemoved bool) (*Object, 
 }
 
 // GetObjectByID indicates an expected call of GetObjectByID.
-func (mr *MockBSDBMockRecorder) GetObjectByID(objectID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetObjectByID(objectID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByID", reflect.TypeOf((*MockBSDB)(nil).GetObjectByID), objectID, includeRemoved)
 }
@@ -1419,7 +1419,7 @@ func (m *MockBSDB) GetObjectByName(objectName, bucketName string, includePrivate
 }
 
 // GetObjectByName indicates an expected call of GetObjectByName.
-func (mr *MockBSDBMockRecorder) GetObjectByName(objectName, bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetObjectByName(objectName, bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockBSDB)(nil).GetObjectByName), objectName, bucketName, includePrivate)
 }
@@ -1434,7 +1434,7 @@ func (m *MockBSDB) GetPaymentByBucketID(bucketID int64, includePrivate bool) (*S
 }
 
 // GetPaymentByBucketID indicates an expected call of GetPaymentByBucketID.
-func (mr *MockBSDBMockRecorder) GetPaymentByBucketID(bucketID, includePrivate interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPaymentByBucketID(bucketID, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketID", reflect.TypeOf((*MockBSDB)(nil).GetPaymentByBucketID), bucketID, includePrivate)
 }
@@ -1449,7 +1449,7 @@ func (m *MockBSDB) GetPaymentByBucketName(bucketName string, includePrivate bool
 }
 
 // GetPaymentByBucketName indicates an expected call of GetPaymentByBucketName.
-func (mr *MockBSDBMockRecorder) GetPaymentByBucketName(bucketName, includePrivate interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPaymentByBucketName(bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByBucketName", reflect.TypeOf((*MockBSDB)(nil).GetPaymentByBucketName), bucketName, includePrivate)
 }
@@ -1464,7 +1464,7 @@ func (m *MockBSDB) GetPaymentByPaymentAddress(address common.Address) (*StreamRe
 }
 
 // GetPaymentByPaymentAddress indicates an expected call of GetPaymentByPaymentAddress.
-func (mr *MockBSDBMockRecorder) GetPaymentByPaymentAddress(address interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPaymentByPaymentAddress(address any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByPaymentAddress", reflect.TypeOf((*MockBSDB)(nil).GetPaymentByPaymentAddress), address)
 }
@@ -1479,7 +1479,7 @@ func (m *MockBSDB) GetPermissionByResourceAndPrincipal(resourceType, principalTy
 }
 
 // GetPermissionByResourceAndPrincipal indicates an expected call of GetPermissionByResourceAndPrincipal.
-func (mr *MockBSDBMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPermissionByResourceAndPrincipal(resourceType, principalType, principalValue, resourceID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByResourceAndPrincipal", reflect.TypeOf((*MockBSDB)(nil).GetPermissionByResourceAndPrincipal), resourceType, principalType, principalValue, resourceID)
 }
@@ -1494,7 +1494,7 @@ func (m *MockBSDB) GetPermissionsByResourceAndPrincipleType(resourceType, princi
 }
 
 // GetPermissionsByResourceAndPrincipleType indicates an expected call of GetPermissionsByResourceAndPrincipleType.
-func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPermissionsByResourceAndPrincipleType(resourceType, principalType, resourceID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionsByResourceAndPrincipleType", reflect.TypeOf((*MockBSDB)(nil).GetPermissionsByResourceAndPrincipleType), resourceType, principalType, resourceID, includeRemoved)
 }
@@ -1509,7 +1509,7 @@ func (m *MockBSDB) GetPrimarySPStreamRecordBySpID(spID uint32) ([]*PrimarySpInco
 }
 
 // GetPrimarySPStreamRecordBySpID indicates an expected call of GetPrimarySPStreamRecordBySpID.
-func (mr *MockBSDBMockRecorder) GetPrimarySPStreamRecordBySpID(spID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetPrimarySPStreamRecordBySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimarySPStreamRecordBySpID", reflect.TypeOf((*MockBSDB)(nil).GetPrimarySPStreamRecordBySpID), spID)
 }
@@ -1524,7 +1524,7 @@ func (m *MockBSDB) GetSPByAddress(operatorAddress common.Address) (*StorageProvi
 }
 
 // GetSPByAddress indicates an expected call of GetSPByAddress.
-func (mr *MockBSDBMockRecorder) GetSPByAddress(operatorAddress interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetSPByAddress(operatorAddress any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSPByAddress", reflect.TypeOf((*MockBSDB)(nil).GetSPByAddress), operatorAddress)
 }
@@ -1539,7 +1539,7 @@ func (m *MockBSDB) GetSecondarySPStreamRecordBySpID(spID uint32) ([]*SecondarySp
 }
 
 // GetSecondarySPStreamRecordBySpID indicates an expected call of GetSecondarySPStreamRecordBySpID.
-func (mr *MockBSDBMockRecorder) GetSecondarySPStreamRecordBySpID(spID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetSecondarySPStreamRecordBySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecondarySPStreamRecordBySpID", reflect.TypeOf((*MockBSDB)(nil).GetSecondarySPStreamRecordBySpID), spID)
 }
@@ -1568,7 +1568,7 @@ func (m *MockBSDB) GetStatementsByPolicyID(policyIDList []common.Hash, includeRe
 }
 
 // GetStatementsByPolicyID indicates an expected call of GetStatementsByPolicyID.
-func (mr *MockBSDBMockRecorder) GetStatementsByPolicyID(policyIDList, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetStatementsByPolicyID(policyIDList, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementsByPolicyID", reflect.TypeOf((*MockBSDB)(nil).GetStatementsByPolicyID), policyIDList, includeRemoved)
 }
@@ -1598,7 +1598,7 @@ func (m *MockBSDB) GetUserBuckets(accountID common.Address, includeRemoved bool)
 }
 
 // GetUserBuckets indicates an expected call of GetUserBuckets.
-func (mr *MockBSDBMockRecorder) GetUserBuckets(accountID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetUserBuckets(accountID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBuckets", reflect.TypeOf((*MockBSDB)(nil).GetUserBuckets), accountID, includeRemoved)
 }
@@ -1613,22 +1613,22 @@ func (m *MockBSDB) GetUserBucketsCount(accountID common.Address, includeRemoved 
 }
 
 // GetUserBucketsCount indicates an expected call of GetUserBucketsCount.
-func (mr *MockBSDBMockRecorder) GetUserBucketsCount(accountID, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetUserBucketsCount(accountID, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBucketsCount", reflect.TypeOf((*MockBSDB)(nil).GetUserBucketsCount), accountID, includeRemoved)
 }
 
 // GetUserGroups mocks base method.
-func (m *MockBSDB) GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error) {
+func (m *MockBSDB) GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*GroupMemberMeta, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserGroups", accountID, startAfter, limit)
-	ret0, _ := ret[0].([]*Group)
+	ret0, _ := ret[0].([]*GroupMemberMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserGroups indicates an expected call of GetUserGroups.
-func (mr *MockBSDBMockRecorder) GetUserGroups(accountID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetUserGroups(accountID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserGroups", reflect.TypeOf((*MockBSDB)(nil).GetUserGroups), accountID, startAfter, limit)
 }
@@ -1643,7 +1643,7 @@ func (m *MockBSDB) GetUserOwnedGroups(accountID common.Address, startAfter commo
 }
 
 // GetUserOwnedGroups indicates an expected call of GetUserOwnedGroups.
-func (mr *MockBSDBMockRecorder) GetUserOwnedGroups(accountID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetUserOwnedGroups(accountID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnedGroups", reflect.TypeOf((*MockBSDB)(nil).GetUserOwnedGroups), accountID, startAfter, limit)
 }
@@ -1658,7 +1658,7 @@ func (m *MockBSDB) GetVirtualGroupFamiliesByVgfID(vgfID uint32) (*GlobalVirtualG
 }
 
 // GetVirtualGroupFamiliesByVgfID indicates an expected call of GetVirtualGroupFamiliesByVgfID.
-func (mr *MockBSDBMockRecorder) GetVirtualGroupFamiliesByVgfID(vgfID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) GetVirtualGroupFamiliesByVgfID(vgfID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualGroupFamiliesByVgfID", reflect.TypeOf((*MockBSDB)(nil).GetVirtualGroupFamiliesByVgfID), vgfID)
 }
@@ -1673,7 +1673,7 @@ func (m *MockBSDB) ListBucketsByIDs(ids []common.Hash, includeRemoved bool) ([]*
 }
 
 // ListBucketsByIDs indicates an expected call of ListBucketsByIDs.
-func (mr *MockBSDBMockRecorder) ListBucketsByIDs(ids, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListBucketsByIDs(ids, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByIDs", reflect.TypeOf((*MockBSDB)(nil).ListBucketsByIDs), ids, includeRemoved)
 }
@@ -1688,7 +1688,7 @@ func (m *MockBSDB) ListBucketsByVgfID(vgfIDs []uint32, startAfter common.Hash, l
 }
 
 // ListBucketsByVgfID indicates an expected call of ListBucketsByVgfID.
-func (mr *MockBSDBMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketsByVgfID", reflect.TypeOf((*MockBSDB)(nil).ListBucketsByVgfID), vgfIDs, startAfter, limit)
 }
@@ -1723,7 +1723,7 @@ func (m *MockBSDB) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlo
 }
 
 // ListDeletedObjectsByBlockNumberRange indicates an expected call of ListDeletedObjectsByBlockNumberRange.
-func (mr *MockBSDBMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeletedObjectsByBlockNumberRange", reflect.TypeOf((*MockBSDB)(nil).ListDeletedObjectsByBlockNumberRange), startBlockNumber, endBlockNumber, includePrivate)
 }
@@ -1738,7 +1738,7 @@ func (m *MockBSDB) ListExpiredBucketsBySp(createAt int64, primarySpID uint32, li
 }
 
 // ListExpiredBucketsBySp indicates an expected call of ListExpiredBucketsBySp.
-func (mr *MockBSDBMockRecorder) ListExpiredBucketsBySp(createAt, primarySpID, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListExpiredBucketsBySp(createAt, primarySpID, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExpiredBucketsBySp", reflect.TypeOf((*MockBSDB)(nil).ListExpiredBucketsBySp), createAt, primarySpID, limit)
 }
@@ -1753,7 +1753,7 @@ func (m *MockBSDB) ListGroupsByIDs(ids []common.Hash) ([]*Group, error) {
 }
 
 // ListGroupsByIDs indicates an expected call of ListGroupsByIDs.
-func (mr *MockBSDBMockRecorder) ListGroupsByIDs(ids interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListGroupsByIDs(ids any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByIDs", reflect.TypeOf((*MockBSDB)(nil).ListGroupsByIDs), ids)
 }
@@ -1769,7 +1769,7 @@ func (m *MockBSDB) ListGroupsByNameAndSourceType(name, prefix, sourceType string
 }
 
 // ListGroupsByNameAndSourceType indicates an expected call of ListGroupsByNameAndSourceType.
-func (mr *MockBSDBMockRecorder) ListGroupsByNameAndSourceType(name, prefix, sourceType, limit, offset, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListGroupsByNameAndSourceType(name, prefix, sourceType, limit, offset, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroupsByNameAndSourceType", reflect.TypeOf((*MockBSDB)(nil).ListGroupsByNameAndSourceType), name, prefix, sourceType, limit, offset, includeRemoved)
 }
@@ -1784,7 +1784,7 @@ func (m *MockBSDB) ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGrou
 }
 
 // ListGvgByBucketID indicates an expected call of ListGvgByBucketID.
-func (mr *MockBSDBMockRecorder) ListGvgByBucketID(bucketID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListGvgByBucketID(bucketID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGvgByBucketID", reflect.TypeOf((*MockBSDB)(nil).ListGvgByBucketID), bucketID)
 }
@@ -1799,7 +1799,7 @@ func (m *MockBSDB) ListGvgByPrimarySpID(spID uint32) ([]*GlobalVirtualGroup, err
 }
 
 // ListGvgByPrimarySpID indicates an expected call of ListGvgByPrimarySpID.
-func (mr *MockBSDBMockRecorder) ListGvgByPrimarySpID(spID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListGvgByPrimarySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGvgByPrimarySpID", reflect.TypeOf((*MockBSDB)(nil).ListGvgByPrimarySpID), spID)
 }
@@ -1814,7 +1814,7 @@ func (m *MockBSDB) ListGvgBySecondarySpID(spID uint32) ([]*GlobalVirtualGroup, e
 }
 
 // ListGvgBySecondarySpID indicates an expected call of ListGvgBySecondarySpID.
-func (mr *MockBSDBMockRecorder) ListGvgBySecondarySpID(spID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListGvgBySecondarySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGvgBySecondarySpID", reflect.TypeOf((*MockBSDB)(nil).ListGvgBySecondarySpID), spID)
 }
@@ -1829,7 +1829,7 @@ func (m *MockBSDB) ListLvgByGvgAndBucketID(bucketID common.Hash, gvgIDs []uint32
 }
 
 // ListLvgByGvgAndBucketID indicates an expected call of ListLvgByGvgAndBucketID.
-func (mr *MockBSDBMockRecorder) ListLvgByGvgAndBucketID(bucketID, gvgIDs interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListLvgByGvgAndBucketID(bucketID, gvgIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLvgByGvgAndBucketID", reflect.TypeOf((*MockBSDB)(nil).ListLvgByGvgAndBucketID), bucketID, gvgIDs)
 }
@@ -1844,7 +1844,7 @@ func (m *MockBSDB) ListLvgByGvgID(gvgIDs []uint32) ([]*LocalVirtualGroup, error)
 }
 
 // ListLvgByGvgID indicates an expected call of ListLvgByGvgID.
-func (mr *MockBSDBMockRecorder) ListLvgByGvgID(gvgIDs interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListLvgByGvgID(gvgIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLvgByGvgID", reflect.TypeOf((*MockBSDB)(nil).ListLvgByGvgID), gvgIDs)
 }
@@ -1852,7 +1852,7 @@ func (mr *MockBSDBMockRecorder) ListLvgByGvgID(gvgIDs interface{}) *gomock.Call 
 // ListMigrateBucketEvents mocks base method.
 func (m *MockBSDB) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventMigrationBucket, []*EventCompleteMigrationBucket, []*EventCancelMigrationBucket, []*EventRejectMigrateBucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{spID}
+	varargs := []any{spID}
 	for _, a := range filters {
 		varargs = append(varargs, a)
 	}
@@ -1866,9 +1866,9 @@ func (m *MockBSDB) ListMigrateBucketEvents(spID uint32, filters ...func(*gorm.DB
 }
 
 // ListMigrateBucketEvents indicates an expected call of ListMigrateBucketEvents.
-func (mr *MockBSDBMockRecorder) ListMigrateBucketEvents(spID interface{}, filters ...interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListMigrateBucketEvents(spID any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{spID}, filters...)
+	varargs := append([]any{spID}, filters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMigrateBucketEvents", reflect.TypeOf((*MockBSDB)(nil).ListMigrateBucketEvents), varargs...)
 }
 
@@ -1882,7 +1882,7 @@ func (m *MockBSDB) ListObjectPolicies(objectID common.Hash, actionType types.Act
 }
 
 // ListObjectPolicies indicates an expected call of ListObjectPolicies.
-func (mr *MockBSDBMockRecorder) ListObjectPolicies(objectID, actionType, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectPolicies(objectID, actionType, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectPolicies", reflect.TypeOf((*MockBSDB)(nil).ListObjectPolicies), objectID, actionType, startAfter, limit)
 }
@@ -1897,7 +1897,7 @@ func (m *MockBSDB) ListObjectsByBucketName(bucketName, continuationToken, prefix
 }
 
 // ListObjectsByBucketName indicates an expected call of ListObjectsByBucketName.
-func (mr *MockBSDBMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByBucketName", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByBucketName), bucketName, continuationToken, prefix, delimiter, maxKeys, includeRemoved)
 }
@@ -1913,7 +1913,7 @@ func (m *MockBSDB) ListObjectsByGVGAndBucketForGC(bucketID common.Hash, gvgID ui
 }
 
 // ListObjectsByGVGAndBucketForGC indicates an expected call of ListObjectsByGVGAndBucketForGC.
-func (mr *MockBSDBMockRecorder) ListObjectsByGVGAndBucketForGC(bucketID, gvgID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectsByGVGAndBucketForGC(bucketID, gvgID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByGVGAndBucketForGC", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByGVGAndBucketForGC), bucketID, gvgID, startAfter, limit)
 }
@@ -1928,7 +1928,7 @@ func (m *MockBSDB) ListObjectsByIDs(ids []common.Hash, includeRemoved bool) ([]*
 }
 
 // ListObjectsByIDs indicates an expected call of ListObjectsByIDs.
-func (mr *MockBSDBMockRecorder) ListObjectsByIDs(ids, includeRemoved interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectsByIDs(ids, includeRemoved any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByIDs", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByIDs), ids, includeRemoved)
 }
@@ -1936,7 +1936,7 @@ func (mr *MockBSDBMockRecorder) ListObjectsByIDs(ids, includeRemoved interface{}
 // ListObjectsByLVGID mocks base method.
 func (m *MockBSDB) ListObjectsByLVGID(lvgIDs []uint32, bucketID, startAfter common.Hash, limit int, filters ...func(*gorm.DB) *gorm.DB) ([]*Object, *Bucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{lvgIDs, bucketID, startAfter, limit}
+	varargs := []any{lvgIDs, bucketID, startAfter, limit}
 	for _, a := range filters {
 		varargs = append(varargs, a)
 	}
@@ -1948,9 +1948,9 @@ func (m *MockBSDB) ListObjectsByLVGID(lvgIDs []uint32, bucketID, startAfter comm
 }
 
 // ListObjectsByLVGID indicates an expected call of ListObjectsByLVGID.
-func (mr *MockBSDBMockRecorder) ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit interface{}, filters ...interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectsByLVGID(lvgIDs, bucketID, startAfter, limit any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{lvgIDs, bucketID, startAfter, limit}, filters...)
+	varargs := append([]any{lvgIDs, bucketID, startAfter, limit}, filters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsByLVGID", reflect.TypeOf((*MockBSDB)(nil).ListObjectsByLVGID), varargs...)
 }
 
@@ -1965,7 +1965,7 @@ func (m *MockBSDB) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 }
 
 // ListObjectsInGVG indicates an expected call of ListObjectsInGVG.
-func (mr *MockBSDBMockRecorder) ListObjectsInGVG(gvgID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectsInGVG(gvgID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVG", reflect.TypeOf((*MockBSDB)(nil).ListObjectsInGVG), gvgID, startAfter, limit)
 }
@@ -1981,7 +1981,7 @@ func (m *MockBSDB) ListObjectsInGVGAndBucket(bucketID common.Hash, gvgID uint32,
 }
 
 // ListObjectsInGVGAndBucket indicates an expected call of ListObjectsInGVGAndBucket.
-func (mr *MockBSDBMockRecorder) ListObjectsInGVGAndBucket(bucketID, gvgID, startAfter, limit interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListObjectsInGVGAndBucket(bucketID, gvgID, startAfter, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectsInGVGAndBucket", reflect.TypeOf((*MockBSDB)(nil).ListObjectsInGVGAndBucket), bucketID, gvgID, startAfter, limit)
 }
@@ -1996,7 +1996,7 @@ func (m *MockBSDB) ListPaymentAccountStreams(paymentAccount common.Address) ([]*
 }
 
 // ListPaymentAccountStreams indicates an expected call of ListPaymentAccountStreams.
-func (mr *MockBSDBMockRecorder) ListPaymentAccountStreams(paymentAccount interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListPaymentAccountStreams(paymentAccount any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaymentAccountStreams", reflect.TypeOf((*MockBSDB)(nil).ListPaymentAccountStreams), paymentAccount)
 }
@@ -2012,7 +2012,7 @@ func (m *MockBSDB) ListSpExitEvents(blockID uint64, spID uint32) (*EventStorageP
 }
 
 // ListSpExitEvents indicates an expected call of ListSpExitEvents.
-func (mr *MockBSDBMockRecorder) ListSpExitEvents(blockID, spID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListSpExitEvents(blockID, spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSpExitEvents", reflect.TypeOf((*MockBSDB)(nil).ListSpExitEvents), blockID, spID)
 }
@@ -2029,7 +2029,7 @@ func (m *MockBSDB) ListSwapOutEvents(blockID uint64, spID uint32) ([]*EventSwapO
 }
 
 // ListSwapOutEvents indicates an expected call of ListSwapOutEvents.
-func (mr *MockBSDBMockRecorder) ListSwapOutEvents(blockID, spID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListSwapOutEvents(blockID, spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSwapOutEvents", reflect.TypeOf((*MockBSDB)(nil).ListSwapOutEvents), blockID, spID)
 }
@@ -2044,7 +2044,7 @@ func (m *MockBSDB) ListUserPaymentAccounts(accountID common.Address) ([]*StreamR
 }
 
 // ListUserPaymentAccounts indicates an expected call of ListUserPaymentAccounts.
-func (mr *MockBSDBMockRecorder) ListUserPaymentAccounts(accountID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListUserPaymentAccounts(accountID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserPaymentAccounts", reflect.TypeOf((*MockBSDB)(nil).ListUserPaymentAccounts), accountID)
 }
@@ -2059,7 +2059,7 @@ func (m *MockBSDB) ListVgfByGvgID(gvgIDs []uint32) ([]*GlobalVirtualGroupFamily,
 }
 
 // ListVgfByGvgID indicates an expected call of ListVgfByGvgID.
-func (mr *MockBSDBMockRecorder) ListVgfByGvgID(gvgIDs interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListVgfByGvgID(gvgIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVgfByGvgID", reflect.TypeOf((*MockBSDB)(nil).ListVgfByGvgID), gvgIDs)
 }
@@ -2074,7 +2074,7 @@ func (m *MockBSDB) ListVirtualGroupFamiliesBySpID(spID uint32) ([]*GlobalVirtual
 }
 
 // ListVirtualGroupFamiliesBySpID indicates an expected call of ListVirtualGroupFamiliesBySpID.
-func (mr *MockBSDBMockRecorder) ListVirtualGroupFamiliesBySpID(spID interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListVirtualGroupFamiliesBySpID(spID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesBySpID", reflect.TypeOf((*MockBSDB)(nil).ListVirtualGroupFamiliesBySpID), spID)
 }
@@ -2089,7 +2089,7 @@ func (m *MockBSDB) ListVirtualGroupFamiliesByVgfIDs(vgfIDs []uint32) ([]*GlobalV
 }
 
 // ListVirtualGroupFamiliesByVgfIDs indicates an expected call of ListVirtualGroupFamiliesByVgfIDs.
-func (mr *MockBSDBMockRecorder) ListVirtualGroupFamiliesByVgfIDs(vgfIDs interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListVirtualGroupFamiliesByVgfIDs(vgfIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVirtualGroupFamiliesByVgfIDs", reflect.TypeOf((*MockBSDB)(nil).ListVirtualGroupFamiliesByVgfIDs), vgfIDs)
 }

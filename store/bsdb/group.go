@@ -168,11 +168,10 @@ func (b *BsDBImpl) GetGroupByID(groupID int64, includeRemoved bool) (*Group, err
 }
 
 // GetUserGroups get groups info by a user address
-func (b *BsDBImpl) GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*Group, error) {
+func (b *BsDBImpl) GetUserGroups(accountID common.Address, startAfter common.Hash, limit int) ([]*GroupMemberMeta, error) {
 	var (
-		groups  []*Group
-		err     error
-		filters []func(*gorm.DB) *gorm.DB
+		groups []*GroupMemberMeta
+		err    error
 	)
 	startTime := time.Now()
 	methodName := currentFunction()
@@ -184,22 +183,23 @@ func (b *BsDBImpl) GetUserGroups(accountID common.Address, startAfter common.Has
 		}
 	}()
 
-	filters = append(filters, GroupIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
-	err = b.db.Table((&Group{}).TableName()).
-		Select("*").
-		Where("account_id  = ?", accountID).
-		Scopes(filters...).
-		Order("group_id").
-		Find(&groups).Error
+	err = b.db.Raw(`
+        SELECT g1.*, g2.extra as group_extra, g2.source_type as group_source_type, g2.tags as group_tags 
+        FROM `+"`groups`"+` g1  
+        LEFT JOIN (SELECT * FROM `+"`groups`"+` WHERE account_id = ?) g2 ON g1.group_id = g2.group_id 
+        WHERE g1.account_id = ? AND g1.group_id > ? AND g1.removed = false
+		Order by g1.group_id
+        LIMIT ?
+    `, common.HexToAddress(GroupAddress), accountID, startAfter, limit).Scan(&groups).Error
+
 	return groups, err
 }
 
 // GetGroupMembers get group members by group id
-func (b *BsDBImpl) GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*Group, error) {
+func (b *BsDBImpl) GetGroupMembers(groupID common.Hash, startAfter common.Address, limit int) ([]*GroupMemberMeta, error) {
 	var (
-		members []*Group
+		members []*GroupMemberMeta
 		err     error
-		filters []func(*gorm.DB) *gorm.DB
 	)
 	startTime := time.Now()
 	methodName := currentFunction()
@@ -211,13 +211,18 @@ func (b *BsDBImpl) GetGroupMembers(groupID common.Hash, startAfter common.Addres
 		}
 	}()
 
-	filters = append(filters, GroupAccountIDStartAfterFilter(startAfter), RemovedFilter(false), WithLimit(limit))
-	err = b.db.Table((&Group{}).TableName()).
-		Select("*").
-		Where("group_id  = ?", groupID).
-		Scopes(filters...).
-		Order("account_id").
-		Find(&members).Error
+	err = b.db.Raw(`
+        SELECT g1.*, g2.extra as group_extra, g2.source_type as group_source_type, g2.tags as group_tags 
+        FROM `+"`groups`"+` g1  
+        LEFT JOIN (SELECT * FROM `+"`groups`"+` WHERE account_id = ?) g2 
+        ON g1.group_id = g2.group_id 
+        WHERE g1.group_id = ? 
+        AND g1.account_id > ? 
+		AND g1.removed = false
+        ORDER BY g1.account_id 
+        LIMIT ?
+    `, common.HexToAddress(GroupAddress), groupID, startAfter, limit).Find(&members).Error
+
 	return members, err
 }
 
