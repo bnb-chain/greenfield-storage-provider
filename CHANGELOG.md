@@ -1,4 +1,10 @@
 # Changelog
+## v1.2.1
+
+BUGFIXES
+* [#1282](https://github.com/bnb-chain/greenfield-storage-provider/pull/1282) fix: delete prefix tree slow query issue
+
+# Changelog
 ## v1.2.0
 
 FEATURES
