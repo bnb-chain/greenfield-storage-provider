@@ -246,7 +246,7 @@ func (s *RecoverGVGScheduler) Start() {
 			return
 		}
 
-		s.curStartAfter = gvgStats.StartAfter
+		//s.curStartAfter = gvgStats.StartAfter
 		startAfter = gvgStats.StartAfter
 
 		log.Infow("processing the batch that after object id", "start_after", s.curStartAfter)
@@ -256,13 +256,16 @@ func (s *RecoverGVGScheduler) Start() {
 			continue
 		}
 
-		log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects))
+		log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects), "curStartAfter", s.curStartAfter)
+		if s.curStartAfter != gvgStats.StartAfter {
+			objectCount += uint64(len(objects))
+			s.curStartAfter = gvgStats.StartAfter
+		}
 
-		//objectCount += uint64(len(objects))
 		if len(objects) == 0 {
 			log.Infow("all objects in gvg have been processed", "start_after_object_id", startAfter, "limit", limit)
 			gvgStats.Status = spdb.Processed
-			gvgStats.ObjectCount = objectCount
+			gvgStats.ObjectCount = objectCount + limit
 			log.Infow("updating GVG stats status to processed", "gvgStats", gvgStats)
 			err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
 			if err != nil {
@@ -288,7 +291,6 @@ func (s *RecoverGVGScheduler) Start() {
 
 			curRecoveryTaskNum := s.manager.recoveryQueue.Len()
 			if int(segmentCount) >= recoveryCompacity {
-				objectCount++
 				o := &spdb.RecoverFailedObject{
 					ObjectID:        objectID,
 					VirtualGroupID:  object.Gvg.Id,
