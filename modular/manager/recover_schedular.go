@@ -349,7 +349,6 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 	startTime := time.Now()
 	for range ticker.C {
 		log.Infow("monitoring for current batch objects", "object_ids", s.currentBatchObjectIDs)
-		// todo add a reasonable timeout if cant get all objects recovered
 		exceedTimeOut := time.Since(startTime).Minutes() > monitorRecoverTimeOut
 		processed := true
 		for objectID := range s.currentBatchObjectIDs {
@@ -396,7 +395,7 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 // RecoverFailedObjectScheduler is used to scan the failed_object table for failed object entries, and retry the object recovery
 // the entries are inserted from
 // (1) RecoverGVGScheduler: Objects failed to recover.
-// (2) VerifyGVGScheduler: Objects are found to be missed when re-verify by calling api ListObjectsInGVG that verifying the object existence by querying integrate and piece_hash.
+// (2) VerifyGVGScheduler: Objects are found to be missed when re-verify by calling api ListObjectsInGVG that verifying the object existence by querying integrate
 //
 // A GVG is marked as completed from Processed only when all objects pass the verification.
 type RecoverFailedObjectScheduler struct {
@@ -445,7 +444,7 @@ func (s *RecoverFailedObjectScheduler) Start() {
 			}
 			segmentCount := segmentPieceCount(objectInfo.PayloadSize, maxSegmentSize)
 
-			verified, err := verifyIntegrityAndPieceHash(s.manager, objectInfo, o.RedundancyIndex, maxSegmentSize)
+			verified, err := verifyIntegrity(s.manager, objectInfo, o.RedundancyIndex)
 			if err != nil {
 				log.Errorw("failed to verify Integrity for object", "object_id", o.ObjectID, "err", err)
 				continue
@@ -523,11 +522,6 @@ func NewVerifyGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyInde
 }
 
 func (s *VerifyGVGScheduler) Start() {
-	storageParams, err := s.manager.baseApp.Consensus().QueryStorageParams(context.Background())
-	if err != nil {
-		return
-	}
-	maxSegmentSize := storageParams.GetMaxSegmentSize()
 	verifyTicker := time.NewTicker(verifyInterval)
 	defer func() {
 		s.manager.verifyTerminationSignal.Add(-1)
@@ -600,7 +594,7 @@ func (s *VerifyGVGScheduler) Start() {
 				}
 
 				// confirm the object is not recovered.
-				verified, err := verifyIntegrityAndPieceHash(s.manager, objectMeta, s.redundancyIndex, maxSegmentSize)
+				verified, err := verifyIntegrity(s.manager, objectMeta, s.redundancyIndex)
 				if err != nil {
 					log.Errorw("failed to verify integrity and piece hash", "object", objectMeta, "error", err)
 					continue
@@ -619,6 +613,20 @@ func (s *VerifyGVGScheduler) Start() {
 			}
 
 			if recoverFailedObjectsCount == 0 {
+				if s.vgfID != 0 {
+					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), s.vgfID, 0)
+				} else {
+					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), 0, s.gvgID)
+				}
+				log.Debugw("query swapIn info", "vgf_id", s.vgfID, "gvg_id", s.gvgID, "error", err)
+				if err != nil {
+					if strings.Contains(err.Error(), "swap in info not exist") {
+						log.Infow("SwapIn is already completed", "vgf_id", s.vgfID, "gvg_id", s.gvgID)
+						return
+					}
+					continue
+				}
+				log.Infow("start to send complete swap in tx", "vgf_id", s.vgfID, "gvg_id", s.gvgID)
 				var msgCompleteSwapIn *types2.MsgCompleteSwapIn
 				if s.vgfID != 0 {
 					msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
@@ -626,7 +634,7 @@ func (s *VerifyGVGScheduler) Start() {
 					}
 				} else {
 					msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
-						GlobalVirtualGroupFamilyId: s.gvgID,
+						GlobalVirtualGroupId: s.gvgID,
 					}
 				}
 				err := SendAndConfirmCompleteSwapInTx(s.manager.baseApp, msgCompleteSwapIn)
@@ -668,7 +676,7 @@ func (s *VerifyGVGScheduler) Start() {
 				log.Debugw("the object has been verified previously", "object", objectID)
 				continue
 			}
-			verified, err := verifyIntegrityAndPieceHash(s.manager, objectInfo, s.redundancyIndex, maxSegmentSize)
+			verified, err := verifyIntegrity(s.manager, objectInfo, s.redundancyIndex)
 			if err != nil {
 				log.Errorw("failed to verify integrity and piece hash", "object", objectInfo, "error", err)
 				break
@@ -694,7 +702,7 @@ func (s *VerifyGVGScheduler) Start() {
 	}
 }
 
-func verifyIntegrityAndPieceHash(m *ManageModular, object *types.ObjectInfo, redundancyIndex int32, maxSegmentSize uint64) (bool, error) {
+func verifyIntegrity(m *ManageModular, object *types.ObjectInfo, redundancyIndex int32) (bool, error) {
 	_, err := m.baseApp.GfSpDB().GetObjectIntegrity(object.Id.Uint64(), redundancyIndex)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -703,15 +711,6 @@ func verifyIntegrityAndPieceHash(m *ManageModular, object *types.ObjectInfo, red
 		}
 		log.Errorw("failed to get object integrity hash", "objectName:", object.ObjectName, "error", err)
 		return false, err
-	}
-	segmentCount := segmentPieceCount(object.PayloadSize, maxSegmentSize)
-	pieceChecksums, err := m.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(object.Id.Uint64(), redundancyIndex, segmentCount)
-	if err != nil {
-		return false, err
-	}
-	if len(pieceChecksums) != int(segmentCount) {
-		log.Errorw("failed to verify the piece hash, count mismacth", "expect", segmentCount, "actual", len(pieceChecksums))
-		return false, nil
 	}
 	return true, nil
 }

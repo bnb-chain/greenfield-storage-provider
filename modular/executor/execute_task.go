@@ -644,6 +644,8 @@ func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.Rec
 
 	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(task.GetObjectInfo().Id.Uint64(), task.GetEcIdx(), segmentCount)
 	if err != nil {
+		log.CtxInfow(ctx, "failed to get recover piece checksum", "object_id", objectID,
+			"segment_index", segmentIdx, "error", err)
 		return err
 	}
 	if len(pieceChecksums) == int(segmentCount) {
@@ -655,6 +657,13 @@ func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.Rec
 			PieceChecksumList: pieceChecksums,
 		}
 		if err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta); err != nil {
+			log.CtxErrorw(ctx, "failed to set object integrity", "object_id", objectID,
+				"segment_index", segmentIdx, "error", err)
+			return err
+		}
+		err = e.baseApp.GfSpDB().DeleteAllReplicatePieceChecksum(objectID, task.GetEcIdx(), segmentCount)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to delete all recover piece checksum", "task", task, "error", err)
 			return err
 		}
 	}
