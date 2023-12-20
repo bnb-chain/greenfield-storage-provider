@@ -268,7 +268,6 @@ func (e *ExecuteModular) HandleRecoverPieceTask(ctx context.Context, task coreta
 
 	// used by secondary SP or successor secondary SP for GVG
 	if redundancyIdx >= 0 {
-		log.Info(1)
 		// recover secondary SP data by the primary SP
 		if err = e.recoverByPrimarySP(ctx, task); err != nil {
 			// if failed to recover by the primary SP, try to recovery secondary SP data from the other secondary SPs
