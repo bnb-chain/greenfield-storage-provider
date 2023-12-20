@@ -227,18 +227,31 @@ type MigrateDB interface {
 	DeleteMigrateBucket(bucketID uint64) error
 }
 
+// ExitRecoverDB is used to support sp exit and recover resource.
 type ExitRecoverDB interface {
+	// GetRecoverGVGStats return recover gvg stats
 	GetRecoverGVGStats(gvgID uint32) (*RecoverGVGStats, error)
+	// BatchGetRecoverGVGStats return recover gvg stats list
 	BatchGetRecoverGVGStats(gvgID []uint32) ([]*RecoverGVGStats, error)
+	// SetRecoverGVGStats insert a recover gvg stats unit
 	SetRecoverGVGStats(stats []*RecoverGVGStats) error
+	// UpdateRecoverGVGStats update recover gvg stats
 	UpdateRecoverGVGStats(stats *RecoverGVGStats) (err error)
+	// DeleteRecoverGVGStats delete recover gvg stats
 	DeleteRecoverGVGStats(gvgID uint32) (err error)
 
+	// InsertRecoverFailedObject inserts a new failed object unit.
 	InsertRecoverFailedObject(object *RecoverFailedObject) error
+	// UpdateRecoverFailedObject update failed object unit
 	UpdateRecoverFailedObject(object *RecoverFailedObject) (err error)
+	// DeleteRecoverFailedObject delete failed object unit
 	DeleteRecoverFailedObject(objectID uint64) (err error)
+	// GetRecoverFailedObject return the failed object.
 	GetRecoverFailedObject(objectID uint64) (*RecoverFailedObject, error)
+	// GetRecoverFailedObjects return the failed object by retry time
 	GetRecoverFailedObjects(retry, limit uint32) ([]*RecoverFailedObject, error)
+	// GetRecoverFailedObjectsByRetryTime return the failed object by retry time
 	GetRecoverFailedObjectsByRetryTime(retry uint32) ([]*RecoverFailedObject, error)
+	// CountRecoverFailedObject return the failed object total count
 	CountRecoverFailedObject() (int64, error)
 }

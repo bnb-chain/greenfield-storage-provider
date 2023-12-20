@@ -648,7 +648,7 @@ func (s *GfSpClient) SpExit(ctx context.Context, spExit *virtualgrouptypes.MsgSt
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to send sp exit tx", "msg", spExit, "error", err)
-		return "", ErrRPCUnknownWithDetail("client failed to sign reject migrate bucket, error: ", err)
+		return "", ErrRPCUnknownWithDetail("client failed to send sp exit tx, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()
@@ -670,7 +670,7 @@ func (s *GfSpClient) CompleteSpExit(ctx context.Context, completeSpExit *virtual
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to send complete sp exit tx", "msg", completeSpExit, "error", err)
-		return "", ErrRPCUnknownWithDetail("client failed to sign reject migrate bucket, error: ", err)
+		return "", ErrRPCUnknownWithDetail("client failed to send complete sp exit tx, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return "", resp.GetErr()
