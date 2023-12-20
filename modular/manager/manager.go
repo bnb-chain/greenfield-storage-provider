@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -1021,7 +1020,7 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 			return err
 		}
 		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
-		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, piecestore.PrimarySPRedundancyIndex)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, redundancyIndex)
 		if err != nil {
 			log.Errorw("failed to create VerifyGVGScheduler", "error", err)
 			return err

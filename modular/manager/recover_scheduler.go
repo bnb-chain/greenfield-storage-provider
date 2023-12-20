@@ -683,7 +683,7 @@ func (s *VerifyGVGScheduler) Start() {
 			}
 			verified, err := verifyIntegrity(s.manager, objectInfo, s.redundancyIndex)
 			if err != nil {
-				log.Errorw("failed to verify integrity and piece hash", "object", objectInfo, "error", err)
+				log.Errorw("failed to verify integrity", "object", objectInfo, "error", err)
 				break
 			}
 			if !verified {
