@@ -27,11 +27,11 @@ const (
 	maxRecoveryRetry = 5
 	MaxRecoveryTime  = 50
 
-	recoverInterval     = 5 * time.Second
+	recoverInterval     = 30 * time.Second
 	verifyInterval      = 1 * time.Minute
 	verifyGVGQueryLimit = uint32(50)
 
-	recoverFailedObjectInterval = 10 * time.Second
+	recoverFailedObjectInterval = 1 * time.Minute
 
 	monitorRecoverTimeOut = float64(10) // 10 minute
 )
@@ -102,6 +102,8 @@ func (s *RecoverVGFScheduler) Start() {
 	}
 }
 
+// ObjectSegmentsStats is used to record the object's segments piece recovery progress. used by the
+// RecoverGVGScheduler
 type ObjectSegmentsStats struct {
 	SegmentCount    int
 	FailedSegments  vgmgr.IDSet
