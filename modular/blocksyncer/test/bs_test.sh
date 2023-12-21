@@ -7,7 +7,7 @@ MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
 TESTCOVERAGE_THRESHOLD=59
-
+# GITHUB_WORKSPACE=. # for local testing
 workspace=${GITHUB_WORKSPACE}
 
 function make_config() {
@@ -46,7 +46,7 @@ function reset_db() {
 
 function test_bs() {
   cd ${workspace}/modular/blocksyncer/ || exit 1
-  go test -v -coverprofile=coverage.txt -covermode=atomic
+  go test -v -coverprofile=coverage.txt  -covermode=atomic -coverpkg=github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/...
   go tool cover -func coverage.txt
 
   echo "Quality Gate: checking test coverage is above threshold ..."

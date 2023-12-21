@@ -12,7 +12,6 @@ import (
 	"github.com/forbole/juno/v4/log"
 	"github.com/forbole/juno/v4/models"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -108,7 +107,6 @@ func (m *Module) handleCreateBucket(ctx context.Context, block *tmctypes.ResultB
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),
-		Tags:         util.GetTagJson(createBucket.Tags),
 	}
 	k, v := m.db.SaveBucketToSQL(ctx, bucket)
 	return map[string][]interface{}{
