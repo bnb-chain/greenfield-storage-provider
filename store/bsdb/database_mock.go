@@ -658,7 +658,7 @@ func (mr *MockMetadataMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit
 // ListCompleteMigrationBucket mocks base method.
 func (m *MockMetadata) ListCompleteMigrationBucket(srcSpID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventCompleteMigrationBucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{srcSpID}
+	varargs := []any{srcSpID}
 	for _, a := range filters {
 		varargs = append(varargs, a)
 	}
@@ -669,9 +669,9 @@ func (m *MockMetadata) ListCompleteMigrationBucket(srcSpID uint32, filters ...fu
 }
 
 // ListCompleteMigrationBucket indicates an expected call of ListCompleteMigrationBucket.
-func (mr *MockMetadataMockRecorder) ListCompleteMigrationBucket(srcSpID interface{}, filters ...interface{}) *gomock.Call {
+func (mr *MockMetadataMockRecorder) ListCompleteMigrationBucket(srcSpID any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{srcSpID}, filters...)
+	varargs := append([]any{srcSpID}, filters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCompleteMigrationBucket", reflect.TypeOf((*MockMetadata)(nil).ListCompleteMigrationBucket), varargs...)
 }
 
@@ -1696,7 +1696,7 @@ func (mr *MockBSDBMockRecorder) ListBucketsByVgfID(vgfIDs, startAfter, limit any
 // ListCompleteMigrationBucket mocks base method.
 func (m *MockBSDB) ListCompleteMigrationBucket(srcSpID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*EventCompleteMigrationBucket, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{srcSpID}
+	varargs := []any{srcSpID}
 	for _, a := range filters {
 		varargs = append(varargs, a)
 	}
@@ -1707,9 +1707,9 @@ func (m *MockBSDB) ListCompleteMigrationBucket(srcSpID uint32, filters ...func(*
 }
 
 // ListCompleteMigrationBucket indicates an expected call of ListCompleteMigrationBucket.
-func (mr *MockBSDBMockRecorder) ListCompleteMigrationBucket(srcSpID interface{}, filters ...interface{}) *gomock.Call {
+func (mr *MockBSDBMockRecorder) ListCompleteMigrationBucket(srcSpID any, filters ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{srcSpID}, filters...)
+	varargs := append([]any{srcSpID}, filters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCompleteMigrationBucket", reflect.TypeOf((*MockBSDB)(nil).ListCompleteMigrationBucket), varargs...)
 }
 

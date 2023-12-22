@@ -91,6 +91,18 @@ var CompleteSwapInCmd = &cli.Command{
 	Description: `After confirming that the recover resource is complete, send a complete swap in to the chain using the completeSwapIn command`,
 }
 
+var CancelSwapInCmd = &cli.Command{
+	Action: CancelSwapInAction,
+	Name:   "cancelSwapIn",
+	Usage:  "cancel swap in",
+	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
+		gvgIDFlag,
+		vgfIDFlag,
+	},
+	Category: swapInCommands,
+}
+
 var QueryRecoverProcessCmd = &cli.Command{
 	Action: QueryRecoverProcessAction,
 	Name:   "query-recover-p",

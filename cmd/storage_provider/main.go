@@ -136,6 +136,7 @@ func init() {
 		command.CompleteSpExitCmd,
 		command.SwapInCmd,
 		command.CompleteSwapInCmd,
+		command.CancelSwapInCmd,
 		command.RecoverGVGCmd,
 		command.RecoverVGFCmd,
 		command.QueryRecoverProcessCmd,
