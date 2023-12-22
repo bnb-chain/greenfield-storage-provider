@@ -13,6 +13,7 @@ BUGFIXES
 * [#1256](https://github.com/bnb-chain/greenfield-storage-provider/pull/1256) fix: fix the slow xml marshaling when returning a large list of objects
 * [#1266](https://github.com/bnb-chain/greenfield-storage-provider/pull/1266) fix: queried gvg might be nil
 * [#1270](https://github.com/bnb-chain/greenfield-storage-provider/pull/1270) fix: list object by bucket name bug
+* [#1277](https://github.com/bnb-chain/greenfield-storage-provider/pull/1277) fix: group members api incorrect tags/source_type/extra response
 
 ## V1.1.0
 

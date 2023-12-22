@@ -7,6 +7,7 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"gorm.io/datatypes"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
@@ -125,32 +126,40 @@ func TestMetadataModular_GfSpGetUserGroups_Success(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetUserGroups(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Address, common.Hash, int) ([]*bsdb.Group, error) {
-			return []*bsdb.Group{&bsdb.Group{
-				ID:             1,
-				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
-				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-				GroupName:      "test",
-				SourceType:     "SOURCE_TYPE_ORIGIN",
-				Extra:          "",
-				AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
-				Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
-				ExpirationTime: 0,
-				CreateAt:       0,
-				CreateTime:     0,
-				UpdateAt:       0,
-				UpdateTime:     0,
-				Removed:        false,
-			}}, nil
+		func(common.Address, common.Hash, int) ([]*bsdb.GroupMemberMeta, error) {
+			return []*bsdb.GroupMemberMeta{
+				&bsdb.GroupMemberMeta{
+					Group: bsdb.Group{
+						ID:             1,
+						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
+						GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+						GroupName:      "test",
+						SourceType:     "",
+						Extra:          "",
+						AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
+						Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						ExpirationTime: 0,
+						CreateAt:       0,
+						CreateTime:     0,
+						UpdateAt:       0,
+						UpdateTime:     0,
+						Removed:        false,
+						Tags:           nil,
+					},
+					SourceType: "SOURCE_TYPE_ORIGIN",
+					Extra:      "test extra",
+					Tags:       datatypes.JSON("{\"tags\": [{\"key\": \"name\", \"value\": \"test\"}]}"),
+				},
+			}, nil
 		},
 	).Times(1)
 	groups, err := a.GfSpGetUserGroups(context.Background(), &types.GfSpGetUserGroupsRequest{
 		AccountId:  "0x84A0D38D64498414B14CD979159D57557345CD8B",
-		Limit:      0,
+		Limit:      1,
 		StartAfter: 0,
 	})
 	assert.Nil(t, err)
-	assert.Equal(t, "test", groups.Groups[0].Group.GroupName)
+	assert.Equal(t, "test extra", groups.Groups[0].Group.Extra)
 }
 
 func TestMetadataModular_GfSpGetUserGroups_Success2(t *testing.T) {
@@ -159,23 +168,31 @@ func TestMetadataModular_GfSpGetUserGroups_Success2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetUserGroups(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Address, common.Hash, int) ([]*bsdb.Group, error) {
-			return []*bsdb.Group{&bsdb.Group{
-				ID:             1,
-				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
-				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-				GroupName:      "test",
-				SourceType:     "SOURCE_TYPE_ORIGIN",
-				Extra:          "",
-				AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
-				Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
-				ExpirationTime: 0,
-				CreateAt:       0,
-				CreateTime:     0,
-				UpdateAt:       0,
-				UpdateTime:     0,
-				Removed:        false,
-			}}, nil
+		func(common.Address, common.Hash, int) ([]*bsdb.GroupMemberMeta, error) {
+			return []*bsdb.GroupMemberMeta{
+				&bsdb.GroupMemberMeta{
+					Group: bsdb.Group{
+						ID:             1,
+						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
+						GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+						GroupName:      "test",
+						SourceType:     "",
+						Extra:          "",
+						AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
+						Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						ExpirationTime: 0,
+						CreateAt:       0,
+						CreateTime:     0,
+						UpdateAt:       0,
+						UpdateTime:     0,
+						Removed:        false,
+						Tags:           nil,
+					},
+					SourceType: "SOURCE_TYPE_ORIGIN",
+					Extra:      "test extra",
+					Tags:       datatypes.JSON("{\"tags\": [{\"key\": \"name\", \"value\": \"test\"}]}"),
+				},
+			}, nil
 		},
 	).Times(1)
 	groups, err := a.GfSpGetUserGroups(context.Background(), &types.GfSpGetUserGroupsRequest{
@@ -184,7 +201,7 @@ func TestMetadataModular_GfSpGetUserGroups_Success2(t *testing.T) {
 		StartAfter: 0,
 	})
 	assert.Nil(t, err)
-	assert.Equal(t, "test", groups.Groups[0].Group.GroupName)
+	assert.Equal(t, "test extra", groups.Groups[0].Group.Extra)
 }
 
 func TestMetadataModular_GfSpGetUserGroups_Failed(t *testing.T) {
@@ -193,7 +210,7 @@ func TestMetadataModular_GfSpGetUserGroups_Failed(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetUserGroups(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Address, common.Hash, int) ([]*bsdb.Group, error) {
+		func(common.Address, common.Hash, int) ([]*bsdb.GroupMemberMeta, error) {
 			return nil, ErrExceedRequest
 		},
 	).Times(1)
@@ -211,32 +228,40 @@ func TestMetadataModular_GfSpGetGroupMembers_Success(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetGroupMembers(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Hash, common.Address, int) ([]*bsdb.Group, error) {
-			return []*bsdb.Group{&bsdb.Group{
-				ID:             1,
-				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
-				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-				GroupName:      "test",
-				SourceType:     "SOURCE_TYPE_ORIGIN",
-				Extra:          "",
-				AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
-				Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
-				ExpirationTime: 0,
-				CreateAt:       0,
-				CreateTime:     0,
-				UpdateAt:       0,
-				UpdateTime:     0,
-				Removed:        false,
-			}}, nil
+		func(common.Hash, common.Address, int) ([]*bsdb.GroupMemberMeta, error) {
+			return []*bsdb.GroupMemberMeta{
+				&bsdb.GroupMemberMeta{
+					Group: bsdb.Group{
+						ID:             1,
+						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
+						GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+						GroupName:      "test",
+						SourceType:     "",
+						Extra:          "",
+						AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
+						Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						ExpirationTime: 0,
+						CreateAt:       0,
+						CreateTime:     0,
+						UpdateAt:       0,
+						UpdateTime:     0,
+						Removed:        false,
+						Tags:           nil,
+					},
+					SourceType: "SOURCE_TYPE_ORIGIN",
+					Extra:      "test extra",
+					Tags:       datatypes.JSON("{\"tags\": [{\"key\": \"name\", \"value\": \"test\"}]}"),
+				},
+			}, nil
 		},
 	).Times(1)
 	groups, err := a.GfSpGetGroupMembers(context.Background(), &types.GfSpGetGroupMembersRequest{
 		GroupId:    1,
-		Limit:      0,
+		Limit:      1,
 		StartAfter: "",
 	})
 	assert.Nil(t, err)
-	assert.Equal(t, "test", groups.Groups[0].Group.GroupName)
+	assert.Equal(t, "test extra", groups.Groups[0].Group.Extra)
 }
 
 func TestMetadataModular_GfSpGetGroupMembers_Success2(t *testing.T) {
@@ -245,23 +270,31 @@ func TestMetadataModular_GfSpGetGroupMembers_Success2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetGroupMembers(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Hash, common.Address, int) ([]*bsdb.Group, error) {
-			return []*bsdb.Group{&bsdb.Group{
-				ID:             1,
-				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
-				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
-				GroupName:      "test",
-				SourceType:     "SOURCE_TYPE_ORIGIN",
-				Extra:          "",
-				AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
-				Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
-				ExpirationTime: 0,
-				CreateAt:       0,
-				CreateTime:     0,
-				UpdateAt:       0,
-				UpdateTime:     0,
-				Removed:        false,
-			}}, nil
+		func(common.Hash, common.Address, int) ([]*bsdb.GroupMemberMeta, error) {
+			return []*bsdb.GroupMemberMeta{
+				&bsdb.GroupMemberMeta{
+					Group: bsdb.Group{
+						ID:             1,
+						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
+						GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
+						GroupName:      "test",
+						SourceType:     "",
+						Extra:          "",
+						AccountID:      common.HexToAddress("0x00000000000000000000000000000000000000000x0000000000000000000000000000000000000000"),
+						Operator:       common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						ExpirationTime: 0,
+						CreateAt:       0,
+						CreateTime:     0,
+						UpdateAt:       0,
+						UpdateTime:     0,
+						Removed:        false,
+						Tags:           nil,
+					},
+					SourceType: "SOURCE_TYPE_ORIGIN",
+					Extra:      "test extra",
+					Tags:       datatypes.JSON("{\"tags\": [{\"key\": \"name\", \"value\": \"test\"}]}"),
+				},
+			}, nil
 		},
 	).Times(1)
 	groups, err := a.GfSpGetGroupMembers(context.Background(), &types.GfSpGetGroupMembersRequest{
@@ -270,7 +303,7 @@ func TestMetadataModular_GfSpGetGroupMembers_Success2(t *testing.T) {
 		StartAfter: "",
 	})
 	assert.Nil(t, err)
-	assert.Equal(t, "test", groups.Groups[0].Group.GroupName)
+	assert.Equal(t, "test extra", groups.Groups[0].Group.Extra)
 }
 
 func TestMetadataModular_GfSpGetGroupMembers_Failed(t *testing.T) {
@@ -279,7 +312,7 @@ func TestMetadataModular_GfSpGetGroupMembers_Failed(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetGroupMembers(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(common.Hash, common.Address, int) ([]*bsdb.Group, error) {
+		func(common.Hash, common.Address, int) ([]*bsdb.GroupMemberMeta, error) {
 			return nil, ErrExceedRequest
 		},
 	).Times(1)

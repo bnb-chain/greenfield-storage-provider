@@ -7,6 +7,7 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
@@ -528,6 +529,25 @@ func TestMetadataModular_GfSpGetObjectMeta_Failed2(t *testing.T) {
 		IncludePrivate: false,
 	})
 	assert.NotNil(t, err)
+}
+
+func TestMetadataModular_GfSpGetObjectMeta_Failed3(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	m.EXPECT().GetObjectByName(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(string, string, bool) (*bsdb.Object, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+	).Times(1)
+	_, err := a.GfSpGetObjectMeta(context.Background(), &types.GfSpGetObjectMetaRequest{
+		ObjectName:     "test",
+		BucketName:     "test",
+		IncludePrivate: false,
+	})
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrNoSuchObject, err)
 }
 
 func TestMetadataModular_GfSpListObjectsByIDs_Success(t *testing.T) {

@@ -56,6 +56,18 @@ type GroupCount struct {
 	Count   int64       `gorm:"column:count"`
 }
 
+// GroupMemberMeta defines the metadata associated with a group member,
+// including information related to the group such as extra data, tags, and source tags.
+type GroupMemberMeta struct {
+	Group
+	// SourceType defines which chain the user should send the bucket management transactions to
+	SourceType string `gorm:"column:group_source_type"`
+	// Extra defines the extra info for the group to update
+	Extra string `gorm:"column:group_extra"`
+	// Tags
+	Tags datatypes.JSON `gorm:"column:group_tags;TYPE:json"`
+}
+
 // TableName is used to set Group table name in database
 func (g *Group) TableName() string {
 	return GroupTableName
@@ -63,6 +75,18 @@ func (g *Group) TableName() string {
 
 // GetResourceTags is used to convert the db tags string to *storage_types.ResourceTags type
 func (g *Group) GetResourceTags() *storagetypes.ResourceTags {
+	tags := &storagetypes.ResourceTags{}
+	if g.Tags != nil {
+		tagUnmarshalErr := json.Unmarshal([]byte(g.Tags), tags)
+		if tagUnmarshalErr != nil {
+			log.Warnw("failed to Unmarshal group tags", "error", tagUnmarshalErr)
+		}
+	}
+	return tags
+}
+
+// GetResourceTags is used to convert the db tags string to *storage_types.ResourceTags type
+func (g *GroupMemberMeta) GetResourceTags() *storagetypes.ResourceTags {
 	tags := &storagetypes.ResourceTags{}
 	if g.Tags != nil {
 		tagUnmarshalErr := json.Unmarshal([]byte(g.Tags), tags)
