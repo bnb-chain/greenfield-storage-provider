@@ -345,3 +345,6 @@ func (m *NullModular) QueryRecoverProcess(context.Context, uint32, uint32) ([]*g
 func (m *NilModular) CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
 	return "nil", ErrNilModular
 }
+func (m *NilModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	return "nil", ErrNilModular
+}

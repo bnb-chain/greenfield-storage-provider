@@ -321,6 +321,8 @@ type Signer interface {
 	ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
 	// CompleteSwapIn complete swapIn
 	CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error)
+	// CancelSwapIn cancel swapIn
+	CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error)
 	// Deposit into a Global virtual group for more store size
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.

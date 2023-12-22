@@ -677,3 +677,25 @@ func (s *GfSpClient) CompleteSpExit(ctx context.Context, completeSpExit *virtual
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CancelSwapIn{
+			CancelSwapIn: cancelSwapIn,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to cancel swap in", "msg", cancelSwapIn, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to cancel swap in, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}

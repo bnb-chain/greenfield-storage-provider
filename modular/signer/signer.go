@@ -37,7 +37,8 @@ var (
 	ErrDepositOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120014, "send deposit failed")
 	ErrDeleteGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120015, "send delete GVG failed")
 	ErrReserveSwapIn                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120016, "send reserve swap in failed")
-	ErrCompleteSwapIn               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120016, "send complete swap in failed")
+	ErrCompleteSwapIn               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120017, "send complete swap in failed")
+	ErrCancelSwapIn                 = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120018, "send cancel swap in failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -237,6 +238,10 @@ func (s *SignModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualg
 
 func (s *SignModular) CompleteSwapIn(ctx context.Context, completeSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
 	return s.client.CompleteSwapIn(ctx, SignOperator, completeSwapIn)
+}
+
+func (s *SignModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	return s.client.CancelSwapIn(ctx, SignOperator, cancelSwapIn)
 }
 
 func (s *SignModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {

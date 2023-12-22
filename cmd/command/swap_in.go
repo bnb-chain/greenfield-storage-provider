@@ -362,3 +362,29 @@ func ListVirtualGroupFamiliesBySpIDAction(ctx *cli.Context) error {
 	println(string(resJson))
 	return nil
 }
+
+func CancelSwapInAction(ctx *cli.Context) error {
+	cfg, err := utils.MakeConfig(ctx)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+
+	gvgID := ctx.Uint64(gvgIDFlag.Name)
+	gvgfID := ctx.Uint64(vgfIDFlag.Name)
+
+	cancelSwapIn := &virtualgrouptypes.MsgCancelSwapIn{
+		GlobalVirtualGroupFamilyId: uint32(gvgfID),
+		GlobalVirtualGroupId:       uint32(gvgID),
+		StorageProvider:            cfg.SpAccount.SpOperatorAddress,
+	}
+
+	spClient := utils.MakeGfSpClient(cfg)
+	tx, err := spClient.CancelSwapIn(ctx.Context, cancelSwapIn)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	fmt.Printf("tx successfully! tx_hash:%s", tx)
+	return nil
+}

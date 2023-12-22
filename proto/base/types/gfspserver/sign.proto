@@ -57,6 +57,7 @@ message GfSpSignRequest {
     greenfield.virtualgroup.MsgDeleteGlobalVirtualGroup delete_global_virtual_group = 27;
     greenfield.virtualgroup.MsgReserveSwapIn reserve_swap_in = 28;
     greenfield.virtualgroup.MsgCompleteSwapIn complete_swap_in = 29;
+    greenfield.virtualgroup.MsgCancelSwapIn cancel_swap_in = 30;
   }
 }
 

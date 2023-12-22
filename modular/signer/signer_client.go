@@ -1070,3 +1070,56 @@ func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, sco
 	ErrCompleteSwapIn.SetError(fmt.Errorf("failed to broadcast rcomplete swap in, error: %v", err))
 	return "", ErrCompleteSwapIn
 }
+
+func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope SignType,
+	msg *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	log.Infow("signer starts to cancel swap in", "scope", scope)
+	if msg == nil {
+		log.CtxError(ctx, "cancel swap in msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msgCancelSwapIn := virtualgrouptypes.NewMsgCancelSwapIn(km.GetAddr(), msg.GetGlobalVirtualGroupFamilyId(), msg.GetGlobalVirtualGroupId())
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCancelSwapIn}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrCompleteSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrCompleteSwapIn
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast cancel swap in tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast cancel swap in tx", "tx_hash", txHash, "cancel_swap_in_msg", msgCancelSwapIn)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrCancelSwapIn.SetError(fmt.Errorf("failed to broadcast cancel swap in, error: %v", err))
+	return "", ErrCancelSwapIn
+}

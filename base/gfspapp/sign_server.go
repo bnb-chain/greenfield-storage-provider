@@ -311,6 +311,16 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SignerSuccessCompleteSwapIn).Inc()
 			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteSwapIn).Observe(time.Since(startTime).Seconds())
 		}
+	case *gfspserver.GfSpSignRequest_CancelSwapIn:
+		txHash, err = g.signer.CancelSwapIn(ctx, t.CancelSwapIn)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to cancel swap in", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureCancelSwapIn).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureCancelSwapIn).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessCancelSwapIn).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessCancelSwapIn).Observe(time.Since(startTime).Seconds())
+		}
 	case *gfspserver.GfSpSignRequest_Deposit:
 		txHash, err = g.signer.Deposit(ctx, t.Deposit)
 		if err != nil {
