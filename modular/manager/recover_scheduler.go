@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	recoverBatchSize = 5
+	recoverBatchSize = 10
 	maxRecoveryRetry = 5
 	MaxRecoveryTime  = 50
 
@@ -236,7 +236,6 @@ func (s *RecoverGVGScheduler) Start() {
 
 	recoveryCompacity := s.manager.recoveryQueue.Cap()
 
-	objectCount := uint64(0)
 	for range recoverTicker.C {
 		log.Infow("looping")
 		gvgStats, err = s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
@@ -249,7 +248,6 @@ func (s *RecoverGVGScheduler) Start() {
 			return
 		}
 
-		//s.curStartAfter = gvgStats.StartAfter
 		startAfter = gvgStats.StartAfter
 
 		log.Infow("processing the batch that after object id", "start_after", s.curStartAfter)
@@ -260,15 +258,10 @@ func (s *RecoverGVGScheduler) Start() {
 		}
 
 		log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects), "curStartAfter", s.curStartAfter)
-		if s.curStartAfter != gvgStats.StartAfter {
-			objectCount += uint64(len(objects))
-			s.curStartAfter = gvgStats.StartAfter
-		}
 
 		if len(objects) == 0 {
 			log.Infow("all objects in gvg have been processed", "start_after_object_id", startAfter, "limit", limit)
 			gvgStats.Status = spdb.Processed
-			gvgStats.ObjectCount = objectCount + limit
 			log.Infow("updating GVG stats status to processed", "gvgStats", gvgStats)
 			err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
 			if err != nil {
