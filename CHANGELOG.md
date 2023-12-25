@@ -1,4 +1,14 @@
 # Changelog
+
+## v1.2.2
+BUGFIXES
+* [#1284](https://github.com/bnb-chain/greenfield-storage-provider/pull/1284) fix: remove tags field when creating object/group/bucket
+
+## v1.2.1
+
+BUGFIXES
+* [#1282](https://github.com/bnb-chain/greenfield-storage-provider/pull/1282) fix: delete prefix tree slow query issue
+
 ## v1.2.0
 
 FEATURES
