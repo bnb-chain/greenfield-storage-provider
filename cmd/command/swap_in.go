@@ -239,6 +239,16 @@ func RecoverGVGAction(ctx *cli.Context) error {
 		}
 	}
 
+	_, executing, err := spClient.QueryRecoverProcess(ctx.Context, uint32(0), uint32(gvgID))
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	if executing {
+		println("Please wait until the previous recover work is completed")
+		return nil
+	}
+
 	err = spClient.TriggerRecoverForSuccessorSP(ctx.Context, 0, uint32(gvgID), replicateIndex)
 	if err != nil {
 		println(err.Error())
@@ -278,6 +288,16 @@ func RecoverVGFAction(ctx *cli.Context) error {
 	if swapInInfo.GetSuccessorSpId() != sp.GetId() {
 		println("sp is not successor sp")
 		return errors.New("sp is not successor sp")
+	}
+
+	_, executing, err := spClient.QueryRecoverProcess(ctx.Context, uint32(vgfID), uint32(0))
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+	if executing {
+		println("Please wait until the previous recover work is completed")
+		return nil
 	}
 
 	// trigger
