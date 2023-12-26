@@ -779,9 +779,19 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 
 	if task.GetRecovered() {
 		m.recoveryQueue.PopByKey(task.Key())
+		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, task.Key().String())
-		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
-		return nil
+		m.recoverMtx.Unlock()
+		log.CtxInfow(ctx, "finished recovery", "task_info", task.Info())
+
+		if task.BySuccessorSP() {
+			objectID := task.GetObjectInfo().Id.Uint64()
+			success := m.recoverObjectStats.addSegmentRecord(objectID, true, task.GetSegmentIdx())
+			if !success {
+				return nil
+			}
+			return nil
+		}
 	}
 
 	if task.Error() != nil {
@@ -799,8 +809,9 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		log.CtxErrorw(ctx, "failed to push recovery object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-
+	m.recoverMtx.Lock()
 	m.recoveryTaskMap[task.Key().String()] = task.Key().String()
+	m.recoverMtx.Unlock()
 	return nil
 }
 
@@ -819,8 +830,31 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 		if !slices.Contains(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName) {
 			m.recoveryFailedList = append(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName)
 		}
+		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, handleTask.Key().String())
-		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
+		m.recoverMtx.Unlock()
+
+		if handleTask.BySuccessorSP() {
+			objectID := handleTask.GetObjectInfo().Id.Uint64()
+			success := m.recoverObjectStats.addSegmentRecord(objectID, false, handleTask.GetSegmentIdx())
+			if !success {
+				return nil
+			}
+
+			if m.recoverObjectStats.isRecoverFailed(objectID) {
+				object := &spdb.RecoverFailedObject{
+					ObjectID:        handleTask.GetObjectInfo().Id.Uint64(),
+					VirtualGroupID:  handleTask.GetGVGID(),
+					RedundancyIndex: handleTask.GetEcIdx(),
+				}
+				err := m.baseApp.GfSpDB().InsertRecoverFailedObject(object)
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to insert recover failed object entry", "task_info", handleTask.Info(), "error", err)
+					return ErrGfSpDBWithDetail("failed to insert recover failed object entry, task_info: " + handleTask.Info() + ", error: " + err.Error())
+				}
+			}
+			return nil
+		}
 	}
 	return nil
 }

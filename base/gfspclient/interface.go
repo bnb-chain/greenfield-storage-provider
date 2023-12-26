@@ -194,6 +194,8 @@ type SignerAPI interface {
 	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
 	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
+	ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
+	CompleteSwapIn(ctx context.Context, completeSwpIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error)
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
 }

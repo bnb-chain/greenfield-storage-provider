@@ -236,6 +236,14 @@ func (mockDownloaderServer) GfSpDeductQuotaForBucketMigrate(ctx context.Context,
 
 type mockManagerServer struct{}
 
+func (s mockManagerServer) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, request *gfspserver.GfSpTriggerRecoverForSuccessorSPRequest) (*gfspserver.GfSpTriggerRecoverForSuccessorSPResponse, error) {
+	return &gfspserver.GfSpTriggerRecoverForSuccessorSPResponse{Err: ErrExceptionsStream}, nil
+}
+
+func (s mockManagerServer) GfSpQueryRecoverProcess(ctx context.Context, request *gfspserver.GfSpQueryRecoverProcessRequest) (*gfspserver.GfSpQueryRecoverProcessResponse, error) {
+	return &gfspserver.GfSpQueryRecoverProcessResponse{Err: ErrExceptionsStream}, nil
+}
+
 func (mockManagerServer) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeginTaskRequest) (
 	*gfspserver.GfSpBeginTaskResponse, error) {
 	switch req.Request.(type) {

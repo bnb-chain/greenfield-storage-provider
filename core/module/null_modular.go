@@ -85,6 +85,10 @@ func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
 	return nil
 }
 
+func (m *NullModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error {
+	return nil
+}
+
 func (*NullModular) PreCreateObjectApproval(context.Context, task.ApprovalCreateObjectTask) error {
 	return ErrNilModular
 }
@@ -311,6 +315,9 @@ func (*NilModular) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrat
 func (*NilModular) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	return nil, ErrNilModular
 }
+func (m *NilModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	return "", ErrNilModular
+}
 
 var _ Receiver = (*NullReceiveModular)(nil)
 
@@ -331,4 +338,13 @@ func (*NullReceiveModular) HandleReceivePieceTask(context.Context, task.ReceiveP
 }
 func (*NullReceiveModular) HandleDoneReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
+}
+func (m *NullModular) QueryRecoverProcess(context.Context, uint32, uint32) ([]*gfspserver.RecoverProcess, bool, error) {
+	return nil, false, ErrNilModular
+}
+func (m *NilModular) CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	return "nil", ErrNilModular
+}
+func (m *NilModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	return "nil", ErrNilModular
 }

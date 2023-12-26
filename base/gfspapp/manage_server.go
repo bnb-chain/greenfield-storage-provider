@@ -411,3 +411,23 @@ func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspse
 		RecoveryFailedList: recoveryFailedList,
 	}, nil
 }
+
+func (g *GfSpBaseApp) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, req *gfspserver.GfSpTriggerRecoverForSuccessorSPRequest) (
+	*gfspserver.GfSpTriggerRecoverForSuccessorSPResponse, error) {
+	err := g.manager.TriggerRecoverForSuccessorSP(ctx, req.GetVgfId(), req.GetGvgId(), req.ReplicateIndex)
+	if err != nil {
+		return nil, err
+	}
+	return &gfspserver.GfSpTriggerRecoverForSuccessorSPResponse{}, nil
+}
+
+func (g *GfSpBaseApp) GfSpQueryRecoverProcess(ctx context.Context, req *gfspserver.GfSpQueryRecoverProcessRequest) (*gfspserver.GfSpQueryRecoverProcessResponse, error) {
+	gvgStats, flag, err := g.manager.QueryRecoverProcess(ctx, req.GetVgfId(), req.GetGvgId())
+	if err != nil {
+		return nil, err
+	}
+	return &gfspserver.GfSpQueryRecoverProcessResponse{
+		RecoverProcesses: gvgStats,
+		Executing:        flag,
+	}, nil
+}

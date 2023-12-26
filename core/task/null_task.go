@@ -133,6 +133,7 @@ func (*NullTask) GetEcIdx() int32                        { return 0 }
 func (*NullTask) SetSegmentIdx(uint32)                   {}
 func (*NullTask) GetRecovered() bool                     { return false }
 func (*NullTask) SetRecoverDone()                        {}
+func (*NullTask) BySuccessorSP() bool                    { return false }
 func (*NullTask) GetRedundancyIdx() int32                { return 0 }
 func (*NullTask) SetRedundancyIdx(idx int32)             {}
 func (*NullTask) GetIntegrityHash() []byte               { return nil }
@@ -190,3 +191,4 @@ func (*NullTask) SetGCFinishedGvgNum(gvgGcNum uint64)                           
 func (*NullTask) GetGCFinishedGvgNum() uint64                                                { return 0 }
 func (*NullTask) SetTotalGvgNum(gvgNum uint64)                                               {}
 func (*NullTask) GetTotalGvgNum() uint64                                                     { return 0 }
+func (t *NullTask) GetGVGID() uint32                                                         { return 0 }

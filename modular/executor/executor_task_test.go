@@ -756,6 +756,9 @@ func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
 					{Id: 1, Endpoint: "endpoint"}}, nil).Times(1)
+				consensusMock.EXPECT().QuerySwapInInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.SwapInInfo{
+					SuccessorSpId: 1, TargetSpId: 1}, nil).Times(1)
+
 				e.baseApp.SetConsensus(consensusMock)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
@@ -823,6 +826,8 @@ func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
 					{Id: 1, Endpoint: "endpoint"}}, nil).Times(1)
+				consensusMock.EXPECT().QuerySwapInInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.SwapInInfo{
+					SuccessorSpId: 1, TargetSpId: 1}, nil).Times(1)
 				e.baseApp.SetConsensus(consensusMock)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
@@ -1172,25 +1177,11 @@ func TestExecuteModular_doRecoveryPiece(t *testing.T) {
 		wantedErr   error
 	}{
 		{
-			name: "failed to sign recovery task",
-			fn: func() *ExecuteModular {
-				e := setup(t)
-				ctrl := gomock.NewController(t)
-				m := gfspclient.NewMockGfSpClientAPI(ctrl)
-				m.EXPECT().SignRecoveryTask(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
-				e.baseApp.SetGfSpClient(m)
-				return e
-			},
-			wantedIsErr: true,
-			wantedErr:   mockErr,
-		},
-		{
 			name: "failed to get piece from ec chunks",
 			fn: func() *ExecuteModular {
 				e := setup(t)
 				ctrl := gomock.NewController(t)
 				m := gfspclient.NewMockGfSpClientAPI(ctrl)
-				m.EXPECT().SignRecoveryTask(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
 				m.EXPECT().GetPieceFromECChunks(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				e.baseApp.SetGfSpClient(m)
 				return e
@@ -1205,7 +1196,6 @@ func TestExecuteModular_doRecoveryPiece(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				m := gfspclient.NewMockGfSpClientAPI(ctrl)
 				e.baseApp.SetGfSpClient(m)
-				m.EXPECT().SignRecoveryTask(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
 
 				m1 := gfspclient.NewMockstdLib(ctrl)
 				m1.EXPECT().Read(gomock.Any()).Return(0, mockErr).Times(1)
@@ -1223,7 +1213,6 @@ func TestExecuteModular_doRecoveryPiece(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				m := gfspclient.NewMockGfSpClientAPI(ctrl)
 				e.baseApp.SetGfSpClient(m)
-				m.EXPECT().SignRecoveryTask(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
 				m.EXPECT().GetPieceFromECChunks(gomock.Any(), gomock.Any(), gomock.Any()).Return(io.NopCloser(
 					strings.NewReader("body")), nil).Times(1)
 				return e

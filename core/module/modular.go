@@ -233,6 +233,10 @@ type Manager interface {
 	NotifyPostMigrateBucketAndRecoupQuota(ctx context.Context, bmStatus *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error)
 	// ResetRecoveryFailedList reset failed list for recovery
 	ResetRecoveryFailedList(ctx context.Context) []string
+	// TriggerRecoverForSuccessorSP is used to trigger recover process
+	TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error
+	// QueryRecoverProcess is used to get recover process
+	QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error)
 }
 
 // P2P is an abstract interface to the to do replicate piece approvals between SPs.
@@ -313,6 +317,12 @@ type Signer interface {
 	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 	// RejectMigrateBucket rejects the bucket migration by dest SP.
 	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
+	// ReserveSwapIn reserve swapIn
+	ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
+	// CompleteSwapIn complete swapIn
+	CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error)
+	// CancelSwapIn cancel swapIn
+	CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error)
 	// Deposit into a Global virtual group for more store size
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.

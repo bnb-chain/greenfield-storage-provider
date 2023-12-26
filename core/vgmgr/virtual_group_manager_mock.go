@@ -278,33 +278,33 @@ func (mr *MockVirtualGroupManagerMockRecorder) FreezeSPAndGVGs(spID, gvgs any) *
 }
 
 // GenerateGlobalVirtualGroupMeta mocks base method.
-func (m *MockVirtualGroupManager) GenerateGlobalVirtualGroupMeta(genPolicy GenerateGVGSecondarySPsPolicy) (*GlobalVirtualGroupMeta, error) {
+func (m *MockVirtualGroupManager) GenerateGlobalVirtualGroupMeta(genPolicy GenerateGVGSecondarySPsPolicy, excludeSPsFilter ExcludeFilter) (*GlobalVirtualGroupMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateGlobalVirtualGroupMeta", genPolicy)
+	ret := m.ctrl.Call(m, "GenerateGlobalVirtualGroupMeta", genPolicy, excludeSPsFilter)
 	ret0, _ := ret[0].(*GlobalVirtualGroupMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GenerateGlobalVirtualGroupMeta indicates an expected call of GenerateGlobalVirtualGroupMeta.
-func (mr *MockVirtualGroupManagerMockRecorder) GenerateGlobalVirtualGroupMeta(genPolicy any) *gomock.Call {
+func (mr *MockVirtualGroupManagerMockRecorder) GenerateGlobalVirtualGroupMeta(genPolicy, excludeSPsFilter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateGlobalVirtualGroupMeta", reflect.TypeOf((*MockVirtualGroupManager)(nil).GenerateGlobalVirtualGroupMeta), genPolicy)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateGlobalVirtualGroupMeta", reflect.TypeOf((*MockVirtualGroupManager)(nil).GenerateGlobalVirtualGroupMeta), genPolicy, excludeSPsFilter)
 }
 
 // PickGlobalVirtualGroup mocks base method.
-func (m *MockVirtualGroupManager) PickGlobalVirtualGroup(vgfID uint32) (*GlobalVirtualGroupMeta, error) {
+func (m *MockVirtualGroupManager) PickGlobalVirtualGroup(vgfID uint32, excludeGVGsFilter ExcludeFilter) (*GlobalVirtualGroupMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PickGlobalVirtualGroup", vgfID)
+	ret := m.ctrl.Call(m, "PickGlobalVirtualGroup", vgfID, excludeGVGsFilter)
 	ret0, _ := ret[0].(*GlobalVirtualGroupMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PickGlobalVirtualGroup indicates an expected call of PickGlobalVirtualGroup.
-func (mr *MockVirtualGroupManagerMockRecorder) PickGlobalVirtualGroup(vgfID any) *gomock.Call {
+func (mr *MockVirtualGroupManagerMockRecorder) PickGlobalVirtualGroup(vgfID, excludeGVGsFilter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PickGlobalVirtualGroup", reflect.TypeOf((*MockVirtualGroupManager)(nil).PickGlobalVirtualGroup), vgfID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PickGlobalVirtualGroup", reflect.TypeOf((*MockVirtualGroupManager)(nil).PickGlobalVirtualGroup), vgfID, excludeGVGsFilter)
 }
 
 // PickGlobalVirtualGroupForBucketMigrate mocks base method.
@@ -338,18 +338,18 @@ func (mr *MockVirtualGroupManagerMockRecorder) PickSPByFilter(filter any) *gomoc
 }
 
 // PickVirtualGroupFamily mocks base method.
-func (m *MockVirtualGroupManager) PickVirtualGroupFamily() (*VirtualGroupFamilyMeta, error) {
+func (m *MockVirtualGroupManager) PickVirtualGroupFamily(filterByGvgList *PickVGFByGVGFilter) (*VirtualGroupFamilyMeta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PickVirtualGroupFamily")
+	ret := m.ctrl.Call(m, "PickVirtualGroupFamily", filterByGvgList)
 	ret0, _ := ret[0].(*VirtualGroupFamilyMeta)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PickVirtualGroupFamily indicates an expected call of PickVirtualGroupFamily.
-func (mr *MockVirtualGroupManagerMockRecorder) PickVirtualGroupFamily() *gomock.Call {
+func (mr *MockVirtualGroupManagerMockRecorder) PickVirtualGroupFamily(filterByGvgList any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PickVirtualGroupFamily", reflect.TypeOf((*MockVirtualGroupManager)(nil).PickVirtualGroupFamily))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PickVirtualGroupFamily", reflect.TypeOf((*MockVirtualGroupManager)(nil).PickVirtualGroupFamily), filterByGvgList)
 }
 
 // QuerySPByID mocks base method.

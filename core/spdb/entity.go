@@ -132,6 +132,31 @@ type SwapOutMeta struct {
 	CompletedGVGs []uint32
 }
 
+type RecoverStatus int
+
+const (
+	Processing RecoverStatus = 0
+	Processed  RecoverStatus = 1
+	Completed  RecoverStatus = 2
+)
+
+type RecoverGVGStats struct {
+	VirtualGroupID       uint32
+	VirtualGroupFamilyID uint32
+	RedundancyIndex      int32
+	StartAfter           uint64
+	Limit                uint64
+	Status               RecoverStatus
+	ObjectCount          uint64
+}
+
+type RecoverFailedObject struct {
+	ObjectID        uint64
+	VirtualGroupID  uint32
+	RedundancyIndex int32
+	RetryTime       int
+}
+
 // MigrateBucketProgressMeta is used to record migrate bucket progress meta.
 type MigrateBucketProgressMeta struct {
 	BucketID              uint64 // as primary key

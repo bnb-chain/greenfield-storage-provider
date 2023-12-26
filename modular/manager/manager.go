@@ -114,8 +114,15 @@ type ManageModular struct {
 
 	gvgPreferSPList []uint32
 
-	recoveryFailedList   []string
-	recoveryTaskMap      map[string]string
+	recoveryFailedList []string
+
+	recoverMtx      sync.RWMutex
+	recoveryTaskMap map[string]string
+
+	recoverObjectStats      *ObjectsSegmentsStats // objectId -> ObjectSegmentsStats
+	recoverProcessCount     atomic.Int64
+	verifyTerminationSignal atomic.Int64
+
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
 	enableHealthyChecker bool
@@ -199,12 +206,6 @@ func (m *ManageModular) delayStartMigrateScheduler() {
 		if m.bucketMigrateScheduler == nil {
 			if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
 				log.Errorw("failed to new bucket migrate scheduler", "error", err)
-				continue
-			}
-		}
-		if m.spExitScheduler == nil {
-			if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
-				log.Errorw("failed to new sp exit scheduler", "error", err)
 				continue
 			}
 		}
@@ -593,7 +594,10 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 		if !slices.Contains(m.recoveryFailedList, task.GetObjectInfo().ObjectName) {
 			m.recoveryFailedList = append(m.recoveryFailedList, task.GetObjectInfo().ObjectName)
 		}
+		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, task.Key().String())
+		m.recoverMtx.Unlock()
+
 	}
 	return GcConditionMet
 }
@@ -989,4 +993,103 @@ func (m *ManageModular) QueryBucketMigrationProgress(_ context.Context, bucketID
 func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
 	m.recoveryFailedList = m.recoveryFailedList[:0]
 	return m.recoveryFailedList
+}
+
+func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error {
+	return m.startRecoverSchedulers(vgfID, gvgID, redundancyIndex)
+}
+
+// start the loop, failed object will be
+func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIndex int32) (err error) {
+	m.verifyTerminationSignal.Store(0)
+	if vgfID != 0 {
+		recoverVGFScheduler, err := NewRecoverVGFScheduler(m, vgfID)
+		if err != nil {
+			log.Errorw("failed to NewRecoverVGFScheduler", "error", err)
+			return err
+		}
+		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
+		m.recoverProcessCount.Store(int64(len(recoverVGFScheduler.RecoverSchedulers)))
+		m.verifyTerminationSignal.Add(int64(len(recoverVGFScheduler.VerifySchedulers)))
+		go recoverVGFScheduler.Start()
+		go recoverFailedObjectScheduler.Start()
+	} else {
+		recoverGVGScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, redundancyIndex)
+		if err != nil {
+			log.Errorw("failed to create RecoverGVGScheduler", "error", err)
+			return err
+		}
+		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, redundancyIndex)
+		if err != nil {
+			log.Errorw("failed to create VerifyGVGScheduler", "error", err)
+			return err
+		}
+		m.recoverProcessCount.Store(1)
+		m.verifyTerminationSignal.Add(1)
+		go recoverGVGScheduler.Start()
+		go recoverFailedObjectScheduler.Start()
+		go verifyScheduler.Start()
+	}
+	return nil
+}
+
+func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error) {
+	gvgIds := make([]uint32, 0)
+	if vgfID != 0 {
+		vgfInfo, err := m.baseApp.Consensus().QueryVirtualGroupFamily(ctx, vgfID)
+		if err != nil {
+			log.Errorw("failed to GetVirtualGroupFamily", "error", err)
+			return nil, false, err
+		}
+		gvgIds = vgfInfo.GetGlobalVirtualGroupIds()
+	} else {
+		gvgIds = append(gvgIds, gvgID)
+	}
+	gvgStatsList, err := m.baseApp.GfSpDB().BatchGetRecoverGVGStats(gvgIds)
+	if err != nil {
+		log.Errorw("failed to BatchGetRecoverGVGStats", "error", err)
+		return nil, false, err
+	}
+	// get failed total count
+	failedCount, err := m.baseApp.GfSpDB().CountRecoverFailedObject()
+	if err != nil {
+		log.Errorw("failed to CountRecoverFailedObject", "error", err)
+		return nil, false, err
+	}
+	// get record retry time > 5
+	failedRecords, err := m.baseApp.GfSpDB().GetRecoverFailedObjectsByRetryTime(5)
+	if err != nil {
+		log.Errorw("failed to CountRecoverFailedObject", "error", err)
+		return nil, false, err
+	}
+	failedObjects := make([]*gfspserver.FailedRecoverObject, 0, len(failedRecords))
+	for _, r := range failedRecords {
+		meta, _ := m.baseApp.GfSpDB().GetObjectIntegrity(r.ObjectID, r.RedundancyIndex)
+		if meta == nil {
+			failedObjects = append(failedObjects, &gfspserver.FailedRecoverObject{
+				ObjectId:        r.ObjectID,
+				VirtualGroupId:  r.VirtualGroupID,
+				RedundancyIndex: r.RedundancyIndex,
+				RetryTime:       int32(r.RetryTime),
+			})
+		}
+	}
+
+	res := make([]*gfspserver.RecoverProcess, 0, len(gvgStatsList))
+	for _, gvgStats := range gvgStatsList {
+		res = append(res, &gfspserver.RecoverProcess{
+			VirtualGroupId:         gvgStats.VirtualGroupID,
+			VirtualGroupFamilyId:   gvgStats.VirtualGroupFamilyID,
+			RedundancyIndex:        gvgStats.RedundancyIndex,
+			StartAfter:             gvgStats.StartAfter,
+			Limit:                  gvgStats.Limit,
+			Status:                 int32(gvgStats.Status),
+			ObjectCount:            gvgStats.ObjectCount,
+			FailedObjectTotalCount: uint64(failedCount),
+			RecoverFailedObject:    failedObjects,
+		})
+	}
+	flag := m.recoverProcessCount.Load() > 0
+	return res, flag, nil
 }

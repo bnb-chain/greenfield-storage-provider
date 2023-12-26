@@ -91,6 +91,8 @@ message GfSpRecoverPieceTask {
   uint64 piece_size = 6;
   bytes signature = 7;
   bool recovered = 8;
+  bool by_successor_sp = 9;
+  uint32 gvg_id = 10;
 }
 
 message GfSpReceivePieceTask {

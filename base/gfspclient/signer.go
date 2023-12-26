@@ -588,3 +588,114 @@ func (s *GfSpClient) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *vi
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_ReserveSwapIn{
+			ReserveSwapIn: reserveSwapIn,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to reserve swap in", "msg", reserveSwapIn, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to reserve swap in, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+func (s *GfSpClient) CompleteSwapIn(ctx context.Context, completeSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CompleteSwapIn{
+			CompleteSwapIn: completeSwapIn,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to complete swap in", "msg", completeSwapIn, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to complete swap in, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+// SpExit sent sp exit tx for sp gracefully exit
+func (s *GfSpClient) SpExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_SpExit{
+			SpExit: spExit,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to send sp exit tx", "msg", spExit, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to send sp exit tx, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+func (s *GfSpClient) CompleteSpExit(ctx context.Context, completeSpExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CompleteSpExit{
+			CompleteSpExit: completeSpExit,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to send complete sp exit tx", "msg", completeSpExit, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to send complete sp exit tx, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
+func (s *GfSpClient) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	conn, err := s.SignerConn(ctx)
+	if err != nil {
+		log.Errorw("failed to connect to signer", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_CancelSwapIn{
+			CancelSwapIn: cancelSwapIn,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to cancel swap in", "msg", cancelSwapIn, "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to cancel swap in, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}

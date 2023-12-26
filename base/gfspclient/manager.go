@@ -257,6 +257,46 @@ func (s *GfSpClient) ResetRecoveryFailedList(ctx context.Context) ([]string, err
 	return resp.GetRecoveryFailedList(), nil
 }
 
+func (s *GfSpClient) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, replicateIndex int32) error {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpTriggerRecoverForSuccessorSP(ctx, &gfspserver.GfSpTriggerRecoverForSuccessorSPRequest{
+		VgfId: vgfID, GvgId: gvgID, ReplicateIndex: replicateIndex,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to trigger recover objects for successor SP", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return ErrRPCUnknownWithDetail("client failed to notify post migrate bucket, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to trigger recover objects for successor SP", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return resp.GetErr()
+	}
+	return nil
+}
+
+func (s *GfSpClient) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error) {
+	conn, connErr := s.ManagerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect manager", "error", connErr)
+		return nil, false, ErrRPCUnknownWithDetail("client failed to connect manager, error: ", connErr)
+	}
+	resp, err := gfspserver.NewGfSpManageServiceClient(conn).GfSpQueryRecoverProcess(ctx, &gfspserver.GfSpQueryRecoverProcessRequest{
+		VgfId: vgfID, GvgId: gvgID,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to query recover process", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return nil, false, ErrRPCUnknownWithDetail("client failed to query recover process, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		log.CtxErrorw(ctx, "failed to query recover process", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
+		return nil, false, resp.GetErr()
+	}
+	return resp.GetRecoverProcesses(), resp.Executing, nil
+}
+
 func (s *GfSpClient) GetMigrateBucketProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
 	conn, connErr := s.ManagerConn(ctx)
 	if connErr != nil {
