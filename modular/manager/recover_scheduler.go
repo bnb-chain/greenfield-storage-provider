@@ -28,8 +28,8 @@ const (
 	MaxRecoveryTime  = 50
 
 	recoverInterval     = 30 * time.Second
-	verifyInterval      = 1 * time.Minute
-	verifyGVGQueryLimit = uint32(50)
+	verifyInterval      = 10 * time.Second
+	verifyGVGQueryLimit = uint32(100)
 
 	recoverFailedObjectInterval = 1 * time.Minute
 
@@ -62,6 +62,7 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 			VirtualGroupID:       gvgID,
 			RedundancyIndex:      piecestore.PrimarySPRedundancyIndex,
 			StartAfter:           0,
+			NextStartAfter:       0,
 			Limit:                recoverBatchSize,
 			ObjectCount:          0,
 		})
@@ -144,19 +145,18 @@ func (s *ObjectsSegmentsStats) remove(objectID uint64) {
 	delete(s.stats, objectID)
 }
 
-func (s *ObjectsSegmentsStats) addSegmentRecord(objectID uint64, success bool, segmentIdx uint32) bool {
+func (s *ObjectsSegmentsStats) addSegmentRecord(objectID uint64, success bool, segmentIdx uint32) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	stats, ok := s.stats[objectID]
 	if !ok {
-		return false
+		return
 	}
 	if success {
 		stats.SucceedSegments[segmentIdx] = struct{}{}
 	} else {
 		stats.FailedSegments[segmentIdx] = struct{}{}
 	}
-	return true
 }
 
 func (s *ObjectsSegmentsStats) isObjectProcessed(objectID uint64) bool {
@@ -166,7 +166,14 @@ func (s *ObjectsSegmentsStats) isObjectProcessed(objectID uint64) bool {
 	if !ok {
 		return false
 	}
-	return len(stats.SucceedSegments)+len(stats.FailedSegments) == stats.SegmentCount
+	processIDs := make(map[uint32]struct{}, 0)
+	for id := range stats.SucceedSegments {
+		processIDs[id] = struct{}{}
+	}
+	for id := range stats.FailedSegments {
+		processIDs[id] = struct{}{}
+	}
+	return len(processIDs) == stats.SegmentCount
 }
 
 func (s *ObjectsSegmentsStats) isRecoverFailed(objectID uint64) bool {
@@ -176,7 +183,17 @@ func (s *ObjectsSegmentsStats) isRecoverFailed(objectID uint64) bool {
 	if !ok {
 		return true
 	}
-	return len(stats.SucceedSegments)+len(stats.FailedSegments) == stats.SegmentCount && len(stats.FailedSegments) > 0
+	if len(stats.SucceedSegments) == stats.SegmentCount {
+		return false
+	}
+	processIDs := make(map[uint32]struct{}, 0)
+	for id := range stats.SucceedSegments {
+		processIDs[id] = struct{}{}
+	}
+	for id := range stats.FailedSegments {
+		processIDs[id] = struct{}{}
+	}
+	return len(processIDs) == stats.SegmentCount && len(stats.FailedSegments) > 0
 }
 
 type RecoverGVGScheduler struct {
@@ -185,7 +202,6 @@ type RecoverGVGScheduler struct {
 	vgfID                 uint32
 	gvgID                 uint32
 	redundancyIndex       int32
-	curStartAfter         uint64
 }
 
 func NewRecoverGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyIndex int32) (*RecoverGVGScheduler, error) {
@@ -195,7 +211,8 @@ func NewRecoverGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyInd
 			VirtualGroupID:       gvgID,
 			RedundancyIndex:      redundancyIndex,
 			StartAfter:           0,
-			Limit:                recoverBatchSize, // TODO
+			NextStartAfter:       0,
+			Limit:                recoverBatchSize,
 		}})
 		if err != nil {
 			return nil, err
@@ -230,14 +247,11 @@ func (s *RecoverGVGScheduler) Start() {
 	}
 	recoverTicker := time.NewTicker(recoverInterval)
 	defer recoverTicker.Stop()
-
-	var startAfter uint64
 	limit := gvgStats.Limit
 
 	recoveryCompacity := s.manager.recoveryQueue.Cap()
 
 	for range recoverTicker.C {
-		log.Infow("looping")
 		gvgStats, err = s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
 		if err != nil {
 			log.Errorw("failed to get gvg stats", "err", err)
@@ -248,19 +262,16 @@ func (s *RecoverGVGScheduler) Start() {
 			return
 		}
 
-		startAfter = gvgStats.StartAfter
-
-		log.Infow("processing the batch that after object id", "start_after", s.curStartAfter)
-		objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, startAfter, uint32(limit))
+		objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, gvgStats.StartAfter, uint32(limit))
 		if err != nil {
-			log.Errorw("failed to list objects in gvg", "start_after_object_id", startAfter, "limit", limit)
+			log.Errorw("failed to list objects in gvg", "start_after_object_id", gvgStats.StartAfter, "limit", limit)
 			continue
 		}
 
-		log.Debugw("list objects in GVG", "start_after", startAfter, "limit", limit, "objects_count", len(objects), "curStartAfter", s.curStartAfter)
+		log.Infow("list objects in GVG", "start_after", gvgStats.StartAfter, "limit", limit, "object_num", len(objects))
 
 		if len(objects) == 0 {
-			log.Infow("all objects in gvg have been processed", "start_after_object_id", startAfter, "limit", limit)
+			log.Infow("all objects in gvg have been processed", "start_after_object_id", gvgStats.StartAfter, "limit", limit)
 			gvgStats.Status = spdb.Processed
 			log.Infow("updating GVG stats status to processed", "gvgStats", gvgStats)
 			err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
@@ -269,6 +280,16 @@ func (s *RecoverGVGScheduler) Start() {
 				continue
 			}
 			break
+		}
+
+		lastObjectID := objects[len(objects)-1].Object.ObjectInfo.Id.Uint64()
+		if lastObjectID != gvgStats.NextStartAfter {
+			gvgStats.NextStartAfter = lastObjectID
+			err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
+			if err != nil {
+				log.Error("failed to update GVG stats", "lastObjectID", lastObjectID)
+				continue
+			}
 		}
 
 		exceedLimit := false
@@ -379,7 +400,7 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 		if err != nil {
 			continue
 		}
-		gvgStats.StartAfter = gvgStats.StartAfter + gvgStats.Limit
+		gvgStats.StartAfter = gvgStats.NextStartAfter
 		err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
 		if err != nil {
 			log.Errorw("failed to update recover gvg status")
@@ -545,7 +566,7 @@ func (s *VerifyGVGScheduler) Start() {
 			continue
 		}
 
-		log.Infow("list objects in GVG", "start_after", s.curStartAfter, "limit", verifyGVGQueryLimit)
+		log.Infow("list objects in GVG", "start_after", s.curStartAfter, "limit", verifyGVGQueryLimit, "object_num", len(objects))
 
 		// Once iterate all objects in GVG, check all recorded recover-failed objects have been recovered.
 		// If there is any object that does not exceed the max retry, will re-start from the beginning object in GVG.
@@ -554,18 +575,18 @@ func (s *VerifyGVGScheduler) Start() {
 			recoverFailedObjectsCount := len(s.verifyFailedObjects)
 			needDiscontinueCount := 0
 			for objectID := range s.verifyFailedObjects {
-				// check if verified failed object is enqueued in DB
+				// the object might have been recovered.
 				recoverFailedObject, err := s.manager.baseApp.GfSpDB().GetRecoverFailedObject(objectID)
 				if err != nil {
 					log.Errorw("failed to get recover failed object", "object_id", objectID, "error", err)
 					if errors.Is(err, gorm.ErrRecordNotFound) {
-						log.Infow("the object is already recovered", "object_id", objectID)
+						log.Infow("the object is already recovered, record has been removed", "object_id", objectID)
 						delete(s.verifyFailedObjects, objectID)
 						recoverFailedObjectsCount--
 					}
 					continue
 				}
-
+				// the object might have been deleted or discontinued
 				_, err = s.manager.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(objectID))
 				if err != nil {
 					log.Errorw("failed to get object info from chain", "object_id", objectID, "error", err)
@@ -580,8 +601,9 @@ func (s *VerifyGVGScheduler) Start() {
 					}
 					continue
 				}
+
 				if recoverFailedObject.RetryTime < maxRecoveryRetry {
-					log.Errorw("object has not been recovered yet", "object_id", objectID, "retry", recoverFailedObject.RetryTime, "max_recovery_retry", maxRecoveryRetry)
+					log.Infow("object is sill being recovered", "object_id", objectID, "retry", recoverFailedObject.RetryTime, "max_recovery_retry", maxRecoveryRetry)
 					continue
 				}
 				// if an object exceeds the max recover retry, will not process further, the SP should manually trigger the discontinue object tx.
@@ -666,6 +688,7 @@ func (s *VerifyGVGScheduler) Start() {
 			}
 		}
 
+		nextStartAfter := objects[len(objects)-1].Object.ObjectInfo.Id.Uint64()
 		for _, o := range objects {
 			objectInfo := o.Object.ObjectInfo
 			objectID := objectInfo.Id.Uint64()
@@ -695,8 +718,7 @@ func (s *VerifyGVGScheduler) Start() {
 			}
 			s.verifySuccessObjects[o.Object.ObjectInfo.Id.Uint64()] = struct{}{}
 		}
-
-		s.curStartAfter = s.curStartAfter + uint64(verifyGVGQueryLimit)
+		s.curStartAfter = nextStartAfter
 	}
 }
 

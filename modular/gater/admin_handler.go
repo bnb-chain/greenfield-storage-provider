@@ -877,27 +877,42 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		sspAddress = append(sspAddress, sp.OperatorAddress)
 	}
 
-	isSuccessor := false
 	var (
-		successorSP *sptypes.StorageProvider
-		swapInInfo  *virtualgrouptypes.SwapInInfo
+		isSuccessorPrimary   bool
+		isSuccessorSecondary bool
+		successorSP          *sptypes.StorageProvider
+		swapInInfo           *virtualgrouptypes.SwapInInfo
 	)
 	if recoveryTask.GetBySuccessorSp() {
-		swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, 0)
-		if err != nil {
-			return nil, ErrConsensusWithDetail("query swapInInfo err: " + err.Error())
-		}
-		successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
-		if err != nil {
-			return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
-		}
-		if primarySp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
-			isSuccessor = true
+		swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, gvg.FamilyId, virtualgrouptypes.NoSpecifiedGVGId)
+		if err == nil {
+			successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
+			if err != nil {
+				return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
+			}
+			if primarySp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
+				isSuccessorPrimary = true
+			}
+		} else {
+			swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, virtualgrouptypes.NoSpecifiedFamilyId, gvg.Id)
+			if err != nil {
+				return nil, ErrConsensusWithDetail("query swapInInfo err: " + err.Error())
+			}
+			successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
+			if err != nil {
+				return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
+			}
+			for _, sspID := range gvg.SecondarySpIds {
+				if sspID == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
+					isSuccessorSecondary = true
+					break
+				}
+			}
 		}
 	}
 
 	// if myself is secondary, the sender of the request can be both of the primary SP or the secondary SP of the gvg
-	if primarySp.OperatorAddress != signatureAddr.String() && !isSuccessor {
+	if primarySp.OperatorAddress != signatureAddr.String() && !isSuccessorPrimary && !isSuccessorSecondary {
 		log.CtxDebug(ctx, "recovery request not come from primary sp", "secondary sp", signatureAddr.String())
 		// judge if the sender is not one of the secondary SP
 		isRequestFromSecondary := false
