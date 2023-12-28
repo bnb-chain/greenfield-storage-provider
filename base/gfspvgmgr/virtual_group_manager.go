@@ -527,8 +527,15 @@ func (vgm *virtualGroupManager) FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrou
 func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 	ticker := time.NewTicker(ReleaseSPJobInterval)
 	for range ticker.C {
-		vgm.freezeSPPool.ReleaseSP()
+		vgm.mutex.RLock()
+		if vgm.spManager == nil {
+			log.Warnw("failed to init sp manager")
+			vgm.mutex.RUnlock()
+			continue
+		}
+		vgm.mutex.RUnlock()
 
+		vgm.freezeSPPool.ReleaseSP()
 		vgm.mutex.RLock()
 		aliveSP := make([]*sptypes.StorageProvider, 0)
 		for _, sp := range vgm.spManager.otherSPs {

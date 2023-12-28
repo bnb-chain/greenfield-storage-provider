@@ -145,6 +145,7 @@ type RecoverGVGStats struct {
 	VirtualGroupFamilyID uint32
 	RedundancyIndex      int32
 	StartAfter           uint64
+	NextStartAfter       uint64
 	Limit                uint64
 	Status               RecoverStatus
 	ObjectCount          uint64
