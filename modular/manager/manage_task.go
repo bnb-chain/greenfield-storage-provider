@@ -382,7 +382,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 		handleTask.AppendLog(fmt.Sprintf("manager-handle-failed-replicate-task-repush:%d", shadowTask.GetRetry()))
 		handleTask.AppendLog(shadowTask.GetLogs())
 		handleTask.SetUpdateTime(time.Now().Unix())
-		if handleTask.GetNotAvailableSpIdx() != -1 {
+		if shadowTask.GetNotAvailableSpIdx() != -1 {
 			objectInfo, queryErr := m.baseApp.Consensus().QueryObjectInfoByID(ctx, util.Uint64ToString(handleTask.GetObjectInfo().Id.Uint64()))
 			if queryErr != nil {
 				log.Errorw("failed to query object info", "object", handleTask.GetObjectInfo(), "error", queryErr)
@@ -400,7 +400,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 				log.Errorw("failed to query global virtual group from chain", "gvgID", gvgID, "error", queryErr)
 				return queryErr
 			}
-			sspID := gvg.GetSecondarySpIds()[handleTask.GetNotAvailableSpIdx()]
+			sspID := gvg.GetSecondarySpIds()[shadowTask.GetNotAvailableSpIdx()]
 			sspJoinGVGs, queryErr := m.baseApp.GfSpClient().ListGlobalVirtualGroupsBySecondarySP(ctx, sspID)
 			if queryErr != nil {
 				log.Errorw("failed to list GVGs by secondary sp", "spID", sspID, "error", queryErr)
