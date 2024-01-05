@@ -8,13 +8,13 @@ import (
 
 func TestGfSpPieceOp_SegmentPieceKey(t *testing.T) {
 	p := &GfSpPieceOp{}
-	result := p.SegmentPieceKey(1, 1)
+	result := p.SegmentPieceKey(1, 1, 0)
 	assert.Equal(t, "s1_s1", result)
 }
 
 func TestGfSpPieceOp_ECPieceKey(t *testing.T) {
 	p := &GfSpPieceOp{}
-	result := p.ECPieceKey(1, 1, 2)
+	result := p.ECPieceKey(1, 1, 2, 0)
 	assert.Equal(t, "e1_s1_p2", result)
 }
 
@@ -44,7 +44,7 @@ func TestGfSpPieceOp_ChallengePieceKey(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &GfSpPieceOp{}
-			result := p.ChallengePieceKey(tt.objectID, tt.segmentIdx, tt.redundancyIdx)
+			result := p.ChallengePieceKey(tt.objectID, tt.segmentIdx, tt.redundancyIdx, 0)
 			assert.Equal(t, tt.wantedResult, result)
 		})
 	}
@@ -255,7 +255,7 @@ func TestGfSpPieceOp_ParseChallengeIdx(t *testing.T) {
 		},
 		{
 			name:          "3",
-			challengeKey:  "s1_s2_p2",
+			challengeKey:  "e1_s2_p2",
 			wantedResult1: 2,
 			wantedResult2: 2,
 			wantedIsErr:   false,

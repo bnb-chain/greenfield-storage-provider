@@ -43,6 +43,9 @@ const (
 
 	// DefaultBackupTaskTimeout defines the timeout of backing up task for dispatching
 	DefaultBackupTaskTimeout = 1
+
+	// ShadowIntegrity
+	DefaultGCStaleVersionLimit = 10
 )
 
 var _ module.Manager = &ManageModular{}
@@ -61,20 +64,22 @@ type ManageModular struct {
 	loadTaskLimitToSeal      int
 	loadTaskLimitToGC        int
 
-	uploadQueue            taskqueue.TQueueOnStrategy
-	resumableUploadQueue   taskqueue.TQueueOnStrategy
-	replicateQueue         taskqueue.TQueueOnStrategyWithLimit
-	sealQueue              taskqueue.TQueueOnStrategyWithLimit
-	receiveQueue           taskqueue.TQueueOnStrategyWithLimit
-	gcObjectQueue          taskqueue.TQueueOnStrategyWithLimit
-	gcZombieQueue          taskqueue.TQueueOnStrategyWithLimit
-	gcMetaQueue            taskqueue.TQueueOnStrategyWithLimit
-	gcBucketMigrationQueue taskqueue.TQueueOnStrategyWithLimit
-	downloadQueue          taskqueue.TQueueOnStrategy
-	challengeQueue         taskqueue.TQueueOnStrategy
-	recoveryQueue          taskqueue.TQueueOnStrategyWithLimit
-	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
-	migrateGVGQueueMux     sync.Mutex
+	uploadQueue               taskqueue.TQueueOnStrategy
+	resumableUploadQueue      taskqueue.TQueueOnStrategy
+	replicateQueue            taskqueue.TQueueOnStrategyWithLimit
+	sealQueue                 taskqueue.TQueueOnStrategyWithLimit
+	receiveQueue              taskqueue.TQueueOnStrategyWithLimit
+	gcObjectQueue             taskqueue.TQueueOnStrategyWithLimit
+	gcZombieQueue             taskqueue.TQueueOnStrategyWithLimit
+	gcMetaQueue               taskqueue.TQueueOnStrategyWithLimit
+	gcBucketMigrationQueue    taskqueue.TQueueOnStrategyWithLimit
+	gcStaleVersionObjectQueue taskqueue.TQueueOnStrategyWithLimit
+
+	downloadQueue      taskqueue.TQueueOnStrategy
+	challengeQueue     taskqueue.TQueueOnStrategy
+	recoveryQueue      taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueue    taskqueue.TQueueOnStrategyWithLimit
+	migrateGVGQueueMux sync.Mutex
 
 	maxUploadObjectNumber int
 
@@ -91,6 +96,9 @@ type ManageModular struct {
 
 	gcMetaEnabled      bool
 	gcMetaTimeInterval int
+
+	gcStaleVersionObjectEnabled      bool
+	gcStaleVersionObjectTimeInterval int
 
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
@@ -159,6 +167,8 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 	m.gcBucketMigrationQueue.SetRetireTaskStrategy(m.ResetGCBucketMigrationQueue)
 	m.gcBucketMigrationQueue.SetFilterTaskStrategy(m.FilterGCTask)
+	m.gcStaleVersionObjectQueue.SetRetireTaskStrategy(m.ResetGCStaleVersionObjectQueue)
+	m.gcStaleVersionObjectQueue.SetFilterTaskStrategy(m.FilterGCTask)
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -222,6 +232,8 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
+	gcObjectStaleVersionPieceTicker := time.NewTicker(20 * time.Second)
+
 	backupTaskTicker := time.NewTicker(time.Duration(DefaultBackupTaskTimeout) * time.Second)
 	for {
 		select {
@@ -313,7 +325,42 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 			}
 			go m.discontinueBuckets(ctx)
 			log.Infow("finished to discontinue buckets", "time", time.Now())
+		case <-gcObjectStaleVersionPieceTicker.C:
+			if !m.gcStaleVersionObjectEnabled {
+				continue
+			}
+			go m.gcObjectStaleVersionPiece(ctx)
 		}
+	}
+}
+
+func (m *ManageModular) gcObjectStaleVersionPiece(ctx context.Context) {
+	shadowIntegrityMetas, err := m.baseApp.GfSpDB().ListShadowIntegrityMeta()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query shadow integrity meta list", "error", err)
+		return
+	}
+	log.Debugw("ListShadowIntegrityMeta", "shadowIntegrityMetas", shadowIntegrityMetas, "error", err)
+	if len(shadowIntegrityMetas) == 0 {
+		log.Debugw("No shadowIntegrityMetas found in DB")
+		return
+	}
+	for _, meta := range shadowIntegrityMetas {
+		log.Debugw("retrieved shadow integrity meta", "meta", meta)
+		task := &gfsptask.GfSpGCStaleVersionObjectTask{}
+		task.InitGCStaleVersionObjectTask(m.baseApp.TaskPriority(task),
+			meta.ObjectID,
+			meta.RedundancyIndex,
+			meta.IntegrityChecksum,
+			meta.PieceChecksumList,
+			meta.Version,
+			m.baseApp.TaskTimeout(task, 0))
+		err = m.gcStaleVersionObjectQueue.Push(task)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to push gc stale version object task task", "error", err)
+			continue
+		}
+		log.CtxDebugw(ctx, "succeed to push gc stale version object task to queue", "task_info", task.Info())
 	}
 }
 
@@ -402,12 +449,12 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			log.Errorw("failed to query object info and continue", "object_id", meta.ObjectID, "error", queryErr)
 			continue
 		}
-
+		// TODO implemente udpate object logic here
 		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 			log.Infow("object is not in create status and continue", "object_info", objectInfo)
 			continue
 		}
-		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetLatestUpdatedTime())
 		if queryErr != nil {
 			log.Errorw("failed to query storage param and continue", "object_id", meta.ObjectID, "error", queryErr)
 			continue
@@ -456,7 +503,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			log.Infow("object is not in create status and continue", "object_info", objectInfo)
 			continue
 		}
-		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+		storageParams, queryErr := m.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetLatestUpdatedTime())
 		if queryErr != nil {
 			log.Errorw("failed to query storage param and continue", "object_id", meta.ObjectID, "error", queryErr)
 			continue
@@ -667,6 +714,16 @@ func (m *ManageModular) ResetGCBucketMigrationQueue(qTask task.Task) bool {
 	return false
 }
 
+func (m *ManageModular) ResetGCStaleVersionObjectQueue(qTask task.Task) bool {
+	task := qTask.(task.GCStaleVersionObjectTask)
+	if task.Expired() {
+		log.Errorw("reset gc stale version object task", "old_task_key", task.Key().String())
+		task.SetRetry(0)
+		log.Errorw("reset gc stale version object task", "new_task_key", task.Key().String())
+	}
+	return false
+}
+
 func (m *ManageModular) GCCacheQueue(qTask task.Task) bool {
 	return true
 }
@@ -789,10 +846,10 @@ func (m *ManageModular) RejectUnSealObject(ctx context.Context, object *storaget
 
 func (m *ManageModular) Statistics() string {
 	return fmt.Sprintf(
-		"current inner status, upload[%d], resumableUpload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
+		"current inner status, upload[%d], resumableUpload[%d], replicate[%d], seal[%d], receive[%d], recovery[%d] gcObject[%d], gcZombie[%d], gcMeta[%d], gcStaleVersionObject[%d], download[%d], challenge[%d], migrateGVG[%d], gcBlockHeight[%d], gcSafeDistance[%d], backupTaskNum[%d]",
 		m.uploadQueue.Len(), m.resumableUploadQueue.Len(), m.replicateQueue.Len(), m.sealQueue.Len(),
 		m.receiveQueue.Len(), m.recoveryQueue.Len(), m.gcObjectQueue.Len(), m.gcZombieQueue.Len(),
-		m.gcMetaQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
+		m.gcMetaQueue.Len(), m.gcStaleVersionObjectQueue.Len(), m.downloadQueue.Len(), m.challengeQueue.Len(), m.migrateGVGQueue.Len(),
 		m.gcBlockHeight, m.gcSafeBlockDistance, m.backupTaskNum)
 }
 
@@ -863,6 +920,12 @@ func (m *ManageModular) backUpTask() {
 			"task_limit", targetTask.EstimateLimit().String())
 		backupTasks = append(backupTasks, targetTask)
 	}
+	targetTask = m.gcStaleVersionObjectQueue.PopByLimit(limit)
+	if targetTask != nil {
+		log.CtxDebugw(ctx, "add gc stale version object task to backup set", "task_key", targetTask.Key().String(),
+			"task_limit", targetTask.EstimateLimit().String())
+		backupTasks = append(backupTasks, targetTask)
+	}
 	endPopTime := time.Now().String()
 
 	startPickUpTime := time.Now().String()
@@ -911,6 +974,9 @@ func (m *ManageModular) repushTask(reserved task.Task) {
 	case *gfsptask.GfSpGCBucketMigrationTask:
 		err := m.gcBucketMigrationQueue.Push(t)
 		log.Infow("retry push gc bucket migration task to queue after dispatching", "error", err)
+	case *gfsptask.GfSpGCStaleVersionObjectTask:
+		err := m.gcStaleVersionObjectQueue.Push(t)
+		log.Infow("retry push gc stale version object task to queue after dispatching", "error", err)
 	}
 }
 

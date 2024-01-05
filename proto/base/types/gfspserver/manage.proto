@@ -35,6 +35,7 @@ message GfSpAskTaskResponse {
     base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 8;
     base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 9;
     base.types.gfsptask.GfSpGCBucketMigrationTask gc_bucket_migration_task = 10;
+    base.types.gfsptask.GfSpGCStaleVersionObjectTask gc_stale_version_object_task = 14;
   }
 }
 
@@ -53,6 +54,7 @@ message GfSpReportTaskRequest {
     base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 11;
     base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 12;
     base.types.gfsptask.GfSpGCBucketMigrationTask gc_bucket_migration_task = 13;
+    base.types.gfsptask.GfSpGCStaleVersionObjectTask gc_stale_version_object_task = 14;
   }
 }
 

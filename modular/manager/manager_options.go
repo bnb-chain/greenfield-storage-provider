@@ -36,6 +36,9 @@ const (
 	// DefaultGlobalGCMetaParallel defines the default max parallel gc meta db in SP
 	// system.
 	DefaultGlobalGCMetaParallel int = 1
+	// DefaultGlobalGCStaleVersionObjectParallel defines the default max parallel gc stale version object in SP
+	// system.
+	DefaultGlobalGCStaleVersionObjectParallel int = 10
 	// DefaultGlobalGCBucketMigrationParallel defines the default max parallel gc bucket migration in SP
 	// system.
 	DefaultGlobalGCBucketMigrationParallel int = 1
@@ -152,6 +155,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Parallel.GlobalGCMetaParallel == 0 {
 		cfg.Parallel.GlobalGCMetaParallel = DefaultGlobalGCMetaParallel
 	}
+	if cfg.Parallel.GlobalGCStaleVersionObjectParallel == 0 {
+		cfg.Parallel.GlobalGCStaleVersionObjectParallel = DefaultGlobalGCStaleVersionObjectParallel
+	}
 	if cfg.Parallel.GlobalGCBucketMigrationParallel == 0 {
 		cfg.Parallel.GlobalGCBucketMigrationParallel = DefaultGlobalGCBucketMigrationParallel
 	}
@@ -232,6 +238,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.gcZombiePieceObjectIDInterval = cfg.GC.GCZombiePieceObjectIDInterval
 	manager.gcMetaEnabled = cfg.GC.EnableGCMeta
 	manager.gcMetaTimeInterval = cfg.GC.GCMetaTimeInterval
+	manager.gcStaleVersionObjectEnabled = cfg.GC.EnableGCStaleVersionObject
+	manager.gcStaleVersionObjectTimeInterval = cfg.GC.GCStaleVersionTimeInterval
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
 	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
 	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval
@@ -259,6 +267,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 		manager.Name()+"-gc-meta", cfg.Parallel.GlobalGCMetaParallel)
 	manager.gcBucketMigrationQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-gc-bucket-migration", cfg.Parallel.GlobalGCBucketMigrationParallel)
+	manager.gcStaleVersionObjectQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
+		manager.Name()+"-gc-stale-version-object", cfg.Parallel.GlobalGCStaleVersionObjectParallel)
 	manager.migrateGVGQueue = cfg.Customize.NewStrategyTQueueWithLimitFunc(
 		manager.Name()+"-migrate-gvg", cfg.Parallel.GlobalMigrateGVGParallel)
 	manager.downloadQueue = cfg.Customize.NewStrategyTQueueFunc(

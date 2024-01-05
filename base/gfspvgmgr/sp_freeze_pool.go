@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	DefaultFreezingPeriodForSP = 5 * time.Minute
-	ReleaseSPJobInterval       = 1 * time.Minute
+	DefaultFreezingPeriodForSP = 10 * time.Second
+	ReleaseSPJobInterval       = 1 * time.Second
 )
 
 type FreezeSPPool struct {

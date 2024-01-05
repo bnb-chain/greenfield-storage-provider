@@ -3,6 +3,7 @@ package object
 import (
 	"context"
 	"errors"
+	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -16,25 +17,31 @@ import (
 )
 
 var (
-	EventCreateObject       = proto.MessageName(&storagetypes.EventCreateObject{})
-	EventCancelCreateObject = proto.MessageName(&storagetypes.EventCancelCreateObject{})
-	EventSealObject         = proto.MessageName(&storagetypes.EventSealObject{})
-	EventCopyObject         = proto.MessageName(&storagetypes.EventCopyObject{})
-	EventDeleteObject       = proto.MessageName(&storagetypes.EventDeleteObject{})
-	EventRejectSealObject   = proto.MessageName(&storagetypes.EventRejectSealObject{})
-	EventDiscontinueObject  = proto.MessageName(&storagetypes.EventDiscontinueObject{})
-	EventUpdateObjectInfo   = proto.MessageName(&storagetypes.EventUpdateObjectInfo{})
+	EventCreateObject               = proto.MessageName(&storagetypes.EventCreateObject{})
+	EventCancelCreateObject         = proto.MessageName(&storagetypes.EventCancelCreateObject{})
+	EventSealObject                 = proto.MessageName(&storagetypes.EventSealObject{})
+	EventCopyObject                 = proto.MessageName(&storagetypes.EventCopyObject{})
+	EventDeleteObject               = proto.MessageName(&storagetypes.EventDeleteObject{})
+	EventRejectSealObject           = proto.MessageName(&storagetypes.EventRejectSealObject{})
+	EventDiscontinueObject          = proto.MessageName(&storagetypes.EventDiscontinueObject{})
+	EventUpdateObjectInfo           = proto.MessageName(&storagetypes.EventUpdateObjectInfo{})
+	EventUpdateObjectContent        = proto.MessageName(&storagetypes.EventUpdateObjectContent{})
+	EventUpdateObjectContentSuccess = proto.MessageName(&storagetypes.EventUpdateObjectContentSuccess{})
+	EventCancelUpdateObjectContent  = proto.MessageName(&storagetypes.EventCancelUpdateObjectContent{})
 )
 
 var ObjectEvents = map[string]bool{
-	EventCreateObject:       true,
-	EventCancelCreateObject: true,
-	EventSealObject:         true,
-	EventCopyObject:         true,
-	EventDeleteObject:       true,
-	EventRejectSealObject:   true,
-	EventDiscontinueObject:  true,
-	EventUpdateObjectInfo:   true,
+	EventCreateObject:               true,
+	EventCancelCreateObject:         true,
+	EventSealObject:                 true,
+	EventCopyObject:                 true,
+	EventDeleteObject:               true,
+	EventRejectSealObject:           true,
+	EventDiscontinueObject:          true,
+	EventUpdateObjectInfo:           true,
+	EventUpdateObjectContent:        true,
+	EventUpdateObjectContentSuccess: true,
+	EventCancelUpdateObjectContent:  true,
 }
 
 func (m *Module) HandleEvent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) error {
@@ -67,7 +74,6 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 			return nil, errors.New("cancel create object event assert error")
 		}
 		return m.handleCancelCreateObject(ctx, block, txHash, cancelCreateObject), nil
-
 	case EventSealObject:
 		sealObject, ok := typedEvent.(*storagetypes.EventSealObject)
 		if !ok {
@@ -110,8 +116,28 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 			return nil, errors.New("update object event assert error")
 		}
 		return m.handleUpdateObjectInfo(ctx, block, txHash, updateObjectInfo), nil
+	case EventUpdateObjectContent:
+		updateObjectContent, ok := typedEvent.(*storagetypes.EventUpdateObjectContent)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventUpdateObjectContent", "event", typedEvent)
+			return nil, errors.New("update object event assert error")
+		}
+		return m.handleUpdateObjectContent(ctx, block, txHash, updateObjectContent), nil
+	case EventUpdateObjectContentSuccess:
+		updateObjectContent, ok := typedEvent.(*storagetypes.EventUpdateObjectContentSuccess)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventUpdateObjectContent", "event", typedEvent)
+			return nil, errors.New("update object event assert error")
+		}
+		return m.handleUpdateObjectContentSuccess(ctx, block, txHash, updateObjectContent), nil
+	case EventCancelUpdateObjectContent:
+		cancelUpdateObjectContent, ok := typedEvent.(*storagetypes.EventCancelUpdateObjectContent)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventCancelUpdateObjectContent", "event", typedEvent)
+			return nil, errors.New("cancel update object event assert error")
+		}
+		return m.handleCancelUpdateObjectContent(ctx, block, txHash, cancelUpdateObjectContent), nil
 	}
-
 	return nil, nil
 }
 
@@ -271,9 +297,12 @@ func (m *Module) handleRejectSealObject(ctx context.Context, block *tmctypes.Res
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),
-		Removed:      true,
 	}
-
+	if rejectSealObject.ForUpdate {
+		object.IsUpdating = false
+	} else {
+		object.Removed = true
+	}
 	k, v := m.db.UpdateObjectToSQL(ctx, object)
 	return map[string][]interface{}{
 		k: v,
@@ -317,4 +346,78 @@ func (m *Module) handleUpdateObjectInfo(ctx context.Context, block *tmctypes.Res
 	return map[string][]interface{}{
 		k: v,
 	}
+}
+
+func (m *Module) handleUpdateObjectContent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, updateObject *storagetypes.EventUpdateObjectContent) map[string][]interface{} {
+	object := &models.Object{
+		BucketName: updateObject.BucketName,
+		ObjectID:   common.BigToHash(updateObject.ObjectId.BigInt()),
+		ObjectName: updateObject.ObjectName,
+		Operator:   common.HexToAddress(updateObject.Operator),
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+
+		IsUpdating: true,
+	}
+
+	k, v := m.db.UpdateObjectToSQL(ctx, object)
+	return map[string][]interface{}{
+		k: v,
+	}
+}
+
+// handleUpdateObjectContentSuccess, when sealing an updated object, EventUpdateObjectContentSuccess will be emitted before EventSealObjet.
+func (m *Module) handleUpdateObjectContentSuccess(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, updateObject *storagetypes.EventUpdateObjectContentSuccess) map[string][]interface{} {
+	object := &models.Object{
+		BucketName: updateObject.BucketName,
+		ObjectID:   common.BigToHash(updateObject.ObjectId.BigInt()),
+		ObjectName: updateObject.ObjectName,
+		Operator:   common.HexToAddress(updateObject.Operator),
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+
+		ContentType:        updateObject.ContentType,
+		IsUpdating:         false,
+		ContentUpdatedTime: updateObject.UpdatedAt,
+		Updater:            common.HexToAddress(updateObject.Operator),
+		PayloadSize:        updateObject.NewPayloadSize,
+		CheckSums:          updateObject.NewChecksums,
+		Version:            updateObject.Version,
+	}
+	res := make(map[string][]interface{})
+	vars := make([]interface{}, 0)
+	// deduct the charged size of previous object.
+	k1, v1 := m.db.UpdateStorageSizeToSQL(ctx, common.BigToHash(updateObject.ObjectId.BigInt()), updateObject.BucketName, "-")
+	vars = append(vars, v1...)
+	k2, v2 := m.db.UpdateChargeSizeToSQL(ctx, common.BigToHash(updateObject.ObjectId.BigInt()), updateObject.BucketName, "-")
+	vars = append(vars, v2...)
+	k3, v3 := m.db.UpdateObjectToSQL(ctx, object)
+	vars = append(vars, v3...)
+	k := strings.Join([]string{k1, k2, k3}, "; ")
+	res[k] = vars
+	return res
+}
+
+func (m *Module) handleCancelUpdateObjectContent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelUpdateObject *storagetypes.EventCancelUpdateObjectContent) map[string][]interface{} {
+	object := &models.Object{
+		BucketName: cancelUpdateObject.BucketName,
+		ObjectName: cancelUpdateObject.ObjectName,
+		ObjectID:   common.BigToHash(cancelUpdateObject.ObjectId.BigInt()),
+		Operator:   common.HexToAddress(cancelUpdateObject.Operator),
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+
+		IsUpdating: false,
+	}
+	res := make(map[string][]interface{})
+	k, v := m.db.UpdateObjectToSQL(ctx, object)
+	res[k] = v
+
+	return res
 }

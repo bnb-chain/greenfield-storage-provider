@@ -75,6 +75,10 @@ type Consensus interface {
 	WaitForNextBlock(ctx context.Context) error
 	// QuerySwapInInfo is used to query the onchain swapIn info
 	QuerySwapInInfo(ctx context.Context, familyID, gvgID uint32) (*virtualgrouptypes.SwapInInfo, error)
+	//
+	VerifyUpdateObjectPermission(ctx context.Context, account, bucket, object string) (bool, error)
+	// QueryShadowObjectInfo
+	QueryShadowObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ShadowObjectInfo, error)
 	// Close the Consensus interface.
 	Close() error
 }
@@ -168,5 +172,10 @@ func (*NullConsensus) WaitForNextBlock(context.Context) error {
 func (c *NullConsensus) QuerySwapInInfo(ctx context.Context, familyID, gvgID uint32) (*virtualgrouptypes.SwapInInfo, error) {
 	return nil, nil
 }
-
+func (c *NullConsensus) VerifyUpdateObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
+	return false, nil
+}
+func (c *NullConsensus) QueryShadowObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ShadowObjectInfo, error) {
+	return nil, nil
+}
 func (*NullConsensus) Close() error { return nil }

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/slices"
 
@@ -324,6 +325,25 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			}
 			log.Errorw("succeed to update object task state", "task_info", task.Info())
 			_ = m.baseApp.GfSpDB().DeleteUploadProgress(task.GetObjectInfo().Id.Uint64())
+
+			log.Infow("objetInfo is", "objetInfo is", task.GetObjectInfo())
+			if task.GetObjectInfo().GetIsUpdating() {
+				shadowIntegrityMeta, err := m.baseApp.GfSpDB().GetShadowObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+				if err != nil {
+					log.Debugw("get object integrity meta", "task_info", task.Info(), "error", err)
+					return
+				}
+				gcStaleVersionObjectTask := &gfsptask.GfSpGCStaleVersionObjectTask{}
+				gcStaleVersionObjectTask.InitGCStaleVersionObjectTask(m.baseApp.TaskPriority(gcStaleVersionObjectTask),
+					shadowIntegrityMeta.ObjectID,
+					shadowIntegrityMeta.RedundancyIndex,
+					shadowIntegrityMeta.IntegrityChecksum,
+					shadowIntegrityMeta.PieceChecksumList,
+					shadowIntegrityMeta.Version,
+					m.baseApp.TaskTimeout(gcStaleVersionObjectTask, 0))
+				err = m.gcStaleVersionObjectQueue.Push(gcStaleVersionObjectTask)
+				log.CtxDebugw(ctx, "push gc stale version object task to queue", "task_info", task.Info(), "error", err)
+			}
 		}()
 		metrics.ManagerCounter.WithLabelValues(ManagerSuccessReplicateAndSeal).Inc()
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessReplicateAndSeal).Observe(
@@ -534,6 +554,27 @@ func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.Re
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessConfirmReceive).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		log.CtxDebugw(ctx, "succeed to confirm receive piece seal on chain")
+
+		log.Infow("HandleReceivePieceTask objetInfo is", "objetInfo is", task.GetObjectInfo())
+
+		// todo gc stale piece by secondary SP
+		if task.GetObjectInfo().GetIsUpdating() {
+			shadowIntegrityMeta, err := m.baseApp.GfSpDB().GetShadowObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+			if err != nil {
+				log.Debugw("get object integrity meta", "task_info", task.Info(), "error", err)
+				return err
+			}
+			gcStaleVersionObjectTask := &gfsptask.GfSpGCStaleVersionObjectTask{}
+			gcStaleVersionObjectTask.InitGCStaleVersionObjectTask(m.baseApp.TaskPriority(gcStaleVersionObjectTask),
+				shadowIntegrityMeta.ObjectID,
+				shadowIntegrityMeta.RedundancyIndex,
+				shadowIntegrityMeta.IntegrityChecksum,
+				shadowIntegrityMeta.PieceChecksumList,
+				shadowIntegrityMeta.Version,
+				m.baseApp.TaskTimeout(gcStaleVersionObjectTask, 0))
+			err = m.gcStaleVersionObjectQueue.Push(gcStaleVersionObjectTask)
+			log.CtxDebugw(ctx, "push gc stale version object task to queue", "task_info", task.Info(), "error", err)
+		}
 	} else if task.Error() != nil {
 		_ = m.handleFailedReceivePieceTask(ctx, task)
 		metrics.ManagerCounter.WithLabelValues(ManagerFailureConfirmReceive).Inc()
@@ -646,6 +687,37 @@ func (m *ManageModular) HandleGCZombiePieceTask(ctx context.Context, gcZombiePie
 	log.CtxInfow(ctx, "succeed to push gc object task to queue again", "from", oldTask, "to", gcZombiePieceTask, "error", err)
 	// Note: The persistence of GC zombie progress in the database is not implemented at the moment.
 	// However, this lack of persistence does not impact correctness since GC zombie periodically scans all objects.
+	return nil
+}
+
+func (m *ManageModular) HandleGCStaleVersionObjectTask(ctx context.Context, gcStaleVersionObjectTask task.GCStaleVersionObjectTask) error {
+	if gcStaleVersionObjectTask == nil {
+		log.CtxErrorw(ctx, "failed to handle gc stale version due to task pointer dangling")
+		return ErrDanglingTask
+	}
+	if !m.gcStaleVersionObjectQueue.Has(gcStaleVersionObjectTask.Key()) {
+		log.CtxErrorw(ctx, "failed to handle due to task is not in the gc stale version objet queue", "task_info", gcStaleVersionObjectTask.Info())
+		return ErrCanceledTask
+	}
+	if gcStaleVersionObjectTask.Error() == nil {
+		log.CtxInfow(ctx, "succeed to finish the gc stale version objet task", "task_info", gcStaleVersionObjectTask.Info())
+		m.gcStaleVersionObjectQueue.PopByKey(gcStaleVersionObjectTask.Key())
+		return nil
+	}
+	gcStaleVersionObjectTask.SetUpdateTime(time.Now().Unix())
+	oldTask := m.gcStaleVersionObjectQueue.PopByKey(gcStaleVersionObjectTask.Key())
+	if oldTask != nil {
+		if oldTask.ExceedRetry() {
+			log.CtxErrorw(ctx, "the reported gc stale version objet task is expired", "task_info", gcStaleVersionObjectTask.Info(),
+				"current_info", oldTask.Info())
+			return ErrCanceledTask
+		}
+	} else {
+		log.CtxErrorw(ctx, "the reported gc stale version objet task is canceled", "task_info", gcStaleVersionObjectTask.Info())
+		return ErrCanceledTask
+	}
+	err := m.gcStaleVersionObjectQueue.Push(gcStaleVersionObjectTask)
+	log.CtxInfow(ctx, "succeed to push gc object task to queue again", "from", oldTask, "to", gcStaleVersionObjectTask, "error", err)
 	return nil
 }
 
@@ -913,6 +985,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	recoveryTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.recoveryQueue, subKey)
 	migrateGVGTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.migrateGVGQueue, subKey)
 	gcBucketMigrationTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcBucketMigrationQueue, subKey)
+	gcStaleVersionObjectTasks, _ := taskqueue.ScanTQueueWithLimitBySubKey(m.gcStaleVersionObjectQueue, subKey)
 
 	var tasks []task.Task
 	tasks = append(tasks, uploadTasks...)
@@ -927,6 +1000,7 @@ func (m *ManageModular) QueryTasks(ctx context.Context, subKey task.TKey) ([]tas
 	tasks = append(tasks, recoveryTasks...)
 	tasks = append(tasks, migrateGVGTasks...)
 	tasks = append(tasks, gcBucketMigrationTasks...)
+	tasks = append(tasks, gcStaleVersionObjectTasks...)
 	return tasks, nil
 }
 

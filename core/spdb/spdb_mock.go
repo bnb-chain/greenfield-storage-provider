@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./spdb.go -destination=./spdb_mock.go -package=spdb
 //
+
 // Package spdb is a generated GoMock package.
 package spdb
 
@@ -251,6 +252,20 @@ func (m *MockSPDB) DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint
 func (mr *MockSPDBMockRecorder) DeleteReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).DeleteReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
+}
+
+// DeleteShadowObjectIntegrity mocks base method.
+func (m *MockSPDB) DeleteShadowObjectIntegrity(objectID uint64, redundancyIndex int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteShadowObjectIntegrity", objectID, redundancyIndex)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteShadowObjectIntegrity indicates an expected call of DeleteShadowObjectIntegrity.
+func (mr *MockSPDBMockRecorder) DeleteShadowObjectIntegrity(objectID, redundancyIndex any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteShadowObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).DeleteShadowObjectIntegrity), objectID, redundancyIndex)
 }
 
 // DeleteUploadProgress mocks base method.
@@ -543,6 +558,21 @@ func (m *MockSPDB) GetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 func (mr *MockSPDBMockRecorder) GetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).GetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
+}
+
+// GetShadowObjectIntegrity mocks base method.
+func (m *MockSPDB) GetShadowObjectIntegrity(objectID uint64, redundancyIndex int32) (*ShadowIntegrityMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetShadowObjectIntegrity", objectID, redundancyIndex)
+	ret0, _ := ret[0].(*ShadowIntegrityMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetShadowObjectIntegrity indicates an expected call of GetShadowObjectIntegrity.
+func (mr *MockSPDBMockRecorder) GetShadowObjectIntegrity(objectID, redundancyIndex any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShadowObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).GetShadowObjectIntegrity), objectID, redundancyIndex)
 }
 
 // GetSpByAddress mocks base method.
@@ -883,6 +913,21 @@ func (mr *MockSPDBMockRecorder) ListReplicatePieceChecksumByObjectIDRange(startO
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListReplicatePieceChecksumByObjectIDRange", reflect.TypeOf((*MockSPDB)(nil).ListReplicatePieceChecksumByObjectIDRange), startObjectID, endObjectID)
 }
 
+// ListShadowIntegrityMeta mocks base method.
+func (m *MockSPDB) ListShadowIntegrityMeta() ([]*ShadowIntegrityMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListShadowIntegrityMeta")
+	ret0, _ := ret[0].([]*ShadowIntegrityMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListShadowIntegrityMeta indicates an expected call of ListShadowIntegrityMeta.
+func (mr *MockSPDBMockRecorder) ListShadowIntegrityMeta() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListShadowIntegrityMeta", reflect.TypeOf((*MockSPDB)(nil).ListShadowIntegrityMeta))
+}
+
 // QueryBucketMigrateSubscribeProgress mocks base method.
 func (m *MockSPDB) QueryBucketMigrateSubscribeProgress() (uint64, error) {
 	m.ctrl.T.Helper()
@@ -1031,17 +1076,31 @@ func (mr *MockSPDBMockRecorder) SetRecoverGVGStats(stats any) *gomock.Call {
 }
 
 // SetReplicatePieceChecksum mocks base method.
-func (m *MockSPDB) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error {
+func (m *MockSPDB) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte, version int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx, checksum)
+	ret := m.ctrl.Call(m, "SetReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx, checksum, version)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetReplicatePieceChecksum indicates an expected call of SetReplicatePieceChecksum.
-func (mr *MockSPDBMockRecorder) SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, checksum any) *gomock.Call {
+func (mr *MockSPDBMockRecorder) SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, checksum, version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum, version)
+}
+
+// SetShadowObjectIntegrity mocks base method.
+func (m *MockSPDB) SetShadowObjectIntegrity(integrity *ShadowIntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetShadowObjectIntegrity", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetShadowObjectIntegrity indicates an expected call of SetShadowObjectIntegrity.
+func (mr *MockSPDBMockRecorder) SetShadowObjectIntegrity(integrity any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetShadowObjectIntegrity", reflect.TypeOf((*MockSPDB)(nil).SetShadowObjectIntegrity), integrity)
 }
 
 // UpdateAllSp mocks base method.
@@ -1226,6 +1285,20 @@ func (mr *MockSPDBMockRecorder) UpdateIntegrityChecksum(integrity any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateIntegrityChecksum), integrity)
 }
 
+// UpdateIntegrityMeta mocks base method.
+func (m *MockSPDB) UpdateIntegrityMeta(integrity *IntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateIntegrityMeta", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateIntegrityMeta indicates an expected call of UpdateIntegrityMeta.
+func (mr *MockSPDBMockRecorder) UpdateIntegrityMeta(integrity any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityMeta", reflect.TypeOf((*MockSPDB)(nil).UpdateIntegrityMeta), integrity)
+}
+
 // UpdateMigrateGVGMigratedBytesSize mocks base method.
 func (m *MockSPDB) UpdateMigrateGVGMigratedBytesSize(migrateKey string, migratedBytes uint64) error {
 	m.ctrl.T.Helper()
@@ -1336,6 +1409,34 @@ func (m *MockSPDB) UpdateSPExitSubscribeProgress(blockHeight uint64) error {
 func (mr *MockSPDBMockRecorder) UpdateSPExitSubscribeProgress(blockHeight any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSPExitSubscribeProgress", reflect.TypeOf((*MockSPDB)(nil).UpdateSPExitSubscribeProgress), blockHeight)
+}
+
+// UpdateShadowIntegrityChecksum mocks base method.
+func (m *MockSPDB) UpdateShadowIntegrityChecksum(integrity *ShadowIntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateShadowIntegrityChecksum", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateShadowIntegrityChecksum indicates an expected call of UpdateShadowIntegrityChecksum.
+func (mr *MockSPDBMockRecorder) UpdateShadowIntegrityChecksum(integrity any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowIntegrityChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateShadowIntegrityChecksum), integrity)
+}
+
+// UpdateShadowPieceChecksum mocks base method.
+func (m *MockSPDB) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateShadowPieceChecksum", objectID, redundancyIndex, checksum, version)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateShadowPieceChecksum indicates an expected call of UpdateShadowPieceChecksum.
+func (mr *MockSPDBMockRecorder) UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowPieceChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateShadowPieceChecksum), objectID, redundancyIndex, checksum, version)
 }
 
 // UpdateSwapOutSubscribeProgress mocks base method.
@@ -1709,6 +1810,20 @@ func (mr *MockSignatureDBMockRecorder) DeleteReplicatePieceChecksum(objectID, se
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).DeleteReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
 }
 
+// DeleteShadowObjectIntegrity mocks base method.
+func (m *MockSignatureDB) DeleteShadowObjectIntegrity(objectID uint64, redundancyIndex int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteShadowObjectIntegrity", objectID, redundancyIndex)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteShadowObjectIntegrity indicates an expected call of DeleteShadowObjectIntegrity.
+func (mr *MockSignatureDBMockRecorder) DeleteShadowObjectIntegrity(objectID, redundancyIndex any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteShadowObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).DeleteShadowObjectIntegrity), objectID, redundancyIndex)
+}
+
 // GetAllReplicatePieceChecksum mocks base method.
 func (m *MockSignatureDB) GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error) {
 	m.ctrl.T.Helper()
@@ -1769,6 +1884,21 @@ func (mr *MockSignatureDBMockRecorder) GetReplicatePieceChecksum(objectID, segme
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).GetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
 }
 
+// GetShadowObjectIntegrity mocks base method.
+func (m *MockSignatureDB) GetShadowObjectIntegrity(objectID uint64, redundancyIndex int32) (*ShadowIntegrityMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetShadowObjectIntegrity", objectID, redundancyIndex)
+	ret0, _ := ret[0].(*ShadowIntegrityMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetShadowObjectIntegrity indicates an expected call of GetShadowObjectIntegrity.
+func (mr *MockSignatureDBMockRecorder) GetShadowObjectIntegrity(objectID, redundancyIndex any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShadowObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).GetShadowObjectIntegrity), objectID, redundancyIndex)
+}
+
 // ListIntegrityMetaByObjectIDRange mocks base method.
 func (m *MockSignatureDB) ListIntegrityMetaByObjectIDRange(startObjectID, endObjectID int64, includePrivate bool) ([]*IntegrityMeta, error) {
 	m.ctrl.T.Helper()
@@ -1799,6 +1929,21 @@ func (mr *MockSignatureDBMockRecorder) ListReplicatePieceChecksumByObjectIDRange
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListReplicatePieceChecksumByObjectIDRange", reflect.TypeOf((*MockSignatureDB)(nil).ListReplicatePieceChecksumByObjectIDRange), startObjectID, endObjectID)
 }
 
+// ListShadowIntegrityMeta mocks base method.
+func (m *MockSignatureDB) ListShadowIntegrityMeta() ([]*ShadowIntegrityMeta, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListShadowIntegrityMeta")
+	ret0, _ := ret[0].([]*ShadowIntegrityMeta)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListShadowIntegrityMeta indicates an expected call of ListShadowIntegrityMeta.
+func (mr *MockSignatureDBMockRecorder) ListShadowIntegrityMeta() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListShadowIntegrityMeta", reflect.TypeOf((*MockSignatureDB)(nil).ListShadowIntegrityMeta))
+}
+
 // SetObjectIntegrity mocks base method.
 func (m *MockSignatureDB) SetObjectIntegrity(integrity *IntegrityMeta) error {
 	m.ctrl.T.Helper()
@@ -1814,17 +1959,31 @@ func (mr *MockSignatureDBMockRecorder) SetObjectIntegrity(integrity any) *gomock
 }
 
 // SetReplicatePieceChecksum mocks base method.
-func (m *MockSignatureDB) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error {
+func (m *MockSignatureDB) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte, version int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx, checksum)
+	ret := m.ctrl.Call(m, "SetReplicatePieceChecksum", objectID, segmentIdx, redundancyIdx, checksum, version)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetReplicatePieceChecksum indicates an expected call of SetReplicatePieceChecksum.
-func (mr *MockSignatureDBMockRecorder) SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, checksum any) *gomock.Call {
+func (mr *MockSignatureDBMockRecorder) SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, checksum, version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).SetReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx, checksum, version)
+}
+
+// SetShadowObjectIntegrity mocks base method.
+func (m *MockSignatureDB) SetShadowObjectIntegrity(integrity *ShadowIntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetShadowObjectIntegrity", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetShadowObjectIntegrity indicates an expected call of SetShadowObjectIntegrity.
+func (mr *MockSignatureDBMockRecorder) SetShadowObjectIntegrity(integrity any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetShadowObjectIntegrity", reflect.TypeOf((*MockSignatureDB)(nil).SetShadowObjectIntegrity), integrity)
 }
 
 // UpdateIntegrityChecksum mocks base method.
@@ -1841,6 +2000,20 @@ func (mr *MockSignatureDBMockRecorder) UpdateIntegrityChecksum(integrity any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateIntegrityChecksum), integrity)
 }
 
+// UpdateIntegrityMeta mocks base method.
+func (m *MockSignatureDB) UpdateIntegrityMeta(integrity *IntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateIntegrityMeta", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateIntegrityMeta indicates an expected call of UpdateIntegrityMeta.
+func (mr *MockSignatureDBMockRecorder) UpdateIntegrityMeta(integrity any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIntegrityMeta", reflect.TypeOf((*MockSignatureDB)(nil).UpdateIntegrityMeta), integrity)
+}
+
 // UpdatePieceChecksum mocks base method.
 func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error {
 	m.ctrl.T.Helper()
@@ -1853,6 +2026,34 @@ func (m *MockSignatureDB) UpdatePieceChecksum(objectID uint64, redundancyIndex i
 func (mr *MockSignatureDBMockRecorder) UpdatePieceChecksum(objectID, redundancyIndex, checksum any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdatePieceChecksum), objectID, redundancyIndex, checksum)
+}
+
+// UpdateShadowIntegrityChecksum mocks base method.
+func (m *MockSignatureDB) UpdateShadowIntegrityChecksum(integrity *ShadowIntegrityMeta) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateShadowIntegrityChecksum", integrity)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateShadowIntegrityChecksum indicates an expected call of UpdateShadowIntegrityChecksum.
+func (mr *MockSignatureDBMockRecorder) UpdateShadowIntegrityChecksum(integrity any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowIntegrityChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateShadowIntegrityChecksum), integrity)
+}
+
+// UpdateShadowPieceChecksum mocks base method.
+func (m *MockSignatureDB) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateShadowPieceChecksum", objectID, redundancyIndex, checksum, version)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateShadowPieceChecksum indicates an expected call of UpdateShadowPieceChecksum.
+func (mr *MockSignatureDBMockRecorder) UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowPieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateShadowPieceChecksum), objectID, redundancyIndex, checksum, version)
 }
 
 // MockTrafficDB is a mock of TrafficDB interface.

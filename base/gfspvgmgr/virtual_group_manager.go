@@ -321,6 +321,7 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	sort.Slice(spList, func(i, j int) bool {
 		return spList[i].Id < spList[j].Id
 	})
+
 	for _, sp := range spList {
 		spMap[sp.Id] = sp
 	}

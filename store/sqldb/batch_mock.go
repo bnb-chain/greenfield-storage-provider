@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./batch.go -destination=./batch_mock.go -package=sqldb
 //
+
 // Package sqldb is a generated GoMock package.
 package sqldb
 

@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./piecestore.go -destination=./piecestore_mock.go -package=piecestore
 //
+
 // Package piecestore is a generated GoMock package.
 package piecestore
 
@@ -39,7 +40,7 @@ func (m *MockPieceOp) EXPECT() *MockPieceOpMockRecorder {
 }
 
 // ChallengePieceKey mocks base method.
-func (m *MockPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32) string {
+func (m *MockPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32, version int64) string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChallengePieceKey", objectID, segmentIdx, redundancyIdx)
 	ret0, _ := ret[0].(string)
@@ -53,7 +54,7 @@ func (mr *MockPieceOpMockRecorder) ChallengePieceKey(objectID, segmentIdx, redun
 }
 
 // ECPieceKey mocks base method.
-func (m *MockPieceOp) ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32) string {
+func (m *MockPieceOp) ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32, version int64) string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ECPieceKey", objectID, segmentIdx, redundancyIdx)
 	ret0, _ := ret[0].(string)
@@ -140,7 +141,7 @@ func (mr *MockPieceOpMockRecorder) SegmentPieceCount(payloadSize, maxSegmentSize
 }
 
 // SegmentPieceKey mocks base method.
-func (m *MockPieceOp) SegmentPieceKey(objectID uint64, segmentIdx uint32) string {
+func (m *MockPieceOp) SegmentPieceKey(objectID uint64, segmentIdx uint32, version int64) string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SegmentPieceKey", objectID, segmentIdx)
 	ret0, _ := ret[0].(string)

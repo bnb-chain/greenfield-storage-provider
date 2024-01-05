@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -166,7 +167,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	defer cancel()
 	go func() {
 		for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
-			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
+			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx, rTask.GetObjectInfo().Version)
 			startGetPieceTime := time.Now()
 			segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 			metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())
@@ -244,6 +245,8 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), segmentIdx, redundancyIdx, int64(len(data)))
 	receive.SetPieceChecksum(hash.GenerateChecksum(data))
+	fmt.Printf("send data is %s", hex.EncodeToString(data))
+
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
 	signTime := time.Now()
 	signature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)

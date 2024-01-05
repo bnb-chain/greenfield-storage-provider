@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./api.go -destination=./api_mock.go -package=piece
 //
+
 // Package piece is a generated GoMock package.
 package piece
 
