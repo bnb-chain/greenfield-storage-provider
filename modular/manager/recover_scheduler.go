@@ -52,6 +52,14 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 		log.Errorw("vgf not exist")
 		return nil, fmt.Errorf("vgf not exist")
 	}
+	if len(vgf.GetGlobalVirtualGroupIds()) == 0 {
+		_, err = m.baseApp.GfSpClient().CompleteSwapIn(context.Background(), &types2.MsgCompleteSwapIn{
+			GlobalVirtualGroupFamilyId: vgfID,
+			GlobalVirtualGroupId:       0,
+			StorageProvider:            m.baseApp.OperatorAddress(),
+		})
+		return nil, err
+	}
 	recoveryGVG := make([]*spdb.RecoverGVGStats, 0, len(vgf.GetGlobalVirtualGroupIds()))
 	gvgSchedulers := make([]*RecoverGVGScheduler, 0, len(vgf.GetGlobalVirtualGroupIds()))
 	verifySchedulers := make([]*VerifyGVGScheduler, 0, len(vgf.GetGlobalVirtualGroupIds()))

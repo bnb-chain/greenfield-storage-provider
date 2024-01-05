@@ -316,14 +316,46 @@ func QueryRecoverProcessAction(ctx *cli.Context) error {
 		println(err.Error())
 		return err
 	}
-	spClient := utils.MakeGfSpClient(cfg)
+
 	gvgID := ctx.Uint64(gvgIDFlag.Name)
 	gvgfID := ctx.Uint64(vgfIDFlag.Name)
+
+	if gvgfID != 0 {
+		// get client
+		chainClient, err := utils.MakeGnfd(cfg)
+		if err != nil {
+			println(err.Error())
+			return err
+		}
+		familyInfo, err := chainClient.QueryVirtualGroupFamily(ctx.Context, uint32(gvgfID))
+		if err != nil {
+			println(err.Error())
+			return err
+		}
+
+		if len(familyInfo.GetGlobalVirtualGroupIds()) == 0 {
+			spInfo, err := chainClient.QuerySP(ctx.Context, cfg.SpAccount.SpOperatorAddress)
+			if err != nil {
+				println(err.Error())
+				return err
+			}
+			if familyInfo.GetPrimarySpId() == spInfo.GetId() {
+				println("recover gvg family complete")
+				return nil
+			} else {
+				println("please execute completeSwapIn cmd")
+				return nil
+			}
+		}
+	}
+
+	spClient := utils.MakeGfSpClient(cfg)
 	gvgstatsList, executing, err := spClient.QueryRecoverProcess(ctx.Context, uint32(gvgfID), uint32(gvgID))
 	if err != nil {
 		println(err.Error())
 		return err
 	}
+
 	if executing {
 		println("Please Wait, recover executing")
 	} else {
