@@ -691,12 +691,13 @@ func (s *VerifyGVGScheduler) Start() {
 				}
 				continue
 			} else if recoverFailedObjectsCount == needDiscontinueCount {
-				log.Error("remaining objects need to be discontinue", "objects_count", needDiscontinueCount)
+				log.Errorw("remaining objects need to be discontinue", "objects_count", needDiscontinueCount)
 				return
 			}
+		} else {
+			s.curStartAfter = objects[len(objects)-1].Object.ObjectInfo.Id.Uint64()
 		}
 
-		nextStartAfter := objects[len(objects)-1].Object.ObjectInfo.Id.Uint64()
 		for _, o := range objects {
 			objectInfo := o.Object.ObjectInfo
 			objectID := objectInfo.Id.Uint64()
@@ -726,7 +727,6 @@ func (s *VerifyGVGScheduler) Start() {
 			}
 			s.verifySuccessObjects[o.Object.ObjectInfo.Id.Uint64()] = struct{}{}
 		}
-		s.curStartAfter = nextStartAfter
 	}
 }
 
