@@ -337,6 +337,9 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	}
 	// log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
 	// add other SP list into health checker, except self sp, self sp should always be healthy
+	if vgm.healthChecker != nil {
+		vgm.healthChecker.cleanSPs()
+	}
 	for _, sp := range otherSPList {
 		if vgm.healthChecker != nil {
 			vgm.healthChecker.addSP(sp)
@@ -531,7 +534,6 @@ func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 	ticker := time.NewTicker(ReleaseSPJobInterval)
 	for range ticker.C {
 		vgm.freezeSPPool.ReleaseSP()
-
 		vgm.mutex.RLock()
 		aliveSP := make([]*sptypes.StorageProvider, 0)
 		for _, sp := range vgm.spManager.otherSPs {
@@ -658,6 +660,13 @@ func NewHealthChecker(chainClient consensus.Consensus) *HealthChecker {
 	return &HealthChecker{sps: sps, unhealthySPs: unhealthySPs, chainClient: chainClient}
 }
 
+func (checker *HealthChecker) cleanSPs() {
+	checker.mutex.Lock()
+	defer checker.mutex.Unlock()
+
+	checker.sps = make(map[uint32]*sptypes.StorageProvider)
+}
+
 func (checker *HealthChecker) addSP(sp *sptypes.StorageProvider) {
 	checker.mutex.Lock()
 	defer checker.mutex.Unlock()
@@ -768,6 +777,11 @@ func (checker *HealthChecker) checkAllSPHealth() {
 }
 
 func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
+	if !sp.IsInService() {
+		log.CtxInfow(context.Background(), "the sp is not in service,sp is treated as unhealthy", "sp", sp)
+		return false
+	}
+
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), defaultSPCheckTimeout)
 	defer cancel()
 	endpoint := sp.GetEndpoint()
