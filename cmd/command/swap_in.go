@@ -14,6 +14,12 @@ import (
 
 const swapInCommands = "SwapIn Commands"
 
+const (
+	ProcessStatus_Recovering = "Recovering"
+	ProcessStatus_Verifying  = "Verifying"
+	ProcessStatus_Complete   = "Successful"
+)
+
 var gvgIDFlag = &cli.Uint64Flag{
 	Name:     "gvgId",
 	Usage:    "assign global virtual group id",
@@ -138,6 +144,25 @@ var ListVirtualGroupFamiliesBySpIDCmd = &cli.Command{
 	},
 	Category:    swapInCommands,
 	Description: `get VirtualGroupFamily List By SpID`,
+}
+
+type FailedRecoverObject struct {
+	ObjectId        uint64 `protobuf:"varint,1,opt,name=object_id,json=objectId,proto3" json:"object_id,omitempty"`
+	VirtualGroupId  uint32 `protobuf:"varint,2,opt,name=virtual_group_id,json=virtualGroupId,proto3" json:"virtual_group_id,omitempty"`
+	RedundancyIndex int32  `protobuf:"varint,3,opt,name=redundancy_index,json=redundancyIndex,proto3" json:"redundancy_index,omitempty"`
+	RetryTime       int32  `protobuf:"varint,4,opt,name=retry_time,json=retryTime,proto3" json:"retry_time,omitempty"`
+}
+
+type ProcessResult struct {
+	VirtualGroupId         uint32                 `json:"virtual_group_id"`
+	VirtualGroupFamilyId   uint32                 `json:"virtual_group_family_id"`
+	RedundancyIndex        int32                  `json:"redundancy_index"`
+	StartAfter             uint64                 `json:"start_after"`
+	Limit                  uint64                 `json:"limit"`
+	Status                 string                 `json:"status"`
+	ObjectCount            uint64                 `json:"object_count"`
+	FailedObjectTotalCount uint64                 `json:"failed_object_total_count"`
+	RecoverFailedObject    []*FailedRecoverObject `json:"recover_failed_object"`
 }
 
 func SwapInAction(ctx *cli.Context) error {
@@ -362,12 +387,42 @@ func QueryRecoverProcessAction(ctx *cli.Context) error {
 		println("recover progress：")
 	}
 
-	res, err := json.Marshal(gvgstatsList)
+	result := make([]*ProcessResult, 0, len(gvgstatsList))
+	for _, gvgStats := range gvgstatsList {
+		res := &ProcessResult{
+			VirtualGroupId:         gvgStats.VirtualGroupId,
+			VirtualGroupFamilyId:   gvgStats.VirtualGroupFamilyId,
+			RedundancyIndex:        gvgStats.RedundancyIndex,
+			StartAfter:             gvgStats.StartAfter,
+			Limit:                  gvgStats.Limit,
+			ObjectCount:            gvgStats.ObjectCount,
+			FailedObjectTotalCount: gvgStats.FailedObjectTotalCount,
+			RecoverFailedObject:    make([]*FailedRecoverObject, 0, len(gvgStats.RecoverFailedObject)),
+		}
+		switch gvgStats.Status {
+		case 0:
+			res.Status = ProcessStatus_Recovering
+		case 1:
+			res.Status = ProcessStatus_Verifying
+		case 2:
+			res.Status = ProcessStatus_Complete
+		}
+		for _, obj := range gvgStats.RecoverFailedObject {
+			res.RecoverFailedObject = append(res.RecoverFailedObject, &FailedRecoverObject{
+				ObjectId:        obj.ObjectId,
+				VirtualGroupId:  obj.VirtualGroupId,
+				RedundancyIndex: obj.RedundancyIndex,
+				RetryTime:       obj.RetryTime,
+			})
+		}
+		result = append(result, res)
+	}
+	resString, err := json.Marshal(result)
 	if err != nil {
 		println(err.Error())
 		return err
 	}
-	println(string(res))
+	println(string(resString))
 	// create file
 	f, err := os.Create("recover_process.json")
 	if err != nil {
@@ -375,7 +430,7 @@ func QueryRecoverProcessAction(ctx *cli.Context) error {
 		return err
 	}
 
-	_, err = fmt.Fprintln(f, string(res))
+	_, err = fmt.Fprintln(f, string(resString))
 	if err != nil {
 		println(err.Error())
 		return err
