@@ -31,7 +31,7 @@ const (
 	verifyInterval      = 10 * time.Second
 	verifyGVGQueryLimit = uint32(100)
 
-	recoverFailedObjectInterval = 1 * time.Minute
+	recoverFailedObjectInterval = 30 * time.Second
 
 	monitorRecoverTimeOut = float64(10) // 10 minute
 )

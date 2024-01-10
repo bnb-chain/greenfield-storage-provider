@@ -1054,12 +1054,6 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 		log.Errorw("failed to BatchGetRecoverGVGStats", "error", err)
 		return nil, false, err
 	}
-	// get failed total count
-	failedCount, err := m.baseApp.GfSpDB().CountRecoverFailedObject()
-	if err != nil {
-		log.Errorw("failed to CountRecoverFailedObject", "error", err)
-		return nil, false, err
-	}
 	// get record retry time > 5
 	failedRecords, err := m.baseApp.GfSpDB().GetRecoverFailedObjectsByRetryTime(5)
 	if err != nil {
@@ -1089,10 +1083,10 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 			Limit:                  gvgStats.Limit,
 			Status:                 int32(gvgStats.Status),
 			ObjectCount:            gvgStats.ObjectCount,
-			FailedObjectTotalCount: uint64(failedCount),
+			FailedObjectTotalCount: uint64(len(failedObjects)),
 			RecoverFailedObject:    failedObjects,
 		})
 	}
-	flag := m.recoverProcessCount.Load() > 0
+	flag := m.recoverProcessCount.Load() > 0 || m.verifyTerminationSignal.Load() > 0
 	return res, flag, nil
 }
