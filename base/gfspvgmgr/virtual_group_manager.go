@@ -321,6 +321,9 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	sort.Slice(spList, func(i, j int) bool {
 		return spList[i].Id < spList[j].Id
 	})
+	if vgm.healthChecker != nil {
+		vgm.healthChecker.cleanSPs()
+	}
 	for _, sp := range spList {
 		spMap[sp.Id] = sp
 		if vgm.healthChecker != nil {
@@ -662,6 +665,13 @@ func NewHealthChecker(chainClient consensus.Consensus) *HealthChecker {
 	return &HealthChecker{sps: sps, unhealthySPs: unhealthySPs, chainClient: chainClient}
 }
 
+func (checker *HealthChecker) cleanSPs() {
+	checker.mutex.Lock()
+	defer checker.mutex.Unlock()
+
+	checker.sps = make(map[uint32]*sptypes.StorageProvider)
+}
+
 func (checker *HealthChecker) addSP(sp *sptypes.StorageProvider) {
 	checker.mutex.Lock()
 	defer checker.mutex.Unlock()
@@ -748,9 +758,6 @@ func (checker *HealthChecker) checkAllSPHealth() {
 	}
 	if unhealthyCnt == 0 {
 		// only update checker.sps and return, this is fast-path.
-		checker.mutex.Lock()
-		checker.sps = spTemp
-		checker.mutex.Unlock()
 		log.Infow("there is no unhealthy sp, only update sps", "unhealthy_sps", checker.unhealthySPs,
 			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
 		return
@@ -759,7 +766,6 @@ func (checker *HealthChecker) checkAllSPHealth() {
 	// Only when more than defaultMinAvailableSPThreshold valid sp, the check is valid
 	if len(spTemp)-unhealthyCnt >= 1+int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) {
 		checker.mutex.Lock()
-		checker.sps = spTemp
 		checker.unhealthySPs = unhealthyTemp
 		checker.mutex.Unlock()
 		log.Infow("succeed to place these sp into unhealthy status", "unhealthy_sps", checker.unhealthySPs,
@@ -772,6 +778,11 @@ func (checker *HealthChecker) checkAllSPHealth() {
 }
 
 func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
+	if !sp.IsInService() {
+		log.CtxInfow(context.Background(), "the sp is not in service,sp is treated as unhealthy", "sp", sp)
+		return false
+	}
+
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), defaultSPCheckTimeout)
 	defer cancel()
 	endpoint := sp.GetEndpoint()
