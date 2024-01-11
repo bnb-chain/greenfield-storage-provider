@@ -55,6 +55,7 @@ var (
 	ErrPrimaryMismatch        = gfsperrors.Register(module.GateModularName, http.StatusNotAcceptable, 50041, "primary sp mismatch")
 	ErrNotCreatedState        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50042, "object has not been created state")
 	ErrNotSealedState         = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50043, "object has not been sealed state")
+	ErrInvalidObjectName      = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50044, "invalid object name")
 )
 
 func ErrEncodeResponseWithDetail(detail string) *gfsperrors.GfSpError {
