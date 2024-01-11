@@ -202,8 +202,27 @@ func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) err
 	replicateTask = &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(objectInfo, storageParams, s.manager.baseApp.TaskPriority(replicateTask),
 		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask))
-	replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
-	replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
+
+	// for objects that have been uploaded but not starting the replication yet, it doesn't have the GVG info the UploadObjectMeta,
+	// so it needs to pick one to start the replicate task.
+	if meta.GlobalVirtualGroupID == 0 {
+		bucketInfo, err := s.manager.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
+		if err != nil || bucketInfo == nil {
+			log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)
+			return err
+		}
+		gvgMeta, err := s.manager.pickGlobalVirtualGroup(context.Background(), bucketInfo.BucketInfo.GlobalVirtualGroupFamilyId, storageParams)
+		log.Infow("pick global virtual group", "gvg_meta", gvgMeta, "error", err)
+		if err != nil {
+			return err
+		}
+		replicateTask.GlobalVirtualGroupId = gvgMeta.ID
+		replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+	} else {
+		replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
+		replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
+	}
+
 	err = s.manager.replicateQueue.Push(replicateTask)
 	if err != nil {
 		if errors.Is(err, gfsptqueue.ErrTaskQueueExceed) {
