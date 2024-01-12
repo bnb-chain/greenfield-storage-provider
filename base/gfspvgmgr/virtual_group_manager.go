@@ -321,9 +321,6 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	sort.Slice(spList, func(i, j int) bool {
 		return spList[i].Id < spList[j].Id
 	})
-	if vgm.healthChecker != nil {
-		vgm.healthChecker.cleanSPs()
-	}
 	for _, sp := range spList {
 		spMap[sp.Id] = sp
 		if vgm.healthChecker != nil {
@@ -342,6 +339,13 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 		otherSPs: otherSPList,
 	}
 	// log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
+	// add other SP list into health checker, except self sp, self sp should always be healthy
+	if vgm.healthChecker != nil {
+		vgm.healthChecker.cleanSPs()
+		for _, sp := range otherSPList {
+			vgm.healthChecker.addSP(sp)
+		}
+	}
 
 	if spID == 0 {
 		log.Error("failed to refresh due to current sp is not in sp list")
@@ -539,6 +543,7 @@ func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 		vgm.mutex.RUnlock()
 
 		vgm.freezeSPPool.ReleaseSP()
+
 		vgm.mutex.RLock()
 		aliveSP := make([]*sptypes.StorageProvider, 0)
 		for _, sp := range vgm.spManager.otherSPs {
@@ -751,20 +756,24 @@ func (checker *HealthChecker) checkAllSPHealth() {
 		}
 	}
 
+	// First clear the unhealthy sp to prevent the subsequent fast-path from causing the unhealthy sp to not be cleared
+	checker.mutex.Lock()
+	checker.unhealthySPs = make(map[uint32]*sptypes.StorageProvider)
+	checker.mutex.Unlock()
 	params, err := checker.chainClient.QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix())
 	if err != nil {
 		log.Errorw("failed to query storage params from chain", "error", err)
 		return
 	}
 	if unhealthyCnt == 0 {
-		// only update checker.sps and return, this is fast-path.
-		log.Infow("there is no unhealthy sp, only update sps", "unhealthy_sps", checker.unhealthySPs,
+		// quickly return, this is fast-path.
+		log.Infow("all SPs are healthy", "unhealthy_sps", checker.unhealthySPs,
 			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
 		return
 	}
 
 	// Only when more than defaultMinAvailableSPThreshold valid sp, the check is valid
-	if len(spTemp)-unhealthyCnt >= 1+int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) {
+	if len(spTemp)-unhealthyCnt >= int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) {
 		checker.mutex.Lock()
 		checker.unhealthySPs = unhealthyTemp
 		checker.mutex.Unlock()
