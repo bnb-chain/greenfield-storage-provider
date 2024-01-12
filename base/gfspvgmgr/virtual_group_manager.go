@@ -738,7 +738,7 @@ func (checker *HealthChecker) checkAllSPHealth() {
 	}
 
 	// First clear the unhealthy sp to prevent the subsequent fast-path from causing the unhealthy sp to not be cleared
-	checker.mutex.RLock()
+	checker.mutex.Lock()
 	checker.unhealthySPs = make(map[uint32]*sptypes.StorageProvider)
 	checker.mutex.Unlock()
 	params, err := checker.chainClient.QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix())
@@ -748,7 +748,7 @@ func (checker *HealthChecker) checkAllSPHealth() {
 	}
 	if unhealthyCnt == 0 {
 		// quickly return, this is fast-path.
-		log.Infow("there is no unhealthy sp", "unhealthy_sps", checker.unhealthySPs,
+		log.Infow("all SPs are healthy", "unhealthy_sps", checker.unhealthySPs,
 			"sps", checker.sps, "unhealthy_sp_cnt", unhealthyCnt)
 		return
 	}
