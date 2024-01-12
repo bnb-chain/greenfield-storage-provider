@@ -339,9 +339,7 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	// add other SP list into health checker, except self sp, self sp should always be healthy
 	if vgm.healthChecker != nil {
 		vgm.healthChecker.cleanSPs()
-	}
-	for _, sp := range otherSPList {
-		if vgm.healthChecker != nil {
+		for _, sp := range otherSPList {
 			vgm.healthChecker.addSP(sp)
 		}
 	}
