@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.2.4
+This release contains 2 bugfixes.
+
+BUGFIXES
+* [#1230](https://github.com/bnb-chain/greenfield-storage-provider/pull/1230) fix: fix gvg not exist
+* [#1299](https://github.com/bnb-chain/greenfield-storage-provider/pull/1299) fix: fix: unhealthy sps clean bug
+
+## v1.2.3
+This release contains 1 bugfix and 1 feature.
+
+BUGFIXES
+* [#1289](https://github.com/bnb-chain/greenfield-storage-provider/pull/1289) fix: replicate failed sp idx not included in local task
+
+FEATURES
+* [#1291](https://github.com/bnb-chain/greenfield-storage-provider/pull/1291) feat: add more log
+
 ## v1.2.2
 BUGFIXES
 * [#1284](https://github.com/bnb-chain/greenfield-storage-provider/pull/1284) fix: remove tags field when creating object/group/bucket
