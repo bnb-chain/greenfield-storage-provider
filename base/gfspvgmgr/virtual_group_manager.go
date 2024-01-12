@@ -676,9 +676,6 @@ func (checker *HealthChecker) addSP(sp *sptypes.StorageProvider) {
 	checker.mutex.Lock()
 	defer checker.mutex.Unlock()
 
-	if !sp.IsInService() {
-		return
-	}
 	if _, exists := checker.sps[sp.GetId()]; !exists {
 		checker.sps[sp.GetId()] = sp
 	}
