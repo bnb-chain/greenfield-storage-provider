@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.4
+This release contains 2 bugfixes.
+
+BUGFIXES
+* [#1230](https://github.com/bnb-chain/greenfield-storage-provider/pull/1230) fix: fix gvg not exist
+* [#1299](https://github.com/bnb-chain/greenfield-storage-provider/pull/1299) fix: fix: unhealthy sps clean bug
+
 ## v1.2.3
 This release contains 1 bugfix and 1 feature.
 
