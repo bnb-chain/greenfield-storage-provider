@@ -27,13 +27,13 @@ const (
 	maxRecoveryRetry = 5
 	MaxRecoveryTime  = 50
 
-	recoverInterval     = 30 * time.Second
+	recoverInterval     = 10 * time.Second
 	verifyInterval      = 10 * time.Second
 	verifyGVGQueryLimit = uint32(100)
 
 	recoverFailedObjectInterval = 30 * time.Second
 
-	monitorRecoverTimeOut = float64(10) // 10 minute
+	monitorRecoverTimeOut = float64(5) // 10 minute
 )
 
 type RecoverVGFScheduler struct {
@@ -276,7 +276,7 @@ func (s *RecoverGVGScheduler) Start() {
 			continue
 		}
 
-		log.Infow("list objects in GVG", "start_after", gvgStats.StartAfter, "limit", limit, "object_num", len(objects))
+		log.Infow("list objects in GVG", "gvg_id", gvgStats.VirtualGroupID, "start_after", gvgStats.StartAfter, "limit", limit, "object_num", len(objects))
 
 		if len(objects) == 0 {
 			log.Infow("all objects in gvg have been processed", "start_after_object_id", gvgStats.StartAfter, "limit", limit)
@@ -574,7 +574,7 @@ func (s *VerifyGVGScheduler) Start() {
 			continue
 		}
 
-		log.Infow("list objects in GVG", "start_after", s.curStartAfter, "limit", verifyGVGQueryLimit, "object_num", len(objects))
+		log.Infow("list objects in GVG", "gvg_id", gvgStats.VirtualGroupID, "start_after", s.curStartAfter, "limit", verifyGVGQueryLimit, "object_num", len(objects))
 
 		// Once iterate all objects in GVG, check all recorded recover-failed objects have been recovered.
 		// If there is any object that does not exceed the max retry, will re-start from the beginning object in GVG.
