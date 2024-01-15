@@ -28,7 +28,11 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
-const MaxSpRequestExpiryAgeInSec int32 = 1000
+const (
+	MaxSpRequestExpiryAgeInSec int32 = 1000
+	checkPermissionRetry             = 3
+	checkPermissionSleepTime         = 3 * time.Second
+)
 
 // getApprovalHandler handles the get create bucket/object approval request.
 // Before create bucket/object to the greenfield, the user should the primary
@@ -674,12 +678,22 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask gfsptask.GfSpReceivePieceTask, signatureAddr string) error {
-	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(ctx, receiveTask.ObjectInfo.BucketName, receiveTask.ObjectInfo.ObjectName)
+	var (
+		objectInfo *storagetypes.ObjectInfo
+		err        error
+	)
+	for retry := 0; retry < checkPermissionRetry; retry++ {
+		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(ctx, receiveTask.ObjectInfo.BucketName, receiveTask.ObjectInfo.ObjectName)
+		if err != nil {
+			err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
+			time.Sleep(checkPermissionSleepTime)
+			continue
+		}
+		break
+	}
 	if err != nil {
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
 		return err
 	}
-
 	if receiveTask.BucketMigration {
 		// if it is bucket migration, the status should be sealed
 		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_SEALED {

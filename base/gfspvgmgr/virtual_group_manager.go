@@ -323,9 +323,6 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	})
 	for _, sp := range spList {
 		spMap[sp.Id] = sp
-		if vgm.healthChecker != nil {
-			vgm.healthChecker.addSP(sp)
-		}
 	}
 	for i, sp := range spList {
 		if strings.EqualFold(vgm.selfOperatorAddress, sp.OperatorAddress) {
@@ -543,7 +540,6 @@ func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 		vgm.mutex.RUnlock()
 
 		vgm.freezeSPPool.ReleaseSP()
-
 		vgm.mutex.RLock()
 		aliveSP := make([]*sptypes.StorageProvider, 0)
 		for _, sp := range vgm.spManager.otherSPs {
