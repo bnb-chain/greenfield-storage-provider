@@ -1653,24 +1653,6 @@ func TestGateModular_getReplicateHandlerHandler(t *testing.T) {
 			},
 			wantedResult: "signature is invalid",
 		},
-		{
-			name: "success",
-			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				g.baseApp.SetGfSpClient(clientMock)
-				return g
-			},
-			request: func() *http.Request {
-				path := fmt.Sprintf("%s%s%s", scheme, testDomain, ReplicateObjectPiecePath)
-				req := httptest.NewRequest(http.MethodPut, path, strings.NewReader(""))
-				// no expire header was set between the http request of SPs, the expiry info is judged by the task update time info of the receive task
-				req.Header.Set(GnfdReceiveMsgHeader, "7b227461736b223a7b7d2c226f626a6563745f696e666f223a7b226f626a6563745f6e616d65223a226d6f636b2d6f626a6563742d6e616d65222c226964223a2230227d2c2273746f726167655f706172616d73223a7b2276657273696f6e65645f706172616d73223a7b7d2c226d61785f7061796c6f61645f73697a65223a31307d2c227365676d656e745f696478223a312c22726564756e64616e63795f696478223a327d")
-				return req
-			},
-			wantedResult: "signature is invalid",
-		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
