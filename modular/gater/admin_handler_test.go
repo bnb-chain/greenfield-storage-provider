@@ -2286,3 +2286,78 @@ func TestGateModular_getRecoverSegment(t *testing.T) {
 		})
 	}
 }
+
+func TestAdmin_handler_checkReplicatePermission(t *testing.T) {
+	cases := []struct {
+		name          string
+		fn            func() *GateModular
+		task          gfsptask.GfSpReceivePieceTask
+		signatureAddr string
+		wantedIsErr   bool
+		wantedErrStr  string
+	}{
+		{
+			name: "check replicate permission query object request all failed",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, mockErr).Times(1)
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, mockErr).Times(1)
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, mockErr).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			task: gfsptask.GfSpReceivePieceTask{
+				ObjectInfo: &storagetypes.ObjectInfo{
+					BucketName: "bucket",
+					ObjectName: "object",
+				},
+			},
+			wantedIsErr:  true,
+			wantedErrStr: mockErr.Error(),
+		},
+		{
+			name: "check replicate permission query object request the last request succeed",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, mockErr).Times(1)
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, mockErr).Times(1)
+				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					&storagetypes.ObjectInfo{
+						BucketName:   "bucket",
+						ObjectName:   "object",
+						ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
+					}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
+				return g
+			},
+			task: gfsptask.GfSpReceivePieceTask{
+				ObjectInfo: &storagetypes.ObjectInfo{
+					BucketName:   "bucket",
+					ObjectName:   "object",
+					ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
+				},
+			},
+			wantedIsErr:  true,
+			wantedErrStr: "object has not been created state",
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fn().checkReplicatePermission(context.TODO(), tt.task, tt.signatureAddr)
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErrStr)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
