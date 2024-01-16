@@ -34,7 +34,7 @@ const (
 	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 1024 // 1TB
 
 	defaultSPCheckTimeout          = 3 * time.Second
-	defaultSPHealthCheckerInterval = 5 * time.Second
+	defaultSPHealthCheckerInterval = 10 * time.Second
 	httpStatusPath                 = "/status"
 
 	emptyGVGSafeDeletePeriod = int64(60) * 60 * 24
@@ -338,10 +338,7 @@ func (vgm *virtualGroupManager) refreshGVGMeta(byChain bool) {
 	// log.Infow("list sp info", "primary_sp", primarySP, "secondary_sps", secondarySPList, "sp_map", spMap)
 	// add other SP list into health checker, except self sp, self sp should always be healthy
 	if vgm.healthChecker != nil {
-		vgm.healthChecker.cleanSPs()
-		for _, sp := range otherSPList {
-			vgm.healthChecker.addSP(sp)
-		}
+		vgm.healthChecker.addAllSP(otherSPList)
 	}
 
 	if spID == 0 {
@@ -666,19 +663,12 @@ func NewHealthChecker(chainClient consensus.Consensus) *HealthChecker {
 	return &HealthChecker{sps: sps, unhealthySPs: unhealthySPs, chainClient: chainClient}
 }
 
-func (checker *HealthChecker) cleanSPs() {
+func (checker *HealthChecker) addAllSP(sps []*sptypes.StorageProvider) {
 	checker.mutex.Lock()
 	defer checker.mutex.Unlock()
-
 	checker.sps = make(map[uint32]*sptypes.StorageProvider)
-}
-
-func (checker *HealthChecker) addSP(sp *sptypes.StorageProvider) {
-	checker.mutex.Lock()
-	defer checker.mutex.Unlock()
-
-	if _, exists := checker.sps[sp.GetId()]; !exists {
-		checker.sps[sp.GetId()] = sp
+	for _, sp := range sps {
+		checker.sps[sp.Id] = sp
 	}
 }
 
@@ -688,10 +678,10 @@ func (checker *HealthChecker) isSPHealthy(spID uint32) bool {
 
 	if sp, exists := checker.sps[spID]; exists {
 		if _, unhealthyExists := checker.unhealthySPs[spID]; unhealthyExists {
-			log.CtxErrorw(context.Background(), "the sp is treated as unhealthy", "sps", checker.sps, "unhealthy_sps", checker.unhealthySPs, "sp", sp)
+			log.CtxErrorw(context.Background(), "the sp is treated as unhealthy", "sp", sp, "sps", checker.sps, "unhealthy_sps", checker.unhealthySPs)
 			return false
 		} else {
-			log.CtxInfow(context.Background(), "the sp isn't exist in unhealthy sp map, is treated as healthy", "sps", checker.sps, "unhealthy_sps", checker.unhealthySPs, "sp", sp)
+			log.CtxInfow(context.Background(), "the sp isn't exist in unhealthy sp map, is treated as healthy", "sp", sp, "sps", checker.sps, "unhealthy_sps", checker.unhealthySPs)
 			return true
 		}
 	}
@@ -746,18 +736,14 @@ func (checker *HealthChecker) checkAllSPHealth() {
 		if !checker.checkSPHealth(sp) {
 			unhealthyCnt++
 			unhealthyTemp[sp.GetId()] = sp
+		} else {
+			checker.mutex.Lock()
+			// an SP is removed from unhealthy pool only when it is confirmed back to normal
+			delete(checker.unhealthySPs, sp.Id)
+			checker.mutex.Unlock()
 		}
 	}
 
-	// First clear the unhealthy sp to prevent the subsequent fast-path from causing the unhealthy sp to not be cleared
-	checker.mutex.Lock()
-	checker.unhealthySPs = make(map[uint32]*sptypes.StorageProvider)
-	checker.mutex.Unlock()
-	params, err := checker.chainClient.QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix())
-	if err != nil {
-		log.Errorw("failed to query storage params from chain", "error", err)
-		return
-	}
 	if unhealthyCnt == 0 {
 		// quickly return, this is fast-path.
 		log.Infow("all SPs are healthy", "unhealthy_sps", checker.unhealthySPs,
@@ -765,6 +751,11 @@ func (checker *HealthChecker) checkAllSPHealth() {
 		return
 	}
 
+	params, err := checker.chainClient.QueryStorageParamsByTimestamp(context.Background(), time.Now().Unix())
+	if err != nil {
+		log.Errorw("failed to query storage params from chain", "error", err)
+		return
+	}
 	// Only when more than defaultMinAvailableSPThreshold valid sp, the check is valid
 	if len(spTemp)-unhealthyCnt >= int(params.GetRedundantDataChunkNum()+params.GetRedundantParityChunkNum()) {
 		checker.mutex.Lock()
