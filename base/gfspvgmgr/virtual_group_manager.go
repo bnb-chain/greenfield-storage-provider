@@ -666,6 +666,7 @@ func NewHealthChecker(chainClient consensus.Consensus) *HealthChecker {
 func (checker *HealthChecker) addAllSP(sps []*sptypes.StorageProvider) {
 	checker.mutex.Lock()
 	defer checker.mutex.Unlock()
+	checker.sps = make(map[uint32]*sptypes.StorageProvider)
 	for _, sp := range sps {
 		checker.sps[sp.Id] = sp
 	}
@@ -737,10 +738,8 @@ func (checker *HealthChecker) checkAllSPHealth() {
 			unhealthyTemp[sp.GetId()] = sp
 		} else {
 			checker.mutex.Lock()
-			if _, ok := checker.unhealthySPs[sp.Id]; ok {
-				// an SP is removed from unhealthy pool only when it is confirmed back to normal
-				delete(checker.unhealthySPs, sp.Id)
-			}
+			// an SP is removed from unhealthy pool only when it is confirmed back to normal
+			delete(checker.unhealthySPs, sp.Id)
 			checker.mutex.Unlock()
 		}
 	}
