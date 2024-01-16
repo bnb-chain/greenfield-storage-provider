@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.5
+This release contains 1 bugfixes.
+
+BUGFIXES
+* [#1305](https://github.com/bnb-chain/greenfield-storage-provider/pull/1305) fix: secondary SP might need to wait object meta due to latency
+
 ## v1.2.4
 This release contains 2 bugfixes.
 
