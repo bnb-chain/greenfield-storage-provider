@@ -1011,7 +1011,7 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 		if recoverVGFScheduler == nil {
 			return nil
 		}
-		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
+		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m, vgfID, gvgID)
 		m.recoverProcessCount.Store(int64(len(recoverVGFScheduler.RecoverSchedulers)))
 		m.verifyTerminationSignal.Add(int64(len(recoverVGFScheduler.VerifySchedulers)))
 		go recoverVGFScheduler.Start()
@@ -1022,8 +1022,8 @@ func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIn
 			log.Errorw("failed to create RecoverGVGScheduler", "error", err)
 			return err
 		}
-		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m)
-		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, redundancyIndex)
+		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m, vgfID, gvgID)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, gvgID, redundancyIndex)
 		if err != nil {
 			log.Errorw("failed to create VerifyGVGScheduler", "error", err)
 			return err

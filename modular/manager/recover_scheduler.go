@@ -81,7 +81,7 @@ func NewRecoverVGFScheduler(m *ManageModular, vgfID uint32) (*RecoverVGFSchedule
 		}
 		gvgSchedulers = append(gvgSchedulers, gvgScheduler)
 
-		verifyScheduler, err := NewVerifyGVGScheduler(m, vgfID, gvgID, piecestore.PrimarySPRedundancyIndex)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, gvgID, piecestore.PrimarySPRedundancyIndex)
 		if err != nil {
 			log.Errorw("failed to create VerifyGVGScheduler", "vgf_id", vgfID, "gvg_id", gvgID, "error", err)
 			return nil, err
@@ -207,7 +207,6 @@ func (s *ObjectsSegmentsStats) isRecoverFailed(objectID uint64) bool {
 type RecoverGVGScheduler struct {
 	manager               *ManageModular
 	currentBatchObjectIDs map[uint64]struct{}
-	vgfID                 uint32
 	gvgID                 uint32
 	redundancyIndex       int32
 }
@@ -229,7 +228,6 @@ func NewRecoverGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyInd
 	return &RecoverGVGScheduler{
 		manager:               m,
 		currentBatchObjectIDs: make(map[uint64]struct{}),
-		vgfID:                 vgfID,
 		gvgID:                 gvgID,
 		redundancyIndex:       redundancyIndex,
 	}, nil
@@ -427,11 +425,15 @@ func (s *RecoverGVGScheduler) monitorBatch() {
 // A GVG is marked as completed from Processed only when all objects pass the verification.
 type RecoverFailedObjectScheduler struct {
 	manager *ManageModular
+	vgfID   uint32
+	gvgID   uint32
 }
 
-func NewRecoverFailedObjectScheduler(m *ManageModular) *RecoverFailedObjectScheduler {
+func NewRecoverFailedObjectScheduler(m *ManageModular, vgfID, gvgID uint32) *RecoverFailedObjectScheduler {
 	return &RecoverFailedObjectScheduler{
 		manager: m,
+		vgfID:   vgfID,
+		gvgID:   gvgID,
 	}
 }
 
@@ -449,8 +451,71 @@ func (s *RecoverFailedObjectScheduler) Start() {
 
 	for range ticker.C {
 		if s.manager.verifyTerminationSignal.Load() == 0 {
-			log.Errorw("all Verify process exited")
-			break
+			log.Infow("all Verify process exited")
+			if s.vgfID != 0 {
+				_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), s.vgfID, 0)
+			} else {
+				_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), 0, s.gvgID)
+			}
+			log.Debugw("query swapIn info", "vgf_id", s.vgfID, "gvg_id", s.gvgID, "error", err)
+			if err != nil {
+				if strings.Contains(err.Error(), "swap in info not exist") {
+					log.Infow("SwapIn is already completed", "vgf_id", s.vgfID, "gvg_id", s.gvgID)
+					return
+				}
+				continue
+			}
+
+			var msgCompleteSwapIn *types2.MsgCompleteSwapIn
+			// confirmed vgf or gvg are all completed.
+			if s.vgfID != 0 {
+				vgf, err := s.manager.baseApp.Consensus().QueryVirtualGroupFamily(context.Background(), s.vgfID)
+				if err != nil {
+					log.Errorw("failed to query virtual group family", "vgf_id", s.vgfID, "error", err)
+					continue
+				}
+				gvgIDs := vgf.GetGlobalVirtualGroupIds()
+				if len(gvgIDs) == 0 {
+					log.Debugw("there is no gvg in family", "vgf", s.vgfID)
+					return
+				}
+				for _, gvgID := range gvgIDs {
+					gvgStats, err := s.manager.baseApp.GfSpDB().GetRecoverGVGStats(gvgID)
+					if err != nil {
+						log.Errorw("failed to get gvg stats", "err", err)
+						return
+					}
+					// if there is gvg not completed yet, should not send the complete swap in tx for vgf
+					if gvgStats.Status != spdb.Completed {
+						log.Errorw("the gvg is not completed yet", "gvg_id", gvgID)
+						return
+					}
+				}
+				msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
+					GlobalVirtualGroupFamilyId: s.vgfID,
+				}
+			} else {
+				gvgStats, err := s.manager.baseApp.GfSpDB().GetRecoverGVGStats(s.gvgID)
+				if err != nil {
+					log.Errorw("failed to get gvg stats", "err", err)
+					return
+				}
+				if gvgStats.Status != spdb.Completed {
+					log.Errorw("the gvg is not completed yet", "gvg_id", s.gvgID)
+					return
+				}
+				msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
+					GlobalVirtualGroupId: s.gvgID,
+				}
+			}
+			log.Infow("start to send complete swap in tx", "vgf_id", s.vgfID, "gvg_id", s.gvgID)
+			err := SendAndConfirmCompleteSwapInTx(s.manager.baseApp, msgCompleteSwapIn)
+			if err != nil {
+				log.Errorw("failed to send complete swap in", "complete_swap_in_msg", msgCompleteSwapIn, "error", err)
+				continue
+			}
+			log.Infow("succeed to complete swap in tx", "vgf_id", s.vgfID, "gvg_id", s.gvgID)
+			return
 		}
 		recoverFailedObjects, err := s.manager.baseApp.GfSpDB().GetRecoverFailedObjects(maxRecoveryRetry, recoverBatchSize)
 		if err != nil {
@@ -529,7 +594,6 @@ func (s *RecoverFailedObjectScheduler) Start() {
 // a recover GVG unit is marked as completed from Processed only when all objects pass the verification.
 type VerifyGVGScheduler struct {
 	manager              *ManageModular
-	vgfID                uint32
 	gvgID                uint32
 	redundancyIndex      int32
 	curStartAfter        uint64
@@ -537,10 +601,9 @@ type VerifyGVGScheduler struct {
 	verifySuccessObjects map[uint64]struct{} // cache
 }
 
-func NewVerifyGVGScheduler(m *ManageModular, vgfID, gvgID uint32, redundancyIndex int32) (*VerifyGVGScheduler, error) {
+func NewVerifyGVGScheduler(m *ManageModular, gvgID uint32, redundancyIndex int32) (*VerifyGVGScheduler, error) {
 	return &VerifyGVGScheduler{
 		manager:              m,
-		vgfID:                vgfID,
 		gvgID:                gvgID,
 		redundancyIndex:      redundancyIndex,
 		verifyFailedObjects:  make(map[uint64]struct{}),
@@ -563,11 +626,14 @@ func (s *VerifyGVGScheduler) Start() {
 			log.Errorw("failed to get recover gvg stats", "err", err)
 			continue
 		}
+		if gvgStats.Status == spdb.Completed {
+			log.Infow("this gvg has been verified", "gvg_id", s.gvgID)
+			return
+		}
 		if gvgStats.Status != spdb.Processed {
 			log.Infow("Wait for all objects in GVG to be processed")
 			continue
 		}
-
 		objects, err := s.manager.baseApp.GfSpClient().ListObjectsInGVG(context.Background(), gvgStats.VirtualGroupID, s.curStartAfter, verifyGVGQueryLimit)
 		if err != nil {
 			log.Errorw("failed to list object in GVG", "err", err)
@@ -641,55 +707,13 @@ func (s *VerifyGVGScheduler) Start() {
 			}
 
 			if recoverFailedObjectsCount == 0 {
-				if s.vgfID != 0 {
-					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), s.vgfID, 0)
-				} else {
-					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), 0, s.gvgID)
-				}
-				log.Debugw("query swapIn info", "vgf_id", s.vgfID, "gvg_id", s.gvgID, "error", err)
+				gvgStats.Status = spdb.Completed
+				err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
 				if err != nil {
-					if strings.Contains(err.Error(), "swap in info not exist") {
-						log.Infow("SwapIn is already completed", "vgf_id", s.vgfID, "gvg_id", s.gvgID)
-						return
-					}
+					log.Error("failed to update GVG stats to complete status", "gvgStats", gvgStats)
 					continue
 				}
-				log.Infow("start to send complete swap in tx", "vgf_id", s.vgfID, "gvg_id", s.gvgID)
-				var msgCompleteSwapIn *types2.MsgCompleteSwapIn
-				if s.vgfID != 0 {
-					msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
-						GlobalVirtualGroupFamilyId: s.vgfID,
-					}
-				} else {
-					msgCompleteSwapIn = &types2.MsgCompleteSwapIn{
-						GlobalVirtualGroupId: s.gvgID,
-					}
-				}
-				err := SendAndConfirmCompleteSwapInTx(s.manager.baseApp, msgCompleteSwapIn)
-				if err != nil {
-					log.Errorw("failed to send complete swap in", "complete_swap_in_msg", msgCompleteSwapIn, "error", err)
-					continue
-				}
-				log.Info("succeed to complete swap in tx")
-				if s.vgfID != 0 {
-					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), s.vgfID, 0)
-				} else {
-					_, err = s.manager.baseApp.Consensus().QuerySwapInInfo(context.Background(), 0, s.gvgID)
-				}
-				log.Debugw("query swapIn info", "vgf_id", s.vgfID, "gvg_id", s.gvgID, "error", err)
-				if err == nil {
-					continue
-				}
-				if strings.Contains(err.Error(), "swap in info not exist") {
-					gvgStats.Status = spdb.Completed
-					err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
-					if err != nil {
-						log.Error("failed to update GVG stats to complete status", "gvgStats", gvgStats)
-						continue
-					}
-					return
-				}
-				continue
+				return
 			} else if recoverFailedObjectsCount == needDiscontinueCount {
 				log.Errorw("remaining objects need to be discontinue", "objects_count", needDiscontinueCount)
 				return
