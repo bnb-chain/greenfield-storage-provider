@@ -666,7 +666,7 @@ func verify64(t *testing.T, db *gorm.DB) error {
 	if err := db.Table(table).Where("bucket_name=? and object_name = ?", "self-custody-bucket-10", "28705261ca3b4146b2014af10612476e-5AF048C9-C68E-4266-BF23-40DDCA7F5897").Find(&o).Error; err != nil {
 		assert.NoError(t, err)
 	}
-	if o.Status != "OBJECT_STATUS_SEALED" {
+	if o.LocalVirtualGroupId != 10 {
 		return errors.New("object status error")
 	}
 

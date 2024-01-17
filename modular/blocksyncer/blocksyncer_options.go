@@ -50,6 +50,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
 	txMap = new(sync.Map)
+	txHashMap = new(sync.Map)
 
 	RealTimeStart = &atomic.Bool{}
 	RealTimeStart.Store(false)

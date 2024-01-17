@@ -130,7 +130,7 @@ func (i *Impl) Process(height uint64) error {
 		events, _ = eventsAny.(*coretypes.ResultBlockResults)
 		txs, _ = txsAny.(map[common.Hash][]abci.Event)
 		txHash, _ = txHashAny.(tmtypes.Txs)
-		if !okb || !oke || !okt || okth {
+		if !okb || !oke || !okt || !okth {
 			log.Warnf("failed to get map data height: %d", height)
 			return ErrBlockNotFound
 		}
@@ -236,6 +236,7 @@ func (i *Impl) Process(height uint64) error {
 		blockMap.Delete(heightKey)
 		eventMap.Delete(heightKey)
 		txMap.Delete(heightKey)
+		txHashMap.Delete(heightKey)
 	}
 
 	// after each block height ends, clear the corresponding key value in ctx
@@ -303,6 +304,7 @@ func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlo
 		k := common.BytesToHash(t.Hash())
 		v, ok := txs[k]
 		if !ok {
+			log.Errorw("tx_hash:%v", k.String())
 			return nil, ErrEventNotFound
 		}
 		for _, event := range v {
@@ -375,6 +377,7 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 		blockMap.Delete(heightKey)
 		eventMap.Delete(heightKey)
 		txMap.Delete(heightKey)
+		txHashMap.Delete(heightKey)
 	}
 	return ep.BlockHeight > int64(height), nil
 }
