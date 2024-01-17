@@ -93,6 +93,7 @@ func (i *Impl) Process(height uint64) error {
 	var block *coretypes.ResultBlock
 	var events *coretypes.ResultBlockResults
 	var txs map[common.Hash][]abci.Event
+	var txHash tmtypes.Txs
 	var err error
 
 	realTimeMode := RealTimeStart.Load()
@@ -113,6 +114,7 @@ func (i *Impl) Process(height uint64) error {
 			return err
 		}
 		metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
+		txHash = block.Block.Data.Txs
 		txs = make(map[common.Hash][]cometbfttypes.Event)
 		for idx := 0; idx < len(events.TxsResults); idx++ {
 			k := block.Block.Data.Txs[idx]
@@ -123,10 +125,12 @@ func (i *Impl) Process(height uint64) error {
 		blockAny, okb := blockMap.Load(heightKey)
 		eventsAny, oke := eventMap.Load(heightKey)
 		txsAny, okt := txMap.Load(heightKey)
+		txHashAny, okth := txHashMap.Load(heightKey)
 		block, _ = blockAny.(*coretypes.ResultBlock)
 		events, _ = eventsAny.(*coretypes.ResultBlockResults)
 		txs, _ = txsAny.(map[common.Hash][]abci.Event)
-		if !okb || !oke || !okt {
+		txHash, _ = txHashAny.(tmtypes.Txs)
+		if !okb || !oke || !okt || okth {
 			log.Warnf("failed to get map data height: %d", height)
 			return ErrBlockNotFound
 		}
@@ -157,7 +161,7 @@ func (i *Impl) Process(height uint64) error {
 	}
 
 	// 2. handle events in txs
-	sqls, err := i.ExportEventsInTxs(ctx, block, txs)
+	sqls, err := i.ExportEventsInTxs(ctx, block, txs, txHash)
 	if err != nil {
 		log.Errorf("failed to export events in txs: %s", err)
 		return err
@@ -293,9 +297,14 @@ type TxHashEvent struct {
 }
 
 // ExportEventsInTxs accepts a slice of events in tx in order to save in database.
-func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs map[common.Hash][]abci.Event) ([]map[string][]interface{}, error) {
+func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs map[common.Hash][]abci.Event, txHash tmtypes.Txs) ([]map[string][]interface{}, error) {
 	allSQL := make([]map[string][]interface{}, 0)
-	for k, v := range txs {
+	for _, t := range txHash {
+		k := common.BytesToHash(t.Hash())
+		v, ok := txs[k]
+		if !ok {
+			return nil, ErrEventNotFound
+		}
 		for _, event := range v {
 			sqls, err := i.ExtractEvent(ctx, block, k, sdk.Event(event))
 			if err != nil {

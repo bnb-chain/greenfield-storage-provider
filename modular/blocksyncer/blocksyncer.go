@@ -25,6 +25,7 @@ var (
 	ErrDSNNotSet           = errors.New("dsn config is not set in environment")
 	ErrBlockNotFound       = errors.New("failed to get block from map need retry")
 	ErrHandleEvent         = errors.New("failed to handle event")
+	ErrEventNotFound       = errors.New("failed to get event from tx map")
 )
 
 const (
@@ -56,9 +57,10 @@ type BlockSyncerModular struct {
 
 // Read concurrency required global variables
 var (
-	blockMap *sync.Map
-	eventMap *sync.Map
-	txMap    *sync.Map
+	blockMap  *sync.Map
+	eventMap  *sync.Map
+	txMap     *sync.Map
+	txHashMap *sync.Map
 
 	RealTimeStart *atomic.Bool
 	CatchEndBlock *atomic.Int64

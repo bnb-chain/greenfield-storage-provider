@@ -344,6 +344,7 @@ func (b *BlockSyncerModular) fetchData(start, end uint64) {
 				blockMap.Store(heightKey, block)
 				eventMap.Store(heightKey, events)
 				txMap.Store(heightKey, txs)
+				txHashMap.Store(heightKey, block.Block.Data.Txs)
 				break
 			}
 		}(i)
