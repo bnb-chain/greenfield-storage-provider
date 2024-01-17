@@ -7,8 +7,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gorm.io/gorm"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	cometbfttypes "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -22,13 +20,14 @@ import (
 	"github.com/forbole/juno/v4/node"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
+	"gorm.io/gorm"
 
 	localDB "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
+func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string, commitNumber uint64) parser.Indexer {
 	return &Impl{
 		codec:           codec,
 		Node:            proxy,
@@ -36,7 +35,7 @@ func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, module
 		Modules:         modules,
 		ServiceName:     serviceName,
 		ProcessedHeight: 0,
-		eventTypeCount:  8,
+		CommitNumber:    commitNumber,
 	}
 }
 
@@ -49,7 +48,7 @@ type Impl struct {
 	LatestBlockHeight atomic.Value
 	ProcessedHeight   uint64
 
-	eventTypeCount int
+	CommitNumber uint64
 
 	ServiceName string
 }
@@ -184,31 +183,41 @@ func (i *Impl) Process(height uint64) error {
 		sql: val,
 	})
 
-	finalSQL := ""
-	finalVal := make([]interface{}, 0)
-	for _, m := range allSQL {
-		for k, v := range m {
-			finalSQL += fmt.Sprintf("%s;   ", k)
-			finalVal = append(finalVal, v...)
-		}
-	}
-
 	sqlCount := len(allSQL)
-
+	log.Infof("height :%d tx count:%d sql count:%d", height, txCount, sqlCount)
 	metrics.BlocksyncerLogicTime.Set(float64(time.Since(startTime).Milliseconds()))
 
+	step := 0
 	dbStartTime := time.Now()
-	tx := i.DB.Begin(context.TODO())
-	if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
-		log.Errorw("failed to exec sql", "error", txErr)
-		tx.Rollback()
-		return txErr
+	for step < sqlCount {
+		finalSQL := ""
+		finalVal := make([]interface{}, 0)
+		left := step
+		right := step + int(i.CommitNumber)
+		if right > sqlCount {
+			right = sqlCount
+		}
+		for _, m := range allSQL[left:right] {
+			for k, v := range m {
+				finalSQL += fmt.Sprintf("%s;   ", k)
+				finalVal = append(finalVal, v...)
+			}
+		}
+		tx := i.DB.Begin(context.TODO())
+		if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
+			log.Errorw("failed to exec sql", "error", txErr)
+			tx.Rollback()
+			return txErr
+		}
+
+		if txErr := tx.Commit(); txErr != nil {
+			log.Errorw("failed to commit db", "error", txErr)
+			return txErr
+		}
+		step = right
+		log.Infof("%d - %d commit", left, right)
 	}
 
-	if txErr := tx.Commit(); txErr != nil {
-		log.Errorw("failed to commit db", "error", txErr)
-		return txErr
-	}
 	metrics.BlocksyncerWriteDBTime.Set(float64(time.Since(dbStartTime).Milliseconds()))
 	log.Infof("height :%d tx count:%d sql count:%d", height, txCount, sqlCount)
 	metrics.BlockEventCount.Set(float64(sqlCount))
@@ -237,7 +246,6 @@ func (i *Impl) Process(height uint64) error {
 
 // SaveEpoch accept a block result data and persist basic info into db to record current sync progress
 func (i *Impl) SaveEpoch(block *coretypes.ResultBlock) (string, []interface{}) {
-	log.Infof(common.BytesToHash(block.BlockID.Hash).String())
 	return localDB.Cast(i.DB).SaveEpochToSQL(context.Background(), &models.Epoch{
 		OneRowId:    true,
 		BlockHeight: block.Block.Height,

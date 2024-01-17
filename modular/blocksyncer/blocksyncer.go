@@ -38,6 +38,7 @@ const (
 	MaxHeightGapFactor    = 4
 	ObjectsNumberOfShards = 64
 	MinChargeSize         = 128000
+	CommitNumber          = 2000
 )
 
 type MigrateDBKey struct{}

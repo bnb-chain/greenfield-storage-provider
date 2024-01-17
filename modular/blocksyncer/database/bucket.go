@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 
@@ -112,6 +111,5 @@ func (db *DB) UpdateChargeSizeToSQL(ctx context.Context, objectID common.Hash, b
 	sql := `UPDATE buckets SET charge_size = charge_size %s CASE WHEN (CAST((SELECT payload_size FROM %s WHERE object_id = ?)AS DECIMAL(65,0)) < 128000) THEN CAST(128000 AS DECIMAL(65,0)) ELSE CAST((SELECT payload_size FROM %s WHERE object_id = ?) AS DECIMAL(65,0)) END WHERE bucket_name = ?`
 	vars := []interface{}{objectID, objectID, bucketName}
 	finalSql := fmt.Sprintf(sql, operation, tableName, tableName)
-	log.Infof("AddChargeSizeToSQL sql:%s", finalSql)
 	return finalSql, vars
 }

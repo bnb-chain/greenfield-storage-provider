@@ -259,6 +259,7 @@ type LogConfig struct {
 type BlockSyncerConfig struct {
 	Modules          []string `comment:"required"`
 	Workers          uint     `comment:"required"`
+	CommitNumber     uint64   `comment:"optional"`
 	BsDBWriteAddress string   `comment:"optional"`
 }
 

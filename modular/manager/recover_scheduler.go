@@ -23,17 +23,17 @@ import (
 )
 
 const (
-	recoverBatchSize = 10
+	recoverBatchSize = 50
 	maxRecoveryRetry = 5
 	MaxRecoveryTime  = 50
 
 	recoverInterval     = 10 * time.Second
-	verifyInterval      = 10 * time.Second
-	verifyGVGQueryLimit = uint32(100)
+	verifyInterval      = 3 * time.Second
+	verifyGVGQueryLimit = uint32(50)
 
-	recoverFailedObjectInterval = 30 * time.Second
+	recoverFailedObjectInterval = 20 * time.Second
 
-	monitorRecoverTimeOut = float64(5) // 10 minute
+	monitorRecoverTimeOut = float64(2) // 2 minute
 )
 
 type RecoverVGFScheduler struct {
