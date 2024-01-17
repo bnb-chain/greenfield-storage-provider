@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	recoverBatchSize = 30
+	recoverBatchSize = 50
 	maxRecoveryRetry = 5
 	MaxRecoveryTime  = 50
 
