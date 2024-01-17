@@ -27,7 +27,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
+func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string, commitNumber uint64) parser.Indexer {
 	return &Impl{
 		codec:           codec,
 		Node:            proxy,
@@ -35,7 +35,7 @@ func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, module
 		Modules:         modules,
 		ServiceName:     serviceName,
 		ProcessedHeight: 0,
-		eventTypeCount:  8,
+		CommitNumber:    commitNumber,
 	}
 }
 
@@ -48,7 +48,7 @@ type Impl struct {
 	LatestBlockHeight atomic.Value
 	ProcessedHeight   uint64
 
-	eventTypeCount int
+	CommitNumber uint64
 
 	ServiceName string
 }
@@ -193,7 +193,7 @@ func (i *Impl) Process(height uint64) error {
 		finalSQL := ""
 		finalVal := make([]interface{}, 0)
 		left := step
-		right := step + CommitNumber
+		right := step + int(i.CommitNumber)
 		if right > sqlCount {
 			right = sqlCount
 		}

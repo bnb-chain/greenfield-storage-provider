@@ -124,11 +124,15 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 	}
 	b.parserCtx = ctx
 	log.Infof("blocksyncer dsn : %s", config.Cfg.Database.DSN)
+	commitNumber := uint64(CommitNumber)
+	if cfg.BlockSyncer.CommitNumber != 0 {
+		commitNumber = cfg.BlockSyncer.CommitNumber
+	}
 	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,
-		b.Name())
+		b.Name(), commitNumber)
 	return nil
 }
 
