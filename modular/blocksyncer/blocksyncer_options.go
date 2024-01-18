@@ -50,6 +50,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
 	txMap = new(sync.Map)
+	txHashMap = new(sync.Map)
 
 	RealTimeStart = &atomic.Bool{}
 	RealTimeStart.Store(false)
@@ -344,6 +345,7 @@ func (b *BlockSyncerModular) fetchData(start, end uint64) {
 				blockMap.Store(heightKey, block)
 				eventMap.Store(heightKey, events)
 				txMap.Store(heightKey, txs)
+				txHashMap.Store(heightKey, block.Block.Data.Txs)
 				break
 			}
 		}(i)

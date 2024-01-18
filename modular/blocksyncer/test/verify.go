@@ -27,7 +27,7 @@ var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
 	verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40,
 	verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49, verify50,
 	verify51, verify52, verify53, verify54, verify55, verify56, verify57, verify58, verify59, verify60,
-	verify61, verify62, verify63,
+	verify61, verify62, verify63, verify64,
 }
 
 func Verify(t *testing.T) error {
@@ -657,6 +657,19 @@ func verify63(t *testing.T, db *gorm.DB) error {
 	if count != 1 {
 		return fmt.Errorf("delete and create same object in same block")
 	}
+	return nil
+}
+
+func verify64(t *testing.T, db *gorm.DB) error {
+	table := GetObjectsTableName("self-custody-bucket-10")
+	var o models.Object
+	if err := db.Table(table).Where("bucket_name=? and object_name = ?", "self-custody-bucket-10", "28705261ca3b4146b2014af10612476e-5AF048C9-C68E-4266-BF23-40DDCA7F5897").Find(&o).Error; err != nil {
+		assert.NoError(t, err)
+	}
+	if o.LocalVirtualGroupId != 10 {
+		return errors.New("object status error")
+	}
+
 	return nil
 }
 
