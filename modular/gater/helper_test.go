@@ -12,7 +12,7 @@ const (
 	scheme                 = "https://"
 	mockBucketName         = "mock-bucket-name"
 	mockObjectName         = "mock-object-name"
-	mockSpecialObjecttName = "?limit=1"
+	mockSpecialObjecttName = "?limit=1%2520--hello$world!~@#$%%^&*(){}:<>`test"
 	invalidBucketName      = "1"
 	invalidObjectName      = ".."
 )
