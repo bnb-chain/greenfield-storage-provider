@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -455,7 +454,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 					reqCtx.account = account.String()
 					reqCtxErr = nil
 					// default set content-disposition to download, if specified in query param as view, then set to view
-					w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+url.QueryEscape(reqCtx.objectName)+"\"")
+					w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 					offChainAuthViewParam := queryParams.Get(OffChainAuthViewQuery)
 					isView, _ := strconv.ParseBool(offChainAuthViewParam)
 					if isView {
@@ -943,7 +942,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 
 	}
 	if isDownload {
-		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+url.QueryEscape(reqCtx.objectName)+"\"")
+		w.Header().Set(ContentDispositionHeader, ContentDispositionAttachmentValue+"; filename=\""+reqCtx.objectName+"\"")
 	} else {
 		w.Header().Set(ContentDispositionHeader, ContentDispositionInlineValue)
 	}

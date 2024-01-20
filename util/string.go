@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -158,29 +157,4 @@ func StringArrayToUint32Slice(arr pq.StringArray) ([]uint32, error) {
 		uint32Slice[i] = val
 	}
 	return uint32Slice, nil
-}
-
-func IsSQLInjection(input string) bool {
-	// define patterns that may indicate SQL injection, especially those with a semicolon followed by common SQL keywords
-	patterns := []string{
-		"(?i).*;.*select", // Matches any string with a semicolon followed by "select"
-		"(?i).*;.*insert", // Matches any string with a semicolon followed by "insert"
-		"(?i).*;.*update", // Matches any string with a semicolon followed by "update"
-		"(?i).*;.*delete", // Matches any string with a semicolon followed by "delete"
-		"(?i).*;.*drop",   // Matches any string with a semicolon followed by "drop"
-		"(?i).*;.*alter",  // Matches any string with a semicolon followed by "alter"
-		"/\\*.*\\*/",      // Matches SQL block comment
-	}
-
-	for _, pattern := range patterns {
-		matched, err := regexp.MatchString(pattern, input)
-		if err != nil {
-			return false
-		}
-		if matched {
-			return true
-		}
-	}
-
-	return false
 }
