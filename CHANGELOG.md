@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.3.0
+This release contains 2 bugfix and 2 feature.
+
+BUGFIXES
+* [#1304](https://github.com/bnb-chain/greenfield-storage-provider/pull/1304) fix: fix sp unhealthy bug
+* [#1311](https://github.com/bnb-chain/greenfield-storage-provider/pull/1311) fix: fix health check
+
+FEATURES
+* [#1279](https://github.com/bnb-chain/greenfield-storage-provider/pull/1279) feat: re-implementation of sp exit
+* [#1312](https://github.com/bnb-chain/greenfield-storage-provider/pull/1312) perf: blocksyncer sql commit
+
 ## v1.2.4
 This release contains 2 bugfixes.
 
