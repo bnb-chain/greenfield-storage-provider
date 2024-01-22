@@ -25,6 +25,7 @@ var (
 	ErrDSNNotSet           = errors.New("dsn config is not set in environment")
 	ErrBlockNotFound       = errors.New("failed to get block from map need retry")
 	ErrHandleEvent         = errors.New("failed to handle event")
+	ErrEventNotFound       = errors.New("failed to get event from tx map")
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 	MaxHeightGapFactor    = 4
 	ObjectsNumberOfShards = 64
 	MinChargeSize         = 128000
+	CommitNumber          = 2000
 )
 
 type MigrateDBKey struct{}
@@ -55,9 +57,10 @@ type BlockSyncerModular struct {
 
 // Read concurrency required global variables
 var (
-	blockMap *sync.Map
-	eventMap *sync.Map
-	txMap    *sync.Map
+	blockMap  *sync.Map
+	eventMap  *sync.Map
+	txMap     *sync.Map
+	txHashMap *sync.Map
 
 	RealTimeStart *atomic.Bool
 	CatchEndBlock *atomic.Int64

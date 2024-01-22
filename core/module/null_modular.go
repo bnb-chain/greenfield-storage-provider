@@ -65,18 +65,27 @@ func (*NullModular) PickVirtualGroupFamily(context.Context, task.ApprovalCreateB
 func (*NullModular) NotifyMigrateSwapOut(context.Context, *virtualgrouptypes.MsgSwapOut) error {
 	return ErrNilModular
 }
-func (*NullModular) NotifyPreMigrateBucket(context.Context, uint64) error {
-	return ErrNilModular
+func (*NullModular) NotifyPreMigrateBucketAndDeductQuota(context.Context, uint64) (*gfsptask.GfSpBucketQuotaInfo, error) {
+	return &gfsptask.GfSpBucketQuotaInfo{}, ErrNilModular
 }
-func (*NullModular) NotifyPostMigrateBucket(context.Context, *gfsptask.GfSpBucketMigrationInfo) error {
-	return ErrNilModular
+
+func (*NullModular) NotifyPostMigrateBucketAndRecoupQuota(context.Context, *gfsptask.GfSpBucketMigrationInfo) (*gfsptask.GfSpBucketQuotaInfo, error) {
+	return &gfsptask.GfSpBucketQuotaInfo{}, ErrNilModular
 }
 
 func (m *NullModular) QueryTasksStats(ctx context.Context) (int, int, int, int, int, int, int, []string) {
 	return 0, 0, 0, 0, 0, 0, 0, nil
 }
 
+func (m *NullModular) QueryBucketMigrationProgress(ctx context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	return &gfspserver.MigrateBucketProgressMeta{}, nil
+}
+
 func (m *NullModular) ResetRecoveryFailedList(ctx context.Context) []string {
+	return nil
+}
+
+func (m *NullModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error {
 	return nil
 }
 
@@ -306,6 +315,9 @@ func (*NilModular) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrat
 func (*NilModular) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	return nil, ErrNilModular
 }
+func (m *NilModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	return "", ErrNilModular
+}
 
 var _ Receiver = (*NullReceiveModular)(nil)
 
@@ -326,4 +338,13 @@ func (*NullReceiveModular) HandleReceivePieceTask(context.Context, task.ReceiveP
 }
 func (*NullReceiveModular) HandleDoneReceivePieceTask(context.Context, task.ReceivePieceTask) ([]byte, error) {
 	return nil, ErrNilModular
+}
+func (m *NullModular) QueryRecoverProcess(context.Context, uint32, uint32) ([]*gfspserver.RecoverProcess, bool, error) {
+	return nil, false, ErrNilModular
+}
+func (m *NilModular) CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	return "nil", ErrNilModular
+}
+func (m *NilModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	return "nil", ErrNilModular
 }

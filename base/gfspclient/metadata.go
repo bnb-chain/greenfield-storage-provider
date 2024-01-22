@@ -355,9 +355,9 @@ func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_typ
 }
 
 func (s *GfSpClient) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (
-	gfsptask.GfSpBucketQuotaInfo, error) {
+	*gfsptask.GfSpBucketQuotaInfo, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
-	quota := gfsptask.GfSpBucketQuotaInfo{}
+	quota := &gfsptask.GfSpBucketQuotaInfo{}
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
 		return quota, ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)
@@ -696,6 +696,24 @@ func (s *GfSpClient) ListMigrateBucketEvents(ctx context.Context, blockID uint64
 		return nil, ErrRPCUnknownWithDetail("client failed to list migrate bucket events, error: ", err)
 	}
 	return resp.Events, nil
+}
+
+func (s *GfSpClient) ListCompleteMigrationBucketEvents(ctx context.Context, blockID uint64, srcSpId uint32, opts ...grpc.DialOption) ([]*storage_types.EventCompleteMigrationBucket, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)
+	}
+	defer conn.Close()
+	req := &types.GfSpListCompleteMigrationBucketEventsRequest{
+		BlockId: blockID,
+		SrcSpId: srcSpId,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListCompleteMigrationBucketEvents(ctx, req)
+	if err != nil {
+		return nil, ErrRPCUnknownWithDetail("client failed to list complete migrate bucket events, error: ", err)
+	}
+	return resp.CompleteEvents, nil
 }
 
 func (s *GfSpClient) ListSwapOutEvents(ctx context.Context, blockID uint64, spID uint32, opts ...grpc.DialOption) ([]*types.ListSwapOutEvents, error) {

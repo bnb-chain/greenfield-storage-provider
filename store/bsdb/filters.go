@@ -80,6 +80,12 @@ func CreateAtFilter(createAt int64) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+func CreateAtEqualFilter(createAt int64) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("create_at = ?", createAt)
+	}
+}
+
 func WithLimit(limit int) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Limit(limit)

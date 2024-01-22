@@ -252,6 +252,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 
 	startPickGVGTime := time.Now()
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, task.GetVirtualGroupFamilyId(), task.GetStorageParams())
+	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "error", err)
 		return err
@@ -680,16 +681,24 @@ func (m *ManageModular) HandleGCMetaTask(ctx context.Context, gcMetaTask task.GC
 	return nil
 }
 
-func (m *ManageModular) GenerateGCBucketMigrationTask(ctx context.Context, bucketID, bucketSize uint64) {
+func (m *ManageModular) GenerateGCBucketMigrationTask(ctx context.Context, bucketID uint64) {
 	// src sp should wait meta data
 	<-time.After(bucketMigrationGCWaitTime)
+	var (
+		bucketSize uint64
+		err        error
+	)
+	// get bucket quota and check, lock quota
+	if bucketSize, err = m.getBucketTotalSize(ctx, bucketID); err != nil {
+		log.Errorw("failed to get bucket total size", "bucket_id", bucketID)
+		return
+	}
 
 	// success generate gc task, gc for bucket migration src sp
 	gcBucketMigrationTask := &gfsptask.GfSpGCBucketMigrationTask{}
 	gcBucketMigrationTask.InitGCBucketMigrationTask(m.baseApp.TaskPriority(gcBucketMigrationTask), bucketID,
 		m.baseApp.TaskTimeout(gcBucketMigrationTask, bucketSize), m.baseApp.TaskMaxRetry(gcBucketMigrationTask))
-	err := m.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask)
-	if err != nil {
+	if err = m.HandleCreateGCBucketMigrationTask(ctx, gcBucketMigrationTask); err != nil {
 		log.CtxErrorw(ctx, "failed to begin gc bucket migration task", "info", gcBucketMigrationTask.Info(), "error", err)
 	}
 	log.CtxInfow(ctx, "succeed to generate bucket migration gc task and push to queue", "bucket_id", bucketID, "gcBucketMigrationTask", gcBucketMigrationTask)
@@ -712,6 +721,7 @@ func (m *ManageModular) HandleCreateGCBucketMigrationTask(ctx context.Context, t
 }
 
 func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucketMigrationTask task.GCBucketMigrationTask) error {
+	var err error
 	if gcBucketMigrationTask == nil {
 		log.CtxError(ctx, "failed to handle gc bucket migration due to gc bucket migration task pointer dangling")
 		return ErrDanglingTask
@@ -720,9 +730,16 @@ func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucke
 		log.CtxErrorw(ctx, "failed to handle gc bucket migration task due to task is not in the gc bucket migration queue", "task_info", gcBucketMigrationTask.Info())
 		return ErrCanceledTask
 	}
+	if err = m.bucketMigrateScheduler.UpdateBucketMigrationGCProgress(ctx, gcBucketMigrationTask); err != nil {
+		return err
+	}
 	if gcBucketMigrationTask.Error() == nil {
-		log.CtxInfow(ctx, "succeed to finish the gc bucket migration task", "task_info", gcBucketMigrationTask.Info())
-		m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+		// success
+		if gcBucketMigrationTask.GetFinished() {
+			log.CtxInfow(ctx, "succeed to finish the gc bucket migration task", "task_info", gcBucketMigrationTask.Info())
+			m.gcBucketMigrationQueue.PopByKey(gcBucketMigrationTask.Key())
+		}
+
 		return nil
 	}
 	gcBucketMigrationTask.SetUpdateTime(time.Now().Unix())
@@ -738,9 +755,9 @@ func (m *ManageModular) HandleGCBucketMigrationTask(ctx context.Context, gcBucke
 		log.CtxErrorw(ctx, "the reported gc object gc bucket migration task is canceled", "report_info", gcBucketMigrationTask.Info())
 		return ErrCanceledTask
 	}
-	err := m.gcBucketMigrationQueue.Push(gcBucketMigrationTask)
+	err = m.gcBucketMigrationQueue.Push(gcBucketMigrationTask)
 	log.CtxInfow(ctx, "succeed to push gc bucket migration task to queue again", "from", oldTask, "to", gcBucketMigrationTask, "error", err)
-	return nil
+	return err
 }
 
 func (m *ManageModular) HandleDownloadObjectTask(ctx context.Context, task task.DownloadObjectTask) error {
@@ -763,9 +780,16 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 
 	if task.GetRecovered() {
 		m.recoveryQueue.PopByKey(task.Key())
+		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, task.Key().String())
-		log.CtxErrorw(ctx, "finished recovery", "task_info", task.Info())
-		return nil
+		m.recoverMtx.Unlock()
+		log.CtxInfow(ctx, "finished recovery", "task_info", task.Info())
+
+		if task.BySuccessorSP() {
+			objectID := task.GetObjectInfo().Id.Uint64()
+			m.recoverObjectStats.addSegmentRecord(objectID, true, task.GetSegmentIdx())
+			return nil
+		}
 	}
 
 	if task.Error() != nil {
@@ -783,8 +807,9 @@ func (m *ManageModular) HandleRecoverPieceTask(ctx context.Context, task task.Re
 		log.CtxErrorw(ctx, "failed to push recovery object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-
+	m.recoverMtx.Lock()
 	m.recoveryTaskMap[task.Key().String()] = task.Key().String()
+	m.recoverMtx.Unlock()
 	return nil
 }
 
@@ -803,8 +828,27 @@ func (m *ManageModular) handleFailedRecoverPieceTask(ctx context.Context, handle
 		if !slices.Contains(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName) {
 			m.recoveryFailedList = append(m.recoveryFailedList, handleTask.GetObjectInfo().ObjectName)
 		}
+		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, handleTask.Key().String())
-		log.CtxErrorw(ctx, "delete expired confirm recovery piece task", "task_info", handleTask.Info())
+		m.recoverMtx.Unlock()
+
+		if handleTask.BySuccessorSP() {
+			objectID := handleTask.GetObjectInfo().Id.Uint64()
+			m.recoverObjectStats.addSegmentRecord(objectID, false, handleTask.GetSegmentIdx())
+			if m.recoverObjectStats.isRecoverFailed(objectID) {
+				object := &spdb.RecoverFailedObject{
+					ObjectID:        handleTask.GetObjectInfo().Id.Uint64(),
+					VirtualGroupID:  handleTask.GetGVGID(),
+					RedundancyIndex: handleTask.GetEcIdx(),
+				}
+				err := m.baseApp.GfSpDB().InsertRecoverFailedObject(object)
+				if err != nil {
+					log.CtxErrorw(ctx, "failed to insert recover failed object entry", "task_info", handleTask.Info(), "error", err)
+					return ErrGfSpDBWithDetail("failed to insert recover failed object entry, task_info: " + handleTask.Info() + ", error: " + err.Error())
+				}
+			}
+			return nil
+		}
 	}
 	return nil
 }
@@ -814,9 +858,12 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 		log.CtxErrorw(ctx, "failed to handle migrate gvg due to pointer dangling")
 		return ErrDanglingTask
 	}
-	var err, pushErr error
-	cancelTask := false
+	var (
+		err, pushErr      error
+		migratedBytesSize uint64
+	)
 
+	cancelTask := false
 	if task.GetBucketID() != 0 {
 		// if there is no execute plan, we should cancel this task
 		if _, err = m.bucketMigrateScheduler.getExecutePlanByBucketID(task.GetBucketID()); err != nil {
@@ -832,10 +879,12 @@ func (m *ManageModular) HandleMigrateGVGTask(ctx context.Context, task task.Migr
 
 	//  if cancel migrate bucket, migrated recoup quota
 	if cancelTask {
-		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: task.GetMigratedBytesSize()}
+		if migratedBytesSize, err = m.bucketMigrateScheduler.getMigratedBytesSize(task.GetBucketID()); err != nil {
+			log.CtxErrorw(ctx, "failed to get migrated bytes size", "task", task, "error", err)
+		}
+		postMsg := &gfsptask.GfSpBucketMigrationInfo{BucketId: task.GetBucketID(), Finished: task.GetFinished(), MigratedBytesSize: migratedBytesSize}
 		log.CtxInfow(ctx, "start to cancel migrate task and send post migrate bucket to src sp", "post_msg", postMsg, "task", task)
-		err = m.bucketMigrateScheduler.PostMigrateBucket(postMsg, nil)
-		if err != nil {
+		if err = m.bucketMigrateScheduler.PostMigrateBucket(postMsg, nil); err != nil {
 			log.CtxErrorw(ctx, "failed to post migrate bucket", "msg", postMsg, "error", err)
 		}
 		return err

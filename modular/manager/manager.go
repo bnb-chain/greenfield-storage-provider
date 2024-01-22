@@ -13,6 +13,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
@@ -75,9 +76,6 @@ type ManageModular struct {
 	migrateGVGQueue        taskqueue.TQueueOnStrategyWithLimit
 	migrateGVGQueueMux     sync.Mutex
 
-	// src sp used TODO: these should be persisted
-	migratingBuckets map[uint64]struct{}
-
 	maxUploadObjectNumber int
 
 	gcObjectTimeInterval  int
@@ -101,10 +99,11 @@ type ManageModular struct {
 	discontinueBucketTimeInterval  int
 	discontinueBucketKeepAliveDays int
 
-	spID                   uint32
-	virtualGroupManager    vgmgr.VirtualGroupManager
-	bucketMigrateScheduler *BucketMigrateScheduler
-	spExitScheduler        *SPExitScheduler
+	spID                     uint32
+	virtualGroupManager      vgmgr.VirtualGroupManager
+	bucketMigrateScheduler   *BucketMigrateScheduler
+	spExitScheduler          *SPExitScheduler
+	enableBucketMigrateCache bool
 
 	subscribeSPExitEventInterval        uint
 	subscribeBucketMigrateEventInterval uint
@@ -115,8 +114,15 @@ type ManageModular struct {
 
 	gvgPreferSPList []uint32
 
-	recoveryFailedList   []string
-	recoveryTaskMap      map[string]string
+	recoveryFailedList []string
+
+	recoverMtx      sync.RWMutex
+	recoveryTaskMap map[string]string
+
+	recoverObjectStats      *ObjectsSegmentsStats // objectId -> ObjectSegmentsStats
+	recoverProcessCount     atomic.Int64
+	verifyTerminationSignal atomic.Int64
+
 	spBlackList          []uint32
 	gvgBlackList         vgmgr.IDSet
 	enableHealthyChecker bool
@@ -153,8 +159,6 @@ func (m *ManageModular) Start(ctx context.Context) error {
 	m.migrateGVGQueue.SetFilterTaskStrategy(m.FilterGVGTask)
 	m.gcBucketMigrationQueue.SetRetireTaskStrategy(m.ResetGCBucketMigrationQueue)
 	m.gcBucketMigrationQueue.SetFilterTaskStrategy(m.FilterGCTask)
-
-	m.migratingBuckets = make(map[uint64]struct{})
 
 	scope, err := m.baseApp.ResourceManager().OpenService(m.Name())
 	if err != nil {
@@ -202,12 +206,6 @@ func (m *ManageModular) delayStartMigrateScheduler() {
 		if m.bucketMigrateScheduler == nil {
 			if m.bucketMigrateScheduler, err = NewBucketMigrateScheduler(m); err != nil {
 				log.Errorw("failed to new bucket migrate scheduler", "error", err)
-				continue
-			}
-		}
-		if m.spExitScheduler == nil {
-			if m.spExitScheduler, err = NewSPExitScheduler(m); err != nil {
-				log.Errorw("failed to new sp exit scheduler", "error", err)
 				continue
 			}
 		}
@@ -596,7 +594,10 @@ func (m *ManageModular) GCRecoverQueue(qTask task.Task) bool {
 		if !slices.Contains(m.recoveryFailedList, task.GetObjectInfo().ObjectName) {
 			m.recoveryFailedList = append(m.recoveryFailedList, task.GetObjectInfo().ObjectName)
 		}
+		m.recoverMtx.Lock()
 		delete(m.recoveryTaskMap, task.Key().String())
+		m.recoverMtx.Unlock()
+
 	}
 	return GcConditionMet
 }
@@ -958,7 +959,134 @@ func (m *ManageModular) QueryTasksStats(_ context.Context) (uploadTasks int,
 	return
 }
 
+func (m *ManageModular) QueryBucketMigrationProgress(_ context.Context, bucketID uint64) (*gfspserver.MigrateBucketProgressMeta, error) {
+	var (
+		progress      *spdb.MigrateBucketProgressMeta
+		err           error
+		migratedBytes uint64
+	)
+
+	if progress, err = m.baseApp.GfSpDB().QueryMigrateBucketProgress(bucketID); err != nil {
+		return nil, err
+	}
+
+	if migratedBytes, err = m.bucketMigrateScheduler.getMigratedBytesSize(bucketID); err != nil {
+		return nil, err
+	}
+
+	progressMeta := &gfspserver.MigrateBucketProgressMeta{
+		BucketId:               progress.BucketID,
+		SubscribedBlockHeight:  progress.SubscribedBlockHeight,
+		MigrateState:           uint32(progress.MigrateState),
+		TotalGvgNum:            progress.TotalGvgNum,
+		MigratedFinishedGvgNum: progress.MigratedFinishedGvgNum,
+		GcFinishedGvgNum:       progress.GcFinishedGvgNum,
+		PreDeductedQuota:       progress.PreDeductedQuota,
+		RecoupQuota:            progress.RecoupQuota,
+		LastGcObjectId:         progress.LastGcObjectID,
+		LastGcGvgId:            progress.LastGcGvgID,
+		MigratedBytes:          migratedBytes,
+	}
+	return progressMeta, err
+}
+
 func (m *ManageModular) ResetRecoveryFailedList(_ context.Context) []string {
 	m.recoveryFailedList = m.recoveryFailedList[:0]
 	return m.recoveryFailedList
+}
+
+func (m *ManageModular) TriggerRecoverForSuccessorSP(ctx context.Context, vgfID, gvgID uint32, redundancyIndex int32) error {
+	return m.startRecoverSchedulers(vgfID, gvgID, redundancyIndex)
+}
+
+// start the loop, failed object will be
+func (m *ManageModular) startRecoverSchedulers(vgfID, gvgID uint32, redundancyIndex int32) (err error) {
+	m.verifyTerminationSignal.Store(0)
+	if vgfID != 0 {
+		recoverVGFScheduler, err := NewRecoverVGFScheduler(m, vgfID)
+		if err != nil {
+			log.Errorw("failed to NewRecoverVGFScheduler", "error", err)
+			return err
+		}
+		if recoverVGFScheduler == nil {
+			return nil
+		}
+		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m, vgfID, gvgID)
+		m.recoverProcessCount.Store(int64(len(recoverVGFScheduler.RecoverSchedulers)))
+		m.verifyTerminationSignal.Add(int64(len(recoverVGFScheduler.VerifySchedulers)))
+		go recoverVGFScheduler.Start()
+		go recoverFailedObjectScheduler.Start()
+	} else {
+		recoverGVGScheduler, err := NewRecoverGVGScheduler(m, vgfID, gvgID, redundancyIndex)
+		if err != nil {
+			log.Errorw("failed to create RecoverGVGScheduler", "error", err)
+			return err
+		}
+		recoverFailedObjectScheduler := NewRecoverFailedObjectScheduler(m, vgfID, gvgID)
+		verifyScheduler, err := NewVerifyGVGScheduler(m, gvgID, redundancyIndex)
+		if err != nil {
+			log.Errorw("failed to create VerifyGVGScheduler", "error", err)
+			return err
+		}
+		m.recoverProcessCount.Store(1)
+		m.verifyTerminationSignal.Add(1)
+		go recoverGVGScheduler.Start()
+		go recoverFailedObjectScheduler.Start()
+		go verifyScheduler.Start()
+	}
+	return nil
+}
+
+func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID uint32) ([]*gfspserver.RecoverProcess, bool, error) {
+	gvgIds := make([]uint32, 0)
+	if vgfID != 0 {
+		vgfInfo, err := m.baseApp.Consensus().QueryVirtualGroupFamily(ctx, vgfID)
+		if err != nil {
+			log.Errorw("failed to GetVirtualGroupFamily", "error", err)
+			return nil, false, err
+		}
+		gvgIds = vgfInfo.GetGlobalVirtualGroupIds()
+	} else {
+		gvgIds = append(gvgIds, gvgID)
+	}
+	gvgStatsList, err := m.baseApp.GfSpDB().BatchGetRecoverGVGStats(gvgIds)
+	if err != nil {
+		log.Errorw("failed to BatchGetRecoverGVGStats", "error", err)
+		return nil, false, err
+	}
+	// get record retry time > 5
+	failedRecords, err := m.baseApp.GfSpDB().GetRecoverFailedObjectsByRetryTime(5)
+	if err != nil {
+		log.Errorw("failed to CountRecoverFailedObject", "error", err)
+		return nil, false, err
+	}
+	failedObjects := make([]*gfspserver.FailedRecoverObject, 0, len(failedRecords))
+	for _, r := range failedRecords {
+		meta, _ := m.baseApp.GfSpDB().GetObjectIntegrity(r.ObjectID, r.RedundancyIndex)
+		if meta == nil {
+			failedObjects = append(failedObjects, &gfspserver.FailedRecoverObject{
+				ObjectId:        r.ObjectID,
+				VirtualGroupId:  r.VirtualGroupID,
+				RedundancyIndex: r.RedundancyIndex,
+				RetryTime:       int32(r.RetryTime),
+			})
+		}
+	}
+
+	res := make([]*gfspserver.RecoverProcess, 0, len(gvgStatsList))
+	for _, gvgStats := range gvgStatsList {
+		res = append(res, &gfspserver.RecoverProcess{
+			VirtualGroupId:         gvgStats.VirtualGroupID,
+			VirtualGroupFamilyId:   gvgStats.VirtualGroupFamilyID,
+			RedundancyIndex:        gvgStats.RedundancyIndex,
+			StartAfter:             gvgStats.StartAfter,
+			Limit:                  gvgStats.Limit,
+			Status:                 int32(gvgStats.Status),
+			ObjectCount:            gvgStats.ObjectCount,
+			FailedObjectTotalCount: uint64(len(failedObjects)),
+			RecoverFailedObject:    failedObjects,
+		})
+	}
+	flag := m.recoverProcessCount.Load() > 0 || m.verifyTerminationSignal.Load() > 0
+	return res, flag, nil
 }

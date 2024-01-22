@@ -7,8 +7,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gorm.io/gorm"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	cometbfttypes "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -22,13 +20,14 @@ import (
 	"github.com/forbole/juno/v4/node"
 	"github.com/forbole/juno/v4/parser"
 	"github.com/forbole/juno/v4/types"
+	"gorm.io/gorm"
 
 	localDB "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string) parser.Indexer {
+func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string, commitNumber uint64) parser.Indexer {
 	return &Impl{
 		codec:           codec,
 		Node:            proxy,
@@ -36,7 +35,7 @@ func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, module
 		Modules:         modules,
 		ServiceName:     serviceName,
 		ProcessedHeight: 0,
-		eventTypeCount:  8,
+		CommitNumber:    commitNumber,
 	}
 }
 
@@ -49,7 +48,7 @@ type Impl struct {
 	LatestBlockHeight atomic.Value
 	ProcessedHeight   uint64
 
-	eventTypeCount int
+	CommitNumber uint64
 
 	ServiceName string
 }
@@ -94,6 +93,7 @@ func (i *Impl) Process(height uint64) error {
 	var block *coretypes.ResultBlock
 	var events *coretypes.ResultBlockResults
 	var txs map[common.Hash][]abci.Event
+	var txHash tmtypes.Txs
 	var err error
 
 	realTimeMode := RealTimeStart.Load()
@@ -114,6 +114,7 @@ func (i *Impl) Process(height uint64) error {
 			return err
 		}
 		metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
+		txHash = block.Block.Data.Txs
 		txs = make(map[common.Hash][]cometbfttypes.Event)
 		for idx := 0; idx < len(events.TxsResults); idx++ {
 			k := block.Block.Data.Txs[idx]
@@ -124,10 +125,12 @@ func (i *Impl) Process(height uint64) error {
 		blockAny, okb := blockMap.Load(heightKey)
 		eventsAny, oke := eventMap.Load(heightKey)
 		txsAny, okt := txMap.Load(heightKey)
+		txHashAny, okth := txHashMap.Load(heightKey)
 		block, _ = blockAny.(*coretypes.ResultBlock)
 		events, _ = eventsAny.(*coretypes.ResultBlockResults)
 		txs, _ = txsAny.(map[common.Hash][]abci.Event)
-		if !okb || !oke || !okt {
+		txHash, _ = txHashAny.(tmtypes.Txs)
+		if !okb || !oke || !okt || !okth {
 			log.Warnf("failed to get map data height: %d", height)
 			return ErrBlockNotFound
 		}
@@ -158,7 +161,7 @@ func (i *Impl) Process(height uint64) error {
 	}
 
 	// 2. handle events in txs
-	sqls, err := i.ExportEventsInTxs(ctx, block, txs)
+	sqls, err := i.ExportEventsInTxs(ctx, block, txs, txHash)
 	if err != nil {
 		log.Errorf("failed to export events in txs: %s", err)
 		return err
@@ -184,31 +187,41 @@ func (i *Impl) Process(height uint64) error {
 		sql: val,
 	})
 
-	finalSQL := ""
-	finalVal := make([]interface{}, 0)
-	for _, m := range allSQL {
-		for k, v := range m {
-			finalSQL += fmt.Sprintf("%s;   ", k)
-			finalVal = append(finalVal, v...)
-		}
-	}
-
 	sqlCount := len(allSQL)
-
+	log.Infof("height :%d tx count:%d sql count:%d", height, txCount, sqlCount)
 	metrics.BlocksyncerLogicTime.Set(float64(time.Since(startTime).Milliseconds()))
 
+	step := 0
 	dbStartTime := time.Now()
-	tx := i.DB.Begin(context.TODO())
-	if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
-		log.Errorw("failed to exec sql", "error", txErr)
-		tx.Rollback()
-		return txErr
+	for step < sqlCount {
+		finalSQL := ""
+		finalVal := make([]interface{}, 0)
+		left := step
+		right := step + int(i.CommitNumber)
+		if right > sqlCount {
+			right = sqlCount
+		}
+		for _, m := range allSQL[left:right] {
+			for k, v := range m {
+				finalSQL += fmt.Sprintf("%s;   ", k)
+				finalVal = append(finalVal, v...)
+			}
+		}
+		tx := i.DB.Begin(context.TODO())
+		if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
+			log.Errorw("failed to exec sql", "error", txErr)
+			tx.Rollback()
+			return txErr
+		}
+
+		if txErr := tx.Commit(); txErr != nil {
+			log.Errorw("failed to commit db", "error", txErr)
+			return txErr
+		}
+		step = right
+		log.Infof("%d - %d commit", left, right)
 	}
 
-	if txErr := tx.Commit(); txErr != nil {
-		log.Errorw("failed to commit db", "error", txErr)
-		return txErr
-	}
 	metrics.BlocksyncerWriteDBTime.Set(float64(time.Since(dbStartTime).Milliseconds()))
 	log.Infof("height :%d tx count:%d sql count:%d", height, txCount, sqlCount)
 	metrics.BlockEventCount.Set(float64(sqlCount))
@@ -223,6 +236,7 @@ func (i *Impl) Process(height uint64) error {
 		blockMap.Delete(heightKey)
 		eventMap.Delete(heightKey)
 		txMap.Delete(heightKey)
+		txHashMap.Delete(heightKey)
 	}
 
 	// after each block height ends, clear the corresponding key value in ctx
@@ -237,7 +251,6 @@ func (i *Impl) Process(height uint64) error {
 
 // SaveEpoch accept a block result data and persist basic info into db to record current sync progress
 func (i *Impl) SaveEpoch(block *coretypes.ResultBlock) (string, []interface{}) {
-	log.Infof(common.BytesToHash(block.BlockID.Hash).String())
 	return localDB.Cast(i.DB).SaveEpochToSQL(context.Background(), &models.Epoch{
 		OneRowId:    true,
 		BlockHeight: block.Block.Height,
@@ -285,9 +298,15 @@ type TxHashEvent struct {
 }
 
 // ExportEventsInTxs accepts a slice of events in tx in order to save in database.
-func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs map[common.Hash][]abci.Event) ([]map[string][]interface{}, error) {
+func (i *Impl) ExportEventsInTxs(ctx context.Context, block *coretypes.ResultBlock, txs map[common.Hash][]abci.Event, txHash tmtypes.Txs) ([]map[string][]interface{}, error) {
 	allSQL := make([]map[string][]interface{}, 0)
-	for k, v := range txs {
+	for _, t := range txHash {
+		k := common.BytesToHash(t.Hash())
+		v, ok := txs[k]
+		if !ok {
+			log.Errorw("tx_hash:%v", k.String())
+			return nil, ErrEventNotFound
+		}
 		for _, event := range v {
 			sqls, err := i.ExtractEvent(ctx, block, k, sdk.Event(event))
 			if err != nil {
@@ -358,6 +377,7 @@ func (i *Impl) Processed(ctx context.Context, height uint64) (bool, error) {
 		blockMap.Delete(heightKey)
 		eventMap.Delete(heightKey)
 		txMap.Delete(heightKey)
+		txHashMap.Delete(heightKey)
 	}
 	return ep.BlockHeight > int64(height), nil
 }

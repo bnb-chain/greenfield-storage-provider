@@ -50,6 +50,7 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
 	txMap = new(sync.Map)
+	txHashMap = new(sync.Map)
 
 	RealTimeStart = &atomic.Bool{}
 	RealTimeStart.Store(false)
@@ -124,11 +125,15 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 	}
 	b.parserCtx = ctx
 	log.Infof("blocksyncer dsn : %s", config.Cfg.Database.DSN)
+	commitNumber := uint64(CommitNumber)
+	if cfg.BlockSyncer.CommitNumber != 0 {
+		commitNumber = cfg.BlockSyncer.CommitNumber
+	}
 	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,
-		b.Name())
+		b.Name(), commitNumber)
 	return nil
 }
 
@@ -340,6 +345,7 @@ func (b *BlockSyncerModular) fetchData(start, end uint64) {
 				blockMap.Store(heightKey, block)
 				eventMap.Store(heightKey, events)
 				txMap.Store(heightKey, txs)
+				txHashMap.Store(heightKey, block.Block.Data.Txs)
 				break
 			}
 		}(i)

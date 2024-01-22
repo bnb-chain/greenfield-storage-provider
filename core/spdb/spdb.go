@@ -19,6 +19,7 @@ type SPDB interface {
 	SPInfoDB
 	OffChainAuthKeyDB
 	MigrateDB
+	ExitRecoverDB
 }
 
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
@@ -85,6 +86,8 @@ type SignatureDB interface {
 	*/
 	// SetReplicatePieceChecksum sets(maybe overwrite) the piece hash.
 	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
+	// GetReplicatePieceChecksum gets all piece hashes.
+	GetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) ([]byte, error)
 	// GetAllReplicatePieceChecksum gets all piece hashes.
 	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
 	// GetAllReplicatePieceChecksumOptimized gets all piece hashes.
@@ -171,6 +174,8 @@ type MigrateDB interface {
 	QuerySwapOutSubscribeProgress() (uint64, error)
 	// UpdateBucketMigrateSubscribeProgress includes insert and update.
 	UpdateBucketMigrateSubscribeProgress(blockHeight uint64) error
+	// UpdateBucketMigrateGCSubscribeProgress includes insert and update.
+	UpdateBucketMigrateGCSubscribeProgress(blockHeight uint64) error
 	// QueryBucketMigrateSubscribeProgress returns blockHeight which is called at startup.
 	QueryBucketMigrateSubscribeProgress() (uint64, error)
 
@@ -187,18 +192,66 @@ type MigrateDB interface {
 	InsertMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
 	// DeleteMigrateGVGUnit deletes the gvg migrate unit.
 	DeleteMigrateGVGUnit(meta *MigrateGVGUnitMeta) error
-
 	// UpdateMigrateGVGUnitStatus updates gvg unit status.
 	UpdateMigrateGVGUnitStatus(migrateKey string, migrateStatus int) error
 	// UpdateMigrateGVGUnitLastMigrateObjectID updates gvg unit LastMigrateObjectID.
 	UpdateMigrateGVGUnitLastMigrateObjectID(migrateKey string, lastMigrateObjectID uint64) error
 	// UpdateMigrateGVGRetryCount updates gvg unit retry time
 	UpdateMigrateGVGRetryCount(migrateKey string, retryTime int) error
-
+	// UpdateMigrateGVGMigratedBytesSize updates gvg unit retry time
+	UpdateMigrateGVGMigratedBytesSize(migrateKey string, migratedBytes uint64) error
 	// QueryMigrateGVGUnit returns the gvg migrate unit info.
 	QueryMigrateGVGUnit(migrateKey string) (*MigrateGVGUnitMeta, error)
 	// ListMigrateGVGUnitsByBucketID is used to load at dest sp startup(bucket migrate).
 	ListMigrateGVGUnitsByBucketID(bucketID uint64) ([]*MigrateGVGUnitMeta, error)
 	// DeleteMigrateGVGUnitsByBucketID is used to delete migrate gvg units at bucket migrate
 	DeleteMigrateGVGUnitsByBucketID(bucketID uint64) error
+
+	// UpdateBucketMigrationProgress update MigrateBucketProgress migrate state.
+	UpdateBucketMigrationProgress(bucketID uint64, migrateState int) error
+	// UpdateBucketMigrationPreDeductedQuota update pre-deducted quota and migration state when src sp receives a preMigrateBucket request.
+	UpdateBucketMigrationPreDeductedQuota(bucketID uint64, deductedQuota uint64, state int) error
+	// UpdateBucketMigrationRecoupQuota update RecoupQuota and the corresponding state in MigrateBucketProgress.
+	UpdateBucketMigrationRecoupQuota(bucketID uint64, recoupQuota uint64, state int) error
+	// UpdateBucketMigrationGCProgress update bucket migration gc progress
+	UpdateBucketMigrationGCProgress(progressMeta MigrateBucketProgressMeta) error
+	// UpdateBucketMigrationMigratingProgress update bucket migration migrating progress
+	UpdateBucketMigrationMigratingProgress(bucketID uint64, gvgUnits uint32, gvgUnitsFinished uint32) error
+	// QueryMigrateBucketState returns the migrate state.
+	QueryMigrateBucketState(bucketID uint64) (int, error)
+	// QueryMigrateBucketProgress returns the migration progress.
+	QueryMigrateBucketProgress(bucketID uint64) (*MigrateBucketProgressMeta, error)
+	// ListBucketMigrationToConfirm returns the migrate bucket id to be confirmed.
+	ListBucketMigrationToConfirm(migrationStates []int) ([]*MigrateBucketProgressMeta, error)
+	// DeleteMigrateBucket delete the bucket migrate status
+	DeleteMigrateBucket(bucketID uint64) error
+}
+
+// ExitRecoverDB is used to support sp exit and recover resource.
+type ExitRecoverDB interface {
+	// GetRecoverGVGStats return recover gvg stats
+	GetRecoverGVGStats(gvgID uint32) (*RecoverGVGStats, error)
+	// BatchGetRecoverGVGStats return recover gvg stats list
+	BatchGetRecoverGVGStats(gvgID []uint32) ([]*RecoverGVGStats, error)
+	// SetRecoverGVGStats insert a recover gvg stats unit
+	SetRecoverGVGStats(stats []*RecoverGVGStats) error
+	// UpdateRecoverGVGStats update recover gvg stats
+	UpdateRecoverGVGStats(stats *RecoverGVGStats) (err error)
+	// DeleteRecoverGVGStats delete recover gvg stats
+	DeleteRecoverGVGStats(gvgID uint32) (err error)
+
+	// InsertRecoverFailedObject inserts a new failed object unit.
+	InsertRecoverFailedObject(object *RecoverFailedObject) error
+	// UpdateRecoverFailedObject update failed object unit
+	UpdateRecoverFailedObject(object *RecoverFailedObject) (err error)
+	// DeleteRecoverFailedObject delete failed object unit
+	DeleteRecoverFailedObject(objectID uint64) (err error)
+	// GetRecoverFailedObject return the failed object.
+	GetRecoverFailedObject(objectID uint64) (*RecoverFailedObject, error)
+	// GetRecoverFailedObjects return the failed object by retry time
+	GetRecoverFailedObjects(retry, limit uint32) ([]*RecoverFailedObject, error)
+	// GetRecoverFailedObjectsByRetryTime return the failed object by retry time
+	GetRecoverFailedObjectsByRetryTime(retry uint32) ([]*RecoverFailedObject, error)
+	// CountRecoverFailedObject return the failed object total count
+	CountRecoverFailedObject() (int64, error)
 }

@@ -2093,6 +2093,7 @@ func TestGateModular_getRecoverSegment(t *testing.T) {
 					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
 				consensusMock.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 					Id: 1, OperatorAddress: "a"}, nil).Times(1)
+
 				g.baseApp.SetConsensus(consensusMock)
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
