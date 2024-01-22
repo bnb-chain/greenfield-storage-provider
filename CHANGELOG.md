@@ -11,12 +11,6 @@ FEATURES
 * [#1279](https://github.com/bnb-chain/greenfield-storage-provider/pull/1279) feat: re-implementation of sp exit
 * [#1312](https://github.com/bnb-chain/greenfield-storage-provider/pull/1312) perf: blocksyncer sql commit
 
-## v1.2.5
-This release contains 1 bugfixes.
-
-BUGFIXES
-* [#1305](https://github.com/bnb-chain/greenfield-storage-provider/pull/1305) fix: secondary SP might need to wait object meta due to latency
-
 ## v1.2.4
 This release contains 2 bugfixes.
 
