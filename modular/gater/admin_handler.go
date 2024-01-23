@@ -200,6 +200,21 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 			err = ErrValidateMsg
 			return
 		}
+		// This code block checks for unsupported or potentially risky formats in object names.
+		// The checks are essential for ensuring the security and compatibility of the object names within the system.
+		// 1. ".." in object names: Checked to prevent path traversal attacks which might access directories outside the intended scope.
+		// 2. Object name being "/": The root directory should not be used as an object name due to potential security risks and ambiguity.
+		// 3. "\\" in object names: Backslashes are checked because they are often not supported in UNIX-like file systems and can cause issues in path parsing.
+		// 4. SQL Injection patterns in object names: Ensures that the object name does not contain patterns that could be used for SQL injection attacks, maintaining the integrity of the database.
+		if strings.Contains(createObjectApproval.GetObjectName(), "..") ||
+			createObjectApproval.GetObjectName() == "/" ||
+			strings.Contains(createObjectApproval.GetObjectName(), "\\") ||
+			util.IsSQLInjection(createObjectApproval.GetObjectName()) {
+			log.Errorw("failed to check object name", "object_approval_msg",
+				createObjectApproval, "error", err)
+			err = ErrInvalidObjectName
+			return
+		}
 		if err = g.checkSPAndBucketStatus(reqCtx.Context(), createObjectApproval.GetBucketName(), createObjectApproval.Creator); err != nil {
 			log.Errorw("create object approval failed to check sp and bucket status", "error", err)
 			return
