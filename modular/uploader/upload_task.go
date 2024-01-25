@@ -37,8 +37,8 @@ var (
 	ErrRepeatedTask         = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110003, "put object request repeated")
 	ErrInvalidIntegrity     = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "invalid payload data integrity hash")
 	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
-	ErrInvalidUploadRequest = gfsperrors.Register(module.GateModularName, http.StatusConflict, 110006, "the object had already been fully uploaded and any further uploading attempt is not allowed")
-	ErrGetObjectUploadState = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 110007, "failed to get upload object state")
+	ErrInvalidUploadRequest = gfsperrors.Register(module.UploadModularName, http.StatusConflict, 110006, "the object had already been fully uploaded and any further uploading attempt is not allowed")
+	ErrGetObjectUploadState = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 110007, "failed to get upload object state")
 )
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
@@ -59,17 +59,6 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 		return ErrNotCreatedState
 	}
 
-	taskState, _, errGetUploadObjectState := u.baseApp.GfSpClient().GetUploadObjectState(ctx, uploadObjectTask.GetObjectInfo().Id.Uint64())
-	if errGetUploadObjectState != nil {
-		log.CtxErrorw(ctx, "failed to get upload object state")
-		return ErrGetObjectUploadState
-	}
-	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) {
-		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
-		log.CtxErrorw(ctx, "failed to put object as the target object had already fully uploaded")
-		return ErrInvalidUploadRequest
-	}
-
 	startTime := time.Now()
 	has := u.uploadQueue.Has(uploadObjectTask.Key())
 	metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_check_repeat_cost").Observe(time.Since(startTime).Seconds())
@@ -85,6 +74,18 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 		log.CtxErrorw(ctx, "failed to begin upload object task")
 		return err
 	}
+
+	taskState, _, errGetUploadObjectState := u.baseApp.GfSpClient().GetUploadObjectState(ctx, uploadObjectTask.GetObjectInfo().Id.Uint64())
+	if errGetUploadObjectState != nil {
+		log.CtxErrorw(ctx, "failed to get upload object state")
+		return ErrGetObjectUploadState
+	}
+	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) {
+		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
+		log.CtxErrorw(ctx, "failed to put object as the target object had already fully uploaded")
+		return ErrInvalidUploadRequest
+	}
+
 	return nil
 }
 
