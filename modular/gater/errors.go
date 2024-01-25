@@ -60,7 +60,8 @@ var (
 	// 2. Equals "/": Direct reference to the root directory, which is usually unsafe.
 	// 3. Contains "\": May indicate an attempt at illegal path or file operations, especially in Windows systems.
 	// 4. Fails SQL Injection Test (util.IsSQLInjection): Object name contains patterns that might be used for SQL injection, like ';select', 'xxx;insert', etc., or SQL comment patterns.
-	ErrInvalidObjectName = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50044, "invalid object name")
+	ErrInvalidObjectName    = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50044, "invalid object name")
+	ErrInvalidUploadRequest = gfsperrors.Register(module.GateModularName, http.StatusConflict, 50045, "The object had already been fully uploaded and any further uploading attempt is not allowed.")
 )
 
 func ErrEncodeResponseWithDetail(detail string) *gfsperrors.GfSpError {
