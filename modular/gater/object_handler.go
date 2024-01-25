@@ -100,14 +100,6 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrInvalidPayloadSize
 		return
 	}
-	taskState, _, _ := g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
-	if taskState == int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) {
-		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
-		log.CtxErrorw(reqCtx.Context(), "failed to put object as the target object had already fully uploaded")
-		err = ErrInvalidUploadRequest
-		return
-	}
-
 	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
@@ -235,19 +227,10 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
 		return
 	}
-
 	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
 	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > params.GetMaxPayloadSize() {
 		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
 		err = ErrInvalidPayloadSize
-		return
-	}
-
-	taskState, _, _ := g.baseApp.GfSpClient().GetUploadObjectState(reqCtx.Context(), objectInfo.Id.Uint64())
-	if taskState == int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) {
-		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
-		log.CtxErrorw(reqCtx.Context(), "failed to put object as the target object had already fully uploaded")
-		err = ErrInvalidUploadRequest
 		return
 	}
 

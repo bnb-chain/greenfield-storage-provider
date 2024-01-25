@@ -16,7 +16,6 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/gorilla/mux"
@@ -225,40 +224,6 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 			wantedResult: "invalid payload",
 		},
 		{
-			name: "can't proceed for object which had been fully uploaded",
-			fn: func() *GateModular {
-				g := setup(t)
-				g.maxPayloadSize = 100
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(true, nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE), "", nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
-
-				consensusMock := consensus.NewMockConsensus(ctrl)
-				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
-				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
-				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
-				g.baseApp.SetConsensus(consensusMock)
-				return g
-			},
-			request: func() *http.Request {
-				path := fmt.Sprintf("%s%s.%s/%s", scheme, mockBucketName, testDomain, mockObjectName)
-				req := httptest.NewRequest(http.MethodPut, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				return req
-			},
-			wantedResult: "The object had already been fully uploaded and any further uploading attempt is not allowed",
-		},
-		{
 			name: "failed to get storage params from consensus",
 			fn: func() *GateModular {
 				g := setup(t)
@@ -269,7 +234,6 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -278,7 +242,7 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil,
 					mockErr).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -306,7 +270,6 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
 				clientMock.EXPECT().UploadObject(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -315,7 +278,7 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -343,7 +306,6 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
 				clientMock.EXPECT().UploadObject(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -352,7 +314,7 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -686,42 +648,6 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 			wantedResult: "invalid payload",
 		},
 		{
-			name: "can't proceed for object which had been fully uploaded",
-			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(true, nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE), "", nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
-
-				consensusMock := consensus.NewMockConsensus(ctrl)
-				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
-				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
-				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
-				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: 100}, nil).Times(1)
-				g.baseApp.SetConsensus(consensusMock)
-				return g
-			},
-			request: func() *http.Request {
-				path := fmt.Sprintf("%s%s.%s/%s?%s=%s&%s", scheme, mockBucketName, testDomain, mockObjectName,
-					ResumableUploadComplete, "a", ResumableUploadOffset)
-				req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				return req
-			},
-			wantedResult: "The object had already been fully uploaded and any further uploading attempt is not allowed",
-		},
-		{
 			name: "failed to parse complete from url",
 			fn: func() *GateModular {
 				g := setup(t)
@@ -731,7 +657,6 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -740,7 +665,7 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
 					MaxPayloadSize: 100}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -767,8 +692,6 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
-
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -777,7 +700,7 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
 					MaxPayloadSize: 100}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -804,7 +727,6 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -813,7 +735,7 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
 					MaxPayloadSize: 100}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -840,8 +762,6 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
-
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -850,7 +770,7 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
 					MaxPayloadSize: 100}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -878,8 +798,6 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
 				clientMock.EXPECT().ResumableUploadObject(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
-
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -888,7 +806,7 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
 					MaxPayloadSize: 100}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -916,8 +834,6 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(true, nil).Times(1)
 				clientMock.EXPECT().ResumableUploadObject(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				clientMock.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
-
 				g.baseApp.SetGfSpClient(clientMock)
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
@@ -926,7 +842,7 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
 					MaxPayloadSize: 100}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)

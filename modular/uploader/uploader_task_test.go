@@ -17,6 +17,7 @@ import (
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
@@ -59,10 +60,12 @@ func TestUploadModular_PreUploadObjectSuccess(t *testing.T) {
 
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
+
 	m1.EXPECT().CreateUploadObject(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 	uploadObjectTask := &gfsptask.GfSpUploadObjectTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED},
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
 		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
 	}
 	err := u.PreUploadObject(context.TODO(), uploadObjectTask)
@@ -77,9 +80,12 @@ func TestUploadModular_PreUploadObjectFailure1(t *testing.T) {
 	m := taskqueue.NewMockTQueueOnStrategy(ctrl)
 	u.uploadQueue = m
 	m.EXPECT().Has(gomock.Any()).Return(true).Times(1)
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 
 	uploadObjectTask := &gfsptask.GfSpUploadObjectTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED},
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
 		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
 	}
 	err := u.PreUploadObject(context.TODO(), uploadObjectTask)
@@ -98,13 +104,47 @@ func TestUploadModular_PreUploadObjectFailure2(t *testing.T) {
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m1)
 	m1.EXPECT().CreateUploadObject(gomock.Any(), gomock.Any()).Return(mockErr).Times(1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 
 	uploadObjectTask := &gfsptask.GfSpUploadObjectTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED},
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
 		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
 	}
 	err := u.PreUploadObject(context.TODO(), uploadObjectTask)
 	assert.Equal(t, mockErr, err)
+}
+
+func TestUploadModular_PreUploadObjectFailure3(t *testing.T) {
+	t.Log("Can't proceed for object which had been fully uploaded")
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE), "", nil).Times(1)
+
+	uploadObjectTask := &gfsptask.GfSpUploadObjectTask{
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
+		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
+	}
+	err := u.PreUploadObject(context.TODO(), uploadObjectTask)
+	assert.Equal(t, ErrInvalidUploadRequest, err)
+}
+
+func TestUploadModular_PreUploadObjectFailure4(t *testing.T) {
+	t.Log("failed to get upload object state")
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED), "", mockErr).Times(1)
+
+	uploadObjectTask := &gfsptask.GfSpUploadObjectTask{
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
+		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
+	}
+	err := u.PreUploadObject(context.TODO(), uploadObjectTask)
+	assert.Equal(t, ErrGetObjectUploadState, err)
 }
 
 func TestUploadModular_HandleUploadObjectTaskSuccess1(t *testing.T) {

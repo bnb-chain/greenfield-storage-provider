@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
@@ -31,11 +32,13 @@ var (
 )
 
 var (
-	ErrDanglingUploadTask = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110001, "OoooH... request lost, try again later")
-	ErrNotCreatedState    = gfsperrors.Register(module.UploadModularName, http.StatusForbidden, 110002, "object not created state")
-	ErrRepeatedTask       = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110003, "put object request repeated")
-	ErrInvalidIntegrity   = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "invalid payload data integrity hash")
-	ErrClosedStream       = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
+	ErrDanglingUploadTask   = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110001, "OoooH... request lost, try again later")
+	ErrNotCreatedState      = gfsperrors.Register(module.UploadModularName, http.StatusForbidden, 110002, "object not created state")
+	ErrRepeatedTask         = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110003, "put object request repeated")
+	ErrInvalidIntegrity     = gfsperrors.Register(module.UploadModularName, http.StatusNotAcceptable, 110004, "invalid payload data integrity hash")
+	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
+	ErrInvalidUploadRequest = gfsperrors.Register(module.GateModularName, http.StatusConflict, 110006, "the object had already been fully uploaded and any further uploading attempt is not allowed")
+	ErrGetObjectUploadState = gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 110007, "failed to get upload object state")
 )
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
@@ -55,6 +58,18 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 		log.CtxErrorw(ctx, "failed to pre upload object, object not create")
 		return ErrNotCreatedState
 	}
+
+	taskState, _, errGetUploadObjectState := u.baseApp.GfSpClient().GetUploadObjectState(ctx, uploadObjectTask.GetObjectInfo().Id.Uint64())
+	if errGetUploadObjectState != nil {
+		log.CtxErrorw(ctx, "failed to get upload object state")
+		return ErrGetObjectUploadState
+	}
+	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) {
+		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
+		log.CtxErrorw(ctx, "failed to put object as the target object had already fully uploaded")
+		return ErrInvalidUploadRequest
+	}
+
 	startTime := time.Now()
 	has := u.uploadQueue.Has(uploadObjectTask.Key())
 	metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_check_repeat_cost").Observe(time.Since(startTime).Seconds())
