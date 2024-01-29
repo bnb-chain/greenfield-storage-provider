@@ -147,6 +147,7 @@ type MetadataAPI interface {
 	PrimarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.PrimarySpIncomeDetail, error)
 	SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error)
 	GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error)
+	GetAllBucketByBucketName(ctx context.Context, bucketName string, opts ...grpc.DialOption) (*types.Bucket, error)
 }
 
 // P2PAPI for mock use

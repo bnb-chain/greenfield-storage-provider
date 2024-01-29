@@ -575,3 +575,56 @@ func (r *MetadataModular) GfSpGetBucketSize(ctx context.Context, req *types.GfSp
 	log.CtxInfow(ctx, "succeed to get bucket total object size", "bucket_size", size)
 	return resp, nil
 }
+
+// GfSpGetAllBucketByBucketName get buckets info by a bucket name, including deleted and private bucket
+func (r *MetadataModular) GfSpGetAllBucketByBucketName(ctx context.Context, req *types.GfSpGetAllBucketByBucketNameRequest) (resp *types.GfSpGetAllBucketByBucketNameResponse, err error) {
+	var (
+		bucket *model.Bucket
+		res    *types.Bucket
+	)
+
+	ctx = log.Context(ctx, req)
+	if err = s3util.CheckValidBucketName(req.BucketName); err != nil {
+		log.Errorw("failed to check bucket name", "bucket_name", req.BucketName, "error", err)
+		return nil, ErrInvalidBucketName
+	}
+
+	bucket, err = r.baseApp.GfBsDB().GetAllBucketByName(req.BucketName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchBucket
+		}
+		log.CtxErrorw(ctx, "failed to get all bucket by bucket name", "error", err)
+		return nil, err
+	}
+
+	if bucket != nil {
+		res = &types.Bucket{
+			BucketInfo: &storage_types.BucketInfo{
+				Owner:                      bucket.Owner.String(),
+				BucketName:                 bucket.BucketName,
+				Visibility:                 storage_types.VisibilityType(storage_types.VisibilityType_value[bucket.Visibility]),
+				Id:                         math.NewUintFromBigInt(bucket.BucketID.Big()),
+				SourceType:                 storage_types.SourceType(storage_types.SourceType_value[bucket.SourceType]),
+				CreateAt:                   bucket.CreateTime,
+				PaymentAddress:             bucket.PaymentAddress.String(),
+				GlobalVirtualGroupFamilyId: bucket.GlobalVirtualGroupFamilyID,
+				ChargedReadQuota:           bucket.ChargedReadQuota,
+				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
+				Tags:                       bucket.GetResourceTags(),
+			},
+			Removed:      bucket.Removed,
+			DeleteAt:     bucket.DeleteAt,
+			DeleteReason: bucket.DeleteReason,
+			Operator:     bucket.Operator.String(),
+			CreateTxHash: bucket.CreateTxHash.String(),
+			UpdateTxHash: bucket.UpdateTxHash.String(),
+			UpdateAt:     bucket.UpdateAt,
+			UpdateTime:   bucket.UpdateTime,
+			StorageSize:  bucket.StorageSize.String(),
+		}
+	}
+	resp = &types.GfSpGetAllBucketByBucketNameResponse{Bucket: res}
+	log.CtxInfo(ctx, "succeed to get all bucket by bucket name")
+	return resp, nil
+}

@@ -78,6 +78,31 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, includePrivate bool) (*Buc
 	return bucket, err
 }
 
+// GetAllBucketByName retrieves a bucket by its name from the database.
+// It returns information for any bucket, including deleted and private ones,
+// without performing permission checks. The function returns a pointer to a
+// Bucket object if found, or gorm.ErrRecordNotFound if not found. In case of database errors, an
+// error is returned.
+func (b *BsDBImpl) GetAllBucketByName(bucketName string) (*Bucket, error) {
+	var (
+		bucket *Bucket
+		err    error
+	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	err = b.db.Take(&bucket, "bucket_name = ?", bucketName).Error
+	return bucket, err
+}
+
 // GetBucketByID get buckets info by a bucket id
 func (b *BsDBImpl) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error) {
 	var (

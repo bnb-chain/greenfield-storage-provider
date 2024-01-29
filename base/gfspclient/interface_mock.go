@@ -388,6 +388,26 @@ func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endp
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePieceToSecondary", reflect.TypeOf((*MockGfSpClientAPI)(nil).DoneReplicatePieceToSecondary), ctx, endpoint, receive)
 }
 
+// GetAllBucketByBucketName mocks base method.
+func (m *MockGfSpClientAPI) GetAllBucketByBucketName(ctx context.Context, bucketName string, opts ...grpc.DialOption) (*types.Bucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, bucketName}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllBucketByBucketName", varargs...)
+	ret0, _ := ret[0].(*types.Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllBucketByBucketName indicates an expected call of GetAllBucketByBucketName.
+func (mr *MockGfSpClientAPIMockRecorder) GetAllBucketByBucketName(ctx, bucketName any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, bucketName}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBucketByBucketName", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetAllBucketByBucketName), varargs...)
+}
+
 // GetAuthNonce mocks base method.
 func (m *MockGfSpClientAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
@@ -3022,6 +3042,26 @@ func NewMockMetadataAPI(ctrl *gomock.Controller) *MockMetadataAPI {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockMetadataAPI) EXPECT() *MockMetadataAPIMockRecorder {
 	return m.recorder
+}
+
+// GetAllBucketByBucketName mocks base method.
+func (m *MockMetadataAPI) GetAllBucketByBucketName(ctx context.Context, bucketName string, opts ...grpc.DialOption) (*types.Bucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, bucketName}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllBucketByBucketName", varargs...)
+	ret0, _ := ret[0].(*types.Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllBucketByBucketName indicates an expected call of GetAllBucketByBucketName.
+func (mr *MockMetadataAPIMockRecorder) GetAllBucketByBucketName(ctx, bucketName any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, bucketName}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBucketByBucketName", reflect.TypeOf((*MockMetadataAPI)(nil).GetAllBucketByBucketName), varargs...)
 }
 
 // GetBucketByBucketID mocks base method.
