@@ -1024,14 +1024,14 @@ message GfSpGetLatestObjectIDResponse {
   uint64 object_id = 1;
 }
 
-// GfSpGetAllBucketByBucketNameRequest is request type for the GfSpGetAllBucketByBucketName RPC method
-message GfSpGetAllBucketByBucketNameRequest {
+// GfSpGetBucketInfoByBucketNameRequest is request type for the GfSpGetBucketInfoByBucketName RPC method
+message GfSpGetBucketInfoByBucketNameRequest {
   // bucket_name is the name of the bucket
   string bucket_name = 1;
 }
 
-// GfSpGetAllBucketByBucketNameResponse is response type for the GfSpGetAllBucketByBucketName RPC method.
-message GfSpGetAllBucketByBucketNameResponse {
+// GfSpGetBucketInfoByBucketNameResponse is response type for the GfSpGetBucketInfoByBucketName RPC method.
+message GfSpGetBucketInfoByBucketNameResponse {
   // bucket defines the information of a bucket
   Bucket bucket = 1;
 }
@@ -1087,5 +1087,5 @@ service GfSpMetadataService {
   rpc GfSpGetBucketSize(GfSpGetBucketSizeRequest) returns (GfSpGetBucketSizeResponse) {}
   rpc GfSpPrimarySpIncomeDetails(GfSpPrimarySpIncomeDetailsRequest) returns (GfSpPrimarySpIncomeDetailsResponse) {}
   rpc GfSpSecondarySpIncomeDetails(GfSpSecondarySpIncomeDetailsRequest) returns (GfSpSecondarySpIncomeDetailsResponse) {}
-  rpc GfSpGetAllBucketByBucketName(GfSpGetAllBucketByBucketNameRequest) returns (GfSpGetAllBucketByBucketNameResponse) {}
+  rpc GfSpGetBucketInfoByBucketName(GfSpGetBucketInfoByBucketNameRequest) returns (GfSpGetBucketInfoByBucketNameResponse) {}
 }

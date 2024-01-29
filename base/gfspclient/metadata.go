@@ -1068,8 +1068,8 @@ func (s *GfSpClient) GetBucketSize(ctx context.Context, bucketID uint64, opts ..
 	return resp.BucketSize, nil
 }
 
-// GetAllBucketByBucketName get bucket info by a bucket name, including deleted and private
-func (s *GfSpClient) GetAllBucketByBucketName(ctx context.Context, bucketName string,
+// GetBucketInfoByBucketName get bucket info by a bucket name, including deleted and private
+func (s *GfSpClient) GetBucketInfoByBucketName(ctx context.Context, bucketName string,
 	opts ...grpc.DialOption) (*types.Bucket, error) {
 	conn, err := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if err != nil {
@@ -1077,11 +1077,11 @@ func (s *GfSpClient) GetAllBucketByBucketName(ctx context.Context, bucketName st
 	}
 	defer conn.Close()
 
-	req := &types.GfSpGetAllBucketByBucketNameRequest{
+	req := &types.GfSpGetBucketInfoByBucketNameRequest{
 		BucketName: bucketName,
 	}
 
-	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetAllBucketByBucketName(ctx, req)
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketInfoByBucketName(ctx, req)
 	ctx = log.Context(ctx, resp)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to send get all bucket rpc by bucket name", "error", err)

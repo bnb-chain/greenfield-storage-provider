@@ -576,8 +576,8 @@ func (r *MetadataModular) GfSpGetBucketSize(ctx context.Context, req *types.GfSp
 	return resp, nil
 }
 
-// GfSpGetAllBucketByBucketName get buckets info by a bucket name, including deleted and private bucket
-func (r *MetadataModular) GfSpGetAllBucketByBucketName(ctx context.Context, req *types.GfSpGetAllBucketByBucketNameRequest) (resp *types.GfSpGetAllBucketByBucketNameResponse, err error) {
+// GfSpGetBucketInfoByBucketName get buckets info by a bucket name, including deleted and private bucket
+func (r *MetadataModular) GfSpGetBucketInfoByBucketName(ctx context.Context, req *types.GfSpGetBucketInfoByBucketNameRequest) (resp *types.GfSpGetBucketInfoByBucketNameResponse, err error) {
 	var (
 		bucket *model.Bucket
 		res    *types.Bucket
@@ -589,7 +589,7 @@ func (r *MetadataModular) GfSpGetAllBucketByBucketName(ctx context.Context, req 
 		return nil, ErrInvalidBucketName
 	}
 
-	bucket, err = r.baseApp.GfBsDB().GetAllBucketByName(req.BucketName)
+	bucket, err = r.baseApp.GfBsDB().GetBucketInfoByBucketName(req.BucketName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNoSuchBucket
@@ -624,7 +624,7 @@ func (r *MetadataModular) GfSpGetAllBucketByBucketName(ctx context.Context, req 
 			StorageSize:  bucket.StorageSize.String(),
 		}
 	}
-	resp = &types.GfSpGetAllBucketByBucketNameResponse{Bucket: res}
+	resp = &types.GfSpGetBucketInfoByBucketNameResponse{Bucket: res}
 	log.CtxInfo(ctx, "succeed to get all bucket by bucket name")
 	return resp, nil
 }

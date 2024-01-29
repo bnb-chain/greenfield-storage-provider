@@ -388,26 +388,6 @@ func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endp
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePieceToSecondary", reflect.TypeOf((*MockGfSpClientAPI)(nil).DoneReplicatePieceToSecondary), ctx, endpoint, receive)
 }
 
-// GetAllBucketByBucketName mocks base method.
-func (m *MockGfSpClientAPI) GetAllBucketByBucketName(ctx context.Context, bucketName string, opts ...grpc.DialOption) (*types.Bucket, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetAllBucketByBucketName", varargs...)
-	ret0, _ := ret[0].(*types.Bucket)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllBucketByBucketName indicates an expected call of GetAllBucketByBucketName.
-func (mr *MockGfSpClientAPIMockRecorder) GetAllBucketByBucketName(ctx, bucketName any, opts ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBucketByBucketName", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetAllBucketByBucketName), varargs...)
-}
-
 // GetAuthNonce mocks base method.
 func (m *MockGfSpClientAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
@@ -469,6 +449,26 @@ func (mr *MockGfSpClientAPIMockRecorder) GetBucketByBucketName(ctx, bucketName, 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByBucketName", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketByBucketName), varargs...)
+}
+
+// GetBucketInfoByBucketName mocks base method.
+func (m *MockGfSpClientAPI) GetBucketInfoByBucketName(ctx context.Context, bucketName string, opts ...grpc.DialOption) (*types.Bucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, bucketName}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBucketInfoByBucketName", varargs...)
+	ret0, _ := ret[0].(*types.Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketInfoByBucketName indicates an expected call of GetBucketInfoByBucketName.
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketInfoByBucketName(ctx, bucketName any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, bucketName}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketInfoByBucketName", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketInfoByBucketName), varargs...)
 }
 
 // GetBucketMeta mocks base method.
@@ -3044,26 +3044,6 @@ func (m *MockMetadataAPI) EXPECT() *MockMetadataAPIMockRecorder {
 	return m.recorder
 }
 
-// GetAllBucketByBucketName mocks base method.
-func (m *MockMetadataAPI) GetAllBucketByBucketName(ctx context.Context, bucketName string, opts ...grpc.DialOption) (*types.Bucket, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx, bucketName}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetAllBucketByBucketName", varargs...)
-	ret0, _ := ret[0].(*types.Bucket)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllBucketByBucketName indicates an expected call of GetAllBucketByBucketName.
-func (mr *MockMetadataAPIMockRecorder) GetAllBucketByBucketName(ctx, bucketName any, opts ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, bucketName}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBucketByBucketName", reflect.TypeOf((*MockMetadataAPI)(nil).GetAllBucketByBucketName), varargs...)
-}
-
 // GetBucketByBucketID mocks base method.
 func (m *MockMetadataAPI) GetBucketByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error) {
 	m.ctrl.T.Helper()
@@ -3102,6 +3082,26 @@ func (mr *MockMetadataAPIMockRecorder) GetBucketByBucketName(ctx, bucketName, in
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, bucketName, includePrivate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByBucketName", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketByBucketName), varargs...)
+}
+
+// GetBucketInfoByBucketName mocks base method.
+func (m *MockMetadataAPI) GetBucketInfoByBucketName(ctx context.Context, bucketName string, opts ...grpc.DialOption) (*types.Bucket, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, bucketName}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBucketInfoByBucketName", varargs...)
+	ret0, _ := ret[0].(*types.Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketInfoByBucketName indicates an expected call of GetBucketInfoByBucketName.
+func (mr *MockMetadataAPIMockRecorder) GetBucketInfoByBucketName(ctx, bucketName any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, bucketName}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketInfoByBucketName", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketInfoByBucketName), varargs...)
 }
 
 // GetBucketMeta mocks base method.

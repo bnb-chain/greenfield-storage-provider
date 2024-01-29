@@ -78,12 +78,12 @@ func (b *BsDBImpl) GetBucketByName(bucketName string, includePrivate bool) (*Buc
 	return bucket, err
 }
 
-// GetAllBucketByName retrieves a bucket by its name from the database.
+// GetBucketInfoByBucketName retrieves a bucket by its name from the database.
 // It returns information for any bucket, including deleted and private ones,
 // without performing permission checks. The function returns a pointer to a
 // Bucket object if found, or gorm.ErrRecordNotFound if not found. In case of database errors, an
 // error is returned.
-func (b *BsDBImpl) GetAllBucketByName(bucketName string) (*Bucket, error) {
+func (b *BsDBImpl) GetBucketInfoByBucketName(bucketName string) (*Bucket, error) {
 	var (
 		bucket *Bucket
 		err    error
