@@ -152,6 +152,27 @@ func TestUploadModular_PreUploadObjectFailure4(t *testing.T) {
 	assert.Equal(t, ErrGetObjectUploadState, err)
 }
 
+func TestUploadModular_PreUploadObjectFailure5(t *testing.T) {
+	t.Log("Can't proceed for object which had been fully uploaded")
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+	m := taskqueue.NewMockTQueueOnStrategy(ctrl)
+	u.uploadQueue = m
+	m.EXPECT().Has(gomock.Any()).Return(false).Times(1)
+
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING), "", nil).Times(1)
+	m1.EXPECT().CreateUploadObject(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	uploadObjectTask := &gfsptask.GfSpUploadObjectTask{
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
+		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
+	}
+	err := u.PreUploadObject(context.TODO(), uploadObjectTask)
+	assert.Equal(t, ErrInvalidUploadRequest, err)
+}
+
 func TestUploadModular_HandleUploadObjectTaskSuccess1(t *testing.T) {
 	t.Log("Success case description: succeed to upload payload to piece store")
 	u := setup(t)
@@ -418,9 +439,10 @@ func TestUploadModular_PreResumableUploadObjectSuccess(t *testing.T) {
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m1)
 	m1.EXPECT().CreateResumableUploadObject(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DOING), "", nil).Times(1)
 
 	uploadObjectTask := &gfsptask.GfSpResumableUploadObjectTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED},
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
 		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
 	}
 	err := u.PreResumableUploadObject(context.TODO(), uploadObjectTask)
@@ -437,7 +459,7 @@ func TestUploadModular_PreResumableUploadObjectFailure1(t *testing.T) {
 	m.EXPECT().Has(gomock.Any()).Return(true).Times(1)
 
 	uploadObjectTask := &gfsptask.GfSpResumableUploadObjectTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED},
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
 		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
 	}
 	err := u.PreResumableUploadObject(context.TODO(), uploadObjectTask)
@@ -458,11 +480,80 @@ func TestUploadModular_PreResumableUploadObjectFailure2(t *testing.T) {
 	m1.EXPECT().CreateResumableUploadObject(gomock.Any(), gomock.Any()).Return(mockErr).Times(1)
 
 	uploadObjectTask := &gfsptask.GfSpResumableUploadObjectTask{
-		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED},
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
 		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
 	}
 	err := u.PreResumableUploadObject(context.TODO(), uploadObjectTask)
 	assert.Equal(t, mockErr, err)
+}
+
+func TestUploadModular_PreResumableUploadObjectFailure3(t *testing.T) {
+	t.Log("Can't proceed for object which had been fully uploaded")
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+
+	m := taskqueue.NewMockTQueueOnStrategy(ctrl)
+	u.resumeableUploadQueue = m
+	m.EXPECT().Has(gomock.Any()).Return(false).Times(1)
+
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE), "", nil).Times(1)
+
+	m1.EXPECT().CreateResumableUploadObject(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	uploadObjectTask := &gfsptask.GfSpResumableUploadObjectTask{
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
+		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
+	}
+	err := u.PreResumableUploadObject(context.TODO(), uploadObjectTask)
+	assert.Equal(t, ErrInvalidUploadRequest, err)
+}
+
+func TestUploadModular_PreResumableUploadObjectFailure4(t *testing.T) {
+	t.Log("failed to get upload object state")
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+
+	m := taskqueue.NewMockTQueueOnStrategy(ctrl)
+	u.resumeableUploadQueue = m
+	m.EXPECT().Has(gomock.Any()).Return(false).Times(1)
+
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED), "", mockErr).Times(1)
+
+	m1.EXPECT().CreateResumableUploadObject(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	uploadObjectTask := &gfsptask.GfSpResumableUploadObjectTask{
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
+		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
+	}
+	err := u.PreResumableUploadObject(context.TODO(), uploadObjectTask)
+	assert.Equal(t, ErrGetObjectUploadState, err)
+}
+
+func TestUploadModular_PreResumableUploadObjectFailure5(t *testing.T) {
+	t.Log("Can't proceed for object which had been fully uploaded")
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+
+	m := taskqueue.NewMockTQueueOnStrategy(ctrl)
+	u.resumeableUploadQueue = m
+	m.EXPECT().Has(gomock.Any()).Return(false).Times(1)
+
+	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m1)
+	m1.EXPECT().GetUploadObjectState(gomock.Any(), gomock.Any()).Return(int32(servicetypes.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING), "", nil).Times(1)
+
+	m1.EXPECT().CreateResumableUploadObject(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	uploadObjectTask := &gfsptask.GfSpResumableUploadObjectTask{
+		ObjectInfo:    &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_CREATED, Id: sdkmath.NewUint(1)},
+		StorageParams: &storagetypes.Params{MaxPayloadSize: 1},
+	}
+	err := u.PreResumableUploadObject(context.TODO(), uploadObjectTask)
+	assert.Equal(t, ErrInvalidUploadRequest, err)
 }
 
 func TestUploadModular_HandleResumableUploadObjectTaskSuccess(t *testing.T) {

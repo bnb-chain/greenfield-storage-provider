@@ -80,7 +80,8 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 		log.CtxErrorw(ctx, "failed to get upload object state")
 		return ErrGetObjectUploadState
 	}
-	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) {
+	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) ||
+		taskState == int32(types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING) {
 		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
 		log.CtxErrorw(ctx, "failed to put object as the target object had already fully uploaded")
 		return ErrInvalidUploadRequest
@@ -236,6 +237,19 @@ func (u *UploadModular) PreResumableUploadObject(ctx context.Context, task coret
 		log.CtxErrorw(ctx, "failed to begin upload object task")
 		return err
 	}
+
+	taskState, _, errGetUploadObjectState := u.baseApp.GfSpClient().GetUploadObjectState(ctx, task.GetObjectInfo().Id.Uint64())
+	if errGetUploadObjectState != nil {
+		log.CtxErrorw(ctx, "failed to get upload object state")
+		return ErrGetObjectUploadState
+	}
+	log.CtxInfo(ctx, "taskState is ", taskState, "task is ", task)
+	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) ||
+		taskState == int32(types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING) {
+		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
+		log.CtxErrorw(ctx, "failed to put object as the target object had already fully uploaded")
+		return ErrInvalidUploadRequest
+	}
 	return nil
 }
 
@@ -328,6 +342,8 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 					ObjectID:  task.GetObjectInfo().Id.Uint64(),
 					TaskState: types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
 				})
+				log.CtxInfow(ctx, "object", task.GetObjectInfo(), "TaskState becomes types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE")
+				time.Sleep(time.Second * 10)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to update upload progress", "error", err)
 					return ErrGfSpDBWithDetail("failed to update upload progress, error: " + err.Error())
