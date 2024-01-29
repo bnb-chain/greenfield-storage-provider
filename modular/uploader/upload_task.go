@@ -342,8 +342,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 					ObjectID:  task.GetObjectInfo().Id.Uint64(),
 					TaskState: types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
 				})
-				log.CtxInfow(ctx, "object", task.GetObjectInfo(), "TaskState becomes types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE")
-				time.Sleep(time.Second * 10)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to update upload progress", "error", err)
 					return ErrGfSpDBWithDetail("failed to update upload progress, error: " + err.Error())
