@@ -64,3 +64,15 @@ func StateToDescription(state TaskState) string {
 	}
 	return description
 }
+
+// CheckAllowUploadStatus helps check if the user upload request is allowed based on current state.
+// If a given TaskState is TaskState_TASK_STATE_UPLOAD_OBJECT_DONE or TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+// we DO NOT accept any further uploading request for the same object id.
+func CheckAllowUploadStatus(state TaskState) bool {
+	switch state {
+	case TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
+		TaskState_TASK_STATE_REPLICATE_OBJECT_DOING:
+		return false
+	}
+	return true
+}
