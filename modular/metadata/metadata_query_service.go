@@ -8,14 +8,18 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 )
 
 func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *types.GfSpQueryUploadProgressRequest) (
 	*types.GfSpQueryUploadProgressResponse, error) {
 	state, errDescription, err := r.baseApp.GfSpDB().GetUploadState(req.GetObjectId())
 	if err != nil {
-		if strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) {
-			return &types.GfSpQueryUploadProgressResponse{Err: ErrNoRecord}, nil
+		if strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) { // ErrRecordNotFound is not an actual error
+			return &types.GfSpQueryUploadProgressResponse{
+				State:          storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED,
+				ErrDescription: errDescription,
+			}, nil
 		}
 		return &types.GfSpQueryUploadProgressResponse{
 			Err: ErrGfSpDBWithDetail("GfSpQueryUploadProgress error:" + err.Error()),
