@@ -31,3 +31,39 @@ func TestStateToDescription(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckAllowUploadStatus(t *testing.T) {
+	const Unknown TaskState = -1
+	cases := []struct {
+		name         string
+		state        TaskState
+		wantedResult bool
+	}{
+		{
+			name:         "1",
+			state:        TaskState_TASK_STATE_INIT_UNSPECIFIED,
+			wantedResult: true,
+		},
+		{
+			name:         "2",
+			state:        TaskState_TASK_STATE_UPLOAD_OBJECT_DONE,
+			wantedResult: false,
+		},
+		{
+			name:         "3",
+			state:        TaskState_TASK_STATE_REPLICATE_OBJECT_DOING,
+			wantedResult: false,
+		},
+		{
+			name:         "4",
+			state:        TaskState_TASK_STATE_UPLOAD_OBJECT_ERROR,
+			wantedResult: true,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			result := CheckAllowUploadStatus(tt.state)
+			assert.Equal(t, tt.wantedResult, result)
+		})
+	}
+}

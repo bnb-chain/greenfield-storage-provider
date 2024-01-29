@@ -80,8 +80,7 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 		log.CtxErrorw(ctx, "failed to get upload object state")
 		return ErrGetObjectUploadState
 	}
-	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) ||
-		taskState == int32(types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING) {
+	if !types.CheckAllowUploadStatus(types.TaskState(taskState)) {
 		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
 		log.CtxErrorw(ctx, "failed to put object as the target object had already fully uploaded")
 		return ErrInvalidUploadRequest
@@ -244,8 +243,7 @@ func (u *UploadModular) PreResumableUploadObject(ctx context.Context, task coret
 		return ErrGetObjectUploadState
 	}
 	log.CtxInfo(ctx, "taskState is ", taskState, "task is ", task)
-	if taskState == int32(types.TaskState_TASK_STATE_UPLOAD_OBJECT_DONE) ||
-		taskState == int32(types.TaskState_TASK_STATE_REPLICATE_OBJECT_DOING) {
+	if !types.CheckAllowUploadStatus(types.TaskState(taskState)) {
 		// It is not allowed to upload piece or object for an object id which had already been fully uploaded.
 		log.CtxErrorw(ctx, "failed to put object as the target object had already fully uploaded")
 		return ErrInvalidUploadRequest
