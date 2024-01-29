@@ -33,7 +33,6 @@ func TestStateToDescription(t *testing.T) {
 }
 
 func TestCheckAllowUploadStatus(t *testing.T) {
-	const Unknown TaskState = -1
 	cases := []struct {
 		name         string
 		state        TaskState
