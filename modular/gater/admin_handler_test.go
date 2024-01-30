@@ -602,6 +602,28 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 			wantedResult: "gnfd msg validate error",
 		},
 		{
+			name: "failed to invalid object approval msg",
+			fn: func() *GateModular {
+				g := setup(t)
+				ctrl := gomock.NewController(t)
+				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
+				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any()).Return(false, nil).Times(1)
+				g.baseApp.SetGfSpClient(clientMock)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s?%s=%s", scheme, testDomain, GetApprovalPath, ActionQuery, createObjectApprovalAction)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "0a7b0a20202263726561746f72223a2022307831433743384136363865323361454432393166373866433266336231383635416363383762364635222c0a2020226275636b65745f6e616d65223a20226d6f636b2d6275636b65742d6e616d65222c0a2020226f626a6563745f6e616d65223a202278783b73656c656374202a2066726f6d206f626a65637473222c0a2020227061796c6f61645f73697a65223a202230222c0a2020227669736962696c697479223a20225649534942494c4954595f545950455f494e4845524954222c0a202022636f6e74656e745f74797065223a20226170706c69636174696f6e2f6a736f6e222c0a2020227072696d6172795f73705f617070726f76616c223a207b0a2020202022657870697265645f686569676874223a20223130222c0a2020202022676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a20302c0a2020202022736967223a206e756c6c0a20207d2c0a2020226578706563745f636865636b73756d73223a205b5d2c0a202022726564756e64616e63795f74797065223a2022524544554e44414e43595f45435f54595045220a7d0a")
+				return req
+			},
+			wantedResult: "invalid object name",
+		},
+		{
 			name: "failed to check sp and bucket status",
 			fn: func() *GateModular {
 				g := setup(t)
