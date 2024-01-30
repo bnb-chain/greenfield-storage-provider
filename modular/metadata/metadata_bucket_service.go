@@ -594,7 +594,7 @@ func (r *MetadataModular) GfSpGetBucketInfoByBucketName(ctx context.Context, req
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNoSuchBucket
 		}
-		log.CtxErrorw(ctx, "failed to get all bucket by bucket name", "error", err)
+		log.CtxErrorw(ctx, "failed to get bucket info by bucket name", "error", err)
 		return nil, err
 	}
 
@@ -625,6 +625,6 @@ func (r *MetadataModular) GfSpGetBucketInfoByBucketName(ctx context.Context, req
 		}
 	}
 	resp = &types.GfSpGetBucketInfoByBucketNameResponse{Bucket: res}
-	log.CtxInfo(ctx, "succeed to get all bucket by bucket name")
+	log.CtxInfo(ctx, "succeed to get bucket info by bucket name")
 	return resp, nil
 }
