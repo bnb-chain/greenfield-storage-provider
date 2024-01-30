@@ -419,6 +419,9 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 	}
 	objects, bucket, err = r.baseApp.GfBsDB().ListObjectsByGVGAndBucketForGC(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.DstGvgId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchBucket
+		}
 		log.CtxErrorw(ctx, "failed to list objects by gvg and bucket for gc", "error", err)
 		return nil, err
 	}
