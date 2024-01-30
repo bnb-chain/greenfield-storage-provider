@@ -15,6 +15,8 @@ type Metadata interface {
 	GetUserBucketsCount(accountID common.Address, includeRemoved bool) (int64, error)
 	// GetBucketByName get buckets info by a bucket name
 	GetBucketByName(bucketName string, includePrivate bool) (*Bucket, error)
+	// GetBucketInfoByBucketName get buckets info by a bucket name, including deleted and private bucket
+	GetBucketInfoByBucketName(bucketName string) (*Bucket, error)
 	// GetBucketByID get buckets info by by a bucket id
 	GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error)
 	// GetLatestBlockNumber get current latest block number

@@ -119,9 +119,9 @@ func (gc *GCWorker) isAllowGCCheck(objectInfo *storagetypes.ObjectInfo, bucketIn
 }
 
 func (gc *GCWorker) getGvgAndSpId(ctx context.Context, objectInfo *storagetypes.ObjectInfo) (*metadatatypes.Bucket, *virtualgrouptypes.GlobalVirtualGroup, uint32, error) {
-	bucketInfo, err := gc.e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
+	bucketInfo, err := gc.e.baseApp.GfSpClient().GetBucketInfoByBucketName(ctx, objectInfo.BucketName)
 	if err != nil || bucketInfo == nil {
-		log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)
+		log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "bucket_name", objectInfo.BucketName, "error", err)
 		return nil, nil, 0, err
 	}
 
@@ -273,9 +273,9 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			log.CtxDebugw(ctx, "delete the primary sp pieces", "object_info", objectInfo,
 				"piece_key", pieceKey, "error", deleteErr)
 		}
-		bucketInfo, err := e.baseApp.GfSpClient().GetBucketByBucketName(ctx, objectInfo.BucketName, true)
+		bucketInfo, err := e.baseApp.GfSpClient().GetBucketInfoByBucketName(ctx, objectInfo.BucketName)
 		if err != nil || bucketInfo == nil {
-			log.Errorw("failed to get bucket by bucket name", "error", err)
+			log.Errorw("failed to get bucket by bucket name", "bucket_name", objectInfo.BucketName, "error", err)
 			return
 		}
 		gvg, err := e.baseApp.GfSpClient().GetGlobalVirtualGroup(ctx, bucketInfo.BucketInfo.Id.Uint64(), objectInfo.LocalVirtualGroupId)
