@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.6
+This release contains 1 bugfixes.
+
+BUGFIXES
+* [#1333](https://github.com/bnb-chain/greenfield-storage-provider/pull/1333) fix: Not allow to upload piece/object for a fully-uploaded object
+
 ## v1.2.5
 This release contains 1 bugfixes.
 
