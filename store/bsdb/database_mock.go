@@ -71,6 +71,21 @@ func (mr *MockMetadataMockRecorder) GetBucketByName(bucketName, includePrivate a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockMetadata)(nil).GetBucketByName), bucketName, includePrivate)
 }
 
+// GetBucketInfoByBucketName mocks base method.
+func (m *MockMetadata) GetBucketInfoByBucketName(bucketName string) (*Bucket, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketInfoByBucketName", bucketName)
+	ret0, _ := ret[0].(*Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketInfoByBucketName indicates an expected call of GetBucketInfoByBucketName.
+func (mr *MockMetadataMockRecorder) GetBucketInfoByBucketName(bucketName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketInfoByBucketName", reflect.TypeOf((*MockMetadata)(nil).GetBucketInfoByBucketName), bucketName)
+}
+
 // GetBucketMetaByName mocks base method.
 func (m *MockMetadata) GetBucketMetaByName(bucketName string, includePrivate bool) (*BucketFullMeta, error) {
 	m.ctrl.T.Helper()
@@ -1107,6 +1122,21 @@ func (m *MockBSDB) GetBucketByName(bucketName string, includePrivate bool) (*Buc
 func (mr *MockBSDBMockRecorder) GetBucketByName(bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketByName", reflect.TypeOf((*MockBSDB)(nil).GetBucketByName), bucketName, includePrivate)
+}
+
+// GetBucketInfoByBucketName mocks base method.
+func (m *MockBSDB) GetBucketInfoByBucketName(bucketName string) (*Bucket, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketInfoByBucketName", bucketName)
+	ret0, _ := ret[0].(*Bucket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketInfoByBucketName indicates an expected call of GetBucketInfoByBucketName.
+func (mr *MockBSDBMockRecorder) GetBucketInfoByBucketName(bucketName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketInfoByBucketName", reflect.TypeOf((*MockBSDB)(nil).GetBucketInfoByBucketName), bucketName)
 }
 
 // GetBucketMetaByName mocks base method.

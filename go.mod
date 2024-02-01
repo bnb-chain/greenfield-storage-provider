@@ -10,7 +10,7 @@ require (
 	github.com/aliyun/credentials-go v1.3.0
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.44.159
-	github.com/bnb-chain/greenfield v1.3.0
+	github.com/bnb-chain/greenfield v1.3.1-0.20240123110110-79d9263996ba
 	github.com/bnb-chain/greenfield-common/go v0.0.0-20230906132736-eb2f0efea228
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.2
