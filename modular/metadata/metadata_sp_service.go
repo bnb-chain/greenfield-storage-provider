@@ -2,9 +2,8 @@ package metadata
 
 import (
 	"context"
-	"errors"
-
 	"cosmossdk.io/math"
+	"errors"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
@@ -149,6 +148,9 @@ func (r *MetadataModular) GfSpGetStatus(ctx context.Context, req *types.GfSpGetS
 		BlockSyncerInfo:     blockSyncerVersion,
 		StorageProviderInfo: storageProviderInfo,
 		ChainInfo:           chainInfo,
+		ManagerInfo:         &managerInfo,
+		ExecutorInfo:        &executorInfo,
+		GcInfo:              &gcInfo,
 	}
 
 	resp = &types.GfSpGetStatusResponse{Status: res}
