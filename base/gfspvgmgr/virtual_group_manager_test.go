@@ -195,5 +195,47 @@ func TestHealthChecker_IsVGFHealthy(t *testing.T) {
 		},
 	})
 	assert.Equal(t, res, true)
+}
 
+func TestHealthChecker_IsVGFHealthy1(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.Write([]byte("body"))
+	}))
+	defer func() { testServer.Close() }()
+
+	ctrl := gomock.NewController(t)
+	con := consensus.NewMockConsensus(ctrl)
+	hc := NewHealthChecker(con)
+	hc.addAllSP([]*sptypes.StorageProvider{
+		{
+			Id:       1,
+			Status:   sptypes.STATUS_IN_SERVICE,
+			Endpoint: testServer.URL,
+		},
+		{
+			Id:       2,
+			Status:   sptypes.STATUS_GRACEFUL_EXITING,
+			Endpoint: testServer.URL,
+		},
+	})
+	hc.unhealthySPs[1] = &sptypes.StorageProvider{
+		Id:       1,
+		Status:   sptypes.STATUS_IN_SERVICE,
+		Endpoint: testServer.URL,
+	}
+
+	hc.unhealthySPs[2] = &sptypes.StorageProvider{
+		Id:       2,
+		Status:   sptypes.STATUS_IN_SERVICE,
+		Endpoint: testServer.URL,
+	}
+
+	res := hc.isVGFHealthy(&vgmgr.VirtualGroupFamilyMeta{
+		GVGMap: map[uint32]*corevgmgr.GlobalVirtualGroupMeta{
+			1: {
+				SecondarySPIDs: []uint32{1, 2},
+			},
+		},
+	})
+	assert.Equal(t, res, false)
 }
