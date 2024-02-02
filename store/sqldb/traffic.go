@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 const (
@@ -378,7 +379,10 @@ func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth strin
 
 // GetLatestBucketTraffic return the latest bucket traffic info of the bucket
 func (s *SpDBImpl) GetLatestBucketTraffic(bucketID uint64) (traffic *corespdb.BucketTraffic, err error) {
-	var queryReturn BucketTrafficTable
+	var (
+		result      *gorm.DB
+		queryReturn BucketTrafficTable
+	)
 
 	startTime := time.Now()
 	defer func() {
@@ -393,8 +397,13 @@ func (s *SpDBImpl) GetLatestBucketTraffic(bucketID uint64) (traffic *corespdb.Bu
 			time.Since(startTime).Seconds())
 	}()
 
-	err = s.db.Where("bucket_id = ?", bucketID).Order("month DESC").Limit(1).Find(&queryReturn).Error
-	if err != nil {
+	result = s.db.Where("bucket_id = ?", bucketID).Order("month DESC").Limit(1).First(&queryReturn)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		err = result.Error
+		return nil, err
+	}
+	if result.Error != nil {
+		err = fmt.Errorf("failed to query bucket traffic table: %s", result.Error)
 		return nil, err
 	}
 
