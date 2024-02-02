@@ -180,7 +180,6 @@ type GCConfig struct {
 	GCMetaTimeInterval int  `comment:"optional"`
 
 	// GC stale version object
-	// gc meta
 	EnableGCStaleVersionObject bool `comment:"optional"`
 	GCStaleVersionTimeInterval int  `comment:"optional"`
 }

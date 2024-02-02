@@ -13,6 +13,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
+const ListShadowIntegrityMetaDefaultSize = 5
+
 // GetShadowObjectIntegrity returns the integrity hash info
 func (s *SpDBImpl) GetShadowObjectIntegrity(objectID uint64, redundancyIndex int32) (meta *corespdb.ShadowIntegrityMeta, err error) {
 	queryReturn := &ShadowIntegrityMetaTable{}
@@ -105,7 +107,7 @@ func (s *SpDBImpl) ListShadowIntegrityMeta() ([]*corespdb.ShadowIntegrityMeta, e
 
 	err = s.db.Table(ShadowIntegrityMetaTableName).
 		Select("*").
-		Limit(ListObjectsDefaultSize).
+		Limit(ListShadowIntegrityMetaDefaultSize).
 		Order("object_id asc").
 		Find(&shadowIntegrityMetas).Error
 

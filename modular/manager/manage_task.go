@@ -554,27 +554,6 @@ func (m *ManageModular) HandleReceivePieceTask(ctx context.Context, task task.Re
 		metrics.ManagerTime.WithLabelValues(ManagerSuccessConfirmReceive).Observe(
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		log.CtxDebugw(ctx, "succeed to confirm receive piece seal on chain")
-
-		log.Infow("HandleReceivePieceTask objetInfo is", "objetInfo is", task.GetObjectInfo())
-
-		// todo gc stale piece by secondary SP
-		if task.GetObjectInfo().GetIsUpdating() {
-			shadowIntegrityMeta, err := m.baseApp.GfSpDB().GetShadowObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
-			if err != nil {
-				log.Debugw("get object integrity meta", "task_info", task.Info(), "error", err)
-				return err
-			}
-			gcStaleVersionObjectTask := &gfsptask.GfSpGCStaleVersionObjectTask{}
-			gcStaleVersionObjectTask.InitGCStaleVersionObjectTask(m.baseApp.TaskPriority(gcStaleVersionObjectTask),
-				shadowIntegrityMeta.ObjectID,
-				shadowIntegrityMeta.RedundancyIndex,
-				shadowIntegrityMeta.IntegrityChecksum,
-				shadowIntegrityMeta.PieceChecksumList,
-				shadowIntegrityMeta.Version,
-				m.baseApp.TaskTimeout(gcStaleVersionObjectTask, 0))
-			err = m.gcStaleVersionObjectQueue.Push(gcStaleVersionObjectTask)
-			log.CtxDebugw(ctx, "push gc stale version object task to queue", "task_info", task.Info(), "error", err)
-		}
 	} else if task.Error() != nil {
 		_ = m.handleFailedReceivePieceTask(ctx, task)
 		metrics.ManagerCounter.WithLabelValues(ManagerFailureConfirmReceive).Inc()

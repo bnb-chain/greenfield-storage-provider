@@ -75,7 +75,8 @@ const (
 	// DefaultGlobalGCMetaTimeInterval defines the default interval for generating
 	// gc meta task.
 	DefaultGlobalGCMetaTimeInterval int = 10 * 60
-
+	//	DefaultGlobalGCStaleVersionObjectInterval int = 10 * 60
+	DefaultGlobalGCStaleVersionObjectInterval = 1 * 60
 	// DefaultGlobalSyncConsensusInfoInterval defines the default interval for sync the sp
 	// info list to sp db.
 	DefaultGlobalSyncConsensusInfoInterval uint64 = 600
@@ -201,7 +202,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.GC.GCMetaTimeInterval == 0 {
 		cfg.GC.GCMetaTimeInterval = DefaultGlobalGCMetaTimeInterval
 	}
-
+	if cfg.GC.GCStaleVersionTimeInterval == 0 {
+		cfg.GC.GCStaleVersionTimeInterval = DefaultGlobalGCStaleVersionObjectInterval
+	}
 	if cfg.Parallel.GlobalSyncConsensusInfoInterval == 0 {
 		cfg.Parallel.GlobalSyncConsensusInfoInterval = DefaultGlobalSyncConsensusInfoInterval
 	}

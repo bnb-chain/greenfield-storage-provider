@@ -118,7 +118,7 @@ type SignatureDB interface {
 	UpdateShadowIntegrityChecksum(integrity *ShadowIntegrityMeta) error
 	// UpdateShadowPieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
 	UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) error
-	// ListShadowIntegrityMeta replicate piece checksum in range
+	// ListShadowIntegrityMeta list Shadow IntegrityMeta records with default limit
 	ListShadowIntegrityMeta() ([]*ShadowIntegrityMeta, error)
 }
 

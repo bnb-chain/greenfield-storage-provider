@@ -126,8 +126,8 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 	case EventUpdateObjectContentSuccess:
 		updateObjectContent, ok := typedEvent.(*storagetypes.EventUpdateObjectContentSuccess)
 		if !ok {
-			log.Errorw("type assert error", "type", "EventUpdateObjectContent", "event", typedEvent)
-			return nil, errors.New("update object event assert error")
+			log.Errorw("type assert error", "type", "EventUpdateObjectContentSuccess", "event", typedEvent)
+			return nil, errors.New("update object success event assert error")
 		}
 		return m.handleUpdateObjectContentSuccess(ctx, block, txHash, updateObjectContent), nil
 	case EventCancelUpdateObjectContent:

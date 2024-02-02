@@ -73,6 +73,8 @@ type Object struct {
 	IsUpdating bool `gorm:"is_updating"`
 	// ContentUpdatedTime defines the content updated time, it is related to updated_at in ObjectInfo
 	ContentUpdatedTime int64 `gorm:"content_updated_time"`
+	// Updater defines the account that updates the object content recently.
+	Updater common.Address `gorm:"updater"`
 	// Version
 	Version int64 `gorm:"version"`
 }

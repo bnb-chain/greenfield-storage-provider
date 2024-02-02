@@ -232,7 +232,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	syncConsensusInfoTicker := time.NewTicker(time.Duration(m.syncConsensusInfoInterval) * time.Second)
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
-	gcObjectStaleVersionPieceTicker := time.NewTicker(20 * time.Second)
+	gcObjectStaleVersionPieceTicker := time.NewTicker(time.Duration(m.gcStaleVersionObjectTimeInterval) * time.Second)
 
 	backupTaskTicker := time.NewTicker(time.Duration(DefaultBackupTaskTimeout) * time.Second)
 	for {
@@ -340,13 +340,11 @@ func (m *ManageModular) gcObjectStaleVersionPiece(ctx context.Context) {
 		log.CtxErrorw(ctx, "failed to query shadow integrity meta list", "error", err)
 		return
 	}
-	log.Debugw("ListShadowIntegrityMeta", "shadowIntegrityMetas", shadowIntegrityMetas, "error", err)
 	if len(shadowIntegrityMetas) == 0 {
 		log.Debugw("No shadowIntegrityMetas found in DB")
 		return
 	}
 	for _, meta := range shadowIntegrityMetas {
-		log.Debugw("retrieved shadow integrity meta", "meta", meta)
 		task := &gfsptask.GfSpGCStaleVersionObjectTask{}
 		task.InitGCStaleVersionObjectTask(m.baseApp.TaskPriority(task),
 			meta.ObjectID,
@@ -436,6 +434,20 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		generateGCObjectTaskCounter  int
 	)
 
+	assignShadowObjectInfo := func(objectInfo *storagetypes.ObjectInfo) error {
+		shadowObject, err := m.baseApp.Consensus().QueryShadowObjectInfo(context.Background(), objectInfo.BucketName, objectInfo.ObjectName)
+		if err != nil {
+			return err
+		}
+		// the shadowObjectInfo will be injected into the objectInfo and passed to related Tasks.
+		// e.g. UploadObjectTask, ReceivePieceTask, SealObjetTask
+		objectInfo.PayloadSize = shadowObject.PayloadSize
+		objectInfo.Version = shadowObject.Version
+		objectInfo.Checksums = shadowObject.Checksums
+		objectInfo.UpdatedAt = shadowObject.UpdatedAt
+		return nil
+	}
+
 	log.Info("start to load task from sp db")
 
 	replicateMetas, err = m.baseApp.GfSpDB().GetUploadMetasToReplicate(m.loadTaskLimitToReplicate, m.loadReplicateTimeout)
@@ -449,8 +461,12 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			log.Errorw("failed to query object info and continue", "object_id", meta.ObjectID, "error", queryErr)
 			continue
 		}
-		// TODO implemente udpate object logic here
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+		if objectInfo.GetIsUpdating() {
+			err = assignShadowObjectInfo(objectInfo)
+			if err != nil {
+				return err
+			}
+		} else if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 			log.Infow("object is not in create status and continue", "object_info", objectInfo)
 			continue
 		}
@@ -499,7 +515,12 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			log.Errorw("failed to query object info and continue", "object_id", meta.ObjectID, "error", queryErr)
 			continue
 		}
-		if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+		if objectInfo.GetIsUpdating() {
+			err = assignShadowObjectInfo(objectInfo)
+			if err != nil {
+				return err
+			}
+		} else if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 			log.Infow("object is not in create status and continue", "object_info", objectInfo)
 			continue
 		}
