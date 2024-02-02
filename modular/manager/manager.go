@@ -415,8 +415,24 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
 			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
-		replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
-		replicateTask.SetSecondaryAddresses(meta.SecondaryEndpoints)
+
+		if meta.GlobalVirtualGroupID == 0 {
+			bucketInfo, err := m.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
+			if err != nil || bucketInfo == nil {
+				log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)
+				return err
+			}
+			gvgMeta, err := m.pickGlobalVirtualGroup(context.Background(), bucketInfo.BucketInfo.GlobalVirtualGroupFamilyId, storageParams)
+			log.Infow("pick global virtual group", "gvg_meta", gvgMeta, "error", err)
+			if err != nil {
+				return err
+			}
+			replicateTask.GlobalVirtualGroupId = gvgMeta.ID
+			replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+		} else {
+			replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
+			replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
+		}
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
