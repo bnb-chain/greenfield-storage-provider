@@ -326,7 +326,6 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			log.Errorw("succeed to update object task state", "task_info", task.Info())
 			_ = m.baseApp.GfSpDB().DeleteUploadProgress(task.GetObjectInfo().Id.Uint64())
 
-			log.Infow("objetInfo is", "objetInfo is", task.GetObjectInfo())
 			if task.GetObjectInfo().GetIsUpdating() {
 				shadowIntegrityMeta, err := m.baseApp.GfSpDB().GetShadowObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 				if err != nil {

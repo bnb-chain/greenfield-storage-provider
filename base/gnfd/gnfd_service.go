@@ -985,18 +985,15 @@ func (g *Gnfd) VerifyUpdateObjectPermission(ctx context.Context, account, bucket
 		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
 			time.Since(startTime).Seconds())
 	}()
-
-	_ = object
 	client := g.getCurrentClient().GnfdClient()
 	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
 		Operator:   account,
 		BucketName: bucket,
 		ObjectName: object,
-		// TODO(ALEX) refine permission
-		ActionType: permissiontypes.ACTION_UPDATE_OBJECT_INFO,
+		ActionType: permissiontypes.ACTION_UPDATE_OBJECT_CONTENT,
 	})
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to verify update object permission", "account", account, "error", err)
+		log.CtxErrorw(ctx, "failed to verify update object content permission", "account", account, "bucket_name", bucket, "object_name", object, "error", err)
 		return false, err
 	}
 	return resp.GetEffect() == permissiontypes.EFFECT_ALLOW, err

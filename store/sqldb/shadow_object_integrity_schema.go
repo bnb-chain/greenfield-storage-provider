@@ -9,7 +9,7 @@ type ShadowIntegrityMetaTable struct {
 	Version           int64
 }
 
-// TableName is used to set IntegrityMetaTable schema's table name in database
+// TableName is used to set ShadowIntegrityMetaTable schema's table name in database
 func (ShadowIntegrityMetaTable) TableName() string {
 	return ShadowIntegrityMetaTableName
 }

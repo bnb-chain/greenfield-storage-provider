@@ -162,7 +162,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		return nil, err
 	}
 	if uint64(latestBlock) < req.BlockId {
-		//log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
+		log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
 		return nil, ErrExceedBlockHeight
 	}
 	log.Debugw("GfSpListMigrateBucketEvents", "sp-id", req.SpId, "block-id", req.BlockId)

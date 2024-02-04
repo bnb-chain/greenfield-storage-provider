@@ -328,11 +328,11 @@ func (m *GfSpGCStaleVersionObjectTask) InitGCStaleVersionObjectTask(priority cor
 }
 
 func (m *GfSpGCStaleVersionObjectTask) Key() coretask.TKey {
-	return GfSpGCStaleVersionObjectTaskKey(m.GetObjectId(), m.GetVersion(), m.GetCreateTime())
+	return GfSpGCStaleVersionObjectTaskKey(m.GetObjectId(), m.GetRedundancyIndex(), m.GetVersion(), m.GetCreateTime())
 }
 
 func (m *GfSpGCStaleVersionObjectTask) Type() coretask.TType {
-	return coretask.TypeTaskGCZombiePiece
+	return coretask.TypeTaskGCStaleVersionObject
 }
 
 func (m *GfSpGCStaleVersionObjectTask) Info() string {

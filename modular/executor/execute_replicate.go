@@ -2,7 +2,6 @@ package executor
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -245,8 +244,6 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), segmentIdx, redundancyIdx, int64(len(data)))
 	receive.SetPieceChecksum(hash.GenerateChecksum(data))
-	fmt.Printf("send data is %s", hex.EncodeToString(data))
-
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
 	signTime := time.Now()
 	signature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)

@@ -186,7 +186,7 @@ func (s *SpDBImpl) UpdateIntegrityChecksum(meta *corespdb.IntegrityMeta) (err er
 	return nil
 }
 
-// UpdateIntegrityMeta update integrity hash info to db
+// UpdateIntegrityMeta update both IntegrityChecksum and PieceChecksumList
 func (s *SpDBImpl) UpdateIntegrityMeta(meta *corespdb.IntegrityMeta) (err error) {
 	startTime := time.Now()
 	defer func() {
@@ -208,9 +208,8 @@ func (s *SpDBImpl) UpdateIntegrityMeta(meta *corespdb.IntegrityMeta) (err error)
 			PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		})
 	if result.Error != nil {
-		return fmt.Errorf("failed to update integrity checksum for integrity meta table: %s", result.Error)
+		return fmt.Errorf("failed to update integrity checksum and piece checksums for integrity meta table: %s", result.Error)
 	}
-
 	return nil
 }
 

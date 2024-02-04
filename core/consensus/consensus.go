@@ -75,9 +75,9 @@ type Consensus interface {
 	WaitForNextBlock(ctx context.Context) error
 	// QuerySwapInInfo is used to query the onchain swapIn info
 	QuerySwapInInfo(ctx context.Context, familyID, gvgID uint32) (*virtualgrouptypes.SwapInInfo, error)
-	//
+	// VerifyUpdateObjectPermission returns an indicator whether the account has permission to update object.
 	VerifyUpdateObjectPermission(ctx context.Context, account, bucket, object string) (bool, error)
-	// QueryShadowObjectInfo
+	// QueryShadowObjectInfo is used to query the onchain ShadowObjectInfo
 	QueryShadowObjectInfo(ctx context.Context, bucket, object string) (*storagetypes.ShadowObjectInfo, error)
 	// Close the Consensus interface.
 	Close() error
