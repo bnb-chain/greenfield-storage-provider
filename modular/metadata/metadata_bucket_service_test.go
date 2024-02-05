@@ -19,6 +19,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 func TestErrGfSpDBWithDetail(t *testing.T) {
@@ -597,6 +598,8 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Failure1(t *testing.T) {
 
 	consensusMock := consensus.NewMockConsensus(ctrl)
 	consensusMock.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(0), mockErr).Times(1)
+	consensusMock.EXPECT().QueryBucketInfoById(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+		BucketName: "testBucketName", ChargedReadQuota: 10000000}, nil).Times(1)
 	a.baseApp.SetConsensus(consensusMock)
 
 	resp, err := a.GfSpGetLatestBucketReadQuota(context.Background(), &types.GfSpGetLatestBucketReadQuotaRequest{
@@ -607,7 +610,7 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Failure1(t *testing.T) {
 		Quota: &gfsptask.GfSpBucketQuotaInfo{
 			BucketId:         1,
 			FreeQuotaSize:    0,
-			ChargedQuotaSize: 0,
+			ChargedQuotaSize: 10000000,
 		},
 	}, resp)
 }
@@ -625,7 +628,7 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Failure2(t *testing.T) {
 	consensusMock := consensus.NewMockConsensus(ctrl)
 	consensusMock.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(10000), nil).Times(1)
 	a.baseApp.SetConsensus(consensusMock)
-
+	consensusMock.EXPECT().QueryBucketInfoById(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 	resp, err := a.GfSpGetLatestBucketReadQuota(context.Background(), &types.GfSpGetLatestBucketReadQuotaRequest{
 		BucketId: 1,
 	})
