@@ -143,7 +143,7 @@ func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Contex
 				log.CtxErrorw(ctx, "failed to update bucket migrate progress recoup quota", "error", err)
 			}
 		}
-		log.CtxDebugw(ctx, "succeed to recoup extra quota to user", "extra_quote", extraQuota)
+		log.CtxDebugw(ctx, "succeed to recoup extra quota to user", "extra_quote", extraQuota, "bucket_id", bucketID)
 	}
 
 	return latestQuota, nil

@@ -417,13 +417,9 @@ func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
 				freeQuotaSize = 0
 			}
 			quota := &gfsptask.GfSpBucketQuotaInfo{
-				BucketName:            bucketTraffic.BucketName,
-				BucketId:              bucketTraffic.BucketID,
-				Month:                 bucketTraffic.YearMonth,
-				ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
-				FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
-				FreeQuotaSize:         freeQuotaSize,
-				ChargedQuotaSize:      bucketTraffic.ChargedQuotaSize,
+				BucketId:         req.BucketId,
+				FreeQuotaSize:    freeQuotaSize,
+				ChargedQuotaSize: 0,
 			}
 
 			return &types.GfSpGetLatestBucketReadQuotaResponse{

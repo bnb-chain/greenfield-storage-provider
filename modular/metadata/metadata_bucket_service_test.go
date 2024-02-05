@@ -10,9 +10,13 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
@@ -579,4 +583,99 @@ func TestMetadataModular_GfSpListBucketsByIDs_Failed(t *testing.T) {
 		IncludeRemoved: true,
 	})
 	assert.NotNil(t, err)
+}
+
+func TestMetadataModular_GfSpGetLatestBucketReadQuota_Failure1(t *testing.T) {
+	a := setup(t)
+
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	spDBMocker := spdb.NewMockSPDB(ctrl)
+	spDBMocker.EXPECT().GetLatestBucketTraffic(gomock.Any()).Return(nil, gorm.ErrRecordNotFound).Times(1)
+	a.baseApp.SetGfSpDB(spDBMocker)
+
+	consensusMock := consensus.NewMockConsensus(ctrl)
+	consensusMock.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(0), mockErr).Times(1)
+	a.baseApp.SetConsensus(consensusMock)
+
+	resp, err := a.GfSpGetLatestBucketReadQuota(context.Background(), &types.GfSpGetLatestBucketReadQuotaRequest{
+		BucketId: 1,
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, &types.GfSpGetLatestBucketReadQuotaResponse{
+		Quota: &gfsptask.GfSpBucketQuotaInfo{
+			BucketId:         1,
+			FreeQuotaSize:    0,
+			ChargedQuotaSize: 0,
+		},
+	}, resp)
+}
+
+func TestMetadataModular_GfSpGetLatestBucketReadQuota_Failure2(t *testing.T) {
+	a := setup(t)
+
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	spDBMocker := spdb.NewMockSPDB(ctrl)
+	spDBMocker.EXPECT().GetLatestBucketTraffic(gomock.Any()).Return(nil, gorm.ErrRecordNotFound).Times(1)
+	a.baseApp.SetGfSpDB(spDBMocker)
+
+	consensusMock := consensus.NewMockConsensus(ctrl)
+	consensusMock.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(10000), nil).Times(1)
+	a.baseApp.SetConsensus(consensusMock)
+
+	resp, err := a.GfSpGetLatestBucketReadQuota(context.Background(), &types.GfSpGetLatestBucketReadQuotaRequest{
+		BucketId: 1,
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, &types.GfSpGetLatestBucketReadQuotaResponse{
+		Quota: &gfsptask.GfSpBucketQuotaInfo{
+			BucketId:         1,
+			FreeQuotaSize:    10000,
+			ChargedQuotaSize: 0,
+		},
+	}, resp)
+}
+
+func TestMetadataModular_GfSpGetLatestBucketReadQuota_Success(t *testing.T) {
+	a := setup(t)
+
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	spDBMocker := spdb.NewMockSPDB(ctrl)
+
+	bucketTraffic := &spdb.BucketTraffic{
+		BucketID:              1,
+		YearMonth:             "2024-01",
+		FreeQuotaSize:         1000,
+		FreeQuotaConsumedSize: 100,
+		BucketName:            "name",
+		ReadConsumedSize:      0,
+		ChargedQuotaSize:      20,
+	}
+	spDBMocker.EXPECT().GetLatestBucketTraffic(gomock.Any()).Return(bucketTraffic, nil).Times(1)
+	a.baseApp.SetGfSpDB(spDBMocker)
+
+	consensusMock := consensus.NewMockConsensus(ctrl)
+	consensusMock.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(10000), nil).Times(0)
+	a.baseApp.SetConsensus(consensusMock)
+
+	resp, err := a.GfSpGetLatestBucketReadQuota(context.Background(), &types.GfSpGetLatestBucketReadQuotaRequest{
+		BucketId: 1,
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, &types.GfSpGetLatestBucketReadQuotaResponse{
+		Quota: &gfsptask.GfSpBucketQuotaInfo{
+			BucketName:            bucketTraffic.BucketName,
+			BucketId:              bucketTraffic.BucketID,
+			Month:                 bucketTraffic.YearMonth,
+			ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
+			FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
+			FreeQuotaSize:         bucketTraffic.FreeQuotaSize,
+			ChargedQuotaSize:      bucketTraffic.ChargedQuotaSize,
+		},
+	}, resp)
 }
