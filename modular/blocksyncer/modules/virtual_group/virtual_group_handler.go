@@ -203,7 +203,7 @@ func (m *Module) handleDeleteGlobalVirtualGroup(ctx context.Context, block *tmct
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 	}
 
-	k, v := m.db.UpdateGVGToSQL(ctx, gvgGroup)
+	k, v := m.db.DeleteGVGToSQL(ctx, gvgGroup)
 	return map[string][]interface{}{
 		k: v,
 	}
@@ -261,7 +261,7 @@ func (m *Module) handleDeleteLocalVirtualGroup(ctx context.Context, block *tmcty
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 	}
 
-	k, v := m.db.UpdateLVGToSQL(ctx, data)
+	k, v := m.db.DeleteLVGToSQL(ctx, data)
 	return map[string][]interface{}{
 		k: v,
 	}
@@ -276,7 +276,7 @@ func (m *Module) handleDeleteGlobalVirtualGroupFamily(ctx context.Context, block
 		UpdateTxHash: txHash,
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 	}
-	k, v := m.db.UpdateVGFToSQL(ctx, data)
+	k, v := m.db.DeleteVGFToSQL(ctx, data)
 	return map[string][]interface{}{
 		k: v,
 	}
