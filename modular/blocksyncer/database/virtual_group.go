@@ -42,10 +42,11 @@ func (db *DB) SaveGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) 
 }
 
 func (db *DB) UpdateGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.GlobalVirtualGroup{}).TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "global_virtual_group_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"primary_sp_id", "secondary_sp_ids", "stored_size", "total_deposit", "update_at", "update_tx_hash", "update_time"}),
-	}).Create(gvg).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.LocalVirtualGroup{}).
+		Select("primary_sp_id", "secondary_sp_ids", "stored_size", "total_deposit", "update_at", "update_tx_hash", "update_time").
+		Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).
+		Updates(gvg).Statement
+	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
 }
 
@@ -92,17 +93,6 @@ func (db *DB) SaveVGFToSQL(ctx context.Context, vgf *models.GlobalVirtualGroupFa
 }
 
 func (db *DB) UpdateVGFToSQL(ctx context.Context, vgf *models.GlobalVirtualGroupFamily) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.GlobalVirtualGroupFamily{}).TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "global_virtual_group_family_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"primary_sp_id", "global_virtual_group_ids", "update_at", "update_tx_hash", "update_time"}),
-	}).Create(vgf).Statement
-	return stat.SQL.String(), stat.Vars
-}
-
-func (db *DB) DeleteVGFToSQL(ctx context.Context, vgf *models.GlobalVirtualGroupFamily) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.GlobalVirtualGroupFamily{}).TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "global_virtual_group_family_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"removed", "update_at", "update_tx_hash", "update_time"}),
-	}).Create(vgf).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.GlobalVirtualGroupFamily{}).TableName()).Where("global_virtual_group_family_id = ?", vgf.GlobalVirtualGroupFamilyId).Updates(vgf).Statement
 	return stat.SQL.String(), stat.Vars
 }
