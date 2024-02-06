@@ -67,8 +67,17 @@ func (db *DB) SaveLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (
 
 func (db *DB) UpdateLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.LocalVirtualGroup{}).
-		Select("bucket_id", "global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
-		Where("local_virtual_group_id = ?", lvg.LocalVirtualGroupId).
+		Select("global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
+		Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).
+		Updates(lvg).Statement
+	log.CtxDebugw(ctx, stat.SQL.String())
+	return stat.SQL.String(), stat.Vars
+}
+
+func (db *DB) DeleteLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.LocalVirtualGroup{}).
+		Select("removed", "update_at", "update_tx_hash", "update_time").
+		Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).
 		Updates(lvg).Statement
 	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
