@@ -228,7 +228,7 @@ func verify15(t *testing.T, db *gorm.DB) error {
 }
 func verify16(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
-	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ? and bucket_id = ?", 1, 649851).Find(&lvg).Error; err != nil {
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
 	}
 	if lvg.StoredSize != 1024 {
@@ -239,7 +239,7 @@ func verify16(t *testing.T, db *gorm.DB) error {
 
 func verify17(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
-	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ? and bucket_id = ?", 1, 649851).Find(&lvg).Error; err != nil {
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
 	}
 	if lvg.StoredSize != 0 || lvg.GlobalVirtualGroupId != 3 {
