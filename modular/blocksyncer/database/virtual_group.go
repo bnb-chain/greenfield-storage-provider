@@ -65,18 +65,7 @@ func (db *DB) SaveLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (
 }
 
 func (db *DB) UpdateLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.LocalVirtualGroup{}).TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "local_virtual_group_id"}, {Name: "bucket_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time"}),
-	}).Create(lvg).Statement
-	return stat.SQL.String(), stat.Vars
-}
-
-func (db *DB) DeleteLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.LocalVirtualGroup{}).TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "local_virtual_group_id"}, {Name: "bucket_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"removed", "update_at", "update_tx_hash", "update_time"}),
-	}).Create(lvg).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).Updates(lvg).Statement
 	return stat.SQL.String(), stat.Vars
 }
 
