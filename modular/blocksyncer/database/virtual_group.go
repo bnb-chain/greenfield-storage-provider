@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
 	"github.com/forbole/juno/v4/models"
 	"gorm.io/gorm"
@@ -66,8 +67,10 @@ func (db *DB) SaveLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (
 
 func (db *DB) UpdateLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.LocalVirtualGroup{}).
-		Select("local_virtual_group_id", "bucket_id", "global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
+		Select("bucket_id", "global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
+		Where("local_virtual_group_id = ?", lvg.LocalVirtualGroupId).
 		Updates(lvg).Statement
+	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
 }
 
