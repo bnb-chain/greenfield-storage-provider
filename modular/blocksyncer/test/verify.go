@@ -239,7 +239,7 @@ func verify17(t *testing.T, db *gorm.DB) error {
 		return err
 	}
 	if lvg.StoredSize != 12345 {
-		return errors.New("StoredSize error, not updated to 12345")
+		return fmt.Errorf("StoredSize error, not updated to 12345, size is %v", lvg.StoredSize)
 	}
 	return nil
 }
