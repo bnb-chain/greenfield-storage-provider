@@ -231,6 +231,9 @@ func verify16(t *testing.T, db *gorm.DB) error {
 	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
 		return err
 	}
+	if lvg.StoredSize != 1024 {
+		return fmt.Errorf("StoredSize error, not updated to 12345, size is %v", lvg.StoredSize)
+	}
 	return nil
 }
 func verify17(t *testing.T, db *gorm.DB) error {
