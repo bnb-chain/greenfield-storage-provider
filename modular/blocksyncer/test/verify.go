@@ -22,7 +22,7 @@ import (
 
 var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
 	verify1, verify2, verify3, verify4, verify5, verify6, verify7, verify8, verify9, verify10,
-	verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify18, verify19, verify20,
+	verify11, verify12, verify13, verify14, verify15, verify16, verify17, verify177, verify18, verify19, verify199, verify20,
 	verify21, verify22, verify23, verify24, verify25, verify26, verify27, verify28, verify29, verify30,
 	verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40,
 	verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49, verify50,
@@ -238,8 +238,19 @@ func verify17(t *testing.T, db *gorm.DB) error {
 	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
 		return err
 	}
+	if lvg.StoredSize != 12345 {
+		return errors.New("StoredSize error, not updated to 12345")
+	}
+	return nil
+}
+
+func verify177(t *testing.T, db *gorm.DB) error {
+	var lvg models.LocalVirtualGroup
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
+		return err
+	}
 	if lvg.StoredSize != 0 {
-		return errors.New("StoredSize error")
+		return fmt.Errorf("StoredSize error, not updated to 0, as expected. stored size is %v", lvg.StoredSize)
 	}
 	return nil
 }
@@ -260,6 +271,18 @@ func verify19(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
+func verify199(t *testing.T, db *gorm.DB) error {
+	var gvg bsdb.GlobalVirtualGroup
+	if err := db.Table((&bsdb.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", 1).Find(&gvg).Error; err != nil {
+		return err
+	}
+	if gvg.StoredSize != 0 || gvg.TotalDeposit.Raw().String() != "0" {
+		return fmt.Errorf("gvg update error StoredSize: %v, TotalDeposit:%v", gvg.StoredSize, gvg.TotalDeposit.Raw().String())
+	}
+	return nil
+}
+
 func verify20(t *testing.T, db *gorm.DB) error {
 	var gvgf bsdb.GlobalVirtualGroupFamily
 	if err := db.Table((&bsdb.GlobalVirtualGroupFamily{}).TableName()).Where("global_virtual_group_family_id = ?", 1).Find(&gvgf).Error; err != nil {
