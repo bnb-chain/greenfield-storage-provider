@@ -7,7 +7,7 @@ MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
 TESTCOVERAGE_THRESHOLD=60
-# GITHUB_WORKSPACE=. # for local testing
+GITHUB_WORKSPACE=. # for local testing
 workspace=${GITHUB_WORKSPACE}
 
 function make_config() {

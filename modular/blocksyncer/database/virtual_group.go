@@ -65,8 +65,8 @@ func (db *DB) SaveLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (
 }
 
 func (db *DB) UpdateLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model((&models.LocalVirtualGroup{}).TableName()).
-		Select("global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.LocalVirtualGroup{}).
+		Select("local_virtual_group_id", "bucket_id", "global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
 		Updates(lvg).Statement
 	return stat.SQL.String(), stat.Vars
 }
