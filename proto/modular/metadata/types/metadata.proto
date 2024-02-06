@@ -819,6 +819,9 @@ message Status {
   StorageProviderInfo storage_provider_info = 1;
   BlockSyncerInfo block_syncer_info = 2;
   ChainInfo chain_info = 3;
+  ManagerInfo manager_info = 4;
+  ExecutorInfo executor_info = 5;
+  GCInfo gc_info = 6;
 }
 
 // BlockSyncerInfo is the debug info for block syncer
@@ -847,6 +850,24 @@ message StorageProviderInfo {
   string sp_operating_system = 5;
   string sp_operator_address = 6;
   string sp_domain_name = 7;
+}
+
+message ManagerInfo {
+  bool enable_load_task = 1;
+  bool enable_health_checker = 2;
+  bool enable_task_retry_scheduler = 3;
+}
+
+message ExecutorInfo {
+  int64 listen_seal_retry_timeout = 1;
+  int64 bucket_traffic_keep_time_day = 2;
+  int64 read_record_keep_time_day = 3;
+}
+
+message GCInfo {
+  bool enable_gc_zombie = 1;
+  bool enable_gc_meta = 2;
+  int64 gc_meta_time_interval = 3;
 }
 
 message GfSpGetStatusRequest {}

@@ -149,6 +149,9 @@ func (r *MetadataModular) GfSpGetStatus(ctx context.Context, req *types.GfSpGetS
 		BlockSyncerInfo:     blockSyncerVersion,
 		StorageProviderInfo: storageProviderInfo,
 		ChainInfo:           chainInfo,
+		ManagerInfo:         &managerInfo,
+		ExecutorInfo:        &executorInfo,
+		GcInfo:              &gcInfo,
 	}
 
 	resp = &types.GfSpGetStatusResponse{Status: res}
