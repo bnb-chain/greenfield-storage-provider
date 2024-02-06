@@ -31,7 +31,7 @@ var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
 }
 
 func Verify(t *testing.T) error {
-	dsn := "root:root@tcp(localhost:3306)/block_syncer?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+	dsn := "root:12121212@tcp(localhost:3306)/block_syncer?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect to the database")
@@ -228,17 +228,17 @@ func verify15(t *testing.T, db *gorm.DB) error {
 }
 func verify16(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
-	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
 	}
 	if lvg.StoredSize != 1024 {
-		return fmt.Errorf("StoredSize error, not updated to 12345, size is %v", lvg.StoredSize)
+		return fmt.Errorf("StoredSize error, not updated to 1024, size is %v", lvg.StoredSize)
 	}
 	return nil
 }
 func verify17(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
-	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
 	}
 	if lvg.StoredSize != 12345 {
@@ -249,11 +249,11 @@ func verify17(t *testing.T, db *gorm.DB) error {
 
 func verify177(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
-	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
 	}
 	if lvg.StoredSize != 0 {
-		return fmt.Errorf("StoredSize error, not updated to 0, as expected. stored size is %v", lvg.StoredSize)
+		return fmt.Errorf("StoredSize error, not updated to 0. stored size is %v", lvg.StoredSize)
 	}
 	return nil
 }
