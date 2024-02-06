@@ -42,7 +42,6 @@ func (db *DB) SaveGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) 
 }
 
 func (db *DB) UpdateGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) (string, []interface{}) {
-	log.CtxDebugw(ctx, "comes into UpdateGVGToSQL")
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.GlobalVirtualGroup{}).
 		Select("primary_sp_id", "secondary_sp_ids", "stored_size", "total_deposit", "update_at", "update_tx_hash", "update_time").
 		Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).
@@ -52,10 +51,11 @@ func (db *DB) UpdateGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup
 }
 
 func (db *DB) DeleteGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.GlobalVirtualGroup{}).TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "global_virtual_group_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"removed", "update_at", "update_tx_hash", "update_time"}),
-	}).Create(gvg).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.GlobalVirtualGroup{}).
+		Select("removed", "update_at", "update_tx_hash", "update_time").
+		Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).
+		Updates(gvg).Statement
+	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
 }
 
