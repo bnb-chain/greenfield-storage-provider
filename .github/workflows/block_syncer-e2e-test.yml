@@ -6,7 +6,6 @@ on:
       - master
       - develop
       - fix-release*
-      - e2e-*
 
   pull_request:
     branches:

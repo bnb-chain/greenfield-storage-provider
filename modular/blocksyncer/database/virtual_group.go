@@ -2,8 +2,6 @@ package database
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-
 	"github.com/forbole/juno/v4/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -46,7 +44,6 @@ func (db *DB) UpdateGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup
 		Select("primary_sp_id", "secondary_sp_ids", "stored_size", "total_deposit", "update_at", "update_tx_hash", "update_time").
 		Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).
 		Updates(gvg).Statement
-	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
 }
 
@@ -55,7 +52,6 @@ func (db *DB) DeleteGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup
 		Select("removed", "update_at", "update_tx_hash", "update_time").
 		Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).
 		Updates(gvg).Statement
-	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
 }
 
@@ -72,7 +68,6 @@ func (db *DB) UpdateLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup)
 		Select("global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
 		Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).
 		Updates(lvg).Statement
-	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
 }
 
@@ -81,7 +76,6 @@ func (db *DB) DeleteLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup)
 		Select("removed", "update_at", "update_tx_hash", "update_time").
 		Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).
 		Updates(lvg).Statement
-	log.CtxDebugw(ctx, stat.SQL.String())
 	return stat.SQL.String(), stat.Vars
 }
 
