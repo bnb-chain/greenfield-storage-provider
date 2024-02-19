@@ -3,6 +3,7 @@ package manager
 import (
 	"container/list"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -210,12 +211,14 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 			return err
 		}
 		vgfID = migrateGVGUnit.DestGVG.GetFamilyId()
+		log.Infow("get bls aggregate signature", "bucket_id", bucket.BucketInfo.Id, "migrateGVGUnit", migrateGVGUnit, "aggBlsSig", hex.EncodeToString(aggBlsSig))
 		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.SrcGVG.GetId(),
 			DstGlobalVirtualGroupId: migrateGVGUnit.DestGVGID, SecondarySpBlsSignature: aggBlsSig})
 	}
 
 	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
 		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
+	log.Infow("sent complete migrate bucket msg to chain", "msg", migrateBucket)
 	txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
 	if txErr != nil {
 		log.Errorw("failed to send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "err", txErr)
@@ -349,6 +352,7 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 			return nil, err
 		}
 		secondarySigs = append(secondarySigs, sig)
+		log.Infow("get secondary sp migration bucket approval", "sp_info", spInfo, "sig", hex.EncodeToString(sig))
 	}
 	aggBlsSig, err := util.BlsAggregate(secondarySigs)
 	if err != nil {
