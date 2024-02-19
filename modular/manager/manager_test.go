@@ -8,6 +8,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	types0 "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -209,6 +210,24 @@ func TestManageModular_LoadTaskFromDB(t *testing.T) {
 			GlobalVirtualGroupID: 1,
 			SecondaryEndpoints:   []string{"endpoint"},
 		},
+		{
+			ObjectID:           2,
+			SecondaryEndpoints: []string{"endpoint"},
+		},
+	}, nil).AnyTimes()
+
+	m3 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	manage.baseApp.SetGfSpClient(m3)
+	m3.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+		&types.Bucket{BucketInfo: &types0.BucketInfo{
+			GlobalVirtualGroupFamilyId: 1,
+		}}, nil)
+
+	vgm := vgmgr.NewMockVirtualGroupManager(ctrl)
+	manage.virtualGroupManager = vgm
+	vgm.EXPECT().PickGlobalVirtualGroup(gomock.Any(), gomock.Any()).Return(&vgmgr.GlobalVirtualGroupMeta{
+		ID:                   1,
+		SecondarySPEndpoints: []string{"endpoint"},
 	}, nil).AnyTimes()
 
 	m2 := consensus.NewMockConsensus(ctrl)
