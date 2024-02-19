@@ -107,6 +107,10 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 		GasLimit:  cfg.Chain.DiscontinueBucketGasLimit,
 		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.DiscontinueBucketFeeAmount)))),
 	}
+	gasInfo[CompleteMigrateBucket] = GasInfo{
+		GasLimit:  cfg.Chain.DiscontinueBucketGasLimit,
+		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.DiscontinueBucketFeeAmount)))),
+	}
 	gasInfo[CreateGlobalVirtualGroup] = GasInfo{
 		GasLimit:  cfg.Chain.CreateGlobalVirtualGroupGasLimit,
 		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.CreateGlobalVirtualGroupFeeAmount)))),
