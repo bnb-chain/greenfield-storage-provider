@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
@@ -349,6 +350,13 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 		sig, err := plan.manager.baseApp.GfSpClient().GetSecondarySPMigrationBucketApproval(ctx, spInfo.GetEndpoint(), signDoc)
 		if err != nil {
 			log.Errorw("failed to get secondary sp migration bucket approval", "error", err, "sp_info", spInfo)
+			return nil, err
+		}
+		// verify bls sig from secondary SP
+		err = veritySecondarySpBlsSignature(spInfo.BlsKey, sig, signDoc.GetSignBytes(), spInfo.Id)
+		if err != nil {
+			log.Errorw("failed to verify secondary sp bls signature", "error", err, "sp_id", spInfo.Id, "bls_pubkey",
+				hex.EncodeToString(spInfo.BlsKey), "bls_sig", hex.EncodeToString(sig))
 			return nil, err
 		}
 		secondarySigs = append(secondarySigs, sig)
@@ -1653,6 +1661,21 @@ func UpdateBucketMigrationProgress(baseApp *gfspapp.GfSpBaseApp, bucketID uint64
 	if err := baseApp.GfSpDB().UpdateBucketMigrationProgress(bucketID, int(migrateState)); err != nil {
 		log.Errorw("failed to update bucket migration progress", "bucket_id", bucketID, "state", migrateState, "error", err)
 		return err
+	}
+	return nil
+}
+
+func veritySecondarySpBlsSignature(secondarySpBlsKey []byte, signature, sigDoc []byte, spID uint32) error {
+	publicKey, err := bls.PublicKeyFromBytes(secondarySpBlsKey)
+	if err != nil {
+		return err
+	}
+	sig, err := bls.SignatureFromBytes(signature)
+	if err != nil {
+		return err
+	}
+	if !sig.Verify(publicKey, sigDoc) {
+		return fmt.Errorf("failed to verify SP[%d] bls signature", spID)
 	}
 	return nil
 }
