@@ -353,7 +353,8 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 			return nil, err
 		}
 		// verify bls sig from secondary SP
-		err = veritySecondarySpBlsSignature(spInfo.BlsKey, sig, signDoc.GetSignBytes(), spInfo.Id)
+		msg := signDoc.GetBlsSignHash()
+		err = verifySecondarySpBlsSignature(spInfo.BlsKey, sig, msg[:], spInfo.Id)
 		if err != nil {
 			log.Errorw("failed to verify secondary sp bls signature", "error", err, "sp_id", spInfo.Id, "bls_pubkey",
 				hex.EncodeToString(spInfo.BlsKey), "bls_sig", hex.EncodeToString(sig))
@@ -1665,7 +1666,7 @@ func UpdateBucketMigrationProgress(baseApp *gfspapp.GfSpBaseApp, bucketID uint64
 	return nil
 }
 
-func veritySecondarySpBlsSignature(secondarySpBlsKey []byte, signature, sigDoc []byte, spID uint32) error {
+func verifySecondarySpBlsSignature(secondarySpBlsKey []byte, signature, sigDoc []byte, spID uint32) error {
 	publicKey, err := bls.PublicKeyFromBytes(secondarySpBlsKey)
 	if err != nil {
 		return err
