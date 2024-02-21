@@ -207,10 +207,27 @@ func (g *GfSpBaseApp) GfSpDeductQuotaForBucketMigrate(ctx context.Context, deduc
 		ReadTimestampUs: sqldb.GetCurrentTimestampUs(),
 	}
 
+	freeQuotaSize, querySPFreeQuotaErr := g.Consensus().QuerySPFreeQuota(ctx, g.OperatorAddress())
+	if querySPFreeQuotaErr != nil {
+		return &gfspserver.GfSpDeductQuotaForBucketMigrateResponse{
+			Err: gfsperrors.MakeGfSpError(querySPFreeQuotaErr),
+		}, nil
+	}
+
+	var chargedQuotaSize uint64
+	bucketInfo, queryBucketInfoErr := g.Consensus().QueryBucketInfoById(ctx, deductQuotaRequest.GetBucketId())
+	if queryBucketInfoErr != nil {
+		log.Errorw("failed to get bucketInfo on chain", "bucket_id", deductQuotaRequest.GetBucketId(), "error", queryBucketInfoErr)
+		chargedQuotaSize = 0
+	} else {
+		chargedQuotaSize = bucketInfo.ChargedReadQuota
+	}
+
 	if dbErr := g.GfSpDB().CheckQuotaAndAddReadRecord(
 		readRecord,
 		&spdb.BucketQuota{
-			ChargedQuotaSize: deductQuotaRequest.GetDeductQuota(),
+			ChargedQuotaSize: chargedQuotaSize,
+			FreeQuotaSize:    freeQuotaSize,
 		},
 	); dbErr != nil {
 		log.CtxErrorw(ctx, "failed to check bucket quota", "error", dbErr)

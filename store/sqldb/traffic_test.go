@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -476,7 +477,7 @@ func TestSpDBImpl_GetLatestBucketTrafficSuccess1(t *testing.T) {
 
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
-	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY month DESC LIMIT 1").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY month DESC,`bucket_traffic`.`bucket_id` LIMIT 1").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
 		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, b.BucketName, b.ReadConsumedSize,
 		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
 
@@ -490,6 +491,44 @@ func TestSpDBImpl_GetLatestBucketTrafficSuccess1(t *testing.T) {
 	newTraffic, err := s.GetLatestBucketTraffic(b.BucketID)
 	assert.Nil(t, err)
 	assert.Equal(t, newTraffic.ReadConsumedSize, b.ReadConsumedSize)
+}
+
+func TestSpDBImpl_GetLatestBucketTrafficFailure1(t *testing.T) {
+	b := BucketTrafficTable{
+		BucketID:              2,
+		BucketName:            "mockBucketName",
+		ReadConsumedSize:      0,
+		FreeQuotaConsumedSize: 10,
+		FreeQuotaSize:         25,
+		ChargedQuotaSize:      30,
+		ModifiedTime:          time.Now(),
+	}
+
+	s, mock := setupDB(t)
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY month DESC,`bucket_traffic`.`bucket_id` LIMIT 1").WillReturnError(gorm.ErrRecordNotFound)
+
+	newTraffic, err := s.GetLatestBucketTraffic(b.BucketID)
+	assert.Equal(t, err, gorm.ErrRecordNotFound)
+	assert.Nil(t, newTraffic)
+}
+
+func TestSpDBImpl_GetLatestBucketTrafficFailure2(t *testing.T) {
+	b := BucketTrafficTable{
+		BucketID:              2,
+		BucketName:            "mockBucketName",
+		ReadConsumedSize:      0,
+		FreeQuotaConsumedSize: 10,
+		FreeQuotaSize:         25,
+		ChargedQuotaSize:      30,
+		ModifiedTime:          time.Now(),
+	}
+
+	s, mock := setupDB(t)
+	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ? ORDER BY month DESC,`bucket_traffic`.`bucket_id` LIMIT 1").WillReturnError(gorm.ErrInvalidDB)
+
+	newTraffic, err := s.GetLatestBucketTraffic(b.BucketID)
+	assert.True(t, strings.Contains(err.Error(), "failed to query bucket traffic table"))
+	assert.Nil(t, newTraffic)
 }
 
 func TestSpDBImpl_UpdateBucketTrafficInsertSuccess(t *testing.T) {

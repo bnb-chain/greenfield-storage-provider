@@ -2,10 +2,15 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -72,6 +77,47 @@ func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context
 	if quota, err = m.baseApp.GfSpClient().GetLatestBucketReadQuota(ctx, bucketID); err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket read quota", "bucket_id", bucketID, "error", err)
 		return quota, err
+	}
+
+	readTimestampUs := sqldb.GetCurrentTimestampUs()
+	yearMonth := sqldb.TimeToYearMonth(sqldb.TimestampUsToTime(readTimestampUs))
+
+	bucketTraffic, err := m.baseApp.GfSpDB().GetBucketTraffic(bucketID, yearMonth)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.CtxErrorw(ctx, "failed to get bucket traffic", "bucket_id", bucketID, "error", err)
+		return quota, err
+	}
+
+	// init the bucket traffic table when checking quota for the first time
+	if bucketTraffic == nil {
+		readRecord := &spdb.ReadRecord{
+			BucketID:        bucketID,
+			ReadTimestampUs: readTimestampUs,
+		}
+
+		freeQuotaSize, querySPFreeQuotaErr := m.baseApp.Consensus().QuerySPFreeQuota(ctx, m.baseApp.OperatorAddress())
+		if querySPFreeQuotaErr != nil {
+			return quota, querySPFreeQuotaErr
+		}
+
+		var chargedQuotaSize uint64
+		bucketInfo, queryBucketInfoErr := m.baseApp.Consensus().QueryBucketInfoById(ctx, bucketID)
+		if queryBucketInfoErr != nil {
+			log.Errorw("failed to get bucketInfo on chain", "bucket_id", bucketID, "error", err)
+			chargedQuotaSize = 0
+		} else {
+			chargedQuotaSize = bucketInfo.ChargedReadQuota
+		}
+
+		// only need to set the free quota when init the traffic table for every month
+		err = m.baseApp.GfSpDB().InitBucketTraffic(readRecord, &spdb.BucketQuota{
+			ChargedQuotaSize: chargedQuotaSize,
+			FreeQuotaSize:    freeQuotaSize,
+		})
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
+			return quota, err
+		}
 	}
 
 	// reduce quota, sql db
@@ -143,7 +189,7 @@ func (m *ManageModular) NotifyPostMigrateBucketAndRecoupQuota(ctx context.Contex
 				log.CtxErrorw(ctx, "failed to update bucket migrate progress recoup quota", "error", err)
 			}
 		}
-		log.CtxDebugw(ctx, "succeed to recoup extra quota to user", "extra_quote", extraQuota)
+		log.CtxDebugw(ctx, "succeed to recoup extra quota to user", "extra_quote", extraQuota, "bucket_id", bucketID)
 	}
 
 	return latestQuota, nil
