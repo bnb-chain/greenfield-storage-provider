@@ -39,7 +39,6 @@ var (
 	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
 	ErrInvalidUploadRequest = gfsperrors.Register(module.UploadModularName, http.StatusConflict, 110006, "the object had already been fully uploaded and any further uploading attempt is not allowed")
 	ErrGetObjectUploadState = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 110007, "failed to get upload object state")
-	ErrNotUpdatingState   = gfsperrors.Register(module.UploadModularName, http.StatusForbidden, 110006, "object not updating state")
 )
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
