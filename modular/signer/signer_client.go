@@ -455,10 +455,8 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 	for i := 0; i < BroadcastTxRetry; i++ {
 		nonce = client.operatorAccNonce
 		txOpt := &ctypes.TxOption{
-			Mode:      &mode,
-			GasLimit:  client.gasInfo[CompleteMigrateBucket].GasLimit,
-			FeeAmount: client.gasInfo[CompleteMigrateBucket].FeeAmount,
-			Nonce:     nonce,
+			Mode:  &mode,
+			Nonce: nonce,
 		}
 		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteMigrateBucket}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {

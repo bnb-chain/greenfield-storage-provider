@@ -35,7 +35,6 @@ func (m *GfSpRecoverPieceTask) Key() coretask.TKey {
 		m.GetObjectInfo().Id.String(),
 		m.GetSegmentIdx(),
 		m.GetEcIdx(),
-		m.GetCreateTime(),
 	)
 }
 

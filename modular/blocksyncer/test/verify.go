@@ -27,7 +27,7 @@ var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
 	verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40,
 	verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49, verify50,
 	verify51, verify52, verify53, verify54, verify55, verify56, verify57, verify58, verify59, verify60,
-	verify61, verify62, verify63, verify64,
+	verify61, verify62, verify63, verify64, verify65, verify66,
 }
 
 func Verify(t *testing.T) error {
@@ -228,26 +228,35 @@ func verify15(t *testing.T, db *gorm.DB) error {
 }
 func verify16(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
-	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
+	}
+	if lvg.StoredSize != 1024 {
+		return fmt.Errorf("StoredSize error, not updated to 1024, size is %v", lvg.StoredSize)
 	}
 	return nil
 }
+
 func verify17(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
-	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 8).Find(&lvg).Error; err != nil {
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
 	}
-	if lvg.StoredSize != 0 {
-		return errors.New("StoredSize error")
+	if lvg.StoredSize != 0 || lvg.GlobalVirtualGroupId != 3 {
+		return fmt.Errorf("StoredSize not updated to 0, or gvgId not update to 3, StoredSize is %v and gvgId is %v", lvg.StoredSize, lvg.GlobalVirtualGroupId)
 	}
 	return nil
 }
+
 func verify18(t *testing.T, db *gorm.DB) error {
-	var gvg bsdb.GlobalVirtualGroup
-	if err := db.Table((&bsdb.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", 1).Find(&gvg).Error; err != nil {
+	var lvg models.LocalVirtualGroup
+	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
 		return err
 	}
+	if !lvg.Removed {
+		return fmt.Errorf("lvg id %v not removed", lvg.LocalVirtualGroupId)
+	}
+
 	return nil
 }
 func verify19(t *testing.T, db *gorm.DB) error {
@@ -255,46 +264,73 @@ func verify19(t *testing.T, db *gorm.DB) error {
 	if err := db.Table((&bsdb.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", 1).Find(&gvg).Error; err != nil {
 		return err
 	}
-	if gvg.StoredSize != 48372064 || gvg.TotalDeposit.Raw().String() != "140737488355328000" {
-		return fmt.Errorf("gvg update error StoredSize: %v, TotalDeposit:%v", gvg.StoredSize, gvg.TotalDeposit.Raw().String())
+	if gvg.StoredSize != 1223 || gvg.TotalDeposit.Raw().String() != "140737488355328000" {
+		return fmt.Errorf("gvg create error StoredSize: %v, TotalDeposit:%v", gvg.StoredSize, gvg.TotalDeposit.Raw().String())
 	}
 	return nil
 }
 func verify20(t *testing.T, db *gorm.DB) error {
-	var gvgf bsdb.GlobalVirtualGroupFamily
-	if err := db.Table((&bsdb.GlobalVirtualGroupFamily{}).TableName()).Where("global_virtual_group_family_id = ?", 1).Find(&gvgf).Error; err != nil {
+	var gvg bsdb.GlobalVirtualGroup
+	if err := db.Table((&bsdb.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", 1).Find(&gvg).Error; err != nil {
 		return err
+	}
+	if gvg.StoredSize != 0 || gvg.TotalDeposit.Raw().String() != "0" || gvg.PrimarySpId != 2 {
+		return fmt.Errorf("gvg update error StoredSize: %v, TotalDeposit: %v, PrimarySpId: %v", gvg.StoredSize, gvg.TotalDeposit.Raw().String(), gvg.PrimarySpId)
 	}
 	return nil
 }
+
 func verify21(t *testing.T, db *gorm.DB) error {
-	var gvgf bsdb.GlobalVirtualGroupFamily
-	if err := db.Table((&bsdb.GlobalVirtualGroupFamily{}).TableName()).Where("global_virtual_group_family_id = ?", 1).Find(&gvgf).Error; err != nil {
+	var gvg bsdb.GlobalVirtualGroup
+	if err := db.Table((&bsdb.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", 1).Find(&gvg).Error; err != nil {
 		return err
 	}
-	if gvgf.PrimarySpId != 3 {
-		return errors.New("PrimarySpId error")
+	if !gvg.Removed {
+		return fmt.Errorf("gvg id %v not removed", gvg.GlobalVirtualGroupId)
 	}
 	return nil
 }
+
 func verify22(t *testing.T, db *gorm.DB) error {
 	var gvgf bsdb.GlobalVirtualGroupFamily
 	if err := db.Table((&bsdb.GlobalVirtualGroupFamily{}).TableName()).Where("global_virtual_group_family_id = ?", 1).Find(&gvgf).Error; err != nil {
 		return err
 	}
-	if !gvgf.Removed {
-		return errors.New("gvgf is not removed")
+	if gvgf.PrimarySpId != 3 {
+		return fmt.Errorf("create gvgf with PrimarySpId error, expect 3, get %v", gvgf.PrimarySpId)
 	}
 	return nil
 }
+
 func verify23(t *testing.T, db *gorm.DB) error {
+	var gvgf bsdb.GlobalVirtualGroupFamily
+	if err := db.Table((&bsdb.GlobalVirtualGroupFamily{}).TableName()).Where("global_virtual_group_family_id = ?", 1).Find(&gvgf).Error; err != nil {
+		return err
+	}
+	if gvgf.PrimarySpId != 5 {
+		return fmt.Errorf("update gvgf with PrimarySpId error, expect 5, get %v", gvgf.PrimarySpId)
+	}
+	return nil
+}
+
+func verify24(t *testing.T, db *gorm.DB) error {
+	var gvgf bsdb.GlobalVirtualGroupFamily
+	if err := db.Table((&bsdb.GlobalVirtualGroupFamily{}).TableName()).Where("global_virtual_group_family_id = ?", 1).Find(&gvgf).Error; err != nil {
+		return err
+	}
+	if !gvgf.Removed {
+		return fmt.Errorf("gvgf id %v is not removed", gvgf.GlobalVirtualGroupFamilyId)
+	}
+	return nil
+}
+func verify25(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify24(t *testing.T, db *gorm.DB) error {
+func verify26(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
 		return err
@@ -304,7 +340,7 @@ func verify24(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
-func verify25(t *testing.T, db *gorm.DB) error {
+func verify27(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
 		return err
@@ -315,7 +351,7 @@ func verify25(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify26(t *testing.T, db *gorm.DB) error {
+func verify28(t *testing.T, db *gorm.DB) error {
 	var permission models.Permission
 	if err := db.Table((&models.Permission{}).TableName()).Where("policy_id = ?", common.BigToHash(big.NewInt(2))).Find(&permission).Error; err != nil {
 		return err
@@ -323,7 +359,7 @@ func verify26(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify27(t *testing.T, db *gorm.DB) error {
+func verify29(t *testing.T, db *gorm.DB) error {
 	var permission models.Permission
 	if err := db.Table((&models.Permission{}).TableName()).Where("policy_id = ?", common.BigToHash(big.NewInt(2))).Find(&permission).Error; err != nil {
 		return err
@@ -334,7 +370,7 @@ func verify27(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify28(t *testing.T, db *gorm.DB) error {
+func verify30(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
 		return err
@@ -344,7 +380,7 @@ func verify28(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
-func verify29(t *testing.T, db *gorm.DB) error {
+func verify31(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
 		return err
@@ -354,10 +390,10 @@ func verify29(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
-func verify30(t *testing.T, db *gorm.DB) error {
+func verify32(t *testing.T, db *gorm.DB) error {
 	return nil
 }
-func verify31(t *testing.T, db *gorm.DB) error {
+func verify33(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
 		return err
@@ -367,7 +403,7 @@ func verify31(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
-func verify32(t *testing.T, db *gorm.DB) error {
+func verify34(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
 		return err
@@ -377,63 +413,63 @@ func verify32(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
-func verify33(t *testing.T, db *gorm.DB) error {
+func verify35(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1204))).Find(&object).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify34(t *testing.T, db *gorm.DB) error {
+func verify36(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCompleteMigrationBucket
 	if err := db.Table(bsdb.EventCompleteMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify35(t *testing.T, db *gorm.DB) error {
+func verify37(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventMigrationBucket
 	if err := db.Table(bsdb.EventMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify36(t *testing.T, db *gorm.DB) error {
+func verify38(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCancelMigrationBucket
 	if err := db.Table(bsdb.EventCancelMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify37(t *testing.T, db *gorm.DB) error {
+func verify39(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventStorageProviderExit
 	if err := db.Table(bsdb.EventStorageProviderExitTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify38(t *testing.T, db *gorm.DB) error {
+func verify40(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventSwapOut
 	if err := db.Table(bsdb.EventSwapOutTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify39(t *testing.T, db *gorm.DB) error {
+func verify41(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCompleteSwapOut
 	if err := db.Table(bsdb.EventCompleteSwapOutTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify40(t *testing.T, db *gorm.DB) error {
+func verify42(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCompleteStorageProviderExit
 	if err := db.Table(bsdb.EventCompleteStorageProviderExitTableName).Where("storage_provider_id = ?", 10).Find(&cmb).Error; err != nil {
 		return err
 	}
 	return nil
 }
-func verify41(t *testing.T, db *gorm.DB) error {
+func verify43(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table((&models.Group{}).TableName()).Where("account_id = ? and group_id = ?", common.HexToAddress("0x4d57d300AfaF9f407e26552965ce355786206cF4"), common.HexToHash("2")).Find(&g).Error; err != nil {
 		return err
@@ -443,7 +479,7 @@ func verify41(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
-func verify42(t *testing.T, db *gorm.DB) error {
+func verify44(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
 		return err
@@ -454,7 +490,7 @@ func verify42(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify43(t *testing.T, db *gorm.DB) error {
+func verify45(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000016")).Find(&g).Error; err != nil {
 		return err
@@ -462,11 +498,11 @@ func verify43(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify44(t *testing.T, db *gorm.DB) error {
+func verify46(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify45(t *testing.T, db *gorm.DB) error {
+func verify47(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_id = ? and account_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000016"), common.HexToAddress("0x5870Af236E63beaEbbFa364f78FC7c8e70F0811f")).Find(&g).Error; err != nil {
 		return err
@@ -477,7 +513,7 @@ func verify45(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify46(t *testing.T, db *gorm.DB) error {
+func verify48(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_id = ? and account_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000016"), common.HexToAddress("0x5870AF236E63BEAEBBFA364F78FC7C8E70F0811F")).Find(&g).Error; err != nil {
 		return err
@@ -488,7 +524,7 @@ func verify46(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify47(t *testing.T, db *gorm.DB) error {
+func verify49(t *testing.T, db *gorm.DB) error {
 	var p models.PaymentAccount
 	if err := db.Table((&models.PaymentAccount{}).TableName()).Where("addr = ?", common.HexToAddress("0x68bd245Df652435321989b999F9F70Cd31281b66")).Find(&p).Error; err != nil {
 		return err
@@ -499,7 +535,7 @@ func verify47(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify48(t *testing.T, db *gorm.DB) error {
+func verify50(t *testing.T, db *gorm.DB) error {
 	var p models.PaymentAccount
 	if err := db.Table((&models.PaymentAccount{}).TableName()).Where("addr = ?", common.HexToAddress("0x68bd245Df652435321989b999F9F70Cd31281b66")).Find(&p).Error; err != nil {
 		return err
@@ -510,7 +546,7 @@ func verify48(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify49(t *testing.T, db *gorm.DB) error {
+func verify51(t *testing.T, db *gorm.DB) error {
 	var event bsdb.EventRejectMigrateBucket
 	if err := db.Table((&bsdb.EventCompleteMigrationBucket{}).TableName()).Where("bucket_name = ?", "onkz").Find(&event).Error; err != nil {
 		return errors.New("event not found")
@@ -518,7 +554,7 @@ func verify49(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify50(t *testing.T, db *gorm.DB) error {
+func verify52(t *testing.T, db *gorm.DB) error {
 	var bucket models.Bucket
 	if err := db.Table(bsdb.BucketTableName).Where("bucket_name = ?", "b4tag02").Find(&bucket).Error; err != nil {
 		assert.NoError(t, err)
@@ -528,12 +564,12 @@ func verify50(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify51(t *testing.T, db *gorm.DB) error {
-	// skip this test. Because block 51 created a bucket without setting tags and we set the tag in block 52. So, we will verify the result in verify52 method
+func verify53(t *testing.T, db *gorm.DB) error {
+	// skip this test. Because block 53 created a bucket without setting tags and we set the tag in block 54. So, we will verify the result in verify54 method
 	return nil
 }
 
-func verify52(t *testing.T, db *gorm.DB) error {
+func verify54(t *testing.T, db *gorm.DB) error {
 	var bucket models.Bucket
 	if err := db.Table(bsdb.BucketTableName).Where("bucket_name = ?", "b4tag04").Find(&bucket).Error; err != nil {
 		assert.NoError(t, err)
@@ -543,7 +579,7 @@ func verify52(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify53(t *testing.T, db *gorm.DB) error {
+func verify55(t *testing.T, db *gorm.DB) error {
 	table := GetObjectsTableName("ot005test-bucket")
 	var o models.Object
 	if err := db.Table(table).Where("bucket_name=? and object_name = ?", "ot005test-bucket", "ot005obj002").Find(&o).Error; err != nil {
@@ -555,12 +591,12 @@ func verify53(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify54(t *testing.T, db *gorm.DB) error {
-	// skip this test. Because block 54 created an object  without setting tags and we set the tag in block 55. So, we will verify the result in verify55 method
+func verify56(t *testing.T, db *gorm.DB) error {
+	// skip this test. Because block 54 created an object  without setting tags and we set the tag in block 57. So, we will verify the result in verify57 method
 	return nil
 }
 
-func verify55(t *testing.T, db *gorm.DB) error {
+func verify57(t *testing.T, db *gorm.DB) error {
 	table := GetObjectsTableName("ot005test-bucket")
 	var o models.Object
 	if err := db.Table(table).Where("bucket_name=? and object_name = ?", "ot005test-bucket", "ot005obj004").Find(&o).Error; err != nil {
@@ -572,7 +608,7 @@ func verify55(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify56(t *testing.T, db *gorm.DB) error {
+func verify58(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_name = ? and account_id = ?", "g001-02", common.HexToAddress("0")).Find(&g).Error; err != nil {
 		return err
@@ -582,12 +618,12 @@ func verify56(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify57(t *testing.T, db *gorm.DB) error {
-	// skip this test. Because block 57 created an group  without setting tags and we set the tag in block 58. So, we will verify the result in verify58 method
+func verify59(t *testing.T, db *gorm.DB) error {
+	// skip this test. Because block 59 created an group  without setting tags and we set the tag in block 60. So, we will verify the result in verify60 method
 	return nil
 }
 
-func verify58(t *testing.T, db *gorm.DB) error {
+func verify60(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_name = ? and account_id = ?", "g001-04", common.HexToAddress("0")).Find(&g).Error; err != nil {
 		return err
@@ -598,7 +634,7 @@ func verify58(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify59(t *testing.T, db *gorm.DB) error {
+func verify61(t *testing.T, db *gorm.DB) error {
 	var count int64
 	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and is_folder = ? and full_name = ?", "cxz", true, "/coco/").Count(&count).Error; err != nil {
 		return errors.New("event not found")
@@ -611,7 +647,7 @@ func verify59(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify60(t *testing.T, db *gorm.DB) error {
+func verify62(t *testing.T, db *gorm.DB) error {
 	var count int64
 	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and is_folder = ? and path_name = ?", "cxz", true, "/coco/").Count(&count).Error; err != nil {
 		return errors.New("event not found")
@@ -624,7 +660,7 @@ func verify60(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify61(t *testing.T, db *gorm.DB) error {
+func verify63(t *testing.T, db *gorm.DB) error {
 	var count int64
 	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and is_folder = ? and path_name = ?", "cxz", true, "/sp/").Count(&count).Error; err != nil {
 		return errors.New("event not found")
@@ -636,31 +672,31 @@ func verify61(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-func verify62(t *testing.T, db *gorm.DB) error {
-	var count int64
-	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and full_name = ?", "cxz", "/coco/data/123.txt").Count(&count).Error; err != nil {
-		return errors.New("event not found")
-	}
-
-	if count != 1 {
-		return fmt.Errorf("delete and create same object in same block")
-	}
-	return nil
-}
-
-func verify63(t *testing.T, db *gorm.DB) error {
-	var count int64
-	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and full_name = ?", "cxz", "/coco/data/123.txt").Count(&count).Error; err != nil {
-		return errors.New("event not found")
-	}
-
-	if count != 1 {
-		return fmt.Errorf("delete and create same object in same block")
-	}
-	return nil
-}
-
 func verify64(t *testing.T, db *gorm.DB) error {
+	var count int64
+	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and full_name = ?", "cxz", "/coco/data/123.txt").Count(&count).Error; err != nil {
+		return errors.New("event not found")
+	}
+
+	if count != 1 {
+		return fmt.Errorf("delete and create same object in same block")
+	}
+	return nil
+}
+
+func verify65(t *testing.T, db *gorm.DB) error {
+	var count int64
+	if err := db.Table(GetPrefixesTableName("cxz")).Where("bucket_name = ? and full_name = ?", "cxz", "/coco/data/123.txt").Count(&count).Error; err != nil {
+		return errors.New("event not found")
+	}
+
+	if count != 1 {
+		return fmt.Errorf("delete and create same object in same block")
+	}
+	return nil
+}
+
+func verify66(t *testing.T, db *gorm.DB) error {
 	table := GetObjectsTableName("self-custody-bucket-10")
 	var o models.Object
 	if err := db.Table(table).Where("bucket_name=? and object_name = ?", "self-custody-bucket-10", "28705261ca3b4146b2014af10612476e-5AF048C9-C68E-4266-BF23-40DDCA7F5897").Find(&o).Error; err != nil {

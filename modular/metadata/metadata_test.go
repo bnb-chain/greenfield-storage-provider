@@ -5,17 +5,28 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 )
 
 var mockErr = errors.New("mock error")
 
 func setup(t *testing.T) *MetadataModular {
-	return &MetadataModular{baseApp: &gfspapp.GfSpBaseApp{}}
+	cfg := &gfspconfig.GfSpConfig{
+		Parallel:    gfspconfig.ParallelConfig{},
+		BlockSyncer: gfspconfig.BlockSyncerConfig{},
+		Chain:       gfspconfig.ChainConfig{},
+		SpAccount:   gfspconfig.SpAccountConfig{},
+		Gateway:     gfspconfig.GatewayConfig{},
+	}
+	metadata := &MetadataModular{baseApp: &gfspapp.GfSpBaseApp{}}
+	DefaultMetadataOptions(metadata, cfg)
+	return metadata
 }
 
 func TestMetadataModular_Name(t *testing.T) {

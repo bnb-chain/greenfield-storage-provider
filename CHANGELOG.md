@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.4.0
+
+BUGFIXES
+
+* [#1347](https://github.com/bnb-chain/greenfield-storage-provider/pull/1347)  fix: init the bucket traffic when NotifyPreMigrateBucketAndDeductQuota
+* [#1343](https://github.com/bnb-chain/greenfield-storage-provider/pull/1343)  fix: correct the bucket quota formula when pre-check in bucket migration
+* [#1341](https://github.com/bnb-chain/greenfield-storage-provider/pull/1341)  fix: let bucket migration be able to start without a pre-read of bucket content
+* [#1333](https://github.com/bnb-chain/greenfield-storage-provider/pull/1333)  fix: Not allow to upload piece/object for a fully-uploaded object 
+* [#1314](https://github.com/bnb-chain/greenfield-storage-provider/pull/1314)  fix: special object download issue 
+* [#1315](https://github.com/bnb-chain/greenfield-storage-provider/pull/1315)  fix: blocksyncer sequential processing 
+* [#1316](https://github.com/bnb-chain/greenfield-storage-provider/pull/1316)  fix: fix complete swap in
+
+FEATURES
+
+* [#1250](https://github.com/bnb-chain/greenfield-storage-provider/pull/1250) feat: bucket migration state improvement
+* [#1298](https://github.com/bnb-chain/greenfield-storage-provider/pull/1298) feat: invalid object name
+
+## v1.3.1
+This release contains 1 bugfix.
+
+BUGFIXES
+* [#1333](https://github.com/bnb-chain/greenfield-storage-provider/pull/1333) fix: Not allow to upload piece/object for a fully-uploaded object
+
 ## v1.3.0
 This release contains 2 bugfix and 2 feature.
 
