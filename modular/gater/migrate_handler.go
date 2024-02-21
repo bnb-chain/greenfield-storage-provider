@@ -579,7 +579,7 @@ func (g *GateModular) sufficientQuotaForBucketMigrationHandler(w http.ResponseWr
 	}
 
 	// empty bucket will approval
-	if quota.FreeQuotaSize > bucketSize || bucketSize == 0 {
+	if quota.FreeQuotaSize+quota.MonthlyFreeQuotaSize > bucketSize || bucketSize == 0 {
 		quota.AllowMigrate = true
 	} else {
 		quota.AllowMigrate = false

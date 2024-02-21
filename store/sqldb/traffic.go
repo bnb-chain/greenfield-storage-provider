@@ -116,6 +116,41 @@ func getUpdatedConsumedQuota(recordQuotaCost, freeQuotaRemain, consumeFreeQuota,
 	return consumeFreeQuota, consumeChargedQuota, freeQuotaRemain, needUpdateFreeQuota, nil
 }
 
+// getUpdatedConsumedQuota compute the updated quota of traffic table by the incoming read cost and the newest record.
+// it returns the updated consumed free quota,consumed charged quota and remained free quota
+func getUpdatedConsumedQuotaV2(recordQuotaCost, freeQuotaRemain, consumeFreeQuota, consumeChargedQuota, chargedQuota, monthlyFreeQuotaRemain, consumeMonthlyFreeQuota uint64) (uint64, uint64, uint64, uint64, uint64, error) {
+	log.Infow("quota info", "freeQuotaRemain", freeQuotaRemain, "consumeFreeQuota", consumeFreeQuota, "consumeChargedQuota", consumeChargedQuota, "chargedQuota", chargedQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain, "consumeMonthlyFreeQuota", consumeMonthlyFreeQuota)
+	defer log.Infow("quota info", "freeQuotaRemain", freeQuotaRemain, "consumeFreeQuota", consumeFreeQuota, "consumeChargedQuota", consumeChargedQuota, "chargedQuota", chargedQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain, "consumeMonthlyFreeQuota", consumeMonthlyFreeQuota)
+	if chargedQuota >= recordQuotaCost {
+		consumeChargedQuota += recordQuotaCost
+		return consumeFreeQuota, consumeChargedQuota, consumeMonthlyFreeQuota, freeQuotaRemain, monthlyFreeQuotaRemain, nil
+	}
+	if chargedQuota > 0 {
+		consumeChargedQuota += chargedQuota
+		recordQuotaCost -= chargedQuota
+	}
+
+	if monthlyFreeQuotaRemain >= recordQuotaCost {
+		consumeMonthlyFreeQuota += recordQuotaCost
+		monthlyFreeQuotaRemain -= recordQuotaCost
+		return consumeFreeQuota, consumeChargedQuota, consumeMonthlyFreeQuota, freeQuotaRemain, monthlyFreeQuotaRemain, nil
+	}
+
+	if monthlyFreeQuotaRemain > 0 {
+		consumeMonthlyFreeQuota += monthlyFreeQuotaRemain
+		recordQuotaCost -= monthlyFreeQuotaRemain
+		monthlyFreeQuotaRemain = 0
+	}
+
+	if freeQuotaRemain >= recordQuotaCost {
+		freeQuotaRemain -= recordQuotaCost
+		consumeFreeQuota += recordQuotaCost
+		return consumeFreeQuota, consumeChargedQuota, consumeMonthlyFreeQuota, freeQuotaRemain, monthlyFreeQuotaRemain, nil
+	}
+
+	return 0, 0, 0, 0, 0, ErrCheckQuotaEnough
+}
+
 // updateConsumedQuota update the consumed quota of BucketTraffic table in the transaction way
 func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *corespdb.BucketQuota) error {
 	yearMonth := TimeToYearMonth(TimestampUsToTime(record.ReadTimestampUs))
@@ -145,28 +180,23 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 		}
 
 		// compute the new consumed quota size to be updated by the newest record and the read cost size
-		updatedConsumedFreeQuota, updatedConsumedChargedQuota, updatedRemainedFreeQuota, needUpdateFreeQuota, err := getUpdatedConsumedQuota(record.ReadSize,
+		updatedConsumedFreeQuota, updatedConsumedChargedQuota, updatedConsumedMonthlyFreeQuota, updatedRemainedFreeQuota, updatedRemainedMonthlyFreeQuota, err := getUpdatedConsumedQuotaV2(record.ReadSize,
 			bucketTraffic.FreeQuotaSize, bucketTraffic.FreeQuotaConsumedSize,
-			bucketTraffic.ReadConsumedSize, quota.ChargedQuotaSize)
+			bucketTraffic.ReadConsumedSize, quota.ChargedQuotaSize, bucketTraffic.MonthlyQuotaSize, bucketTraffic.MonthlyFreeQuotaConsumedSize)
 		if err != nil {
 			return err
 		}
 
-		if needUpdateFreeQuota {
-			// it is needed to add select items if you need to update a value to zero in gorm db
-			err = tx.Model(&bucketTraffic).
-				Select("read_consumed_size", "free_quota_consumed_size", "free_quota_size", "modified_time").Updates(BucketTrafficTable{
-				ReadConsumedSize:      updatedConsumedChargedQuota,
-				FreeQuotaConsumedSize: updatedConsumedFreeQuota,
-				FreeQuotaSize:         updatedRemainedFreeQuota,
-				ModifiedTime:          time.Now(),
-			}).Error
-		} else {
-			err = tx.Model(&bucketTraffic).Updates(BucketTrafficTable{
-				ReadConsumedSize: updatedConsumedChargedQuota,
-				ModifiedTime:     time.Now(),
-			}).Error
-		}
+		// it is needed to add select items if you need to update a value to zero in gorm db
+		err = tx.Model(&bucketTraffic).
+			Select("read_consumed_size", "free_quota_consumed_size", "free_quota_size", "monthly_free_quota_consumed_size", "monthly_quota_size", "modified_time").Updates(BucketTrafficTable{
+			ReadConsumedSize:             updatedConsumedChargedQuota,
+			FreeQuotaConsumedSize:        updatedConsumedFreeQuota,
+			FreeQuotaSize:                updatedRemainedFreeQuota,
+			MonthlyFreeQuotaConsumedSize: updatedConsumedMonthlyFreeQuota,
+			MonthlyQuotaSize:             updatedRemainedMonthlyFreeQuota,
+			ModifiedTime:                 time.Now(),
+		}).Error
 		if err != nil {
 			return fmt.Errorf("failed to update bucket traffic table: %v", err)
 		}
@@ -196,14 +226,16 @@ func (s *SpDBImpl) InitBucketTraffic(record *corespdb.ReadRecord, quota *corespd
 			} else {
 				// If the record of this bucket id does not exist, then the free quota consumed is initialized to 0
 				insertBucketTraffic = &BucketTrafficTable{
-					BucketID:              bucketID,
-					Month:                 yearMonth,
-					FreeQuotaSize:         quota.FreeQuotaSize,
-					FreeQuotaConsumedSize: 0,
-					BucketName:            bucketName,
-					ReadConsumedSize:      0,
-					ChargedQuotaSize:      quota.ChargedQuotaSize,
-					ModifiedTime:          time.Now(),
+					BucketID:                     bucketID,
+					Month:                        yearMonth,
+					FreeQuotaSize:                quota.FreeQuotaSize,
+					FreeQuotaConsumedSize:        0,
+					BucketName:                   bucketName,
+					ReadConsumedSize:             0,
+					ChargedQuotaSize:             quota.ChargedQuotaSize,
+					MonthlyQuotaSize:             quota.MonthlyFreeQuotaSize,
+					MonthlyFreeQuotaConsumedSize: 0,
+					ModifiedTime:                 time.Now(),
 				}
 			}
 		} else {
@@ -216,14 +248,16 @@ func (s *SpDBImpl) InitBucketTraffic(record *corespdb.ReadRecord, quota *corespd
 			}
 
 			insertBucketTraffic = &BucketTrafficTable{
-				BucketID:              bucketID,
-				Month:                 yearMonth,
-				FreeQuotaSize:         newestTraffic.FreeQuotaSize,
-				FreeQuotaConsumedSize: 0,
-				BucketName:            bucketName,
-				ReadConsumedSize:      0,
-				ChargedQuotaSize:      quota.ChargedQuotaSize,
-				ModifiedTime:          time.Now(),
+				BucketID:                     bucketID,
+				Month:                        yearMonth,
+				FreeQuotaSize:                newestTraffic.FreeQuotaSize,
+				FreeQuotaConsumedSize:        0,
+				BucketName:                   bucketName,
+				ReadConsumedSize:             0,
+				ChargedQuotaSize:             quota.ChargedQuotaSize,
+				MonthlyQuotaSize:             quota.MonthlyFreeQuotaSize,
+				MonthlyFreeQuotaConsumedSize: 0,
+				ModifiedTime:                 time.Now(),
 			}
 		}
 		result = tx.Create(insertBucketTraffic)
@@ -272,14 +306,16 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (traffic 
 	}
 
 	return &corespdb.BucketTraffic{
-		BucketID:              queryReturn.BucketID,
-		YearMonth:             queryReturn.Month,
-		FreeQuotaSize:         queryReturn.FreeQuotaSize,
-		FreeQuotaConsumedSize: queryReturn.FreeQuotaConsumedSize,
-		BucketName:            queryReturn.BucketName,
-		ReadConsumedSize:      queryReturn.ReadConsumedSize,
-		ChargedQuotaSize:      queryReturn.ChargedQuotaSize,
-		ModifyTime:            queryReturn.ModifiedTime.Unix(),
+		BucketID:                     queryReturn.BucketID,
+		YearMonth:                    queryReturn.Month,
+		FreeQuotaSize:                queryReturn.FreeQuotaSize,
+		FreeQuotaConsumedSize:        queryReturn.FreeQuotaConsumedSize,
+		BucketName:                   queryReturn.BucketName,
+		ReadConsumedSize:             queryReturn.ReadConsumedSize,
+		ChargedQuotaSize:             queryReturn.ChargedQuotaSize,
+		MonthlyFreeQuotaConsumedSize: queryReturn.MonthlyFreeQuotaConsumedSize,
+		MonthlyFreeQuotaSize:         queryReturn.MonthlyQuotaSize,
+		ModifyTime:                   queryReturn.ModifiedTime.Unix(),
 	}, nil
 }
 
@@ -330,36 +366,44 @@ func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth strin
 					ModifiedTime:  time.Now(),
 				}).Error
 		} else {
-			// if the free quota has not exhaust even after consumed extra quota or the consumed charged quota is still zero,
-			// the consumed free quota should be updated
 			consumedChargeQuota := bucketTraffic.ReadConsumedSize
-			if bucketTraffic.FreeQuotaSize > 0 || (bucketTraffic.FreeQuotaSize == 0 && consumedChargeQuota == 0) {
-				err = tx.Model(&bucketTraffic).Select("free_quota_consumed_size", "free_quota_size", "modified_time").
-					Updates(BucketTrafficTable{
-						FreeQuotaConsumedSize: consumedFreeQuota - extraQuota,
-						FreeQuotaSize:         remainedFreeQuota + extraQuota,
-						ModifiedTime:          time.Now(),
-					}).Error
-			} else {
-				// if consumed charge quota is more than extra quota, excess quota needs to be deducted from the consumed charge quota
-				if consumedChargeQuota > extraQuota {
-					err = tx.Model(&bucketTraffic).Select("read_consumed_size", "modified_time").
-						Updates(BucketTrafficTable{
-							ReadConsumedSize: consumedChargeQuota - extraQuota,
-							ModifiedTime:     time.Now(),
-						}).Error
-				} else {
-					extraFreeQuota := extraQuota - consumedChargeQuota
-					// it is needed to add select items if you need to update a value to zero in gorm db
-					err = tx.Model(&bucketTraffic).
-						Select("read_consumed_size", "free_quota_consumed_size", "free_quota_size", "modified_time").Updates(BucketTrafficTable{
-						ReadConsumedSize:      uint64(0),
-						FreeQuotaConsumedSize: consumedFreeQuota - extraFreeQuota,
-						FreeQuotaSize:         remainedFreeQuota + extraFreeQuota,
-						ModifiedTime:          time.Now(),
-					}).Error
-				}
+			consumedMonthlyFreeQuota := bucketTraffic.MonthlyFreeQuotaConsumedSize
+			monthlyFreeQuotaRemain := bucketTraffic.MonthlyQuotaSize
+			log.Infow("quota info", "consumedFreeQuota", consumedFreeQuota, "remainedFreeQuota", remainedFreeQuota, "consumedChargeQuota", consumedChargeQuota, "consumedMonthlyFreeQuota", consumedMonthlyFreeQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain)
+			// The priority of compensation is chargeQuota > monthlyFreeQuota > freeQuota
+			// ChargeQuota
+			if consumedChargeQuota >= extraQuota {
+				consumedChargeQuota -= extraQuota
+				extraQuota = 0
+			} else if consumedChargeQuota > 0 {
+				extraQuota -= consumedChargeQuota
+				consumedChargeQuota = 0
 			}
+			// MonthlyFreeQuota
+			if extraQuota > 0 && consumedMonthlyFreeQuota >= extraQuota {
+				consumedMonthlyFreeQuota -= extraQuota
+				monthlyFreeQuotaRemain += extraQuota
+				extraQuota = 0
+			} else if extraQuota > 0 && consumedMonthlyFreeQuota > 0 {
+				extraQuota -= consumedMonthlyFreeQuota
+				monthlyFreeQuotaRemain += consumedMonthlyFreeQuota
+				consumedMonthlyFreeQuota = 0
+			}
+			// FreeQuota
+			if extraQuota > 0 {
+				consumedFreeQuota -= extraQuota
+				remainedFreeQuota += extraQuota
+			}
+			log.Infow("quota info", "consumedFreeQuota", consumedFreeQuota, "remainedFreeQuota", remainedFreeQuota, "consumedChargeQuota", consumedChargeQuota, "consumedMonthlyFreeQuota", consumedMonthlyFreeQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain)
+			err = tx.Model(&bucketTraffic).
+				Select("read_consumed_size", "free_quota_consumed_size", "monthly_free_quota_consumed_size", "free_quota_size", "monthly_quota_size", "modified_time").Updates(BucketTrafficTable{
+				ReadConsumedSize:             consumedChargeQuota,
+				FreeQuotaConsumedSize:        consumedFreeQuota,
+				MonthlyFreeQuotaConsumedSize: consumedMonthlyFreeQuota,
+				FreeQuotaSize:                remainedFreeQuota,
+				MonthlyQuotaSize:             monthlyFreeQuotaRemain,
+				ModifiedTime:                 time.Now(),
+			}).Error
 		}
 
 		if err != nil {

@@ -371,10 +371,14 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 			}
 
 			return &types.GfSpGetBucketReadQuotaResponse{
-				ChargedQuotaSize:     req.GetBucketInfo().GetChargedReadQuota(),
-				SpFreeQuotaSize:      freeQuotaSize,
-				ConsumedSize:         0,
-				FreeQuotaConsumeSize: 0,
+				ChargedQuotaSize:            req.GetBucketInfo().GetChargedReadQuota(),
+				SpFreeQuotaSize:             freeQuotaSize,
+				ConsumedSize:                0,
+				FreeQuotaConsumeSize:        0,
+				MonthlyFreeQuotaConsumeSize: 0,
+				SpMonthlyFreeQuotaSize:      MonthlyFreeQuota,
+				TotalConsumeSize:            0,
+				RemainQuotaSize:             freeQuotaSize + MonthlyFreeQuota + req.GetBucketInfo().GetChargedReadQuota(),
 			}, nil
 		} else {
 			log.Errorw("failed to get bucket traffic",
@@ -387,10 +391,14 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 	}
 	// if the traffic table has been created, return the db info from meta service
 	return &types.GfSpGetBucketReadQuotaResponse{
-		ChargedQuotaSize:     req.GetBucketInfo().GetChargedReadQuota(),
-		SpFreeQuotaSize:      bucketTraffic.FreeQuotaSize,
-		ConsumedSize:         bucketTraffic.ReadConsumedSize,
-		FreeQuotaConsumeSize: bucketTraffic.FreeQuotaConsumedSize,
+		ChargedQuotaSize:            req.GetBucketInfo().GetChargedReadQuota(),
+		SpFreeQuotaSize:             bucketTraffic.FreeQuotaSize,
+		ConsumedSize:                bucketTraffic.ReadConsumedSize,
+		FreeQuotaConsumeSize:        bucketTraffic.FreeQuotaConsumedSize,
+		MonthlyFreeQuotaConsumeSize: bucketTraffic.MonthlyFreeQuotaConsumedSize,
+		SpMonthlyFreeQuotaSize:      bucketTraffic.MonthlyFreeQuotaSize,
+		TotalConsumeSize:            bucketTraffic.MonthlyFreeQuotaConsumedSize + bucketTraffic.FreeQuotaConsumedSize + bucketTraffic.ReadConsumedSize,
+		RemainQuotaSize:             bucketTraffic.FreeQuotaSize + bucketTraffic.MonthlyFreeQuotaSize + req.GetBucketInfo().GetChargedReadQuota() - bucketTraffic.ReadConsumedSize,
 	}, nil
 }
 
@@ -417,13 +425,15 @@ func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
 				freeQuotaSize = 0
 			}
 			quota := &gfsptask.GfSpBucketQuotaInfo{
-				BucketName:            bucketTraffic.BucketName,
-				BucketId:              bucketTraffic.BucketID,
-				Month:                 bucketTraffic.YearMonth,
-				ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
-				FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
-				FreeQuotaSize:         freeQuotaSize,
-				ChargedQuotaSize:      bucketTraffic.ChargedQuotaSize,
+				BucketName:                   "",
+				BucketId:                     req.GetBucketId(),
+				Month:                        "",
+				ReadConsumedSize:             0,
+				FreeQuotaConsumedSize:        0,
+				FreeQuotaSize:                freeQuotaSize,
+				ChargedQuotaSize:             0,
+				MonthlyFreeQuotaSize:         0,
+				MonthlyFreeQuotaConsumedSize: 0,
 			}
 
 			return &types.GfSpGetLatestBucketReadQuotaResponse{
@@ -438,13 +448,15 @@ func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
 	}
 	// if the traffic table has been created, return the db info from meta service
 	quota := &gfsptask.GfSpBucketQuotaInfo{
-		BucketName:            bucketTraffic.BucketName,
-		BucketId:              bucketTraffic.BucketID,
-		Month:                 bucketTraffic.YearMonth,
-		ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
-		FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
-		FreeQuotaSize:         bucketTraffic.FreeQuotaSize,
-		ChargedQuotaSize:      bucketTraffic.ChargedQuotaSize,
+		BucketName:                   bucketTraffic.BucketName,
+		BucketId:                     bucketTraffic.BucketID,
+		Month:                        bucketTraffic.YearMonth,
+		ReadConsumedSize:             bucketTraffic.ReadConsumedSize,
+		FreeQuotaConsumedSize:        bucketTraffic.FreeQuotaConsumedSize,
+		FreeQuotaSize:                bucketTraffic.FreeQuotaSize,
+		ChargedQuotaSize:             bucketTraffic.ChargedQuotaSize,
+		MonthlyFreeQuotaSize:         bucketTraffic.MonthlyFreeQuotaSize,
+		MonthlyFreeQuotaConsumedSize: bucketTraffic.MonthlyFreeQuotaConsumedSize,
 	}
 	return &types.GfSpGetLatestBucketReadQuotaResponse{
 		Quota: quota,

@@ -237,4 +237,8 @@ message GfSpBucketQuotaInfo {
   uint64 charged_quota_size = 7;
   // used to check if the src sp has enough quota to execute bucket migration
   bool allow_migrate = 8;
+  // the remained monthly free quota
+  uint64 monthly_free_quota_size = 9;
+  // the consumed monthly free quota size of this month
+  uint64 monthly_free_quota_consumed_size = 10;
 }

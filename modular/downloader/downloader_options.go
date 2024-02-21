@@ -43,5 +43,7 @@ func DefaultDownloaderOptions(downloader *DownloadModular, cfg *gfspconfig.GfSpC
 	downloader.pieceCache = cache
 	downloader.downloadParallel = int64(cfg.Parallel.DownloadObjectParallelPerNode)
 	downloader.challengeParallel = int64(cfg.Parallel.ChallengePieceParallelPerNode)
+	downloader.monthlyFreeQuota = cfg.Quota.MonthlyFreeQuota
+
 	return nil
 }

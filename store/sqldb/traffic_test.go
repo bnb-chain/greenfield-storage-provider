@@ -30,28 +30,30 @@ func TestSpDBImpl_CheckQuotaAndAddReadRecordSuccess1(t *testing.T) {
 	}
 
 	b := BucketTrafficTable{
-		BucketID:              2,
-		BucketName:            "mockBucketName",
-		ReadConsumedSize:      0,
-		FreeQuotaConsumedSize: 10,
-		FreeQuotaSize:         25,
-		ChargedQuotaSize:      30,
-		ModifiedTime:          time.Now(),
+		BucketID:                     2,
+		BucketName:                   "mockBucketName",
+		ReadConsumedSize:             0,
+		FreeQuotaConsumedSize:        10,
+		FreeQuotaSize:                25,
+		ChargedQuotaSize:             30,
+		MonthlyFreeQuotaConsumedSize: 0,
+		MonthlyQuotaSize:             20,
+		ModifiedTime:                 time.Now(),
 	}
 
 	yearMonth := TimestampYearMonth(b.ModifiedTime.Unix())
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT * FROM `bucket_traffic` WHERE bucket_id = ?  and month = ? ORDER BY `bucket_traffic`.`bucket_id` LIMIT 1 FOR UPDATE").WillReturnRows(sqlmock.NewRows([]string{"bucket_id", "year_month", "bucket_name", "read_consumed_size", "free_quota_consumed_size",
-		"free_quota_size", "charged_quota_size", "modified_time"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
-		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime))
+		"free_quota_size", "charged_quota_size", "modified_time", "monthly_free_quota_consumed_size", "monthly_quota_size"}).AddRow(b.BucketID, yearMonth, b.BucketName, b.ReadConsumedSize,
+		b.FreeQuotaConsumedSize, b.FreeQuotaSize, b.ChargedQuotaSize, b.ModifiedTime, b.MonthlyFreeQuotaConsumedSize, b.MonthlyQuotaSize))
 
 	mock.ExpectExec("UPDATE `bucket_traffic` SET `charged_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
 		WithArgs(20, sqlmock.AnyArg(), newRecord.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectExec("UPDATE `bucket_traffic` SET `read_consumed_size`=?,`free_quota_consumed_size`=?,`free_quota_size`=?,`modified_time`=? WHERE `bucket_id` = ? ").
-		WithArgs(3, 35, 0, sqlmock.AnyArg(), newRecord.BucketID).
+	mock.ExpectExec("UPDATE `bucket_traffic` SET  `read_consumed_size`=?,`free_quota_consumed_size`=?,`monthly_free_quota_consumed_size`=?,`free_quota_size`=?,`monthly_quota_size`=?,`modified_time`=?  WHERE `bucket_id` = ? ").
+		WithArgs(20, 10, 8, 25, 12, sqlmock.AnyArg(), newRecord.BucketID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectCommit()

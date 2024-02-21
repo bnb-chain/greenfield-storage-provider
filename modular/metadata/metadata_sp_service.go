@@ -131,13 +131,14 @@ func (r *MetadataModular) GfSpGetStatus(ctx context.Context, req *types.GfSpGetS
 	}
 
 	storageProviderInfo = &types.StorageProviderInfo{
-		SpOperatorAddress: SpOperatorAddress,
-		SpDomainName:      GatewayDomainName,
-		SpGoVersion:       spVersion.SpGoVersion,
-		SpCodeCommit:      spVersion.SpCodeCommit,
-		SpCodeVersion:     spVersion.SpCodeVersion,
-		SpOperatingSystem: spVersion.SpOperatingSystem,
-		SpArchitecture:    spVersion.SpArchitecture,
+		SpOperatorAddress:  SpOperatorAddress,
+		SpDomainName:       GatewayDomainName,
+		SpGoVersion:        spVersion.SpGoVersion,
+		SpCodeCommit:       spVersion.SpCodeCommit,
+		SpCodeVersion:      spVersion.SpCodeVersion,
+		SpOperatingSystem:  spVersion.SpOperatingSystem,
+		SpArchitecture:     spVersion.SpArchitecture,
+		SpMonthlyFreeQuota: MonthlyFreeQuota,
 	}
 
 	chainInfo = &types.ChainInfo{

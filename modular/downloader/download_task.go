@@ -108,8 +108,9 @@ func (d *DownloadModular) PreDownloadObject(ctx context.Context, downloadObjectT
 		}
 		// only need to set the free quota when init the traffic table for every month
 		err = d.baseApp.GfSpDB().InitBucketTraffic(readRecord, &spdb.BucketQuota{
-			ChargedQuotaSize: downloadObjectTask.GetBucketInfo().GetChargedReadQuota(),
-			FreeQuotaSize:    freeQuotaSize,
+			ChargedQuotaSize:     downloadObjectTask.GetBucketInfo().GetChargedReadQuota(),
+			FreeQuotaSize:        freeQuotaSize,
+			MonthlyFreeQuotaSize: d.monthlyFreeQuota,
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
@@ -324,8 +325,9 @@ func (d *DownloadModular) PreDownloadPiece(ctx context.Context, downloadPieceTas
 
 			// only need to set the free quota when init the traffic table for every month
 			err = d.baseApp.GfSpDB().InitBucketTraffic(readRecord, &spdb.BucketQuota{
-				ChargedQuotaSize: downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
-				FreeQuotaSize:    freeQuotaSize,
+				ChargedQuotaSize:     downloadPieceTask.GetBucketInfo().GetChargedReadQuota(),
+				FreeQuotaSize:        freeQuotaSize,
+				MonthlyFreeQuotaSize: d.monthlyFreeQuota,
 			})
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)
