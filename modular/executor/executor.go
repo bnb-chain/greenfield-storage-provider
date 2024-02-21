@@ -40,16 +40,17 @@ type ExecuteModular struct {
 	maxObjectMigrationRetry     int
 	objectMigrationRetryTimeout int
 
-	statisticsOutputInterval   int
-	doingReplicatePieceTaskCnt int64
-	doingSpSealObjectTaskCnt   int64
-	doingReceivePieceTaskCnt   int64
-	doingGCObjectTaskCnt       int64
-	doingGCZombiePieceTaskCnt  int64
-	doingGCGCMetaTaskCnt       int64
-	doingRecoveryPieceTaskCnt  int64
-	doingMigrationGVGTaskCnt   int64
-	doingGCBucketMigrationCnt  int64
+	statisticsOutputInterval       int
+	doingReplicatePieceTaskCnt     int64
+	doingSpSealObjectTaskCnt       int64
+	doingReceivePieceTaskCnt       int64
+	doingGCObjectTaskCnt           int64
+	doingGCZombiePieceTaskCnt      int64
+	doingStaleVersionObjectTaskCnt int64
+	doingGCGCMetaTaskCnt           int64
+	doingRecoveryPieceTaskCnt      int64
+	doingMigrationGVGTaskCnt       int64
+	doingGCBucketMigrationCnt      int64
 
 	// gc meta
 	bucketTrafficKeepLatestDay uint64
@@ -247,6 +248,10 @@ func (e *ExecuteModular) AskTask(ctx context.Context) error {
 		atomic.AddInt64(&e.doingGCZombiePieceTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingGCZombiePieceTaskCnt, -1)
 		e.HandleGCZombiePieceTask(ctx, t)
+	case *gfsptask.GfSpGCStaleVersionObjectTask:
+		atomic.AddInt64(&e.doingStaleVersionObjectTaskCnt, 1)
+		defer atomic.AddInt64(&e.doingStaleVersionObjectTaskCnt, -1)
+		e.HandleGCStaleVersionObjectTask(ctx, t)
 	case *gfsptask.GfSpGCMetaTask:
 		atomic.AddInt64(&e.doingGCGCMetaTaskCnt, 1)
 		defer atomic.AddInt64(&e.doingGCGCMetaTaskCnt, -1)

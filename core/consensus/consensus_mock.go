@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./consensus.go -destination=./consensus_mock.go -package=consensus
 //
+
 // Package consensus is a generated GoMock package.
 package consensus
 
@@ -374,6 +375,21 @@ func (mr *MockConsensusMockRecorder) QuerySPPrice(ctx, operatorAddress any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySPPrice", reflect.TypeOf((*MockConsensus)(nil).QuerySPPrice), ctx, operatorAddress)
 }
 
+// QueryShadowObjectInfo mocks base method.
+func (m *MockConsensus) QueryShadowObjectInfo(ctx context.Context, bucket, object string) (*types1.ShadowObjectInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryShadowObjectInfo", ctx, bucket, object)
+	ret0, _ := ret[0].(*types1.ShadowObjectInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryShadowObjectInfo indicates an expected call of QueryShadowObjectInfo.
+func (mr *MockConsensusMockRecorder) QueryShadowObjectInfo(ctx, bucket, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryShadowObjectInfo", reflect.TypeOf((*MockConsensus)(nil).QueryShadowObjectInfo), ctx, bucket, object)
+}
+
 // QueryStorageParams mocks base method.
 func (m *MockConsensus) QueryStorageParams(ctx context.Context) (*types1.Params, error) {
 	m.ctrl.T.Helper()
@@ -477,6 +493,21 @@ func (m *MockConsensus) VerifyPutObjectPermission(ctx context.Context, account, 
 func (mr *MockConsensusMockRecorder) VerifyPutObjectPermission(ctx, account, bucket, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyPutObjectPermission", reflect.TypeOf((*MockConsensus)(nil).VerifyPutObjectPermission), ctx, account, bucket, object)
+}
+
+// VerifyUpdateObjectPermission mocks base method.
+func (m *MockConsensus) VerifyUpdateObjectPermission(ctx context.Context, account, bucket, object string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyUpdateObjectPermission", ctx, account, bucket, object)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyUpdateObjectPermission indicates an expected call of VerifyUpdateObjectPermission.
+func (mr *MockConsensusMockRecorder) VerifyUpdateObjectPermission(ctx, account, bucket, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyUpdateObjectPermission", reflect.TypeOf((*MockConsensus)(nil).VerifyUpdateObjectPermission), ctx, account, bucket, object)
 }
 
 // WaitForNextBlock mocks base method.

@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./piece_store_client.go -destination=./piece_store_client_mock.go -package=client
 //
+
 // Package client is a generated GoMock package.
 package client
 

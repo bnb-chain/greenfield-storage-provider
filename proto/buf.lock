@@ -4,8 +4,8 @@ deps:
   - remote: buf.build
     owner: bnb-chain
     repository: greenfield
-    commit: fb6d340760a24875b94a36369d979a9f
-    digest: shake256:f9909cac3372e0593e397f0a6d79e0b668e7c778d52ab27b185df63e5ce84b82a2e4e0eaf4075f4fa83c4775fba8126001f505d80b16bd7348f31497de6a6ed3
+    commit: eeeac15eeec14f1eb548253102bbe0f3
+    digest: shake256:8039e6c2e62279c42e59a9dc7e6752aded44840481c858fb33cac43b22d466c9490fbeb327b5f4d5903e571ad85752bffb35c636a2c1dc315c9c1e0c0a1d8b07
   - remote: buf.build
     owner: cosmos
     repository: cosmos-proto

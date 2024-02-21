@@ -12,19 +12,31 @@ var _ piecestore.PieceOp = &GfSpPieceOp{}
 
 type GfSpPieceOp struct{}
 
-func (p *GfSpPieceOp) SegmentPieceKey(objectID uint64, segmentIdx uint32) string {
-	return fmt.Sprintf("s%d_s%d", objectID, segmentIdx)
-}
-
-func (p *GfSpPieceOp) ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32) string {
-	return fmt.Sprintf("e%d_s%d_p%d", objectID, segmentIdx, redundancyIdx)
-}
-
-func (p *GfSpPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32) string {
-	if redundancyIdx < 0 {
-		return p.SegmentPieceKey(objectID, segmentIdx)
+func (p *GfSpPieceOp) SegmentPieceKey(objectID uint64, segmentIdx uint32, version int64) string {
+	var key string
+	if version == 0 {
+		key = fmt.Sprintf("s%d_s%d", objectID, segmentIdx)
+	} else {
+		key = fmt.Sprintf("s%d_s%d_v%d", objectID, segmentIdx, version)
 	}
-	return p.ECPieceKey(objectID, segmentIdx, uint32(redundancyIdx))
+	return key
+}
+
+func (p *GfSpPieceOp) ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32, version int64) string {
+	var key string
+	if version == 0 {
+		key = fmt.Sprintf("e%d_s%d_p%d", objectID, segmentIdx, redundancyIdx)
+	} else {
+		key = fmt.Sprintf("e%d_s%d_p%d_v%d", objectID, segmentIdx, redundancyIdx, version)
+	}
+	return key
+}
+
+func (p *GfSpPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32, version int64) string {
+	if redundancyIdx < 0 {
+		return p.SegmentPieceKey(objectID, segmentIdx, version)
+	}
+	return p.ECPieceKey(objectID, segmentIdx, uint32(redundancyIdx), version)
 }
 
 func (p *GfSpPieceOp) MaxSegmentPieceSize(payloadSize uint64, maxSegmentSize uint64) int64 {
@@ -69,10 +81,9 @@ func (p *GfSpPieceOp) SegmentPieceCount(payloadSize uint64, maxSegmentSize uint6
 
 func (p *GfSpPieceOp) ParseSegmentIdx(segmentKey string) (uint32, error) {
 	keyParts := strings.Split(segmentKey, "_")
-	if len(keyParts) != 2 {
+	if len(keyParts) != 2 && len(keyParts) != 3 {
 		return 0, fmt.Errorf("invalid segmentKey format")
 	}
-
 	segPrefix := "s"
 	segmentIdx, err := strconv.ParseUint(keyParts[1][len(segPrefix):], 10, 32)
 	if err != nil {
@@ -84,7 +95,7 @@ func (p *GfSpPieceOp) ParseSegmentIdx(segmentKey string) (uint32, error) {
 
 func (p *GfSpPieceOp) ParseECPieceKeyIdx(ecPieceKey string) (uint32, int32, error) {
 	keyParts := strings.Split(ecPieceKey, "_")
-	if len(keyParts) != 3 {
+	if len(keyParts) != 3 && len(keyParts) != 4 {
 		return 0, 0, fmt.Errorf("invalid EC piece key: %s", ecPieceKey)
 	}
 	segPrefix := "s"
@@ -104,15 +115,14 @@ func (p *GfSpPieceOp) ParseECPieceKeyIdx(ecPieceKey string) (uint32, int32, erro
 func (p *GfSpPieceOp) ParseChallengeIdx(challengeKey string) (uint32, int32, error) {
 	keyParts := strings.Split(challengeKey, "_")
 
-	if len(keyParts) == 2 {
+	if keyParts[0][0:1] == "e" {
+		return p.ParseECPieceKeyIdx(challengeKey)
+	} else if keyParts[0][0:1] == "s" {
 		segmentIdx, err := p.ParseSegmentIdx(challengeKey)
 		if err != nil {
 			return 0, 0, err
 		}
 		return segmentIdx, -1, nil
-	} else if len(keyParts) == 3 {
-		return p.ParseECPieceKeyIdx(challengeKey)
 	}
-
 	return 0, 0, fmt.Errorf("invalid challenge key: %s", challengeKey)
 }

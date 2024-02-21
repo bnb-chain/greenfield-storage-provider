@@ -405,13 +405,14 @@ func TestSpDBImpl_SetReplicatePieceChecksumSuccess(t *testing.T) {
 		segmentIdx    = uint32(3)
 		redundancyIdx = int32(5)
 		pieceChecksum = []byte("mock")
+		version       = int64(1)
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`) VALUES (?,?,?,?)").
-		WithArgs(objectID, segmentIdx, redundancyIdx, hex.EncodeToString(pieceChecksum)).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`,`version`) VALUES (?,?,?,?,?)").
+		WithArgs(objectID, segmentIdx, redundancyIdx, hex.EncodeToString(pieceChecksum), version).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum)
+	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum, version)
 	assert.Nil(t, err)
 }
 
@@ -422,14 +423,15 @@ func TestSpDBImpl_SetReplicatePieceChecksumFailure1(t *testing.T) {
 		segmentIdx    = uint32(3)
 		redundancyIdx = int32(5)
 		pieceChecksum = []byte("mock")
+		version       = int64(1)
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`) VALUES (?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`,`version`) VALUES (?,?,?,?,?)").
 		WillReturnError(&mysql.MySQLError{Number: uint16(ErrDuplicateEntryCode), Message: "duplicate entry code"})
 	mock.ExpectRollback()
 	mock.ExpectCommit()
-	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum)
+	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum, version)
 	assert.Nil(t, err)
 }
 
@@ -447,7 +449,7 @@ func TestSpDBImpl_SetReplicatePieceChecksumFailure2(t *testing.T) {
 		WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
-	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum)
+	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum, 0)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 }
 

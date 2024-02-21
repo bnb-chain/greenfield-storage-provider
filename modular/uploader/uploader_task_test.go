@@ -212,6 +212,46 @@ func TestUploadModular_HandleUploadObjectTaskSuccess1(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestUploadModular_HandleUploadObjectForUpdateTaskSuccess1(t *testing.T) {
+	t.Log("Success case description: succeed to upload payload to piece store")
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+
+	m := gfspclient.NewMockstdLib(ctrl)
+	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
+
+	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
+	u.uploadQueue = m1
+	m1.EXPECT().Push(gomock.Any()).Return(nil).Times(1)
+	m1.EXPECT().PopByKey(gomock.Any()).Return(&gfsptask.GfSpUploadObjectTask{}).AnyTimes()
+
+	m2 := piecestore.NewMockPieceOp(ctrl)
+	u.baseApp.SetPieceOp(m2)
+	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
+
+	m3 := corespdb.NewMockSPDB(ctrl)
+	u.baseApp.SetGfSpDB(m3)
+	m3.EXPECT().SetShadowObjectIntegrity(gomock.Any()).Return(nil).AnyTimes()
+	m3.EXPECT().UpdateUploadProgress(gomock.Any()).Return(nil).AnyTimes()
+
+	m4 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m4)
+	m4.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	uploadObjectTask := &gfsptask.GfSpUploadObjectTask{
+		Task: &gfsptask.GfSpTask{TaskPriority: 1},
+		ObjectInfo: &storagetypes.ObjectInfo{
+			Id: sdkmath.NewUint(1),
+			Checksums: [][]byte{{227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65,
+				228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85}},
+			IsUpdating: true,
+		},
+		StorageParams: &storagetypes.Params{},
+	}
+	err := u.HandleUploadObjectTask(context.TODO(), uploadObjectTask, m)
+	assert.Nil(t, err)
+}
+
 func TestUploadModular_HandleUploadObjectTaskFailure1(t *testing.T) {
 	t.Log("Failure case description: failed to push upload queue")
 	u := setup(t)
@@ -584,6 +624,42 @@ func TestUploadModular_HandleResumableUploadObjectTaskSuccess(t *testing.T) {
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
 		ObjectInfo: &storagetypes.ObjectInfo{
 			Id: sdkmath.NewUint(1),
+		},
+		StorageParams: &storagetypes.Params{},
+	}
+	err := u.HandleResumableUploadObjectTask(context.TODO(), task, m)
+	assert.Nil(t, err)
+}
+
+func TestUploadModular_HandleResumableUploadObjectForUpdateTaskSuccess(t *testing.T) {
+	u := setup(t)
+	ctrl := gomock.NewController(t)
+
+	m := gfspclient.NewMockstdLib(ctrl)
+	m.EXPECT().Read(gomock.Any()).Return(0, io.EOF).AnyTimes()
+
+	m1 := taskqueue.NewMockTQueueOnStrategy(ctrl)
+	u.resumeableUploadQueue = m1
+	m1.EXPECT().Push(gomock.Any()).Return(nil).Times(1)
+	m1.EXPECT().PopByKey(gomock.Any()).Return(&gfsptask.GfSpResumableUploadObjectTask{}).AnyTimes()
+
+	m2 := piecestore.NewMockPieceOp(ctrl)
+	u.baseApp.SetPieceOp(m2)
+	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
+
+	m3 := corespdb.NewMockSPDB(ctrl)
+	u.baseApp.SetGfSpDB(m3)
+	m3.EXPECT().SetShadowObjectIntegrity(gomock.Any()).Return(nil).AnyTimes()
+
+	m4 := gfspclient.NewMockGfSpClientAPI(ctrl)
+	u.baseApp.SetGfSpClient(m4)
+	m4.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	task := &gfsptask.GfSpResumableUploadObjectTask{
+		Task: &gfsptask.GfSpTask{TaskPriority: 1},
+		ObjectInfo: &storagetypes.ObjectInfo{
+			Id:         sdkmath.NewUint(1),
+			IsUpdating: true,
 		},
 		StorageParams: &storagetypes.Params{},
 	}

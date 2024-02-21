@@ -216,16 +216,15 @@ func SplitToSegmentPieceInfos(downloadObjectTask task.DownloadObjectTask, op pie
 			currentStart = low
 		}
 
+		objectVersion := downloadObjectTask.GetObjectInfo().GetVersion()
 		if high <= currentEnd {
 			currentEnd = high
 			offsetInPiece := currentStart - (segmentPieceIndex * segmentSize)
 			lengthInPiece := currentEnd - currentStart + 1
 			pieceInfos = append(pieceInfos, &SegmentPieceInfo{
-				SegmentPieceKey: op.SegmentPieceKey(
-					downloadObjectTask.GetObjectInfo().Id.Uint64(),
-					uint32(segmentPieceIndex)),
-				Offset: offsetInPiece,
-				Length: lengthInPiece,
+				SegmentPieceKey: op.SegmentPieceKey(downloadObjectTask.GetObjectInfo().Id.Uint64(), uint32(segmentPieceIndex), objectVersion),
+				Offset:          offsetInPiece,
+				Length:          lengthInPiece,
 			})
 			// break to finish
 			break
@@ -233,11 +232,9 @@ func SplitToSegmentPieceInfos(downloadObjectTask task.DownloadObjectTask, op pie
 			offsetInPiece := currentStart - (segmentPieceIndex * segmentSize)
 			lengthInPiece := currentEnd - currentStart + 1
 			pieceInfos = append(pieceInfos, &SegmentPieceInfo{
-				SegmentPieceKey: op.SegmentPieceKey(
-					downloadObjectTask.GetObjectInfo().Id.Uint64(),
-					uint32(segmentPieceIndex)),
-				Offset: offsetInPiece,
-				Length: lengthInPiece,
+				SegmentPieceKey: op.SegmentPieceKey(downloadObjectTask.GetObjectInfo().Id.Uint64(), uint32(segmentPieceIndex), objectVersion),
+				Offset:          offsetInPiece,
+				Length:          lengthInPiece,
 			})
 		}
 	}
@@ -439,10 +436,7 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, challengePie
 		return nil, nil, nil, err
 	}
 
-	pieceKey := d.baseApp.PieceOp().ChallengePieceKey(
-		challengePieceTask.GetObjectInfo().Id.Uint64(),
-		challengePieceTask.GetSegmentIdx(),
-		challengePieceTask.GetRedundancyIdx())
+	pieceKey := d.baseApp.PieceOp().ChallengePieceKey(challengePieceTask.GetObjectInfo().Id.Uint64(), challengePieceTask.GetSegmentIdx(), challengePieceTask.GetRedundancyIdx(), challengePieceTask.GetObjectInfo().GetVersion())
 	getIntegrityTime := time.Now()
 	integrity, err = d.baseApp.GfSpDB().GetObjectIntegrity(challengePieceTask.GetObjectInfo().Id.Uint64(), challengePieceTask.GetRedundancyIdx())
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_integrity_time").Observe(time.Since(getIntegrityTime).Seconds())

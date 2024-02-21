@@ -10,6 +10,8 @@ const (
 	PieceHashTableName = "piece_hash"
 	// IntegrityMetaTableName defines the integrity meta table name.
 	IntegrityMetaTableName = "integrity_meta"
+
+	ShadowIntegrityMetaTableName = "shadow_integrity_meta"
 	// SpInfoTableName defines the SP info table name.
 	SpInfoTableName = "sp_info"
 	// StorageParamsTableName defines the storage params info table name.

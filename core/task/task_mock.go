@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./task.go -destination=./task_mock.go -package=task
 //
+
 // Package task is a generated GoMock package.
 package task
 
@@ -2259,6 +2260,475 @@ func (m *MockApprovalCreateObjectTask) Type() TType {
 func (mr *MockApprovalCreateObjectTaskMockRecorder) Type() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockApprovalCreateObjectTask)(nil).Type))
+}
+
+// MockApprovalUpdateObjectTask is a mock of ApprovalUpdateObjectTask interface.
+type MockApprovalUpdateObjectTask struct {
+	ctrl     *gomock.Controller
+	recorder *MockApprovalUpdateObjectTaskMockRecorder
+}
+
+// MockApprovalUpdateObjectTaskMockRecorder is the mock recorder for MockApprovalUpdateObjectTask.
+type MockApprovalUpdateObjectTaskMockRecorder struct {
+	mock *MockApprovalUpdateObjectTask
+}
+
+// NewMockApprovalUpdateObjectTask creates a new mock instance.
+func NewMockApprovalUpdateObjectTask(ctrl *gomock.Controller) *MockApprovalUpdateObjectTask {
+	mock := &MockApprovalUpdateObjectTask{ctrl: ctrl}
+	mock.recorder = &MockApprovalUpdateObjectTaskMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockApprovalUpdateObjectTask) EXPECT() *MockApprovalUpdateObjectTaskMockRecorder {
+	return m.recorder
+}
+
+// AppendLog mocks base method.
+func (m *MockApprovalUpdateObjectTask) AppendLog(log string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AppendLog", log)
+}
+
+// AppendLog indicates an expected call of AppendLog.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) AppendLog(log any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendLog", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).AppendLog), log)
+}
+
+// Error mocks base method.
+func (m *MockApprovalUpdateObjectTask) Error() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Error")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Error indicates an expected call of Error.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) Error() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).Error))
+}
+
+// EstimateLimit mocks base method.
+func (m *MockApprovalUpdateObjectTask) EstimateLimit() rcmgr.Limit {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EstimateLimit")
+	ret0, _ := ret[0].(rcmgr.Limit)
+	return ret0
+}
+
+// EstimateLimit indicates an expected call of EstimateLimit.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) EstimateLimit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstimateLimit", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).EstimateLimit))
+}
+
+// ExceedRetry mocks base method.
+func (m *MockApprovalUpdateObjectTask) ExceedRetry() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExceedRetry")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// ExceedRetry indicates an expected call of ExceedRetry.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) ExceedRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExceedRetry", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).ExceedRetry))
+}
+
+// ExceedTimeout mocks base method.
+func (m *MockApprovalUpdateObjectTask) ExceedTimeout() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExceedTimeout")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// ExceedTimeout indicates an expected call of ExceedTimeout.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) ExceedTimeout() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExceedTimeout", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).ExceedTimeout))
+}
+
+// Expired mocks base method.
+func (m *MockApprovalUpdateObjectTask) Expired() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Expired")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Expired indicates an expected call of Expired.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) Expired() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Expired", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).Expired))
+}
+
+// GetAddress mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetAddress() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAddress")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetAddress indicates an expected call of GetAddress.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetAddress))
+}
+
+// GetCreateTime mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetCreateTime() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCreateTime")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetCreateTime indicates an expected call of GetCreateTime.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetCreateTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCreateTime", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetCreateTime))
+}
+
+// GetExpiredHeight mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetExpiredHeight() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExpiredHeight")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetExpiredHeight indicates an expected call of GetExpiredHeight.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetExpiredHeight() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExpiredHeight", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetExpiredHeight))
+}
+
+// GetLogs mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetLogs() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLogs")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetLogs indicates an expected call of GetLogs.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetLogs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLogs", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetLogs))
+}
+
+// GetMaxRetry mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetMaxRetry() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxRetry")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetMaxRetry indicates an expected call of GetMaxRetry.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetMaxRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxRetry", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetMaxRetry))
+}
+
+// GetPriority mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetPriority() TPriority {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPriority")
+	ret0, _ := ret[0].(TPriority)
+	return ret0
+}
+
+// GetPriority indicates an expected call of GetPriority.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetPriority() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriority", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetPriority))
+}
+
+// GetRetry mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetRetry() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRetry")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetRetry indicates an expected call of GetRetry.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRetry", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetRetry))
+}
+
+// GetTimeout mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetTimeout() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTimeout")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetTimeout indicates an expected call of GetTimeout.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetTimeout() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeout", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetTimeout))
+}
+
+// GetUpdateObjectInfo mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetUpdateObjectInfo() *types0.MsgUpdateObjectContent {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUpdateObjectInfo")
+	ret0, _ := ret[0].(*types0.MsgUpdateObjectContent)
+	return ret0
+}
+
+// GetUpdateObjectInfo indicates an expected call of GetUpdateObjectInfo.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetUpdateObjectInfo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUpdateObjectInfo", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetUpdateObjectInfo))
+}
+
+// GetUpdateTime mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetUpdateTime() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUpdateTime")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetUpdateTime indicates an expected call of GetUpdateTime.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetUpdateTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUpdateTime", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetUpdateTime))
+}
+
+// GetUserAddress mocks base method.
+func (m *MockApprovalUpdateObjectTask) GetUserAddress() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserAddress")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetUserAddress indicates an expected call of GetUserAddress.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) GetUserAddress() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAddress", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).GetUserAddress))
+}
+
+// IncRetry mocks base method.
+func (m *MockApprovalUpdateObjectTask) IncRetry() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IncRetry")
+}
+
+// IncRetry indicates an expected call of IncRetry.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) IncRetry() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncRetry", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).IncRetry))
+}
+
+// Info mocks base method.
+func (m *MockApprovalUpdateObjectTask) Info() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Info")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Info indicates an expected call of Info.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) Info() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).Info))
+}
+
+// InitApprovalUpdateObjectTask mocks base method.
+func (m *MockApprovalUpdateObjectTask) InitApprovalUpdateObjectTask(arg0 string, arg1 *types0.MsgUpdateObjectContent, arg2 []byte, arg3 TPriority) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "InitApprovalUpdateObjectTask", arg0, arg1, arg2, arg3)
+}
+
+// InitApprovalUpdateObjectTask indicates an expected call of InitApprovalUpdateObjectTask.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) InitApprovalUpdateObjectTask(arg0, arg1, arg2, arg3 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitApprovalUpdateObjectTask", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).InitApprovalUpdateObjectTask), arg0, arg1, arg2, arg3)
+}
+
+// Key mocks base method.
+func (m *MockApprovalUpdateObjectTask) Key() TKey {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Key")
+	ret0, _ := ret[0].(TKey)
+	return ret0
+}
+
+// Key indicates an expected call of Key.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) Key() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Key", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).Key))
+}
+
+// SetAddress mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetAddress(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetAddress", arg0)
+}
+
+// SetAddress indicates an expected call of SetAddress.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetAddress(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAddress", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetAddress), arg0)
+}
+
+// SetCreateTime mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetCreateTime(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCreateTime", arg0)
+}
+
+// SetCreateTime indicates an expected call of SetCreateTime.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetCreateTime(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateTime", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetCreateTime), arg0)
+}
+
+// SetError mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetError(arg0 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetError", arg0)
+}
+
+// SetError indicates an expected call of SetError.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetError(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetError", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetError), arg0)
+}
+
+// SetExpiredHeight mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetExpiredHeight(arg0 uint64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetExpiredHeight", arg0)
+}
+
+// SetExpiredHeight indicates an expected call of SetExpiredHeight.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetExpiredHeight(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExpiredHeight", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetExpiredHeight), arg0)
+}
+
+// SetLogs mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetLogs(logs string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLogs", logs)
+}
+
+// SetLogs indicates an expected call of SetLogs.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetLogs(logs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLogs", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetLogs), logs)
+}
+
+// SetMaxRetry mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetMaxRetry(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMaxRetry", arg0)
+}
+
+// SetMaxRetry indicates an expected call of SetMaxRetry.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetMaxRetry(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxRetry", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetMaxRetry), arg0)
+}
+
+// SetPriority mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetPriority(arg0 TPriority) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPriority", arg0)
+}
+
+// SetPriority indicates an expected call of SetPriority.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetPriority(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetPriority), arg0)
+}
+
+// SetRetry mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetRetry(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetRetry", arg0)
+}
+
+// SetRetry indicates an expected call of SetRetry.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetRetry(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRetry", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetRetry), arg0)
+}
+
+// SetTimeout mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetTimeout(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTimeout", arg0)
+}
+
+// SetTimeout indicates an expected call of SetTimeout.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetTimeout(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeout", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetTimeout), arg0)
+}
+
+// SetUpdateObjectInfo mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetUpdateObjectInfo(arg0 *types0.MsgUpdateObjectContent) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUpdateObjectInfo", arg0)
+}
+
+// SetUpdateObjectInfo indicates an expected call of SetUpdateObjectInfo.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetUpdateObjectInfo(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateObjectInfo", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetUpdateObjectInfo), arg0)
+}
+
+// SetUpdateTime mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetUpdateTime(arg0 int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUpdateTime", arg0)
+}
+
+// SetUpdateTime indicates an expected call of SetUpdateTime.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetUpdateTime(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdateTime", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetUpdateTime), arg0)
+}
+
+// SetUserAddress mocks base method.
+func (m *MockApprovalUpdateObjectTask) SetUserAddress(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUserAddress", arg0)
+}
+
+// SetUserAddress indicates an expected call of SetUserAddress.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) SetUserAddress(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAddress", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).SetUserAddress), arg0)
+}
+
+// Type mocks base method.
+func (m *MockApprovalUpdateObjectTask) Type() TType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Type")
+	ret0, _ := ret[0].(TType)
+	return ret0
+}
+
+// Type indicates an expected call of Type.
+func (mr *MockApprovalUpdateObjectTaskMockRecorder) Type() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockApprovalUpdateObjectTask)(nil).Type))
 }
 
 // MockApprovalReplicatePieceTask is a mock of ApprovalReplicatePieceTask interface.

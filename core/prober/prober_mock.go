@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./prober.go -destination=./prober_mock.go -package=prober
 //
+
 // Package prober is a generated GoMock package.
 package prober
 

@@ -188,11 +188,17 @@ func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) err
 		}
 		return err
 	}
-	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+	if objectInfo.GetIsUpdating() {
+		err = s.assignShadowObjectInfo(objectInfo)
+		if err != nil {
+			return err
+		}
+	} else if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.Infow("object is not in create status", "object_info", objectInfo)
 		return fmt.Errorf("object is not in create status")
 	}
-	storageParams, err = s.manager.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+
+	storageParams, err = s.manager.baseApp.Consensus().QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetLatestUpdatedTime())
 	if err != nil {
 		log.Errorw("failed to query storage param", "object_id", meta.ObjectID, "error", err)
 		time.Sleep(backoffIntervalSecond)
@@ -252,7 +258,13 @@ func (s *TaskRetryScheduler) retrySealTask(meta *spdb.UploadObjectMeta) error {
 		}
 		return err
 	}
-	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
+
+	if objectInfo.GetIsUpdating() {
+		err = s.assignShadowObjectInfo(objectInfo)
+		if err != nil {
+			return err
+		}
+	} else if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
 		log.Infow("object is not in create status", "object_info", objectInfo)
 		return fmt.Errorf("object is not in create status")
 	}
@@ -414,4 +426,18 @@ func (iter *TaskIterator) Next() {
 
 func (iter *TaskIterator) Value() *spdb.UploadObjectMeta {
 	return iter.cachedValueList[iter.currentIndex]
+}
+
+func (s *TaskRetryScheduler) assignShadowObjectInfo(objectInfo *storagetypes.ObjectInfo) error {
+	shadowObject, err := s.manager.baseApp.Consensus().QueryShadowObjectInfo(context.Background(), objectInfo.BucketName, objectInfo.ObjectName)
+	if err != nil {
+		return err
+	}
+	// the shadowObjectInfo will be injected into the objectInfo and passed to related Tasks.
+	// e.g. UploadObjectTask, ReceivePieceTask, SealObjetTask
+	objectInfo.PayloadSize = shadowObject.PayloadSize
+	objectInfo.Version = shadowObject.Version
+	objectInfo.Checksums = shadowObject.Checksums
+	objectInfo.UpdatedAt = shadowObject.UpdatedAt
+	return nil
 }

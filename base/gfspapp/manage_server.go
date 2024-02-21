@@ -172,6 +172,10 @@ func (g *GfSpBaseApp) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTa
 		resp.Response = &gfspserver.GfSpAskTaskResponse_GcBucketMigrationTask{
 			GcBucketMigrationTask: t,
 		}
+	case *gfsptask.GfSpGCStaleVersionObjectTask:
+		resp.Response = &gfspserver.GfSpAskTaskResponse_GcStaleVersionObjectTask{
+			GcStaleVersionObjectTask: t,
+		}
 	default:
 		log.CtxErrorw(ctx, "[BUG] Unsupported task type to dispatch")
 		return &gfspserver.GfSpAskTaskResponse{Err: ErrUnsupportedTaskType}, nil
@@ -272,6 +276,12 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 		task.SetAddress(util.GetRPCRemoteAddress(ctx))
 		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
 		err = g.manager.HandleGCZombiePieceTask(ctx, t.GcZombiePieceTask)
+	case *gfspserver.GfSpReportTaskRequest_GcStaleVersionObjectTask:
+		task := t.GcStaleVersionObjectTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
+		task.SetAddress(util.GetRPCRemoteAddress(ctx))
+		log.CtxInfow(ctx, "begin to handle reported task", "task_info", task.Info())
+		err = g.manager.HandleGCStaleVersionObjectTask(ctx, t.GcStaleVersionObjectTask)
 	case *gfspserver.GfSpReportTaskRequest_GcMetaTask:
 		task := t.GcMetaTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, task.Key().String())
