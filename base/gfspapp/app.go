@@ -64,12 +64,14 @@ type GfSpBaseApp struct {
 	replicateSpeed int64
 	receiveSpeed   int64
 
-	sealObjectTimeout        int64
-	gcObjectTimeout          int64
-	gcZombieTimeout          int64
-	gcMetaTimeout            int64
-	gcBucketMigrationTimeout int64
-	migrateGVGTimeout        int64
+	sealObjectTimeout           int64
+	gcObjectTimeout             int64
+	gcZombieTimeout             int64
+	gcMetaTimeout               int64
+	gcBucketMigrationTimeout    int64
+	gcStaleVersionObjectTimeout int64
+
+	migrateGVGTimeout int64
 
 	sealObjectRetry        int64
 	replicateRetry         int64

@@ -933,3 +933,68 @@ func (g *Gnfd) QuerySwapInInfo(ctx context.Context, vgfID, gvgID uint32) (swapIn
 	}
 	return resp.SwapInInfo, nil
 }
+
+func (g *Gnfd) QueryShadowObjectInfo(ctx context.Context, bucket, object string) (objectInfo *storagetypes.ShadowObjectInfo, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryObjectInfo).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryObjectInfo).Observe(
+				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryObjectInfo).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryObjectInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.HeadShadowObject(ctx, &storagetypes.QueryHeadShadowObjectRequest{
+		BucketName: bucket,
+		ObjectName: object,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query object", "bucket_name", bucket, "object_name", object, "error", err)
+		return nil, err
+	}
+	return resp.GetObjectInfo(), nil
+}
+
+func (g *Gnfd) VerifyUpdateObjectPermission(ctx context.Context, account, bucket, object string) (allow bool, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureVerifyPutObjectPermission).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureVerifyPutObjectPermission).Observe(
+				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessVerifyPutObjectPermission).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessVerifyPutObjectPermission).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
+			time.Since(startTime).Seconds())
+	}()
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.VerifyPermission(ctx, &storagetypes.QueryVerifyPermissionRequest{
+		Operator:   account,
+		BucketName: bucket,
+		ObjectName: object,
+		ActionType: permissiontypes.ACTION_UPDATE_OBJECT_CONTENT,
+	})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to verify update object content permission", "account", account, "bucket_name", bucket, "object_name", object, "error", err)
+		return false, err
+	}
+	return resp.GetEffect() == permissiontypes.EFFECT_ALLOW, err
+}

@@ -250,9 +250,9 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 	)
 	for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 		if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-			pieceKey = e.baseApp.PieceOp().ECPieceKey(objectInfo.Id.Uint64(), segIdx, uint32(index))
+			pieceKey = e.baseApp.PieceOp().ECPieceKey(objectInfo.Id.Uint64(), segIdx, uint32(index), objectInfo.Version)
 		} else {
-			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx)
+			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx, objectInfo.Version)
 		}
 		pieceData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 		if err != nil {
@@ -341,6 +341,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, gvgTask *gf
 			pieceTask.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 		redundancyIdx = pieceTask.GetRedundancyIdx()
 		objectID      = pieceTask.GetObjectInfo().Id.Uint64()
+		objectVersion = pieceTask.GetObjectInfo().GetVersion()
 	)
 
 	if pieceTask == nil {
@@ -361,9 +362,9 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, gvgTask *gf
 
 		var pieceKey string
 		if redundancyIdx == piecestore.PrimarySPRedundancyIndex {
-			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectID, uint32(i))
+			pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectID, uint32(i), objectVersion)
 		} else {
-			pieceKey = e.baseApp.PieceOp().ECPieceKey(objectID, uint32(i), uint32(redundancyIdx))
+			pieceKey = e.baseApp.PieceOp().ECPieceKey(objectID, uint32(i), uint32(redundancyIdx), objectVersion)
 		}
 		if err = e.baseApp.PieceStore().PutPiece(ctx, pieceKey, pieceData); err != nil {
 			log.CtxErrorw(ctx, "failed to put piece data into primary sp", "piece_key", pieceKey, "error", err)
@@ -371,7 +372,7 @@ func (e *ExecuteModular) HandleMigratePieceTask(ctx context.Context, gvgTask *gf
 		}
 
 		pieceChecksum := hash.GenerateChecksum(pieceData)
-		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, uint32(i), redundancyIdx, pieceChecksum); err != nil {
+		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(objectID, uint32(i), redundancyIdx, pieceChecksum, objectVersion); err != nil {
 			log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", pieceTask.GetObjectInfo().Id.Uint64(),
 				"segment_index", i, "redundancy_index", redundancyIdx, "error", err)
 			detail := fmt.Sprintf("failed to set replicate piece checksum, object_id: %s, segment_index: %v, redundancy_index: %v, error: %s",

@@ -492,3 +492,149 @@ func TestGfSpGCMetaTask_SetGCMetaStatus(t *testing.T) {
 	m := &GfSpGCMetaTask{Task: &GfSpTask{}}
 	m.SetGCMetaStatus(0, 0)
 }
+
+func TestGfSpGCStaleVersionObjectTask_Key(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.Key()
+}
+
+func TestGfSpGCStaleVersionObjectTask_Type(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	result := m.Type()
+	assert.Equal(t, coretask.TypeTaskGCStaleVersionObject, result)
+}
+
+func TestGfSpGCStaleVersionObjectTask_Info(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.Info()
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetAddress(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetAddress()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetAddress(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetAddress("mockAddress")
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetCreateTime(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetCreateTime()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetCreateTime(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetCreateTime(1)
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetUpdateTime(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetUpdateTime()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetUpdateTime(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetUpdateTime(1)
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetTimeout(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetTimeout()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetTimeout(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetTimeout(1)
+}
+
+func TestGfSpGCStaleVersionObjectTask_ExceedTimeout(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.ExceedTimeout()
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetRetry(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetRetry()
+}
+
+func TestGfSpGCStaleVersionObjectTask_IncRetry(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.IncRetry()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetRetry(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetRetry(1)
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetMaxRetry(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetMaxRetry()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetMaxRetry(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetMaxRetry(1)
+}
+
+func TestGfSpGCStaleVersionObjectTask_ExceedRetry(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.ExceedRetry()
+}
+
+func TestGfSpGCStaleVersionObjectTask_Expired(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.Expired()
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetPriority(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetPriority()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetPriority(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetPriority(1)
+}
+
+func TestGfSpGCStaleVersionObjectTask_EstimateLimit(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.EstimateLimit()
+}
+
+func TestGfSpGCStaleVersionObjectTask_Error(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	_ = m.Error()
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetUserAddress(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetUserAddress()
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetUserAddress(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetUserAddress("mock")
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetLogs(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetLogs("mock")
+}
+
+func TestGfSpGCStaleVersionObjectTask_GetLogs(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.GetLogs()
+}
+
+func TestGfSpGCStaleVersionObjectTask_AppendLog(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.AppendLog("mock")
+}
+
+func TestGfSpGCStaleVersionObjectTask_SetError(t *testing.T) {
+	m := &GfSpGCStaleVersionObjectTask{Task: &GfSpTask{}}
+	m.SetError(nil)
+}

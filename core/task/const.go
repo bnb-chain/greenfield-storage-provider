@@ -52,6 +52,8 @@ const (
 	TypeTaskRecoverPiece
 	// TypeTaskMigrateGVG defines the type of migrating gvg task.
 	TypeTaskMigrateGVG
+	// TypeTaskGCStaleVersionObject defines the type of gc stale version object task
+	TypeTaskGCStaleVersionObject
 )
 
 var TypeTaskMap = map[TType]string{

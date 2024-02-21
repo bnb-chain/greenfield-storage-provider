@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./lifecycle.go -destination=./lifecycle_mock.go -package=lifecycle
 //
+
 // Package lifecycle is a generated GoMock package.
 package lifecycle
 

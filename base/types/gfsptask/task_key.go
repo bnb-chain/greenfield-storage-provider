@@ -25,6 +25,7 @@ const (
 	KeyPrefixGfSpReceivePieceTask           = "ReceivePiece"
 	KeyPrefixGfSpGCObjectTask               = "GCObject"
 	KeyPrefixGfSpGCZombiePieceTask          = "GCZombiePiece"
+	KeyPrefixGfSpGCStaleVersionObjectTask   = "GCStaleVersionObject"
 	KeyPrefixGfSpGfSpGCMetaTask             = "GCMeta"
 	KeyPrefixGfSpGCBucketMigrationTask      = "GCBucketMigration"
 	KeyPrefixGfSpMigrateBucketTask          = "MigrateBucket"
@@ -83,13 +84,13 @@ func GfSpReplicatePieceTaskKey(bucket, object, id string) task.TKey {
 		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id))
 }
 
-func GfSpRecoverPieceTaskKey(bucket, object, id string, pIdx uint32, replicateIdx int32, time int64) task.TKey {
+func GfSpRecoverPieceTaskKey(bucket, object, id string, pIdx uint32, replicateIdx int32) task.TKey {
 	if replicateIdx >= 0 {
 		return task.TKey(KeyPrefixGfSpRecoverPieceTask +
-			CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "segIdx:"+fmt.Sprint(pIdx), "ecIdx:"+fmt.Sprint(replicateIdx), "time"+fmt.Sprint(time)))
+			CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "segIdx:"+fmt.Sprint(pIdx), "ecIdx:"+fmt.Sprint(replicateIdx)))
 	}
 	return task.TKey(KeyPrefixGfSpRecoverPieceTask +
-		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "segIdx:"+fmt.Sprint(pIdx), "time"+fmt.Sprint(time)))
+		CombineKey("bucket:"+bucket, "object:"+object, "id:"+id, "segIdx:"+fmt.Sprint(pIdx)))
 }
 
 func GfSpSealObjectTaskKey(bucket, object, id string) task.TKey {
@@ -111,6 +112,11 @@ func GfSpGCObjectTaskKey(start, end uint64, time int64) task.TKey {
 func GfSpGCZombiePieceTaskKey(start, end uint64, time int64) task.TKey {
 	return task.TKey(KeyPrefixGfSpGCZombiePieceTask + CombineKey(
 		"start"+fmt.Sprint(start), "end"+fmt.Sprint(end), "time"+fmt.Sprint(time)))
+}
+
+func GfSpGCStaleVersionObjectTaskKey(objectID uint64, redundancyIndex int32, version, time int64) task.TKey {
+	return task.TKey(KeyPrefixGfSpGCStaleVersionObjectTask + CombineKey(
+		"object_id"+fmt.Sprint(objectID), "version"+fmt.Sprint(version), "redundancy_index"+fmt.Sprint(redundancyIndex), "time"+fmt.Sprint(time)))
 }
 
 func GfSpGfSpGCMetaTaskKey(time int64) task.TKey {

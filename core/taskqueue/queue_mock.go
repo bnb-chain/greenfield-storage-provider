@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./queue.go -destination=./queue_mock.go -package=taskqueue
 //
+
 // Package taskqueue is a generated GoMock package.
 package taskqueue
 

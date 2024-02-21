@@ -158,6 +158,9 @@ func (*NullModular) HandleGCBucketMigrationTask(context.Context, task.GCBucketMi
 	return ErrNilModular
 }
 func (*NullModular) HandleGCMetaTask(context.Context, task.GCMetaTask) error { return ErrNilModular }
+func (m *NullModular) HandleGCStaleVersionObjectTask(ctx context.Context, task task.GCStaleVersionObjectTask) error {
+	return ErrNilModular
+}
 func (*NullModular) HandleMigrateGVGTask(ctx context.Context, gvgTask task.MigrateGVGTask) error {
 	return ErrNilModular
 }

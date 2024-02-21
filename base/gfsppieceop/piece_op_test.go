@@ -8,14 +8,26 @@ import (
 
 func TestGfSpPieceOp_SegmentPieceKey(t *testing.T) {
 	p := &GfSpPieceOp{}
-	result := p.SegmentPieceKey(1, 1)
+	result := p.SegmentPieceKey(1, 1, 0)
 	assert.Equal(t, "s1_s1", result)
+}
+
+func TestGfSpPieceOp_SegmentPieceKey_with_version(t *testing.T) {
+	p := &GfSpPieceOp{}
+	result := p.SegmentPieceKey(1, 1, 2)
+	assert.Equal(t, "s1_s1_v2", result)
 }
 
 func TestGfSpPieceOp_ECPieceKey(t *testing.T) {
 	p := &GfSpPieceOp{}
-	result := p.ECPieceKey(1, 1, 2)
+	result := p.ECPieceKey(1, 1, 2, 0)
 	assert.Equal(t, "e1_s1_p2", result)
+}
+
+func TestGfSpPieceOp_ECPieceKey_with_version(t *testing.T) {
+	p := &GfSpPieceOp{}
+	result := p.ECPieceKey(1, 1, 2, 2)
+	assert.Equal(t, "e1_s1_p2_v2", result)
 }
 
 func TestGfSpPieceOp_ChallengePieceKey(t *testing.T) {
@@ -24,6 +36,7 @@ func TestGfSpPieceOp_ChallengePieceKey(t *testing.T) {
 		objectID      uint64
 		segmentIdx    uint32
 		redundancyIdx int32
+		version       int64
 		wantedResult  string
 	}{
 		{
@@ -40,11 +53,35 @@ func TestGfSpPieceOp_ChallengePieceKey(t *testing.T) {
 			redundancyIdx: 2,
 			wantedResult:  "e1_s3_p2",
 		},
+		{
+			name:          "2",
+			objectID:      1,
+			segmentIdx:    3,
+			redundancyIdx: 2,
+			version:       1,
+			wantedResult:  "e1_s3_p2_v1",
+		},
+		{
+			name:          "2",
+			objectID:      1,
+			segmentIdx:    3,
+			redundancyIdx: 2,
+			version:       1,
+			wantedResult:  "e1_s3_p2_v1",
+		},
+		{
+			name:          "2",
+			objectID:      1,
+			segmentIdx:    3,
+			redundancyIdx: -1,
+			version:       1,
+			wantedResult:  "s1_s3_v1",
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &GfSpPieceOp{}
-			result := p.ChallengePieceKey(tt.objectID, tt.segmentIdx, tt.redundancyIdx)
+			result := p.ChallengePieceKey(tt.objectID, tt.segmentIdx, tt.redundancyIdx, tt.version)
 			assert.Equal(t, tt.wantedResult, result)
 		})
 	}
@@ -158,6 +195,12 @@ func TestGfSpPieceOp_ParseSegmentIdx(t *testing.T) {
 			wantedIsErr:  true,
 			wantedErrStr: "value out of range",
 		},
+		{
+			name:         "4",
+			segmentKey:   "s1_s1_v3",
+			wantedResult: 1,
+			wantedIsErr:  false,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -213,6 +256,13 @@ func TestGfSpPieceOp_ParseECPieceKeyIdx(t *testing.T) {
 			wantedIsErr:   true,
 			wantedErrStr:  "value out of range",
 		},
+		{
+			name:          "1",
+			ecPieceKey:    "e1_s1_p2_v2",
+			wantedResult1: 1,
+			wantedResult2: 2,
+			wantedIsErr:   false,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -255,7 +305,7 @@ func TestGfSpPieceOp_ParseChallengeIdx(t *testing.T) {
 		},
 		{
 			name:          "3",
-			challengeKey:  "s1_s2_p2",
+			challengeKey:  "e1_s2_p2",
 			wantedResult1: 2,
 			wantedResult2: 2,
 			wantedIsErr:   false,
@@ -267,6 +317,13 @@ func TestGfSpPieceOp_ParseChallengeIdx(t *testing.T) {
 			wantedResult2: 0,
 			wantedIsErr:   true,
 			wantedErrStr:  "invalid challenge key",
+		},
+		{
+			name:          "3",
+			challengeKey:  "e1_s2_p2_v3",
+			wantedResult1: 2,
+			wantedResult2: 2,
+			wantedIsErr:   false,
 		},
 	}
 	for _, tt := range cases {

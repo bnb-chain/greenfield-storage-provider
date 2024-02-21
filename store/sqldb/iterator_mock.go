@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./iterator.go -destination=./iterator_mock.go -package=sqldb
 //
+
 // Package sqldb is a generated GoMock package.
 package sqldb
 

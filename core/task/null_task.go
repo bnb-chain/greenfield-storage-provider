@@ -191,4 +191,8 @@ func (*NullTask) SetGCFinishedGvgNum(gvgGcNum uint64)                           
 func (*NullTask) GetGCFinishedGvgNum() uint64                                                { return 0 }
 func (*NullTask) SetTotalGvgNum(gvgNum uint64)                                               {}
 func (*NullTask) GetTotalGvgNum() uint64                                                     { return 0 }
-func (t *NullTask) GetGVGID() uint32                                                         { return 0 }
+func (*NullTask) GetGVGID() uint32                                                           { return 0 }
+func (*NullTask) GetShadowObjectInfo() *storagetypes.ShadowObjectInfo {
+	return nil
+}
+func (*NullTask) SetShadowObjectInfo(info *storagetypes.ShadowObjectInfo) {}

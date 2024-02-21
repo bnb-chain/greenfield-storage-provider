@@ -564,7 +564,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(waitingGCObjects, uint64(0), nil).Times(1)
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+				m.EXPECT().GetBucketInfoByBucketName(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				e.baseApp.SetGfSpClient(m)
 
 				m1 := consensus.NewMockConsensus(ctrl)
@@ -602,7 +602,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(waitingGCObjects, uint64(0), nil).Times(1)
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketInfoByBucketName(gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
 					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil).Times(1)
 				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				e.baseApp.SetGfSpClient(m)
@@ -669,7 +669,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(waitingGCObjects, uint64(0), nil).AnyTimes()
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketInfoByBucketName(gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
 					BucketInfo: &storagetypes.BucketInfo{Id: sdkmath.NewUint(1)}}, nil).Times(1)
 				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.GlobalVirtualGroup{
 					SecondarySpIds: []uint32{1}}, nil).Times(1)
@@ -738,7 +738,7 @@ func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
 
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				m.EXPECT().GetObjectByID(gomock.Any(), gomock.Any()).Return(objectInfo, nil).AnyTimes()
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketInfoByBucketName(gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
 					BucketInfo: bucketInfo}, nil).AnyTimes()
 				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.GlobalVirtualGroup{
 					PrimarySpId:    1,
@@ -808,7 +808,7 @@ func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
 
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				m.EXPECT().GetObjectByID(gomock.Any(), gomock.Any()).Return(objectInfo, nil).AnyTimes()
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketInfoByBucketName(gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
 					BucketInfo: bucketInfo}, nil).AnyTimes()
 				m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(&virtual_types.GlobalVirtualGroup{
 					PrimarySpId:    1,
@@ -883,7 +883,7 @@ func TestExecuteModular_HandleGCMetaTask(t *testing.T) {
 
 				m.EXPECT().ReportTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				m.EXPECT().GetObjectByID(gomock.Any(), gomock.Any()).Return(objectInfo, nil).AnyTimes()
-				m.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
+				m.EXPECT().GetBucketInfoByBucketName(gomock.Any(), gomock.Any()).Return(&metadatatypes.Bucket{
 					BucketInfo: bucketInfo}, nil).AnyTimes()
 				e.baseApp.SetGfSpClient(m)
 

@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./limit.go -destination=./limit_mock.go -package=rcmgr
 //
+
 // Package rcmgr is a generated GoMock package.
 package rcmgr
 

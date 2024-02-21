@@ -95,13 +95,19 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		return
 	}
+	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		return
+	}
 	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
 		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
 		err = ErrInvalidPayloadSize
 		return
 	}
 	startGetStorageParamTime := time.Now()
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
@@ -124,6 +130,23 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.CtxDebug(ctx, "succeed to upload payload data")
+}
+
+func (g *GateModular) checkAndAssignShadowObjectInfo(reqCtx *RequestContext, objectInfo *storagetypes.ObjectInfo) error {
+	if !objectInfo.IsUpdating {
+		return nil
+	}
+	shadowObject, err := g.baseApp.Consensus().QueryShadowObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		return err
+	}
+	// the shadowObjectInfo will be injected into the objectInfo and passed to related Tasks.
+	// e.g. UploadObjectTask, ReceivePieceTask, SealObjetTask
+	objectInfo.PayloadSize = shadowObject.PayloadSize
+	objectInfo.Version = shadowObject.Version
+	objectInfo.Checksums = shadowObject.Checksums
+	objectInfo.UpdatedAt = shadowObject.UpdatedAt
+	return nil
 }
 
 func parseRange(rangeStr string) (bool, int64, int64) {
@@ -225,6 +248,12 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
+		return
+	}
+	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		return
 	}
 	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
@@ -335,7 +364,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
@@ -550,7 +579,7 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 	}
 
 	getParamTime := time.Now()
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_storage_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)

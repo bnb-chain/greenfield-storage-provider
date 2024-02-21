@@ -241,7 +241,7 @@ func (w *CMDWrapper) getObjectAction(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to query bucket info, error: %v", err)
 	}
-	params, err := w.chainAPI.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+	params, err := w.chainAPI.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetLatestUpdatedTime())
 	if err != nil {
 		return fmt.Errorf("failed to query storage params, error: %v", err)
 	}
@@ -281,7 +281,7 @@ func (w *CMDWrapper) challengePieceAction(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to query bucket info, error: %v", err)
 	}
-	params, err := w.chainAPI.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetCreateAt())
+	params, err := w.chainAPI.QueryStorageParamsByTimestamp(context.Background(), objectInfo.GetLatestUpdatedTime())
 	if err != nil {
 		return fmt.Errorf("failed to query storage params, error: %v", err)
 	}

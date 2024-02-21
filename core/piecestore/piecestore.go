@@ -13,12 +13,12 @@ const (
 //go:generate mockgen -source=./piecestore.go -destination=./piecestore_mock.go -package=piecestore
 type PieceOp interface {
 	// SegmentPieceKey returns the segment piece key used as the key of store piece store.
-	SegmentPieceKey(objectID uint64, segmentIdx uint32) string
+	SegmentPieceKey(objectID uint64, segmentIdx uint32, version int64) string
 	// ECPieceKey returns the ec piece key used as the key of store piece store.
-	ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32) string
+	ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32, version int64) string
 	// ChallengePieceKey returns the  piece key used as the key of challenge piece key.
 	// if replicateIdx < 0 , returns the SegmentPieceKey, otherwise returns the ECPieceKey.
-	ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32) string
+	ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32, version int64) string
 	// MaxSegmentPieceSize returns the object max segment piece size by object payload size and
 	// max segment size that comes from storage params.
 	MaxSegmentPieceSize(payloadSize uint64, maxSegmentSize uint64) int64

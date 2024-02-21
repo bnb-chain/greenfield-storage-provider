@@ -27,6 +27,10 @@ var (
 
 	SpOperatorAddress string
 	GatewayDomainName string
+
+	managerInfo  types.ManagerInfo
+	executorInfo types.ExecutorInfo
+	gcInfo       types.GCInfo
 )
 
 func NewMetadataModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -54,6 +58,18 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	ChainAddress = cfg.Chain.ChainAddress
 	SpOperatorAddress = cfg.SpAccount.SpOperatorAddress
 	GatewayDomainName = cfg.Gateway.DomainName
+
+	managerInfo.EnableLoadTask = cfg.Manager.EnableLoadTask
+	managerInfo.EnableHealthChecker = cfg.Manager.EnableHealthyChecker
+	managerInfo.EnableTaskRetryScheduler = cfg.Manager.EnableTaskRetryScheduler
+
+	executorInfo.ListenSealRetryTimeout = int64(cfg.Executor.ListenSealRetryTimeout)
+	executorInfo.BucketTrafficKeepTimeDay = int64(cfg.Executor.BucketTrafficKeepTimeDay)
+	executorInfo.ReadRecordKeepTimeDay = int64(cfg.Executor.ReadRecordKeepTimeDay)
+
+	gcInfo.EnableGcZombie = cfg.GC.EnableGCZombie
+	gcInfo.EnableGcMeta = cfg.GC.EnableGCMeta
+	gcInfo.GcMetaTimeInterval = int64(cfg.GC.GCMetaTimeInterval)
 
 	startGoRoutineListener()
 	return nil

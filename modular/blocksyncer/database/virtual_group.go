@@ -41,7 +41,18 @@ func (db *DB) SaveGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) 
 }
 
 func (db *DB) UpdateGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).Updates(gvg).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.GlobalVirtualGroup{}).
+		Select("primary_sp_id", "secondary_sp_ids", "stored_size", "total_deposit", "update_at", "update_tx_hash", "update_time").
+		Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).
+		Updates(gvg).Statement
+	return stat.SQL.String(), stat.Vars
+}
+
+func (db *DB) DeleteGVGToSQL(ctx context.Context, gvg *models.GlobalVirtualGroup) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.GlobalVirtualGroup{}).
+		Select("removed", "update_at", "update_tx_hash", "update_time").
+		Where("global_virtual_group_id = ?", gvg.GlobalVirtualGroupId).
+		Updates(gvg).Statement
 	return stat.SQL.String(), stat.Vars
 }
 
@@ -54,7 +65,18 @@ func (db *DB) SaveLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (
 }
 
 func (db *DB) UpdateLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
-	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).Updates(lvg).Statement
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.LocalVirtualGroup{}).
+		Select("global_virtual_group_id", "stored_size", "update_at", "update_tx_hash", "update_time").
+		Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).
+		Updates(lvg).Statement
+	return stat.SQL.String(), stat.Vars
+}
+
+func (db *DB) DeleteLVGToSQL(ctx context.Context, lvg *models.LocalVirtualGroup) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Model(&models.LocalVirtualGroup{}).
+		Select("removed", "update_at", "update_tx_hash", "update_time").
+		Where("local_virtual_group_id = ? and bucket_id = ?", lvg.LocalVirtualGroupId, lvg.BucketID).
+		Updates(lvg).Statement
 	return stat.SQL.String(), stat.Vars
 }
 

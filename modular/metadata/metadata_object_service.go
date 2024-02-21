@@ -82,6 +82,10 @@ func (r *MetadataModular) GfSpListObjectsByBucketName(ctx context.Context, req *
 					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
+					IsUpdating:          object.IsUpdating,
+					UpdatedAt:           object.ContentUpdatedTime,
+					UpdatedBy:           object.Updater.String(),
+					Version:             object.Version,
 				},
 				LockedBalance: object.LockedBalance.String(),
 				Removed:       object.Removed,
@@ -151,6 +155,10 @@ func (r *MetadataModular) GfSpListDeletedObjectsByBlockNumberRange(ctx context.C
 				SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 				Checksums:           object.Checksums,
 				Tags:                object.GetResourceTags(),
+				IsUpdating:          object.IsUpdating,
+				UpdatedAt:           object.ContentUpdatedTime,
+				UpdatedBy:           object.Updater.String(),
+				Version:             object.Version,
 			},
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
@@ -212,6 +220,10 @@ func (r *MetadataModular) GfSpGetObjectMeta(ctx context.Context, req *types.GfSp
 				SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 				Checksums:           object.Checksums,
 				Tags:                object.GetResourceTags(),
+				IsUpdating:          object.IsUpdating,
+				UpdatedAt:           object.ContentUpdatedTime,
+				UpdatedBy:           object.Updater.String(),
+				Version:             object.Version,
 			},
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
@@ -270,6 +282,10 @@ func (r *MetadataModular) GfSpListObjectsByIDs(ctx context.Context, req *types.G
 				SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 				Checksums:           object.Checksums,
 				Tags:                object.GetResourceTags(),
+				IsUpdating:          object.IsUpdating,
+				UpdatedAt:           object.ContentUpdatedTime,
+				UpdatedBy:           object.Updater.String(),
+				Version:             object.Version,
 			},
 			LockedBalance: object.LockedBalance.String(),
 			Removed:       object.Removed,
@@ -342,6 +358,10 @@ func (r *MetadataModular) GfSpListObjectsInGVGAndBucket(ctx context.Context, req
 					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
+					IsUpdating:          object.IsUpdating,
+					UpdatedAt:           object.ContentUpdatedTime,
+					UpdatedBy:           object.Updater.String(),
+					Version:             object.Version,
 				},
 				LockedBalance: object.LockedBalance.String(),
 				Removed:       object.Removed,
@@ -419,6 +439,9 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 	}
 	objects, bucket, err = r.baseApp.GfBsDB().ListObjectsByGVGAndBucketForGC(common.BigToHash(math.NewUint(req.BucketId).BigInt()), req.DstGvgId, common.BigToHash(math.NewUint(req.StartAfter).BigInt()), limit)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNoSuchBucket
+		}
 		log.CtxErrorw(ctx, "failed to list objects by gvg and bucket for gc", "error", err)
 		return nil, err
 	}
@@ -454,6 +477,10 @@ func (r *MetadataModular) GfSpListObjectsByGVGAndBucketForGC(ctx context.Context
 					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
+					IsUpdating:          object.IsUpdating,
+					UpdatedAt:           object.ContentUpdatedTime,
+					UpdatedBy:           object.Updater.String(),
+					Version:             object.Version,
 				},
 				LockedBalance: object.LockedBalance.String(),
 				Removed:       object.Removed,
@@ -578,6 +605,10 @@ func (r *MetadataModular) GfSpListObjectsInGVG(ctx context.Context, req *types.G
 					SourceType:          storagetypes.SourceType(storagetypes.SourceType_value[object.SourceType]),
 					Checksums:           object.Checksums,
 					Tags:                object.GetResourceTags(),
+					IsUpdating:          object.IsUpdating,
+					UpdatedAt:           object.ContentUpdatedTime,
+					UpdatedBy:           object.Updater.String(),
+					Version:             object.Version,
 				},
 				LockedBalance: object.LockedBalance.String(),
 				Removed:       object.Removed,

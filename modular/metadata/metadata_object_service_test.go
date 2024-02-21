@@ -1183,6 +1183,25 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Failed2(t *testing.T
 	assert.NotNil(t, err)
 }
 
+func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Failed3(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	m.EXPECT().ListObjectsByGVGAndBucketForGC(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(common.Hash, uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
+			return nil, nil, gorm.ErrRecordNotFound
+		},
+	).Times(1)
+	_, err := a.GfSpListObjectsByGVGAndBucketForGC(context.Background(), &types.GfSpListObjectsByGVGAndBucketForGCRequest{
+		DstGvgId:   1,
+		BucketId:   1,
+		StartAfter: 0,
+		Limit:      11111,
+	})
+	assert.NotNil(t, err)
+}
+
 func TestMetadataModular_GfSpListObjectsInGVG_Success(t *testing.T) {
 	a := setup(t)
 	ctrl := gomock.NewController(t)

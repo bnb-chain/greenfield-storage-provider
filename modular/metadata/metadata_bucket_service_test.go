@@ -682,3 +682,96 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Success(t *testing.T) {
 		},
 	}, resp)
 }
+
+func TestMetadataModular_GfSpGetBucketInfoByBucketName_Success(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	m.EXPECT().GetBucketInfoByBucketName(gomock.Any()).DoAndReturn(
+		func(string) (*bsdb.Bucket, error) { return nil, nil },
+	).Times(1)
+	a.baseApp.SetGfBsDB(m)
+	_, err := a.GfSpGetBucketInfoByBucketName(context.Background(), &types.GfSpGetBucketInfoByBucketNameRequest{
+		BucketName: "11111",
+	})
+	assert.Nil(t, err)
+}
+
+func TestMetadataModular_GfSpGetBucketInfoByBucketName_Success2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	m.EXPECT().GetBucketInfoByBucketName(gomock.Any()).DoAndReturn(
+		func(string) (*bsdb.Bucket, error) {
+			return &bsdb.Bucket{
+				ID:                         848,
+				Owner:                      common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+				Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+				BucketName:                 "44yei",
+				Visibility:                 "VISIBILITY_TYPE_PRIVATE",
+				BucketID:                   common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000529"),
+				SourceType:                 "SOURCE_TYPE_ORIGIN",
+				CreateAt:                   0,
+				CreateTime:                 0,
+				CreateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
+				PaymentAddress:             common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
+				GlobalVirtualGroupFamilyID: 4,
+				ChargedReadQuota:           0,
+				PaymentPriceTime:           0,
+				Removed:                    false,
+				Status:                     "",
+				DeleteAt:                   0,
+				DeleteReason:               "",
+				UpdateAt:                   0,
+				UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
+				UpdateTime:                 0,
+				StorageSize:                decimal.New(100, 2),
+			}, nil
+		},
+	).Times(1)
+	a.baseApp.SetGfBsDB(m)
+	b, err := a.GfSpGetBucketInfoByBucketName(context.Background(), &types.GfSpGetBucketInfoByBucketNameRequest{
+		BucketName: "44yei",
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "44yei", b.Bucket.BucketInfo.BucketName)
+}
+
+func TestMetadataModular_GfSpGetBucketInfoByBucketName_CheckValidBucketName_Failed(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	_, err := a.GfSpGetBucketInfoByBucketName(context.Background(), &types.GfSpGetBucketInfoByBucketNameRequest{
+		BucketName: "0",
+	})
+	assert.NotNil(t, err)
+}
+
+func TestMetadataModular_GfSpGetBucketInfoByBucketName_GetBucketByName_Failed(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	m.EXPECT().GetBucketInfoByBucketName(gomock.Any()).DoAndReturn(
+		func(string) (*bsdb.Bucket, error) { return nil, ErrExceedRequest },
+	).Times(1)
+	_, err := a.GfSpGetBucketInfoByBucketName(context.Background(), &types.GfSpGetBucketInfoByBucketNameRequest{
+		BucketName: "hello",
+	})
+	assert.NotNil(t, err)
+}
+
+func TestMetadataModular_GfSpGetBucketInfoByBucketName_ErrRecordNotFound_Failed(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := bsdb.NewMockBSDB(ctrl)
+	a.baseApp.SetGfBsDB(m)
+	m.EXPECT().GetBucketInfoByBucketName(gomock.Any()).DoAndReturn(
+		func(string) (*bsdb.Bucket, error) { return nil, gorm.ErrRecordNotFound },
+	).Times(1)
+	_, err := a.GfSpGetBucketInfoByBucketName(context.Background(), &types.GfSpGetBucketInfoByBucketNameRequest{
+		BucketName: "hello",
+	})
+	assert.NotNil(t, err)
+}
