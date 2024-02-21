@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
+	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -579,7 +580,7 @@ func (g *GateModular) sufficientQuotaForBucketMigrationHandler(w http.ResponseWr
 	}
 
 	// empty bucket will approval
-	if quota.FreeQuotaSize+quota.MonthlyFreeQuotaSize > bucketSize || bucketSize == 0 {
+	if quota.FreeQuotaSize+quota.ChargedQuotaSize-quota.ReadConsumedSize+quota.MonthlyFreeQuotaSize-quota.MonthlyFreeQuotaConsumedSize > bucketSize || bucketSize == 0 {
 		quota.AllowMigrate = true
 	} else {
 		quota.AllowMigrate = false

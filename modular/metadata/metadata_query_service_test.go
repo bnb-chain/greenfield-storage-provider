@@ -5,11 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 )
@@ -41,7 +42,8 @@ func TestMetadataModular_GfSpQueryUploadProgress_ErrRecordNotFound(t *testing.T)
 	).Times(1)
 	state, err := a.GfSpQueryUploadProgress(context.Background(), &types.GfSpQueryUploadProgressRequest{ObjectId: 1})
 	assert.Nil(t, err)
-	assert.Equal(t, "no uploading record", state.Err.Description)
+	assert.Nil(t, state.Err)
+	assert.Equal(t, "record not found", state.ErrDescription)
 }
 
 func TestMetadataModular_GfSpQueryUploadProgress_Err(t *testing.T) {

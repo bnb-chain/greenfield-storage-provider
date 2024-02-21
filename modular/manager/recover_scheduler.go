@@ -350,6 +350,7 @@ func (s *RecoverGVGScheduler) Start() {
 						break out
 					}
 				}
+				log.Infow("pushed piece to recover queue", "object_id", objectInfo.Id, "segmentIdx", segmentIdx)
 			}
 			if !s.manager.recoverObjectStats.has(objectID) {
 				s.manager.recoverObjectStats.put(objectID, segmentCount)
@@ -575,7 +576,7 @@ func (s *RecoverFailedObjectScheduler) Start() {
 						break out
 					}
 				}
-				log.Errorw("pushed piece to recover queue", "object_id", objectInfo.Id, "segmentIdx", segmentIdx)
+				log.Infow("pushed piece to recover queue", "object_id", objectInfo.Id, "segmentIdx", segmentIdx)
 			}
 			o.RetryTime++
 			err = s.manager.baseApp.GfSpDB().UpdateRecoverFailedObject(o)
