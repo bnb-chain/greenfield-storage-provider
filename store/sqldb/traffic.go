@@ -84,51 +84,17 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 
 // getUpdatedConsumedQuota compute the updated quota of traffic table by the incoming read cost and the newest record.
 // it returns the updated consumed free quota,consumed charged quota and remained free quota
-func getUpdatedConsumedQuota(recordQuotaCost, freeQuotaRemain, consumeFreeQuota, consumeChargedQuota, chargedQuota uint64) (uint64, uint64, uint64, bool, error) {
-	// if remain free quota enough, just consume free quota
-	needUpdateFreeQuota := false
-	if recordQuotaCost < freeQuotaRemain {
-		needUpdateFreeQuota = true
-		consumeFreeQuota += recordQuotaCost
-		freeQuotaRemain -= recordQuotaCost
-	} else {
-		// if free remain quota exist, consume all the free remain quota first
-		if freeQuotaRemain > 0 {
-			if freeQuotaRemain+chargedQuota < recordQuotaCost {
-				return 0, 0, 0, false, ErrCheckQuotaEnough
-			}
-			needUpdateFreeQuota = true
-			consumeFreeQuota += freeQuotaRemain
-			// update the consumed charge quota by remained free quota
-			// if read cost 5G, and the remained free quota is 2G, consumed charge quota should be 3G and remained free quota should be 0
-			consumeQuota := recordQuotaCost - freeQuotaRemain
-			consumeChargedQuota += consumeQuota
-			freeQuotaRemain = uint64(0)
-			log.CtxDebugw(context.Background(), "free quota has been exhausted", "consumed", consumeFreeQuota, "remained", freeQuotaRemain)
-		} else {
-			// free remain quota is zero, no need to consider the free quota
-			// the consumeChargedQuota plus record cost need to be more than total charged quota
-			if chargedQuota < consumeChargedQuota+recordQuotaCost {
-				return 0, 0, 0, false, ErrCheckQuotaEnough
-			}
-			consumeChargedQuota += recordQuotaCost
-		}
-	}
-	return consumeFreeQuota, consumeChargedQuota, freeQuotaRemain, needUpdateFreeQuota, nil
-}
-
-// getUpdatedConsumedQuota compute the updated quota of traffic table by the incoming read cost and the newest record.
-// it returns the updated consumed free quota,consumed charged quota and remained free quota
 func getUpdatedConsumedQuotaV2(recordQuotaCost, freeQuotaRemain, consumeFreeQuota, consumeChargedQuota, chargedQuota, monthlyFreeQuotaRemain, consumeMonthlyFreeQuota uint64) (uint64, uint64, uint64, uint64, uint64, error) {
 	log.Infow("quota info", "freeQuotaRemain", freeQuotaRemain, "consumeFreeQuota", consumeFreeQuota, "consumeChargedQuota", consumeChargedQuota, "chargedQuota", chargedQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain, "consumeMonthlyFreeQuota", consumeMonthlyFreeQuota)
 	defer log.Infow("quota info", "freeQuotaRemain", freeQuotaRemain, "consumeFreeQuota", consumeFreeQuota, "consumeChargedQuota", consumeChargedQuota, "chargedQuota", chargedQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain, "consumeMonthlyFreeQuota", consumeMonthlyFreeQuota)
-	if chargedQuota >= recordQuotaCost {
+	chargedQuotaInt := int64(chargedQuota) - int64(consumeChargedQuota)
+	if chargedQuotaInt >= int64(recordQuotaCost) {
 		consumeChargedQuota += recordQuotaCost
 		return consumeFreeQuota, consumeChargedQuota, consumeMonthlyFreeQuota, freeQuotaRemain, monthlyFreeQuotaRemain, nil
 	}
-	if chargedQuota > 0 {
-		consumeChargedQuota += chargedQuota
-		recordQuotaCost -= chargedQuota
+	if chargedQuotaInt > 0 {
+		consumeChargedQuota += uint64(chargedQuotaInt)
+		recordQuotaCost -= uint64(chargedQuotaInt)
 	}
 
 	if monthlyFreeQuotaRemain >= recordQuotaCost {
