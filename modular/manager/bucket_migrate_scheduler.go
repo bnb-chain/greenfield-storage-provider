@@ -3,6 +3,7 @@ package manager
 import (
 	"container/list"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -10,6 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
+	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
@@ -204,18 +206,20 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 	}
 	var gvgMappings []*storagetypes.GVGMapping
 	for _, migrateGVGUnit := range plan.gvgUnitMap {
-		aggBlsSig, getBlsError := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateExecuteUnit)
+		aggBlsSig, getBlsError := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateGVGUnit)
 		if getBlsError != nil {
 			log.Errorw("failed to get bls aggregate signature", "error", getBlsError)
 			return err
 		}
 		vgfID = migrateGVGUnit.DestGVG.GetFamilyId()
+		log.Infow("get bls aggregate signature", "bucket_id", bucket.BucketInfo.Id, "migrateGVGUnit", migrateGVGUnit, "aggBlsSig", hex.EncodeToString(aggBlsSig))
 		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.SrcGVG.GetId(),
 			DstGlobalVirtualGroupId: migrateGVGUnit.DestGVGID, SecondarySpBlsSignature: aggBlsSig})
 	}
 
 	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
 		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
+	log.Infow("before sent complete migrate bucket msg to chain", "msg", migrateBucket, "gvgUnitMap", plan.gvgUnitMap)
 	txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
 	if txErr != nil {
 		log.Errorw("failed to send complete migrate bucket msg to chain", "msg", migrateBucket, "tx_hash", txHash, "err", txErr)
@@ -337,6 +341,7 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 	signDoc := storagetypes.NewSecondarySpMigrationBucketSignDoc(plan.manager.baseApp.ChainID(),
 		sdkmath.NewUint(plan.bucketID), migrateExecuteUnit.DestSP.GetId(), migrateExecuteUnit.SrcGVG.GetId(), migrateExecuteUnit.DestGVGID)
 	secondarySigs := make([][]byte, 0)
+	log.Infow("get secondary sp migration bucket approval", "migrateExecuteUnit", migrateExecuteUnit)
 	for _, spID := range migrateExecuteUnit.DestGVG.GetSecondarySpIds() {
 		spInfo, err := plan.manager.virtualGroupManager.QuerySPByID(spID)
 		if err != nil {
@@ -348,7 +353,16 @@ func (plan *BucketMigrateExecutePlan) getBlsAggregateSigForBucketMigration(ctx c
 			log.Errorw("failed to get secondary sp migration bucket approval", "error", err, "sp_info", spInfo)
 			return nil, err
 		}
+		// verify bls sig from secondary SP
+		msg := signDoc.GetBlsSignHash()
+		err = verifySecondarySpBlsSignature(spInfo.BlsKey, sig, msg[:], spInfo.Id)
+		if err != nil {
+			log.Errorw("failed to verify secondary sp bls signature", "error", err, "sp_id", spInfo.Id, "bls_pubkey",
+				hex.EncodeToString(spInfo.BlsKey), "bls_sig", hex.EncodeToString(sig))
+			return nil, err
+		}
 		secondarySigs = append(secondarySigs, sig)
+		log.Infow("get secondary sp migration bucket approval", "sp_info", spInfo, "sig", hex.EncodeToString(sig))
 	}
 	aggBlsSig, err := util.BlsAggregate(secondarySigs)
 	if err != nil {
@@ -1649,6 +1663,21 @@ func UpdateBucketMigrationProgress(baseApp *gfspapp.GfSpBaseApp, bucketID uint64
 	if err := baseApp.GfSpDB().UpdateBucketMigrationProgress(bucketID, int(migrateState)); err != nil {
 		log.Errorw("failed to update bucket migration progress", "bucket_id", bucketID, "state", migrateState, "error", err)
 		return err
+	}
+	return nil
+}
+
+func verifySecondarySpBlsSignature(secondarySpBlsKey []byte, signature, sigDoc []byte, spID uint32) error {
+	publicKey, err := bls.PublicKeyFromBytes(secondarySpBlsKey)
+	if err != nil {
+		return err
+	}
+	sig, err := bls.SignatureFromBytes(signature)
+	if err != nil {
+		return err
+	}
+	if !sig.Verify(publicKey, sigDoc) {
+		return fmt.Errorf("failed to verify SP[%d] bls signature", spID)
 	}
 	return nil
 }

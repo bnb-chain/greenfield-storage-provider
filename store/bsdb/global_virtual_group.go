@@ -157,7 +157,7 @@ func (b *BsDBImpl) ListGvgByBucketID(bucketID common.Hash) ([]*GlobalVirtualGrou
 	err = b.db.Table((&GlobalVirtualGroup{}).TableName()).
 		Select("*").
 		Where("global_virtual_group_id in (?)", gvgID).
-		Take(&globalGroups).Error
+		Find(&globalGroups).Error
 
 	return globalGroups, err
 }
