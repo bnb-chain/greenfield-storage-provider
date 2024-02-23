@@ -106,7 +106,7 @@ func TestHandleReceivePieceTask_SetPieceChecksumFailed(t *testing.T) {
 	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().SetReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("failed to set piece checksum")).Times(1)
+	mockSPDB.EXPECT().SetReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("failed to set piece checksum")).Times(1)
 	err := r.HandleReceivePieceTask(context.TODO(), mockTask, data)
 	assert.NotNil(t, err)
 }
@@ -133,7 +133,7 @@ func TestHandleReceivePieceTask_PutPieceFailed(t *testing.T) {
 	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().SetReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	mockSPDB.EXPECT().SetReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 	mockPieceStoreAPI := piecestore.NewMockPieceStore(ctrl)
 	r.baseApp.SetPieceStore(mockPieceStoreAPI)
 	mockPieceStoreAPI.EXPECT().PutPiece(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("failed to put piece")).Times(1)
@@ -163,7 +163,7 @@ func TestHandleReceivePieceTask_HandleReceivePieceTaskSucceed(t *testing.T) {
 	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
-	mockSPDB.EXPECT().SetReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	mockSPDB.EXPECT().SetReplicatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 	mockPieceStoreAPI := piecestore.NewMockPieceStore(ctrl)
 	r.baseApp.SetPieceStore(mockPieceStoreAPI)
 	mockPieceStoreAPI.EXPECT().PutPiece(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)

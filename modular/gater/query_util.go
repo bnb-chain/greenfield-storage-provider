@@ -73,7 +73,7 @@ func (g *GateModular) getObjectChainMeta(ctx context.Context, objectName, bucket
 		return nil, nil, nil, ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 	}
 
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, objectInfo.GetCreateAt())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, objectInfo.GetLatestUpdatedTime())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage params", "error", err)
 		return nil, nil, nil, ErrConsensusWithDetail("failed to get storage params, error: " + err.Error())

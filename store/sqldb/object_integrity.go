@@ -186,6 +186,33 @@ func (s *SpDBImpl) UpdateIntegrityChecksum(meta *corespdb.IntegrityMeta) (err er
 	return nil
 }
 
+// UpdateIntegrityMeta update both IntegrityChecksum and PieceChecksumList
+func (s *SpDBImpl) UpdateIntegrityMeta(meta *corespdb.IntegrityMeta) (err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureUpdateIntegrityChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureUpdateIntegrityChecksum).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessUpdateIntegrityChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessUpdateIntegrityChecksum).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	shardTableName := GetIntegrityMetasTableName(meta.ObjectID)
+	result := s.db.Table(shardTableName).Where("object_id = ? and redundancy_index = ?", meta.ObjectID, meta.RedundancyIndex).
+		Updates(&IntegrityMetaTable{
+			IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
+			PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
+		})
+	if result.Error != nil {
+		return fmt.Errorf("failed to update integrity checksum and piece checksums for integrity meta table: %s", result.Error)
+	}
+	return nil
+}
+
 // DeleteObjectIntegrity deletes integrity meta info.
 func (s *SpDBImpl) DeleteObjectIntegrity(objectID uint64, redundancyIndex int32) (err error) {
 	startTime := time.Now()
@@ -352,7 +379,7 @@ func (s *SpDBImpl) GetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 }
 
 // SetReplicatePieceChecksum sets replicate checksum.
-func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error {
+func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte, version int64) error {
 	var (
 		result *gorm.DB
 		err    error
@@ -375,6 +402,7 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 		SegmentIndex:    segmentIdx,
 		RedundancyIndex: redundancyIdx,
 		PieceChecksum:   hex.EncodeToString(checksum),
+		Version:         version,
 	}
 	result = s.db.Create(insertPieceHash)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
@@ -566,6 +594,7 @@ func (s *SpDBImpl) ListReplicatePieceChecksumByObjectIDRange(startObjectID int64
 			SegmentIndex:    queryReturn.SegmentIndex,
 			RedundancyIndex: queryReturn.RedundancyIndex,
 			PieceChecksum:   queryReturn.PieceChecksum,
+			Version:         queryReturn.Version,
 		}
 		pieceMetas = append(pieceMetas, pieceMeta)
 	}

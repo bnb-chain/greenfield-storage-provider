@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./virtual_group_manager.go -destination=./virtual_group_manager_mock.go -package=vgmgr
 //
+
 // Package vgmgr is a generated GoMock package.
 package vgmgr
 

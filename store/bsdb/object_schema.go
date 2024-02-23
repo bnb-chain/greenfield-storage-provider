@@ -69,6 +69,14 @@ type Object struct {
 	SealTxHash common.Hash `gorm:"column:sealed_tx_hash"`
 	// Tags
 	Tags datatypes.JSON `gorm:"column:tags;TYPE:json"` // tags
+	// Updating
+	IsUpdating bool `gorm:"is_updating"`
+	// ContentUpdatedTime defines the content updated time, it is related to updated_at in ObjectInfo
+	ContentUpdatedTime int64 `gorm:"content_updated_time"`
+	// Updater defines the account that updates the object content recently.
+	Updater common.Address `gorm:"updater"`
+	// Version
+	Version int64 `gorm:"version"`
 }
 
 // TableName is used to set Object table name in database

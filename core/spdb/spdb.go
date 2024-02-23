@@ -79,14 +79,17 @@ type SignatureDB interface {
 	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
 	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
 	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
+	// UpdateIntegrityMeta update both piece checksum and integrity
+	UpdateIntegrityMeta(integrity *IntegrityMeta) error
 	// ListIntegrityMetaByObjectIDRange list integrity meta in range
 	ListIntegrityMetaByObjectIDRange(startObjectID int64, endObjectID int64, includePrivate bool) ([]*IntegrityMeta, error)
+
 	/*
 		Piece Signature is used to help replicate object's piece data to secondary sps, which is temporary.
 	*/
 	// SetReplicatePieceChecksum sets(maybe overwrite) the piece hash.
-	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte) error
-	// GetReplicatePieceChecksum gets all piece hashes.
+	SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32, checksum []byte, version int64) error
+	// GetReplicatePieceChecksum gets a piece hash.
 	GetReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) ([]byte, error)
 	// GetAllReplicatePieceChecksum gets all piece hashes.
 	GetAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) ([][]byte, error)
@@ -100,6 +103,23 @@ type SignatureDB interface {
 	DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error
 	// ListReplicatePieceChecksumByObjectIDRange list replicate piece checksum in range
 	ListReplicatePieceChecksumByObjectIDRange(startObjectID int64, endObjectID int64) ([]*GCPieceMeta, error)
+
+	/*
+	  Used for Object Update, the ShadowObjectIntegrity is used for temporally storing used updated object meta;
+	  it will be clean when the object is re-sealed
+	*/
+	// GetShadowObjectIntegrity gets the shadow object integrity meta info by object id and redundancy index.
+	GetShadowObjectIntegrity(objectID uint64, redundancyIndex int32) (*ShadowIntegrityMeta, error)
+	// SetShadowObjectIntegrity sets(maybe overwrite) shadow integrity hash info to db.
+	SetShadowObjectIntegrity(integrity *ShadowIntegrityMeta) error
+	// DeleteShadowObjectIntegrity deletes the shadow integrity hash.
+	DeleteShadowObjectIntegrity(objectID uint64, redundancyIndex int32) error
+	// UpdateShadowIntegrityChecksum update ShadowIntegrityMetaTable's integrity checksum
+	UpdateShadowIntegrityChecksum(integrity *ShadowIntegrityMeta) error
+	// UpdateShadowPieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
+	UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) error
+	// ListShadowIntegrityMeta list Shadow IntegrityMeta records with default limit
+	ListShadowIntegrityMeta() ([]*ShadowIntegrityMeta, error)
 }
 
 // TrafficDB defines a series of traffic interfaces.

@@ -166,7 +166,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	defer cancel()
 	go func() {
 		for segIdx := uint32(0); segIdx < segmentPieceCount; segIdx++ {
-			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx)
+			pieceKey := e.baseApp.PieceOp().SegmentPieceKey(rTask.GetObjectInfo().Id.Uint64(), segIdx, rTask.GetObjectInfo().Version)
 			startGetPieceTime := time.Now()
 			segData, err := e.baseApp.PieceStore().GetPiece(ctx, pieceKey, 0, -1)
 			metrics.PerfPutObjectTime.WithLabelValues("background_get_piece_time").Observe(time.Since(startGetPieceTime).Seconds())

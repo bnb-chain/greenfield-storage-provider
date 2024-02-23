@@ -506,6 +506,28 @@ type GCZombiePieceTask interface {
 	GetEndObjectId() uint64
 }
 
+// GCStaleVersionObjectTask gc the stale version of object data from piece store which is not successfully deleted
+// during reported sealing task.
+type GCStaleVersionObjectTask interface {
+	GCTask
+	InitGCStaleVersionObjectTask(priority TPriority,
+		objectID uint64,
+		redundancyIndex int32,
+		integrityChecksum []byte,
+		pieceChecksumList [][]byte,
+		version, timeout int64)
+	SetObjectID(uint64)
+	GetObjectId() uint64
+	SetVersion(int64)
+	GetVersion() int64
+	SetRedundancyIndex(int32)
+	GetRedundancyIndex() int32
+	SetIntegrityChecksum(integrityChecksum []byte)
+	GetIntegrityChecksum() []byte
+	SetPieceChecksumList(pieceChecksumList [][]byte)
+	GetPieceChecksumList() [][]byte
+}
+
 // GCMetaTask is an abstract interface to record the information for collecting the SP
 // meta store space by deleting the expired data.
 type GCMetaTask interface {

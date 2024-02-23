@@ -35,5 +35,8 @@ func TestNullConsensus(t *testing.T) {
 	_, _ = nc.ListenRejectUnSealObject(context.TODO(), 0, 0)
 	_, _ = nc.ConfirmTransaction(context.TODO(), "")
 	_ = nc.WaitForNextBlock(context.TODO())
+	_, _ = nc.QuerySwapInInfo(context.TODO(), 0, 0)
+	_, _ = nc.VerifyUpdateObjectPermission(context.TODO(), "", "", "")
+	_, _ = nc.QueryShadowObjectInfo(context.TODO(), "", "")
 	_ = nc.Close()
 }
