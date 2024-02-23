@@ -41,7 +41,7 @@ install-go-test-coverage:
 
 install-tools:
 	go install go.uber.org/mock/mockgen@latest
-	go install github.com/bufbuild/buf/cmd/buf@v1.25.0
+	go install github.com/bufbuild/buf/cmd/buf@v1.28.0
 	go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
 
 lint:

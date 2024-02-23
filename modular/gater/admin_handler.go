@@ -359,7 +359,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	getParamTime := time.Now()
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
@@ -500,7 +500,7 @@ func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.R
 		return
 	}
 	getParamTime := time.Now()
-	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetCreateAt())
+	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params", "error", err)
@@ -701,7 +701,7 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 		}
 	} else {
 		// if it is replicate when uploading, the status should be created
-		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
+		if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED && !objectInfo.IsUpdating {
 			return ErrNotCreatedState
 		}
 	}
@@ -976,7 +976,7 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
-	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(ECIndex))
+	ECPieceKey := g.baseApp.PieceOp().ECPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), uint32(ECIndex), objectInfo.GetVersion())
 
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
 	// no need to check quota when recovering primary SP segment data
@@ -1058,8 +1058,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 		return nil, ErrRecoverySP
 	}
 	pieceTask := &gfsptask.GfSpDownloadPieceTask{}
-	segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(),
-		recoveryTask.GetSegmentIdx())
+	segmentPieceKey := g.baseApp.PieceOp().SegmentPieceKey(recoveryTask.GetObjectInfo().Id.Uint64(), recoveryTask.GetSegmentIdx(), recoveryTask.GetObjectInfo().GetVersion())
 
 	// if recovery data chunk, just download the data part of segment in primarySP
 	// no need to check quota when recovering primary SP or secondary SP data

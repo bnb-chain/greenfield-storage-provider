@@ -92,6 +92,8 @@ func (s *GfSpClient) AskTask(ctx context.Context, limit corercmgr.Limit) (coreta
 		return t.MigrateGvgTask, nil
 	case *gfspserver.GfSpAskTaskResponse_GcBucketMigrationTask:
 		return t.GcBucketMigrationTask, nil
+	case *gfspserver.GfSpAskTaskResponse_GcStaleVersionObjectTask:
+		return t.GcStaleVersionObjectTask, nil
 	default:
 		return nil, ErrTypeMismatch
 	}
@@ -131,6 +133,8 @@ func (s *GfSpClient) ReportTask(ctx context.Context, report coretask.Task) error
 		req.Request = &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{MigrateGvgTask: t}
 	case *gfsptask.GfSpGCBucketMigrationTask:
 		req.Request = &gfspserver.GfSpReportTaskRequest_GcBucketMigrationTask{GcBucketMigrationTask: t}
+	case *gfsptask.GfSpGCStaleVersionObjectTask:
+		req.Request = &gfspserver.GfSpReportTaskRequest_GcStaleVersionObjectTask{GcStaleVersionObjectTask: t}
 	default:
 		log.CtxErrorw(ctx, "unsupported task type to report")
 		return ErrTypeMismatch

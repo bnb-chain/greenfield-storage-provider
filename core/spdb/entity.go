@@ -43,6 +43,7 @@ type GCPieceMeta struct {
 	SegmentIndex    uint32
 	RedundancyIndex int32
 	PieceChecksum   string
+	Version         int64 // the version is used to locate the correct piece in Piece Store.  Default is 0.
 }
 
 // IntegrityMeta defines the payload integrity hash and piece checksum with objectID.
@@ -51,6 +52,17 @@ type IntegrityMeta struct {
 	RedundancyIndex   int32
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
+}
+
+// ShadowIntegrityMeta defines the payload integrity hash and piece checksum with objectID. It is used for storing user's
+// updated object meta. When the SP seals the object successful, this temporary record will be persisted to IntegrityMeta
+// and removed from ShadowIntegrityMeta.
+type ShadowIntegrityMeta struct {
+	ObjectID          uint64
+	RedundancyIndex   int32
+	IntegrityChecksum []byte
+	PieceChecksumList [][]byte
+	Version           int64
 }
 
 // ReadRecord defines a read request record, will decrease the bucket read quota.

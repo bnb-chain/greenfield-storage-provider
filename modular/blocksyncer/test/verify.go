@@ -27,7 +27,7 @@ var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
 	verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40,
 	verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49, verify50,
 	verify51, verify52, verify53, verify54, verify55, verify56, verify57, verify58, verify59, verify60,
-	verify61, verify62, verify63, verify64, verify65, verify66,
+	verify61, verify62, verify63, verify64, verify65, verify66, verify67,
 }
 
 func Verify(t *testing.T) error {
@@ -707,6 +707,25 @@ func verify66(t *testing.T, db *gorm.DB) error {
 	}
 
 	return nil
+}
+
+func verify67(t *testing.T, db *gorm.DB) error {
+	table := GetObjectsTableName("phugwly1grq")
+	var o models.Object
+	if err := db.Table(table).Where("bucket_name=? and object_name = ?", "phugwly1grq", "j5lgngcf").Find(&o).Error; err != nil {
+		assert.NoError(t, err)
+	}
+	if o.Version != 1 {
+		return errors.New("update object error")
+	}
+	if o.Status != "OBJECT_STATUS_SEALED" {
+		return errors.New("update object error")
+	}
+	if o.IsUpdating {
+		return errors.New("update object error")
+	}
+	return nil
+
 }
 
 const ObjectsNumberOfShards = 64

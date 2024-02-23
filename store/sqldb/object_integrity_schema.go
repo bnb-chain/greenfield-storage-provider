@@ -16,6 +16,7 @@ type PieceHashTable struct {
 	SegmentIndex    uint32 `gorm:"primary_key"`
 	RedundancyIndex int32  `gorm:"primary_key"`
 	PieceChecksum   string
+	Version         int64
 }
 
 // TableName is used to set PieceHashTable schema's table name in database

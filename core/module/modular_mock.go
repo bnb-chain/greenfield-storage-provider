@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./modular.go -destination=./modular_mock.go -package=module
 //
+
 // Package module is a generated GoMock package.
 package module
 
@@ -1097,6 +1098,20 @@ func (m *MockManager) HandleGCObjectTask(ctx context.Context, task task.GCObject
 func (mr *MockManagerMockRecorder) HandleGCObjectTask(ctx, task any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleGCObjectTask", reflect.TypeOf((*MockManager)(nil).HandleGCObjectTask), ctx, task)
+}
+
+// HandleGCStaleVersionObjectTask mocks base method.
+func (m *MockManager) HandleGCStaleVersionObjectTask(ctx context.Context, task task.GCStaleVersionObjectTask) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HandleGCStaleVersionObjectTask", ctx, task)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// HandleGCStaleVersionObjectTask indicates an expected call of HandleGCStaleVersionObjectTask.
+func (mr *MockManagerMockRecorder) HandleGCStaleVersionObjectTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleGCStaleVersionObjectTask", reflect.TypeOf((*MockManager)(nil).HandleGCStaleVersionObjectTask), ctx, task)
 }
 
 // HandleGCZombiePieceTask mocks base method.

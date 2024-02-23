@@ -226,6 +226,8 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 
 	redundancyNumber := int32(migratePiece.GetStorageParams().GetRedundantDataChunkNum()+migratePiece.GetStorageParams().GetRedundantParityChunkNum()) - 1
 	objectID := migratePiece.GetObjectInfo().Id.Uint64()
+	objectVersion := migratePiece.GetObjectInfo().GetVersion()
+
 	segmentIdx := migratePiece.GetSegmentIdx()
 	redundancyIdx := migratePiece.GetRedundancyIdx()
 	if redundancyIdx < piecestore.PrimarySPRedundancyIndex || redundancyIdx > redundancyNumber {
@@ -233,11 +235,11 @@ func (g *GateModular) migratePieceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if redundancyIdx == piecestore.PrimarySPRedundancyIndex {
-		pieceKey = g.baseApp.PieceOp().SegmentPieceKey(objectID, segmentIdx)
+		pieceKey = g.baseApp.PieceOp().SegmentPieceKey(objectID, segmentIdx, objectVersion)
 		pieceSize = g.baseApp.PieceOp().SegmentPieceSize(migratePiece.ObjectInfo.GetPayloadSize(),
 			segmentIdx, migratePiece.GetStorageParams().GetMaxSegmentSize())
 	} else {
-		pieceKey = g.baseApp.PieceOp().ECPieceKey(objectID, segmentIdx, uint32(redundancyIdx))
+		pieceKey = g.baseApp.PieceOp().ECPieceKey(objectID, segmentIdx, uint32(redundancyIdx), objectVersion)
 		pieceSize = g.baseApp.PieceOp().ECPieceSize(migratePiece.ObjectInfo.GetPayloadSize(), segmentIdx,
 			migratePiece.GetStorageParams().GetMaxSegmentSize(), migratePiece.GetStorageParams().GetRedundantDataChunkNum())
 	}

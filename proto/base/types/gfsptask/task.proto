@@ -170,6 +170,15 @@ message GfSpGCZombiePieceTask {
   bool finished = 5;
 }
 
+message GfSpGCStaleVersionObjectTask {
+  GfSpTask task = 1;
+  uint64 object_id = 2;
+  int32 redundancy_index = 3;
+  int64 version = 4;
+  bytes integrity_checksum = 5;
+  repeated bytes piece_checksum_list = 6;
+}
+
 message GfSpGCMetaTask {
   GfSpTask task = 1;
   uint64 current_idx = 2;

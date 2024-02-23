@@ -64,17 +64,14 @@ func (r *ReceiveModular) HandleReceivePieceTask(ctx context.Context, task task.R
 		err = ErrInvalidDataChecksum
 		return ErrInvalidDataChecksum
 	}
-
 	var pieceKey string
 	if task.GetObjectInfo().GetRedundancyType() == storagetypes.REDUNDANCY_EC_TYPE {
-		pieceKey = r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx(),
-			uint32(task.GetRedundancyIdx()))
+		pieceKey = r.baseApp.PieceOp().ECPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx(), uint32(task.GetRedundancyIdx()), task.GetObjectInfo().GetVersion())
 	} else {
-		pieceKey = r.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx())
+		pieceKey = r.baseApp.PieceOp().SegmentPieceKey(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx(), task.GetObjectInfo().GetVersion())
 	}
 	setDBTime := time.Now()
-	if err = r.baseApp.GfSpDB().SetReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(),
-		task.GetSegmentIdx(), task.GetRedundancyIdx(), task.GetPieceChecksum()); err != nil {
+	if err = r.baseApp.GfSpDB().SetReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(), task.GetSegmentIdx(), task.GetRedundancyIdx(), task.GetPieceChecksum(), task.GetObjectInfo().GetVersion()); err != nil {
 		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_set_mysql_time").Observe(time.Since(setDBTime).Seconds())
 		log.CtxErrorw(ctx, "failed to set checksum to db", "task", task, "error", err)
 		return ErrGfSpDBWithDetail("failed to set checksum to db, error: " + err.Error())
@@ -107,7 +104,6 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_push_time").Observe(time.Since(pushTime).Seconds())
 	defer r.receiveQueue.PopByKey(task.Key())
-
 	segmentCount := r.baseApp.PieceOp().SegmentPieceCount(task.GetObjectInfo().GetPayloadSize(),
 		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
 	getChecksumsTime := time.Now()
@@ -125,13 +121,11 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 	expectedIntegrityHash := task.GetObjectInfo().GetChecksums()[task.GetRedundancyIdx()+1]
 	integrityChecksum := hash.GenerateIntegrityHash(pieceChecksums)
-
 	if !bytes.Equal(expectedIntegrityHash, integrityChecksum) {
 		log.CtxErrorw(ctx, "failed to compare checksum", "task", task, "actual_checksum", integrityChecksum, "expected_checksum", expectedIntegrityHash)
 		err = ErrInvalidDataChecksum
 		return nil, ErrInvalidDataChecksum
 	}
-
 	signTime := time.Now()
 	signature, err := r.baseApp.GfSpClient().SignSecondarySealBls(ctx, task.GetObjectInfo().Id.Uint64(),
 		task.GetGlobalVirtualGroupId(), task.GetObjectInfo().GetChecksums())
@@ -141,14 +135,25 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		return nil, err
 	}
 
-	integrityMeta := &corespdb.IntegrityMeta{
-		ObjectID:          task.GetObjectInfo().Id.Uint64(),
-		RedundancyIndex:   task.GetRedundancyIdx(),
-		IntegrityChecksum: integrityChecksum,
-		PieceChecksumList: pieceChecksums,
-	}
 	setIntegrityTime := time.Now()
-	err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
+	if task.GetObjectInfo().GetIsUpdating() {
+		integrityMeta := &corespdb.ShadowIntegrityMeta{
+			ObjectID:          task.GetObjectInfo().Id.Uint64(),
+			RedundancyIndex:   task.GetRedundancyIdx(),
+			IntegrityChecksum: integrityChecksum,
+			PieceChecksumList: pieceChecksums,
+			Version:           task.GetObjectInfo().GetVersion(),
+		}
+		err = r.baseApp.GfSpDB().SetShadowObjectIntegrity(integrityMeta)
+	} else {
+		integrityMeta := &corespdb.IntegrityMeta{
+			ObjectID:          task.GetObjectInfo().Id.Uint64(),
+			RedundancyIndex:   task.GetRedundancyIdx(),
+			IntegrityChecksum: integrityChecksum,
+			PieceChecksumList: pieceChecksums,
+		}
+		err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
+	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_set_integrity_time").Observe(time.Since(setIntegrityTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to write integrity meta to db", "task", task, "error", err)

@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./interface.go -destination=./interface_mock.go -package=gfspclient
 //
+
 // Package gfspclient is a generated GoMock package.
 package gfspclient
 

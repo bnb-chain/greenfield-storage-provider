@@ -179,6 +179,10 @@ type GCConfig struct {
 	// gc meta
 	EnableGCMeta       bool `comment:"optional"`
 	GCMetaTimeInterval int  `comment:"optional"`
+
+	// GC stale version object
+	EnableGCStaleVersionObject bool `comment:"optional"`
+	GCStaleVersionTimeInterval int  `comment:"optional"`
 }
 
 type ParallelConfig struct {
@@ -199,10 +203,11 @@ type ParallelConfig struct {
 	GlobalSyncConsensusInfoInterval   uint64 `comment:"optional"`
 
 	// gc
-	GlobalGCObjectParallel          int `comment:"optional"`
-	GlobalGCBucketMigrationParallel int `comment:"optional"`
-	GlobalGCZombieParallel          int `comment:"optional"`
-	GlobalGCMetaParallel            int `comment:"optional"`
+	GlobalGCObjectParallel             int `comment:"optional"`
+	GlobalGCBucketMigrationParallel    int `comment:"optional"`
+	GlobalGCZombieParallel             int `comment:"optional"`
+	GlobalGCMetaParallel               int `comment:"optional"`
+	GlobalGCStaleVersionObjectParallel int `comment:"optional"`
 
 	UploadObjectParallelPerNode         int   `comment:"optional"`
 	ReceivePieceParallelPerNode         int   `comment:"optional"`
