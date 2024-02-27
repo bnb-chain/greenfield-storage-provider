@@ -111,8 +111,9 @@ func (m *ManageModular) NotifyPreMigrateBucketAndDeductQuota(ctx context.Context
 
 		// only need to set the free quota when init the traffic table for every month
 		err = m.baseApp.GfSpDB().InitBucketTraffic(readRecord, &spdb.BucketQuota{
-			ChargedQuotaSize: chargedQuotaSize,
-			FreeQuotaSize:    freeQuotaSize,
+			ChargedQuotaSize:     chargedQuotaSize,
+			FreeQuotaSize:        freeQuotaSize,
+			MonthlyFreeQuotaSize: m.spMonthlyFreeQuota,
 		})
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to init bucket traffic", "error", err)

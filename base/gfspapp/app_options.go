@@ -64,6 +64,9 @@ const (
 	DefaultMediumTaskLimit = 1024
 	// DefaultLowTaskLimit defines the default low priority task limit for resource manager.
 	DefaultLowTaskLimit = 16
+
+	// DefaultSpMonthlyFreeQuota defines the default value of the free quota sp provides to users each month
+	DefaultSpMonthlyFreeQuota = 0
 )
 
 const (
