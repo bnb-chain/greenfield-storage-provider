@@ -31,6 +31,8 @@ var (
 	managerInfo  types.ManagerInfo
 	executorInfo types.ExecutorInfo
 	gcInfo       types.GCInfo
+
+	MonthlyFreeQuota uint64
 )
 
 func NewMetadataModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -70,6 +72,12 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	gcInfo.EnableGcZombie = cfg.GC.EnableGCZombie
 	gcInfo.EnableGcMeta = cfg.GC.EnableGCMeta
 	gcInfo.GcMetaTimeInterval = int64(cfg.GC.GCMetaTimeInterval)
+
+	if cfg.Quota.MonthlyFreeQuota == 0 {
+		MonthlyFreeQuota = gfspapp.DefaultSpMonthlyFreeQuota
+	} else {
+		MonthlyFreeQuota = cfg.Quota.MonthlyFreeQuota
+	}
 
 	startGoRoutineListener()
 	return nil

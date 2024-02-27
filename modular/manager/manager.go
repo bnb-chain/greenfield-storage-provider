@@ -138,6 +138,8 @@ type ManageModular struct {
 	enableTaskRetryScheduler    bool
 	rejectUnsealThresholdSecond uint64
 	taskRetryScheduler          *TaskRetryScheduler
+
+	spMonthlyFreeQuota uint64
 }
 
 func (m *ManageModular) Name() string {

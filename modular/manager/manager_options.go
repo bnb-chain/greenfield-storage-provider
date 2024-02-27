@@ -309,5 +309,11 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 
 	manager.enableBucketMigrateCache = cfg.Manager.EnableBucketMigrateCache
 
+	if cfg.Quota.MonthlyFreeQuota == 0 {
+		manager.spMonthlyFreeQuota = gfspapp.DefaultSpMonthlyFreeQuota
+	} else {
+		manager.spMonthlyFreeQuota = cfg.Quota.MonthlyFreeQuota
+	}
+
 	return nil
 }

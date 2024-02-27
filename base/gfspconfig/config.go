@@ -60,6 +60,7 @@ type GfSpConfig struct {
 	APIRateLimiter mwhttp.RateLimiterConfig
 	Manager        ManagerConfig
 	GC             GCConfig
+	Quota          QuotaConfig
 }
 
 // Apply sets the customized implement to the GfSp configuration, it will be called
@@ -294,4 +295,8 @@ type ManagerConfig struct {
 
 	// EnableBucketMigrateCache is used to enable bucket migrate's bucket cache.
 	EnableBucketMigrateCache bool `comment:"optional"`
+}
+
+type QuotaConfig struct {
+	MonthlyFreeQuota uint64 `comment:"optional"`
 }
