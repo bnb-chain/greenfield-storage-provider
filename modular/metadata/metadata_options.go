@@ -73,7 +73,11 @@ func DefaultMetadataOptions(metadata *MetadataModular, cfg *gfspconfig.GfSpConfi
 	gcInfo.EnableGcMeta = cfg.GC.EnableGCMeta
 	gcInfo.GcMetaTimeInterval = int64(cfg.GC.GCMetaTimeInterval)
 
-	MonthlyFreeQuota = cfg.Quota.MonthlyFreeQuota
+	if cfg.Quota.MonthlyFreeQuota == 0 {
+		MonthlyFreeQuota = gfspapp.DefaultSpMonthlyFreeQuota
+	} else {
+		MonthlyFreeQuota = cfg.Quota.MonthlyFreeQuota
+	}
 
 	startGoRoutineListener()
 	return nil
