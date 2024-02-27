@@ -41,6 +41,7 @@ var (
 	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
 	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
 	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
+	ErrInvalidAddressOrDomain = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20016, "userAddress or domain can't be null")
 )
 
 func ErrUnexpectedObjectStatusWithDetail(objectName string, expectedStatus storagetypes.ObjectStatus, actualStatus storagetypes.ObjectStatus) *gfsperrors.GfSpError {
@@ -118,6 +119,9 @@ func (a *AuthenticationModular) ReleaseResource(
 
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
 func (a *AuthenticationModular) GetAuthNonce(ctx context.Context, account string, domain string) (*spdb.OffChainAuthKey, error) {
+	if account == "" || domain == "" {
+		return nil, ErrInvalidAddressOrDomain
+	}
 	authKey, err := a.baseApp.GfSpDB().GetAuthKey(account, domain)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to GetAuthKey", "error", err)

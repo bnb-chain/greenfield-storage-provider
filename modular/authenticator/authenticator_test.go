@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"log"
 	"strings"
 	"testing"
 	"time"
@@ -142,6 +143,20 @@ func TestAuthModular_GetAuthNonce_Failure(t *testing.T) {
 	a.baseApp.SetGfSpDB(m)
 	_, err := a.GetAuthNonce(context.Background(), "test_account", "https://domain.com")
 	assert.NotNil(t, err)
+}
+
+func TestAuthModular_GetAuthNonce_Failure1(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	m.EXPECT().GetAuthKey(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(string, string) (*spdb.OffChainAuthKey, error) { return nil, gorm.ErrInvalidDB },
+	).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	_, err := a.GetAuthNonce(context.Background(), "", "https://domain.com")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "\"http_status_code\":400")
+	log.Println(err)
 }
 
 func TestAuthModular_UpdateUserPublicKey(t *testing.T) {
