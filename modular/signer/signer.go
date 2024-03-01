@@ -21,24 +21,25 @@ import (
 )
 
 var (
-	ErrSignMsg                      = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
-	ErrSealObjectOnChain            = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
-	ErrRejectUnSealObjectOnChain    = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
-	ErrDiscontinueBucketOnChain     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
-	ErrDanglingPointer              = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
-	ErrCreateGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
-	ErrCompleteMigrateBucketOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120007, "send complete migrate bucket failed")
-	ErrSwapOutOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send swap out failed")
-	ErrCompleteSwapOutOnChain       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120009, "send complete swap out failed")
-	ErrSPExitOnChain                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
-	ErrCompleteSPExitOnChain        = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
-	ErrUpdateSPPriceOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120012, "send update sp price failed")
-	ErrRejectMigrateBucketOnChain   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket failed")
-	ErrDepositOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120014, "send deposit failed")
-	ErrDeleteGVGOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120015, "send delete GVG failed")
-	ErrReserveSwapIn                = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120016, "send reserve swap in failed")
-	ErrCompleteSwapIn               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120017, "send complete swap in failed")
-	ErrCancelSwapIn                 = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120018, "send cancel swap in failed")
+	ErrSignMsg                            = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120001, "sign message with private key failed")
+	ErrSealObjectOnChain                  = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120002, "send sealObject msg failed")
+	ErrRejectUnSealObjectOnChain          = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120003, "send rejectUnSealObject msg failed")
+	ErrDiscontinueBucketOnChain           = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120004, "send discontinueBucket msg failed")
+	ErrDanglingPointer                    = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120005, "sign or tx msg pointer dangling")
+	ErrCreateGVGOnChain                   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120006, "send create gvg msg failed")
+	ErrCompleteMigrateBucketOnChain       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120007, "send complete migrate bucket failed")
+	ErrSwapOutOnChain                     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120008, "send swap out failed")
+	ErrCompleteSwapOutOnChain             = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120009, "send complete swap out failed")
+	ErrSPExitOnChain                      = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120010, "send sp exit failed")
+	ErrCompleteSPExitOnChain              = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120011, "send complete sp exit failed")
+	ErrUpdateSPPriceOnChain               = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120012, "send update sp price failed")
+	ErrRejectMigrateBucketOnChain         = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120013, "send reject migrate bucket failed")
+	ErrDepositOnChain                     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120014, "send deposit failed")
+	ErrDeleteGVGOnChain                   = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120015, "send delete GVG failed")
+	ErrReserveSwapIn                      = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120016, "send reserve swap in failed")
+	ErrCompleteSwapIn                     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120017, "send complete swap in failed")
+	ErrCancelSwapIn                       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120018, "send cancel swap in failed")
+	ErrDelegateUpdateObjectContentOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120019, "send DelegateUpdateObjectContent failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -250,5 +251,7 @@ func (s *SignModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.Ms
 
 func (s *SignModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
 	return s.client.DeleteGlobalVirtualGroup(ctx, SignOperator, deleteGVG)
-
+}
+func (s *SignModular) DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
+	return s.client.DelegateUpdateObjectContent(ctx, SignOperator, msg)
 }
