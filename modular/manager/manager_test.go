@@ -91,7 +91,7 @@ func TestExecuteModular_StartSuccess(t *testing.T) {
 	}).AnyTimes()
 
 	m2.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint"}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_GRACEFUL_EXITING}}, nil).AnyTimes()
 	m2.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(100), nil).AnyTimes()
 
 	m4 := spdb.NewMockSPDB(ctrl)
@@ -125,7 +125,7 @@ func TestManageModular_EventLoop(t *testing.T) {
 	m1 := consensus.NewMockConsensus(ctrl)
 	manage.baseApp.SetConsensus(m1)
 	m1.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint"}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_GRACEFUL_EXITING}}, nil).AnyTimes()
 	m1.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(0), nil).AnyTimes()
 	m2 := spdb.NewMockSPDB(ctrl)
 	manage.baseApp.SetGfSpDB(m2)
@@ -141,10 +141,9 @@ func TestManageModular_EventLoop(t *testing.T) {
 			},
 		}, nil).AnyTimes()
 	m3.EXPECT().DiscontinueBucket(gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
-
 	ctx, cancel := context.WithTimeout(context.TODO(), 10)
 	manage.eventLoop(ctx)
-	time.Sleep(11 * time.Second)
+	time.Sleep(10 * time.Second)
 	cancel()
 }
 
