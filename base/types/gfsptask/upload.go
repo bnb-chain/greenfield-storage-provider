@@ -170,10 +170,11 @@ func (m *GfSpUploadObjectTask) SetStorageParams(param *storagetypes.Params) {
 }
 
 func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	timeout int64, complete bool, offset uint64) {
+	timeout int64, complete bool, offset uint64, isAgentUpload bool) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.VirtualGroupFamilyId = vgfID
+	m.IsAgentUpload = isAgentUpload
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetTimeout(timeout)

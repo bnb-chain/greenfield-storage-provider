@@ -78,7 +78,7 @@ type SignatureDB interface {
 	// UpdateIntegrityChecksum update IntegrityMetaTable's integrity checksum
 	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
 	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
-	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
+	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, dataLength uint64) error
 	// UpdateIntegrityMeta update both piece checksum and integrity
 	UpdateIntegrityMeta(integrity *IntegrityMeta) error
 	// ListIntegrityMetaByObjectIDRange list integrity meta in range

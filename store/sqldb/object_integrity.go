@@ -302,7 +302,7 @@ func (s *SpDBImpl) ListIntegrityMetaByObjectIDRange(startObjectID int64, endObje
 
 // UpdatePieceChecksum 1) If the IntegrityMetaTable does not exist, it will be created.
 // 2) If the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
-func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) (err error) {
+func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, dataLength uint64) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -326,6 +326,7 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 			RedundancyIndex:   redundancyIndex,
 			PieceChecksumList: append(checksums, checksum),
 			IntegrityChecksum: integrity,
+			PieceSize:         dataLength,
 		}
 		err = s.SetObjectIntegrity(integrityMetaNew)
 		if err != nil {
@@ -337,8 +338,9 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 		newChecksums := append(integrityMeta.PieceChecksumList, checksum)
 		integrityMeta.PieceChecksumList = newChecksums
 		result := s.db.Table(shardTableName).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
-			Updates(&IntegrityMetaTable{
-				PieceChecksumList: util.BytesSliceToString(newChecksums),
+			Updates(map[string]interface{}{
+				"piece_checksum_list": util.BytesSliceToString(newChecksums),
+				"piece_size":          gorm.Expr("piece_size + ?", dataLength),
 			})
 		if result.Error != nil {
 			return fmt.Errorf("failed to update integrity meta table: %s", result.Error)

@@ -4023,6 +4023,20 @@ func (mr *MockResumableUploadObjectTaskMockRecorder) GetCreateTime() *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCreateTime", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).GetCreateTime))
 }
 
+// GetIsAgentUpload mocks base method.
+func (m *MockResumableUploadObjectTask) GetIsAgentUpload() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIsAgentUpload")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetIsAgentUpload indicates an expected call of GetIsAgentUpload.
+func (mr *MockResumableUploadObjectTaskMockRecorder) GetIsAgentUpload() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIsAgentUpload", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).GetIsAgentUpload))
+}
+
 // GetLogs mocks base method.
 func (m *MockResumableUploadObjectTask) GetLogs() string {
 	m.ctrl.T.Helper()
@@ -4204,15 +4218,15 @@ func (mr *MockResumableUploadObjectTaskMockRecorder) Info() *gomock.Call {
 }
 
 // InitResumableUploadObjectTask mocks base method.
-func (m *MockResumableUploadObjectTask) InitResumableUploadObjectTask(vgfID uint32, object *types0.ObjectInfo, params *types0.Params, timeout int64, complete bool, offset uint64) {
+func (m *MockResumableUploadObjectTask) InitResumableUploadObjectTask(vgfID uint32, object *types0.ObjectInfo, params *types0.Params, timeout int64, complete bool, offset uint64, isAgentUpload bool) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "InitResumableUploadObjectTask", vgfID, object, params, timeout, complete, offset)
+	m.ctrl.Call(m, "InitResumableUploadObjectTask", vgfID, object, params, timeout, complete, offset, isAgentUpload)
 }
 
 // InitResumableUploadObjectTask indicates an expected call of InitResumableUploadObjectTask.
-func (mr *MockResumableUploadObjectTaskMockRecorder) InitResumableUploadObjectTask(vgfID, object, params, timeout, complete, offset interface{}) *gomock.Call {
+func (mr *MockResumableUploadObjectTaskMockRecorder) InitResumableUploadObjectTask(vgfID, object, params, timeout, complete, offset, isAgentUpload interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitResumableUploadObjectTask", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).InitResumableUploadObjectTask), vgfID, object, params, timeout, complete, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitResumableUploadObjectTask", reflect.TypeOf((*MockResumableUploadObjectTask)(nil).InitResumableUploadObjectTask), vgfID, object, params, timeout, complete, offset, isAgentUpload)
 }
 
 // Key mocks base method.
@@ -4558,6 +4572,20 @@ func (mr *MockReplicatePieceTaskMockRecorder) GetGlobalVirtualGroupId() *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroupId", reflect.TypeOf((*MockReplicatePieceTask)(nil).GetGlobalVirtualGroupId))
 }
 
+// GetIsAgentUpload mocks base method.
+func (m *MockReplicatePieceTask) GetIsAgentUpload() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIsAgentUpload")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetIsAgentUpload indicates an expected call of GetIsAgentUpload.
+func (mr *MockReplicatePieceTaskMockRecorder) GetIsAgentUpload() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIsAgentUpload", reflect.TypeOf((*MockReplicatePieceTask)(nil).GetIsAgentUpload))
+}
+
 // GetLogs mocks base method.
 func (m *MockReplicatePieceTask) GetLogs() string {
 	m.ctrl.T.Helper()
@@ -4781,15 +4809,15 @@ func (mr *MockReplicatePieceTaskMockRecorder) Info() *gomock.Call {
 }
 
 // InitReplicatePieceTask mocks base method.
-func (m *MockReplicatePieceTask) InitReplicatePieceTask(object *types0.ObjectInfo, params *types0.Params, priority TPriority, timeout, retry int64) {
+func (m *MockReplicatePieceTask) InitReplicatePieceTask(object *types0.ObjectInfo, params *types0.Params, priority TPriority, timeout, retry int64, isAgentUpload bool) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "InitReplicatePieceTask", object, params, priority, timeout, retry)
+	m.ctrl.Call(m, "InitReplicatePieceTask", object, params, priority, timeout, retry, isAgentUpload)
 }
 
 // InitReplicatePieceTask indicates an expected call of InitReplicatePieceTask.
-func (mr *MockReplicatePieceTaskMockRecorder) InitReplicatePieceTask(object, params, priority, timeout, retry interface{}) *gomock.Call {
+func (mr *MockReplicatePieceTaskMockRecorder) InitReplicatePieceTask(object, params, priority, timeout, retry, isAgentUpload interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitReplicatePieceTask", reflect.TypeOf((*MockReplicatePieceTask)(nil).InitReplicatePieceTask), object, params, priority, timeout, retry)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitReplicatePieceTask", reflect.TypeOf((*MockReplicatePieceTask)(nil).InitReplicatePieceTask), object, params, priority, timeout, retry, isAgentUpload)
 }
 
 // Key mocks base method.

@@ -263,7 +263,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
-		m.baseApp.TaskMaxRetry(replicateTask), false)
+		m.baseApp.TaskMaxRetry(replicateTask), task.GetIsAgentUpload())
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)

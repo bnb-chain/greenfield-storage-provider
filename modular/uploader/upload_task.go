@@ -176,7 +176,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 			}
 			if uint64(readSize) != uploadObjectTask.GetObjectInfo().GetPayloadSize() {
 				log.CtxErrorw(ctx, "readSize is not equal payloadSize", "objectID", uploadObjectTask.GetObjectInfo().Id.Uint64(), "readSize", readSize, "payloadSize", uploadObjectTask.GetObjectInfo().GetPayloadSize())
-				_ = u.rejectCreateObject(ctx, uploadObjectTask, segIdx)
+				go u.rejectCreateObject(ctx, uploadObjectTask.GetObjectInfo())
 				return ErrPayloadSize
 			}
 			startUpdateSignature := time.Now()
@@ -288,12 +288,13 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 	isUpdate := task.GetObjectInfo().GetIsUpdating()
 
 	var (
-		err      error
-		segIdx   = uint32(int64(offset) / segmentSize)
-		pieceKey string
-		readN    int
-		readSize int
-		data     = make([]byte, segmentSize)
+		err       error
+		segIdx    = uint32(int64(offset) / segmentSize)
+		pieceKey  string
+		readN     int
+		readSize  int
+		data      = make([]byte, segmentSize)
+		pieceSize uint64
 	)
 	defer func() {
 		if err != nil {
@@ -336,7 +337,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 					return ErrPieceStoreWithDetail(fmt.Sprintf("failed to put segment piece to piece store, piece_key: %s, error: %s",
 						pieceKey, err.Error()))
 				}
-				err = u.updatePieceCheckSum(task, data, isUpdate)
+				err = u.updatePieceCheckSum(task, data, isUpdate, uint64(readN))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
 					return ErrGfSpDBWithDetail("failed to append integrity checksum to db, error: " + err.Error())
@@ -344,13 +345,16 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 			}
 			if task.GetCompleted() {
 				var pieceChecksumList [][]byte
-				pieceChecksumList, err = u.getPieceCheckSumList(task, isUpdate)
+				pieceChecksumList, pieceSize, err = u.getPieceCheckSumListAndPieceSize(task, isUpdate)
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to get object integrity hash", "error", err)
 					return err
 				}
+				if task.GetIsAgentUpload() && pieceSize != task.GetObjectInfo().GetPayloadSize() {
+					go u.rejectCreateObject(ctx, task.GetObjectInfo())
+				}
 				integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
-				if !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
+				if !task.GetIsAgentUpload() && !bytes.Equal(integrityHash, task.GetObjectInfo().GetChecksums()[0]) {
 					log.CtxErrorw(ctx, "invalid integrity hash", "object_info", task.GetObjectInfo(),
 						"actual", hex.EncodeToString(integrityHash), "expected", hex.EncodeToString(task.GetObjectInfo().GetChecksums()[0]))
 					err = ErrInvalidIntegrity
@@ -384,7 +388,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
 			return ErrPieceStoreWithDetail("failed to put segment piece to piece store, error: " + err.Error())
 		}
-		err = u.updatePieceCheckSum(task, data, isUpdate)
+		err = u.updatePieceCheckSum(task, data, isUpdate, uint64(readN))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
 			return ErrGfSpDBWithDetail("failed to append integrity checksum to db, error: " + err.Error())
@@ -416,29 +420,29 @@ func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 	}
 }
 
-func (u *UploadModular) updatePieceCheckSum(task coretask.ResumableUploadObjectTask, data []byte, isUpdate bool) error {
+func (u *UploadModular) updatePieceCheckSum(task coretask.ResumableUploadObjectTask, data []byte, isUpdate bool, dataLength uint64) error {
 	var err error
 	if isUpdate {
 		err = u.baseApp.GfSpDB().UpdateShadowPieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data), task.GetObjectInfo().GetVersion())
 	} else {
-		err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data))
+		err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data), dataLength)
 	}
 	return err
 }
 
-func (u *UploadModular) getPieceCheckSumList(task coretask.ResumableUploadObjectTask, isUpdate bool) ([][]byte, error) {
+func (u *UploadModular) getPieceCheckSumListAndPieceSize(task coretask.ResumableUploadObjectTask, isUpdate bool) ([][]byte, uint64, error) {
 	if isUpdate {
 		shadowIntegrityMeta, err := u.baseApp.GfSpDB().GetShadowObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
-		return shadowIntegrityMeta.PieceChecksumList, nil
+		return shadowIntegrityMeta.PieceChecksumList, 0, nil
 	}
 	integrityMeta, err := u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return integrityMeta.PieceChecksumList, nil
+	return integrityMeta.PieceChecksumList, integrityMeta.PieceSize, nil
 }
 
 func (u *UploadModular) updateIntegrityChecksum(objectID uint64, integrityHash []byte, isUpdate bool) error {
@@ -461,11 +465,7 @@ func (u *UploadModular) updateIntegrityChecksum(objectID uint64, integrityHash [
 	return err
 }
 
-func (u *UploadModular) rejectCreateObject(ctx context.Context, uploadObjectTask coretask.UploadObjectTask, segCount uint32) error {
-	objectInfo := uploadObjectTask.GetObjectInfo()
-	if objectInfo == nil {
-		return nil
-	}
+func (u *UploadModular) rejectCreateObject(ctx context.Context, objectInfo *storagetypes.ObjectInfo) {
 	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
 		BucketName: objectInfo.GetBucketName(),
 		ObjectName: objectInfo.GetObjectName(),
@@ -493,8 +493,6 @@ func (u *UploadModular) rejectCreateObject(ctx context.Context, uploadObjectTask
 	}
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to reject unseal object", "error", err, "objectID", objectInfo.Id.Uint64())
-		return err
+		return
 	}
-
-	return nil
 }
