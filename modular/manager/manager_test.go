@@ -50,6 +50,7 @@ func setup(t *testing.T) *ManageModular {
 		gcMetaTimeInterval:               4,
 		gcStaleVersionObjectTimeInterval: 2,
 		syncConsensusInfoInterval:        5,
+		syncAvailableVGFInterval:         5,
 		statisticsOutputInterval:         6,
 		discontinueBucketTimeInterval:    7,
 		gcSafeBlockDistance:              1,
