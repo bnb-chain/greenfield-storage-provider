@@ -87,6 +87,9 @@ const (
 	// on greenfield timeout height, if after current block height + timeout height, the object
 	// is not rejected, it is judged failed to reject unseal object on greenfield.
 	DefaultListenRejectUnSealTimeoutHeight int = 10
+	// DefaultSyncAvailableVGFInterval defines the default interval for available global virtual group family info,
+	// it is used to log and debug.
+	DefaultSyncAvailableVGFInterval int = 5
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
@@ -231,6 +234,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.loadTaskLimitToGC = cfg.Parallel.GlobalGCObjectParallel
 
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
+	manager.syncAvailableVGFInterval = DefaultSyncAvailableVGFInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.GC.GCObjectTimeInterval
 	manager.gcObjectBlockInterval = cfg.GC.GCObjectBlockInterval
