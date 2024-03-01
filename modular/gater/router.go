@@ -162,8 +162,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 
 		// Delegate Put Object By Offset
-		//r.NewRoute().Name(delegateResumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.delegateResumablePutObjectHandler).
-		//Queries("offset", "{offset}", "complete", "{complete}")
+		r.NewRoute().Name(delegateResumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.delegateResumablePutObjectHandler).
+			Queries("offset", "{offset}", "complete", "{complete}")
 		// Delegate Put Object
 		r.NewRoute().Name(delegatePutObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.delegatePutObjectHandler)
 

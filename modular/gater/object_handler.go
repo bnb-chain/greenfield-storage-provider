@@ -1003,6 +1003,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		payloadSize   uint64
 		contentType   string
 		visibility    storagetypes.VisibilityType
+		txHash        string
 	)
 
 	uploadPrimaryStartTime := time.Now()
@@ -1046,6 +1047,20 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 
 	payloadSize, err = strconv.ParseUint(reqCtx.vars["payload_size"], 10, 64)
 	if err != nil {
+		return
+	}
+
+	startAuthenticationTime := time.Now()
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
+		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
 		return
 	}
 
@@ -1112,23 +1127,18 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = g.baseApp.Consensus().WaitForNextBlock(reqCtx.ctx)
+	startDelegateCreateObject := time.Now()
+	txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
+		log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
 		return
 	}
 
-	startAuthenticationTime := time.Now()
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
-		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	_, err = g.baseApp.Consensus().ConfirmTransactionBoundless(reqCtx.ctx, txHash)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-		return
-	}
-	if !authenticated {
-		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-		err = ErrNoPermission
+		log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
 		return
 	}
 
@@ -1176,6 +1186,10 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	log.CtxDebug(ctx, "succeed to upload payload data")
+}
+
+func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.ObjectInfo) bool {

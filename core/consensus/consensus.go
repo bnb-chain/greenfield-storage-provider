@@ -71,6 +71,8 @@ type Consensus interface {
 	ListenRejectUnSealObject(ctx context.Context, objectID uint64, timeoutHeight int) (bool, error)
 	// ConfirmTransaction is used to confirm whether the transaction is on the chain.
 	ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxResponse, error)
+	// ConfirmTransaction is used to confirm whether the transaction is on the chain.
+	ConfirmTransactionBoundless(ctx context.Context, txHash string) (*sdk.TxResponse, error)
 	// WaitForNextBlock is used to chain generate a new block.
 	WaitForNextBlock(ctx context.Context) error
 	// QuerySwapInInfo is used to query the onchain swapIn info
@@ -179,3 +181,7 @@ func (c *NullConsensus) QueryShadowObjectInfo(ctx context.Context, bucket, objec
 	return nil, nil
 }
 func (*NullConsensus) Close() error { return nil }
+
+func (c *NullConsensus) ConfirmTransactionBoundless(ctx context.Context, txHash string) (*sdk.TxResponse, error) {
+	return nil, nil
+}

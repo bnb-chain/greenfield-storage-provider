@@ -722,11 +722,11 @@ func (s *GfSpClient) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrou
 	return resp.GetTxHash(), nil
 }
 
-func (s *GfSpClient) SignDelegateCreateObjectApproval(ctx context.Context, object *storagetypes.MsgDelegateCreateObject) ([]byte, error) {
+func (s *GfSpClient) DelegateCreateObject(ctx context.Context, object *storagetypes.MsgDelegateCreateObject) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect to signer", "error", connErr)
-		return nil, ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", connErr)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", connErr)
 	}
 	req := &gfspserver.GfSpSignRequest{
 		Request: &gfspserver.GfSpSignRequest_DelegateCreateObjectInfo{
@@ -736,10 +736,10 @@ func (s *GfSpClient) SignDelegateCreateObjectApproval(ctx context.Context, objec
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to sign create object approval", "error", err)
-		return nil, ErrRPCUnknownWithDetail("client failed to sign create object approval, error: ", err)
+		return "", ErrRPCUnknownWithDetail("client failed to sign create object approval, error: ", err)
 	}
 	if resp.GetErr() != nil {
-		return nil, resp.GetErr()
+		return "", resp.GetErr()
 	}
-	return resp.GetSignature(), nil
+	return resp.GetTxHash(), nil
 }
