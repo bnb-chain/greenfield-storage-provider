@@ -144,7 +144,7 @@ func TestManageModular_EventLoop(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 10)
 	manage.eventLoop(ctx)
-	time.Sleep(10 * time.Second)
+	time.Sleep(11 * time.Second)
 	cancel()
 }
 
