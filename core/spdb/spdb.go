@@ -275,3 +275,7 @@ type ExitRecoverDB interface {
 	// CountRecoverFailedObject return the failed object total count
 	CountRecoverFailedObject() (int64, error)
 }
+
+// AgentUploadPieceHashDB is used to support sp exit and recover resource.
+type AgentUploadPieceHashDB interface {
+}

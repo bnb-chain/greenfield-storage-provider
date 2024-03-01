@@ -137,10 +137,10 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
 	log.Debugw("UploadObjectTask info", "task", task)
-	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
+	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task, task.GetIsAgentUpload())
 }
 
-func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task task.ObjectTask) error {
+func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task task.ObjectTask, isAgentUpload bool) error {
 	startPickGVGTime := time.Now()
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, vgfID, task.GetStorageParams())
 	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
@@ -151,7 +151,7 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
-		m.baseApp.TaskMaxRetry(replicateTask))
+		m.baseApp.TaskMaxRetry(replicateTask), isAgentUpload)
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
@@ -263,7 +263,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
-		m.baseApp.TaskMaxRetry(replicateTask))
+		m.baseApp.TaskMaxRetry(replicateTask), false)
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
@@ -438,7 +438,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 				}
 			}
 			m.virtualGroupManager.FreezeSPAndGVGs(sspID, shouldFreezeGVGs)
-			rePickAndReplicateErr := m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask)
+			rePickAndReplicateErr := m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask, handleTask.GetIsAgentUpload())
 			log.CtxDebugw(ctx, "add failed sp to freeze pool, re-pick and push task again",
 				"failed_sp_id", sspID, "task_info", handleTask.Info(),
 				"excludedGVGs", shouldFreezeGVGs, "error", rePickAndReplicateErr)

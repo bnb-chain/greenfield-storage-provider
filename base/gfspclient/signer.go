@@ -101,6 +101,28 @@ func (s *GfSpClient) SealObject(ctx context.Context, object *storagetypes.MsgSea
 	return resp.GetTxHash(), nil
 }
 
+func (s *GfSpClient) SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error) {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect to signer", "error", connErr)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", connErr)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_SealObjectInfoV2{
+			SealObjectInfoV2: object,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to seal object approval", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to seal object approval, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
+
 func (s *GfSpClient) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
 	conn, connErr := s.SignerConn(ctx)
 	if connErr != nil {
@@ -698,4 +720,26 @@ func (s *GfSpClient) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrou
 		return "", resp.GetErr()
 	}
 	return resp.GetTxHash(), nil
+}
+
+func (s *GfSpClient) SignDelegateCreateObjectApproval(ctx context.Context, object *storagetypes.MsgDelegateCreateObject) ([]byte, error) {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect to signer", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", connErr)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_DelegateCreateObjectInfo{
+			DelegateCreateObjectInfo: object,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign create object approval", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to sign create object approval, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetSignature(), nil
 }

@@ -479,7 +479,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		}
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
-			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
+			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask), replicateTask.IsAgentUploadTask)
 
 		if meta.GlobalVirtualGroupID == 0 {
 			bucketInfo, err := m.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)

@@ -44,6 +44,7 @@ var (
 	ErrInvalidPieceChecksumLength   = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45214, "invalid piece checksum length")
 	ErrRecoveryObjectStatus         = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45215, "the recovered object has not been sealed state")
 	ErrInvalidSecondaryBlsSignature = gfsperrors.Register(module.ExecuteModularName, http.StatusNotAcceptable, 45216, "primary receive invalid bls signature from secondary SP")
+	ErrInvalidReplicatePieceTask    = gfsperrors.Register(module.ExecuteModularName, http.StatusInternalServerError, 45217, "invalid replicate piece task")
 )
 
 func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
@@ -100,6 +101,40 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	}()
 	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
 		txHash, err = e.baseApp.GfSpClient().SealObject(ctx, sealMsg)
+		if err != nil {
+			task.AppendLog(fmt.Sprintf("executor-seal-tx-failed-error:%s-retry:%d", err.Error(), retry))
+			log.CtxErrorw(ctx, "failed to seal object", "retry", retry, "max_retry", task.GetMaxRetry(),
+				"error", err)
+			time.Sleep(time.Duration(e.listenSealRetryTimeout) * time.Second)
+		} else {
+			task.AppendLog(fmt.Sprintf("executor-seal-tx-succeed-retry:%d-txHash:%s", retry, txHash))
+			err = nil
+			break
+		}
+	}
+	// even though signer return error, maybe seal on chain successfully because
+	// signer use the async mode, so ignore the error and listen directly
+	err = e.listenSealObject(ctx, task, task.GetObjectInfo())
+	return err
+}
+
+func (e *ExecuteModular) sealObjectV2(ctx context.Context, task coretask.ObjectTask, sealMsg *storagetypes.MsgSealObjectV2) error {
+	var (
+		err    error
+		txHash string
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.ExecutorCounter.WithLabelValues(ExecutorFailureSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorFailureSealObject).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessSealObject).Inc()
+			metrics.ExecutorTime.WithLabelValues(ExecutorSuccessSealObject).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+	for retry := int64(0); retry <= task.GetMaxRetry(); retry++ {
+		txHash, err = e.baseApp.GfSpClient().SealObjectV2(ctx, sealMsg)
 		if err != nil {
 			task.AppendLog(fmt.Sprintf("executor-seal-tx-failed-error:%s-retry:%d", err.Error(), retry))
 			log.CtxErrorw(ctx, "failed to seal object", "retry", retry, "max_retry", task.GetMaxRetry(),

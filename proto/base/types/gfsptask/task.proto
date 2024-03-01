@@ -40,6 +40,12 @@ message GfSpCreateObjectApprovalTask {
   bytes fingerprint = 3;
 }
 
+message GfSpDelegateCreateObjectApprovalTask {
+  GfSpTask task = 1;
+  greenfield.storage.MsgDelegateCreateObject delegate_create_object_info = 2;
+  bytes fingerprint = 3;
+}
+
 message GfSpReplicatePieceApprovalTask {
   GfSpTask task = 1;
   greenfield.storage.ObjectInfo object_info = 2;
@@ -58,6 +64,7 @@ message GfSpUploadObjectTask {
   uint32 virtual_group_family_id = 2;
   greenfield.storage.ObjectInfo object_info = 3;
   greenfield.storage.Params storage_params = 4;
+  bool is_agent_upload = 5;
 }
 
 message GfSpResumableUploadObjectTask {
@@ -80,6 +87,7 @@ message GfSpReplicatePieceTask {
   uint32 global_virtual_group_id = 7;
   repeated string secondary_endpoints = 8;
   int32 not_available_sp_idx = 9;
+  bool is_agent_upload_task = 10;
 }
 
 message GfSpRecoverPieceTask {

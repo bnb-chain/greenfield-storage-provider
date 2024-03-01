@@ -351,3 +351,6 @@ func (m *NilModular) CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualg
 func (m *NilModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
 	return "nil", ErrNilModular
 }
+func (m *NullModular) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error) {
+	return false, nil
+}

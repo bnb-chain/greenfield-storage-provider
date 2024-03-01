@@ -207,7 +207,7 @@ func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) err
 
 	replicateTask = &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(objectInfo, storageParams, s.manager.baseApp.TaskPriority(replicateTask),
-		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask))
+		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask), replicateTask.GetIsAgentUpload())
 
 	// for objects that have been uploaded but not starting the replication yet, it doesn't have the GVG info the UploadObjectMeta,
 	// so it needs to pick one to start the replicate task.

@@ -92,3 +92,30 @@ func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.
 	}
 	return resp.GetAllowed(), task, nil
 }
+
+func (s *GfSpClient) AskDelegateCreateObjectApproval(ctx context.Context, task coretask.ApprovalDelegateCreateObjectTask) (bool, coretask.ApprovalDelegateCreateObjectTask, error) {
+	conn, connErr := s.ApproverConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
+		return false, nil, ErrRPCUnknownWithDetail("client failed to connect approver, error: ", connErr)
+	}
+	req := &gfspserver.GfSpAskApprovalRequest{
+		Request: &gfspserver.GfSpAskApprovalRequest_DelegateCreateObjectApprovalTask{
+			DelegateCreateObjectApprovalTask: task.(*gfsptask.GfSpDelegateCreateObjectApprovalTask),
+		}}
+	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to ask create object approval", "error", err)
+		return false, nil, ErrRPCUnknownWithDetail("client failed to ask create object approval, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return false, nil, resp.GetErr()
+	}
+	switch t := resp.Response.(type) {
+	case *gfspserver.GfSpAskApprovalResponse_DelegateCreateObjectApprovalTask:
+		task = t.DelegateCreateObjectApprovalTask
+	default:
+		return false, nil, ErrTypeMismatch
+	}
+	return resp.GetAllowed(), task, nil
+}

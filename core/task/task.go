@@ -234,9 +234,11 @@ type ObjectTask interface {
 type UploadObjectTask interface {
 	ObjectTask
 	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
+	InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, isAgentUpload bool)
 	// GetVirtualGroupFamilyId returns the object's virtual group family which is bind in bucket.
 	GetVirtualGroupFamilyId() uint32
+	// GetIsAgentUpload returns Whether the task is a agent upload
+	GetIsAgentUpload() bool
 }
 
 // The ResumableUploadObjectTask is the interface to record the information for uploading object
@@ -265,7 +267,7 @@ type ReplicatePieceTask interface {
 	ObjectTask
 	// InitReplicatePieceTask inits the ReplicatePieceTask by ObjectInfo, params,
 	// task priority, timeout and max retry.
-	InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64)
+	InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64, isAgentUpload bool)
 	// GetSealed returns an indicator whether successful seal object on greenfield
 	// after replicate pieces, it is an optimization method. ReplicatePieceTask and
 	// SealObjectTask are combined. Otherwise, the two tasks will be completed in
@@ -292,6 +294,8 @@ type ReplicatePieceTask interface {
 	GetNotAvailableSpIdx() int32
 	// SetNotAvailableSpIdx sets the secondary sp Index in GVG if fail to replicate data
 	SetNotAvailableSpIdx(int32)
+	// GetIsAgentUpload returns the task's isAgentUpload.
+	GetIsAgentUpload() bool
 }
 
 // ReceivePieceTask is an abstract interface to record the information for receiving pieces
@@ -641,4 +645,21 @@ type GCBucketMigrationTask interface {
 	GetFinished() bool
 	// SetFinished sets the bucket migration task status when finished
 	SetFinished(bool)
+}
+
+// ApprovalDelegateCreateObjectTask is an abstract interface to record the ask delagate create object
+// approval information. The user account will create MsgDelegateCreateObject, SP
+// should decide whether approved the request based on the MsgDelegateCreateObject.
+// If so, SP will SetExpiredHeight and signs the MsgDelegateCreateObject.
+type ApprovalDelegateCreateObjectTask interface {
+	ApprovalTask
+	// InitApprovalDelegateCreateObjectTask inits the ApprovalDelegateCreateObjectTask by
+	// MsgDelegateCreateObject and task priority. SP only fill the MsgDelegateCreateObject's
+	// PrimarySpApproval field, can not change other fields.
+	InitApprovalDelegateCreateObjectTask(string, *storagetypes.MsgDelegateCreateObject, []byte, TPriority)
+	// GetDelegateCreateObjectInfo returns the user's MsgDelegateCreateObject.
+	GetDelegateCreateObjectInfo() *storagetypes.MsgDelegateCreateObject
+	// SetDelegateCreateObjectInfo sets the MsgDelegateCreateObject. Should try to avoid calling
+	// this method, it will change the approval information.
+	SetDelegateCreateObjectInfo(*storagetypes.MsgDelegateCreateObject)
 }

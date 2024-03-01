@@ -204,7 +204,7 @@ func (w *CMDWrapper) putObjectAction(ctx *cli.Context) error {
 	stream := bytes.NewReader(data)
 
 	task := &gfsptask.GfSpUploadObjectTask{}
-	task.InitUploadObjectTask(0, objectInfo, params, 0)
+	task.InitUploadObjectTask(0, objectInfo, params, 0, false)
 	err = w.grpcAPI.UploadObject(context.Background(), task, stream)
 	if err != nil {
 		return fmt.Errorf("failed to upload %s to uploader, error: %v", filePath, err)

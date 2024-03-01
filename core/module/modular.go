@@ -104,6 +104,8 @@ type Approver interface {
 	PostCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask)
 	// QueryTasks queries tasks that running on approver by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	// HandleDelegateCreateObjectApprovalTask handles the DelegateCreateObjectApproval,
+	HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error)
 }
 
 // Downloader is an abstract interface to handle getting object requests from users' account, and getting

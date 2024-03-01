@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"sync"
 	"time"
 
@@ -63,15 +64,49 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessReplicateAllPiece).Inc()
 		metrics.ExecutorTime.WithLabelValues(ExecutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
 	}
-	sealMsg := &storagetypes.MsgSealObject{
-		Operator:                    e.baseApp.OperatorAddress(),
-		BucketName:                  task.GetObjectInfo().GetBucketName(),
-		ObjectName:                  task.GetObjectInfo().GetObjectName(),
-		GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
-		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
-	}
+
 	sealTime := time.Now()
-	sealErr := e.sealObject(ctx, task, sealMsg)
+	var sealErr error
+	if task.GetIsAgentUpload() {
+		integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get object integrity",
+				"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
+			return
+		}
+		expectChecksums := make([][]byte, 0)
+		expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList))
+		segmentPieceCount := e.baseApp.PieceOp().SegmentPieceCount(
+			task.GetObjectInfo().GetPayloadSize(),
+			task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
+		for redundancyIdx, _ := range task.GetSecondaryEndpoints() {
+			ecHash, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(), int32(redundancyIdx), segmentPieceCount)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to get all replicate piece",
+					"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
+				return
+			}
+			expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(ecHash))
+		}
+		sealMsgV2 := &storagetypes.MsgSealObjectV2{
+			Operator:                    e.baseApp.OperatorAddress(),
+			BucketName:                  task.GetObjectInfo().GetBucketName(),
+			ObjectName:                  task.GetObjectInfo().GetObjectName(),
+			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
+			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			ExpectChecksums:             expectChecksums,
+		}
+		sealErr = e.sealObjectV2(ctx, task, sealMsgV2)
+	} else {
+		sealMsg := &storagetypes.MsgSealObject{
+			Operator:                    e.baseApp.OperatorAddress(),
+			BucketName:                  task.GetObjectInfo().GetBucketName(),
+			ObjectName:                  task.GetObjectInfo().GetObjectName(),
+			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
+			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+		}
+		sealErr = e.sealObject(ctx, task, sealMsg)
+	}
 	metrics.PerfPutObjectTime.WithLabelValues("background_seal_object_cost").Observe(time.Since(sealTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("background_task_seal_object_end").Observe(time.Since(startReplicateTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("replicate_object_total_time_from_uploading_to_sealing").Observe(time.Since(
@@ -224,6 +259,10 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.ReplicatePieceTask,
 	spEndpoint string, segmentIdx uint32, redundancyIdx int32, data []byte) (err error) {
 	var signature []byte
+	if rTask.GetObjectInfo() == nil {
+		log.CtxErrorw(ctx, "ReplicatePieceTask object info is empty")
+		return ErrInvalidReplicatePieceTask
+	}
 	rTask.AppendLog(fmt.Sprintf("executor-begin-replicate-piece-sIdx:%d-rIdx-%d", segmentIdx, redundancyIdx))
 	startTime := time.Now()
 	defer func() {
@@ -243,7 +282,18 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
 		e.baseApp.TaskPriority(rTask), segmentIdx, redundancyIdx, int64(len(data)))
-	receive.SetPieceChecksum(hash.GenerateChecksum(data))
+	pieceHash := hash.GenerateChecksum(data)
+	// save EC Chunk hash to db
+	objectId := rTask.GetObjectInfo().Id.Uint64()
+	if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(rTask.GetObjectInfo().Id.Uint64(), segmentIdx, redundancyIdx, pieceHash, rTask.GetObjectInfo().GetVersion()); err != nil {
+		log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", objectId,
+			"segment_index", segmentIdx, "redundancy_index", redundancyIdx, "error", err)
+		detail := fmt.Sprintf("failed to set replicate piece checksum, object_id: %d, segment_index: %v, redundancy_index: %v, error: %s",
+			objectId, segmentIdx, redundancyIdx, err.Error())
+		err = ErrGfSpDBWithDetail(detail)
+		return
+	}
+	receive.SetPieceChecksum(pieceHash)
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
 	signTime := time.Now()
 	signature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
@@ -331,7 +381,7 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 	}
 	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_cost").Observe(time.Since(doneReplicateTime).Seconds())
 	metrics.PerfPutObjectTime.WithLabelValues("background_done_receive_http_end").Observe(time.Since(signTime).Seconds())
-	if int(redundancyIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
+	if !rTask.GetIsAgentUpload() && int(redundancyIdx+1) >= len(rTask.GetObjectInfo().GetChecksums()) {
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "redundancy_idx", redundancyIdx)
 		return nil, ErrReplicateIdsOutOfBounds
 	}

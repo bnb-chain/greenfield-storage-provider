@@ -39,6 +39,7 @@ var (
 	ErrClosedStream         = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110005, "upload payload data stream exception")
 	ErrInvalidUploadRequest = gfsperrors.Register(module.UploadModularName, http.StatusConflict, 110006, "the object had already been fully uploaded and any further uploading attempt is not allowed")
 	ErrGetObjectUploadState = gfsperrors.Register(module.UploadModularName, http.StatusInternalServerError, 110007, "failed to get upload object state")
+	ErrPayloadSize          = gfsperrors.Register(module.UploadModularName, http.StatusBadRequest, 110008, "The file payload size is inconsistent with the parameter payload size")
 )
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
@@ -160,15 +161,23 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 					log.CtxErrorw(ctx, "failed to put segment piece to piece store", "piece_key", pieceKey, "error", err)
 					return ErrPieceStoreWithDetail("failed to put segment piece to piece store, piece_key: " + pieceKey + ", error: " + err.Error())
 				}
+				segIdx++
 			}
 			integrity = hash.GenerateIntegrityHash(checksums)
-			expectedChecksum := uploadObjectTask.GetObjectInfo().GetChecksums()[0]
-			if !bytes.Equal(integrity, expectedChecksum) {
-				log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
-					"object_info", uploadObjectTask.GetObjectInfo(), "actual_integrity", hex.EncodeToString(integrity),
-					"expected_integrity", hex.EncodeToString(expectedChecksum))
-				err = ErrInvalidIntegrity
-				return ErrInvalidIntegrity
+			if !uploadObjectTask.GetIsAgentUpload() {
+				expectedChecksum := uploadObjectTask.GetObjectInfo().GetChecksums()[0]
+				if !bytes.Equal(integrity, expectedChecksum) {
+					log.CtxErrorw(ctx, "failed to put object due to check integrity hash not consistent",
+						"object_info", uploadObjectTask.GetObjectInfo(), "actual_integrity", hex.EncodeToString(integrity),
+						"expected_integrity", hex.EncodeToString(expectedChecksum))
+					err = ErrInvalidIntegrity
+					return ErrInvalidIntegrity
+				}
+			}
+			if uint64(readSize) != uploadObjectTask.GetObjectInfo().GetPayloadSize() {
+				log.CtxErrorw(ctx, "readSize is not equal payloadSize", "objectID", uploadObjectTask.GetObjectInfo().Id.Uint64(), "readSize", readSize, "payloadSize", uploadObjectTask.GetObjectInfo().GetPayloadSize())
+				_ = u.rejectCreateObject(ctx, uploadObjectTask, segIdx)
+				return ErrPayloadSize
 			}
 			startUpdateSignature := time.Now()
 			if uploadObjectTask.GetObjectInfo().GetIsUpdating() {
@@ -450,4 +459,42 @@ func (u *UploadModular) updateIntegrityChecksum(objectID uint64, integrityHash [
 		err = u.baseApp.GfSpDB().UpdateIntegrityChecksum(integrityMeta)
 	}
 	return err
+}
+
+func (u *UploadModular) rejectCreateObject(ctx context.Context, uploadObjectTask coretask.UploadObjectTask, segCount uint32) error {
+	objectInfo := uploadObjectTask.GetObjectInfo()
+	if objectInfo == nil {
+		return nil
+	}
+	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
+		BucketName: objectInfo.GetBucketName(),
+		ObjectName: objectInfo.GetObjectName(),
+	}
+
+	var err error
+
+	for i := 0; i < RejectUnSealObjectRetry; i++ {
+		_, err = u.baseApp.GfSpClient().RejectUnSealObject(ctx, rejectUnSealObjectMsg)
+		if err != nil {
+			time.Sleep(RejectUnSealObjectTimeout * time.Second)
+		} else {
+			log.CtxDebugw(ctx, "succeed to reject unseal object")
+			reject, err := u.baseApp.Consensus().ListenRejectUnSealObject(ctx, objectInfo.Id.Uint64(), DefaultListenRejectUnSealTimeoutHeight)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to reject unseal object", "error", err, "objectID", objectInfo.Id.Uint64())
+				continue
+			}
+			if !reject {
+				log.CtxErrorw(ctx, "failed to reject unseal object")
+				continue
+			}
+			break
+		}
+	}
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to reject unseal object", "error", err, "objectID", objectInfo.Id.Uint64())
+		return err
+	}
+
+	return nil
 }

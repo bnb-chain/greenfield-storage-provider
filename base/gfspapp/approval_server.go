@@ -75,6 +75,23 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 				CreateObjectApprovalTask: approvalTask,
 			},
 		}, nil
+	case *gfspserver.GfSpAskApprovalRequest_DelegateCreateObjectApprovalTask:
+		approvalTask := taskType.DelegateCreateObjectApprovalTask
+		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
+		span, err := g.approver.ReserveResource(ctx, approvalTask.EstimateLimit().ScopeStat())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to reserve approval resource", "error", err)
+			return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalExhaustResource}, nil
+		}
+		defer span.Done()
+		allow, err := g.OnAskDelegateCreateObjectApproval(ctx, approvalTask)
+		return &gfspserver.GfSpAskApprovalResponse{
+			Err:     gfsperrors.MakeGfSpError(err),
+			Allowed: allow,
+			Response: &gfspserver.GfSpAskApprovalResponse_DelegateCreateObjectApprovalTask{
+				DelegateCreateObjectApprovalTask: approvalTask,
+			},
+		}, nil
 	default:
 		return &gfspserver.GfSpAskApprovalResponse{Err: ErrUnsupportedTaskType}, nil
 	}
@@ -159,6 +176,36 @@ func (g *GfSpBaseApp) OnAskCreateObjectApproval(ctx context.Context, task task.A
 		return false, err
 	}
 	g.approver.PostCreateObjectApproval(ctx, task)
+	log.CtxDebugw(ctx, "succeed to ask create object approval")
+	return allow, nil
+}
+
+func (g *GfSpBaseApp) OnAskDelegateCreateObjectApproval(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (allow bool, err error) {
+	if task == nil || task.GetDelegateCreateObjectInfo() == nil {
+		log.CtxError(ctx, "failed to ask create object approval due to object info pointer dangling")
+		return false, ErrApprovalTaskDangling
+	}
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.ReqCounter.WithLabelValues(ApproverFailureGetObjectApproval).Inc()
+			metrics.ReqTime.WithLabelValues(ApproverFailureGetObjectApproval).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(ApproverSuccessGetObjectApproval).Inc()
+			metrics.ReqTime.WithLabelValues(ApproverSuccessGetObjectApproval).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	err = g.approver.PreCreateObjectApproval(ctx, nil)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to pre create object approval", "info", task.Info(), "error", err)
+		return false, err
+	}
+	allow, err = g.approver.HandleDelegateCreateObjectApprovalTask(ctx, task)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to ask create object approval", "error", err)
+		return false, err
+	}
 	log.CtxDebugw(ctx, "succeed to ask create object approval")
 	return allow, nil
 }

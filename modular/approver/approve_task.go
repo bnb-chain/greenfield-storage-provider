@@ -303,3 +303,41 @@ func (a *ApprovalModular) migrateBucketQuotaCheck(ctx context.Context, task core
 	log.CtxDebugw(ctx, "succeed to check bucket source sp quota for bucket migration", "migrate_bucket_msg", migrateBucketMsg)
 	return true, nil
 }
+
+func (a *ApprovalModular) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task coretask.ApprovalDelegateCreateObjectTask) (bool, error) {
+	var (
+		err error
+	)
+	if task == nil || task.GetDelegateCreateObjectInfo() == nil {
+		log.CtxErrorw(ctx, "failed to create object approval due to pointer nil")
+		return false, ErrDanglingPointer
+	}
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
+
+	startQueryQueue := time.Now()
+	has := a.objectQueue.Has(task.Key())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_check_repeated_cost").Observe(time.Since(startQueryQueue).Seconds())
+	if has {
+		shadowTask := a.objectQueue.PopByKey(task.Key())
+		task.SetDelegateCreateObjectInfo((shadowTask.(coretask.ApprovalDelegateCreateObjectTask).GetDelegateCreateObjectInfo()))
+		_ = a.objectQueue.Push(shadowTask)
+		log.CtxErrorw(ctx, "repeated create object approval task is returned")
+		return true, nil
+	}
+
+	startSignApproval := time.Now()
+	_, err = a.baseApp.GfSpClient().SignDelegateCreateObjectApproval(ctx, task.GetDelegateCreateObjectInfo())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startSignApproval).Seconds())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startQueryQueue).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign create object approval", "error", err)
+		return false, err
+	}
+	go a.objectQueue.Push(task)
+	return true, nil
+}

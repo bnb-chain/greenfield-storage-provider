@@ -4,8 +4,8 @@ deps:
   - remote: buf.build
     owner: bnb-chain
     repository: greenfield
-    commit: eeeac15eeec14f1eb548253102bbe0f3
-    digest: shake256:8039e6c2e62279c42e59a9dc7e6752aded44840481c858fb33cac43b22d466c9490fbeb327b5f4d5903e571ad85752bffb35c636a2c1dc315c9c1e0c0a1d8b07
+    commit: 205e26d62fc84285b1e8e6320d3a749a
+    digest: shake256:f6c7960dee6081b9065dda7568170e744119452f58ecde7767d43aef3db619bffc3b4c6f8f8fb9d236d3c01aa6a17d17e28fa3c835a9cb30d2e7482a64993c7a
   - remote: buf.build
     owner: cosmos
     repository: cosmos-proto
@@ -19,8 +19,8 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto
-    commit: 5e5b9fdd01804356895f8f79a6f1ddc1
-    digest: shake256:0b85da49e2e5f9ebc4806eae058e2f56096ff3b1c59d1fb7c190413dd15f45dd456f0b69ced9059341c80795d2b6c943de15b120a9e0308b499e43e4b5fc2952
+    commit: 88ef6483f90f478fb938c37dde52ece3
+    digest: shake256:89c45df2aa11e0cff97b0d695436713db3d993d76792e9f8dc1ae90e6ab9a9bec55503d48ceedd6b86069ab07d3041b32001b2bfe0227fa725dd515ff381e5ba
   - remote: buf.build
     owner: googleapis
     repository: googleapis

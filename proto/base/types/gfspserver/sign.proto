@@ -58,6 +58,8 @@ message GfSpSignRequest {
     greenfield.virtualgroup.MsgReserveSwapIn reserve_swap_in = 28;
     greenfield.virtualgroup.MsgCompleteSwapIn complete_swap_in = 29;
     greenfield.virtualgroup.MsgCancelSwapIn cancel_swap_in = 30;
+    greenfield.storage.MsgDelegateCreateObject delegate_create_object_info = 31;
+    greenfield.storage.MsgSealObjectV2 seal_object_info_v2 = 32;
   }
 }
 
