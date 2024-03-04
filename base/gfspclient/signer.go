@@ -743,3 +743,25 @@ func (s *GfSpClient) DelegateCreateObject(ctx context.Context, object *storagety
 	}
 	return resp.GetTxHash(), nil
 }
+
+func (s *GfSpClient) DelegateUpdateObjectContent(ctx context.Context, object *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
+	conn, connErr := s.SignerConn(ctx)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect to signer", "error", connErr)
+		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", connErr)
+	}
+	req := &gfspserver.GfSpSignRequest{
+		Request: &gfspserver.GfSpSignRequest_DelegateUpdateObjectContent{
+			DelegateUpdateObjectContent: object,
+		},
+	}
+	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to sign update object", "error", err)
+		return "", ErrRPCUnknownWithDetail("client failed to sign update object, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return "", resp.GetErr()
+	}
+	return resp.GetTxHash(), nil
+}
