@@ -126,7 +126,7 @@ func TestManageModular_PickGVGAndReplicate(t *testing.T) {
 		},
 		StorageParams: &types0.Params{},
 	}
-	err := m.pickGVGAndReplicate(context.TODO(), 1, uot)
+	err := m.pickGVGAndReplicate(context.TODO(), 1, uot, false)
 	assert.Equal(t, nil, err)
 }
 

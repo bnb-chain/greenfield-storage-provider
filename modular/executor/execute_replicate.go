@@ -3,9 +3,10 @@ package executor
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"sync"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
@@ -79,7 +80,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		segmentPieceCount := e.baseApp.PieceOp().SegmentPieceCount(
 			task.GetObjectInfo().GetPayloadSize(),
 			task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
-		for redundancyIdx, _ := range task.GetSecondaryEndpoints() {
+		for redundancyIdx := range task.GetSecondaryEndpoints() {
 			ecHash, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(), int32(redundancyIdx), segmentPieceCount)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to get all replicate piece",

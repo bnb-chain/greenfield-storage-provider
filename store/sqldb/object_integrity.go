@@ -146,6 +146,7 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 		RedundancyIndex:   meta.RedundancyIndex,
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
+		PieceSize:         1,
 	}
 	shardTableName := GetIntegrityMetasTableName(meta.ObjectID)
 	result := s.db.Table(shardTableName).Create(insertIntegrityMetaRecord)

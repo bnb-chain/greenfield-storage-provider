@@ -45,7 +45,7 @@ type ApproverAPI interface {
 	AskCreateBucketApproval(ctx context.Context, t coretask.ApprovalCreateBucketTask) (bool, coretask.ApprovalCreateBucketTask, error)
 	AskMigrateBucketApproval(ctx context.Context, t coretask.ApprovalMigrateBucketTask) (bool, coretask.ApprovalMigrateBucketTask, error)
 	AskCreateObjectApproval(ctx context.Context, t coretask.ApprovalCreateObjectTask) (bool, coretask.ApprovalCreateObjectTask, error)
-	AskDelegateCreateObjectApproval(ctx context.Context, task coretask.ApprovalDelegateCreateObjectTask) (bool, coretask.ApprovalDelegateCreateObjectTask, error)
+	AskDelegateCreateObjectApproval(ctx context.Context, t coretask.ApprovalDelegateCreateObjectTask) (bool, coretask.ApprovalDelegateCreateObjectTask, error)
 }
 
 // AuthenticatorAPI for mock use

@@ -407,7 +407,7 @@ func TestExecuteModular_HandleReceivePieceTask(t *testing.T) {
 
 				m3 := piecestore.NewMockPieceOp(ctrl)
 				m3.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				m3.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
+				m3.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				e.baseApp.SetPieceOp(m3)
 
 				m4 := piecestore.NewMockPieceStore(ctrl)
@@ -448,7 +448,7 @@ func TestExecuteModular_HandleReceivePieceTask(t *testing.T) {
 
 				m3 := piecestore.NewMockPieceOp(ctrl)
 				m3.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				m3.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
+				m3.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				e.baseApp.SetPieceOp(m3)
 
 				m4 := piecestore.NewMockPieceStore(ctrl)
@@ -575,7 +575,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
 				m2.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
+				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
@@ -615,7 +615,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
 				m2.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
+				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
@@ -683,8 +683,8 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
 				m2.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
-				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
+				m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
+				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
@@ -762,7 +762,7 @@ func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
 				e.baseApp.SetConsensus(consensusMock)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
-				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
@@ -831,7 +831,7 @@ func TestExecuteModular_HandleGCZombiePieceTask(t *testing.T) {
 				e.baseApp.SetConsensus(consensusMock)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
-				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
@@ -900,7 +900,7 @@ func TestExecuteModular_HandleGCMetaTask(t *testing.T) {
 				e.baseApp.SetConsensus(consensusMock)
 
 				m2 := piecestore.NewMockPieceOp(ctrl)
-				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				m2.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 				e.baseApp.SetPieceOp(m2)
 
 				m4 := corespdb.NewMockSPDB(ctrl)
@@ -988,7 +988,7 @@ func TestExecuteModular_recoverByPrimarySPSuccess(t *testing.T) {
 	e.baseApp.SetGfSpDB(m2)
 
 	m3 := piecestore.NewMockPieceOp(ctrl)
-	m3.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
+	m3.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 	e.baseApp.SetPieceOp(m3)
 
 	m4 := piecestore.NewMockPieceStore(ctrl)

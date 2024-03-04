@@ -161,7 +161,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 					log.CtxErrorw(ctx, "failed to put segment piece to piece store", "piece_key", pieceKey, "error", err)
 					return ErrPieceStoreWithDetail("failed to put segment piece to piece store, piece_key: " + pieceKey + ", error: " + err.Error())
 				}
-				segIdx++
 			}
 			integrity = hash.GenerateIntegrityHash(checksums)
 			if !uploadObjectTask.GetIsAgentUpload() {

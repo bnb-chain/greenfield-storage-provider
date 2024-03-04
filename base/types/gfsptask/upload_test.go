@@ -11,7 +11,7 @@ import (
 
 func TestInitUploadObjectTask(t *testing.T) {
 	m := &GfSpUploadObjectTask{}
-	m.InitUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0)
+	m.InitUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0, false)
 }
 
 func TestGfSpUploadObjectTask_Key(t *testing.T) {
@@ -307,7 +307,7 @@ func TestGfSpUploadObjectTask_SetStorageParams(t *testing.T) {
 
 func TestInitResumableUploadObjectTask(t *testing.T) {
 	m := &GfSpResumableUploadObjectTask{}
-	m.InitResumableUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0, true, 1)
+	m.InitResumableUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0, true, 1, false)
 }
 
 func TestGfSpResumableUploadObjectTask_GetResumeOffset(t *testing.T) {
@@ -630,7 +630,7 @@ func TestGfSpResumableUploadObjectTask_SetStorageParams(t *testing.T) {
 
 func TestInitReplicatePieceTask(t *testing.T) {
 	m := &GfSpReplicatePieceTask{}
-	m.InitReplicatePieceTask(mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 0, 0)
+	m.InitReplicatePieceTask(mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 0, 0, false)
 }
 
 func TestGfSpReplicatePieceTask_Key(t *testing.T) {

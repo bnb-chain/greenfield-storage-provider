@@ -1114,7 +1114,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 			return
 		}
 	} else {
-		visibilityInt, err := strconv.Atoi(reqCtx.vars["visibility"])
+		visibilityInt, err := strconv.ParseInt(reqCtx.vars["visibility"], 10, 32)
 		if err != nil {
 			return
 		}
@@ -1143,7 +1143,6 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		}
 		if !authenticated {
 			log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
-			err = ErrRefuseApproval
 			return
 		}
 		startDelegateCreateObject := time.Now()
