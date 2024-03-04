@@ -892,30 +892,6 @@ func (g *Gnfd) WaitForNextBlock(ctx context.Context) error {
 	}
 }
 
-// ConfirmTransactionBoundless is used to confirm whether the transaction is on the chain.
-func (g *Gnfd) ConfirmTransactionBoundless(ctx context.Context, txHash string) (*sdk.TxResponse, error) {
-	startTime := time.Now()
-	defer func() {
-		metrics.GnfdChainTime.WithLabelValues("confirm_transaction").Observe(time.Since(startTime).Seconds())
-	}()
-	client := g.getCurrentClient().GnfdClient()
-	for {
-		txResponse, err := client.GetTx(ctx, &tx.GetTxRequest{Hash: txHash})
-		if err != nil {
-			if strings.Contains(err.Error(), "not found") {
-				// Tx not found, wait for next block and try again
-				if err = g.WaitForNextBlock(ctx); err != nil {
-					return nil, err
-				}
-				continue
-			}
-			return nil, err
-		}
-		// Tx found
-		return txResponse.TxResponse, nil
-	}
-}
-
 func (g *Gnfd) getLatestBlockHeight(ctx context.Context) (int64, error) {
 	client := g.getCurrentClient().GnfdClient()
 	block, err := client.GetLatestBlock(ctx, &tmservice.GetLatestBlockRequest{})

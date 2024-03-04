@@ -1301,16 +1301,22 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 
-	startDelegateCreateObject := time.Now()
-	txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
-	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
-	metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
+	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
+	if objectInfo == nil {
+		startDelegateCreateObject := time.Now()
+		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
+		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
+			return
+		}
+	} else if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || objectInfo.Creator != reqCtx.account {
+		log.CtxErrorw(reqCtx.ctx, "object has been created")
 		return
 	}
 
-	_, err = g.baseApp.Consensus().ConfirmTransactionBoundless(reqCtx.ctx, txHash)
+	_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
 		return
