@@ -223,6 +223,15 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			return false, ErrRepeatedObject
 		}
 		return true, nil
+	case coremodule.AuthOpTypeAgentPutObject:
+		permissionTime := time.Now()
+		allow, err := a.baseApp.Consensus().VerifyPutObjectPermission(ctx, account, bucket, object)
+		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_verify_permission_time").Observe(time.Since(permissionTime).Seconds())
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to verify put object permission from consensus", "error", err)
+			return false, err
+		}
+		return allow, nil
 	case coremodule.AuthOpTypePutObject:
 		queryTime := time.Now()
 		bucketInfo, objectInfo, err := a.baseApp.Consensus().QueryBucketInfoAndObjectInfo(ctx, bucket, object)

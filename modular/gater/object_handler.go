@@ -1050,7 +1050,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	startAuthenticationTime := time.Now()
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypePutObject,
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
 		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 	if err != nil {
@@ -1254,7 +1254,7 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypePutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		coremodule.AuthOpTypeAgentPutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
 		return
