@@ -254,6 +254,8 @@ DiscontinueBucketKeepAliveDays = 0
 LoadReplicateTimeout = 0
 # optional
 LoadSealTimeout = 0
+# optional
+SyncAvailableVGFInterval = 0
 
 [Task]
 # optional

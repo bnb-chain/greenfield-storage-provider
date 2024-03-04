@@ -222,6 +222,8 @@ type ParallelConfig struct {
 
 	LoadReplicateTimeout int64 `comment:"optional"`
 	LoadSealTimeout      int64 `comment:"optional"`
+
+	SyncAvailableVGFInterval int `comment:"optional"`
 }
 
 type TaskConfig struct {
