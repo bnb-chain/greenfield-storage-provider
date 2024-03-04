@@ -176,6 +176,7 @@ type SignerAPI interface {
 	SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgMigrateBucket) ([]byte, error)
 	SignCreateObjectApproval(ctx context.Context, object *storagetypes.MsgCreateObject) ([]byte, error)
 	DelegateCreateObject(ctx context.Context, object *storagetypes.MsgDelegateCreateObject) (string, error)
+	DelegateUpdateObjectContent(ctx context.Context, object *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
 	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)

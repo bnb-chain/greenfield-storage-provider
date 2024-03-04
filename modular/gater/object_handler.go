@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -1004,6 +1005,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		contentType   string
 		visibility    storagetypes.VisibilityType
 		txHash        string
+		isUpdate      bool
 	)
 
 	uploadPrimaryStartTime := time.Now()
@@ -1033,6 +1035,10 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return
 	}
+	isUpdate, err = strconv.ParseBool(reqCtx.vars["is_update"])
+	if err != nil {
+		return
+	}
 
 	err = s3util.CheckValidBucketName(reqCtx.bucketName)
 	if err != nil {
@@ -1048,11 +1054,16 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return
 	}
-
 	startAuthenticationTime := time.Now()
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
-		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	if isUpdate {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentUpdateObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	} else {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	}
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
 		return
@@ -1062,21 +1073,10 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrNoPermission
 		return
 	}
-
 	contentType = reqCtx.vars["content_type"]
 	if contentType == "" {
 		contentType = ContentDefault
 	}
-
-	visibilityInt, err := strconv.Atoi(reqCtx.vars["visibility"])
-	if err != nil {
-		return
-	}
-	visibility = storagetypes.VisibilityType(visibilityInt)
-	if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
-		visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
-	}
-
 	if strings.Contains(reqCtx.objectName, "..") ||
 		reqCtx.objectName == "/" ||
 		strings.Contains(reqCtx.objectName, "\\") ||
@@ -1085,12 +1085,10 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrInvalidObjectName
 		return
 	}
-
 	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
 		return
 	}
-
 	approvalType := reqCtx.vars["action"]
 	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
@@ -1101,41 +1099,64 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	}
 	fingerprint = commonhash.GenerateChecksum(approvalMsg)
 	startTime := time.Now()
-	task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
-	task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
-		Operator:       g.baseApp.OperatorAddress(),
-		Creator:        reqCtx.account,
-		BucketName:     reqCtx.bucketName,
-		ObjectName:     reqCtx.objectName,
-		PayloadSize:    payloadSize,
-		ContentType:    contentType,
-		Visibility:     visibility,
-		RedundancyType: storagetypes.REDUNDANCY_EC_TYPE,
-	}, fingerprint, g.baseApp.TaskPriority(task))
-	startAskCreateObjectApproval := time.Now()
-	authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
-	metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
-	metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
-		return
-	}
-	if !authenticated {
-		log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
-		err = ErrRefuseApproval
-		return
+
+	if isUpdate {
+		msg := &storagetypes.MsgDelegateUpdateObjectContent{
+			Updater:     reqCtx.account,
+			BucketName:  reqCtx.bucketName,
+			ObjectName:  reqCtx.objectName,
+			PayloadSize: payloadSize,
+			ContentType: contentType,
+		}
+		txHash, err = g.baseApp.GfSpClient().DelegateUpdateObjectContent(reqCtx.ctx, msg)
+		if err != nil {
+			log.CtxErrorw(reqCtx.ctx, "failed to delegate update object", "error", err)
+			return
+		}
+	} else {
+		visibilityInt, err := strconv.Atoi(reqCtx.vars["visibility"])
+		if err != nil {
+			return
+		}
+		visibility = storagetypes.VisibilityType(visibilityInt)
+		if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
+			visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
+		}
+		task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
+		task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
+			Operator:       g.baseApp.OperatorAddress(),
+			Creator:        reqCtx.account,
+			BucketName:     reqCtx.bucketName,
+			ObjectName:     reqCtx.objectName,
+			PayloadSize:    payloadSize,
+			ContentType:    contentType,
+			Visibility:     visibility,
+			RedundancyType: storagetypes.REDUNDANCY_EC_TYPE,
+		}, fingerprint, g.baseApp.TaskPriority(task))
+		startAskCreateObjectApproval := time.Now()
+		authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
+			return
+		}
+		if !authenticated {
+			log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
+			err = ErrRefuseApproval
+			return
+		}
+		startDelegateCreateObject := time.Now()
+		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
+		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
+			return
+		}
 	}
 
-	startDelegateCreateObject := time.Now()
-	txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
-	metrics.PerfApprovalTime.WithLabelValues("signer_object_delegate_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
-	metrics.PerfApprovalTime.WithLabelValues("signer_object_delegate_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
-		return
-	}
-
-	_, err = g.baseApp.Consensus().ConfirmTransactionBoundless(reqCtx.ctx, txHash)
+	_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
 		return
@@ -1171,15 +1192,15 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	uploadTask := &gfsptask.GfSpUploadObjectTask{}
-	uploadTask.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()), true)
+	uploadTask.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(uploadTask, objectInfo.GetPayloadSize()), true)
 	uploadTask.SetCreateTime(uploadPrimaryStartTime.Unix())
 	uploadTask.AppendLog(fmt.Sprintf("gateway-prepare-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
 	uploadTask.AppendLog("gateway-create-upload-task")
-	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
+	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, uploadTask.Key().String())
 	uploadDataTime := time.Now()
 	err = g.baseApp.GfSpClient().UploadObject(ctx, uploadTask, r.Body)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(time.Since(time.Unix(uploadTask.GetCreateTime(), 0)).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 		return
@@ -1201,6 +1222,7 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		payloadSize   uint64
 		contentType   string
 		visibility    storagetypes.VisibilityType
+		isUpdate      bool
 	)
 
 	uploadPrimaryStartTime := time.Now()
@@ -1221,6 +1243,10 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	}()
 
 	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+	isUpdate, err = strconv.ParseBool(reqCtx.vars["is_update"])
 	if err != nil {
 		return
 	}
@@ -1253,11 +1279,12 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
 		return
 	}
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypeAgentPutObject, reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify authorize", "error", err)
-		return
+	if isUpdate {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentUpdateObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	} else {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
 	}
 	if !authenticated {
 		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
@@ -1275,51 +1302,68 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	}
 	fingerprint = commonhash.GenerateChecksum(approvalMsg)
 	startTime := time.Now()
-	task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
-	task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
-		Operator:       g.baseApp.OperatorAddress(),
-		Creator:        reqCtx.account,
-		BucketName:     reqCtx.bucketName,
-		ObjectName:     reqCtx.objectName,
-		PayloadSize:    payloadSize,
-		ContentType:    contentType,
-		Visibility:     visibility,
-		RedundancyType: storagetypes.REDUNDANCY_EC_TYPE,
-	}, fingerprint, g.baseApp.TaskPriority(task))
 
-	startAskCreateObjectApproval := time.Now()
-	authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
-	metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
-	metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_cost").Observe(time.Since(startTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
-		return
-	}
-	if !authenticated {
-		log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
-		err = ErrRefuseApproval
-		return
-	}
-
-	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
-	if objectInfo == nil {
-		startDelegateCreateObject := time.Now()
-		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
-		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
-		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+	if isUpdate {
+		msg := &storagetypes.MsgDelegateUpdateObjectContent{
+			Updater:     reqCtx.account,
+			BucketName:  reqCtx.bucketName,
+			ObjectName:  reqCtx.objectName,
+			PayloadSize: payloadSize,
+			ContentType: contentType,
+		}
+		txHash, err = g.baseApp.GfSpClient().DelegateUpdateObjectContent(reqCtx.ctx, msg)
 		if err != nil {
-			log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
+			log.CtxErrorw(reqCtx.ctx, "failed to delegate update object", "error", err)
 			return
 		}
-	} else if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || objectInfo.Creator != reqCtx.account {
-		log.CtxErrorw(reqCtx.ctx, "object has been created")
-		return
+	} else {
+		task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
+		task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
+			Operator:       g.baseApp.OperatorAddress(),
+			Creator:        reqCtx.account,
+			BucketName:     reqCtx.bucketName,
+			ObjectName:     reqCtx.objectName,
+			PayloadSize:    payloadSize,
+			ContentType:    contentType,
+			Visibility:     visibility,
+			RedundancyType: storagetypes.REDUNDANCY_EC_TYPE,
+		}, fingerprint, g.baseApp.TaskPriority(task))
+
+		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
+		if objectInfo == nil {
+			startAskCreateObjectApproval := time.Now()
+			authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
+			metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_cost").Observe(time.Since(startTime).Seconds())
+			if err != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
+				return
+			}
+			if !authenticated {
+				log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
+				err = ErrRefuseApproval
+				return
+			}
+			startDelegateCreateObject := time.Now()
+			txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
+			metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+			if err != nil {
+				log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
+				return
+			}
+		} else if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || objectInfo.Creator != reqCtx.account {
+			log.CtxErrorw(reqCtx.ctx, "object has been created")
+			return
+		}
 	}
 
-	_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
-		return
+	if txHash != "" {
+		_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
+			return
+		}
 	}
 
 	startGetObjectInfoTime := time.Now()
@@ -1388,15 +1432,15 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	}
 
 	uploadTask := &gfsptask.GfSpResumableUploadObjectTask{}
-	uploadTask.InitResumableUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()), complete, offset, true)
+	uploadTask.InitResumableUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(uploadTask, objectInfo.GetPayloadSize()), complete, offset, true)
 	uploadTask.SetCreateTime(uploadPrimaryStartTime.Unix())
 	uploadTask.AppendLog(fmt.Sprintf("gateway-prepare-resumable-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
 	uploadTask.AppendLog("gateway-create-resumable-upload-task")
-	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, task.Key().String())
+	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, uploadTask.Key().String())
 	uploadDataTime := time.Now()
 	err = g.baseApp.GfSpClient().ResumableUploadObject(ctx, uploadTask, r.Body)
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_end").Observe(time.Since(time.Unix(uploadTask.GetCreateTime(), 0)).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to resumable upload payload data", "error", err)
 		return

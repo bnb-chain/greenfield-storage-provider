@@ -59,6 +59,7 @@ const (
 	AuthOpTypeQueryBucketMigrationProgress
 	// AuthOpTypeAgentPutObject defines the agent PutObject operator
 	AuthOpTypeAgentPutObject
+	AuthOpTypeAgentUpdateObject
 )
 
 // Authenticator is an abstract interface to verify users authentication.
