@@ -1204,22 +1204,21 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 
 func (m *ManageModular) syncAvailableVGF(ctx context.Context) {
 	var (
-		err    error
-		spList []*sptypes.StorageProvider
+		err error
+		sp  *sptypes.StorageProvider
 	)
 
 	// query meta
-	if spList, err = m.baseApp.Consensus().ListSPs(context.Background()); err != nil {
+	if sp, err = m.baseApp.Consensus().QuerySPByID(context.Background(), m.spID); err != nil {
 		log.CtxErrorw(ctx, "failed to list sps", "error", err)
 		return
 	}
 
-	for _, sp := range spList {
-		if sp.Status == sptypes.STATUS_IN_SERVICE {
-			if _, err = m.PickVirtualGroupFamily(context.Background(), &task.NullTask{}); err != nil {
-				log.CtxErrorw(ctx, "failed to pick vgf for migrate bucket", "error", err)
-				return
-			}
+	// only pick vgf when sp is STATUS_IN_SERVICE
+	if sp.Status == sptypes.STATUS_IN_SERVICE {
+		if _, err = m.PickVirtualGroupFamily(context.Background(), &task.NullTask{}); err != nil {
+			log.CtxErrorw(ctx, "failed to pick vgf for migrate bucket", "error", err)
+			return
 		}
 	}
 }
