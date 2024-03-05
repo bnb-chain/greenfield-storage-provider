@@ -709,6 +709,30 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: getBucketSizeRouterName,
 		},
+		{
+			name:             "delegate put object",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              fmt.Sprintf("%s%s/4pheou4squv/b0q?delegate_resumable=&complete=false&offset=0", scheme, testDomain),
+			shouldMatch:      true,
+			wantedRouterName: delegateResumablePutObjectRouterName,
+		},
+		{
+			name:             "delegate put object 1",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              fmt.Sprintf("%s%s.%s/%s?%s", scheme, mockBucketName, testDomain, mockObjectName, "delegate_resumable"),
+			shouldMatch:      true,
+			wantedRouterName: delegateResumablePutObjectRouterName,
+		},
+		{
+			name:             "delegate put object 1",
+			router:           gwRouter,
+			method:           http.MethodPut,
+			url:              fmt.Sprintf("%s%s.%s/%s?%s", scheme, mockBucketName, testDomain, mockObjectName, "delegate"),
+			shouldMatch:      true,
+			wantedRouterName: delegatePutObjectRouterName,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -721,7 +745,7 @@ func TestRouters(t *testing.T) {
 			if ok != tt.shouldMatch {
 				t.Errorf("(%v) %v:\nRouter: %#v\nRequest: %#v\n", tt.name, "should match", router, request)
 			}
-			assert.Equal(t, match.Route.GetName(), tt.wantedRouterName)
+			assert.Equal(t, tt.wantedRouterName, match.Route.GetName())
 		})
 	}
 }

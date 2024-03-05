@@ -1247,6 +1247,7 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	}
 	isUpdate, err = strconv.ParseBool(reqCtx.vars["is_update"])
 	if err != nil {
+		log.CtxErrorw(reqCtx.ctx, "failed to parse is_update", "error", err)
 		return
 	}
 
