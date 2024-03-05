@@ -27,6 +27,7 @@ const (
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
 	requestNonceRouterName                         = "RequestNonce"
 	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
+	updateUserPublicKeyV2RouterName                = "UpdateUserPublicKeyV2"
 	queryUploadProgressRouterName                  = "QueryUploadProgress"
 	downloadObjectByUniversalEndpointName          = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName              = "ViewObjectByUniversalEndpoint"
@@ -99,6 +100,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// off-chain-auth router
 	router.Path(AuthRequestNoncePath).Name(requestNonceRouterName).Methods(http.MethodGet).HandlerFunc(g.requestNonceHandler)
 	router.Path(AuthUpdateKeyPath).Name(updateUserPublicKeyRouterName).Methods(http.MethodPost).HandlerFunc(g.updateUserPublicKeyHandler)
+	router.Path(AuthUpdateKeyV2Path).Name(updateUserPublicKeyV2RouterName).Methods(http.MethodPost).HandlerFunc(g.updateUserPublicKeyV2Handler)
 
 	// verify permission router
 	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).

@@ -71,6 +71,13 @@ type Authenticator interface {
 		userPublicKey string, expiryDate int64) (bool, error)
 	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error)
+
+	// GetAuthKeyV2 can check if the given account/domain/public_key was registered in this system.
+	GetAuthKeyV2(ctx context.Context, account string, domain string, publicKey string) (*spdb.OffChainAuthKeyV2, error)
+	// UpdateUserPublicKeyV2 registered the user public key once the dApp or client generates the EDDSA key pairs.
+	UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, publicKey string, expiryDate int64) (bool, error)
+	// VerifyGNFD2EddsaSignature verifies the signature signed by user's EDDSA private key.
+	VerifyGNFD2EddsaSignature(ctx context.Context, account string, domain string, publicKey string, offChainSig string, realMsgToSign []byte) (bool, error)
 }
 
 // Approver is an abstract interface to handle asking approval requests.

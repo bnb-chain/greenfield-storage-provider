@@ -122,6 +122,16 @@ type OffChainAuthKey struct {
 	ModifiedTime time.Time
 }
 
+type OffChainAuthKeyV2 struct {
+	UserAddress string
+	Domain      string
+	PublicKey   string
+
+	ExpiryDate   time.Time
+	CreatedTime  time.Time
+	ModifiedTime time.Time
+}
+
 // MigrateGVGUnitMeta is used to record migrate type/meta/status/progress.
 type MigrateGVGUnitMeta struct {
 	MigrateGVGKey            string // as primary key

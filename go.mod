@@ -11,7 +11,7 @@ require (
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.44.159
 	github.com/bnb-chain/greenfield v1.4.1-0.20240221082420-50b8ec14277e
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20230906132736-eb2f0efea228
+	github.com/bnb-chain/greenfield-common/go v0.0.0-20240228080631-2683b0ee669a
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.37.2
 	github.com/consensys/gnark-crypto v0.7.0

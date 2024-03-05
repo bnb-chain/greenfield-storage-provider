@@ -227,6 +227,113 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	w.Write(b)
 }
 
+// updateUserPublicKeyV2Handler register users' EdDSA public key into off_chain_auth_key_v2 table
+func (g *GateModular) updateUserPublicKeyV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		b             []byte
+		reqCtx        *RequestContext
+		account       string
+		userPublicKey string
+		domain        string
+		origin        string
+		expiryDateStr string
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2", "req_info", reqCtx.String())
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	// verify personal sign signature
+	personalSignSignaturePrefix := commonhttp.Gnfd1EthPersonalSign + ","
+	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
+
+	if !strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
+		err = ErrUnsupportedSignType
+		return
+	}
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(strings.TrimPrefix(requestSignature, personalSignSignaturePrefix))
+	if err != nil {
+		return
+	}
+	accAddress, personalSignVerifyErr := VerifyPersonalSignature(*signedMsg, *sigString)
+
+	if personalSignVerifyErr != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
+		err = personalSignVerifyErr
+		return
+	}
+	account = accAddress.String()
+	reqCtx.account = account
+
+	domain = reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+	origin = reqCtx.request.Header.Get("Origin")
+	userPublicKey = reqCtx.request.Header.Get(GnfdOffChainAuthAppRegPublicKeyHeader)
+	expiryDateStr = reqCtx.request.Header.Get(GnfdOffChainAuthAppRegExpiryDateHeader)
+
+	// validate headers
+	if domain == "" || domain != origin {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to bad origin or domain")
+		err = ErrInvalidDomainHeader
+		return
+	}
+
+	if userPublicKey == "" || len(userPublicKey) != ExpectedEddsaPubKeyLength {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to bad userPublicKey")
+		err = ErrInvalidPublicKeyHeader
+		return
+	}
+
+	ctx := log.Context(context.Background(), account, domain)
+
+	expiryDate, err := time.Parse(ExpiryDateFormat, expiryDateStr)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to InvalidExpiryDateHeader")
+		err = ErrInvalidExpiryDateHeader
+		return
+	}
+	expiryAge := int32(time.Until(expiryDate).Seconds())
+	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
+		err = ErrInvalidExpiryDateHeader
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to InvalidExpiryDateHeader")
+		return
+	}
+
+	err = g.verifySignedContentV2(*signedMsg, domain, userPublicKey, expiryDateStr)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to bad signed content.")
+		return
+	}
+
+	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKeyV2(ctx, account, domain, userPublicKey, expiryDate.UnixMilli())
+	if err != nil {
+		log.Errorw("failed to updateUserPublicKeyV2 when saving key")
+		return
+	}
+	var resp = &UpdateUserPublicKeyResp{
+		Result: updateUserPublicKeyResp,
+	}
+	b, err = xml.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal update user public key response", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(b)
+}
+
 // parseSignedMsgAndSigFromRequest get sig for personal auth, it expects the auth string should look like "Signature=xxxxx,SignedMsg=xxx".
 func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
 	var (
@@ -330,6 +437,32 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 	if !found { // the signed content is not for this SP  (g.config.SpOperatorAddress)
 		return ErrSignedMsgNotMatchSPAddr
 	}
+	if dappDomain != expectedDomain {
+		return ErrSignedMsgNotMatchDomain
+	}
+	if publicKey != expectedPublicKey {
+		return ErrSignedMsgNotMatchPubKey
+	}
+	if eip4361ExpirationTime != expectedExpiryDate {
+		return ErrSignedMsgNotMatchExpiry
+	}
+
+	return nil
+}
+
+func (g *GateModular) verifySignedContentV2(signedContent string, expectedDomain string, expectedPublicKey string, expectedExpiryDate string) error {
+	pattern := `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)`
+
+	re := regexp.MustCompile(pattern)
+	patternMatches := re.FindStringSubmatch(signedContent)
+	if len(patternMatches) < 9 {
+		return ErrSignedMsgNotMatchTemplate
+	}
+	// Extract variable values
+	dappDomain := patternMatches[1]
+	publicKey := patternMatches[3]
+	eip4361ExpirationTime := patternMatches[8]
+
 	if dappDomain != expectedDomain {
 		return ErrSignedMsgNotMatchDomain
 	}

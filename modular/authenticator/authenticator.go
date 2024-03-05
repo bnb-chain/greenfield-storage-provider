@@ -37,11 +37,12 @@ var (
 	ErrRepeatedObject         = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20010, "repeated object")
 	ErrNoPermission           = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20011, "no permission")
 
-	ErrBadSignature           = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20012, "bad signature")
-	ErrSignedMsgFormat        = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
-	ErrExpiredTimestampFormat = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
-	ErrPublicKeyExpired       = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
-	ErrInvalidAddressOrDomain = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20016, "userAddress or domain can't be null")
+	ErrBadSignature                      = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20012, "bad signature")
+	ErrSignedMsgFormat                   = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20013, "signed msg must be formatted as ${actionContent}_${expiredTimestamp}")
+	ErrExpiredTimestampFormat            = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20014, "expiredTimestamp in signed msg must be a unix epoch time in milliseconds")
+	ErrPublicKeyExpired                  = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
+	ErrInvalidAddressOrDomain            = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20016, "userAddress or domain can't be null")
+	ErrInvalidAddressOrDomainOrPublicKey = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20017, "userAddress, domain or publicKey can't be null")
 )
 
 func ErrUnexpectedObjectStatusWithDetail(objectName string, expectedStatus storagetypes.ObjectStatus, actualStatus storagetypes.ObjectStatus) *gfsperrors.GfSpError {
@@ -165,6 +166,64 @@ func (a *AuthenticationModular) VerifyGNFD1EddsaSignature(ctx context.Context, a
 	}
 
 	log.CtxInfow(ctx, "succeed to VerifyOffChainSignature")
+	return true, nil
+}
+
+// GetAuthKeyV2 can check if the given account/domain/public_key was registered in this system.
+func (a *AuthenticationModular) GetAuthKeyV2(ctx context.Context, account string, domain string, publicKey string) (*spdb.OffChainAuthKeyV2, error) {
+	if account == "" || domain == "" || publicKey == "" {
+		return nil, ErrInvalidAddressOrDomainOrPublicKey
+	}
+	authKey, err := a.baseApp.GfSpDB().GetAuthKeyV2(account, domain, publicKey)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to GetAuthKeyV2", "error", err)
+		return nil, err
+	}
+	log.CtxInfow(ctx, "succeed to GetAuthKeyV2")
+	return authKey, nil
+}
+
+// UpdateUserPublicKeyV2 registered the user public key once the dApp or client generates the EDDSA key pairs.
+func (a *AuthenticationModular) UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, publicKey string, expiryDate int64) (bool, error) {
+	newRecord := &spdb.OffChainAuthKeyV2{
+		UserAddress:  account,
+		Domain:       domain,
+		PublicKey:    publicKey,
+		ExpiryDate:   time.UnixMilli(expiryDate),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	err := a.baseApp.GfSpDB().InsertAuthKeyV2(newRecord)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to UpdateUserPublicKeyV2 when saving key")
+		return false, err
+	}
+	log.CtxInfow(ctx, "succeed to UpdateUserPublicKeyV2")
+	return true, nil
+}
+
+// VerifyGNFD2EddsaSignature verifies the signature signed by user's EDDSA private key.
+func (a *AuthenticationModular) VerifyGNFD2EddsaSignature(ctx context.Context, account string, domain string, publicKey string, offChainSig string, realMsgToSign []byte) (bool, error) {
+	signature, err := hex.DecodeString(offChainSig)
+	if err != nil {
+		return false, ErrBadSignature
+	}
+
+	getAuthKeyV2Resp, err := a.GetAuthKeyV2(ctx, account, domain, publicKey)
+	if err != nil {
+		return false, err
+	}
+	if time.Until(getAuthKeyV2Resp.ExpiryDate).Seconds() < 0 {
+		return false, ErrPublicKeyExpired
+	}
+	userPublicKey := getAuthKeyV2Resp.PublicKey
+
+	err = VerifyEddsaSignatureV2(userPublicKey, signature, realMsgToSign)
+	if err != nil {
+		return false, gfsperrors.MakeGfSpError(err)
+	}
+
+	log.CtxInfow(ctx, "succeed to VerifyGNFD2EddsaSignature")
 	return true, nil
 }
 

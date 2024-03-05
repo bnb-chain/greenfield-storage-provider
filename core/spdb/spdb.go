@@ -18,6 +18,7 @@ type SPDB interface {
 	TrafficDB
 	SPInfoDB
 	OffChainAuthKeyDB
+	OffChainAuthKeyV2DB
 	MigrateDB
 	ExitRecoverDB
 }
@@ -180,6 +181,12 @@ type OffChainAuthKeyDB interface {
 	GetAuthKey(userAddress string, domain string) (*OffChainAuthKey, error)
 	UpdateAuthKey(userAddress string, domain string, oldNonce int32, newNonce int32, newPublicKey string, newExpiryDate time.Time) error
 	InsertAuthKey(newRecord *OffChainAuthKey) error
+}
+
+// OffChainAuthKeyV2DB interface.
+type OffChainAuthKeyV2DB interface {
+	GetAuthKeyV2(userAddress string, domain string, publicKey string) (*OffChainAuthKeyV2, error)
+	InsertAuthKeyV2(newRecord *OffChainAuthKeyV2) error
 }
 
 // MigrateDB is used to support sp exit and bucket migrate.

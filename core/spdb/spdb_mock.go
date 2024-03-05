@@ -365,6 +365,21 @@ func (mr *MockSPDBMockRecorder) GetAuthKey(userAddress, domain any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKey", reflect.TypeOf((*MockSPDB)(nil).GetAuthKey), userAddress, domain)
 }
 
+// GetAuthKeyV2 mocks base method.
+func (m *MockSPDB) GetAuthKeyV2(userAddress, domain, publicKey string) (*OffChainAuthKeyV2, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", userAddress, domain, publicKey)
+	ret0, _ := ret[0].(*OffChainAuthKeyV2)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockSPDBMockRecorder) GetAuthKeyV2(userAddress, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockSPDB)(nil).GetAuthKeyV2), userAddress, domain, publicKey)
+}
+
 // GetBucketReadRecord mocks base method.
 func (m *MockSPDB) GetBucketReadRecord(bucketID uint64, timeRange *TrafficTimeRange) ([]*ReadRecord, error) {
 	m.ctrl.T.Helper()
@@ -752,6 +767,20 @@ func (m *MockSPDB) InsertAuthKey(newRecord *OffChainAuthKey) error {
 func (mr *MockSPDBMockRecorder) InsertAuthKey(newRecord any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKey", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKey), newRecord)
+}
+
+// InsertAuthKeyV2 mocks base method.
+func (m *MockSPDB) InsertAuthKeyV2(newRecord *OffChainAuthKeyV2) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertAuthKeyV2", newRecord)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertAuthKeyV2 indicates an expected call of InsertAuthKeyV2.
+func (mr *MockSPDBMockRecorder) InsertAuthKeyV2(newRecord any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKeyV2", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKeyV2), newRecord)
 }
 
 // InsertGCObjectProgress mocks base method.
@@ -2466,6 +2495,58 @@ func (m *MockOffChainAuthKeyDB) UpdateAuthKey(userAddress, domain string, oldNon
 func (mr *MockOffChainAuthKeyDBMockRecorder) UpdateAuthKey(userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthKey", reflect.TypeOf((*MockOffChainAuthKeyDB)(nil).UpdateAuthKey), userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
+}
+
+// MockOffChainAuthKeyV2DB is a mock of OffChainAuthKeyV2DB interface.
+type MockOffChainAuthKeyV2DB struct {
+	ctrl     *gomock.Controller
+	recorder *MockOffChainAuthKeyV2DBMockRecorder
+}
+
+// MockOffChainAuthKeyV2DBMockRecorder is the mock recorder for MockOffChainAuthKeyV2DB.
+type MockOffChainAuthKeyV2DBMockRecorder struct {
+	mock *MockOffChainAuthKeyV2DB
+}
+
+// NewMockOffChainAuthKeyV2DB creates a new mock instance.
+func NewMockOffChainAuthKeyV2DB(ctrl *gomock.Controller) *MockOffChainAuthKeyV2DB {
+	mock := &MockOffChainAuthKeyV2DB{ctrl: ctrl}
+	mock.recorder = &MockOffChainAuthKeyV2DBMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockOffChainAuthKeyV2DB) EXPECT() *MockOffChainAuthKeyV2DBMockRecorder {
+	return m.recorder
+}
+
+// GetAuthKeyV2 mocks base method.
+func (m *MockOffChainAuthKeyV2DB) GetAuthKeyV2(userAddress, domain, publicKey string) (*OffChainAuthKeyV2, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", userAddress, domain, publicKey)
+	ret0, _ := ret[0].(*OffChainAuthKeyV2)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockOffChainAuthKeyV2DBMockRecorder) GetAuthKeyV2(userAddress, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockOffChainAuthKeyV2DB)(nil).GetAuthKeyV2), userAddress, domain, publicKey)
+}
+
+// InsertAuthKeyV2 mocks base method.
+func (m *MockOffChainAuthKeyV2DB) InsertAuthKeyV2(newRecord *OffChainAuthKeyV2) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertAuthKeyV2", newRecord)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertAuthKeyV2 indicates an expected call of InsertAuthKeyV2.
+func (mr *MockOffChainAuthKeyV2DBMockRecorder) InsertAuthKeyV2(newRecord any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKeyV2", reflect.TypeOf((*MockOffChainAuthKeyV2DB)(nil).InsertAuthKeyV2), newRecord)
 }
 
 // MockMigrateDB is a mock of MigrateDB interface.

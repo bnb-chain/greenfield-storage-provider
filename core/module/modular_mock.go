@@ -141,6 +141,21 @@ func (m *MockAuthenticator) EXPECT() *MockAuthenticatorMockRecorder {
 	return m.recorder
 }
 
+// GetAuthKeyV2 mocks base method.
+func (m *MockAuthenticator) GetAuthKeyV2(ctx context.Context, account, domain, publicKey string) (*spdb.OffChainAuthKeyV2, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", ctx, account, domain, publicKey)
+	ret0, _ := ret[0].(*spdb.OffChainAuthKeyV2)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockAuthenticatorMockRecorder) GetAuthKeyV2(ctx, account, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockAuthenticator)(nil).GetAuthKeyV2), ctx, account, domain, publicKey)
+}
+
 // GetAuthNonce mocks base method.
 func (m *MockAuthenticator) GetAuthNonce(ctx context.Context, account, domain string) (*spdb.OffChainAuthKey, error) {
 	m.ctrl.T.Helper()
@@ -240,6 +255,21 @@ func (mr *MockAuthenticatorMockRecorder) UpdateUserPublicKey(ctx, account, domai
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockAuthenticator)(nil).UpdateUserPublicKey), ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate)
 }
 
+// UpdateUserPublicKeyV2 mocks base method.
+func (m *MockAuthenticator) UpdateUserPublicKeyV2(ctx context.Context, account, domain, publicKey string, expiryDate int64) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserPublicKeyV2", ctx, account, domain, publicKey, expiryDate)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPublicKeyV2 indicates an expected call of UpdateUserPublicKeyV2.
+func (mr *MockAuthenticatorMockRecorder) UpdateUserPublicKeyV2(ctx, account, domain, publicKey, expiryDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKeyV2", reflect.TypeOf((*MockAuthenticator)(nil).UpdateUserPublicKeyV2), ctx, account, domain, publicKey, expiryDate)
+}
+
 // VerifyAuthentication mocks base method.
 func (m *MockAuthenticator) VerifyAuthentication(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -268,6 +298,21 @@ func (m *MockAuthenticator) VerifyGNFD1EddsaSignature(ctx context.Context, accou
 func (mr *MockAuthenticatorMockRecorder) VerifyGNFD1EddsaSignature(ctx, account, domain, offChainSig, realMsgToSign any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockAuthenticator)(nil).VerifyGNFD1EddsaSignature), ctx, account, domain, offChainSig, realMsgToSign)
+}
+
+// VerifyGNFD2EddsaSignature mocks base method.
+func (m *MockAuthenticator) VerifyGNFD2EddsaSignature(ctx context.Context, account, domain, publicKey, offChainSig string, realMsgToSign []byte) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyGNFD2EddsaSignature", ctx, account, domain, publicKey, offChainSig, realMsgToSign)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyGNFD2EddsaSignature indicates an expected call of VerifyGNFD2EddsaSignature.
+func (mr *MockAuthenticatorMockRecorder) VerifyGNFD2EddsaSignature(ctx, account, domain, publicKey, offChainSig, realMsgToSign any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD2EddsaSignature", reflect.TypeOf((*MockAuthenticator)(nil).VerifyGNFD2EddsaSignature), ctx, account, domain, publicKey, offChainSig, realMsgToSign)
 }
 
 // MockApprover is a mock of Approver interface.

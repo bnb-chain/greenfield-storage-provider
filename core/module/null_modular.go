@@ -186,6 +186,18 @@ func (*NullModular) VerifyGNFD1EddsaSignature(ctx context.Context, account strin
 	return false, ErrNilModular
 }
 
+func (m *NullModular) GetAuthKeyV2(ctx context.Context, account string, domain string, publicKey string) (*corespdb.OffChainAuthKeyV2, error) {
+	return nil, ErrNilModular
+}
+
+func (m *NullModular) UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, publicKey string, expiryDate int64) (bool, error) {
+	return false, ErrNilModular
+}
+
+func (m *NullModular) VerifyGNFD2EddsaSignature(ctx context.Context, account string, domain string, publicKey string, offChainSig string, realMsgToSign []byte) (bool, error) {
+	return false, ErrNilModular
+}
+
 var _ TaskExecutor = (*NilModular)(nil)
 var _ P2P = (*NilModular)(nil)
 var _ Signer = (*NilModular)(nil)

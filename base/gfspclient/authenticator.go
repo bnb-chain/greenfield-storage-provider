@@ -124,3 +124,78 @@ func (s *GfSpClient) VerifyGNFD1EddsaSignature(ctx context.Context, account stri
 	}
 	return resp.Result, nil
 }
+
+func (s *GfSpClient) GetAuthKeyV2(ctx context.Context, account string, domain string, userPublicKey string, opts ...grpc.DialOption) (publicKey string, expiryDate int64, err error) {
+	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
+		return "", 0, ErrRPCUnknownWithDetail("client failed to connect authenticator, error: ", connErr)
+	}
+	defer conn.Close()
+	req := &gfspserver.GetAuthKeyV2Request{
+		AccountId:     account,
+		Domain:        domain,
+		UserPublicKey: userPublicKey,
+	}
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).GetAuthKeyV2(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get GetAuthKeyV2 rpc", "error", err)
+		return "", 0, err
+	}
+	if resp.GetErr() != nil {
+		return "", 0, resp.GetErr()
+	}
+	return resp.GetPublicKey(), resp.GetExpiryDate(), nil
+}
+
+func (s *GfSpClient) UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
+	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
+		return false, ErrRPCUnknownWithDetail("client failed to connect authenticator, error: ", connErr)
+	}
+	defer conn.Close()
+	req := &gfspserver.UpdateUserPublicKeyV2Request{
+		AccountId:     account,
+		Domain:        domain,
+		UserPublicKey: userPublicKey,
+		ExpiryDate:    expiryDate,
+	}
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).UpdateUserPublicKeyV2(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to UpdateUserPublicKeyV2 rpc", "error", err)
+		return false, err
+	}
+	if resp.GetErr() != nil {
+		return false, resp.GetErr()
+	}
+	return resp.Result, nil
+}
+
+func (s *GfSpClient) VerifyGNFD2EddsaSignature(ctx context.Context, account string, domain string, userPublicKey string, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
+	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
+		return false, ErrRPCUnknownWithDetail("client failed to connect authenticator, error: ", connErr)
+	}
+	defer conn.Close()
+	req := &gfspserver.VerifyGNFD2EddsaSignatureRequest{
+		AccountId:     account,
+		Domain:        domain,
+		UserPublicKey: userPublicKey,
+		OffChainSig:   offChainSig,
+		RealMsgToSign: realMsgToSign,
+	}
+	resp, err := gfspserver.NewGfSpAuthenticationServiceClient(conn).VerifyGNFD2EddsaSignature(ctx, req)
+	ctx = log.Context(ctx, resp)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to VerifyGNFD2EddsaSignature rpc", "error", err)
+		return false, err
+	}
+	if resp.GetErr() != nil {
+		return false, resp.GetErr()
+	}
+	return resp.Result, nil
+}

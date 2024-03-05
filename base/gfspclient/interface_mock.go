@@ -389,6 +389,27 @@ func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endp
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePieceToSecondary", reflect.TypeOf((*MockGfSpClientAPI)(nil).DoneReplicatePieceToSecondary), ctx, endpoint, receive)
 }
 
+// GetAuthKeyV2 mocks base method.
+func (m *MockGfSpClientAPI) GetAuthKeyV2(ctx context.Context, account, domain, userPublicKey string, opts ...grpc.DialOption) (string, int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", varargs...)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockGfSpClientAPIMockRecorder) GetAuthKeyV2(ctx, account, domain, userPublicKey any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetAuthKeyV2), varargs...)
+}
+
 // GetAuthNonce mocks base method.
 func (m *MockGfSpClientAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
@@ -2249,6 +2270,26 @@ func (mr *MockGfSpClientAPIMockRecorder) UpdateUserPublicKey(ctx, account, domai
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockGfSpClientAPI)(nil).UpdateUserPublicKey), varargs...)
 }
 
+// UpdateUserPublicKeyV2 mocks base method.
+func (m *MockGfSpClientAPI) UpdateUserPublicKeyV2(ctx context.Context, account, domain, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, expiryDate}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateUserPublicKeyV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPublicKeyV2 indicates an expected call of UpdateUserPublicKeyV2.
+func (mr *MockGfSpClientAPIMockRecorder) UpdateUserPublicKeyV2(ctx, account, domain, userPublicKey, expiryDate any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, expiryDate}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKeyV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).UpdateUserPublicKeyV2), varargs...)
+}
+
 // UploadObject mocks base method.
 func (m *MockGfSpClientAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
@@ -2306,6 +2347,26 @@ func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account,
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
+}
+
+// VerifyGNFD2EddsaSignature mocks base method.
+func (m *MockGfSpClientAPI) VerifyGNFD2EddsaSignature(ctx context.Context, account, domain, userPublicKey, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyGNFD2EddsaSignature", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyGNFD2EddsaSignature indicates an expected call of VerifyGNFD2EddsaSignature.
+func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD2EddsaSignature(ctx, account, domain, userPublicKey, offChainSig, realMsgToSign any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD2EddsaSignature", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyGNFD2EddsaSignature), varargs...)
 }
 
 // VerifyMigrateGVGPermission mocks base method.
@@ -2462,6 +2523,27 @@ func (m *MockAuthenticatorAPI) EXPECT() *MockAuthenticatorAPIMockRecorder {
 	return m.recorder
 }
 
+// GetAuthKeyV2 mocks base method.
+func (m *MockAuthenticatorAPI) GetAuthKeyV2(ctx context.Context, account, domain, userPublicKey string, opts ...grpc.DialOption) (string, int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", varargs...)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockAuthenticatorAPIMockRecorder) GetAuthKeyV2(ctx, account, domain, userPublicKey any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).GetAuthKeyV2), varargs...)
+}
+
 // GetAuthNonce mocks base method.
 func (m *MockAuthenticatorAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
@@ -2505,6 +2587,26 @@ func (mr *MockAuthenticatorAPIMockRecorder) UpdateUserPublicKey(ctx, account, do
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockAuthenticatorAPI)(nil).UpdateUserPublicKey), varargs...)
 }
 
+// UpdateUserPublicKeyV2 mocks base method.
+func (m *MockAuthenticatorAPI) UpdateUserPublicKeyV2(ctx context.Context, account, domain, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, expiryDate}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateUserPublicKeyV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPublicKeyV2 indicates an expected call of UpdateUserPublicKeyV2.
+func (mr *MockAuthenticatorAPIMockRecorder) UpdateUserPublicKeyV2(ctx, account, domain, userPublicKey, expiryDate any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, expiryDate}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKeyV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).UpdateUserPublicKeyV2), varargs...)
+}
+
 // VerifyAuthentication mocks base method.
 func (m *MockAuthenticatorAPI) VerifyAuthentication(ctx context.Context, auth module.AuthOpType, account, bucket, object string, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
@@ -2543,6 +2645,26 @@ func (mr *MockAuthenticatorAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, accou
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
+}
+
+// VerifyGNFD2EddsaSignature mocks base method.
+func (m *MockAuthenticatorAPI) VerifyGNFD2EddsaSignature(ctx context.Context, account, domain, userPublicKey, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyGNFD2EddsaSignature", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyGNFD2EddsaSignature indicates an expected call of VerifyGNFD2EddsaSignature.
+func (mr *MockAuthenticatorAPIMockRecorder) VerifyGNFD2EddsaSignature(ctx, account, domain, userPublicKey, offChainSig, realMsgToSign any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD2EddsaSignature", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyGNFD2EddsaSignature), varargs...)
 }
 
 // MockDownloaderAPI is a mock of DownloaderAPI interface.
