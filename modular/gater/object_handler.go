@@ -1035,7 +1035,16 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return
 	}
-	isUpdate, err = strconv.ParseBool(reqCtx.vars["is_update"])
+	queryParams := reqCtx.request.URL.Query()
+	isUpdateStr := queryParams.Get("is_update")
+	isUpdate, err = strconv.ParseBool(isUpdateStr)
+	if err != nil {
+		log.CtxErrorw(reqCtx.ctx, "failed to parse is_update", "error", err)
+		return
+	}
+
+	payloadSizeStr := queryParams.Get("payload_size")
+	payloadSize, err = strconv.ParseUint(payloadSizeStr, 10, 64)
 	if err != nil {
 		return
 	}
@@ -1050,10 +1059,6 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	payloadSize, err = strconv.ParseUint(reqCtx.vars["payload_size"], 10, 64)
-	if err != nil {
-		return
-	}
 	startAuthenticationTime := time.Now()
 	if isUpdate {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentUpdateObject,
@@ -1089,10 +1094,10 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
 		return
 	}
-	approvalType := reqCtx.vars["action"]
+
 	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
-		log.Errorw("failed to parse approval header", "approval_type", approvalType,
+		log.Errorw("failed to parse approval header",
 			"approval", r.Header.Get(GnfdUnsignedApprovalMsgHeader))
 		err = ErrDecodeMsg
 		return
@@ -1114,7 +1119,9 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 			return
 		}
 	} else {
-		visibilityInt, err := strconv.ParseInt(reqCtx.vars["visibility"], 10, 32)
+		var visibilityInt int64
+		visibilityStr := queryParams.Get("visibility")
+		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
 		if err != nil {
 			return
 		}
@@ -1147,6 +1154,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		}
 		startDelegateCreateObject := time.Now()
 		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
+		log.Debugw("debug", "txHash", txHash)
 		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
 		if err != nil {
@@ -1170,6 +1178,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		return
 	}
+	log.Debugw("debug", "bucket", bucketInfo.BucketName, "object", objectInfo.Id.Uint64(), "payload", objectInfo.PayloadSize)
 	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
@@ -1245,9 +1254,17 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	if err != nil {
 		return
 	}
-	isUpdate, err = strconv.ParseBool(reqCtx.vars["is_update"])
+	queryParams := reqCtx.request.URL.Query()
+	isUpdateStr := queryParams.Get("is_update")
+	isUpdate, err = strconv.ParseBool(isUpdateStr)
 	if err != nil {
 		log.CtxErrorw(reqCtx.ctx, "failed to parse is_update", "error", err)
+		return
+	}
+
+	payloadSizeStr := queryParams.Get("payload_size")
+	payloadSize, err = strconv.ParseUint(payloadSizeStr, 10, 64)
+	if err != nil {
 		return
 	}
 
@@ -1270,11 +1287,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 
-	payloadSize, err = strconv.ParseUint(reqCtx.vars["payload_size"], 10, 64)
-	if err != nil {
-		return
-	}
-
 	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
 		return
@@ -1292,10 +1304,9 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 
-	approvalType := reqCtx.vars["action"]
 	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))
 	if err != nil {
-		log.Errorw("failed to parse approval header", "approval_type", approvalType,
+		log.Errorw("failed to parse approval header",
 			"approval", r.Header.Get(GnfdUnsignedApprovalMsgHeader))
 		err = ErrDecodeMsg
 		return
@@ -1317,6 +1328,15 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 			return
 		}
 	} else {
+		visibilityStr := queryParams.Get("visibility")
+		visibilityInt, err := strconv.ParseInt(visibilityStr, 10, 32)
+		if err != nil {
+			return
+		}
+		visibility = storagetypes.VisibilityType(visibilityInt)
+		if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
+			visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
+		}
 		task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
 		task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
 			Operator:       g.baseApp.OperatorAddress(),
@@ -1404,7 +1424,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		requestComplete string
 		requestOffset   string
 	)
-	queryParams := reqCtx.request.URL.Query()
 	requestComplete = queryParams.Get(ResumableUploadComplete)
 	requestOffset = queryParams.Get(ResumableUploadOffset)
 	if requestComplete != "" {

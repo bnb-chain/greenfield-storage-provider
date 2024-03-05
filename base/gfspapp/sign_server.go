@@ -341,6 +341,16 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Inc()
 			metrics.ReqTime.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
 		}
+	case *gfspserver.GfSpSignRequest_DelegateCreateObjectInfo:
+		txHash, err = g.signer.DelegateCreateObject(ctx, t.DelegateCreateObjectInfo)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to delete global virtual group", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")
 		return &gfspserver.GfSpSignResponse{

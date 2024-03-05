@@ -255,3 +255,7 @@ func (s *SignModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *v
 func (s *SignModular) DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
 	return s.client.DelegateUpdateObjectContent(ctx, SignOperator, msg)
 }
+
+func (s *SignModular) DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	return s.client.DelegateCreateObjectContent(ctx, SignOperator, msg)
+}

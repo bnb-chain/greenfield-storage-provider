@@ -931,6 +931,58 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 	return "", ErrDeleteGVGOnChain
 }
 
+func (client *GreenfieldChainSignClient) DelegateCreateObjectContent(ctx context.Context, scope SignType,
+	msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	log.Infow("signer starts to delegate create object content", "scope", scope)
+	if msg == nil {
+		log.CtxError(ctx, "delegate create object content msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msg.Operator = km.GetAddr().String()
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msg}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrDeleteGVGOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast delegate create object content tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast delegate update object content tx", "tx_hash", txHash, "delegate_update_object_content_msg", msg)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to delegate create object, error: %v", err))
+	return "", ErrDeleteGVGOnChain
+}
+
 func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
 	log.Infow("signer starts to delegate update object content", "scope", scope)

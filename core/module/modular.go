@@ -334,6 +334,8 @@ type Signer interface {
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.
 	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
+	// DelegateCreateObject  broadcast the tx to greenfield.
+	DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

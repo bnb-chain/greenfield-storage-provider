@@ -354,3 +354,6 @@ func (m *NilModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrou
 func (m *NullModular) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error) {
 	return false, nil
 }
+func (m *NilModular) DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	return "", nil
+}
