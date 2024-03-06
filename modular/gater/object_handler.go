@@ -1328,8 +1328,9 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 			return
 		}
 	} else {
+		var visibilityInt int64
 		visibilityStr := queryParams.Get("visibility")
-		visibilityInt, err := strconv.ParseInt(visibilityStr, 10, 32)
+		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
 		if err != nil {
 			return
 		}

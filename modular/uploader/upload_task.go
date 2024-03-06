@@ -115,7 +115,6 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		if err != nil {
 			uploadObjectTask.SetError(err)
 		}
-
 		log.CtxDebugw(ctx, "finished to read data from stream", "info", uploadObjectTask.Info(),
 			"read_size", readSize, "error", err)
 		uploadObjectTask.AppendLog("uploader-report-upload-task")

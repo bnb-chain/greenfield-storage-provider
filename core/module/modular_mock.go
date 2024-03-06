@@ -1852,6 +1852,21 @@ func (mr *MockSignerMockRecorder) CreateGlobalVirtualGroup(ctx, gvg any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSigner)(nil).CreateGlobalVirtualGroup), ctx, gvg)
 }
 
+// DelegateCreateObject mocks base method.
+func (m *MockSigner) DelegateCreateObject(ctx context.Context, msg *types0.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, msg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockSignerMockRecorder) DelegateCreateObject(ctx, msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockSigner)(nil).DelegateCreateObject), ctx, msg)
+}
+
 // DeleteGlobalVirtualGroup mocks base method.
 func (m *MockSigner) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types1.MsgDeleteGlobalVirtualGroup) (string, error) {
 	m.ctrl.T.Helper()

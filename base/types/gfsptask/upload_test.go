@@ -1290,7 +1290,7 @@ func TestGfSpSealObjectTask_SetStorageParams(t *testing.T) {
 
 func TestInitReceivePieceTask(t *testing.T) {
 	m := &GfSpReceivePieceTask{}
-	m.InitReceivePieceTask(1, mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 1, 0, 0)
+	m.InitReceivePieceTask(1, mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 1, 0, 0, false)
 }
 
 func TestGfSpReceivePieceTask_GetSignBytes(t *testing.T) {

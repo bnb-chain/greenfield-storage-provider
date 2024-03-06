@@ -282,7 +282,7 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}()
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
-		e.baseApp.TaskPriority(rTask), segmentIdx, redundancyIdx, int64(len(data)))
+		e.baseApp.TaskPriority(rTask), segmentIdx, redundancyIdx, int64(len(data)), rTask.GetIsAgentUpload())
 	pieceHash := hash.GenerateChecksum(data)
 	// save EC Chunk hash to db
 	objectId := rTask.GetObjectInfo().Id.Uint64()
@@ -354,7 +354,7 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(rTask.GetGlobalVirtualGroupId(), rTask.GetObjectInfo(), rTask.GetStorageParams(),
-		e.baseApp.TaskPriority(rTask), 0, redundancyIdx, 0)
+		e.baseApp.TaskPriority(rTask), 0, redundancyIdx, 0, rTask.GetIsAgentUpload())
 	receive.SetFinished(true)
 	signTime := time.Now()
 	taskSignature, err = e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)

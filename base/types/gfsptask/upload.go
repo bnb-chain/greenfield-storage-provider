@@ -676,10 +676,11 @@ func (m *GfSpSealObjectTask) SetError(err error) {
 }
 
 func (m *GfSpReceivePieceTask) InitReceivePieceTask(gvgID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	priority coretask.TPriority, segmentIdx uint32, redundancyIdx int32, pieceSize int64) {
+	priority coretask.TPriority, segmentIdx uint32, redundancyIdx int32, pieceSize int64, isAgentUpload bool) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GlobalVirtualGroupId = gvgID
+	m.IsAgentUploadTask = isAgentUpload
 	m.SetCreateTime(time.Now().Unix())
 	m.SetUpdateTime(time.Now().Unix())
 	m.SetObjectInfo(object)

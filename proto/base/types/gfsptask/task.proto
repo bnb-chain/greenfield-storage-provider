@@ -117,6 +117,7 @@ message GfSpReceivePieceTask {
   bool finished = 10;
   uint32 global_virtual_group_id = 11;
   bool bucket_migration = 12;
+  bool is_agent_upload_task = 13;
 }
 
 message GfSpSealObjectTask {

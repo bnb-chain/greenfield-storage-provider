@@ -306,7 +306,7 @@ type ReceivePieceTask interface {
 	ObjectTask
 	// InitReceivePieceTask init the ReceivePieceTask.
 	InitReceivePieceTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
-		segmentIdx uint32, redundancyIdx int32, pieceSize int64)
+		segmentIdx uint32, redundancyIdx int32, pieceSize int64, isAgentUpload bool)
 	// GetSegmentIdx returns the piece index. The piece index identifies the serial number
 	// of segment of object payload data for object piece copy.
 	GetSegmentIdx() uint32

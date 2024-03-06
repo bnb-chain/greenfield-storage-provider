@@ -74,7 +74,7 @@ func TestNullTask(t *testing.T) {
 	n.SetSecondaryAddresses(nil)
 	n.GetSecondaryEndpoints()
 	n.InitSealObjectTask(0, nil, nil, 0, nil, nil, 0, 0)
-	n.InitReceivePieceTask(0, nil, nil, 0, 0, 0, 0)
+	n.InitReceivePieceTask(0, nil, nil, 0, 0, 0, 0, false)
 	n.GetReplicateIdx()
 	n.SetReplicateIdx(0)
 	n.GetPieceIdx()
