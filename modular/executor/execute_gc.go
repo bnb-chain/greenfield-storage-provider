@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"strconv"
@@ -635,7 +634,6 @@ func (e *ExecuteModular) HandleGCStaleVersionObjectTask(ctx context.Context, tas
 	}()
 	log.CtxDebugw(ctx, "HandleGCStaleVersionObjectTask", "task_info", task.Info())
 
-	// verify zombie piece via IntegrityMetaTable
 	if err = e.gcStaleVersionObjectFromShadowIntegrityMeta(ctx, task); err != nil {
 		log.CtxErrorw(ctx, "failed to gc zombie piece from integrity meta", "task_info", task.Info(), "error", err)
 		return
@@ -643,11 +641,10 @@ func (e *ExecuteModular) HandleGCStaleVersionObjectTask(ctx context.Context, tas
 }
 
 func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context.Context, task coretask.GCStaleVersionObjectTask) error {
-	objectInfo, err := e.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(task.GetObjectId()))
-	if err != nil {
-		log.Errorw("failed to query object info", "object_id", task.GetObjectId())
-		return err
-	}
+	var err error
+	objectID := task.GetObjectId()
+	metaSegmentCount := uint32(len(task.GetPieceChecksumList()))
+
 	gcStaleVersionPieces := func(objectID uint64, segmentCount uint32, version int64, redundancyIndex int32) error {
 		for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
 			var pieceKey string
@@ -658,22 +655,45 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 			}
 			err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
 			if err != nil {
-				log.CtxErrorw(ctx, "delete the stale sp pieces", "object_info", objectInfo,
+				log.CtxErrorw(ctx, "failed to delete the stale sp pieces", "object_id", objectID,
 					"piece_key", pieceKey, "error", err)
-				return err
+				if strings.Contains(err.Error(), "The specified key does not exist") {
+					continue
+				} else {
+					return err
+				}
 			}
 		}
-		err = e.baseApp.GfSpDB().DeleteShadowObjectIntegrity(task.GetObjectId(), task.GetRedundancyIndex())
-		log.Debugw("deleted shadow object integrity meta", "object_id", task.GetObjectId())
+		err = e.baseApp.GfSpDB().DeleteShadowObjectIntegrity(objectID, task.GetRedundancyIndex())
 		if err != nil {
+			log.CtxErrorw(ctx, "failed to delete shadow object integrity meta", "object_id", objectID, "error", err)
 			return err
 		}
 		return nil
 	}
-	metaSegmentCount := uint32(len(task.GetPieceChecksumList()))
+
+	objectInfo, err := e.baseApp.Consensus().QueryObjectInfoByID(context.Background(), util.Uint64ToString(objectID))
+	if err != nil {
+		log.Errorw("failed to query object info", "object_id", task.GetObjectId(), "error", err)
+
+		if strings.Contains(err.Error(), "No such object") {
+			// if the object is deleted, can gc the piece according to the shadow integrity meta
+			err = gcStaleVersionPieces(task.GetObjectId(), metaSegmentCount, task.GetVersion(), task.GetRedundancyIndex())
+			if err != nil {
+				log.Errorw("failed to gc stale pieces", "object_id", task.GetObjectId(), "version", task.GetVersion(),
+					"segment_count", metaSegmentCount, "redundancy_index", task.GetRedundancyIndex(), "error", err)
+				return err
+			}
+			return nil
+		}
+		return err
+	}
+
 	if task.GetVersion() < objectInfo.Version {
 		err = gcStaleVersionPieces(task.GetObjectId(), metaSegmentCount, task.GetVersion(), task.GetRedundancyIndex())
 		if err != nil {
+			log.Errorw("failed to gc stale pieces", "object_id", task.GetObjectId(), "version", task.GetVersion(),
+				"segment_count", metaSegmentCount, "redundancy_index", task.GetRedundancyIndex(), "error", err)
 			return err
 		}
 	} else if task.GetVersion() == objectInfo.Version {
@@ -681,32 +701,62 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 		if objectInfo.IsUpdating {
 			err = gcStaleVersionPieces(task.GetObjectId(), metaSegmentCount, task.GetVersion(), task.GetRedundancyIndex())
 			if err != nil {
+				log.Errorw("failed to gc stale pieces", "object_id", task.GetObjectId(), "version", task.GetVersion(),
+					"segment_count", metaSegmentCount, "redundancy_index", task.GetRedundancyIndex(), "error", err)
 				return err
 			}
 		} else {
-			// copy and replace, the shadow integrity meta takes effect
-			staleIntegrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectId(), task.GetRedundancyIndex())
-			if err != nil {
-				log.Debugw("get  object integrity meta", "object_id", task.GetObjectId(), "error", err)
-				return err
-			}
-			if bytes.Equal(staleIntegrityMeta.IntegrityChecksum, task.GetIntegrityChecksum()) {
-				log.Errorw("the integrity meta is already updated", "object_id", task.GetObjectId(), "error", err)
-				return err
-			}
-			for segIdx := uint32(0); segIdx < uint32(len(staleIntegrityMeta.PieceChecksumList)); segIdx++ {
-				var pieceKey string
-				if task.GetRedundancyIndex() == piecestore.PrimarySPRedundancyIndex {
-					pieceKey = e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectId(), segIdx, task.GetVersion()-1)
-				} else {
-					pieceKey = e.baseApp.PieceOp().ECPieceKey(task.GetObjectId(), segIdx, uint32(task.GetRedundancyIndex()), task.GetVersion()-1)
-				}
-				err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+			var staleIntegrityMeta *spdb.IntegrityMeta
+			if task.GetRedundancyIndex() == piecestore.PrimarySPRedundancyIndex {
+				staleIntegrityMeta, err = e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectId(), task.GetRedundancyIndex())
 				if err != nil {
-					log.CtxErrorw(ctx, "delete the stale sp pieces", "object_info", objectInfo,
-						"piece_key", pieceKey, "error", err)
+					log.Errorw("failed to get object integrity meta", "object_id", task.GetObjectId(), "error", err)
 					return err
 				}
+				for segIdx := uint32(0); segIdx < uint32(len(staleIntegrityMeta.PieceChecksumList)); segIdx++ {
+					pieceKey := e.baseApp.PieceOp().SegmentPieceKey(task.GetObjectId(), segIdx, task.GetVersion()-1)
+					err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+					if err != nil {
+						log.CtxErrorw(ctx, "failed to delete the stale sp pieces", "object_info", objectInfo,
+							"piece_key", pieceKey, "error", err)
+						if strings.Contains(err.Error(), "The specified key does not exist") {
+							continue
+						} else {
+							return err
+						}
+					}
+				}
+			} else {
+				// the SP might have 2 integrityMetas for an objet if SP play as primary and 1 of secondary in GVG
+				staleIntegrityMetas, err := e.baseApp.GfSpDB().ListIntegrityMetaByObjectIDRange(int64(objectID), int64(objectID)+1, true)
+				if err != nil {
+					return err
+				}
+				for _, sim := range staleIntegrityMetas {
+					if sim.RedundancyIndex != piecestore.PrimarySPRedundancyIndex {
+						staleIntegrityMeta = sim
+						break
+					}
+				}
+				for segIdx := uint32(0); segIdx < uint32(len(staleIntegrityMeta.PieceChecksumList)); segIdx++ {
+					pieceKey := e.baseApp.PieceOp().ECPieceKey(task.GetObjectId(), segIdx, uint32(staleIntegrityMeta.RedundancyIndex), task.GetVersion()-1)
+					err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+					if err != nil {
+						log.CtxErrorw(ctx, "failed to delete the stale sp pieces", "object_info", objectInfo,
+							"piece_key", pieceKey, "error", err)
+						// the piece might have been gc the the gcZombiePiece Task if object is deleted and the gcStale tasks are not executed for a while
+						if strings.Contains(err.Error(), "The specified key does not exist") {
+							continue
+						} else {
+							return err
+						}
+					}
+				}
+			}
+			err = e.baseApp.GfSpDB().DeleteObjectIntegrity(objectID, staleIntegrityMeta.RedundancyIndex)
+			if err != nil {
+				log.CtxErrorw(ctx, "failed to delete the object integrity meta", "object_id", objectID, "error", err)
+				return err
 			}
 			integrityMeta := &spdb.IntegrityMeta{
 				ObjectID:          task.GetObjectId(),
@@ -714,21 +764,23 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 				IntegrityChecksum: task.GetIntegrityChecksum(),
 				PieceChecksumList: task.GetPieceChecksumList(),
 			}
-			err = e.baseApp.GfSpDB().UpdateIntegrityMeta(integrityMeta)
+			err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 			if err != nil {
 				return err
 			}
 			err = e.baseApp.GfSpDB().DeleteShadowObjectIntegrity(task.GetObjectId(), task.GetRedundancyIndex())
-			log.Debugw("deleted shadow object integrity meta", "object_id", task.GetObjectId())
 			if err != nil {
+				log.Errorw("failed to delete shadow object integrity meta", "object_id", task.GetObjectId())
 				return err
 			}
 		}
 	} else {
 		// user cancels the update
 		if !objectInfo.IsUpdating {
-			err := gcStaleVersionPieces(task.GetObjectId(), metaSegmentCount, task.GetVersion(), task.GetRedundancyIndex())
+			err = gcStaleVersionPieces(task.GetObjectId(), metaSegmentCount, task.GetVersion(), task.GetRedundancyIndex())
 			if err != nil {
+				log.Errorw("failed to gc stale pieces", "object_id", task.GetObjectId(), "version", task.GetVersion(),
+					"segment_count", metaSegmentCount, "redundancy_index", task.GetRedundancyIndex(), "error", err)
 				return err
 			}
 		}
