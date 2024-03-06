@@ -657,7 +657,11 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to delete the stale sp pieces", "object_id", objectID,
 					"piece_key", pieceKey, "error", err)
-				return err
+				if strings.Contains(err.Error(), "The specified key does not exist") {
+					continue
+				} else {
+					return err
+				}
 			}
 		}
 		err = e.baseApp.GfSpDB().DeleteShadowObjectIntegrity(objectID, task.GetRedundancyIndex())
@@ -715,7 +719,11 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 					if err != nil {
 						log.CtxErrorw(ctx, "failed to delete the stale sp pieces", "object_info", objectInfo,
 							"piece_key", pieceKey, "error", err)
-						return err
+						if strings.Contains(err.Error(), "The specified key does not exist") {
+							continue
+						} else {
+							return err
+						}
 					}
 				}
 			} else {
@@ -736,12 +744,18 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 					if err != nil {
 						log.CtxErrorw(ctx, "failed to delete the stale sp pieces", "object_info", objectInfo,
 							"piece_key", pieceKey, "error", err)
-						return err
+						// the piece might have been gc the the gcZombiePiece Task if object is deleted and the gcStale tasks are not executed for a while
+						if strings.Contains(err.Error(), "The specified key does not exist") {
+							continue
+						} else {
+							return err
+						}
 					}
 				}
 			}
 			err = e.baseApp.GfSpDB().DeleteObjectIntegrity(objectID, staleIntegrityMeta.RedundancyIndex)
 			if err != nil {
+				log.CtxErrorw(ctx, "failed to delete the object integrity meta", "object_id", objectID, "error", err)
 				return err
 			}
 			integrityMeta := &spdb.IntegrityMeta{
