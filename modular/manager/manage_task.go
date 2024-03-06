@@ -92,7 +92,7 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64(), task.GetIsAgentUpload()); err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			log.Infow("insert upload progress with duplicate entry", "task_info", task.Info())
 			return nil
@@ -199,7 +199,7 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 		log.CtxErrorw(ctx, "failed to push resumable upload object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64(), task.GetIsAgentUpload()); err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			return nil
 		} else {

@@ -28,7 +28,7 @@ func TestManageModular_HandleCreateUploadObjectTask(t *testing.T) {
 
 	db := spdb.NewMockSPDB(ctrl)
 	m.baseApp.SetGfSpDB(db)
-	db.EXPECT().InsertUploadProgress(gomock.Any()).Return(nil).AnyTimes()
+	db.EXPECT().InsertUploadProgress(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	uot := &gfsptask.GfSpUploadObjectTask{
 		ObjectInfo: &types0.ObjectInfo{
@@ -74,7 +74,7 @@ func TestManageModular_HandleCreateUploadObjectTask3(t *testing.T) {
 
 	db := spdb.NewMockSPDB(ctrl)
 	m.baseApp.SetGfSpDB(db)
-	db.EXPECT().InsertUploadProgress(gomock.Any()).Return(errors.New("db Duplicate entry")).AnyTimes()
+	db.EXPECT().InsertUploadProgress(gomock.Any(), gomock.Any()).Return(errors.New("db Duplicate entry")).AnyTimes()
 
 	uot := &gfsptask.GfSpUploadObjectTask{
 		ObjectInfo: &types0.ObjectInfo{
@@ -138,7 +138,7 @@ func TestManageModular_HandleCreateResumableUploadObjectTask(t *testing.T) {
 
 	db := spdb.NewMockSPDB(ctrl)
 	m.baseApp.SetGfSpDB(db)
-	db.EXPECT().InsertUploadProgress(gomock.Any()).Return(nil).AnyTimes()
+	db.EXPECT().InsertUploadProgress(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	uploadTask := &gfsptask.GfSpResumableUploadObjectTask{
 		ObjectInfo: &types0.ObjectInfo{

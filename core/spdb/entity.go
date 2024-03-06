@@ -26,6 +26,7 @@ type UploadObjectMeta struct {
 	SecondarySignatures   [][]byte
 	ErrorDescription      string
 	CreateTimeStampSecond int64
+	IsAgentUpload         bool
 }
 
 // GCObjectMeta defines the gc object range progress info.

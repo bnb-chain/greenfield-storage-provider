@@ -25,7 +25,7 @@ type SPDB interface {
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
 type UploadObjectProgressDB interface {
 	// InsertUploadProgress inserts a new upload object progress.
-	InsertUploadProgress(objectID uint64) error
+	InsertUploadProgress(objectID uint64, isAgentUpload bool) error
 	// DeleteUploadProgress deletes the upload object progress.
 	DeleteUploadProgress(objectID uint64) error
 	// UpdateUploadProgress updates the upload object progress state.

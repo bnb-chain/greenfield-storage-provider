@@ -642,7 +642,7 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if receiveTask.GetObjectInfo() == nil || (!receiveTask.GetIsAgentUploadTask() && int(receiveTask.GetRedundancyIdx()) >= len(receiveTask.GetObjectInfo().GetChecksums())) {
-		log.CtxErrorw(reqCtx.Context(), "receive task params error", "GetRedundancyIdx", receiveTask.GetRedundancyIdx())
+		log.CtxErrorw(reqCtx.Context(), "receive task params error")
 		err = ErrInvalidHeader
 		return
 	}
