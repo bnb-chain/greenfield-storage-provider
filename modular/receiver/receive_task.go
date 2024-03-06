@@ -119,6 +119,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		err = ErrUnfinishedTask
 		return nil, ErrUnfinishedTask
 	}
+
 	expectedIntegrityHash := task.GetObjectInfo().GetChecksums()[task.GetRedundancyIdx()+1]
 	integrityChecksum := hash.GenerateIntegrityHash(pieceChecksums)
 	if !bytes.Equal(expectedIntegrityHash, integrityChecksum) {

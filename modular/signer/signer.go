@@ -259,3 +259,7 @@ func (s *SignModular) DelegateUpdateObjectContent(ctx context.Context, msg *stor
 func (s *SignModular) DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
 	return s.client.DelegateCreateObjectContent(ctx, SignOperator, msg)
 }
+
+func (s *SignModular) SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error) {
+	return s.client.SealObjectV2(ctx, SignSeal, object)
+}

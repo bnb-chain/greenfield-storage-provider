@@ -2028,6 +2028,21 @@ func (mr *MockSignerMockRecorder) SealObject(ctx, object any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSigner)(nil).SealObject), ctx, object)
 }
 
+// SealObjectV2 mocks base method.
+func (m *MockSigner) SealObjectV2(ctx context.Context, object *types0.MsgSealObjectV2) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SealObjectV2", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SealObjectV2 indicates an expected call of SealObjectV2.
+func (mr *MockSignerMockRecorder) SealObjectV2(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObjectV2", reflect.TypeOf((*MockSigner)(nil).SealObjectV2), ctx, object)
+}
+
 // SignBucketMigrationInfo mocks base method.
 func (m *MockSigner) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error) {
 	m.ctrl.T.Helper()

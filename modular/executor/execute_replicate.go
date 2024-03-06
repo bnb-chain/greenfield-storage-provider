@@ -69,33 +69,15 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	sealTime := time.Now()
 	var sealErr error
 	if task.GetIsAgentUpload() {
-		integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get object integrity",
-				"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
-			return
-		}
-		expectChecksums := make([][]byte, 0)
-		expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList))
-		segmentPieceCount := e.baseApp.PieceOp().SegmentPieceCount(
-			task.GetObjectInfo().GetPayloadSize(),
-			task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
-		for redundancyIdx := range task.GetSecondaryEndpoints() {
-			ecHash, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(), int32(redundancyIdx), segmentPieceCount)
-			if err != nil {
-				log.CtxErrorw(ctx, "failed to get all replicate piece",
-					"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
-				return
-			}
-			expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(ecHash))
-		}
+		expectCheckSums := e.makeCheckSumsForAgentUpload(ctx, task)
+		log.CtxDebug(ctx, "CHECKSUMS", expectCheckSums)
 		sealMsgV2 := &storagetypes.MsgSealObjectV2{
 			Operator:                    e.baseApp.OperatorAddress(),
 			BucketName:                  task.GetObjectInfo().GetBucketName(),
 			ObjectName:                  task.GetObjectInfo().GetObjectName(),
 			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
 			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
-			ExpectChecksums:             expectChecksums,
+			ExpectChecksums:             expectCheckSums,
 		}
 		sealErr = e.sealObjectV2(ctx, task, sealMsgV2)
 	} else {
@@ -172,6 +154,12 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		}
 		if gvg == nil {
 			return fmt.Errorf("gvg not exist")
+		}
+		if rTask.GetIsAgentUpload() {
+			objectInfo := rTask.GetObjectInfo()
+			expectCheckSums := e.makeCheckSumsForAgentUpload(ctx, rTask)
+			objectInfo.Checksums = expectCheckSums
+			rTask.SetObjectInfo(objectInfo)
 		}
 		for rIdx, spEp := range rTask.GetSecondaryEndpoints() {
 			log.Debugw("start to done replicate", "sp", spEp)
@@ -417,4 +405,28 @@ func veritySecondarySpBlsSignature(secondarySp *sptypes.StorageProvider, signatu
 		return fmt.Errorf("failed to verify SP[%d] bls signature", secondarySp.Id)
 	}
 	return nil
+}
+
+func (e *ExecuteModular) makeCheckSumsForAgentUpload(ctx context.Context, task coretask.ReplicatePieceTask) [][]byte {
+	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get object integrity",
+			"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
+		return nil
+	}
+	expectChecksums := make([][]byte, 0)
+	expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList))
+	segmentPieceCount := e.baseApp.PieceOp().SegmentPieceCount(
+		task.GetObjectInfo().GetPayloadSize(),
+		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
+	for redundancyIdx := range task.GetSecondaryEndpoints() {
+		ecHash, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(), int32(redundancyIdx), segmentPieceCount)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get all replicate piece",
+				"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
+			return nil
+		}
+		expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(ecHash))
+	}
+	return expectChecksums
 }

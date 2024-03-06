@@ -357,3 +357,6 @@ func (m *NullModular) HandleDelegateCreateObjectApprovalTask(ctx context.Context
 func (m *NilModular) DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
 	return "", nil
 }
+func (m *NilModular) SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error) {
+	return "", nil
+}
