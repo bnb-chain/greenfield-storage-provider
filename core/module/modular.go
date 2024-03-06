@@ -338,6 +338,8 @@ type Signer interface {
 	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
 	// DelegateCreateObject  broadcast the tx to greenfield.
 	DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)
+	// DelegateUpdateObjectContent  send the delegate update object content tx
+	DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

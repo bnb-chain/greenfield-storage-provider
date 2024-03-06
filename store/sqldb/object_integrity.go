@@ -563,6 +563,24 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 	return err
 }
 
+// DeleteReplicatePieceChecksumsByObjectID deletes all piece checksums for a given objectID.
+func (s *SpDBImpl) DeleteReplicatePieceChecksumsByObjectID(objectID uint64) (err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureDelAllReplicatePieceChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureDelAllReplicatePieceChecksum).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Observe(
+			time.Since(startTime).Seconds())
+	}()
+	err = s.db.Where("object_id = ?", objectID).Delete(PieceHashTable{}).Error
+	return err
+}
+
 // ListReplicatePieceChecksumByObjectIDRange gets all replicate piece checksums for a given objectID and redundancyIdx.
 func (s *SpDBImpl) ListReplicatePieceChecksumByObjectIDRange(startObjectID int64, endObjectID int64) ([]*corespdb.GCPieceMeta, error) {
 	var (

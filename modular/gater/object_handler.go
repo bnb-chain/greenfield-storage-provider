@@ -1315,18 +1315,28 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	startTime := time.Now()
 
 	if isUpdate {
-		msg := &storagetypes.MsgDelegateUpdateObjectContent{
-			Updater:     reqCtx.account,
-			BucketName:  reqCtx.bucketName,
-			ObjectName:  reqCtx.objectName,
-			PayloadSize: payloadSize,
-			ContentType: contentType,
-		}
-		txHash, err = g.baseApp.GfSpClient().DelegateUpdateObjectContent(reqCtx.ctx, msg)
+		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
-			log.CtxErrorw(reqCtx.ctx, "failed to delegate update object", "error", err)
+			log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+			err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 			return
 		}
+
+		if !objectInfo.IsUpdating {
+			msg := &storagetypes.MsgDelegateUpdateObjectContent{
+				Updater:     reqCtx.account,
+				BucketName:  reqCtx.bucketName,
+				ObjectName:  reqCtx.objectName,
+				PayloadSize: payloadSize,
+				ContentType: contentType,
+			}
+			txHash, err = g.baseApp.GfSpClient().DelegateUpdateObjectContent(reqCtx.ctx, msg)
+			if err != nil {
+				log.CtxErrorw(reqCtx.ctx, "failed to delegate update object", "error", err)
+				return
+			}
+		}
+
 	} else {
 		var visibilityInt int64
 		visibilityStr := queryParams.Get("visibility")

@@ -99,6 +99,8 @@ type SignatureDB interface {
 	DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) (err error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
 	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
+	// DeleteReplicatePieceChecksumsByObjectID deletes all piece hashes for a given object, called by primary SP to clear delegated upload object meta.
+	DeleteReplicatePieceChecksumsByObjectID(objectID uint64) error
 	// DeleteAllReplicatePieceChecksumOptimized deletes all piece hashes.
 	DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error
 	// ListReplicatePieceChecksumByObjectIDRange list replicate piece checksum in range

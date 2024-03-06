@@ -326,6 +326,10 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			log.Errorw("succeed to update object task state", "task_info", task.Info())
 			_ = m.baseApp.GfSpDB().DeleteUploadProgress(task.GetObjectInfo().Id.Uint64())
 
+			if task.GetIsAgentUpload() {
+				_ = m.baseApp.GfSpDB().DeleteReplicatePieceChecksumsByObjectID(task.GetObjectInfo().Id.Uint64())
+			}
+
 			if task.GetObjectInfo().GetIsUpdating() {
 				shadowIntegrityMeta, err := m.baseApp.GfSpDB().GetShadowObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 				if err != nil {
@@ -408,7 +412,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 				log.Errorw("failed to query object info", "object", handleTask.GetObjectInfo(), "error", queryErr)
 				return queryErr
 			}
-			if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+			if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED && !objectInfo.GetIsUpdating() {
 				log.CtxInfow(ctx, "object already sealed, abort replicate task", "object_info", objectInfo)
 				m.replicateQueue.PopByKey(handleTask.Key())
 				return nil

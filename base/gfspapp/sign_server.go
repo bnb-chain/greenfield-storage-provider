@@ -351,6 +351,16 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqCounter.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Inc()
 			metrics.ReqTime.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
 		}
+	case *gfspserver.GfSpSignRequest_DelegateUpdateObjectContent:
+		txHash, err = g.signer.DelegateUpdateObjectContent(ctx, t.DelegateUpdateObjectContent)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to delegate update object content", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerSuccessDelegateUpdateObjectContent).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureDelegateUpdateObjectContent).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(SignerSuccessDelegateUpdateObjectContent).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureDelegateUpdateObjectContent).Observe(time.Since(startTime).Seconds())
+		}
 	case *gfspserver.GfSpSignRequest_SealObjectInfoV2:
 		txHash, err = g.signer.SealObjectV2(ctx, t.SealObjectInfoV2)
 		if err != nil {

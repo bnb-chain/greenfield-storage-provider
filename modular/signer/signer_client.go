@@ -1031,8 +1031,8 @@ func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context
 	}
 
 	// failed to broadcast tx
-	ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to broadcast delete GVG, error: %v", err))
-	return "", ErrDeleteGVGOnChain
+	ErrDelegateUpdateObjectContentOnChain.SetError(fmt.Errorf("failed to broadcast delegte update object, error: %v", err))
+	return "", ErrDelegateUpdateObjectContentOnChain
 }
 
 func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.GreenfieldClient) (uint64, error) {
