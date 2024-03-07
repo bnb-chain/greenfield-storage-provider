@@ -668,7 +668,7 @@ func (g *Gnfd) ListenObjectSeal(ctx context.Context, objectID uint64, timeoutHei
 			time.Sleep(ExpectedOutputBlockInternal * time.Second)
 			continue
 		}
-		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+		if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED && !objectInfo.GetIsUpdating() {
 			log.CtxDebugw(ctx, "succeed to listen object stat")
 			return true, nil
 		}
