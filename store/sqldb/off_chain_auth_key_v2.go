@@ -2,10 +2,12 @@ package sqldb
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm/clause"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // InsertAuthKeyV2 insert a new record into OffChainAuthKeyV2
@@ -48,4 +50,15 @@ func (s *SpDBImpl) GetAuthKeyV2(userAddress string, domain string, publicKey str
 		CreatedTime:  queryKeyReturn.CreatedTime,
 		ModifiedTime: queryKeyReturn.ModifiedTime,
 	}, nil
+}
+
+// ClearExpiredOffChainAuthKeys will clear those expired off chain auth keys from OffChainAuthKeyV2Table
+func (s *SpDBImpl) ClearExpiredOffChainAuthKeys() error {
+	result := s.db.Table(OffChainAuthKeyV2TableName).Where("expiry_date < ? ", time.Now()).Delete(&OffChainAuthKeyV2Table{})
+	if result.Error != nil {
+		return result.Error
+	}
+	log.Infow("ClearExpiredOffChainAuthKeys successfully.", "removed rows are ", result.RowsAffected)
+
+	return nil
 }

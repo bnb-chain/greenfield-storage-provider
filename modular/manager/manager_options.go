@@ -243,6 +243,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.gcMetaTimeInterval = cfg.GC.GCMetaTimeInterval
 	manager.gcStaleVersionObjectEnabled = cfg.GC.EnableGCStaleVersionObject
 	manager.gcStaleVersionObjectTimeInterval = cfg.GC.GCStaleVersionTimeInterval
+	manager.gcExpiredOffChainAuthKeysEnabled = cfg.GC.EnableGCExpiredOffChainAuthKeys
+	manager.gcExpiredOffChainAuthKeysTimeInterval = cfg.GC.GCExpiredOffChainAuthKeysTimeInterval
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
 	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
 	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval

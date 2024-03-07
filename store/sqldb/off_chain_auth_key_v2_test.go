@@ -74,7 +74,7 @@ func TestSpDBImpl_GetAuthKeyV2Success1(t *testing.T) {
 }
 
 func TestSpDBImpl_GetAuthKeyV2Failure1(t *testing.T) {
-	t.Log("Success case description: query db and return db error")
+	t.Log("failure case description: query db and return db error")
 	var (
 		userAddress = "mockUserAddress"
 		domain      = "mockDomain"
@@ -90,7 +90,7 @@ func TestSpDBImpl_GetAuthKeyV2Failure1(t *testing.T) {
 }
 
 func TestSpDBImpl_GetAuthKeyV2Failure2(t *testing.T) {
-	t.Log("Success case description: query db and has no data")
+	t.Log("failure case description: query db and has no data")
 	var (
 		userAddress = "mockUserAddress"
 		domain      = "mockDomain"
@@ -102,5 +102,17 @@ func TestSpDBImpl_GetAuthKeyV2Failure2(t *testing.T) {
 		WithArgs(userAddress, domain, publicKey).WillReturnError(gorm.ErrRecordNotFound)
 	result, err := s.GetAuthKeyV2(userAddress, domain, publicKey)
 	assert.Nil(t, result)
+	assert.Nil(t, err)
+}
+
+func TestSpDBImpl_ClearExpiredOffChainAuthKeysSuccess(t *testing.T) {
+	t.Log("Success case description: delete data")
+
+	s, mock := setupDB(t)
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM `off_chain_auth_key_v2` WHERE expiry_date < ?").WithArgs(sqlmock.AnyArg()).WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectCommit()
+	err := s.ClearExpiredOffChainAuthKeys()
+	//assert.Nil(t, result)
 	assert.Nil(t, err)
 }

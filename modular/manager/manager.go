@@ -100,6 +100,9 @@ type ManageModular struct {
 	gcStaleVersionObjectEnabled      bool
 	gcStaleVersionObjectTimeInterval int
 
+	gcExpiredOffChainAuthKeysEnabled      bool
+	gcExpiredOffChainAuthKeysTimeInterval int
+
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
 
@@ -235,6 +238,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
 	gcObjectStaleVersionPieceTicker := time.NewTicker(time.Duration(m.gcStaleVersionObjectTimeInterval) * time.Second)
+	gcExpiredOffChainAuthKeysTicker := time.NewTicker(time.Duration(m.gcExpiredOffChainAuthKeysTimeInterval) * time.Second)
 
 	backupTaskTicker := time.NewTicker(time.Duration(DefaultBackupTaskTimeout) * time.Second)
 	for {
@@ -332,6 +336,12 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				continue
 			}
 			go m.gcObjectStaleVersionPiece(ctx)
+
+		case <-gcExpiredOffChainAuthKeysTicker.C:
+			if !m.gcExpiredOffChainAuthKeysEnabled {
+				continue
+			}
+			go m.gcExpiredOffChainAuthKeys(ctx)
 		}
 	}
 }
@@ -362,6 +372,17 @@ func (m *ManageModular) gcObjectStaleVersionPiece(ctx context.Context) {
 		}
 		log.CtxDebugw(ctx, "succeed to push gc stale version object task to queue", "task_info", task.Info())
 	}
+}
+
+func (m *ManageModular) gcExpiredOffChainAuthKeys(ctx context.Context) {
+	log.CtxInfow(ctx, "gcExpiredOffChainAuthKeys starts to execute")
+	err := m.baseApp.GfSpDB().ClearExpiredOffChainAuthKeys()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to gc ExpiredOffChainAuthKeys", "error", err)
+		return
+	}
+
+	log.CtxInfow(ctx, "gcExpiredOffChainAuthKeys ends")
 }
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
