@@ -89,7 +89,7 @@ const (
 	DefaultListenRejectUnSealTimeoutHeight int = 10
 	// DefaultSyncAvailableVGFInterval defines the default interval for available global virtual group family info,
 	// it is used to log and debug.
-	DefaultSyncAvailableVGFInterval int = 60
+	DefaultSyncAvailableVGFInterval int = 5 * 60
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
@@ -226,9 +226,6 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Parallel.LoadSealTimeout == 0 {
 		cfg.Parallel.LoadSealTimeout = DefaultLoadSealTimeout
 	}
-	if cfg.Parallel.SyncAvailableVGFInterval == 0 {
-		cfg.Parallel.SyncAvailableVGFInterval = DefaultSyncAvailableVGFInterval
-	}
 
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
 	manager.enableHealthyChecker = cfg.Manager.EnableHealthyChecker
@@ -237,7 +234,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.loadTaskLimitToGC = cfg.Parallel.GlobalGCObjectParallel
 
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
-	manager.syncAvailableVGFInterval = cfg.Parallel.SyncAvailableVGFInterval
+	manager.syncAvailableVGFInterval = DefaultSyncAvailableVGFInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.GC.GCObjectTimeInterval
 	manager.gcObjectBlockInterval = cfg.GC.GCObjectBlockInterval
