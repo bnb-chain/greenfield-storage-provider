@@ -254,6 +254,20 @@ func (mr *MockSPDBMockRecorder) DeleteReplicatePieceChecksum(objectID, segmentId
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockSPDB)(nil).DeleteReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
 }
 
+// DeleteReplicatePieceChecksumsByObjectID mocks base method.
+func (m *MockSPDB) DeleteReplicatePieceChecksumsByObjectID(objectID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteReplicatePieceChecksumsByObjectID", objectID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteReplicatePieceChecksumsByObjectID indicates an expected call of DeleteReplicatePieceChecksumsByObjectID.
+func (mr *MockSPDBMockRecorder) DeleteReplicatePieceChecksumsByObjectID(objectID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksumsByObjectID", reflect.TypeOf((*MockSPDB)(nil).DeleteReplicatePieceChecksumsByObjectID), objectID)
+}
+
 // DeleteShadowObjectIntegrity mocks base method.
 func (m *MockSPDB) DeleteShadowObjectIntegrity(objectID uint64, redundancyIndex int32) error {
 	m.ctrl.T.Helper()
@@ -1808,6 +1822,20 @@ func (m *MockSignatureDB) DeleteReplicatePieceChecksum(objectID uint64, segmentI
 func (mr *MockSignatureDBMockRecorder) DeleteReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).DeleteReplicatePieceChecksum), objectID, segmentIdx, redundancyIdx)
+}
+
+// DeleteReplicatePieceChecksumsByObjectID mocks base method.
+func (m *MockSignatureDB) DeleteReplicatePieceChecksumsByObjectID(objectID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteReplicatePieceChecksumsByObjectID", objectID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteReplicatePieceChecksumsByObjectID indicates an expected call of DeleteReplicatePieceChecksumsByObjectID.
+func (mr *MockSignatureDBMockRecorder) DeleteReplicatePieceChecksumsByObjectID(objectID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteReplicatePieceChecksumsByObjectID", reflect.TypeOf((*MockSignatureDB)(nil).DeleteReplicatePieceChecksumsByObjectID), objectID)
 }
 
 // DeleteShadowObjectIntegrity mocks base method.

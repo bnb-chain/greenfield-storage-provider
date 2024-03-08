@@ -344,12 +344,12 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	case *gfspserver.GfSpSignRequest_DelegateCreateObjectInfo:
 		txHash, err = g.signer.DelegateCreateObject(ctx, t.DelegateCreateObjectInfo)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to delete global virtual group", "error", err)
-			metrics.ReqCounter.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Inc()
-			metrics.ReqTime.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+			log.CtxErrorw(ctx, "failed to delegate create object", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureDelegateCreateObjectContent).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureDelegateCreateObjectContent).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Inc()
-			metrics.ReqTime.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessDelegateCreateObjectContent).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessDelegateCreateObjectContent).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_DelegateUpdateObjectContent:
 		txHash, err = g.signer.DelegateUpdateObjectContent(ctx, t.DelegateUpdateObjectContent)
@@ -364,12 +364,12 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 	case *gfspserver.GfSpSignRequest_SealObjectInfoV2:
 		txHash, err = g.signer.SealObjectV2(ctx, t.SealObjectInfoV2)
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to delete global virtual group", "error", err)
-			metrics.ReqCounter.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Inc()
-			metrics.ReqTime.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+			log.CtxErrorw(ctx, "failed to seal object", "error", err)
+			metrics.ReqCounter.WithLabelValues(SignerFailureSealObjectV2).Inc()
+			metrics.ReqTime.WithLabelValues(SignerFailureSealObjectV2).Observe(time.Since(startTime).Seconds())
 		} else {
-			metrics.ReqCounter.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Inc()
-			metrics.ReqTime.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(SignerSuccessSealObjectV2).Inc()
+			metrics.ReqTime.WithLabelValues(SignerSuccessSealObjectV2).Observe(time.Since(startTime).Seconds())
 		}
 	default:
 		log.CtxError(ctx, "unknown gfsp sign request type")

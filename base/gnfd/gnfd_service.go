@@ -96,7 +96,7 @@ const (
 	ChainFailureQuerySwapInInfo = "query_swap_in_info_failure"
 
 	// ConfirmBlockNumber defines wait block number.
-	ConfirmBlockNumber = 10
+	ConfirmBlockNumber = 3
 	// WaitForNextBlockTimeout define wait block timeout.
 	WaitForNextBlockTimeout = 30 * time.Second
 )

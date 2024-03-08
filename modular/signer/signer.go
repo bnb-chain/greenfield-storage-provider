@@ -40,6 +40,7 @@ var (
 	ErrCompleteSwapIn                     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120017, "send complete swap in failed")
 	ErrCancelSwapIn                       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120018, "send cancel swap in failed")
 	ErrDelegateUpdateObjectContentOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120019, "send DelegateUpdateObjectContent failed")
+	ErrDelegateCreateObjectContentOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120019, "send DelegateUpdateObjectContent failed")
 )
 
 var _ module.Signer = &SignModular{}

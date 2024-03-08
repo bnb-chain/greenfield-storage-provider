@@ -78,6 +78,8 @@ const (
 	ExecutorFailureDoneReplicatePiece = "executor_done_replicate_piece_failure"
 	ExecutorSuccessSealObject         = "executor_seal_object_success"
 	ExecutorFailureSealObject         = "executor_seal_object_failure"
+	ExecutorSuccessSealObjectV2       = "executor_seal_object_v2_success"
+	ExecutorFailureSealObjectV2       = "executor_seal_object_v2_failure"
 )
 
 func NewExecuteModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {

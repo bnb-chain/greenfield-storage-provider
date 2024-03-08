@@ -1063,11 +1063,11 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	if isUpdate {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentUpdateObject,
 			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 	} else {
 		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
 			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
-		metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+		metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
 	}
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
@@ -1142,8 +1142,8 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		}, fingerprint, g.baseApp.TaskPriority(task))
 		startAskCreateObjectApproval := time.Now()
 		authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
-		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
-		metrics.PerfApprovalTime.WithLabelValues("gateway_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
 			return
@@ -1155,8 +1155,8 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		startDelegateCreateObject := time.Now()
 		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
 		log.Debugw("debug", "txHash", txHash)
-		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
-		metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
 		if err != nil {
 			log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
 			return
@@ -1171,8 +1171,8 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 
 	startGetObjectInfoTime := time.Now()
 	bucketInfo, objectInfo, err = g.baseApp.Consensus().QueryBucketInfoAndObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
@@ -1192,8 +1192,8 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	}
 	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get storage params from consensus, error" + err.Error())
@@ -1207,8 +1207,8 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, uploadTask.Key().String())
 	uploadDataTime := time.Now()
 	err = g.baseApp.GfSpClient().UploadObject(ctx, uploadTask, r.Body)
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_data_end").Observe(time.Since(time.Unix(uploadTask.GetCreateTime(), 0)).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_data_end").Observe(time.Since(time.Unix(uploadTask.GetCreateTime(), 0)).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
 		return
