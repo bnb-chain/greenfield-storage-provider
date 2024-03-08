@@ -118,6 +118,7 @@ func (e *ExecuteModular) sealObject(ctx context.Context, task coretask.ObjectTas
 	return err
 }
 
+// sealObjectV2 Sends a new seal message to the chain
 func (e *ExecuteModular) sealObjectV2(ctx context.Context, task coretask.ObjectTask, sealMsg *storagetypes.MsgSealObjectV2) error {
 	var (
 		err    error

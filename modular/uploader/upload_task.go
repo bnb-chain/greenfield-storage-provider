@@ -463,6 +463,7 @@ func (u *UploadModular) updateIntegrityChecksum(objectID uint64, integrityHash [
 	return err
 }
 
+// rejectCreateObject reject create object when the upload task go wrong such as failed to verify the object payload
 func (u *UploadModular) rejectCreateObject(ctx context.Context, objectInfo *storagetypes.ObjectInfo) {
 	rejectUnSealObjectMsg := &storagetypes.MsgRejectSealObject{
 		BucketName: objectInfo.GetBucketName(),

@@ -105,8 +105,8 @@ func (s *GfSpClient) AskDelegateCreateObjectApproval(ctx context.Context, task c
 		}}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to ask create object approval", "error", err)
-		return false, nil, ErrRPCUnknownWithDetail("client failed to ask create object approval, error: ", err)
+		log.CtxErrorw(ctx, "client failed to ask delegate create object approval", "error", err)
+		return false, nil, ErrRPCUnknownWithDetail("client failed to ask delegate create object approval, error: ", err)
 	}
 	if resp.GetErr() != nil {
 		return false, nil, resp.GetErr()
