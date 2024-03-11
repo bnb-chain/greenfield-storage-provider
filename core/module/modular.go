@@ -74,6 +74,10 @@ type Authenticator interface {
 
 	// GetAuthKeyV2 can check if the given account/domain/public_key was registered in this system.
 	GetAuthKeyV2(ctx context.Context, account string, domain string, publicKey string) (*spdb.OffChainAuthKeyV2, error)
+	// ListAuthKeysV2 can list user public keys
+	ListAuthKeysV2(ctx context.Context, account string, domain string) ([]string, error)
+	// DeleteAuthKeysV2 can delete user public keys
+	DeleteAuthKeysV2(ctx context.Context, account string, domain string, publicKeys []string) (bool, error)
 	// UpdateUserPublicKeyV2 registered the user public key once the dApp or client generates the EDDSA key pairs.
 	UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, publicKey string, expiryDate int64) (bool, error)
 	// VerifyGNFD2EddsaSignature verifies the signature signed by user's EDDSA private key.

@@ -308,6 +308,26 @@ func (mr *MockGfSpClientAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucket
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeductQuotaForBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeductQuotaForBucketMigrate), varargs...)
 }
 
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockGfSpClientAPI) DeleteAuthKeysV2(ctx context.Context, account, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKeys}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockGfSpClientAPIMockRecorder) DeleteAuthKeysV2(ctx, account, domain, userPublicKeys any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKeys}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeleteAuthKeysV2), varargs...)
+}
+
 // DeleteGlobalVirtualGroup mocks base method.
 func (m *MockGfSpClientAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
 	m.ctrl.T.Helper()
@@ -1128,6 +1148,26 @@ func (m *MockGfSpClientAPI) HTTPClient(ctx context.Context) *http.Client {
 func (mr *MockGfSpClientAPIMockRecorder) HTTPClient(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HTTPClient", reflect.TypeOf((*MockGfSpClientAPI)(nil).HTTPClient), ctx)
+}
+
+// ListAuthKeysV2 mocks base method.
+func (m *MockGfSpClientAPI) ListAuthKeysV2(ctx context.Context, account, domain string, opts ...grpc.DialOption) ([]string, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", varargs...)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockGfSpClientAPIMockRecorder) ListAuthKeysV2(ctx, account, domain any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListAuthKeysV2), varargs...)
 }
 
 // ListBucketReadRecord mocks base method.
@@ -2523,6 +2563,26 @@ func (m *MockAuthenticatorAPI) EXPECT() *MockAuthenticatorAPIMockRecorder {
 	return m.recorder
 }
 
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockAuthenticatorAPI) DeleteAuthKeysV2(ctx context.Context, account, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKeys}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockAuthenticatorAPIMockRecorder) DeleteAuthKeysV2(ctx, account, domain, userPublicKeys any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKeys}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).DeleteAuthKeysV2), varargs...)
+}
+
 // GetAuthKeyV2 mocks base method.
 func (m *MockAuthenticatorAPI) GetAuthKeyV2(ctx context.Context, account, domain, userPublicKey string, opts ...grpc.DialOption) (string, int64, error) {
 	m.ctrl.T.Helper()
@@ -2565,6 +2625,26 @@ func (mr *MockAuthenticatorAPIMockRecorder) GetAuthNonce(ctx, account, domain an
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, account, domain}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthNonce", reflect.TypeOf((*MockAuthenticatorAPI)(nil).GetAuthNonce), varargs...)
+}
+
+// ListAuthKeysV2 mocks base method.
+func (m *MockAuthenticatorAPI) ListAuthKeysV2(ctx context.Context, account, domain string, opts ...grpc.DialOption) ([]string, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", varargs...)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockAuthenticatorAPIMockRecorder) ListAuthKeysV2(ctx, account, domain any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).ListAuthKeysV2), varargs...)
 }
 
 // UpdateUserPublicKey mocks base method.

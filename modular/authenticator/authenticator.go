@@ -43,6 +43,7 @@ var (
 	ErrPublicKeyExpired                  = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20015, "user public key is expired")
 	ErrInvalidAddressOrDomain            = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20016, "userAddress or domain can't be null")
 	ErrInvalidAddressOrDomainOrPublicKey = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20017, "userAddress, domain or publicKey can't be null")
+	ErrInvalidPublicKeyLength            = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20018, "The length of publicKeys must be less or equal to 100")
 )
 
 func ErrUnexpectedObjectStatusWithDetail(objectName string, expectedStatus storagetypes.ObjectStatus, actualStatus storagetypes.ObjectStatus) *gfsperrors.GfSpError {
@@ -181,6 +182,41 @@ func (a *AuthenticationModular) GetAuthKeyV2(ctx context.Context, account string
 	}
 	log.CtxInfow(ctx, "succeed to GetAuthKeyV2")
 	return authKey, nil
+}
+
+// ListAuthKeysV2 can list user public keys
+func (a *AuthenticationModular) ListAuthKeysV2(ctx context.Context, account string, domain string) ([]string, error) {
+	if account == "" || domain == "" {
+		return nil, ErrInvalidAddressOrDomain
+	}
+	authKeys, err := a.baseApp.GfSpDB().ListAuthKeysV2(account, domain)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to ListAuthKeysV2", "error", err)
+		return nil, err
+	}
+	log.CtxInfow(ctx, "succeed to ListAuthKeysV2")
+	return authKeys, nil
+}
+
+// DeleteAuthKeysV2 can delete user public keys
+func (a *AuthenticationModular) DeleteAuthKeysV2(ctx context.Context, account string, domain string, publicKeys []string) (bool, error) {
+	if account == "" || domain == "" {
+		return false, ErrInvalidAddressOrDomain
+	}
+	if len(publicKeys) == 0 {
+		return true, nil
+	}
+
+	if len(publicKeys) > 100 {
+		return false, ErrInvalidPublicKeyLength
+	}
+	result, err := a.baseApp.GfSpDB().DeleteAuthKeysV2(account, domain, publicKeys)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to DeleteAuthKeysV2", "error", err)
+		return false, err
+	}
+	log.CtxInfow(ctx, "succeed to DeleteAuthKeysV2")
+	return result, nil
 }
 
 // UpdateUserPublicKeyV2 registered the user public key once the dApp or client generates the EDDSA key pairs.

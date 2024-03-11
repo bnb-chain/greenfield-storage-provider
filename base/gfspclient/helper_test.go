@@ -145,6 +145,31 @@ func (*mockApproverServer) GfSpAskApproval(ctx context.Context, req *gfspserver.
 
 type mockAuthenticatorServer struct{}
 
+func (s mockAuthenticatorServer) GetAuthKeyV2(ctx context.Context, request *gfspserver.GetAuthKeyV2Request) (*gfspserver.GetAuthKeyV2Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s mockAuthenticatorServer) ListAuthKeysV2(ctx context.Context, request *gfspserver.ListAuthKeysV2Request) (*gfspserver.ListAuthKeysV2Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s mockAuthenticatorServer) DeleteAuthKeysV2(ctx context.Context, request *gfspserver.DeleteAuthKeysV2Request) (*gfspserver.DeleteAuthKeysV2Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s mockAuthenticatorServer) UpdateUserPublicKeyV2(ctx context.Context, request *gfspserver.UpdateUserPublicKeyV2Request) (*gfspserver.UpdateUserPublicKeyV2Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s mockAuthenticatorServer) VerifyGNFD2EddsaSignature(ctx context.Context, request *gfspserver.VerifyGNFD2EddsaSignatureRequest) (*gfspserver.VerifyGNFD2EddsaSignatureResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (mockAuthenticatorServer) GfSpVerifyAuthentication(ctx context.Context, req *gfspserver.GfSpAuthenticationRequest) (
 	*gfspserver.GfSpAuthenticationResponse, error) {
 	if req.GetAuthType() == int32(coremodule.AuthOpAskMigrateBucketApproval) {

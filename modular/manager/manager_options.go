@@ -105,6 +105,8 @@ const (
 	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 2000
 	// DefaultSubscribeSwapOutEventIntervalMillisecond define the default time interval to subscribe gvg swap out event from metadata.
 	DefaultSubscribeSwapOutEventIntervalMillisecond = 2000
+	// DefaultGCExpiredOffChainAuthKeysTimeInterval define the default time interval to gc expired off chain auth keys
+	DefaultGCExpiredOffChainAuthKeysTimeInterval = 24 * 3600
 )
 
 const (
@@ -222,6 +224,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	}
 	if cfg.Parallel.LoadSealTimeout == 0 {
 		cfg.Parallel.LoadSealTimeout = DefaultLoadSealTimeout
+	}
+	if cfg.GC.GCExpiredOffChainAuthKeysTimeInterval == 0 {
+		cfg.GC.GCExpiredOffChainAuthKeysTimeInterval = DefaultGCExpiredOffChainAuthKeysTimeInterval
 	}
 
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask

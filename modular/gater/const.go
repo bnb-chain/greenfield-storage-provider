@@ -214,6 +214,10 @@ const (
 	AuthUpdateKeyPath = "/auth/update_key"
 	// AuthUpdateKeyV2Path defines path to update user public key into off_chain_auth_key_v2 table
 	AuthUpdateKeyV2Path = "/auth/update_key_v2"
+	// ListAuthKeyV2Path defines path to list user public keys from off_chain_auth_key_v2 table
+	ListAuthKeyV2Path = "/auth/keys_v2"
+	// AuthDeleteKeysV2Path defines path to delete user public keys from off_chain_auth_key_v2 table
+	AuthDeleteKeysV2Path = "/auth/delete_keys_v2"
 	// GnfdRequestIDHeader defines trace-id, trace request in sp
 	GnfdRequestIDHeader = "X-Gnfd-Request-ID"
 	// GnfdAuthorizationHeader defines authorization, verify signature and check authorization

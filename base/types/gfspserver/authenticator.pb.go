@@ -620,7 +620,7 @@ func (m *GetAuthKeyV2Request) GetUserPublicKey() string {
 	return ""
 }
 
-// GetAuthNonceResponse is response type for the GetAuthNonce RPC method.
+// GetAuthKeyV2Response is response type for the GetAuthKeyV2 RPC method.
 type GetAuthKeyV2Response struct {
 	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
 	// current_public_key defines the current user EDDSA public key
@@ -683,6 +683,233 @@ func (m *GetAuthKeyV2Response) GetExpiryDate() int64 {
 	return 0
 }
 
+// ListAuthKeysV2Request is request type for the ListAuthKeysV2 RPC method.
+type ListAuthKeysV2Request struct {
+	// account_id is the account address of user
+	AccountId string `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	// domain is the DApp domain for this nonce
+	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+}
+
+func (m *ListAuthKeysV2Request) Reset()         { *m = ListAuthKeysV2Request{} }
+func (m *ListAuthKeysV2Request) String() string { return proto.CompactTextString(m) }
+func (*ListAuthKeysV2Request) ProtoMessage()    {}
+func (*ListAuthKeysV2Request) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ebf94e0d260942, []int{10}
+}
+func (m *ListAuthKeysV2Request) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ListAuthKeysV2Request) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ListAuthKeysV2Request.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ListAuthKeysV2Request) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAuthKeysV2Request.Merge(m, src)
+}
+func (m *ListAuthKeysV2Request) XXX_Size() int {
+	return m.Size()
+}
+func (m *ListAuthKeysV2Request) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAuthKeysV2Request.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAuthKeysV2Request proto.InternalMessageInfo
+
+func (m *ListAuthKeysV2Request) GetAccountId() string {
+	if m != nil {
+		return m.AccountId
+	}
+	return ""
+}
+
+func (m *ListAuthKeysV2Request) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+
+// ListAuthKeysV2Response is response type for the ListAuthKeysV2 RPC method.
+type ListAuthKeysV2Response struct {
+	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	// publicKeys defines the list of user public keys
+	PublicKeys []string `protobuf:"bytes,2,rep,name=publicKeys,proto3" json:"publicKeys,omitempty"`
+}
+
+func (m *ListAuthKeysV2Response) Reset()         { *m = ListAuthKeysV2Response{} }
+func (m *ListAuthKeysV2Response) String() string { return proto.CompactTextString(m) }
+func (*ListAuthKeysV2Response) ProtoMessage()    {}
+func (*ListAuthKeysV2Response) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ebf94e0d260942, []int{11}
+}
+func (m *ListAuthKeysV2Response) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ListAuthKeysV2Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ListAuthKeysV2Response.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ListAuthKeysV2Response) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAuthKeysV2Response.Merge(m, src)
+}
+func (m *ListAuthKeysV2Response) XXX_Size() int {
+	return m.Size()
+}
+func (m *ListAuthKeysV2Response) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAuthKeysV2Response.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAuthKeysV2Response proto.InternalMessageInfo
+
+func (m *ListAuthKeysV2Response) GetErr() *gfsperrors.GfSpError {
+	if m != nil {
+		return m.Err
+	}
+	return nil
+}
+
+func (m *ListAuthKeysV2Response) GetPublicKeys() []string {
+	if m != nil {
+		return m.PublicKeys
+	}
+	return nil
+}
+
+// DeleteAuthKeysV2Request is request type for the DeleteAuthKeysV2 RPC method.
+type DeleteAuthKeysV2Request struct {
+	// account_id is the account address of user
+	AccountId string `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	// domain is the DApp domain for this nonce
+	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	// publicKeys defines the list of user public keys
+	PublicKeys []string `protobuf:"bytes,3,rep,name=publicKeys,proto3" json:"publicKeys,omitempty"`
+}
+
+func (m *DeleteAuthKeysV2Request) Reset()         { *m = DeleteAuthKeysV2Request{} }
+func (m *DeleteAuthKeysV2Request) String() string { return proto.CompactTextString(m) }
+func (*DeleteAuthKeysV2Request) ProtoMessage()    {}
+func (*DeleteAuthKeysV2Request) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ebf94e0d260942, []int{12}
+}
+func (m *DeleteAuthKeysV2Request) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeleteAuthKeysV2Request) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeleteAuthKeysV2Request.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeleteAuthKeysV2Request) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteAuthKeysV2Request.Merge(m, src)
+}
+func (m *DeleteAuthKeysV2Request) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeleteAuthKeysV2Request) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteAuthKeysV2Request.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteAuthKeysV2Request proto.InternalMessageInfo
+
+func (m *DeleteAuthKeysV2Request) GetAccountId() string {
+	if m != nil {
+		return m.AccountId
+	}
+	return ""
+}
+
+func (m *DeleteAuthKeysV2Request) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+
+func (m *DeleteAuthKeysV2Request) GetPublicKeys() []string {
+	if m != nil {
+		return m.PublicKeys
+	}
+	return nil
+}
+
+// DeleteAuthKeysV2Response is response type for the DeleteAuthKeysV2 RPC method.
+type DeleteAuthKeysV2Response struct {
+	Err *gfsperrors.GfSpError `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	// result defines the result of if the user public keys are deleted
+	Result bool `protobuf:"varint,2,opt,name=result,proto3" json:"result,omitempty"`
+}
+
+func (m *DeleteAuthKeysV2Response) Reset()         { *m = DeleteAuthKeysV2Response{} }
+func (m *DeleteAuthKeysV2Response) String() string { return proto.CompactTextString(m) }
+func (*DeleteAuthKeysV2Response) ProtoMessage()    {}
+func (*DeleteAuthKeysV2Response) Descriptor() ([]byte, []int) {
+	return fileDescriptor_30ebf94e0d260942, []int{13}
+}
+func (m *DeleteAuthKeysV2Response) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeleteAuthKeysV2Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeleteAuthKeysV2Response.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeleteAuthKeysV2Response) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteAuthKeysV2Response.Merge(m, src)
+}
+func (m *DeleteAuthKeysV2Response) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeleteAuthKeysV2Response) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteAuthKeysV2Response.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteAuthKeysV2Response proto.InternalMessageInfo
+
+func (m *DeleteAuthKeysV2Response) GetErr() *gfsperrors.GfSpError {
+	if m != nil {
+		return m.Err
+	}
+	return nil
+}
+
+func (m *DeleteAuthKeysV2Response) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
 // UpdateUserPublicKeyV2Request is request type for the UpdateUserPublicKeyV2 RPC method.
 type UpdateUserPublicKeyV2Request struct {
 	// account_id is the account address of user
@@ -699,7 +926,7 @@ func (m *UpdateUserPublicKeyV2Request) Reset()         { *m = UpdateUserPublicKe
 func (m *UpdateUserPublicKeyV2Request) String() string { return proto.CompactTextString(m) }
 func (*UpdateUserPublicKeyV2Request) ProtoMessage()    {}
 func (*UpdateUserPublicKeyV2Request) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{10}
+	return fileDescriptor_30ebf94e0d260942, []int{14}
 }
 func (m *UpdateUserPublicKeyV2Request) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -767,7 +994,7 @@ func (m *UpdateUserPublicKeyV2Response) Reset()         { *m = UpdateUserPublicK
 func (m *UpdateUserPublicKeyV2Response) String() string { return proto.CompactTextString(m) }
 func (*UpdateUserPublicKeyV2Response) ProtoMessage()    {}
 func (*UpdateUserPublicKeyV2Response) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{11}
+	return fileDescriptor_30ebf94e0d260942, []int{15}
 }
 func (m *UpdateUserPublicKeyV2Response) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -828,7 +1055,7 @@ func (m *VerifyGNFD2EddsaSignatureRequest) Reset()         { *m = VerifyGNFD2Edd
 func (m *VerifyGNFD2EddsaSignatureRequest) String() string { return proto.CompactTextString(m) }
 func (*VerifyGNFD2EddsaSignatureRequest) ProtoMessage()    {}
 func (*VerifyGNFD2EddsaSignatureRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{12}
+	return fileDescriptor_30ebf94e0d260942, []int{16}
 }
 func (m *VerifyGNFD2EddsaSignatureRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -903,7 +1130,7 @@ func (m *VerifyGNFD2EddsaSignatureResponse) Reset()         { *m = VerifyGNFD2Ed
 func (m *VerifyGNFD2EddsaSignatureResponse) String() string { return proto.CompactTextString(m) }
 func (*VerifyGNFD2EddsaSignatureResponse) ProtoMessage()    {}
 func (*VerifyGNFD2EddsaSignatureResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30ebf94e0d260942, []int{13}
+	return fileDescriptor_30ebf94e0d260942, []int{17}
 }
 func (m *VerifyGNFD2EddsaSignatureResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -957,6 +1184,10 @@ func init() {
 	proto.RegisterType((*VerifyGNFD1EddsaSignatureResponse)(nil), "base.types.gfspserver.VerifyGNFD1EddsaSignatureResponse")
 	proto.RegisterType((*GetAuthKeyV2Request)(nil), "base.types.gfspserver.GetAuthKeyV2Request")
 	proto.RegisterType((*GetAuthKeyV2Response)(nil), "base.types.gfspserver.GetAuthKeyV2Response")
+	proto.RegisterType((*ListAuthKeysV2Request)(nil), "base.types.gfspserver.ListAuthKeysV2Request")
+	proto.RegisterType((*ListAuthKeysV2Response)(nil), "base.types.gfspserver.ListAuthKeysV2Response")
+	proto.RegisterType((*DeleteAuthKeysV2Request)(nil), "base.types.gfspserver.DeleteAuthKeysV2Request")
+	proto.RegisterType((*DeleteAuthKeysV2Response)(nil), "base.types.gfspserver.DeleteAuthKeysV2Response")
 	proto.RegisterType((*UpdateUserPublicKeyV2Request)(nil), "base.types.gfspserver.UpdateUserPublicKeyV2Request")
 	proto.RegisterType((*UpdateUserPublicKeyV2Response)(nil), "base.types.gfspserver.UpdateUserPublicKeyV2Response")
 	proto.RegisterType((*VerifyGNFD2EddsaSignatureRequest)(nil), "base.types.gfspserver.VerifyGNFD2EddsaSignatureRequest")
@@ -968,62 +1199,67 @@ func init() {
 }
 
 var fileDescriptor_30ebf94e0d260942 = []byte{
-	// 867 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0x4b, 0x6f, 0x1c, 0x45,
-	0x10, 0xde, 0x61, 0xbd, 0x4e, 0xb6, 0x6c, 0x8b, 0xa8, 0xf3, 0xd0, 0x66, 0x83, 0x97, 0xf5, 0x20,
-	0x81, 0x79, 0x78, 0x96, 0x4c, 0x90, 0xe0, 0x1a, 0x48, 0x62, 0xa1, 0x80, 0x85, 0xc6, 0x49, 0x0e,
-	0x5c, 0x86, 0x79, 0xd4, 0x8c, 0x3b, 0xde, 0x9d, 0x1e, 0xba, 0x7b, 0x4c, 0xf6, 0x82, 0x84, 0xc4,
-	0x89, 0x53, 0xfe, 0x00, 0x1c, 0x38, 0xf0, 0x5b, 0x38, 0x21, 0xdf, 0xe0, 0x82, 0x84, 0xec, 0x3f,
-	0x82, 0xba, 0x67, 0x6c, 0xef, 0x63, 0x86, 0xdd, 0x65, 0x31, 0x27, 0xbb, 0xab, 0xbf, 0xaa, 0xfa,
-	0xea, 0xeb, 0xaa, 0xee, 0x59, 0x78, 0xdb, 0xf7, 0x04, 0xf6, 0xe4, 0x30, 0x45, 0xd1, 0x8b, 0x23,
-	0x91, 0x0a, 0xe4, 0x47, 0xc8, 0x7b, 0x5e, 0x26, 0x0f, 0x30, 0x91, 0x34, 0xf0, 0x24, 0xe3, 0x56,
-	0xca, 0x99, 0x64, 0xe4, 0xa6, 0x82, 0x5a, 0x1a, 0x6a, 0x5d, 0x40, 0xdb, 0x5b, 0x13, 0x11, 0x90,
-	0x73, 0xc6, 0x45, 0x4f, 0xff, 0xc9, 0x3d, 0xcd, 0x1f, 0x0d, 0xb8, 0xbd, 0x1b, 0xed, 0xa7, 0xf7,
-	0x2f, 0xa2, 0x52, 0x96, 0x38, 0xf8, 0x75, 0x86, 0x42, 0x92, 0x3b, 0xd0, 0x54, 0xe9, 0x5c, 0x15,
-	0xa2, 0x65, 0x74, 0x8d, 0xed, 0x86, 0x73, 0x55, 0x19, 0x9e, 0x0c, 0x53, 0x24, 0x5b, 0xb0, 0x9e,
-	0x09, 0xe4, 0xae, 0x17, 0x04, 0x2c, 0x4b, 0x64, 0xeb, 0x95, 0xae, 0xb1, 0xdd, 0x74, 0xd6, 0x94,
-	0xed, 0x7e, 0x6e, 0x22, 0xaf, 0xc3, 0x9a, 0x9f, 0x05, 0x87, 0x28, 0xdd, 0xc4, 0x1b, 0x60, 0xab,
-	0xae, 0x11, 0x90, 0x9b, 0xf6, 0xbc, 0x01, 0x2a, 0x00, 0xf3, 0x9f, 0x63, 0x50, 0x00, 0x56, 0x72,
-	0x40, 0x6e, 0x52, 0x00, 0xf3, 0x39, 0xb4, 0xcb, 0xe8, 0x89, 0x94, 0x25, 0x02, 0x89, 0x0d, 0x75,
-	0xe4, 0x5c, 0x33, 0x5b, 0xb3, 0xbb, 0xd6, 0x84, 0x0a, 0x79, 0xb9, 0x96, 0xf2, 0x7f, 0xa8, 0xfe,
-	0x75, 0x14, 0x98, 0xb4, 0xe0, 0x8a, 0xd7, 0xef, 0xb3, 0x6f, 0x30, 0xd4, 0x8c, 0xaf, 0x3a, 0x67,
-	0x4b, 0xf3, 0x33, 0xb8, 0xbe, 0x8b, 0x52, 0xa5, 0xda, 0x63, 0x49, 0x80, 0x67, 0x22, 0x6c, 0x02,
-	0x14, 0x25, 0xba, 0x34, 0xd4, 0xb9, 0x9a, 0x4e, 0xb3, 0xb0, 0x7c, 0x1a, 0x92, 0x5b, 0xb0, 0x1a,
-	0xb2, 0x81, 0x47, 0x93, 0x42, 0x80, 0x62, 0x65, 0xfe, 0x69, 0xc0, 0x8d, 0xf1, 0x70, 0x4b, 0x90,
-	0x7e, 0x03, 0x36, 0x82, 0x8c, 0x73, 0x4c, 0xa4, 0x9b, 0xa8, 0x60, 0x3a, 0x57, 0xc3, 0x59, 0x2f,
-	0x8c, 0x3a, 0x81, 0x22, 0x9a, 0xe0, 0x8b, 0x33, 0x44, 0x5d, 0x23, 0x9a, 0xca, 0x92, 0x6f, 0xbf,
-	0x07, 0xe4, 0x2c, 0x46, 0x9a, 0xf9, 0x7d, 0x1a, 0xb8, 0x87, 0x38, 0x2c, 0x24, 0xbf, 0x56, 0xec,
-	0x7c, 0xa1, 0x37, 0x1e, 0xe3, 0x50, 0x9d, 0x0c, 0xbe, 0x48, 0x29, 0x1f, 0xba, 0xa1, 0x27, 0xb1,
-	0xd5, 0xe8, 0x1a, 0xdb, 0x75, 0x07, 0x72, 0xd3, 0x03, 0x4f, 0xa2, 0xf9, 0xbb, 0x01, 0xed, 0xa7,
-	0xa9, 0xda, 0x7c, 0x2a, 0x90, 0x9f, 0x3b, 0x2e, 0xa7, 0xda, 0x74, 0xa1, 0xf5, 0x92, 0x42, 0x6f,
-	0x40, 0x23, 0xdf, 0x5c, 0xd1, 0x9b, 0xf9, 0x82, 0xbc, 0x09, 0xaf, 0xea, 0x7e, 0x1c, 0x29, 0xae,
-	0xa1, 0x63, 0x6f, 0x64, 0xa3, 0x04, 0x27, 0x2b, 0x5b, 0x9d, 0xaa, 0x8c, 0xc2, 0x9d, 0xd2, 0xc2,
-	0x96, 0x38, 0xbf, 0x5b, 0xb0, 0xca, 0x51, 0x64, 0x7d, 0x59, 0xf4, 0x5c, 0xb1, 0x32, 0x7f, 0x31,
-	0xa0, 0xfb, 0x0c, 0x39, 0x8d, 0x86, 0xbb, 0x7b, 0x8f, 0x1e, 0xdc, 0x7d, 0x18, 0x86, 0xc2, 0xdb,
-	0xa7, 0x71, 0xe2, 0xc9, 0x8c, 0x2f, 0xd9, 0x80, 0xc4, 0x84, 0x0d, 0x16, 0x45, 0x6e, 0x70, 0xe0,
-	0xd1, 0xc4, 0x15, 0x34, 0x2e, 0xc6, 0x6f, 0x8d, 0x45, 0xd1, 0x27, 0xca, 0xb6, 0x4f, 0x63, 0xf2,
-	0x16, 0x5c, 0xe3, 0xe8, 0xf5, 0xdd, 0x81, 0x88, 0x5d, 0xc9, 0x14, 0x2a, 0xd1, 0xa2, 0xae, 0x3b,
-	0x1b, 0xca, 0xfe, 0xb9, 0x88, 0x9f, 0x30, 0xc5, 0xc7, 0x64, 0xb0, 0xf5, 0x0f, 0x3c, 0x2f, 0x41,
-	0x19, 0x79, 0x3e, 0x8c, 0x8f, 0x71, 0xf8, 0xcc, 0x5e, 0x52, 0x8b, 0x92, 0xde, 0xa8, 0x97, 0xf4,
-	0x86, 0xf9, 0xc3, 0xc5, 0xd0, 0x16, 0x69, 0x97, 0x28, 0x6d, 0x13, 0x60, 0x24, 0x5f, 0x4e, 0xa8,
-	0x99, 0x56, 0xf5, 0x61, 0x7d, 0xaa, 0x0f, 0x7f, 0x32, 0xe0, 0xb5, 0x92, 0x46, 0xfc, 0xbf, 0xc4,
-	0x98, 0x24, 0xb8, 0x32, 0x45, 0xf0, 0x10, 0x36, 0x2b, 0xf8, 0x5d, 0x42, 0x43, 0xfc, 0x36, 0x36,
-	0x2a, 0xf6, 0x7f, 0x3a, 0x2a, 0xf3, 0x2a, 0x32, 0x35, 0x52, 0x2b, 0xf3, 0x8d, 0x54, 0x63, 0xe6,
-	0x48, 0xd9, 0x97, 0x3f, 0x52, 0xf6, 0xcf, 0x57, 0xca, 0xde, 0xfa, 0x7d, 0xe4, 0x47, 0x34, 0x40,
-	0xf2, 0x9d, 0x01, 0x2d, 0xb5, 0x9b, 0x73, 0x1a, 0xc7, 0x90, 0xf7, 0xad, 0xd2, 0x2f, 0x0c, 0xab,
-	0xf2, 0xd3, 0xa1, 0x7d, 0x77, 0x01, 0x8f, 0xbc, 0x56, 0xb3, 0x46, 0x28, 0xac, 0x8f, 0x3e, 0x99,
-	0xe4, 0x9d, 0xaa, 0x20, 0xd3, 0xcf, 0x74, 0xfb, 0xdd, 0xb9, 0xb0, 0xe7, 0xa9, 0xbe, 0x85, 0xeb,
-	0x25, 0xbd, 0x4b, 0xaa, 0x68, 0x57, 0xbf, 0x74, 0x6d, 0x7b, 0x11, 0x97, 0xf3, 0xfc, 0x2f, 0x0d,
-	0xb8, 0x5d, 0x79, 0xa3, 0x92, 0x0f, 0x2b, 0x62, 0xce, 0x7a, 0x2b, 0xda, 0x1f, 0x2d, 0xee, 0x58,
-	0xa2, 0xbe, 0x9e, 0xe2, 0x59, 0xea, 0x8f, 0x5e, 0x45, 0xb3, 0xd4, 0x1f, 0xbb, 0x16, 0xcc, 0x1a,
-	0xf9, 0xde, 0x80, 0x9b, 0xa5, 0x57, 0x07, 0xb9, 0x37, 0xbf, 0x9a, 0x17, 0xd9, 0x3f, 0x58, 0xcc,
-	0xa9, 0xe2, 0x10, 0xec, 0x85, 0x0f, 0xc1, 0xfe, 0xb7, 0x87, 0x60, 0x57, 0x1d, 0xc2, 0xc7, 0x5f,
-	0xfd, 0x7a, 0xd2, 0x31, 0x8e, 0x4f, 0x3a, 0xc6, 0x5f, 0x27, 0x1d, 0xe3, 0xe5, 0x69, 0xa7, 0x76,
-	0x7c, 0xda, 0xa9, 0xfd, 0x71, 0xda, 0xa9, 0x7d, 0xf9, 0x28, 0xa6, 0xf2, 0x20, 0xf3, 0xad, 0x80,
-	0x0d, 0x7a, 0x7e, 0xe2, 0xef, 0xe8, 0x5b, 0xa8, 0x17, 0x73, 0xc4, 0x24, 0xa2, 0xd8, 0x0f, 0x77,
-	0x84, 0x64, 0xdc, 0x8b, 0x71, 0x27, 0xe5, 0xec, 0x88, 0x86, 0xc8, 0x7b, 0xa5, 0x3f, 0x20, 0xfc,
-	0x55, 0xfd, 0xe5, 0x7f, 0xef, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa5, 0xc9, 0x8f, 0x9e, 0x60,
-	0x0c, 0x00, 0x00,
+	// 954 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0x4f, 0x6f, 0xdc, 0x44,
+	0x14, 0x8f, 0xbb, 0xd9, 0xd0, 0x7d, 0x49, 0x20, 0x9a, 0x36, 0x61, 0xeb, 0x92, 0x65, 0x63, 0x24,
+	0x08, 0xd0, 0x78, 0xa9, 0x8b, 0x04, 0xd7, 0x42, 0xda, 0x08, 0xb5, 0x44, 0xc8, 0x69, 0x7b, 0xe0,
+	0x62, 0xbc, 0xf6, 0xb3, 0x33, 0xcd, 0xae, 0xc7, 0xcc, 0x8c, 0x43, 0xf7, 0x82, 0x84, 0xc4, 0xa9,
+	0xa7, 0x7e, 0x01, 0x38, 0xf2, 0x59, 0x38, 0xa1, 0xde, 0xe0, 0x82, 0x84, 0x92, 0x2f, 0x82, 0xc6,
+	0xf6, 0xfe, 0xb7, 0xc9, 0x2e, 0xdb, 0xf4, 0x94, 0xcc, 0x9b, 0xdf, 0x7b, 0xef, 0xf7, 0xde, 0xfe,
+	0xe6, 0xcd, 0x18, 0x3e, 0x6c, 0xbb, 0x02, 0x5b, 0xb2, 0x17, 0xa3, 0x68, 0x85, 0x81, 0x88, 0x05,
+	0xf2, 0x53, 0xe4, 0x2d, 0x37, 0x91, 0xc7, 0x18, 0x49, 0xea, 0xb9, 0x92, 0x71, 0x33, 0xe6, 0x4c,
+	0x32, 0xb2, 0xa9, 0xa0, 0x66, 0x0a, 0x35, 0x87, 0x50, 0x7d, 0x67, 0x22, 0x02, 0x72, 0xce, 0xb8,
+	0x68, 0xa5, 0x7f, 0x32, 0x4f, 0xe3, 0x17, 0x0d, 0x6e, 0x1c, 0x04, 0x47, 0xf1, 0xdd, 0x61, 0x54,
+	0xca, 0x22, 0x1b, 0xbf, 0x4f, 0x50, 0x48, 0x72, 0x13, 0x6a, 0x2a, 0x9d, 0xa3, 0x42, 0xd4, 0xb5,
+	0xa6, 0xb6, 0x5b, 0xb5, 0xaf, 0x2a, 0xc3, 0xa3, 0x5e, 0x8c, 0x64, 0x07, 0xd6, 0x12, 0x81, 0xdc,
+	0x71, 0x3d, 0x8f, 0x25, 0x91, 0xac, 0x5f, 0x69, 0x6a, 0xbb, 0x35, 0x7b, 0x55, 0xd9, 0xee, 0x66,
+	0x26, 0xf2, 0x2e, 0xac, 0xb6, 0x13, 0xef, 0x04, 0xa5, 0x13, 0xb9, 0x5d, 0xac, 0x57, 0x52, 0x04,
+	0x64, 0xa6, 0x43, 0xb7, 0x8b, 0x0a, 0xc0, 0xda, 0x4f, 0xd1, 0xcb, 0x01, 0xcb, 0x19, 0x20, 0x33,
+	0x29, 0x80, 0xf1, 0x14, 0xf4, 0x22, 0x7a, 0x22, 0x66, 0x91, 0x40, 0x62, 0x41, 0x05, 0x39, 0x4f,
+	0x99, 0xad, 0x5a, 0x4d, 0x73, 0xa2, 0x0b, 0x59, 0xb9, 0xa6, 0xf2, 0xbf, 0xa7, 0xfe, 0xb5, 0x15,
+	0x98, 0xd4, 0xe1, 0x0d, 0xb7, 0xd3, 0x61, 0x3f, 0xa0, 0x9f, 0x32, 0xbe, 0x6a, 0xf7, 0x97, 0xc6,
+	0x43, 0xb8, 0x76, 0x80, 0x52, 0xa5, 0x3a, 0x64, 0x91, 0x87, 0xfd, 0x26, 0x6c, 0x03, 0xe4, 0x25,
+	0x3a, 0xd4, 0x4f, 0x73, 0xd5, 0xec, 0x5a, 0x6e, 0xf9, 0xca, 0x27, 0x5b, 0xb0, 0xe2, 0xb3, 0xae,
+	0x4b, 0xa3, 0xbc, 0x01, 0xf9, 0xca, 0xf8, 0x5b, 0x83, 0xeb, 0xe3, 0xe1, 0x16, 0x20, 0xfd, 0x1e,
+	0xac, 0x7b, 0x09, 0xe7, 0x18, 0x49, 0x27, 0x52, 0xc1, 0xd2, 0x5c, 0x55, 0x7b, 0x2d, 0x37, 0xa6,
+	0x09, 0x14, 0xd1, 0x08, 0x9f, 0xf5, 0x11, 0x95, 0x14, 0x51, 0x53, 0x96, 0x6c, 0xfb, 0x16, 0x90,
+	0x7e, 0x8c, 0x38, 0x69, 0x77, 0xa8, 0xe7, 0x9c, 0x60, 0x2f, 0x6f, 0xf9, 0x46, 0xbe, 0xf3, 0x4d,
+	0xba, 0xf1, 0x00, 0x7b, 0xea, 0x97, 0xc1, 0x67, 0x31, 0xe5, 0x3d, 0xc7, 0x77, 0x25, 0xd6, 0xab,
+	0x4d, 0x6d, 0xb7, 0x62, 0x43, 0x66, 0xda, 0x77, 0x25, 0x1a, 0x7f, 0x6a, 0xa0, 0x3f, 0x8e, 0xd5,
+	0xe6, 0x63, 0x81, 0x7c, 0xe0, 0xb8, 0x58, 0xd7, 0xa6, 0x0b, 0xad, 0x14, 0x14, 0x7a, 0x1d, 0xaa,
+	0xd9, 0xe6, 0x72, 0xba, 0x99, 0x2d, 0xc8, 0xfb, 0xf0, 0x56, 0xaa, 0xc7, 0x91, 0xe2, 0xaa, 0x69,
+	0xec, 0xf5, 0x64, 0x94, 0xe0, 0x64, 0x65, 0x2b, 0x53, 0x95, 0x51, 0xb8, 0x59, 0x58, 0xd8, 0x02,
+	0xbf, 0xdf, 0x16, 0xac, 0x70, 0x14, 0x49, 0x47, 0xe6, 0x9a, 0xcb, 0x57, 0xc6, 0x6f, 0x1a, 0x34,
+	0x9f, 0x20, 0xa7, 0x41, 0xef, 0xe0, 0xf0, 0xfe, 0xfe, 0xed, 0x7b, 0xbe, 0x2f, 0xdc, 0x23, 0x1a,
+	0x46, 0xae, 0x4c, 0xf8, 0x82, 0x02, 0x24, 0x06, 0xac, 0xb3, 0x20, 0x70, 0xbc, 0x63, 0x97, 0x46,
+	0x8e, 0xa0, 0x61, 0x7e, 0xfc, 0x56, 0x59, 0x10, 0x7c, 0xa9, 0x6c, 0x47, 0x34, 0x24, 0x1f, 0xc0,
+	0x06, 0x47, 0xb7, 0xe3, 0x74, 0x45, 0xe8, 0x48, 0xa6, 0x50, 0x51, 0xda, 0xd4, 0x35, 0x7b, 0x5d,
+	0xd9, 0xbf, 0x16, 0xe1, 0x23, 0xa6, 0xf8, 0x18, 0x0c, 0x76, 0xfe, 0x83, 0xe7, 0x25, 0x74, 0x46,
+	0x0e, 0x0e, 0xe3, 0x03, 0xec, 0x3d, 0xb1, 0x16, 0xec, 0x45, 0x81, 0x36, 0x2a, 0x05, 0xda, 0x30,
+	0x9e, 0x0f, 0x0f, 0x6d, 0x9e, 0x76, 0x81, 0xd2, 0xb6, 0x01, 0x46, 0xf2, 0x65, 0x84, 0x6a, 0x71,
+	0x99, 0x0e, 0x2b, 0x53, 0x3a, 0x3c, 0x84, 0xcd, 0x87, 0x54, 0xf4, 0xc9, 0x88, 0x45, 0x9b, 0x60,
+	0x74, 0x60, 0x6b, 0x32, 0xde, 0x02, 0xd5, 0x35, 0xfa, 0xd5, 0xa9, 0x58, 0xf5, 0x2b, 0xcd, 0x8a,
+	0x9a, 0xdc, 0x43, 0x8b, 0x11, 0xc3, 0xdb, 0xfb, 0xd8, 0x41, 0x89, 0xaf, 0x8a, 0xff, 0x44, 0xc6,
+	0xca, 0x54, 0xc6, 0x00, 0xea, 0xd3, 0x19, 0x2f, 0x41, 0x9a, 0xbf, 0x6a, 0xf0, 0x4e, 0xc1, 0x80,
+	0x78, 0x5d, 0x22, 0x9d, 0x14, 0xce, 0xf2, 0x94, 0x70, 0x4e, 0x60, 0xbb, 0x84, 0xdf, 0x25, 0x74,
+	0xe3, 0x8f, 0xb1, 0x11, 0x66, 0xbd, 0xd2, 0x11, 0x36, 0x6b, 0x47, 0xa6, 0x46, 0xdd, 0xf2, 0x6c,
+	0xa3, 0xae, 0x7a, 0xe1, 0xa8, 0xb3, 0x2e, 0x7f, 0xd4, 0x59, 0xcf, 0x6b, 0x45, 0x6f, 0xb0, 0x23,
+	0xe4, 0xa7, 0xd4, 0x43, 0xf2, 0x93, 0x06, 0x75, 0xb5, 0x9b, 0x71, 0x1a, 0xc7, 0x90, 0x4f, 0xcc,
+	0xc2, 0x97, 0x9f, 0x59, 0xfa, 0xa4, 0xd3, 0x6f, 0xcf, 0xe1, 0x91, 0xd5, 0x6a, 0x2c, 0x11, 0x0a,
+	0x6b, 0xa3, 0x4f, 0x19, 0xf2, 0x51, 0x59, 0x90, 0xe9, 0xe7, 0x93, 0xfe, 0xf1, 0x4c, 0xd8, 0x41,
+	0xaa, 0x1f, 0xe1, 0x5a, 0x81, 0x76, 0x49, 0x19, 0xed, 0xf2, 0x17, 0x88, 0x6e, 0xcd, 0xe3, 0x32,
+	0xc8, 0xff, 0x42, 0x83, 0x1b, 0xa5, 0x37, 0x1d, 0xf9, 0xac, 0x24, 0xe6, 0x45, 0x77, 0xb8, 0xfe,
+	0xf9, 0xfc, 0x8e, 0x05, 0xdd, 0x4f, 0x4f, 0xf1, 0x45, 0xdd, 0x1f, 0x1d, 0x45, 0x17, 0x75, 0x7f,
+	0x6c, 0x2c, 0x18, 0x4b, 0x84, 0xc1, 0x9b, 0xe3, 0x57, 0x04, 0xb9, 0x55, 0x12, 0xa0, 0xf0, 0x66,
+	0xd2, 0xf7, 0x66, 0x44, 0x0f, 0x12, 0x26, 0xb0, 0x31, 0x39, 0xb3, 0x89, 0x59, 0x12, 0xa4, 0xe4,
+	0x3a, 0xd1, 0x5b, 0x33, 0xe3, 0x07, 0x69, 0x7f, 0xd6, 0x60, 0xb3, 0x70, 0x44, 0x92, 0x3b, 0xb3,
+	0xab, 0x66, 0xc8, 0xe0, 0xd3, 0xf9, 0x9c, 0x4a, 0xc4, 0x66, 0xcd, 0x2d, 0x36, 0xeb, 0xff, 0x8a,
+	0xcd, 0x2a, 0x13, 0xdb, 0x17, 0xdf, 0xfd, 0x7e, 0xd6, 0xd0, 0x5e, 0x9e, 0x35, 0xb4, 0x7f, 0xce,
+	0x1a, 0xda, 0x8b, 0xf3, 0xc6, 0xd2, 0xcb, 0xf3, 0xc6, 0xd2, 0x5f, 0xe7, 0x8d, 0xa5, 0x6f, 0xef,
+	0x87, 0x54, 0x1e, 0x27, 0x6d, 0xd3, 0x63, 0xdd, 0x56, 0x3b, 0x6a, 0xef, 0xa5, 0xd3, 0xb6, 0x15,
+	0x72, 0xc4, 0x28, 0xa0, 0xd8, 0xf1, 0xf7, 0x84, 0x64, 0xdc, 0x0d, 0x71, 0x2f, 0xe6, 0xec, 0x94,
+	0xfa, 0xc8, 0x5b, 0x85, 0x1f, 0xb0, 0xed, 0x95, 0xf4, 0xcb, 0xf3, 0xce, 0xbf, 0x01, 0x00, 0x00,
+	0xff, 0xff, 0xc4, 0x1a, 0x07, 0x26, 0xe0, 0x0e, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1045,8 +1281,12 @@ type GfSpAuthenticationServiceClient interface {
 	UpdateUserPublicKey(ctx context.Context, in *UpdateUserPublicKeyRequest, opts ...grpc.CallOption) (*UpdateUserPublicKeyResponse, error)
 	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 	VerifyGNFD1EddsaSignature(ctx context.Context, in *VerifyGNFD1EddsaSignatureRequest, opts ...grpc.CallOption) (*VerifyGNFD1EddsaSignatureResponse, error)
-	// GetAuthKeyV2 get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
+	// GetAuthKeyV2 get the auth key for which the Dapp or client can generate EDDSA key pairs.
 	GetAuthKeyV2(ctx context.Context, in *GetAuthKeyV2Request, opts ...grpc.CallOption) (*GetAuthKeyV2Response, error)
+	// ListAuthKeysV2 list the user public keys
+	ListAuthKeysV2(ctx context.Context, in *ListAuthKeysV2Request, opts ...grpc.CallOption) (*ListAuthKeysV2Response, error)
+	// DeleteAuthKeysV2 delete the user public keys
+	DeleteAuthKeysV2(ctx context.Context, in *DeleteAuthKeysV2Request, opts ...grpc.CallOption) (*DeleteAuthKeysV2Response, error)
 	// UpdateUserPublicKeyV2 updates the user public key once the Dapp or client generates the EDDSA key pairs.
 	UpdateUserPublicKeyV2(ctx context.Context, in *UpdateUserPublicKeyV2Request, opts ...grpc.CallOption) (*UpdateUserPublicKeyV2Response, error)
 	// VerifyGNFD2EddsaSignature verifies the signature signed by user's EDDSA private key.
@@ -1106,6 +1346,24 @@ func (c *gfSpAuthenticationServiceClient) GetAuthKeyV2(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *gfSpAuthenticationServiceClient) ListAuthKeysV2(ctx context.Context, in *ListAuthKeysV2Request, opts ...grpc.CallOption) (*ListAuthKeysV2Response, error) {
+	out := new(ListAuthKeysV2Response)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpAuthenticationService/ListAuthKeysV2", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gfSpAuthenticationServiceClient) DeleteAuthKeysV2(ctx context.Context, in *DeleteAuthKeysV2Request, opts ...grpc.CallOption) (*DeleteAuthKeysV2Response, error) {
+	out := new(DeleteAuthKeysV2Response)
+	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpAuthenticationService/DeleteAuthKeysV2", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gfSpAuthenticationServiceClient) UpdateUserPublicKeyV2(ctx context.Context, in *UpdateUserPublicKeyV2Request, opts ...grpc.CallOption) (*UpdateUserPublicKeyV2Response, error) {
 	out := new(UpdateUserPublicKeyV2Response)
 	err := c.cc.Invoke(ctx, "/base.types.gfspserver.GfSpAuthenticationService/UpdateUserPublicKeyV2", in, out, opts...)
@@ -1133,8 +1391,12 @@ type GfSpAuthenticationServiceServer interface {
 	UpdateUserPublicKey(context.Context, *UpdateUserPublicKeyRequest) (*UpdateUserPublicKeyResponse, error)
 	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 	VerifyGNFD1EddsaSignature(context.Context, *VerifyGNFD1EddsaSignatureRequest) (*VerifyGNFD1EddsaSignatureResponse, error)
-	// GetAuthKeyV2 get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
+	// GetAuthKeyV2 get the auth key for which the Dapp or client can generate EDDSA key pairs.
 	GetAuthKeyV2(context.Context, *GetAuthKeyV2Request) (*GetAuthKeyV2Response, error)
+	// ListAuthKeysV2 list the user public keys
+	ListAuthKeysV2(context.Context, *ListAuthKeysV2Request) (*ListAuthKeysV2Response, error)
+	// DeleteAuthKeysV2 delete the user public keys
+	DeleteAuthKeysV2(context.Context, *DeleteAuthKeysV2Request) (*DeleteAuthKeysV2Response, error)
 	// UpdateUserPublicKeyV2 updates the user public key once the Dapp or client generates the EDDSA key pairs.
 	UpdateUserPublicKeyV2(context.Context, *UpdateUserPublicKeyV2Request) (*UpdateUserPublicKeyV2Response, error)
 	// VerifyGNFD2EddsaSignature verifies the signature signed by user's EDDSA private key.
@@ -1159,6 +1421,12 @@ func (*UnimplementedGfSpAuthenticationServiceServer) VerifyGNFD1EddsaSignature(c
 }
 func (*UnimplementedGfSpAuthenticationServiceServer) GetAuthKeyV2(ctx context.Context, req *GetAuthKeyV2Request) (*GetAuthKeyV2Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAuthKeyV2 not implemented")
+}
+func (*UnimplementedGfSpAuthenticationServiceServer) ListAuthKeysV2(ctx context.Context, req *ListAuthKeysV2Request) (*ListAuthKeysV2Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAuthKeysV2 not implemented")
+}
+func (*UnimplementedGfSpAuthenticationServiceServer) DeleteAuthKeysV2(ctx context.Context, req *DeleteAuthKeysV2Request) (*DeleteAuthKeysV2Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAuthKeysV2 not implemented")
 }
 func (*UnimplementedGfSpAuthenticationServiceServer) UpdateUserPublicKeyV2(ctx context.Context, req *UpdateUserPublicKeyV2Request) (*UpdateUserPublicKeyV2Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserPublicKeyV2 not implemented")
@@ -1261,6 +1529,42 @@ func _GfSpAuthenticationService_GetAuthKeyV2_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GfSpAuthenticationService_ListAuthKeysV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAuthKeysV2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GfSpAuthenticationServiceServer).ListAuthKeysV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.types.gfspserver.GfSpAuthenticationService/ListAuthKeysV2",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GfSpAuthenticationServiceServer).ListAuthKeysV2(ctx, req.(*ListAuthKeysV2Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GfSpAuthenticationService_DeleteAuthKeysV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAuthKeysV2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GfSpAuthenticationServiceServer).DeleteAuthKeysV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.types.gfspserver.GfSpAuthenticationService/DeleteAuthKeysV2",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GfSpAuthenticationServiceServer).DeleteAuthKeysV2(ctx, req.(*DeleteAuthKeysV2Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GfSpAuthenticationService_UpdateUserPublicKeyV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateUserPublicKeyV2Request)
 	if err := dec(in); err != nil {
@@ -1320,6 +1624,14 @@ var _GfSpAuthenticationService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAuthKeyV2",
 			Handler:    _GfSpAuthenticationService_GetAuthKeyV2_Handler,
+		},
+		{
+			MethodName: "ListAuthKeysV2",
+			Handler:    _GfSpAuthenticationService_ListAuthKeysV2_Handler,
+		},
+		{
+			MethodName: "DeleteAuthKeysV2",
+			Handler:    _GfSpAuthenticationService_DeleteAuthKeysV2_Handler,
 		},
 		{
 			MethodName: "UpdateUserPublicKeyV2",
@@ -1813,6 +2125,178 @@ func (m *GetAuthKeyV2Response) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ListAuthKeysV2Request) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ListAuthKeysV2Request) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ListAuthKeysV2Request) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Domain) > 0 {
+		i -= len(m.Domain)
+		copy(dAtA[i:], m.Domain)
+		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.Domain)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.AccountId) > 0 {
+		i -= len(m.AccountId)
+		copy(dAtA[i:], m.AccountId)
+		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.AccountId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ListAuthKeysV2Response) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ListAuthKeysV2Response) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ListAuthKeysV2Response) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.PublicKeys) > 0 {
+		for iNdEx := len(m.PublicKeys) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.PublicKeys[iNdEx])
+			copy(dAtA[i:], m.PublicKeys[iNdEx])
+			i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.PublicKeys[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.Err != nil {
+		{
+			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAuthenticator(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DeleteAuthKeysV2Request) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeleteAuthKeysV2Request) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeleteAuthKeysV2Request) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.PublicKeys) > 0 {
+		for iNdEx := len(m.PublicKeys) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.PublicKeys[iNdEx])
+			copy(dAtA[i:], m.PublicKeys[iNdEx])
+			i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.PublicKeys[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Domain) > 0 {
+		i -= len(m.Domain)
+		copy(dAtA[i:], m.Domain)
+		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.Domain)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.AccountId) > 0 {
+		i -= len(m.AccountId)
+		copy(dAtA[i:], m.AccountId)
+		i = encodeVarintAuthenticator(dAtA, i, uint64(len(m.AccountId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DeleteAuthKeysV2Response) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeleteAuthKeysV2Response) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeleteAuthKeysV2Response) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Result {
+		i--
+		if m.Result {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Err != nil {
+		{
+			size, err := m.Err.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAuthenticator(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *UpdateUserPublicKeyV2Request) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2228,6 +2712,81 @@ func (m *GetAuthKeyV2Response) Size() (n int) {
 	}
 	if m.ExpiryDate != 0 {
 		n += 1 + sovAuthenticator(uint64(m.ExpiryDate))
+	}
+	return n
+}
+
+func (m *ListAuthKeysV2Request) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AccountId)
+	if l > 0 {
+		n += 1 + l + sovAuthenticator(uint64(l))
+	}
+	l = len(m.Domain)
+	if l > 0 {
+		n += 1 + l + sovAuthenticator(uint64(l))
+	}
+	return n
+}
+
+func (m *ListAuthKeysV2Response) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Err != nil {
+		l = m.Err.Size()
+		n += 1 + l + sovAuthenticator(uint64(l))
+	}
+	if len(m.PublicKeys) > 0 {
+		for _, s := range m.PublicKeys {
+			l = len(s)
+			n += 1 + l + sovAuthenticator(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *DeleteAuthKeysV2Request) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AccountId)
+	if l > 0 {
+		n += 1 + l + sovAuthenticator(uint64(l))
+	}
+	l = len(m.Domain)
+	if l > 0 {
+		n += 1 + l + sovAuthenticator(uint64(l))
+	}
+	if len(m.PublicKeys) > 0 {
+		for _, s := range m.PublicKeys {
+			l = len(s)
+			n += 1 + l + sovAuthenticator(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *DeleteAuthKeysV2Response) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Err != nil {
+		l = m.Err.Size()
+		n += 1 + l + sovAuthenticator(uint64(l))
+	}
+	if m.Result {
+		n += 2
 	}
 	return n
 }
@@ -3740,6 +4299,490 @@ func (m *GetAuthKeyV2Response) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthenticator(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ListAuthKeysV2Request) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthenticator
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ListAuthKeysV2Request: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ListAuthKeysV2Request: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccountId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Domain = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthenticator(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ListAuthKeysV2Response) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthenticator
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ListAuthKeysV2Response: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ListAuthKeysV2Response: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Err == nil {
+				m.Err = &gfsperrors.GfSpError{}
+			}
+			if err := m.Err.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PublicKeys", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PublicKeys = append(m.PublicKeys, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthenticator(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeleteAuthKeysV2Request) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthenticator
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeleteAuthKeysV2Request: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeleteAuthKeysV2Request: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccountId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Domain = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PublicKeys", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PublicKeys = append(m.PublicKeys, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthenticator(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeleteAuthKeysV2Response) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthenticator
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeleteAuthKeysV2Response: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeleteAuthKeysV2Response: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthenticator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Err == nil {
+				m.Err = &gfsperrors.GfSpError{}
+			}
+			if err := m.Err.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Result", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthenticator
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Result = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAuthenticator(dAtA[iNdEx:])

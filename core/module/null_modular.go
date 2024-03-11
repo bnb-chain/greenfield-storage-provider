@@ -198,6 +198,14 @@ func (m *NullModular) VerifyGNFD2EddsaSignature(ctx context.Context, account str
 	return false, ErrNilModular
 }
 
+func (m *NullModular) ListAuthKeysV2(ctx context.Context, account string, domain string) ([]string, error) {
+	return nil, ErrNilModular
+}
+
+func (m *NullModular) DeleteAuthKeysV2(ctx context.Context, account string, domain string, publicKeys []string) (bool, error) {
+	return false, ErrNilModular
+}
+
 var _ TaskExecutor = (*NilModular)(nil)
 var _ P2P = (*NilModular)(nil)
 var _ Signer = (*NilModular)(nil)

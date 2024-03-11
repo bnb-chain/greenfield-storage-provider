@@ -188,6 +188,8 @@ type OffChainAuthKeyV2DB interface {
 	GetAuthKeyV2(userAddress string, domain string, publicKey string) (*OffChainAuthKeyV2, error)
 	InsertAuthKeyV2(newRecord *OffChainAuthKeyV2) error
 	ClearExpiredOffChainAuthKeys() error
+	ListAuthKeysV2(userAddress string, domain string) ([]string, error)
+	DeleteAuthKeysV2(userAddress string, domain string, publicKey []string) (bool, error)
 }
 
 // MigrateDB is used to support sp exit and bucket migrate.

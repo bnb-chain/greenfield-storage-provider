@@ -141,6 +141,21 @@ func (m *MockAuthenticator) EXPECT() *MockAuthenticatorMockRecorder {
 	return m.recorder
 }
 
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockAuthenticator) DeleteAuthKeysV2(ctx context.Context, account, domain string, publicKeys []string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", ctx, account, domain, publicKeys)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockAuthenticatorMockRecorder) DeleteAuthKeysV2(ctx, account, domain, publicKeys any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockAuthenticator)(nil).DeleteAuthKeysV2), ctx, account, domain, publicKeys)
+}
+
 // GetAuthKeyV2 mocks base method.
 func (m *MockAuthenticator) GetAuthKeyV2(ctx context.Context, account, domain, publicKey string) (*spdb.OffChainAuthKeyV2, error) {
 	m.ctrl.T.Helper()
@@ -169,6 +184,21 @@ func (m *MockAuthenticator) GetAuthNonce(ctx context.Context, account, domain st
 func (mr *MockAuthenticatorMockRecorder) GetAuthNonce(ctx, account, domain any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthNonce", reflect.TypeOf((*MockAuthenticator)(nil).GetAuthNonce), ctx, account, domain)
+}
+
+// ListAuthKeysV2 mocks base method.
+func (m *MockAuthenticator) ListAuthKeysV2(ctx context.Context, account, domain string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", ctx, account, domain)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockAuthenticatorMockRecorder) ListAuthKeysV2(ctx, account, domain any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockAuthenticator)(nil).ListAuthKeysV2), ctx, account, domain)
 }
 
 // Name mocks base method.

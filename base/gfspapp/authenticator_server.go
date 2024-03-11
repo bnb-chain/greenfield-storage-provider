@@ -172,3 +172,52 @@ func (g *GfSpBaseApp) VerifyGNFD2EddsaSignature(ctx context.Context, req *gfspse
 		Result: resp,
 	}, nil
 }
+
+func (g *GfSpBaseApp) ListAuthKeysV2(ctx context.Context, req *gfspserver.ListAuthKeysV2Request) (*gfspserver.ListAuthKeysV2Response, error) {
+	if req == nil {
+		log.Error("failed to ListAuthKeysV2 to pointer dangling")
+		return &gfspserver.ListAuthKeysV2Response{
+			Err: ErrAuthenticatorTaskDangling,
+		}, nil
+	}
+	log.CtxDebugw(ctx, "begin to ListAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain())
+	resp, err := g.authenticator.ListAuthKeysV2(ctx, req.AccountId, req.Domain)
+	log.CtxDebugw(ctx, "finish to ListAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
+	if err != nil {
+		return &gfspserver.ListAuthKeysV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+	if resp == nil {
+		return &gfspserver.ListAuthKeysV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+
+	return &gfspserver.ListAuthKeysV2Response{
+		Err:        gfsperrors.MakeGfSpError(err),
+		PublicKeys: resp,
+	}, nil
+}
+
+func (g *GfSpBaseApp) DeleteAuthKeysV2(ctx context.Context, req *gfspserver.DeleteAuthKeysV2Request) (*gfspserver.DeleteAuthKeysV2Response, error) {
+	if req == nil {
+		log.Error("failed to GetAuthKeyV2 to pointer dangling")
+		return &gfspserver.DeleteAuthKeysV2Response{
+			Err: ErrAuthenticatorTaskDangling,
+		}, nil
+	}
+	log.CtxDebugw(ctx, "begin to DeleteAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_keys", req.GetPublicKeys())
+	result, err := g.authenticator.DeleteAuthKeysV2(ctx, req.AccountId, req.Domain, req.PublicKeys)
+	log.CtxDebugw(ctx, "finish to DeleteAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.GetPublicKeys(), "error", err)
+	if err != nil {
+		return &gfspserver.DeleteAuthKeysV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+
+	return &gfspserver.DeleteAuthKeysV2Response{
+		Err:    gfsperrors.MakeGfSpError(err),
+		Result: result,
+	}, nil
+}

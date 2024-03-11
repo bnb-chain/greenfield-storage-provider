@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
@@ -61,4 +62,37 @@ func (s *SpDBImpl) ClearExpiredOffChainAuthKeys() error {
 	log.Infow("ClearExpiredOffChainAuthKeys successfully.", "removed rows are ", result.RowsAffected)
 
 	return nil
+}
+
+// ListAuthKeysV2 list user public keys
+func (s *SpDBImpl) ListAuthKeysV2(userAddress string, domain string) ([]string, error) {
+	var (
+		result     *gorm.DB
+		publicKeys []string
+	)
+	var results []*OffChainAuthKeyV2Table
+
+	result = s.db.Table(OffChainAuthKeyV2TableName).Where("user_address = ? and domain =? ", userAddress, domain).Find(&results)
+
+	if result.Error != nil {
+		if errIsNotFound(result.Error) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to query ListAuthKeysV2 table: %s", result.Error)
+	}
+
+	for _, res := range results {
+		publicKeys = append(publicKeys, res.PublicKey)
+	}
+
+	return publicKeys, nil
+}
+
+// DeleteAuthKeysV2 delete user public keys
+func (s *SpDBImpl) DeleteAuthKeysV2(userAddress string, domain string, publicKeys []string) (bool, error) {
+	result := s.db.Table(OffChainAuthKeyV2TableName).Where("user_address = ? and domain =? and public_key in (?)", userAddress, domain, publicKeys).Delete(&OffChainAuthKeyV2Table{})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return true, nil
 }

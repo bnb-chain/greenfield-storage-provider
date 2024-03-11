@@ -3,6 +3,7 @@ package gater
 import (
 	"context"
 	"encoding/xml"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -38,6 +39,14 @@ type RequestNonceResp struct {
 
 type UpdateUserPublicKeyResp struct {
 	Result bool `xml:"Result"`
+}
+
+type DeleteUserPublicKeyV2Resp struct {
+	Result bool `xml:"Result"`
+}
+
+type ListUserPublicKeyV2Resp struct {
+	PublicKeys []string `xml:"Result"`
 }
 
 // requestNonceHandler handle requestNonce request
@@ -327,6 +336,146 @@ func (g *GateModular) updateUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 	b, err = xml.Marshal(resp)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal update user public key response", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(b)
+}
+
+// listUserPublicKeyV2Handler list user public keys from off_chain_auth_key_v2 table
+func (g *GateModular) listUserPublicKeyV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      []byte
+		reqCtx *RequestContext
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to listUserPublicKeyV2", "req_info", reqCtx.String())
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	// ignore the error, because the listUserPublicKeyV2 does not need signature
+	reqCtx, _ = NewRequestContext(r, g)
+
+	account := reqCtx.request.Header.Get(GnfdUserAddressHeader)
+	domain := reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+
+	// validate account header
+	if ok := common.IsHexAddress(account); !ok {
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+
+	// validate domain header
+	if domain == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check GnfdOffChainAuthAppDomainHeader header")
+		err = ErrInvalidDomainHeader
+		return
+	}
+
+	ctx := log.Context(context.Background(), account, domain)
+	userPublicKeys, err := g.baseApp.GfSpClient().ListAuthKeysV2(ctx, account, domain)
+
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to listUserPublicKeyV2", "error", err)
+		return
+	}
+
+	var resp = &ListUserPublicKeyV2Resp{
+		PublicKeys: userPublicKeys,
+	}
+	b, err = xml.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal listUserPublicKeyV2 response", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(b)
+}
+
+func (g *GateModular) deleteUserPublicKeyV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      []byte
+		reqCtx *RequestContext
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to deleteUserPublicKeyV2", "req_info", reqCtx.String())
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	// deleteUserPublicKeyV2Handler requires the authentication
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+
+	account := reqCtx.request.Header.Get(GnfdUserAddressHeader)
+	domain := reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+
+	// validate account header
+	if ok := common.IsHexAddress(account); !ok {
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
+		err = ErrInvalidHeader
+		return
+	}
+	if account != reqCtx.account {
+		err = ErrNoPermission
+	}
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to read publicKeys from request body", "error", err)
+		err = ErrExceptionStream
+		return
+	}
+
+	publicKeys := strings.Split(string(data), ",")
+
+	// validate domain header
+	if domain == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check GnfdOffChainAuthAppDomainHeader header")
+		err = ErrInvalidDomainHeader
+		return
+	}
+
+	ctx := log.Context(context.Background(), account, domain)
+	result, err := g.baseApp.GfSpClient().DeleteAuthKeysV2(ctx, account, domain, publicKeys)
+
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to deleteUserPublicKeyV2", "error", err)
+		return
+	}
+
+	var resp = &DeleteUserPublicKeyV2Resp{
+		Result: result,
+	}
+	b, err = xml.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal DeleteUserPublicKeyV2Resp", "error", err)
 		err = ErrDecodeMsg
 		return
 	}

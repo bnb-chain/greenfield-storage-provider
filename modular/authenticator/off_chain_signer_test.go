@@ -27,7 +27,7 @@ func TestEd25519PrivateKeyAndVerify(t *testing.T) {
 	msg := "I want to sign a message"
 	sigStr := "7a72fef8af89fbdd45879b842b70c868c489484daf564a53b027bb3cd68374007a7b43a49645c82ad0dba63fb9477bc8d15988d0c0ffe1b54fb1bf8fa9a02905"
 
-	sig, err := hex.DecodeString(sigStr)
+	sig, _ := hex.DecodeString(sigStr)
 
 	pubKeyBytes, err := hex.DecodeString(userEddsaPublicKeyStr)
 	if err != nil {
