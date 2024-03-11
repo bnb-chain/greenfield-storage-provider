@@ -1905,7 +1905,7 @@ func TestGateModular_getRecoverPiece(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-				pieceOpMock.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
+				pieceOpMock.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				return g
 			},
@@ -1939,7 +1939,7 @@ func TestGateModular_getRecoverPiece(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-				pieceOpMock.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
+				pieceOpMock.EXPECT().ECPieceKey(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				return g
 			},
@@ -2153,7 +2153,7 @@ func TestGateModular_getRecoverSegment(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				g.baseApp.SetPieceOp(pieceOpMock)
 
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
@@ -2188,7 +2188,7 @@ func TestGateModular_getRecoverSegment(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				pieceOpMock.EXPECT().SegmentPieceSize(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
 				g.baseApp.SetPieceOp(pieceOpMock)
 
@@ -2224,7 +2224,7 @@ func TestGateModular_getRecoverSegment(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				pieceOpMock.EXPECT().SegmentPieceSize(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
 				g.baseApp.SetPieceOp(pieceOpMock)
 
@@ -2260,7 +2260,7 @@ func TestGateModular_getRecoverSegment(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				pieceOpMock.EXPECT().ECPieceSize(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").Times(1)
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").Times(1)
 				g.baseApp.SetPieceOp(pieceOpMock)
 
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)

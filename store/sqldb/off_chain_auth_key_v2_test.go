@@ -22,7 +22,7 @@ func TestSpDBImpl_InsertAuthKeyV2Success(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `off_chain_auth_key_v2` (`user_address`,`domain`,`public_key`,`expiry_date`,`created_time`,`modified_time`) VALUES (?,?,?,?,?,?)").
+	mock.ExpectExec("\t\t\tINSERT INTO `off_chain_auth_key_v2` (`user_address`,`domain`,`public_key`,`expiry_date`,`created_time`,`modified_time`) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `expiry_date`=VALUES(`expiry_date`),`modified_time`=VALUES(`modified_time`)\n").
 		WithArgs(o.UserAddress, o.Domain, o.PublicKey, o.ExpiryDate, o.CreatedTime, o.ModifiedTime).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
