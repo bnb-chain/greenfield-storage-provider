@@ -272,8 +272,8 @@ func TestSpDBImpl_UpdatePieceChecksumSuccess1(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "piece_size"}).
 			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.PieceSize))
 	mock.ExpectBegin()
-	mock.ExpectExec("UPDATE `integrity_meta_00` SET `piece_checksum_list`=?,`piece_size`=piece_size + ? WHERE object_id = ? and redundancy_index = ?").
-		WithArgs(newChecksum, i.PieceSize, i.ObjectID, i.RedundancyIndex).
+	mock.ExpectExec("UPDATE `integrity_meta_00` SET `piece_checksum_list`=?,`piece_size`=? WHERE object_id = ? and redundancy_index = ?").
+		WithArgs(newChecksum, 2, i.ObjectID, i.RedundancyIndex).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.UpdatePieceChecksum(objectID, redundancyIndex, checksum, 1)
@@ -351,7 +351,7 @@ func TestSpDBImpl_UpdatePieceChecksumFailure3(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "piece_size"}).
 			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.PieceSize))
 	mock.ExpectBegin()
-	mock.ExpectExec("UPDATE `integrity_meta_00` SET `piece_checksum_list`=? ,`piece_size`=piece_size + ? WHERE object_id = ? and redundancy_index = ?").
+	mock.ExpectExec("UPDATE `integrity_meta_00` SET `piece_checksum_list`=? ,`piece_size`=? WHERE object_id = ? and redundancy_index = ?").
 		WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()

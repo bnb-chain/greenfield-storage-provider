@@ -181,7 +181,7 @@ func (g *GfSpBaseApp) OnAskCreateObjectApproval(ctx context.Context, task task.A
 }
 
 func (g *GfSpBaseApp) OnAskDelegateCreateObjectApproval(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (allow bool, err error) {
-	if task == nil || task.GetDelegateCreateObjectInfo() == nil {
+	if task == nil || task.GetDelegateCreateObject() == nil {
 		log.CtxError(ctx, "failed to ask create object approval due to object info pointer dangling")
 		return false, ErrApprovalTaskDangling
 	}

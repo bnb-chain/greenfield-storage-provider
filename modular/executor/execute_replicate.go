@@ -70,7 +70,6 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	var sealErr error
 	if task.GetIsAgentUpload() {
 		expectCheckSums := e.makeCheckSumsForAgentUpload(ctx, task)
-		log.CtxDebug(ctx, "CHECKSUMS", expectCheckSums)
 		sealMsgV2 := &storagetypes.MsgSealObjectV2{
 			Operator:                    e.baseApp.OperatorAddress(),
 			BucketName:                  task.GetObjectInfo().GetBucketName(),

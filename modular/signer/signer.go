@@ -40,7 +40,7 @@ var (
 	ErrCompleteSwapIn                     = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120017, "send complete swap in failed")
 	ErrCancelSwapIn                       = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120018, "send cancel swap in failed")
 	ErrDelegateUpdateObjectContentOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120019, "send DelegateUpdateObjectContent failed")
-	ErrDelegateCreateObjectContentOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120019, "send DelegateUpdateObjectContent failed")
+	ErrDelegateCreateObjectContentOnChain = gfsperrors.Register(module.SignModularName, http.StatusBadRequest, 120020, "send DelegateCreateObjectContent failed")
 )
 
 var _ module.Signer = &SignModular{}
@@ -258,7 +258,7 @@ func (s *SignModular) DelegateUpdateObjectContent(ctx context.Context, msg *stor
 }
 
 func (s *SignModular) DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
-	return s.client.DelegateCreateObjectContent(ctx, SignOperator, msg)
+	return s.client.DelegateCreateObject(ctx, SignOperator, msg)
 }
 
 func (s *SignModular) SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error) {

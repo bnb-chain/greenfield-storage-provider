@@ -931,7 +931,7 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 	return "", ErrDeleteGVGOnChain
 }
 
-func (client *GreenfieldChainSignClient) DelegateCreateObjectContent(ctx context.Context, scope SignType,
+func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateCreateObject) (string, error) {
 	log.Infow("signer starts to delegate create object content", "scope", scope)
 	if msg == nil {

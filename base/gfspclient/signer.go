@@ -114,7 +114,7 @@ func (s *GfSpClient) SealObjectV2(ctx context.Context, object *storagetypes.MsgS
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to seal object approval", "error", err)
+		log.CtxErrorw(ctx, "client failed to seal object", "error", err)
 		return "", ErrRPCUnknownWithDetail("client failed to seal object approval, error: ", err)
 	}
 	if resp.GetErr() != nil {
@@ -729,8 +729,8 @@ func (s *GfSpClient) DelegateCreateObject(ctx context.Context, object *storagety
 		return "", ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", connErr)
 	}
 	req := &gfspserver.GfSpSignRequest{
-		Request: &gfspserver.GfSpSignRequest_DelegateCreateObjectInfo{
-			DelegateCreateObjectInfo: object,
+		Request: &gfspserver.GfSpSignRequest_DelegateCreateObject{
+			DelegateCreateObject: object,
 		},
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)

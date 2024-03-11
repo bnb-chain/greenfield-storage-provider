@@ -308,7 +308,7 @@ func (a *ApprovalModular) HandleDelegateCreateObjectApprovalTask(ctx context.Con
 	var (
 		err error
 	)
-	if task == nil || task.GetDelegateCreateObjectInfo() == nil {
+	if task == nil || task.GetDelegateCreateObject() == nil {
 		log.CtxErrorw(ctx, "failed to create object approval due to pointer nil")
 		return false, ErrDanglingPointer
 	}
@@ -324,7 +324,7 @@ func (a *ApprovalModular) HandleDelegateCreateObjectApprovalTask(ctx context.Con
 	metrics.PerfApprovalTime.WithLabelValues("approval_object_check_repeated_cost").Observe(time.Since(startQueryQueue).Seconds())
 	if has {
 		shadowTask := a.objectQueue.PopByKey(task.Key())
-		task.SetDelegateCreateObjectInfo((shadowTask.(coretask.ApprovalDelegateCreateObjectTask).GetDelegateCreateObjectInfo()))
+		task.SetDelegateCreateObject((shadowTask.(coretask.ApprovalDelegateCreateObjectTask).GetDelegateCreateObject()))
 		_ = a.objectQueue.Push(shadowTask)
 		log.CtxErrorw(ctx, "repeated create object approval task is returned")
 		return true, nil

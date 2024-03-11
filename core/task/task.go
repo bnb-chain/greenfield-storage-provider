@@ -649,19 +649,16 @@ type GCBucketMigrationTask interface {
 	SetFinished(bool)
 }
 
-// ApprovalDelegateCreateObjectTask is an abstract interface to record the ask delagate create object
-// approval information. The user account will create MsgDelegateCreateObject, SP
-// should decide whether approved the request based on the MsgDelegateCreateObject.
-// If so, SP will SetExpiredHeight and signs the MsgDelegateCreateObject.
+// ApprovalDelegateCreateObjectTask The user account will create MsgDelegateCreateObject, SP should decide whether approved the request based on the MsgDelegateCreateObject.
 type ApprovalDelegateCreateObjectTask interface {
 	ApprovalTask
 	// InitApprovalDelegateCreateObjectTask inits the ApprovalDelegateCreateObjectTask by
 	// MsgDelegateCreateObject and task priority. SP only fill the MsgDelegateCreateObject's
 	// PrimarySpApproval field, can not change other fields.
 	InitApprovalDelegateCreateObjectTask(string, *storagetypes.MsgDelegateCreateObject, []byte, TPriority)
-	// GetDelegateCreateObjectInfo returns the user's MsgDelegateCreateObject.
-	GetDelegateCreateObjectInfo() *storagetypes.MsgDelegateCreateObject
-	// SetDelegateCreateObjectInfo sets the MsgDelegateCreateObject. Should try to avoid calling
+	// GetDelegateCreateObject returns the task's MsgDelegateCreateObject.
+	GetDelegateCreateObject() *storagetypes.MsgDelegateCreateObject
+	// SetDelegateCreateObject sets the MsgDelegateCreateObject. Should try to avoid calling
 	// this method, it will change the approval information.
-	SetDelegateCreateObjectInfo(*storagetypes.MsgDelegateCreateObject)
+	SetDelegateCreateObject(*storagetypes.MsgDelegateCreateObject)
 }

@@ -42,7 +42,7 @@ message GfSpCreateObjectApprovalTask {
 
 message GfSpDelegateCreateObjectApprovalTask {
   GfSpTask task = 1;
-  greenfield.storage.MsgDelegateCreateObject delegate_create_object_info = 2;
+  greenfield.storage.MsgDelegateCreateObject delegate_create_object = 2;
   bytes fingerprint = 3;
 }
 

@@ -198,9 +198,9 @@ func (*NullTask) SetShadowObjectInfo(info *storagetypes.ShadowObjectInfo) {}
 func (t *NullTask) InitApprovalDelegateCreateObjectTask(s string, object *storagetypes.MsgDelegateCreateObject, bytes []byte, priority TPriority) {
 }
 
-func (t *NullTask) GetDelegateCreateObjectInfo() *storagetypes.MsgDelegateCreateObject { return nil }
+func (t *NullTask) GetDelegateCreateObject() *storagetypes.MsgDelegateCreateObject { return nil }
 
-func (t *NullTask) SetDelegateCreateObjectInfo(object *storagetypes.MsgDelegateCreateObject) {}
-func (t *NullTask) GetIsAgentUpload() bool                                                   { return false }
+func (t *NullTask) SetDelegateCreateObject(object *storagetypes.MsgDelegateCreateObject) {}
+func (t *NullTask) GetIsAgentUpload() bool                                               { return false }
 func (t *NullTask) InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64, isAgentUpload bool) {
 }

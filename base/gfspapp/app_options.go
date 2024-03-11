@@ -171,10 +171,8 @@ const (
 
 	SignerSuccessDelegateUpdateObjectContent = "signer_delegate_update_object_content_success"
 	SignerFailureDelegateUpdateObjectContent = "signer_delegate_update_object_content_failure"
-	SignerSuccessDelegateCreateObjectContent = "signer_delegate_create_object_content_success"
-	SignerFailureDelegateCreateObjectContent = "signer_delegate_create_object_content_failure"
-	SignerSuccessSealObjectV2                = "signer_seal_v2_object_success"
-	SignerFailureSealObjectV2                = "signer_seal_v2_object_failure"
+	SignerSuccessDelegateCreateObject        = "signer_delegate_create_object_success"
+	SignerFailureDelegateCreateObject        = "signer_delegate_create_object_failure"
 
 	UploaderSuccessPutObject = "uploader_put_object_success"
 	UploaderFailurePutObject = "uploader_put_object_failure"

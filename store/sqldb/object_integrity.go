@@ -106,6 +106,7 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64, redundancyIndex int32) (m
 		ObjectID:          queryReturn.ObjectID,
 		RedundancyIndex:   queryReturn.RedundancyIndex,
 		IntegrityChecksum: integrityChecksum,
+		PieceSize:         queryReturn.PieceSize,
 	}
 	meta.PieceChecksumList, err = util.StringToBytesSlice(queryReturn.PieceChecksumList)
 	if err != nil {
@@ -146,7 +147,7 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 		RedundancyIndex:   meta.RedundancyIndex,
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
-		PieceSize:         1,
+		PieceSize:         meta.PieceSize,
 	}
 	shardTableName := GetIntegrityMetasTableName(meta.ObjectID)
 	result := s.db.Table(shardTableName).Create(insertIntegrityMetaRecord)
@@ -339,9 +340,9 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 		newChecksums := append(integrityMeta.PieceChecksumList, checksum)
 		integrityMeta.PieceChecksumList = newChecksums
 		result := s.db.Table(shardTableName).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
-			Updates(map[string]interface{}{
-				"piece_checksum_list": util.BytesSliceToString(newChecksums),
-				"piece_size":          gorm.Expr("piece_size + ?", dataLength),
+			Updates(&IntegrityMetaTable{
+				PieceChecksumList: util.BytesSliceToString(newChecksums),
+				PieceSize:         integrityMeta.PieceSize + dataLength,
 			})
 		if result.Error != nil {
 			return fmt.Errorf("failed to update integrity meta table: %s", result.Error)

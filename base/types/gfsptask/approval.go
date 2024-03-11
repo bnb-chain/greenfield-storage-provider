@@ -453,10 +453,6 @@ func (m *GfSpCreateObjectApprovalTask) SetCreateObjectInfo(object *storagetypes.
 	m.CreateObjectInfo = object
 }
 
-func (m *GfSpCreateObjectApprovalTask) GetIsAgentUpload() bool {
-	return m.GetIsAgentUpload()
-}
-
 func (m *GfSpReplicatePieceApprovalTask) InitApprovalReplicatePieceTask(object *storagetypes.ObjectInfo,
 	params *storagetypes.Params, priority coretask.TPriority, askOpAddress string) {
 	m.Reset()
@@ -647,14 +643,14 @@ func (m *GfSpDelegateCreateObjectApprovalTask) InitApprovalDelegateCreateObjectT
 	m.GetTask().SetCreateTime(time.Now().Unix())
 	m.GetTask().SetUpdateTime(time.Now().Unix())
 	m.SetUserAddress(account)
-	m.SetDelegateCreateObjectInfo(object)
+	m.SetDelegateCreateObject(object)
 	m.SetPriority(priority)
 }
 
 func (m *GfSpDelegateCreateObjectApprovalTask) Key() coretask.TKey {
 	return GfSpCreateObjectApprovalTaskKey(
-		m.GetDelegateCreateObjectInfo().GetBucketName(),
-		m.GetDelegateCreateObjectInfo().GetObjectName(),
+		m.GetDelegateCreateObject().GetBucketName(),
+		m.GetDelegateCreateObject().GetObjectName(),
 		m.GetUserAddress(),
 		m.Fingerprint)
 }
@@ -781,6 +777,6 @@ func (m *GfSpDelegateCreateObjectApprovalTask) GetExpiredHeight() uint64 {
 	return 0
 }
 
-func (m *GfSpDelegateCreateObjectApprovalTask) SetDelegateCreateObjectInfo(object *storagetypes.MsgDelegateCreateObject) {
-	m.DelegateCreateObjectInfo = object
+func (m *GfSpDelegateCreateObjectApprovalTask) SetDelegateCreateObject(object *storagetypes.MsgDelegateCreateObject) {
+	m.DelegateCreateObject = object
 }

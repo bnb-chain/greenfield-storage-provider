@@ -1048,6 +1048,11 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return
 	}
+	if payloadSize == 0 || payloadSize > g.maxPayloadSize {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+		err = ErrInvalidPayloadSize
+		return
+	}
 
 	err = s3util.CheckValidBucketName(reqCtx.bucketName)
 	if err != nil {
@@ -1153,7 +1158,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 			return
 		}
 		startDelegateCreateObject := time.Now()
-		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
+		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObject())
 		log.Debugw("debug", "txHash", txHash)
 		metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
 		metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
@@ -1165,7 +1170,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 
 	_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
+		log.CtxErrorw(reqCtx.Context(), "failed to ConfirmTransaction", "error", err)
 		return
 	}
 
@@ -1178,18 +1183,13 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		return
 	}
-	log.Debugw("debug", "bucket", bucketInfo.BucketName, "object", objectInfo.Id.Uint64(), "payload", objectInfo.PayloadSize)
 	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		return
 	}
-	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
-		err = ErrInvalidPayloadSize
-		return
-	}
+
 	startGetStorageParamTime := time.Now()
 	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
@@ -1265,6 +1265,12 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	payloadSizeStr := queryParams.Get("payload_size")
 	payloadSize, err = strconv.ParseUint(payloadSizeStr, 10, 64)
 	if err != nil {
+		return
+	}
+	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
+	if payloadSize == 0 || payloadSize > params.GetMaxPayloadSize() {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+		err = ErrInvalidPayloadSize
 		return
 	}
 
@@ -1361,7 +1367,7 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		}, fingerprint, g.baseApp.TaskPriority(task))
 
 		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
-		if objectInfo == nil {
+		if strings.Contains(err.Error(), "no such object") {
 			startAskCreateObjectApproval := time.Now()
 			authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
 			metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
@@ -1376,15 +1382,15 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 				return
 			}
 			startDelegateCreateObject := time.Now()
-			txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObjectInfo())
+			txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObject())
 			metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
 			metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
 			if err != nil {
 				log.CtxErrorw(reqCtx.ctx, "failed to sign create object approval", "error", err)
 				return
 			}
-		} else if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || objectInfo.Creator != reqCtx.account {
-			log.CtxErrorw(reqCtx.ctx, "object has been created")
+		} else if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
+			log.CtxErrorw(reqCtx.ctx, "object has been created", "status", objectInfo.ObjectStatus)
 			return
 		}
 	}
@@ -1420,12 +1426,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
-		return
-	}
-	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
-	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > params.GetMaxPayloadSize() {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
-		err = ErrInvalidPayloadSize
 		return
 	}
 
