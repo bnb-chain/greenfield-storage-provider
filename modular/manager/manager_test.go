@@ -50,10 +50,12 @@ func setup(t *testing.T) *ManageModular {
 		gcMetaTimeInterval:               4,
 		gcStaleVersionObjectTimeInterval: 2,
 		syncConsensusInfoInterval:        5,
+		syncAvailableVGFInterval:         5,
 		statisticsOutputInterval:         6,
 		discontinueBucketTimeInterval:    7,
 		gcSafeBlockDistance:              1,
 		backupTaskMux:                    sync.Mutex{},
+		spID:                             1,
 	}
 
 	return manager
@@ -90,13 +92,22 @@ func TestExecuteModular_StartSuccess(t *testing.T) {
 	}).AnyTimes()
 
 	m2.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint"}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_GRACEFUL_EXITING}}, nil).AnyTimes()
+	m2.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
+		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}, nil).AnyTimes()
 	m2.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(100), nil).AnyTimes()
 
 	m4 := spdb.NewMockSPDB(ctrl)
 	manage.baseApp.SetGfSpDB(m4)
 	m4.EXPECT().UpdateAllSp(gomock.Any()).Return(nil).AnyTimes()
 	m4.EXPECT().SetOwnSpInfo(gomock.Any()).Return(nil).AnyTimes()
+
+	m5 := vgmgr.NewMockVirtualGroupManager(ctrl)
+	manage.virtualGroupManager = m5
+	m5.EXPECT().PickVirtualGroupFamily(gomock.Any()).Return(&vgmgr.VirtualGroupFamilyMeta{
+		ID:          1,
+		PrimarySPID: 1,
+	}, nil).AnyTimes()
 
 	err := manage.Start(context.TODO())
 	assert.Nil(t, err)
@@ -124,7 +135,9 @@ func TestManageModular_EventLoop(t *testing.T) {
 	m1 := consensus.NewMockConsensus(ctrl)
 	manage.baseApp.SetConsensus(m1)
 	m1.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint"}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}}, nil).AnyTimes()
+	m1.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
+		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}, nil).AnyTimes()
 	m1.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(0), nil).AnyTimes()
 	m2 := spdb.NewMockSPDB(ctrl)
 	manage.baseApp.SetGfSpDB(m2)
@@ -140,7 +153,6 @@ func TestManageModular_EventLoop(t *testing.T) {
 			},
 		}, nil).AnyTimes()
 	m3.EXPECT().DiscontinueBucket(gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
-
 	ctx, cancel := context.WithTimeout(context.TODO(), 10)
 	manage.eventLoop(ctx)
 	time.Sleep(10 * time.Second)
@@ -172,7 +184,8 @@ func TestManageModular_EventLoop1(t *testing.T) {
 			},
 		}, nil).AnyTimes()
 	m3.EXPECT().DiscontinueBucket(gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
-
+	m1.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
+		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}, nil).AnyTimes()
 	ctx, cancel := context.WithTimeout(context.TODO(), 10)
 	manage.eventLoop(ctx)
 	time.Sleep(10 * time.Second)
