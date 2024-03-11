@@ -111,7 +111,7 @@ message ListAuthKeysV2Request {
 message ListAuthKeysV2Response {
   base.types.gfsperrors.GfSpError err = 1;
   // publicKeys defines the list of user public keys
-  repeated string publicKeys = 2;
+  repeated string public_keys = 2;
 }
 
 // DeleteAuthKeysV2Request is request type for the DeleteAuthKeysV2 RPC method.
@@ -121,7 +121,7 @@ message DeleteAuthKeysV2Request {
   // domain is the DApp domain for this nonce
   string domain = 2;
   // publicKeys defines the list of user public keys
-  repeated string publicKeys = 3;
+  repeated string public_keys = 3;
 }
 
 // DeleteAuthKeysV2Response is response type for the DeleteAuthKeysV2 RPC method.
