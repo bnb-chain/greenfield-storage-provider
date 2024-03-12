@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -25,7 +27,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 const (
@@ -102,6 +103,7 @@ type ManageModular struct {
 
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
+	syncAvailableVGFInterval  int
 
 	discontinueBucketEnabled       bool
 	discontinueBucketTimeInterval  int
@@ -235,6 +237,7 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
 	gcObjectStaleVersionPieceTicker := time.NewTicker(time.Duration(m.gcStaleVersionObjectTimeInterval) * time.Second)
+	syncAvailableVGFTicker := time.NewTicker(time.Duration(m.syncAvailableVGFInterval) * time.Second)
 
 	backupTaskTicker := time.NewTicker(time.Duration(DefaultBackupTaskTimeout) * time.Second)
 	for {
@@ -332,7 +335,10 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				continue
 			}
 			go m.gcObjectStaleVersionPiece(ctx)
+		case <-syncAvailableVGFTicker.C:
+			go m.syncAvailableVGF(ctx)
 		}
+
 	}
 }
 
@@ -1194,4 +1200,25 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 	}
 	flag := m.recoverProcessCount.Load() > 0 || m.verifyTerminationSignal.Load() > 0
 	return res, flag, nil
+}
+
+func (m *ManageModular) syncAvailableVGF(ctx context.Context) {
+	var (
+		err error
+		sp  *sptypes.StorageProvider
+	)
+
+	// query meta
+	if sp, err = m.baseApp.Consensus().QuerySPByID(context.Background(), m.spID); err != nil {
+		log.CtxErrorw(ctx, "failed to list sps", "error", err)
+		return
+	}
+
+	// only pick vgf when sp is STATUS_IN_SERVICE
+	if sp.Status == sptypes.STATUS_IN_SERVICE {
+		if _, err = m.PickVirtualGroupFamily(context.Background(), &task.NullTask{}); err != nil {
+			log.CtxErrorw(ctx, "failed to pick vgf for migrate bucket", "error", err)
+			return
+		}
+	}
 }
