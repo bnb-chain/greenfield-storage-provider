@@ -44,6 +44,7 @@ var (
 	ErrInvalidAddressOrDomain            = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20016, "userAddress or domain can't be null")
 	ErrInvalidAddressOrDomainOrPublicKey = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20017, "userAddress, domain or publicKey can't be null")
 	ErrInvalidPublicKeyLength            = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20018, "The length of publicKeys must be less or equal to 100")
+	ErrPublicKeyNotExist                 = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20019, "The publicKey was not registered")
 )
 
 func ErrUnexpectedObjectStatusWithDetail(objectName string, expectedStatus storagetypes.ObjectStatus, actualStatus storagetypes.ObjectStatus) *gfsperrors.GfSpError {
@@ -248,6 +249,9 @@ func (a *AuthenticationModular) VerifyGNFD2EddsaSignature(ctx context.Context, a
 	getAuthKeyV2Resp, err := a.GetAuthKeyV2(ctx, account, domain, publicKey)
 	if err != nil {
 		return false, err
+	}
+	if getAuthKeyV2Resp == nil {
+		return false, ErrPublicKeyNotExist
 	}
 	if time.Until(getAuthKeyV2Resp.ExpiryDate).Seconds() < 0 {
 		return false, ErrPublicKeyExpired

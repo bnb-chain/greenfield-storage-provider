@@ -473,11 +473,7 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			gnfd1EddsaSignaturePrefix := commonhttp.Gnfd1Eddsa + ","
 			// GNFD2-EDDSA
 			gnfd2EddsaSignaturePrefix := commonhttp.Gnfd2Eddsa + ","
-			if strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
-
-			} else if strings.HasPrefix(gnfdAuthorizationParam, gnfd2EddsaSignaturePrefix) {
-
-			} else {
+			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) && !strings.HasPrefix(gnfdAuthorizationParam, gnfd2EddsaSignaturePrefix) {
 				err = ErrUnsupportedSignType
 				return
 			}
