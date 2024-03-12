@@ -979,8 +979,8 @@ func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Contex
 	}
 
 	// failed to broadcast tx
-	ErrDelegateCreateObjectContentOnChain.SetError(fmt.Errorf("failed to delegate create object, error: %v", err))
-	return "", ErrDelegateCreateObjectContentOnChain
+	ErrDelegateCreateObjectOnChain.SetError(fmt.Errorf("failed to delegate create object, error: %v", err))
+	return "", ErrDelegateCreateObjectOnChain
 }
 
 func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context.Context, scope SignType,

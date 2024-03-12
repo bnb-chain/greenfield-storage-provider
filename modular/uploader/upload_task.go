@@ -336,7 +336,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 					return ErrPieceStoreWithDetail(fmt.Sprintf("failed to put segment piece to piece store, piece_key: %s, error: %s",
 						pieceKey, err.Error()))
 				}
-				err = u.updatePieceCheckSum(ctx, task, data, isUpdate, uint64(readN))
+				err = u.updatePieceCheckSum(task, data, isUpdate, uint64(readN))
 				if err != nil {
 					log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
 					return ErrGfSpDBWithDetail("failed to append integrity checksum to db, error: " + err.Error())
@@ -388,7 +388,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 			log.CtxErrorw(ctx, "failed to put segment piece to piece store", "error", err)
 			return ErrPieceStoreWithDetail("failed to put segment piece to piece store, error: " + err.Error())
 		}
-		err = u.updatePieceCheckSum(ctx, task, data, isUpdate, uint64(readN))
+		err = u.updatePieceCheckSum(task, data, isUpdate, uint64(readN))
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to append integrity checksum to db", "error", err)
 			return ErrGfSpDBWithDetail("failed to append integrity checksum to db, error: " + err.Error())
@@ -420,7 +420,7 @@ func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 	}
 }
 
-func (u *UploadModular) updatePieceCheckSum(ctx context.Context, task coretask.ResumableUploadObjectTask, data []byte, isUpdate bool, dataLength uint64) error {
+func (u *UploadModular) updatePieceCheckSum(task coretask.ResumableUploadObjectTask, data []byte, isUpdate bool, dataLength uint64) error {
 	var err error
 	if isUpdate {
 		err = u.baseApp.GfSpDB().UpdateShadowPieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data), task.GetObjectInfo().GetVersion())
