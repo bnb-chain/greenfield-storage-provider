@@ -1267,9 +1267,20 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	if err != nil {
 		return
 	}
+
+	startGetStorageParamTime := time.Now()
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), time.Now().Unix())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, error" + err.Error())
+		return
+	}
+
 	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
 	if payloadSize == 0 || payloadSize > params.GetMaxPayloadSize() {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+		log.CtxErrorw(reqCtx.Context(), "failed to put object due to payload size invalid", "payload_size", payloadSize, "max_payload_size", params.GetMaxPayloadSize())
 		err = ErrInvalidPayloadSize
 		return
 	}
@@ -1283,7 +1294,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	if err != nil {
 		return
 	}
-
 	if strings.Contains(reqCtx.objectName, "..") ||
 		reqCtx.objectName == "/" ||
 		strings.Contains(reqCtx.objectName, "\\") ||
@@ -1292,7 +1302,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		err = ErrInvalidObjectName
 		return
 	}
-
 	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
 		return
@@ -1394,7 +1403,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 			return
 		}
 	}
-
 	if txHash != "" {
 		_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
 		if err != nil {
@@ -1410,16 +1418,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
-		return
-	}
-
-	startGetStorageParamTime := time.Now()
-	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
 		return
 	}
 	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)

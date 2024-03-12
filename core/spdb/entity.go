@@ -65,6 +65,7 @@ type ShadowIntegrityMeta struct {
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
 	Version           int64
+	PieceSize         uint64
 }
 
 // ReadRecord defines a read request record, will decrease the bucket read quota.
