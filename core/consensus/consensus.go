@@ -179,7 +179,3 @@ func (c *NullConsensus) QueryShadowObjectInfo(ctx context.Context, bucket, objec
 	return nil, nil
 }
 func (*NullConsensus) Close() error { return nil }
-
-func (c *NullConsensus) ConfirmTransactionBoundless(ctx context.Context, txHash string) (*sdk.TxResponse, error) {
-	return nil, nil
-}

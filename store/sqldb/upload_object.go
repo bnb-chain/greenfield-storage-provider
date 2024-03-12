@@ -121,6 +121,7 @@ func (s *SpDBImpl) GetUploadMetasToSeal(limit int, timeoutSecond int64) ([]*core
 			GlobalVirtualGroupID: u.GlobalVirtualGroupID,
 			SecondaryEndpoints:   util.SplitByComma(u.SecondaryEndpoints),
 			SecondarySignatures:  secondarySignatures,
+			IsAgentUpload:        u.IsAgentUpload,
 		})
 	}
 	return returnUploadObjectMetas, nil

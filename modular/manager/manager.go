@@ -533,7 +533,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		}
 		sealTask := &gfsptask.GfSpSealObjectTask{}
 		sealTask.InitSealObjectTask(meta.GlobalVirtualGroupID, objectInfo, storageParams, m.baseApp.TaskPriority(sealTask),
-			meta.SecondaryEndpoints, meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask))
+			meta.SecondaryEndpoints, meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask), meta.IsAgentUpload)
 		pushErr := m.sealQueue.Push(sealTask)
 		if pushErr != nil {
 			log.Errorw("failed to push seal object task to queue", "object_info", objectInfo, "error", pushErr)

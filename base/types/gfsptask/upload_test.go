@@ -987,7 +987,7 @@ func TestGfSpReplicatePieceTask_SetSecondaryAddresses(t *testing.T) {
 func TestInitSealObjectTask(t *testing.T) {
 	m := &GfSpSealObjectTask{}
 	m.InitSealObjectTask(1, mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, []string{"1"},
-		[][]byte{[]byte("1")}, 0, 0)
+		[][]byte{[]byte("1")}, 0, 0, false)
 }
 
 func TestGfSpSealObjectTask_Key(t *testing.T) {

@@ -521,7 +521,7 @@ func (m *GfSpReplicatePieceTask) GetIsAgentUpload() bool {
 }
 
 func (m *GfSpSealObjectTask) InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority coretask.TPriority,
-	endpoints []string, signatures [][]byte, timeout int64, retry int64) {
+	endpoints []string, signatures [][]byte, timeout int64, retry int64, isAgentUpload bool) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GlobalVirtualGroupId = vgfID
@@ -534,6 +534,7 @@ func (m *GfSpSealObjectTask) InitSealObjectTask(vgfID uint32, object *storagetyp
 	m.SetTimeout(timeout)
 	m.SetMaxRetry(retry)
 	m.SetSecondarySignatures(signatures)
+	m.IsAgentUploadTask = isAgentUpload
 }
 
 func (m *GfSpSealObjectTask) Key() coretask.TKey {
@@ -619,6 +620,10 @@ func (m *GfSpSealObjectTask) Expired() bool {
 
 func (m *GfSpSealObjectTask) GetPriority() coretask.TPriority {
 	return m.GetTask().GetPriority()
+}
+
+func (m *GfSpSealObjectTask) GetIsAgentUpload() bool {
+	return m.IsAgentUploadTask
 }
 
 func (m *GfSpSealObjectTask) SetPriority(priority coretask.TPriority) {

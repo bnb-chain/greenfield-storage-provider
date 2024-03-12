@@ -70,14 +70,32 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		return
 	}
 	task.AppendLog("executor-begin-handle-seal-task")
-	sealMsg := &storagetypes.MsgSealObject{
-		Operator:                    e.baseApp.OperatorAddress(),
-		BucketName:                  task.GetObjectInfo().GetBucketName(),
-		ObjectName:                  task.GetObjectInfo().GetObjectName(),
-		GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
-		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+	if task.GetIsAgentUpload() {
+		checksums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryAddresses()))
+		if makeErr != nil {
+			task.SetError(makeErr)
+			return
+		}
+		sealMsg := &storagetypes.MsgSealObjectV2{
+			Operator:                    e.baseApp.OperatorAddress(),
+			BucketName:                  task.GetObjectInfo().GetBucketName(),
+			ObjectName:                  task.GetObjectInfo().GetObjectName(),
+			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
+			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			ExpectChecksums:             checksums,
+		}
+		task.SetError(e.sealObjectV2(ctx, task, sealMsg))
+	} else {
+		sealMsg := &storagetypes.MsgSealObject{
+			Operator:                    e.baseApp.OperatorAddress(),
+			BucketName:                  task.GetObjectInfo().GetBucketName(),
+			ObjectName:                  task.GetObjectInfo().GetObjectName(),
+			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
+			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+		}
+		task.SetError(e.sealObject(ctx, task, sealMsg))
 	}
-	task.SetError(e.sealObject(ctx, task, sealMsg))
+
 	metrics.PerfPutObjectTime.WithLabelValues("seal_object_total_time_from_uploading_to_sealing").Observe(time.Since(
 		time.Unix(task.GetObjectInfo().GetCreateAt(), 0)).Seconds())
 	task.AppendLog("executor-end-handle-seal-task")

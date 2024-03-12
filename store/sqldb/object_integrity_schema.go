@@ -30,7 +30,7 @@ type IntegrityMetaTable struct {
 	RedundancyIndex   int32  `gorm:"primary_key"`
 	IntegrityChecksum string
 	PieceChecksumList string
-	PieceSize         uint64
+	PiecesSize        uint64
 }
 
 // TableName is used to set IntegrityMetaTable schema's table name in database

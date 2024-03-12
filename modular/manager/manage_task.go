@@ -362,8 +362,8 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
 	sealObject := &gfsptask.GfSpSealObjectTask{}
 	sealObject.InitSealObjectTask(task.GetGlobalVirtualGroupId(), task.GetObjectInfo(), task.GetStorageParams(),
-		m.baseApp.TaskPriority(sealObject), task.GetSecondaryAddresses(), task.GetSecondarySignatures(),
-		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
+		m.baseApp.TaskPriority(sealObject), task.GetSecondaryEndpoints(), task.GetSecondarySignatures(),
+		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject), task.GetIsAgentUpload())
 	sealObject.SetCreateTime(task.GetCreateTime())
 	sealObject.SetLogs(task.GetLogs())
 	sealObject.AppendLog("manager-create-seal-task")
