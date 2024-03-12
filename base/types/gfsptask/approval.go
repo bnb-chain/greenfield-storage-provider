@@ -660,9 +660,9 @@ func (m *GfSpDelegateCreateObjectApprovalTask) Type() coretask.TType {
 }
 
 func (m *GfSpDelegateCreateObjectApprovalTask) Info() string {
-	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], expiedHeight[%d], %s",
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
 		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
-		m.GetExpiredHeight(), m.GetTask().Info())
+		m.GetTask().Info())
 }
 
 func (m *GfSpDelegateCreateObjectApprovalTask) GetAddress() string {

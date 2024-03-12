@@ -69,7 +69,12 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	sealTime := time.Now()
 	var sealErr error
 	if task.GetIsAgentUpload() {
-		expectCheckSums := e.makeCheckSumsForAgentUpload(ctx, task)
+		expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryEndpoints()))
+		if makeErr != nil {
+			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", err)
+			err = makeErr
+			return
+		}
 		sealMsgV2 := &storagetypes.MsgSealObjectV2{
 			Operator:                    e.baseApp.OperatorAddress(),
 			BucketName:                  task.GetObjectInfo().GetBucketName(),
@@ -156,7 +161,11 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		}
 		if rTask.GetIsAgentUpload() {
 			objectInfo := rTask.GetObjectInfo()
-			expectCheckSums := e.makeCheckSumsForAgentUpload(ctx, rTask)
+			expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, rTask.GetObjectInfo(), len(rTask.GetSecondaryEndpoints()))
+			if makeErr != nil {
+				log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload ", "error", makeErr)
+				return makeErr
+			}
 			objectInfo.Checksums = expectCheckSums
 			rTask.SetObjectInfo(objectInfo)
 		}
@@ -406,26 +415,33 @@ func veritySecondarySpBlsSignature(secondarySp *sptypes.StorageProvider, signatu
 	return nil
 }
 
-func (e *ExecuteModular) makeCheckSumsForAgentUpload(ctx context.Context, task coretask.ReplicatePieceTask) [][]byte {
-	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+func (e *ExecuteModular) makeCheckSumsForAgentUpload(ctx context.Context, objectInfo *storagetypes.ObjectInfo, redundancyCount int) ([][]byte, error) {
+	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(objectInfo.Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object integrity",
-			"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
-		return nil
+			"objectID", objectInfo.Id.Uint64(), "error", err)
+		return nil, err
 	}
 	expectChecksums := make([][]byte, 0)
 	expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList))
-	segmentPieceCount := e.baseApp.PieceOp().SegmentPieceCount(
-		task.GetObjectInfo().GetPayloadSize(),
-		task.GetStorageParams().VersionedParams.GetMaxSegmentSize())
-	for redundancyIdx := range task.GetSecondaryEndpoints() {
-		ecHash, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(task.GetObjectInfo().Id.Uint64(), int32(redundancyIdx), segmentPieceCount)
+	params, err := e.baseApp.Consensus().QueryStorageParams(ctx)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to QueryStorageParams",
+			"objectID", objectInfo.Id.Uint64(), "error", err)
+		return nil, err
+	}
+	spc := e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(), params.VersionedParams.GetMaxSegmentSize())
+	for redundancyIdx := 0; redundancyIdx < redundancyCount; redundancyIdx++ {
+		var ecHash [][]byte
+		ecHash, err = e.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectInfo.Id.Uint64(), int32(redundancyIdx), spc)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get all replicate piece",
-				"objectID", task.GetObjectInfo().Id.Uint64(), "error", err)
-			return nil
+				"objectID", objectInfo.Id.Uint64(), "error", err)
+			return nil, err
 		}
+
 		expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(ecHash))
 	}
-	return expectChecksums
+
+	return expectChecksums, nil
 }

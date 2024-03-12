@@ -102,7 +102,7 @@ func (*NullTask) GetSecondarySignatures() [][]byte { return nil }
 func (*NullTask) SetSecondarySignatures([][]byte)  {}
 func (*NullTask) SetSecondaryAddresses([]string)   {}
 func (*NullTask) GetSecondaryEndpoints() []string  { return nil }
-func (*NullTask) InitSealObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
+func (*NullTask) InitSealObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64, bool) {
 }
 func (*NullTask) InitReceivePieceTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64, bool) {
 }

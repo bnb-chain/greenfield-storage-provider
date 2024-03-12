@@ -53,7 +53,7 @@ type IntegrityMeta struct {
 	RedundancyIndex   int32
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
-	PieceSize         uint64
+	ObjectSize        uint64
 }
 
 // ShadowIntegrityMeta defines the payload integrity hash and piece checksum with objectID. It is used for storing user's

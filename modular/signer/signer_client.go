@@ -933,9 +933,9 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 
 func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateCreateObject) (string, error) {
-	log.Infow("signer starts to delegate create object content", "scope", scope)
+	log.Infow("signer starts to delegate create object", "scope", scope)
 	if msg == nil {
-		log.CtxError(ctx, "delegate create object content msg pointer dangling")
+		log.CtxError(ctx, "delegate create object msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
 	km, err := client.greenfieldClients[scope].GetKeyManager()
@@ -964,17 +964,17 @@ func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Contex
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
-				ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
-				return "", ErrDeleteGVGOnChain
+				ErrDelegateCreateObjectOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrDelegateCreateObjectOnChain
 			}
 			client.operatorAccNonce = nonce
 		}
 		if err != nil {
-			log.CtxErrorw(ctx, "failed to broadcast delegate create object content tx", "retry_number", i, "error", err)
+			log.CtxErrorw(ctx, "failed to broadcast delegate create object tx", "retry_number", i, "error", err)
 			continue
 		}
 		client.operatorAccNonce = nonce + 1
-		log.CtxDebugw(ctx, "succeed to broadcast delegate update object content tx", "tx_hash", txHash, "delegate_update_object_content_msg", msg)
+		log.CtxDebugw(ctx, "succeed to broadcast delegate create object tx", "tx_hash", txHash, "delegate_update_object_msg", msg)
 		return txHash, nil
 	}
 

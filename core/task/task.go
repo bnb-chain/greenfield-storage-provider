@@ -359,7 +359,7 @@ type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
 	InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
-		signatures [][]byte, timeout int64, retry int64)
+		signatures [][]byte, timeout int64, retry int64, isAgentUpload bool)
 	// GetSecondaryAddresses return the secondary SP's addresses.
 	GetSecondaryAddresses() []string
 	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
@@ -367,6 +367,8 @@ type SealObjectTask interface {
 	GetSecondarySignatures() [][]byte
 	// GetGlobalVirtualGroupId returns the object's global virtual group id.
 	GetGlobalVirtualGroupId() uint32
+	// GetIsAgentUpload return the task's is_agent_upload field
+	GetIsAgentUpload() bool
 }
 
 // DownloadObjectTask is an abstract interface to record the information for downloading

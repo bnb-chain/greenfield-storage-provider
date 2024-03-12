@@ -128,6 +128,7 @@ message GfSpSealObjectTask {
   repeated bytes secondary_signatures = 5;
   uint32 global_virtual_group_id = 6;
   repeated string secondary_endpoints = 7;
+  bool is_agent_upload_task = 8;
 }
 
 message GfSpDownloadObjectTask {
