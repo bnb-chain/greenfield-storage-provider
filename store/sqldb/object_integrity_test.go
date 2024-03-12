@@ -24,12 +24,12 @@ func TestSpDBImpl_GetObjectIntegritySuccess(t *testing.T) {
 		RedundancyIndex:   redundancyIndex,
 		IntegrityChecksum: "1406e05881e299367766d313e26c05564ec91bf721d31726bd6e46e60689539a",
 		PieceChecksumList: "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `integrity_meta_00` WHERE object_id = ? and redundancy_index = ? ORDER BY `integrity_meta_00`.`object_id` LIMIT 1").
 		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "object_size"}).
-			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.PiecesSize))
+			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.ObjectSize))
 	result, err := s.GetObjectIntegrity(objectID, redundancyIndex)
 	assert.Nil(t, err)
 	assert.Equal(t, objectID, result.ObjectID)
@@ -74,12 +74,12 @@ func TestSpDBImpl_GetObjectIntegrityFailure3(t *testing.T) {
 		RedundancyIndex:   redundancyIndex,
 		IntegrityChecksum: "test",
 		PieceChecksumList: "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `integrity_meta_00` WHERE object_id = ? and redundancy_index = ? ORDER BY `integrity_meta_00`.`object_id` LIMIT 1").
 		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "object_size"}).
-			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.PiecesSize))
+			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.ObjectSize))
 	result, err := s.GetObjectIntegrity(objectID, redundancyIndex)
 	assert.NotNil(t, err)
 	assert.Nil(t, result)
@@ -96,12 +96,12 @@ func TestSpDBImpl_GetObjectIntegrityFailure4(t *testing.T) {
 		RedundancyIndex:   redundancyIndex,
 		IntegrityChecksum: "1406e05881e299367766d313e26c05564ec91bf721d31726bd6e46e60689539a",
 		PieceChecksumList: "test",
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `integrity_meta_00` WHERE object_id = ? and redundancy_index = ? ORDER BY `integrity_meta_00`.`object_id` LIMIT 1").
 		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "object_size"}).
-			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.PiecesSize))
+			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.ObjectSize))
 	result, err := s.GetObjectIntegrity(objectID, redundancyIndex)
 	assert.NotNil(t, err)
 	assert.Nil(t, result)
@@ -126,7 +126,7 @@ func TestSpDBImpl_SetObjectIntegritySuccess(t *testing.T) {
 		RedundancyIndex:   2,
 		IntegrityChecksum: []byte("mockIntegrityChecksum"),
 		PieceChecksumList: [][]byte{[]byte("mockPieceChecksumList")},
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
@@ -144,7 +144,7 @@ func TestSpDBImpl_SetObjectIntegrityFailure1(t *testing.T) {
 		RedundancyIndex:   2,
 		IntegrityChecksum: []byte("mockIntegrityChecksum"),
 		PieceChecksumList: [][]byte{[]byte("mockPieceChecksumList")},
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
@@ -163,7 +163,7 @@ func TestSpDBImpl_SetObjectIntegrityFailure2(t *testing.T) {
 		RedundancyIndex:   2,
 		IntegrityChecksum: []byte("mockIntegrityChecksum"),
 		PieceChecksumList: [][]byte{[]byte("mockPieceChecksumList")},
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
@@ -265,12 +265,12 @@ func TestSpDBImpl_UpdatePieceChecksumSuccess1(t *testing.T) {
 		RedundancyIndex:   redundancyIndex,
 		IntegrityChecksum: "1406e05881e299367766d313e26c05564ec91bf721d31726bd6e46e60689539a",
 		PieceChecksumList: "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `integrity_meta_00` WHERE object_id = ? and redundancy_index = ? ORDER BY `integrity_meta_00`.`object_id` LIMIT 1").
 		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "object_size"}).
-			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.PiecesSize))
+			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.ObjectSize))
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE `integrity_meta_00` SET `piece_checksum_list`=?,`object_size`=? WHERE object_id = ? and redundancy_index = ?").
 		WithArgs(newChecksum, 2, i.ObjectID, i.RedundancyIndex).
@@ -344,12 +344,12 @@ func TestSpDBImpl_UpdatePieceChecksumFailure3(t *testing.T) {
 		RedundancyIndex:   redundancyIndex,
 		IntegrityChecksum: "1406e05881e299367766d313e26c05564ec91bf721d31726bd6e46e60689539a",
 		PieceChecksumList: "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
-		PiecesSize:        1,
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `integrity_meta_00` WHERE object_id = ? and redundancy_index = ? ORDER BY `integrity_meta_00`.`object_id` LIMIT 1").
 		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "object_size"}).
-			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.PiecesSize))
+			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.ObjectSize))
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE `integrity_meta_00` SET `piece_checksum_list`=? ,`object_size`=? WHERE object_id = ? and redundancy_index = ?").
 		WillReturnError(mockDBInternalError)

@@ -39,7 +39,7 @@ func (s *SpDBImpl) GetShadowObjectIntegrity(objectID uint64, redundancyIndex int
 		RedundancyIndex:   queryReturn.RedundancyIndex,
 		IntegrityChecksum: integrityChecksum,
 		Version:           queryReturn.Version,
-		PiecesSize:        queryReturn.PieceSize,
+		ObjectSize:        queryReturn.ObjectSize,
 	}
 	meta.PieceChecksumList, err = util.StringToBytesSlice(queryReturn.PieceChecksumList)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *SpDBImpl) SetShadowObjectIntegrity(meta *corespdb.ShadowIntegrityMeta) 
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
 		Version:           meta.Version,
-		PieceSize:         meta.PiecesSize,
+		ObjectSize:        meta.ObjectSize,
 	}
 	result := s.db.Table(ShadowIntegrityMetaTableName).Create(insertIntegrityMetaRecord)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
@@ -159,7 +159,7 @@ func (s *SpDBImpl) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex in
 			PieceChecksumList: append(checksums, checksum),
 			IntegrityChecksum: integrity,
 			Version:           version,
-			PiecesSize:        dataLength,
+			ObjectSize:        dataLength,
 		}
 		err = s.SetShadowObjectIntegrity(integrityMetaNew)
 		if err != nil {
@@ -173,7 +173,7 @@ func (s *SpDBImpl) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex in
 		result := s.db.Table(ShadowIntegrityMetaTableName).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
 			Updates(&ShadowIntegrityMetaTable{
 				PieceChecksumList: util.BytesSliceToString(newChecksums),
-				PieceSize:         integrityMeta.PiecesSize + dataLength,
+				ObjectSize:        integrityMeta.ObjectSize + dataLength,
 			})
 		if result.Error != nil {
 			return fmt.Errorf("failed to update integrity meta table: %s", result.Error)

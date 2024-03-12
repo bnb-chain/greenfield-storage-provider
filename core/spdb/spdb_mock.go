@@ -1440,17 +1440,17 @@ func (mr *MockSPDBMockRecorder) UpdateShadowIntegrityChecksum(integrity any) *go
 }
 
 // UpdateShadowPieceChecksum mocks base method.
-func (m *MockSPDB) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) error {
+func (m *MockSPDB) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64, dataLength uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateShadowPieceChecksum", objectID, redundancyIndex, checksum, version)
+	ret := m.ctrl.Call(m, "UpdateShadowPieceChecksum", objectID, redundancyIndex, checksum, version, dataLength)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateShadowPieceChecksum indicates an expected call of UpdateShadowPieceChecksum.
-func (mr *MockSPDBMockRecorder) UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version any) *gomock.Call {
+func (mr *MockSPDBMockRecorder) UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version, dataLength any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowPieceChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateShadowPieceChecksum), objectID, redundancyIndex, checksum, version)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowPieceChecksum", reflect.TypeOf((*MockSPDB)(nil).UpdateShadowPieceChecksum), objectID, redundancyIndex, checksum, version, dataLength)
 }
 
 // UpdateSwapOutSubscribeProgress mocks base method.
@@ -2071,17 +2071,17 @@ func (mr *MockSignatureDBMockRecorder) UpdateShadowIntegrityChecksum(integrity a
 }
 
 // UpdateShadowPieceChecksum mocks base method.
-func (m *MockSignatureDB) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) error {
+func (m *MockSignatureDB) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64, dataLength uint64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateShadowPieceChecksum", objectID, redundancyIndex, checksum, version)
+	ret := m.ctrl.Call(m, "UpdateShadowPieceChecksum", objectID, redundancyIndex, checksum, version, dataLength)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateShadowPieceChecksum indicates an expected call of UpdateShadowPieceChecksum.
-func (mr *MockSignatureDBMockRecorder) UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version any) *gomock.Call {
+func (mr *MockSignatureDBMockRecorder) UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version, dataLength any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowPieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateShadowPieceChecksum), objectID, redundancyIndex, checksum, version)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateShadowPieceChecksum", reflect.TypeOf((*MockSignatureDB)(nil).UpdateShadowPieceChecksum), objectID, redundancyIndex, checksum, version, dataLength)
 }
 
 // MockTrafficDB is a mock of TrafficDB interface.

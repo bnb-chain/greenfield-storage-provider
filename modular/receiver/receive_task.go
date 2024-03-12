@@ -144,6 +144,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 			IntegrityChecksum: integrityChecksum,
 			PieceChecksumList: pieceChecksums,
 			Version:           task.GetObjectInfo().GetVersion(),
+			ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
 		}
 		err = r.baseApp.GfSpDB().SetShadowObjectIntegrity(integrityMeta)
 	} else {
@@ -152,7 +153,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 			RedundancyIndex:   task.GetRedundancyIdx(),
 			IntegrityChecksum: integrityChecksum,
 			PieceChecksumList: pieceChecksums,
-			PiecesSize:        task.GetObjectInfo().GetPayloadSize(),
+			ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
 		}
 		err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 	}
