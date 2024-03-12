@@ -1273,7 +1273,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	if err != nil {
 		return
 	}
-
 	if strings.Contains(reqCtx.objectName, "..") ||
 		reqCtx.objectName == "/" ||
 		strings.Contains(reqCtx.objectName, "\\") ||
@@ -1282,7 +1281,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		err = ErrInvalidObjectName
 		return
 	}
-
 	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
 		return
@@ -1409,7 +1407,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 			return
 		}
 	}
-
 	if txHash != "" {
 		_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
 		if err != nil {

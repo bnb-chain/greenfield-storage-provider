@@ -185,6 +185,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 					PieceChecksumList: checksums,
 					IntegrityChecksum: integrity,
 					Version:           uploadObjectTask.GetObjectInfo().GetVersion(),
+					PiecesSize:        uint64(readSize),
 				}
 				err = u.baseApp.GfSpDB().SetShadowObjectIntegrity(integrityMeta)
 			} else {
@@ -193,7 +194,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 					RedundancyIndex:   piecestore.PrimarySPRedundancyIndex,
 					PieceChecksumList: checksums,
 					IntegrityChecksum: integrity,
-					ObjectSize:        uint64(readSize),
+					PiecesSize:        uint64(readSize),
 				}
 				err = u.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 			}
@@ -423,7 +424,7 @@ func StreamReadAt(stream io.Reader, b []byte) (int, error) {
 func (u *UploadModular) updatePieceCheckSum(task coretask.ResumableUploadObjectTask, data []byte, isUpdate bool, dataLength uint64) error {
 	var err error
 	if isUpdate {
-		err = u.baseApp.GfSpDB().UpdateShadowPieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data), task.GetObjectInfo().GetVersion())
+		err = u.baseApp.GfSpDB().UpdateShadowPieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data), task.GetObjectInfo().GetVersion(), dataLength)
 	} else {
 		err = u.baseApp.GfSpDB().UpdatePieceChecksum(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex, hash.GenerateChecksum(data), dataLength)
 	}
@@ -436,13 +437,13 @@ func (u *UploadModular) getPieceCheckSumListAndPieceSize(task coretask.Resumable
 		if err != nil {
 			return nil, 0, err
 		}
-		return shadowIntegrityMeta.PieceChecksumList, 0, nil
+		return shadowIntegrityMeta.PieceChecksumList, shadowIntegrityMeta.PiecesSize, nil
 	}
 	integrityMeta, err := u.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 	if err != nil {
 		return nil, 0, err
 	}
-	return integrityMeta.PieceChecksumList, integrityMeta.ObjectSize, nil
+	return integrityMeta.PieceChecksumList, integrityMeta.PiecesSize, nil
 }
 
 func (u *UploadModular) updateIntegrityChecksum(objectID uint64, integrityHash []byte, isUpdate bool) error {

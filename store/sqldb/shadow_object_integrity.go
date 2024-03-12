@@ -39,6 +39,7 @@ func (s *SpDBImpl) GetShadowObjectIntegrity(objectID uint64, redundancyIndex int
 		RedundancyIndex:   queryReturn.RedundancyIndex,
 		IntegrityChecksum: integrityChecksum,
 		Version:           queryReturn.Version,
+		PiecesSize:        queryReturn.PieceSize,
 	}
 	meta.PieceChecksumList, err = util.StringToBytesSlice(queryReturn.PieceChecksumList)
 	if err != nil {
@@ -55,6 +56,7 @@ func (s *SpDBImpl) SetShadowObjectIntegrity(meta *corespdb.ShadowIntegrityMeta) 
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
 		Version:           meta.Version,
+		PieceSize:         meta.PiecesSize,
 	}
 	result := s.db.Table(ShadowIntegrityMetaTableName).Create(insertIntegrityMetaRecord)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
@@ -133,7 +135,7 @@ func (s *SpDBImpl) ListShadowIntegrityMeta() ([]*corespdb.ShadowIntegrityMeta, e
 
 // UpdateShadowPieceChecksum 1) If the ShadowIntegrityMetaTable does not exist, it will be created.
 // 2) If the ShadowIntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
-func (s *SpDBImpl) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) (err error) {
+func (s *SpDBImpl) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64, dataLength uint64) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -157,6 +159,7 @@ func (s *SpDBImpl) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex in
 			PieceChecksumList: append(checksums, checksum),
 			IntegrityChecksum: integrity,
 			Version:           version,
+			PiecesSize:        dataLength,
 		}
 		err = s.SetShadowObjectIntegrity(integrityMetaNew)
 		if err != nil {
@@ -170,6 +173,7 @@ func (s *SpDBImpl) UpdateShadowPieceChecksum(objectID uint64, redundancyIndex in
 		result := s.db.Table(ShadowIntegrityMetaTableName).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
 			Updates(&ShadowIntegrityMetaTable{
 				PieceChecksumList: util.BytesSliceToString(newChecksums),
+				PieceSize:         integrityMeta.PiecesSize + dataLength,
 			})
 		if result.Error != nil {
 			return fmt.Errorf("failed to update integrity meta table: %s", result.Error)
