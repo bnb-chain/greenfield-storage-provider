@@ -1085,13 +1085,24 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	startGetStorageParamTime := time.Now()
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), startGetStorageParamTime.Unix())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, error" + err.Error())
+		return
+	}
+
 	payloadSizeStr := queryParams.Get("payload_size")
 	payloadSize, err = strconv.ParseUint(payloadSizeStr, 10, 64)
 	if err != nil {
+		log.CtxErrorw(reqCtx.ctx, "failed to parse payload_size", "error", err)
 		return
 	}
-	if payloadSize == 0 {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+	if payloadSize == 0 || payloadSize > params.GetMaxPayloadSize() {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size error", "size", payloadSize, "size limit", params.GetMaxPayloadSize())
 		err = ErrInvalidPayloadSize
 		return
 	}
@@ -1189,21 +1200,6 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
 		return
 	}
-	startGetStorageParamTime := time.Now()
-	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error" + err.Error())
-		return
-	}
-
-	if payloadSize > params.GetMaxPayloadSize() {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is too large", "size", payloadSize, "size limit", params.GetMaxPayloadSize())
-		err = ErrInvalidPayloadSize
-		return
-	}
 
 	uploadTask := &gfsptask.GfSpUploadObjectTask{}
 	uploadTask.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(uploadTask, objectInfo.GetPayloadSize()), true)
@@ -1298,8 +1294,17 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
-	if payloadSize == 0 {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is zero")
+	startGetStorageParamTime := time.Now()
+	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
+		return
+	}
+	if payloadSize == 0 || payloadSize > params.GetMaxPayloadSize() {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is too large", "size", payloadSize, "size limit", params.GetMaxPayloadSize())
 		err = ErrInvalidPayloadSize
 		return
 	}
@@ -1396,6 +1401,9 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 				log.CtxErrorw(reqCtx.ctx, "failed to delegate create object", "error", err)
 				return
 			}
+		} else if err != nil {
+			log.CtxErrorw(reqCtx.ctx, "failed to QueryObjectInfo", "error", err)
+			return
 		} else if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
 			log.CtxErrorw(reqCtx.ctx, "object has been sealed", "status", objectInfo.ObjectStatus)
 			return
@@ -1417,21 +1425,6 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
-		return
-	}
-
-	startGetStorageParamTime := time.Now()
-	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
-	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
-		return
-	}
-	if payloadSize > params.GetMaxPayloadSize() {
-		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is too large", "size", payloadSize, "size limit", params.GetMaxPayloadSize())
-		err = ErrInvalidPayloadSize
 		return
 	}
 
