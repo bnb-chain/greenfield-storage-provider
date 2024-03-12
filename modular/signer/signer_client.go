@@ -1016,8 +1016,8 @@ func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context
 			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
-				ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
-				return "", ErrDeleteGVGOnChain
+				ErrDelegateUpdateObjectContentOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrDelegateUpdateObjectContentOnChain
 			}
 			client.operatorAccNonce = nonce
 		}
