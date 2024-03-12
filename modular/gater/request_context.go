@@ -272,7 +272,7 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 	}
 }
 
-// verifyOffChainSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed. The auth information will be parsed from URL.
+// verifyGNFD1EddsaSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed. The auth information will be parsed from URL.
 func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticationStr string, account string, domain string) (sdk.AccAddress, error) {
 	var err error
 	offChainSig, err := parseSignatureFromRequest(authenticationStr)
@@ -283,6 +283,26 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1AuthForPreSignedURL(r.request)
 	_, err = r.g.baseApp.GfSpClient().VerifyGNFD1EddsaSignature(r.Context(), account, domain, offChainSig, realMsgToSign)
+	if err != nil {
+		log.Errorw("failed to verify off chain signature", "error", err)
+		return nil, err
+	} else {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
+		return userAddress, nil
+	}
+}
+
+// verifyGNFD2EddsaSignatureFromPreSignedURL used to verify off-chain-auth-v2 signature, return (address, nil) if check succeed. The auth information will be parsed from URL.
+func (r *RequestContext) verifyGNFD2EddsaSignatureFromPreSignedURL(authenticationStr string, account string, domain string, userPublicKey string) (sdk.AccAddress, error) {
+	var err error
+	offChainSig, err := parseSignatureFromRequest(authenticationStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// check request integrity
+	realMsgToSign := commonhttp.GetMsgToSignInGNFD1AuthForPreSignedURL(r.request)
+	_, err = r.g.baseApp.GfSpClient().VerifyGNFD2EddsaSignature(r.Context(), account, domain, userPublicKey, offChainSig, realMsgToSign)
 	if err != nil {
 		log.Errorw("failed to verify off chain signature", "error", err)
 		return nil, err
