@@ -186,10 +186,10 @@ github.com/bnb-chain/greenfield-common/go v0.0.0-20230906132736-eb2f0efea228 h1:
 github.com/bnb-chain/greenfield-common/go v0.0.0-20230906132736-eb2f0efea228/go.mod h1:K9jK80fbahciC+FAvrch8Qsbw9ZkvVgjfKsqrzPTAVA=
 github.com/bnb-chain/greenfield-cosmos-sdk v1.4.1-0.20240305064839-3cb07f5a365c h1:H0Rvx1FTVNgmXnUYvG0z3oFVvixPzlUHGN2JOPoNszM=
 github.com/bnb-chain/greenfield-cosmos-sdk v1.4.1-0.20240305064839-3cb07f5a365c/go.mod h1:XF8U3VN1euzLkIR5xiSNyQSnBabvnD86oz6fgdrpteQ=
-github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230816082903-b48770f5e210 h1:GHPbV2bC+gmuO6/sG0Tm8oGal3KKSRlyE+zPscDjlA8=
-github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230816082903-b48770f5e210/go.mod h1:vhsZxXE9tYJeYB5JR4hPhd6Pc/uPf7j1T8IJ7p9FdeM=
-github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e210 h1:FLVOn4+OVbsKi2+YJX5kmD27/4dRu4FW7xCXFhzDO5s=
-github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e210/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
+github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20231206043955-0855e0965bc8 h1:mUMOeNo3K0SZvAhiOHNKW4mmkrhOphBF8tDUyK6e1tY=
+github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20231206043955-0855e0965bc8/go.mod h1:vhsZxXE9tYJeYB5JR4hPhd6Pc/uPf7j1T8IJ7p9FdeM=
+github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20231206043955-0855e0965bc8 h1:1Ud7itq03c4Q9h0kBpw1FYlWKN3kco8cgj59vdd50UQ=
+github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20231206043955-0855e0965bc8/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
 github.com/bnb-chain/greenfield-iavl v0.20.1 h1:y3L64GU99otNp27/xLVBTDbv4eroR6CzoYz0rbaVotM=
 github.com/bnb-chain/greenfield-iavl v0.20.1/go.mod h1:oLksTs8dfh7DYIKBro7hbRQ+ewls7ghJ27pIXlbEXyI=
 github.com/bnb-chain/juno/v4 v4.0.0-20240221084449-8b5ee76301fa h1:bkNYQmoiE0ZpigBawuqX+UOJziBboDqD8Z3REYMpIzI=
