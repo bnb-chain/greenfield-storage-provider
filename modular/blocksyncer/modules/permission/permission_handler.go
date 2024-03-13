@@ -27,19 +27,21 @@ var PolicyEvents = map[string]bool{
 }
 
 var actionTypeMap = map[permissiontypes.ActionType]int{
-	permissiontypes.ACTION_TYPE_ALL:            0,
-	permissiontypes.ACTION_UPDATE_BUCKET_INFO:  1,
-	permissiontypes.ACTION_DELETE_BUCKET:       2,
-	permissiontypes.ACTION_CREATE_OBJECT:       3,
-	permissiontypes.ACTION_DELETE_OBJECT:       4,
-	permissiontypes.ACTION_COPY_OBJECT:         5,
-	permissiontypes.ACTION_GET_OBJECT:          6,
-	permissiontypes.ACTION_EXECUTE_OBJECT:      7,
-	permissiontypes.ACTION_LIST_OBJECT:         8,
-	permissiontypes.ACTION_UPDATE_GROUP_MEMBER: 9,
-	permissiontypes.ACTION_DELETE_GROUP:        10,
-	permissiontypes.ACTION_UPDATE_OBJECT_INFO:  11,
-	permissiontypes.ACTION_UPDATE_GROUP_EXTRA:  12,
+	permissiontypes.ACTION_TYPE_ALL:              0,
+	permissiontypes.ACTION_UPDATE_BUCKET_INFO:    1,
+	permissiontypes.ACTION_DELETE_BUCKET:         2,
+	permissiontypes.ACTION_CREATE_OBJECT:         3,
+	permissiontypes.ACTION_DELETE_OBJECT:         4,
+	permissiontypes.ACTION_COPY_OBJECT:           5,
+	permissiontypes.ACTION_GET_OBJECT:            6,
+	permissiontypes.ACTION_EXECUTE_OBJECT:        7,
+	permissiontypes.ACTION_LIST_OBJECT:           8,
+	permissiontypes.ACTION_UPDATE_GROUP_MEMBER:   9,
+	permissiontypes.ACTION_DELETE_GROUP:          10,
+	permissiontypes.ACTION_UPDATE_OBJECT_INFO:    11,
+	permissiontypes.ACTION_UPDATE_GROUP_EXTRA:    12,
+	permissiontypes.ACTION_UPDATE_GROUP_INFO:     13,
+	permissiontypes.ACTION_UPDATE_OBJECT_CONTENT: 14,
 }
 
 func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
