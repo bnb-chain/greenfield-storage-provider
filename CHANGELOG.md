@@ -1,4 +1,16 @@
 # Changelog
+## v1.5.0
+
+BUGFIXES
+* [#1344](https://github.com/bnb-chain/greenfield-storage-provider/pull/1344)  fix: exclude timestamp from recovery piece key to avoid duplicate requests
+* [#1342](https://github.com/bnb-chain/greenfield-storage-provider/pull/1342)  fix: Upload_Done task loaded from DB does not have GVG info
+* [#1336](https://github.com/bnb-chain/greenfield-storage-provider/pull/1336)  fix: 500 error code when bucket is deleted
+* [#1334](https://github.com/bnb-chain/greenfield-storage-provider/pull/1334)  fix: gc object retry due to deleted bucket
+
+FEATURES
+* [#1337](https://github.com/bnb-chain/greenfield-storage-provider/pull/1337)  feat: atomic object update 
+* [#1345](https://github.com/bnb-chain/greenfield-storage-provider/pull/1345)  feat: update gvg save logic
+* [#1340](https://github.com/bnb-chain/greenfield-storage-provider/pull/1340)  feat: add more info in status api
 
 ## v1.4.0
 
