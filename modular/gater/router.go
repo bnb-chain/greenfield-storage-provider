@@ -156,7 +156,7 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
 	for _, r := range routers {
 		// Delegate Put Object By Offset
-		r.NewRoute().Name(delegateResumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").Queries(DelegateResumable, "").HandlerFunc(g.delegateResumablePutObjectHandler)
+		r.NewRoute().Name(delegateResumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").Queries(Delegate, "").HandlerFunc(g.delegateResumablePutObjectHandler)
 		// Put Object By Offset
 		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).
 			Queries("offset", "{offset}", "complete", "{complete}")
