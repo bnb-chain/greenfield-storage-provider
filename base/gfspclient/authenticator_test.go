@@ -238,3 +238,127 @@ func TestGfSpClient_VerifyGNFD1EddsaSignatureFailure(t *testing.T) {
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 	assert.Equal(t, false, result)
 }
+
+func TestGfSpClient_GetAuthKeyV2(t *testing.T) {
+	cases := []struct {
+		name             string
+		account          string
+		wantedPublicKey  string
+		wantedExpiryDate int64
+		wantedIsErr      bool
+		wantedErr        error
+	}{
+		{
+			name:             "success",
+			account:          mockObjectName3,
+			wantedPublicKey:  "test",
+			wantedExpiryDate: 0,
+			wantedIsErr:      false,
+		},
+		{
+			name:             "mock rpc error",
+			account:          mockObjectName1,
+			wantedPublicKey:  "",
+			wantedExpiryDate: 0,
+			wantedIsErr:      true,
+			wantedErr:        mockRPCErr,
+		},
+		{
+			name:             "mock response returns error",
+			account:          mockObjectName2,
+			wantedPublicKey:  "",
+			wantedExpiryDate: 0,
+			wantedIsErr:      true,
+			wantedErr:        ErrExceptionsStream,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := mockBufClient()
+			ctx := context.Background()
+			publicKey, expiryDate, err := s.GetAuthKeyV2(ctx, tt.account, emptyString, emptyString, grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErr.Error())
+				assert.Equal(t, tt.wantedExpiryDate, expiryDate)
+				assert.Equal(t, tt.wantedPublicKey, publicKey)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tt.wantedExpiryDate, expiryDate)
+				assert.Equal(t, tt.wantedPublicKey, publicKey)
+
+			}
+		})
+	}
+}
+
+func TestGfSpClient_GetAuthKeyV2Failure(t *testing.T) {
+	t.Log("Failure case description: client failed to connect authenticator")
+	ctx, cancel := context.WithCancel(context.Background())
+	s := mockBufClient()
+	defer s.Close()
+	cancel()
+	publicKey, expiryDate, err := s.GetAuthKeyV2(ctx, emptyString, emptyString, emptyString)
+	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Equal(t, int64(0), expiryDate)
+	assert.Equal(t, "", publicKey)
+}
+
+func TestGfSpClient_UpdateUserPublicKeyV2(t *testing.T) {
+	cases := []struct {
+		name            string
+		account         string
+		wantedPublicKey string
+		wantedResult    bool
+		wantedIsErr     bool
+		wantedErr       error
+	}{
+		{
+			name:            "success",
+			account:         mockObjectName3,
+			wantedPublicKey: "test",
+			wantedIsErr:     false,
+			wantedResult:    true,
+		},
+		{
+			name:            "mock rpc error",
+			account:         mockObjectName1,
+			wantedPublicKey: "",
+			wantedResult:    false,
+			wantedIsErr:     true,
+			wantedErr:       mockRPCErr,
+		},
+		{
+			name:            "mock response returns error",
+			account:         mockObjectName2,
+			wantedPublicKey: "",
+			wantedResult:    false,
+			wantedIsErr:     true,
+			wantedErr:       ErrExceptionsStream,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := mockBufClient()
+			ctx := context.Background()
+			result, err := s.UpdateUserPublicKeyV2(ctx, tt.account, emptyString, emptyString, 0, grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErr.Error())
+				assert.Equal(t, tt.wantedResult, result)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tt.wantedResult, result)
+			}
+		})
+	}
+}
+
+func TestGfSpClient_UpdateUserPublicKeyV2Failure(t *testing.T) {
+	t.Log("Failure case description: client failed to connect authenticator")
+	ctx, cancel := context.WithCancel(context.Background())
+	s := mockBufClient()
+	defer s.Close()
+	cancel()
+	result, err := s.UpdateUserPublicKeyV2(ctx, emptyString, emptyString, emptyString, 0)
+	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Equal(t, false, result)
+}
