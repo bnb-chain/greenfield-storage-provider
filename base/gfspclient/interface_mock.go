@@ -324,6 +324,35 @@ func (mr *MockGfSpClientAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucket
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeductQuotaForBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeductQuotaForBucketMigrate), varargs...)
 }
 
+// DelegateCreateObject mocks base method.
+func (m *MockGfSpClientAPI) DelegateCreateObject(ctx context.Context, object *types3.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockGfSpClientAPIMockRecorder) DelegateCreateObject(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).DelegateCreateObject), ctx, object)
+}
+
+// DelegateUpdateObjectContent mocks base method.
+func (m *MockGfSpClientAPI) DelegateUpdateObjectContent(ctx context.Context, object *types3.MsgDelegateUpdateObjectContent) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateUpdateObjectContent", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateUpdateObjectContent indicates an expected call of DelegateUpdateObjectContent.
+func (mr *MockGfSpClientAPIMockRecorder) DelegateUpdateObjectContent(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateUpdateObjectContent", reflect.TypeOf((*MockGfSpClientAPI)(nil).DelegateUpdateObjectContent), ctx, object)
+}
 
 // DeleteAuthKeysV2 mocks base method.
 func (m *MockGfSpClientAPI) DeleteAuthKeysV2(ctx context.Context, account, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error) {
