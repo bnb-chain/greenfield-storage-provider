@@ -867,6 +867,21 @@ func (mr *MockSPDBMockRecorder) ListBucketMigrationToConfirm(migrationStates any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketMigrationToConfirm", reflect.TypeOf((*MockSPDB)(nil).ListBucketMigrationToConfirm), migrationStates)
 }
 
+// ListBucketTraffic mocks base method.
+func (m *MockSPDB) ListBucketTraffic(yearMonth string, offset, limit int) ([]*BucketTraffic, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBucketTraffic", yearMonth, offset, limit)
+	ret0, _ := ret[0].([]*BucketTraffic)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBucketTraffic indicates an expected call of ListBucketTraffic.
+func (mr *MockSPDBMockRecorder) ListBucketTraffic(yearMonth, offset, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).ListBucketTraffic), yearMonth, offset, limit)
+}
+
 // ListDestSPSwapOutUnits mocks base method.
 func (m *MockSPDB) ListDestSPSwapOutUnits() ([]*SwapOutMeta, error) {
 	m.ctrl.T.Helper()
@@ -2251,6 +2266,21 @@ func (m *MockTrafficDB) InitBucketTraffic(record *ReadRecord, quota *BucketQuota
 func (mr *MockTrafficDBMockRecorder) InitBucketTraffic(record, quota any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).InitBucketTraffic), record, quota)
+}
+
+// ListBucketTraffic mocks base method.
+func (m *MockTrafficDB) ListBucketTraffic(yearMonth string, offset, limit int) ([]*BucketTraffic, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBucketTraffic", yearMonth, offset, limit)
+	ret0, _ := ret[0].([]*BucketTraffic)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBucketTraffic indicates an expected call of ListBucketTraffic.
+func (mr *MockTrafficDBMockRecorder) ListBucketTraffic(yearMonth, offset, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).ListBucketTraffic), yearMonth, offset, limit)
 }
 
 // UpdateBucketTraffic mocks base method.

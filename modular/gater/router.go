@@ -26,6 +26,7 @@ const (
 	listObjectsByBucketRouterName                  = "ListObjectsByBucketName"
 	verifyPermissionRouterName                     = "VerifyPermission"
 	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
+	listBucketReadQuotaRouterName                  = "ListBucketReadQuota"
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
 	requestNonceRouterName                         = "RequestNonce"
 	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
@@ -194,6 +195,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		// Get Bucket Read Quota
 		r.NewRoute().Name(getBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.getBucketReadQuotaHandler).Queries(
 			GetBucketReadQuotaQuery, "", GetBucketReadQuotaMonthQuery, "{year_month}")
+
+		// List Bucket Read Quota
+		r.NewRoute().Name(listBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.listBucketReadQuotaHandler).Queries(
+			ListBucketReadQuotaQuery, "", GetBucketReadQuotaMonthQuery, "{year_month}")
 
 		if g.env != gfspapp.EnvMainnet {
 			// Get Bucket By Bucket Name

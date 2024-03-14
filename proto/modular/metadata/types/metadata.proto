@@ -360,6 +360,21 @@ message GfSpGetBucketReadQuotaResponse {
   uint64 remain_quota_size = 9;
 }
 
+// GfSpListBucketReadQuotaRequest is request type for the GfSpListBucketReadQuota RPC method.
+message GfSpListBucketReadQuotaRequest {
+  // year_month is the query bucket quota's month, like "2023-03"
+  string year_month = 1;
+  // offset, limit is param for paging query
+  uint32 offset = 2;
+  uint32 limit = 3;
+}
+
+// GfSpListBucketReadQuotaResponse is response type for the GfSpListBucketReadQuota RPC method.
+message GfSpListBucketReadQuotaResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  map<string,GfSpGetBucketReadQuotaResponse> result = 2;
+}
+
 // GfSpGetLatestBucketReadQuotaRequest is request type for the GfSpGetLatestBucketReadQuota RPC method.
 message GfSpGetLatestBucketReadQuotaRequest {
   // bucket id from the greenfield chain
@@ -1082,6 +1097,7 @@ service GfSpMetadataService {
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
   rpc GfSpGetEndpointBySpID(GfSpGetEndpointBySpIDRequest) returns (GfSpGetEndpointBySpIDResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
+  rpc GfSpListBucketReadQuota(GfSpListBucketReadQuotaRequest) returns (GfSpListBucketReadQuotaResponse) {}
   rpc GfSpGetLatestBucketReadQuota(GfSpGetLatestBucketReadQuotaRequest) returns (GfSpGetLatestBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}

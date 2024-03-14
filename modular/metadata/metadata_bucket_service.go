@@ -402,6 +402,44 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 	}, nil
 }
 
+func (r *MetadataModular) GfSpListBucketReadQuota(
+	ctx context.Context,
+	req *types.GfSpListBucketReadQuotaRequest) (
+	*types.GfSpListBucketReadQuotaResponse, error) {
+	defer atomic.AddInt64(&r.retrievingRequest, -1)
+	if atomic.AddInt64(&r.retrievingRequest, 1) >
+		atomic.LoadInt64(&r.maxMetadataRequest) {
+		return nil, ErrExceedRequest
+	}
+	bucketTraffics, err := r.baseApp.GfSpDB().ListBucketTraffic(req.GetYearMonth(), int(req.GetOffset()), int(req.GetLimit()))
+	if err != nil {
+		// if the traffic table has not been created and initialized yet, return the chain info
+		if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffics == nil {
+			return &types.GfSpListBucketReadQuotaResponse{}, nil
+		} else {
+			log.Errorw("failed to list bucket traffic", "error", err)
+			return &types.GfSpListBucketReadQuotaResponse{Err: ErrGfSpDBWithDetail("failed to list bucket traffic" + ", error: " + err.Error())}, nil
+		}
+	}
+	result := make(map[string]*types.GfSpGetBucketReadQuotaResponse, len(bucketTraffics))
+	for _, bucketTraffic := range bucketTraffics {
+		//bucketInfo:=r.baseApp.Consensus().QueryBucketInfo(ctx, bucketTraffic.BucketName)
+		result[bucketTraffic.BucketName] = &types.GfSpGetBucketReadQuotaResponse{
+			//ChargedQuotaSize:            req.GetBucketInfo().GetChargedReadQuota(),
+			SpFreeQuotaSize:             bucketTraffic.FreeQuotaSize,
+			ConsumedSize:                bucketTraffic.ReadConsumedSize,
+			FreeQuotaConsumeSize:        bucketTraffic.FreeQuotaConsumedSize,
+			MonthlyFreeQuotaConsumeSize: bucketTraffic.MonthlyFreeQuotaConsumedSize,
+			SpMonthlyFreeQuotaSize:      bucketTraffic.MonthlyFreeQuotaSize,
+			TotalConsumeSize:            bucketTraffic.MonthlyFreeQuotaConsumedSize + bucketTraffic.FreeQuotaConsumedSize + bucketTraffic.ReadConsumedSize,
+		}
+	}
+	// if the traffic table has been created, return the db info from meta service
+	return &types.GfSpListBucketReadQuotaResponse{
+		Result: result,
+	}, nil
+}
+
 func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
 	ctx context.Context,
 	req *types.GfSpGetLatestBucketReadQuotaRequest) (
