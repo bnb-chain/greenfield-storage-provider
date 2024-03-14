@@ -747,7 +747,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		} else {
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 		}
-	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED && !objectInfo.GetIsUpdating() {
 		taskState = int32(servicetypes.TaskState_TASK_STATE_SEAL_OBJECT_DONE)
 		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_DISCONTINUED {

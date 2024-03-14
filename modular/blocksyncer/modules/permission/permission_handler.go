@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
 	"github.com/forbole/juno/v4/models"
@@ -24,22 +24,6 @@ var (
 var PolicyEvents = map[string]bool{
 	EventPutPolicy:    true,
 	EventDeletePolicy: true,
-}
-
-var actionTypeMap = map[permissiontypes.ActionType]int{
-	permissiontypes.ACTION_TYPE_ALL:            0,
-	permissiontypes.ACTION_UPDATE_BUCKET_INFO:  1,
-	permissiontypes.ACTION_DELETE_BUCKET:       2,
-	permissiontypes.ACTION_CREATE_OBJECT:       3,
-	permissiontypes.ACTION_DELETE_OBJECT:       4,
-	permissiontypes.ACTION_COPY_OBJECT:         5,
-	permissiontypes.ACTION_GET_OBJECT:          6,
-	permissiontypes.ACTION_EXECUTE_OBJECT:      7,
-	permissiontypes.ACTION_LIST_OBJECT:         8,
-	permissiontypes.ACTION_UPDATE_GROUP_MEMBER: 9,
-	permissiontypes.ACTION_DELETE_GROUP:        10,
-	permissiontypes.ACTION_UPDATE_OBJECT_INFO:  11,
-	permissiontypes.ACTION_UPDATE_GROUP_EXTRA:  12,
 }
 
 func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
@@ -96,7 +80,7 @@ func (m *Module) handlePutPolicy(ctx context.Context, block *tmctypes.ResultBloc
 	for _, statement := range policy.Statements {
 		actionValue := 0
 		for _, action := range statement.Actions {
-			value, ok := actionTypeMap[action]
+			value, ok := bsdb.ActionTypeMap[action]
 			if !ok {
 				return nil, errors.New("unknown action type action")
 			}
