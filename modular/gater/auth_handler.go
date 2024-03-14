@@ -28,6 +28,7 @@ const (
 	MaxExpiryAgeInSec         int32  = commonhttp.MaxExpiryAgeInSec // 7 days
 	ExpiryDateFormat          string = time.RFC3339
 	ExpectedEddsaPubKeyLength int    = 64
+	SignedContentV2Pattern           = `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)`
 )
 
 type RequestNonceResp struct {
@@ -79,8 +80,8 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 
 	// validate account header
 	if ok := common.IsHexAddress(account); !ok {
-		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		err = ErrInvalidHeader
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		return
 	}
 
@@ -304,8 +305,6 @@ func (g *GateModular) updateUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	ctx := log.Context(context.Background(), account, domain)
-
 	expiryDate, err := time.Parse(ExpiryDateFormat, expiryDateStr)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to InvalidExpiryDateHeader")
@@ -325,7 +324,7 @@ func (g *GateModular) updateUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKeyV2(ctx, account, domain, userPublicKey, expiryDate.UnixMilli())
+	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKeyV2(reqCtx.ctx, account, domain, userPublicKey, expiryDate.UnixMilli())
 	if err != nil {
 		log.Errorw("failed to updateUserPublicKeyV2 when saving key")
 		return
@@ -373,8 +372,8 @@ func (g *GateModular) listUserPublicKeyV2Handler(w http.ResponseWriter, r *http.
 
 	// validate account header
 	if ok := common.IsHexAddress(account); !ok {
-		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		err = ErrInvalidHeader
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		return
 	}
 
@@ -385,8 +384,7 @@ func (g *GateModular) listUserPublicKeyV2Handler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	ctx := log.Context(context.Background(), account, domain)
-	userPublicKeys, err := g.baseApp.GfSpClient().ListAuthKeysV2(ctx, account, domain)
+	userPublicKeys, err := g.baseApp.GfSpClient().ListAuthKeysV2(reqCtx.ctx, account, domain)
 
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to listUserPublicKeyV2", "error", err)
@@ -438,8 +436,8 @@ func (g *GateModular) deleteUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 
 	// validate account header
 	if ok := common.IsHexAddress(account); !ok {
-		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		err = ErrInvalidHeader
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		return
 	}
 	if account != reqCtx.account {
@@ -462,8 +460,7 @@ func (g *GateModular) deleteUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	ctx := log.Context(context.Background(), account, domain)
-	result, err := g.baseApp.GfSpClient().DeleteAuthKeysV2(ctx, account, domain, publicKeys)
+	result, err := g.baseApp.GfSpClient().DeleteAuthKeysV2(reqCtx.ctx, account, domain, publicKeys)
 
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to deleteUserPublicKeyV2", "error", err)
@@ -600,9 +597,7 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 }
 
 func (g *GateModular) verifySignedContentV2(signedContent string, expectedDomain string, expectedPublicKey string, expectedExpiryDate string) error {
-	pattern := `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)`
-
-	re := regexp.MustCompile(pattern)
+	re := regexp.MustCompile(SignedContentV2Pattern)
 	patternMatches := re.FindStringSubmatch(signedContent)
 	if len(patternMatches) < 9 {
 		return ErrSignedMsgNotMatchTemplate

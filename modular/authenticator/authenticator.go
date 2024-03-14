@@ -232,7 +232,7 @@ func (a *AuthenticationModular) UpdateUserPublicKeyV2(ctx context.Context, accou
 	}
 	err := a.baseApp.GfSpDB().InsertAuthKeyV2(newRecord)
 	if err != nil {
-		log.CtxErrorw(ctx, "failed to UpdateUserPublicKeyV2 when saving key")
+		log.CtxErrorw(ctx, "failed to UpdateUserPublicKeyV2 when saving key", "error", err)
 		return false, err
 	}
 	log.CtxInfow(ctx, "succeed to UpdateUserPublicKeyV2")
