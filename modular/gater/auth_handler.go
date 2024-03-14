@@ -3,6 +3,7 @@ package gater
 import (
 	"context"
 	"encoding/xml"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -27,6 +28,7 @@ const (
 	MaxExpiryAgeInSec         int32  = commonhttp.MaxExpiryAgeInSec // 7 days
 	ExpiryDateFormat          string = time.RFC3339
 	ExpectedEddsaPubKeyLength int    = 64
+	SignedContentV2Pattern           = `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)`
 )
 
 type RequestNonceResp struct {
@@ -38,6 +40,14 @@ type RequestNonceResp struct {
 
 type UpdateUserPublicKeyResp struct {
 	Result bool `xml:"Result"`
+}
+
+type DeleteUserPublicKeyV2Resp struct {
+	Result bool `xml:"Result"`
+}
+
+type ListUserPublicKeyV2Resp struct {
+	PublicKeys []string `xml:"Result"`
 }
 
 // requestNonceHandler handle requestNonce request
@@ -70,8 +80,8 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 
 	// validate account header
 	if ok := common.IsHexAddress(account); !ok {
-		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		err = ErrInvalidHeader
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
 		return
 	}
 
@@ -227,6 +237,249 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 	w.Write(b)
 }
 
+// updateUserPublicKeyV2Handler register users' EdDSA public key into off_chain_auth_key_v2 table
+func (g *GateModular) updateUserPublicKeyV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		b             []byte
+		reqCtx        *RequestContext
+		account       string
+		userPublicKey string
+		domain        string
+		origin        string
+		expiryDateStr string
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2", "req_info", reqCtx.String())
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	reqCtx, _ = NewRequestContext(r, g)
+	// verify personal sign signature
+	personalSignSignaturePrefix := commonhttp.Gnfd1EthPersonalSign + ","
+	requestSignature := reqCtx.request.Header.Get(GnfdAuthorizationHeader)
+
+	if !strings.HasPrefix(requestSignature, personalSignSignaturePrefix) {
+		err = ErrUnsupportedSignType
+		return
+	}
+	signedMsg, sigString, err := parseSignedMsgAndSigFromRequest(strings.TrimPrefix(requestSignature, personalSignSignaturePrefix))
+	if err != nil {
+		return
+	}
+	accAddress, personalSignVerifyErr := VerifyPersonalSignature(*signedMsg, *sigString)
+
+	if personalSignVerifyErr != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify signature", "error", personalSignVerifyErr)
+		err = personalSignVerifyErr
+		return
+	}
+	account = accAddress.String()
+	reqCtx.account = account
+
+	domain = reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+	origin = reqCtx.request.Header.Get("Origin")
+	userPublicKey = reqCtx.request.Header.Get(GnfdOffChainAuthAppRegPublicKeyHeader)
+	expiryDateStr = reqCtx.request.Header.Get(GnfdOffChainAuthAppRegExpiryDateHeader)
+
+	// validate headers
+	if domain == "" || domain != origin {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to bad origin or domain")
+		err = ErrInvalidDomainHeader
+		return
+	}
+
+	if userPublicKey == "" || len(userPublicKey) != ExpectedEddsaPubKeyLength {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to bad userPublicKey")
+		err = ErrInvalidPublicKeyHeader
+		return
+	}
+
+	expiryDate, err := time.Parse(ExpiryDateFormat, expiryDateStr)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to InvalidExpiryDateHeader")
+		err = ErrInvalidExpiryDateHeader
+		return
+	}
+	expiryAge := int32(time.Until(expiryDate).Seconds())
+	if MaxExpiryAgeInSec < expiryAge || expiryAge < 0 {
+		err = ErrInvalidExpiryDateHeader
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to InvalidExpiryDateHeader")
+		return
+	}
+
+	err = g.verifySignedContentV2(*signedMsg, domain, userPublicKey, expiryDateStr)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to updateUserPublicKeyV2 due to bad signed content.")
+		return
+	}
+
+	updateUserPublicKeyResp, err := g.baseApp.GfSpClient().UpdateUserPublicKeyV2(reqCtx.ctx, account, domain, userPublicKey, expiryDate.UnixMilli())
+	if err != nil {
+		log.Errorw("failed to updateUserPublicKeyV2 when saving key")
+		return
+	}
+	var resp = &UpdateUserPublicKeyResp{
+		Result: updateUserPublicKeyResp,
+	}
+	b, err = xml.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal update user public key response", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(b)
+}
+
+// listUserPublicKeyV2Handler list user public keys from off_chain_auth_key_v2 table
+func (g *GateModular) listUserPublicKeyV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      []byte
+		reqCtx *RequestContext
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to listUserPublicKeyV2", "req_info", reqCtx.String())
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	// ignore the error, because the listUserPublicKeyV2 does not need signature
+	reqCtx, _ = NewRequestContext(r, g)
+
+	account := reqCtx.request.Header.Get(GnfdUserAddressHeader)
+	domain := reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+
+	// validate account header
+	if ok := common.IsHexAddress(account); !ok {
+		err = ErrInvalidHeader
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
+		return
+	}
+
+	// validate domain header
+	if domain == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check GnfdOffChainAuthAppDomainHeader header")
+		err = ErrInvalidDomainHeader
+		return
+	}
+
+	userPublicKeys, err := g.baseApp.GfSpClient().ListAuthKeysV2(reqCtx.ctx, account, domain)
+
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to listUserPublicKeyV2", "error", err)
+		return
+	}
+
+	var resp = &ListUserPublicKeyV2Resp{
+		PublicKeys: userPublicKeys,
+	}
+	b, err = xml.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal listUserPublicKeyV2 response", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(b)
+}
+
+func (g *GateModular) deleteUserPublicKeyV2Handler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		b      []byte
+		reqCtx *RequestContext
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			log.CtxErrorw(reqCtx.Context(), "failed to deleteUserPublicKeyV2", "req_info", reqCtx.String())
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	// deleteUserPublicKeyV2Handler requires the authentication
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+
+	account := reqCtx.request.Header.Get(GnfdUserAddressHeader)
+	domain := reqCtx.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+
+	// validate account header
+	if ok := common.IsHexAddress(account); !ok {
+		err = ErrInvalidHeader
+		log.Errorw("failed to check account address", "account_address", account, "error", err)
+		return
+	}
+	if account != reqCtx.account {
+		err = ErrNoPermission
+	}
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to read publicKeys from request body", "error", err)
+		err = ErrExceptionStream
+		return
+	}
+
+	publicKeys := strings.Split(string(data), ",")
+
+	// validate domain header
+	if domain == "" {
+		log.CtxErrorw(reqCtx.Context(), "failed to check GnfdOffChainAuthAppDomainHeader header")
+		err = ErrInvalidDomainHeader
+		return
+	}
+
+	result, err := g.baseApp.GfSpClient().DeleteAuthKeysV2(reqCtx.ctx, account, domain, publicKeys)
+
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to deleteUserPublicKeyV2", "error", err)
+		return
+	}
+
+	var resp = &DeleteUserPublicKeyV2Resp{
+		Result: result,
+	}
+	b, err = xml.Marshal(resp)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal DeleteUserPublicKeyV2Resp", "error", err)
+		err = ErrDecodeMsg
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(b)
+}
+
 // parseSignedMsgAndSigFromRequest get sig for personal auth, it expects the auth string should look like "Signature=xxxxx,SignedMsg=xxx".
 func parseSignedMsgAndSigFromRequest(requestSignature string) (*string, *string, error) {
 	var (
@@ -330,6 +583,30 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 	if !found { // the signed content is not for this SP  (g.config.SpOperatorAddress)
 		return ErrSignedMsgNotMatchSPAddr
 	}
+	if dappDomain != expectedDomain {
+		return ErrSignedMsgNotMatchDomain
+	}
+	if publicKey != expectedPublicKey {
+		return ErrSignedMsgNotMatchPubKey
+	}
+	if eip4361ExpirationTime != expectedExpiryDate {
+		return ErrSignedMsgNotMatchExpiry
+	}
+
+	return nil
+}
+
+func (g *GateModular) verifySignedContentV2(signedContent string, expectedDomain string, expectedPublicKey string, expectedExpiryDate string) error {
+	re := regexp.MustCompile(SignedContentV2Pattern)
+	patternMatches := re.FindStringSubmatch(signedContent)
+	if len(patternMatches) < 9 {
+		return ErrSignedMsgNotMatchTemplate
+	}
+	// Extract variable values
+	dappDomain := patternMatches[1]
+	publicKey := patternMatches[3]
+	eip4361ExpirationTime := patternMatches[8]
+
 	if dappDomain != expectedDomain {
 		return ErrSignedMsgNotMatchDomain
 	}

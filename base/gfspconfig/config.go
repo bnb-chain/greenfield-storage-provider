@@ -183,6 +183,10 @@ type GCConfig struct {
 	// GC stale version object
 	EnableGCStaleVersionObject bool `comment:"optional"`
 	GCStaleVersionTimeInterval int  `comment:"optional"`
+
+	// GC expired off-chain-auth keys
+	EnableGCExpiredOffChainAuthKeys       bool `comment:"optional"`
+	GCExpiredOffChainAuthKeysTimeInterval int  `comment:"optional"`
 }
 
 type ParallelConfig struct {

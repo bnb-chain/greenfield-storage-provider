@@ -2,8 +2,11 @@ package authenticator
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"log"
 	"strings"
 	"testing"
 	"time"
@@ -142,6 +145,20 @@ func TestAuthModular_GetAuthNonce_Failure(t *testing.T) {
 	a.baseApp.SetGfSpDB(m)
 	_, err := a.GetAuthNonce(context.Background(), "test_account", "https://domain.com")
 	assert.NotNil(t, err)
+}
+
+func TestAuthModular_GetAuthNonce_Failure1(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	m.EXPECT().GetAuthKey(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(string, string) (*spdb.OffChainAuthKey, error) { return nil, gorm.ErrInvalidDB },
+	).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	_, err := a.GetAuthNonce(context.Background(), "", "https://domain.com")
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "\"http_status_code\":400")
+	log.Println(err)
 }
 
 func TestAuthModular_UpdateUserPublicKey(t *testing.T) {
@@ -309,6 +326,406 @@ func TestAuthModular_VerifyGNFD1EddsaSignature_SigVerificationFailure(t *testing
 
 	assert.False(t, verifyResult)
 	assert.NotNil(t, err)
+}
+
+func TestAuthModular_GetAuthKeyV2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKey,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockedData, nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.GetAuthKeyV2(context.Background(), userAddress, userDomain, publicKey)
+	assert.Equal(t, mockedData, result)
+	assert.Nil(t, err)
+}
+
+func TestAuthModular_GetAuthKeyV2_Err1(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKey,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockedData, nil).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.GetAuthKeyV2(context.Background(), userAddress, userDomain, "")
+	assert.Equal(t, ErrInvalidAddressOrDomainOrPublicKey, err)
+	assert.Nil(t, result)
+}
+
+func TestAuthModular_GetAuthKeyV2_Err2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.GetAuthKeyV2(context.Background(), userAddress, userDomain, publicKey)
+	assert.NotNil(t, err)
+	assert.Nil(t, result)
+}
+
+func TestAuthModular_ListAuthKeysV2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+
+	m.EXPECT().ListAuthKeysV2(gomock.Any(), gomock.Any()).Return([]string{publicKey}, nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.ListAuthKeysV2(context.Background(), userAddress, userDomain)
+	assert.Equal(t, []string{publicKey}, result)
+	assert.Nil(t, err)
+}
+
+func TestAuthModular_ListAuthKeysV2_Err1(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	publicKey := "testkey"
+
+	m.EXPECT().ListAuthKeysV2(gomock.Any(), gomock.Any()).Return([]string{publicKey}, nil).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.ListAuthKeysV2(context.Background(), userAddress, "")
+	assert.Equal(t, []string(nil), result)
+	assert.Equal(t, ErrInvalidAddressOrDomain, err)
+}
+
+func TestAuthModular_ListAuthKeysV2_Err2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	m.EXPECT().ListAuthKeysV2(gomock.Any(), gomock.Any()).Return([]string(nil), mockErr).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.ListAuthKeysV2(context.Background(), userAddress, userDomain)
+	assert.Equal(t, []string(nil), result)
+	assert.NotNil(t, err)
+}
+
+func TestAuthModular_DeleteAuthKeysV2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+
+	m.EXPECT().DeleteAuthKeysV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.DeleteAuthKeysV2(context.Background(), userAddress, userDomain, []string{publicKey})
+	assert.Equal(t, true, result)
+	assert.Nil(t, err)
+}
+
+func TestAuthModular_DeleteAuthKeysV2_Err1(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	publicKey := "testkey"
+
+	m.EXPECT().DeleteAuthKeysV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.DeleteAuthKeysV2(context.Background(), userAddress, "", []string{publicKey})
+	assert.Equal(t, ErrInvalidAddressOrDomain, err)
+	assert.False(t, result)
+}
+
+func TestAuthModular_DeleteAuthKeysV2_Err2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+
+	m.EXPECT().DeleteAuthKeysV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, mockErr).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.DeleteAuthKeysV2(context.Background(), userAddress, userDomain, []string{publicKey})
+	assert.Equal(t, false, result)
+	assert.NotNil(t, err)
+}
+
+func TestAuthModular_DeleteAuthKeysV2_Err3(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	m.EXPECT().DeleteAuthKeysV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, mockErr).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.DeleteAuthKeysV2(context.Background(), userAddress, userDomain, []string{})
+	assert.Equal(t, true, result)
+	assert.Nil(t, err)
+}
+
+func TestAuthModular_DeleteAuthKeysV2_Err4(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	// Initialize a list of strings with a size of 100
+	keyList := make([]string, 101)
+
+	// Use a for loop to assign values to each element
+	for i := 0; i < len(keyList); i++ {
+		keyList[i] = fmt.Sprintf("testKey_%d", i+1)
+	}
+	m.EXPECT().DeleteAuthKeysV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, mockErr).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.DeleteAuthKeysV2(context.Background(), userAddress, userDomain, keyList)
+	assert.Equal(t, ErrInvalidPublicKeyLength, err)
+	assert.False(t, result)
+}
+
+func TestAuthModular_UpdateUserPublicKeyV2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKey,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().InsertAuthKeyV2(gomock.Any()).Return(nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.UpdateUserPublicKeyV2(context.Background(), userAddress, userDomain, publicKey, mockedData.ExpiryDate.UnixMilli())
+	assert.Equal(t, true, result)
+	assert.Nil(t, err)
+}
+
+func TestAuthModular_UpdateUserPublicKeyV2_Err(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+	publicKey := "testkey"
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKey,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().InsertAuthKeyV2(gomock.Any()).Return(mockErr).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.UpdateUserPublicKeyV2(context.Background(), userAddress, userDomain, publicKey, mockedData.ExpiryDate.UnixMilli())
+	assert.Equal(t, false, result)
+	assert.NotNil(t, err)
+}
+
+func TestAuthModular_VerifyGNFD2EddsaSignature(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	// Generate a new private key
+	ed25519PublicKey, ed25519PrivateKey, _ := ed25519.GenerateKey(nil)
+	signature := ed25519.Sign(ed25519PrivateKey, []byte(TestUnsignedMsg))
+
+	publicKeyStr := hex.EncodeToString(ed25519PublicKey)
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKeyStr,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockedData, nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.VerifyGNFD2EddsaSignature(context.Background(), userAddress, userDomain, publicKeyStr, hex.EncodeToString(signature), []byte(TestUnsignedMsg))
+	assert.Equal(t, true, result)
+	assert.Nil(t, err)
+}
+
+func TestAuthModular_VerifyGNFD2EddsaSignature_Err1(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	// Generate a new private key
+	ed25519PublicKey, ed25519PrivateKey, _ := ed25519.GenerateKey(nil)
+	ed25519.Sign(ed25519PrivateKey, []byte(TestUnsignedMsg))
+
+	publicKeyStr := hex.EncodeToString(ed25519PublicKey)
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKeyStr,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockedData, nil).Times(0)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.VerifyGNFD2EddsaSignature(context.Background(), userAddress, userDomain, publicKeyStr, "badSignature", []byte(TestUnsignedMsg))
+	assert.Equal(t, ErrBadSignature, err)
+	assert.False(t, result)
+}
+
+func TestAuthModular_VerifyGNFD2EddsaSignature_Err2(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	// Generate a new private key
+	ed25519PublicKey, ed25519PrivateKey, _ := ed25519.GenerateKey(nil)
+	signature := ed25519.Sign(ed25519PrivateKey, []byte(TestUnsignedMsg))
+
+	publicKeyStr := hex.EncodeToString(ed25519PublicKey)
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKeyStr,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockedData, mockErr).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.VerifyGNFD2EddsaSignature(context.Background(), userAddress, userDomain, publicKeyStr, hex.EncodeToString(signature), []byte(TestUnsignedMsg))
+	assert.Equal(t, false, result)
+	assert.NotNil(t, err)
+}
+
+func TestAuthModular_VerifyGNFD2EddsaSignature_Err3(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	// Generate a new private key
+	ed25519PublicKey, ed25519PrivateKey, _ := ed25519.GenerateKey(nil)
+	signature := ed25519.Sign(ed25519PrivateKey, []byte(TestUnsignedMsg))
+
+	publicKeyStr := hex.EncodeToString(ed25519PublicKey)
+
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.VerifyGNFD2EddsaSignature(context.Background(), userAddress, userDomain, publicKeyStr, hex.EncodeToString(signature), []byte(TestUnsignedMsg))
+	assert.Equal(t, false, result)
+	assert.Equal(t, ErrPublicKeyNotExist, err)
+}
+
+func TestAuthModular_VerifyGNFD2EddsaSignature_Err4(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	// Generate a new private key
+	ed25519PublicKey, ed25519PrivateKey, _ := ed25519.GenerateKey(nil)
+	signature := ed25519.Sign(ed25519PrivateKey, []byte(TestUnsignedMsg))
+
+	publicKeyStr := hex.EncodeToString(ed25519PublicKey)
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKeyStr,
+		ExpiryDate:   time.Now().Add(-7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockedData, nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.VerifyGNFD2EddsaSignature(context.Background(), userAddress, userDomain, publicKeyStr, hex.EncodeToString(signature), []byte(TestUnsignedMsg))
+	assert.Equal(t, false, result)
+	assert.Equal(t, ErrPublicKeyExpired, err)
+}
+
+func TestAuthModular_VerifyGNFD2EddsaSignature_Err5(t *testing.T) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+	userDomain := "testDomain"
+
+	// Generate a new private key
+	ed25519PublicKey, ed25519PrivateKey, _ := ed25519.GenerateKey(nil)
+	signature := ed25519.Sign(ed25519PrivateKey, []byte("Another Message"))
+
+	publicKeyStr := hex.EncodeToString(ed25519PublicKey)
+	mockedData := &spdb.OffChainAuthKeyV2{
+		UserAddress:  userAddress,
+		Domain:       userDomain,
+		PublicKey:    publicKeyStr,
+		ExpiryDate:   time.Now().Add(7 * time.Hour),
+		CreatedTime:  time.Now(),
+		ModifiedTime: time.Now(),
+	}
+	m.EXPECT().GetAuthKeyV2(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockedData, nil).Times(1)
+	a.baseApp.SetGfSpDB(m)
+	result, err := a.VerifyGNFD2EddsaSignature(context.Background(), userAddress, userDomain, publicKeyStr, hex.EncodeToString(signature), []byte(TestUnsignedMsg))
+	assert.Equal(t, false, result)
+	assert.Equal(t, ErrBadSignature, err)
 }
 
 func Test_VerifyAuth_AskCreateBucketApproval(t *testing.T) {

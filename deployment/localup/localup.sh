@@ -166,6 +166,8 @@ function make_config() {
     sed -i -e "s/RejectUnsealThresholdSecond = .*/RejectUnsealThresholdSecond = 600/g" config.toml
     sed -i -e "s/EnableHealthyChecker = .*/EnableHealthyChecker = true/g" config.toml
     sed -i -e "s/EnableGCStaleVersionObject = .*/EnableGCStaleVersionObject = true/g" config.toml
+    sed -i -e "s/EnableGCExpiredOffChainAuthKeys = .*/EnableGCExpiredOffChainAuthKeys = true/g" config.toml
+    sed -i -e "s/GCExpiredOffChainAuthKeysTimeInterval = .*/GCExpiredOffChainAuthKeysTimeInterval = 86400/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null

@@ -1,6 +1,8 @@
 package gater
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -44,6 +46,16 @@ Resources:
 	SampleUserAccount = "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6"
 	SampleNonce       = "123456"
 	SampleExpiryDate  = "test_expiry_date"
+
+	UnsignedContentTemplateV2 string = `%s wants you to sign in with your BNB Greenfield account:
+%s
+Register your identity public key %s
+
+URI: %s
+Version: 1
+Chain ID: 5600
+Issued At: %s
+Expiration Time: %s`
 )
 
 func TestAuthHandlerVerifySignedContent(t *testing.T) {
@@ -240,6 +252,41 @@ func getSampleRequestWithAuthSig(domain string, nonce string, eddsaPublicKey str
 
 	// mock request
 	req := httptest.NewRequest(http.MethodPost, "/auth/update_key", nil)
+	req.Host = "testBucket.gnfd.nodereal.com"
+
+	req.Header.Set(ContentTypeHeader, "application/x-www-form-urlencoded")
+	req.Header.Set(GnfdAuthorizationHeader, authString)
+	req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDate)
+	req.Header.Set(GnfdOffChainAuthAppRegPublicKeyHeader, eddsaPublicKey)
+	req.Header.Set(GnfdUserAddressHeader, address.String())
+	return req
+}
+
+func getSampleRequestURLWithAuthSigV2(domain string, eddsaPublicKey string, validExpiryDate string) *http.Request {
+	// Account information.
+	privateKey, _ := crypto.GenerateKey()
+
+	address := crypto.PubkeyToAddress(privateKey.PublicKey)
+	log.Infof("address is: " + address.Hex())
+
+	unSignedContent := UnsignedContentTemplateV2
+
+	unSignedContent = fmt.Sprintf(unSignedContent, domain, address.Hex(), eddsaPublicKey, domain, validExpiryDate, validExpiryDate)
+
+	log.Infof("unSignedContent is: %s", unSignedContent)
+	unSignedContentHash := accounts.TextHash([]byte(unSignedContent))
+
+	// Sign data.
+	signature, err := crypto.Sign(unSignedContentHash, privateKey)
+	if err != nil {
+		log.Error(err)
+	}
+	authString := commonhttp.Gnfd1EthPersonalSign + `,SignedMsg=%s,Signature=%s`
+	authString = fmt.Sprintf(authString, unSignedContent, hexutil.Encode(signature))
+	log.Infof("authString is: %s", authString)
+
+	// mock request
+	req := httptest.NewRequest(http.MethodPost, "/auth/update_key_v2", nil)
 	req.Host = "testBucket.gnfd.nodereal.com"
 
 	req.Header.Set(ContentTypeHeader, "application/x-www-form-urlencoded")
@@ -745,11 +792,375 @@ func msgToString(currentNonce int32, nextNonce int32, currentPublicKey string, e
 	return string(b)
 }
 
-// msgToStringForUpdateKey an util method to convert msg from UpdateUserPublicKey API to string
+// msgToStringForUpdateKey a util method to convert msg from UpdateUserPublicKey API to string
 func msgToStringForUpdateKey(updateUserPublicKeyResult bool) string {
 	var resp = &UpdateUserPublicKeyResp{
 		Result: updateUserPublicKeyResult,
 	}
 	b, _ := xml.Marshal(resp)
 	return string(b)
+}
+
+// msgToStringForListUserPublicKeyV2 a util method to convert msg from ListUserPublicKeyV2Resp to string
+func msgToStringForListUserPublicKeyV2(keys []string) string {
+	var resp = &ListUserPublicKeyV2Resp{
+		PublicKeys: keys,
+	}
+	b, _ := xml.Marshal(resp)
+	return string(b)
+}
+
+// off-chain-auth v2 ut
+
+func TestUpdateUserPublicKeyV2Handler(t *testing.T) {
+	type fields struct {
+		mockGfSpClient *gfspclient.MockGfSpClientAPI
+	}
+	type args struct {
+		w *httptest.ResponseRecorder
+		r *http.Request
+	}
+	type Body struct {
+		fields         fields
+		args           args
+		wantRespBody   interface{}
+		wantRespStatus interface{}
+	}
+	tm := time.Now().UTC()
+	Now = func() time.Time {
+		return tm
+	}
+	tests := []struct {
+		name string
+		f    func(*testing.T, *gomock.Controller) *Body
+	}{
+		{
+			name: "case UpdateUserPublicKeyV2 success",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				domain := SampleDAppDomain
+				// Generate a new private key
+				ed25519PublicKey, _, _ := ed25519.GenerateKey(nil)
+				eddsaPublicKey := hex.EncodeToString(ed25519PublicKey)
+
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req := getSampleRequestURLWithAuthSigV2(domain, eddsaPublicKey, validExpiryDateStr)
+
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, domain)
+				req.Header.Set("Origin", domain)
+				req.Header.Set(GnfdOffChainAuthAppRegPublicKeyHeader, eddsaPublicKey)
+				req.Header.Set(GnfdOffChainAuthAppRegExpiryDateHeader, validExpiryDateStr)
+
+				mockedClient.EXPECT().UpdateUserPublicKeyV2(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(true, nil).Times(1)
+
+				w := httptest.NewRecorder()
+				expectedBody := msgToStringForUpdateKey(true)
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusOK,
+				}
+			},
+		},
+		{
+			name: "case wrongAuthString",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				domain := SampleDAppDomain
+				// Generate a new private key
+				ed25519PublicKey, _, _ := ed25519.GenerateKey(nil)
+				eddsaPublicKey := hex.EncodeToString(ed25519PublicKey)
+
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req := getSampleRequestURLWithAuthSigV2(domain, eddsaPublicKey, validExpiryDateStr)
+				req.Header.Set(GnfdAuthorizationHeader, "wrongAuthString")
+
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, domain)
+				req.Header.Set("Origin", domain)
+				req.Header.Set(GnfdOffChainAuthAppRegPublicKeyHeader, eddsaPublicKey)
+				req.Header.Set(GnfdOffChainAuthAppRegExpiryDateHeader, validExpiryDateStr)
+
+				mockedClient.EXPECT().UpdateUserPublicKeyV2(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(true, nil).Times(0)
+
+				w := httptest.NewRecorder()
+				expectedBody := ""
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusBadRequest,
+				}
+			},
+		},
+		{
+			name: "case bad domain",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				domain := SampleDAppDomain
+				// Generate a new private key
+				ed25519PublicKey, _, _ := ed25519.GenerateKey(nil)
+				eddsaPublicKey := hex.EncodeToString(ed25519PublicKey)
+
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req := getSampleRequestURLWithAuthSigV2(domain, eddsaPublicKey, validExpiryDateStr)
+
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, domain)
+				req.Header.Set("Origin", "")
+				req.Header.Set(GnfdOffChainAuthAppRegPublicKeyHeader, eddsaPublicKey)
+				req.Header.Set(GnfdOffChainAuthAppRegExpiryDateHeader, validExpiryDateStr)
+
+				mockedClient.EXPECT().UpdateUserPublicKeyV2(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(true, nil).Times(0)
+
+				w := httptest.NewRecorder()
+				expectedBody := ""
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusBadRequest,
+				}
+			},
+		},
+		{
+			name: "case bad userPublicKey",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				domain := SampleDAppDomain
+				// Generate a new private key
+				ed25519PublicKey, _, _ := ed25519.GenerateKey(nil)
+				eddsaPublicKey := hex.EncodeToString(ed25519PublicKey)
+
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req := getSampleRequestURLWithAuthSigV2(domain, eddsaPublicKey, validExpiryDateStr)
+
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, domain)
+				req.Header.Set("Origin", domain)
+				req.Header.Set(GnfdOffChainAuthAppRegPublicKeyHeader, eddsaPublicKey+"badKey")
+				req.Header.Set(GnfdOffChainAuthAppRegExpiryDateHeader, validExpiryDateStr)
+
+				mockedClient.EXPECT().UpdateUserPublicKeyV2(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(true, nil).Times(0)
+
+				w := httptest.NewRecorder()
+				expectedBody := ""
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusBadRequest,
+				}
+			},
+		},
+		{
+			name: "case bad ExpiryDate",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				domain := SampleDAppDomain
+				// Generate a new private key
+				ed25519PublicKey, _, _ := ed25519.GenerateKey(nil)
+				eddsaPublicKey := hex.EncodeToString(ed25519PublicKey)
+
+				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
+				req := getSampleRequestURLWithAuthSigV2(domain, eddsaPublicKey, validExpiryDateStr)
+
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, domain)
+				req.Header.Set("Origin", domain)
+				req.Header.Set(GnfdOffChainAuthAppRegPublicKeyHeader, eddsaPublicKey)
+				req.Header.Set(GnfdOffChainAuthAppRegExpiryDateHeader, validExpiryDateStr+"badExpiryDate")
+
+				mockedClient.EXPECT().UpdateUserPublicKeyV2(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(true, nil).Times(0)
+
+				w := httptest.NewRecorder()
+				expectedBody := ""
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusBadRequest,
+				}
+			},
+		},
+		{
+			name: "case bad ExpiryDate 2",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				domain := SampleDAppDomain
+				// Generate a new private key
+				ed25519PublicKey, _, _ := ed25519.GenerateKey(nil)
+				eddsaPublicKey := hex.EncodeToString(ed25519PublicKey)
+
+				validExpiryDateStr := time.Now().Add(time.Hour * 24 * 8).Format(ExpiryDateFormat)
+				req := getSampleRequestURLWithAuthSigV2(domain, eddsaPublicKey, validExpiryDateStr)
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, domain)
+				req.Header.Set("Origin", domain)
+				req.Header.Set(GnfdOffChainAuthAppRegPublicKeyHeader, eddsaPublicKey)
+				req.Header.Set(GnfdOffChainAuthAppRegExpiryDateHeader, validExpiryDateStr)
+
+				mockedClient.EXPECT().UpdateUserPublicKeyV2(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(true, nil).Times(0)
+
+				w := httptest.NewRecorder()
+				expectedBody := ""
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusBadRequest,
+				}
+			},
+		},
+	}
+
+	for _, _tt := range tests {
+		t.Run(_tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			tt := _tt.f(t, ctrl)
+
+			gateway := &GateModular{
+				env:    gfspapp.EnvLocal,
+				domain: testDomain,
+			}
+			gateway.baseApp = &gfspapp.GfSpBaseApp{}
+			gateway.baseApp.SetGfSpClient(tt.fields.mockGfSpClient)
+			gateway.baseApp.SetOperatorAddress(TestSpAddress)
+
+			gateway.updateUserPublicKeyV2Handler(tt.args.w, tt.args.r)
+
+			res := tt.args.w.Result()
+			defer res.Body.Close()
+
+			data, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Errorf("expected error to be nil got %v", err)
+			}
+
+			assert.Equal(t, tt.wantRespStatus, res.StatusCode)
+			if tt.wantRespStatus == http.StatusOK {
+				assert.Equal(t, tt.wantRespBody, string(data))
+			}
+
+		})
+	}
+}
+
+func TestListUserPublicKeyV2Handler(t *testing.T) {
+	type fields struct {
+		mockGfSpClient *gfspclient.MockGfSpClientAPI
+	}
+	type args struct {
+		w *httptest.ResponseRecorder
+		r *http.Request
+	}
+	type Body struct {
+		fields         fields
+		args           args
+		wantRespBody   interface{}
+		wantRespStatus interface{}
+	}
+	tm := time.Now().UTC()
+	Now = func() time.Time {
+		return tm
+	}
+	tests := []struct {
+		name string
+		f    func(*testing.T, *gomock.Controller) *Body
+	}{
+		{
+			name: "case ListUserPublicKeyV2 success",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				req := httptest.NewRequest(http.MethodGet, "/auth/keys_v2", nil)
+
+				req.Header.Set(GnfdUserAddressHeader, SampleUserAccount)
+				req.Header.Set(GnfdOffChainAuthAppDomainHeader, SampleDAppDomain)
+
+				mockedClient.EXPECT().ListAuthKeysV2(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return([]string{"testKey"}, nil).Times(1)
+
+				w := httptest.NewRecorder()
+				expectedBody := msgToStringForListUserPublicKeyV2([]string{"testKey"})
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusOK,
+				}
+			},
+		},
+		{
+			name: "case bad domain",
+			f: func(t *testing.T, c *gomock.Controller) *Body {
+				mockedClient := gfspclient.NewMockGfSpClientAPI(c)
+				req := httptest.NewRequest(http.MethodGet, "/auth/keys_v2", nil)
+
+				req.Header.Set(GnfdUserAddressHeader, SampleUserAccount)
+
+				mockedClient.EXPECT().ListAuthKeysV2(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return([]string{"testKey"}, nil).Times(0)
+
+				w := httptest.NewRecorder()
+				expectedBody := ""
+				return &Body{
+					fields: fields{
+						mockGfSpClient: mockedClient,
+					},
+					args:           args{w: w, r: req},
+					wantRespBody:   expectedBody,
+					wantRespStatus: http.StatusBadRequest,
+				}
+			},
+		},
+	}
+
+	for _, _tt := range tests {
+		t.Run(_tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			tt := _tt.f(t, ctrl)
+
+			gateway := &GateModular{
+				env:    gfspapp.EnvLocal,
+				domain: testDomain,
+			}
+			gateway.baseApp = &gfspapp.GfSpBaseApp{}
+			gateway.baseApp.SetGfSpClient(tt.fields.mockGfSpClient)
+			gateway.baseApp.SetOperatorAddress(TestSpAddress)
+
+			gateway.listUserPublicKeyV2Handler(tt.args.w, tt.args.r)
+
+			res := tt.args.w.Result()
+			defer res.Body.Close()
+
+			data, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Errorf("expected error to be nil got %v", err)
+			}
+
+			assert.Equal(t, tt.wantRespStatus, res.StatusCode)
+			if tt.wantRespStatus == http.StatusOK {
+				assert.Equal(t, tt.wantRespBody, string(data))
+			}
+
+		})
+	}
 }
