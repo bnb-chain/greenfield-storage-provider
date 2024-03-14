@@ -17,6 +17,7 @@ var _ coretask.ApprovalCreateBucketTask = &GfSpCreateBucketApprovalTask{}
 var _ coretask.ApprovalMigrateBucketTask = &GfSpMigrateBucketApprovalTask{}
 var _ coretask.ApprovalCreateObjectTask = &GfSpCreateObjectApprovalTask{}
 var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
+var _ coretask.ApprovalDelegateCreateObjectTask = &GfSpDelegateCreateObjectApprovalTask{}
 
 func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(account string, bucket *storagetypes.MsgCreateBucket,
 	fingerprint []byte, priority coretask.TPriority) {
@@ -632,4 +633,150 @@ func (m *GfSpReplicatePieceApprovalTask) SetApprovedSpEndpoint(endpoint string) 
 
 func (m *GfSpReplicatePieceApprovalTask) SetApprovedSpApprovalAddress(address string) {
 	m.ApprovedSpApprovalAddress = address
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) InitApprovalDelegateCreateObjectTask(account string, object *storagetypes.MsgDelegateCreateObject,
+	fingerprint []byte, priority coretask.TPriority) {
+	m.Reset()
+	m.Task = &GfSpTask{}
+	m.Fingerprint = fingerprint
+	m.GetTask().SetCreateTime(time.Now().Unix())
+	m.GetTask().SetUpdateTime(time.Now().Unix())
+	m.SetUserAddress(account)
+	m.SetDelegateCreateObject(object)
+	m.SetPriority(priority)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) Key() coretask.TKey {
+	return GfSpCreateObjectApprovalTaskKey(
+		m.GetDelegateCreateObject().GetBucketName(),
+		m.GetDelegateCreateObject().GetObjectName(),
+		m.GetUserAddress(),
+		m.Fingerprint)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) Type() coretask.TType {
+	return coretask.TypeTaskCreateObjectApproval
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) Info() string {
+	return fmt.Sprintf("key[%s], type[%s], priority[%d], limit[%s], %s",
+		m.Key(), coretask.TaskTypeName(m.Type()), m.GetPriority(), m.EstimateLimit().String(),
+		m.GetTask().Info())
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetAddress() string {
+	return m.GetTask().GetAddress()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetAddress(address string) {
+	m.GetTask().SetAddress(address)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetCreateTime() int64 {
+	return m.GetTask().GetCreateTime()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetCreateTime(time int64) {
+	m.GetTask().SetCreateTime(time)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetUpdateTime() int64 {
+	return m.GetTask().GetUpdateTime()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetUpdateTime(time int64) {
+	m.GetTask().SetUpdateTime(time)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetTimeout() int64 {
+	return m.GetTask().GetTimeout()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetTimeout(time int64) {
+	m.GetTask().SetTimeout(time)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) ExceedTimeout() bool {
+	return m.GetTask().ExceedTimeout()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetRetry() int64 {
+	return m.GetTask().GetRetry()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) IncRetry() {
+	m.GetTask().IncRetry()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetRetry(retry int64) {
+	m.GetTask().SetRetry(retry)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetMaxRetry() int64 {
+	return m.GetTask().GetMaxRetry()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetMaxRetry(limit int64) {
+	m.GetTask().SetMaxRetry(limit)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) ExceedRetry() bool {
+	return m.GetTask().ExceedRetry()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) Expired() bool {
+	return m.GetTask().Expired()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetPriority() coretask.TPriority {
+	return m.GetTask().GetPriority()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetPriority(priority coretask.TPriority) {
+	m.GetTask().SetPriority(priority)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) EstimateLimit() corercmgr.Limit {
+	l := &gfsplimit.GfSpLimit{}
+	l.Add(LimitEstimateByPriority(m.GetPriority()))
+	return l
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetUserAddress() string {
+	return m.GetTask().GetUserAddress()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetUserAddress(address string) {
+	m.GetTask().SetUserAddress(address)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetLogs(logs string) {
+	m.GetTask().SetLogs(logs)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetLogs() string {
+	return m.GetTask().GetLogs()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) AppendLog(log string) {
+	m.GetTask().AppendLog(log)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) Error() error {
+	return m.GetTask().Error()
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetError(err error) {
+	m.GetTask().SetError(err)
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetExpiredHeight(height uint64) {}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) GetExpiredHeight() uint64 {
+	return 0
+}
+
+func (m *GfSpDelegateCreateObjectApprovalTask) SetDelegateCreateObject(object *storagetypes.MsgDelegateCreateObject) {
+	m.DelegateCreateObject = object
 }

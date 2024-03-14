@@ -45,6 +45,7 @@ type ApproverAPI interface {
 	AskCreateBucketApproval(ctx context.Context, t coretask.ApprovalCreateBucketTask) (bool, coretask.ApprovalCreateBucketTask, error)
 	AskMigrateBucketApproval(ctx context.Context, t coretask.ApprovalMigrateBucketTask) (bool, coretask.ApprovalMigrateBucketTask, error)
 	AskCreateObjectApproval(ctx context.Context, t coretask.ApprovalCreateObjectTask) (bool, coretask.ApprovalCreateObjectTask, error)
+	AskDelegateCreateObjectApproval(ctx context.Context, t coretask.ApprovalDelegateCreateObjectTask) (bool, coretask.ApprovalDelegateCreateObjectTask, error)
 }
 
 // AuthenticatorAPI for mock use
@@ -179,7 +180,10 @@ type SignerAPI interface {
 	SignCreateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) ([]byte, error)
 	SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgMigrateBucket) ([]byte, error)
 	SignCreateObjectApproval(ctx context.Context, object *storagetypes.MsgCreateObject) ([]byte, error)
+	DelegateCreateObject(ctx context.Context, object *storagetypes.MsgDelegateCreateObject) (string, error)
+	DelegateUpdateObjectContent(ctx context.Context, object *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
+	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 	CreateGlobalVirtualGroup(ctx context.Context, group *gfspserver.GfSpCreateGlobalVirtualGroup) error
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)

@@ -26,6 +26,7 @@ type UploadObjectMeta struct {
 	SecondarySignatures   [][]byte
 	ErrorDescription      string
 	CreateTimeStampSecond int64
+	IsAgentUpload         bool
 }
 
 // GCObjectMeta defines the gc object range progress info.
@@ -52,6 +53,7 @@ type IntegrityMeta struct {
 	RedundancyIndex   int32
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
+	ObjectSize        uint64
 }
 
 // ShadowIntegrityMeta defines the payload integrity hash and piece checksum with objectID. It is used for storing user's
@@ -63,6 +65,7 @@ type ShadowIntegrityMeta struct {
 	IntegrityChecksum []byte
 	PieceChecksumList [][]byte
 	Version           int64
+	ObjectSize        uint64
 }
 
 // ReadRecord defines a read request record, will decrease the bucket read quota.

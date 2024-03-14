@@ -745,7 +745,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure3(t *testing.T) {
 
 	m5 := corespdb.NewMockSPDB(ctrl)
 	u.baseApp.SetGfSpDB(m5)
-	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
+	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
@@ -966,7 +966,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure9(t *testing.T) {
 
 	m5 := corespdb.NewMockSPDB(ctrl)
 	u.baseApp.SetGfSpDB(m5)
-	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
+	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},

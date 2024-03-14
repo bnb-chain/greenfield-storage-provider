@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnb-chain/greenfield-common/go/hash"
+	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -207,7 +210,7 @@ func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) err
 
 	replicateTask = &gfsptask.GfSpReplicatePieceTask{}
 	replicateTask.InitReplicatePieceTask(objectInfo, storageParams, s.manager.baseApp.TaskPriority(replicateTask),
-		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask))
+		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask), meta.IsAgentUpload)
 
 	// for objects that have been uploaded but not starting the replication yet, it doesn't have the GVG info the UploadObjectMeta,
 	// so it needs to pick one to start the replicate task.
@@ -274,18 +277,39 @@ func (s *TaskRetryScheduler) retrySealTask(meta *spdb.UploadObjectMeta) error {
 		log.Errorw("failed to get multiple signature", "object_id", meta.ObjectID, "error", err)
 		return err
 	}
-	sealMsg = &storagetypes.MsgSealObject{
-		Operator:                    s.manager.baseApp.OperatorAddress(),
-		BucketName:                  objectInfo.GetBucketName(),
-		ObjectName:                  objectInfo.GetObjectName(),
-		GlobalVirtualGroupId:        meta.GlobalVirtualGroupID,
-		SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+	if !meta.IsAgentUpload {
+		sealMsg = &storagetypes.MsgSealObject{
+			Operator:                    s.manager.baseApp.OperatorAddress(),
+			BucketName:                  objectInfo.GetBucketName(),
+			ObjectName:                  objectInfo.GetObjectName(),
+			GlobalVirtualGroupId:        meta.GlobalVirtualGroupID,
+			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+		}
+		err = sendAndConfirmSealObjectTx(s.manager.baseApp, sealMsg)
+		if err == nil {
+			_ = s.manager.baseApp.GfSpDB().DeleteUploadProgress(objectInfo.Id.Uint64())
+		}
+		return err
+	} else {
+		var checksums [][]byte
+		checksums, err = s.makeCheckSumsForAgentUpload(context.Background(), objectInfo, meta.SecondaryEndpoints)
+		if err != nil {
+			return err
+		}
+		sealMsgV2 := &storagetypes.MsgSealObjectV2{
+			Operator:                    s.manager.baseApp.OperatorAddress(),
+			BucketName:                  objectInfo.GetBucketName(),
+			ObjectName:                  objectInfo.GetObjectName(),
+			GlobalVirtualGroupId:        meta.GlobalVirtualGroupID,
+			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			ExpectChecksums:             checksums,
+		}
+		err = sendAndConfirmSealObjectTxV2(s.manager.baseApp, sealMsgV2)
+		if err == nil {
+			_ = s.manager.baseApp.GfSpDB().DeleteUploadProgress(objectInfo.Id.Uint64())
+		}
+		return err
 	}
-	err = sendAndConfirmSealObjectTx(s.manager.baseApp, sealMsg)
-	if err == nil {
-		_ = s.manager.baseApp.GfSpDB().DeleteUploadProgress(objectInfo.Id.Uint64())
-	}
-	return err
 }
 
 // retryRejectTask is used to send reject unseal tx to chain.
@@ -330,6 +354,21 @@ func sendAndConfirmSealObjectTx(baseApp *gfspapp.GfSpBaseApp, msg *storagetypes.
 				txErr  error
 			)
 			if txHash, txErr = baseApp.GfSpClient().SealObject(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
+				log.Errorw("failed to send seal object", "seal_object_msg", msg, "error", txErr)
+				return "", txErr
+			}
+			return txHash, nil
+		})
+}
+
+func sendAndConfirmSealObjectTxV2(baseApp *gfspapp.GfSpBaseApp, msg *storagetypes.MsgSealObjectV2) error {
+	return SendAndConfirmTx(baseApp.Consensus(),
+		func() (string, error) {
+			var (
+				txHash string
+				txErr  error
+			)
+			if txHash, txErr = baseApp.GfSpClient().SealObjectV2(context.Background(), msg); txErr != nil && !isAlreadyExists(txErr) {
 				log.Errorw("failed to send seal object", "seal_object_msg", msg, "error", txErr)
 				return "", txErr
 			}
@@ -440,4 +479,33 @@ func (s *TaskRetryScheduler) assignShadowObjectInfo(objectInfo *storagetypes.Obj
 	objectInfo.Checksums = shadowObject.Checksums
 	objectInfo.UpdatedAt = shadowObject.UpdatedAt
 	return nil
+}
+
+func (s *TaskRetryScheduler) makeCheckSumsForAgentUpload(ctx context.Context, objectInfo *storagetypes.ObjectInfo, secondaryEndpoints []string) ([][]byte, error) {
+	integrityMeta, err := s.manager.baseApp.GfSpDB().GetObjectIntegrity(objectInfo.Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get object integrity",
+			"objectID", objectInfo.Id.Uint64(), "error", err)
+		return nil, err
+	}
+	expectChecksums := make([][]byte, 0)
+	expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList))
+	params, err := s.manager.baseApp.Consensus().QueryStorageParams(ctx)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to QueryStorageParams",
+			"objectID", objectInfo.Id.Uint64(), "error", err)
+		return nil, err
+	}
+	spc := s.manager.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(), params.VersionedParams.GetMaxSegmentSize())
+	for redundancyIdx := range secondaryEndpoints {
+		var ecHash [][]byte
+		ecHash, err = s.manager.baseApp.GfSpDB().GetAllReplicatePieceChecksum(objectInfo.Id.Uint64(), int32(redundancyIdx), spc)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get all replicate piece",
+				"objectID", objectInfo.Id.Uint64(), "error", err)
+			return nil, err
+		}
+		expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(ecHash))
+	}
+	return expectChecksums, nil
 }

@@ -57,6 +57,9 @@ const (
 	AuthOpTypeGetRecoveryPiece
 	// AuthOpTypeQueryBucketMigrationProgress defines the QueryBucketMigrationProgress operator
 	AuthOpTypeQueryBucketMigrationProgress
+	// AuthOpTypeAgentPutObject defines the agent PutObject operator
+	AuthOpTypeAgentPutObject
+	AuthOpTypeAgentUpdateObject
 )
 
 // Authenticator is an abstract interface to verify users authentication.
@@ -115,6 +118,8 @@ type Approver interface {
 	PostCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask)
 	// QueryTasks queries tasks that running on approver by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	// HandleDelegateCreateObjectApprovalTask handles the DelegateCreateObjectApproval,
+	HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error)
 }
 
 // Downloader is an abstract interface to handle getting object requests from users' account, and getting
@@ -302,6 +307,8 @@ type Signer interface {
 	SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
 	// SealObject signs the MsgSealObject and broadcast the tx to greenfield.
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
+	// SealObjectV2 signs the MsgSealObject and broadcast the tx to greenfield.
+	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
 	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
@@ -340,6 +347,10 @@ type Signer interface {
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.
 	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
+	// DelegateCreateObject  broadcast the tx to greenfield.
+	DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)
+	// DelegateUpdateObjectContent  send the delegate update object content tx
+	DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

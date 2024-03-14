@@ -11,7 +11,7 @@ import (
 
 func TestInitUploadObjectTask(t *testing.T) {
 	m := &GfSpUploadObjectTask{}
-	m.InitUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0)
+	m.InitUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0, false)
 }
 
 func TestGfSpUploadObjectTask_Key(t *testing.T) {
@@ -307,7 +307,7 @@ func TestGfSpUploadObjectTask_SetStorageParams(t *testing.T) {
 
 func TestInitResumableUploadObjectTask(t *testing.T) {
 	m := &GfSpResumableUploadObjectTask{}
-	m.InitResumableUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0, true, 1)
+	m.InitResumableUploadObjectTask(1, mockObjectInfo, mockStorageParams, 0, true, 1, false)
 }
 
 func TestGfSpResumableUploadObjectTask_GetResumeOffset(t *testing.T) {
@@ -630,7 +630,7 @@ func TestGfSpResumableUploadObjectTask_SetStorageParams(t *testing.T) {
 
 func TestInitReplicatePieceTask(t *testing.T) {
 	m := &GfSpReplicatePieceTask{}
-	m.InitReplicatePieceTask(mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 0, 0)
+	m.InitReplicatePieceTask(mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 0, 0, false)
 }
 
 func TestGfSpReplicatePieceTask_Key(t *testing.T) {
@@ -987,7 +987,7 @@ func TestGfSpReplicatePieceTask_SetSecondaryAddresses(t *testing.T) {
 func TestInitSealObjectTask(t *testing.T) {
 	m := &GfSpSealObjectTask{}
 	m.InitSealObjectTask(1, mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, []string{"1"},
-		[][]byte{[]byte("1")}, 0, 0)
+		[][]byte{[]byte("1")}, 0, 0, false)
 }
 
 func TestGfSpSealObjectTask_Key(t *testing.T) {
@@ -1290,7 +1290,7 @@ func TestGfSpSealObjectTask_SetStorageParams(t *testing.T) {
 
 func TestInitReceivePieceTask(t *testing.T) {
 	m := &GfSpReceivePieceTask{}
-	m.InitReceivePieceTask(1, mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 1, 0, 0)
+	m.InitReceivePieceTask(1, mockObjectInfo, mockStorageParams, coretask.MaxTaskPriority, 1, 0, 0, false)
 }
 
 func TestGfSpReceivePieceTask_GetSignBytes(t *testing.T) {

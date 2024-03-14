@@ -398,6 +398,21 @@ func (mr *MockApproverMockRecorder) HandleCreateObjectApprovalTask(ctx, task any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleCreateObjectApprovalTask", reflect.TypeOf((*MockApprover)(nil).HandleCreateObjectApprovalTask), ctx, task)
 }
 
+// HandleDelegateCreateObjectApprovalTask mocks base method.
+func (m *MockApprover) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HandleDelegateCreateObjectApprovalTask", ctx, task)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HandleDelegateCreateObjectApprovalTask indicates an expected call of HandleDelegateCreateObjectApprovalTask.
+func (mr *MockApproverMockRecorder) HandleDelegateCreateObjectApprovalTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleDelegateCreateObjectApprovalTask", reflect.TypeOf((*MockApprover)(nil).HandleDelegateCreateObjectApprovalTask), ctx, task)
+}
+
 // HandleMigrateBucketApprovalTask mocks base method.
 func (m *MockApprover) HandleMigrateBucketApprovalTask(ctx context.Context, task task.ApprovalMigrateBucketTask) (bool, error) {
 	m.ctrl.T.Helper()
@@ -1912,6 +1927,36 @@ func (mr *MockSignerMockRecorder) CreateGlobalVirtualGroup(ctx, gvg any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSigner)(nil).CreateGlobalVirtualGroup), ctx, gvg)
 }
 
+// DelegateCreateObject mocks base method.
+func (m *MockSigner) DelegateCreateObject(ctx context.Context, msg *types0.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, msg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockSignerMockRecorder) DelegateCreateObject(ctx, msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockSigner)(nil).DelegateCreateObject), ctx, msg)
+}
+
+// DelegateUpdateObjectContent mocks base method.
+func (m *MockSigner) DelegateUpdateObjectContent(ctx context.Context, msg *types0.MsgDelegateUpdateObjectContent) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateUpdateObjectContent", ctx, msg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateUpdateObjectContent indicates an expected call of DelegateUpdateObjectContent.
+func (mr *MockSignerMockRecorder) DelegateUpdateObjectContent(ctx, msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateUpdateObjectContent", reflect.TypeOf((*MockSigner)(nil).DelegateUpdateObjectContent), ctx, msg)
+}
+
 // DeleteGlobalVirtualGroup mocks base method.
 func (m *MockSigner) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types1.MsgDeleteGlobalVirtualGroup) (string, error) {
 	m.ctrl.T.Helper()
@@ -2071,6 +2116,21 @@ func (m *MockSigner) SealObject(ctx context.Context, object *types0.MsgSealObjec
 func (mr *MockSignerMockRecorder) SealObject(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSigner)(nil).SealObject), ctx, object)
+}
+
+// SealObjectV2 mocks base method.
+func (m *MockSigner) SealObjectV2(ctx context.Context, object *types0.MsgSealObjectV2) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SealObjectV2", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SealObjectV2 indicates an expected call of SealObjectV2.
+func (mr *MockSignerMockRecorder) SealObjectV2(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObjectV2", reflect.TypeOf((*MockSigner)(nil).SealObjectV2), ctx, object)
 }
 
 // SignBucketMigrationInfo mocks base method.

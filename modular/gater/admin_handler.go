@@ -641,11 +641,12 @@ func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if receiveTask.GetObjectInfo() == nil || int(receiveTask.GetRedundancyIdx()) >= len(receiveTask.GetObjectInfo().GetChecksums()) {
+	if receiveTask.GetObjectInfo() == nil || (!receiveTask.GetIsAgentUploadTask() && int(receiveTask.GetRedundancyIdx()) >= len(receiveTask.GetObjectInfo().GetChecksums())) {
 		log.CtxErrorw(reqCtx.Context(), "receive task params error")
 		err = ErrInvalidHeader
 		return
 	}
+
 	readDataTime := time.Now()
 	data, err = io.ReadAll(r.Body)
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_read_piece_time").Observe(time.Since(readDataTime).Seconds())

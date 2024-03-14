@@ -280,7 +280,7 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 	params *storagetypes.Params, destSPEndpoint string, segmentIdx, redundancyIdx uint32, data []byte) error {
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx,
-		int32(redundancyIdx), int64(len(data)))
+		int32(redundancyIdx), int64(len(data)), false)
 	receive.SetPieceChecksum(hash.GenerateChecksum(data))
 	receive.SetBucketMigration(true)
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
@@ -306,7 +306,7 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, gvgID uint32, objectInfo *storagetypes.ObjectInfo,
 	params *storagetypes.Params, destSPEndpoint string, redundancyIdx uint32) error {
 	receive := &gfsptask.GfSpReceivePieceTask{}
-	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, 0 /* useless */, int32(redundancyIdx), 0)
+	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, 0 /* useless */, int32(redundancyIdx), 0, false)
 	taskSignature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to sign done receive task", "error", err, "redundancy_index", redundancyIdx)

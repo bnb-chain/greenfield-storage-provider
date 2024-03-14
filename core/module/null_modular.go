@@ -371,3 +371,15 @@ func (m *NilModular) CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualg
 func (m *NilModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
 	return "nil", ErrNilModular
 }
+func (m *NullModular) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error) {
+	return false, nil
+}
+func (m *NilModular) DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	return "", nil
+}
+func (m *NilModular) DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
+	return "", nil
+}
+func (m *NilModular) SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error) {
+	return "", nil
+}
