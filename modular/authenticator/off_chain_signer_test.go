@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"bytes"
+	"crypto/ed25519"
 	"crypto/subtle"
 	"encoding/hex"
 	"io"
@@ -20,6 +21,22 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
+
+func TestEd25519PrivateKeyAndVerify(t *testing.T) {
+	userEddsaPublicKeyStr := "1db9bfd4f2a457f32a1c500d6d6848b843602942f1b0577d968ea378cbfacf97"
+	msg := "I want to sign a message"
+	sigStr := "7a72fef8af89fbdd45879b842b70c868c489484daf564a53b027bb3cd68374007a7b43a49645c82ad0dba63fb9477bc8d15988d0c0ffe1b54fb1bf8fa9a02905"
+
+	sig, _ := hex.DecodeString(sigStr)
+
+	pubKeyBytes, err := hex.DecodeString(userEddsaPublicKeyStr)
+	if err != nil {
+		t.Errorf("Decode public key failed: %v", err)
+	}
+	if !ed25519.Verify(pubKeyBytes, []byte(msg), sig) {
+		t.Errorf("Verify failed: signature is not valid")
+	}
+}
 
 func TestGenerateEddsaPrivateKey(t *testing.T) {
 	sk, err := GenerateEddsaPrivateKey("testeeetgcxsaahsadcastzxbmjhgmgjhcarwewfseasdasdavacsafaewe")

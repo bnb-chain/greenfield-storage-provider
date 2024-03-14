@@ -471,21 +471,34 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
 			gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
 			gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+			gnfdOffChainAuthPublicKeyParam := queryParams.Get(GnfdOffChainAuthAppRegPublicKeyHeader)
 			gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
 
 			// GNFD1-EDDSA
 			gnfd1EddsaSignaturePrefix := commonhttp.Gnfd1Eddsa + ","
-			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
+			// GNFD2-EDDSA
+			gnfd2EddsaSignaturePrefix := commonhttp.Gnfd2Eddsa + ","
+			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) && !strings.HasPrefix(gnfdAuthorizationParam, gnfd2EddsaSignaturePrefix) {
 				err = ErrUnsupportedSignType
 				return
 			}
 
 			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
 			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
-				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				var preSignedURLErr error
+				var account sdk.AccAddress
+				if strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
+					account, preSignedURLErr = reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+
+				} else if strings.HasPrefix(gnfdAuthorizationParam, gnfd2EddsaSignaturePrefix) && gnfdOffChainAuthPublicKeyParam != "" {
+					account, preSignedURLErr = reqCtx.verifyGNFD2EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam, gnfdOffChainAuthPublicKeyParam)
+
+				}
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
-				} else {
+				}
+
+				if account != nil {
 					reqCtx.account = account.String()
 					reqCtxErr = nil
 					// default set content-disposition to download, if specified in query param as view, then set to view
@@ -734,7 +747,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		} else {
 			taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 		}
-	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED {
+	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_SEALED && !objectInfo.GetIsUpdating() {
 		taskState = int32(servicetypes.TaskState_TASK_STATE_SEAL_OBJECT_DONE)
 		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 	} else if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_DISCONTINUED {

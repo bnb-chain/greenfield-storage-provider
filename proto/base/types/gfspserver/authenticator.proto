@@ -80,6 +80,97 @@ message VerifyGNFD1EddsaSignatureResponse {
   bool result = 2;
 }
 
+// GetAuthKeyV2Request is request type for the GetAuthKeyV2 RPC method.
+message GetAuthKeyV2Request {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for this nonce
+  string domain = 2;
+  // user_public_key is the public key value to update in SP database
+  string user_public_key = 3;
+}
+
+// GetAuthKeyV2Response is response type for the GetAuthKeyV2 RPC method.
+message GetAuthKeyV2Response {
+  base.types.gfsperrors.GfSpError err = 1;
+  // current_public_key defines the current user EDDSA public key
+  string public_key = 2;
+  // expiry_date is the expiry timestamp of the current public key
+  int64 expiry_date = 3;
+}
+
+// ListAuthKeysV2Request is request type for the ListAuthKeysV2 RPC method.
+message ListAuthKeysV2Request {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for this nonce
+  string domain = 2;
+}
+
+// ListAuthKeysV2Response is response type for the ListAuthKeysV2 RPC method.
+message ListAuthKeysV2Response {
+  base.types.gfsperrors.GfSpError err = 1;
+  // publicKeys defines the list of user public keys
+  repeated string public_keys = 2;
+}
+
+// DeleteAuthKeysV2Request is request type for the DeleteAuthKeysV2 RPC method.
+message DeleteAuthKeysV2Request {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for this nonce
+  string domain = 2;
+  // publicKeys defines the list of user public keys
+  repeated string public_keys = 3;
+}
+
+// DeleteAuthKeysV2Response is response type for the DeleteAuthKeysV2 RPC method.
+message DeleteAuthKeysV2Response {
+  base.types.gfsperrors.GfSpError err = 1;
+  // result defines the result of if the user public keys are deleted
+  bool result = 2;
+}
+
+// UpdateUserPublicKeyV2Request is request type for the UpdateUserPublicKeyV2 RPC method.
+message UpdateUserPublicKeyV2Request {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for which the public key is updated
+  string domain = 2;
+  // user_public_key is the public key value to update in SP database
+  string user_public_key = 3;
+  // expiry_date is the expiry timestamp of the public key
+  int64 expiry_date = 4;
+}
+
+// UpdateUserPublicKeyV2Response is response type for the UpdateUserPublicKeyV2 RPC method.
+message UpdateUserPublicKeyV2Response {
+  base.types.gfsperrors.GfSpError err = 1;
+  // result defines the result of if the user public key is updated
+  bool result = 2;
+}
+
+// VerifyGNFD2EddsaSignatureRequest is request type for the VerifyGNFD2EddsaSignature RPC method.
+message VerifyGNFD2EddsaSignatureRequest {
+  // account_id is the account address of user
+  string account_id = 1;
+  // domain is the DApp domain for which the public key is updated
+  string domain = 2;
+  // user_public_key is the public key value to update in SP database
+  string user_public_key = 3;
+  // off_chain_sig is the off chain signature signed by user's eddsa seed private key
+  string off_chain_sig = 4;
+  // real_msg_to_sign is the msg that the off_chain_sig is signed for
+  bytes real_msg_to_sign = 5;
+}
+
+// VerifyGNFD2EddsaSignatureResponse is response type for the VerifyGNFD2EddsaSignature RPC method.
+message VerifyGNFD2EddsaSignatureResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  // result defines the result of if the OffChainSignature is verified
+  bool result = 2;
+}
+
 service GfSpAuthenticationService {
   rpc GfSpVerifyAuthentication(GfSpAuthenticationRequest) returns (GfSpAuthenticationResponse) {}
   // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
@@ -88,4 +179,14 @@ service GfSpAuthenticationService {
   rpc UpdateUserPublicKey(UpdateUserPublicKeyRequest) returns (UpdateUserPublicKeyResponse) {}
   // VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
   rpc VerifyGNFD1EddsaSignature(VerifyGNFD1EddsaSignatureRequest) returns (VerifyGNFD1EddsaSignatureResponse) {}
+  // GetAuthKeyV2 get the auth key for which the Dapp or client can generate EDDSA key pairs.
+  rpc GetAuthKeyV2(GetAuthKeyV2Request) returns (GetAuthKeyV2Response) {}
+  // ListAuthKeysV2 list the user public keys
+  rpc ListAuthKeysV2(ListAuthKeysV2Request) returns (ListAuthKeysV2Response) {}
+  // DeleteAuthKeysV2 delete the user public keys
+  rpc DeleteAuthKeysV2(DeleteAuthKeysV2Request) returns (DeleteAuthKeysV2Response) {}
+  // UpdateUserPublicKeyV2 updates the user public key once the Dapp or client generates the EDDSA key pairs.
+  rpc UpdateUserPublicKeyV2(UpdateUserPublicKeyV2Request) returns (UpdateUserPublicKeyV2Response) {}
+  // VerifyGNFD2EddsaSignature verifies the signature signed by user's EDDSA private key.
+  rpc VerifyGNFD2EddsaSignature(VerifyGNFD2EddsaSignatureRequest) returns (VerifyGNFD2EddsaSignatureResponse) {}
 }

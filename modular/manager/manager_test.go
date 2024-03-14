@@ -8,12 +8,13 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	types0 "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
@@ -30,32 +31,34 @@ var mockErr = errors.New("mock error")
 func setup(t *testing.T) *ManageModular {
 	t.Helper()
 	manager := &ManageModular{
-		baseApp:                          &gfspapp.GfSpBaseApp{},
-		uploadQueue:                      &gfsptqueue.GfSpTQueue{},
-		resumableUploadQueue:             &gfsptqueue.GfSpTQueue{},
-		replicateQueue:                   &gfsptqueue.GfSpTQueueWithLimit{},
-		sealQueue:                        &gfsptqueue.GfSpTQueueWithLimit{},
-		receiveQueue:                     &gfsptqueue.GfSpTQueueWithLimit{},
-		gcObjectQueue:                    &gfsptqueue.GfSpTQueueWithLimit{},
-		gcZombieQueue:                    &gfsptqueue.GfSpTQueueWithLimit{},
-		gcMetaQueue:                      &gfsptqueue.GfSpTQueueWithLimit{},
-		gcBucketMigrationQueue:           &gfsptqueue.GfSpTQueueWithLimit{},
-		gcStaleVersionObjectQueue:        &gfsptqueue.GfSpTQueueWithLimit{},
-		downloadQueue:                    &gfsptqueue.GfSpTQueue{},
-		challengeQueue:                   &gfsptqueue.GfSpTQueue{},
-		recoveryQueue:                    &gfsptqueue.GfSpTQueueWithLimit{},
-		migrateGVGQueue:                  &gfsptqueue.GfSpTQueueWithLimit{},
-		gcObjectTimeInterval:             2,
-		gcZombiePieceTimeInterval:        3,
-		gcMetaTimeInterval:               4,
-		gcStaleVersionObjectTimeInterval: 2,
-		syncConsensusInfoInterval:        5,
-		syncAvailableVGFInterval:         5,
-		statisticsOutputInterval:         6,
-		discontinueBucketTimeInterval:    7,
-		gcSafeBlockDistance:              1,
-		backupTaskMux:                    sync.Mutex{},
-		spID:                             1,
+		baseApp:                               &gfspapp.GfSpBaseApp{},
+		uploadQueue:                           &gfsptqueue.GfSpTQueue{},
+		resumableUploadQueue:                  &gfsptqueue.GfSpTQueue{},
+		replicateQueue:                        &gfsptqueue.GfSpTQueueWithLimit{},
+		sealQueue:                             &gfsptqueue.GfSpTQueueWithLimit{},
+		receiveQueue:                          &gfsptqueue.GfSpTQueueWithLimit{},
+		gcObjectQueue:                         &gfsptqueue.GfSpTQueueWithLimit{},
+		gcZombieQueue:                         &gfsptqueue.GfSpTQueueWithLimit{},
+		gcMetaQueue:                           &gfsptqueue.GfSpTQueueWithLimit{},
+		gcBucketMigrationQueue:                &gfsptqueue.GfSpTQueueWithLimit{},
+		gcStaleVersionObjectQueue:             &gfsptqueue.GfSpTQueueWithLimit{},
+		downloadQueue:                         &gfsptqueue.GfSpTQueue{},
+		challengeQueue:                        &gfsptqueue.GfSpTQueue{},
+		recoveryQueue:                         &gfsptqueue.GfSpTQueueWithLimit{},
+		migrateGVGQueue:                       &gfsptqueue.GfSpTQueueWithLimit{},
+		gcObjectTimeInterval:                  2,
+		gcZombiePieceTimeInterval:             3,
+		gcMetaTimeInterval:                    4,
+		gcStaleVersionObjectTimeInterval:      2,
+		syncConsensusInfoInterval:             5,
+		syncAvailableVGFInterval:              5,
+		statisticsOutputInterval:              6,
+		discontinueBucketTimeInterval:         7,
+		gcSafeBlockDistance:                   1,
+		backupTaskMux:                         sync.Mutex{},
+		spID:                                  1,
+		gcExpiredOffChainAuthKeysEnabled:      true,
+		gcExpiredOffChainAuthKeysTimeInterval: 300,
 	}
 
 	return manager

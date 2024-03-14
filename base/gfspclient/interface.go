@@ -54,6 +54,11 @@ type AuthenticatorAPI interface {
 	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.DialOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error)
 	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error)
+	GetAuthKeyV2(ctx context.Context, account string, domain string, userPublicKey string, opts ...grpc.DialOption) (string, int64, error)
+	UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error)
+	VerifyGNFD2EddsaSignature(ctx context.Context, account string, domain string, userPublicKey string, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error)
+	ListAuthKeysV2(ctx context.Context, account string, domain string, opts ...grpc.DialOption) ([]string, error)
+	DeleteAuthKeysV2(ctx context.Context, account string, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error)
 }
 
 // DownloaderAPI for mock use
