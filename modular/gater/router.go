@@ -203,6 +203,10 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(getBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.getBucketReadQuotaHandler).Queries(
 			GetBucketReadQuotaQuery, "", GetBucketReadQuotaMonthQuery, "{year_month}")
 
+		// List Bucket Read Quota
+		r.NewRoute().Name(listBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.listBucketReadQuotaHandler).Queries(
+			ListBucketReadQuotaQuery, "", GetBucketReadQuotaMonthQuery, "{year_month}")
+
 		if g.env != gfspapp.EnvMainnet {
 			// Get Bucket By Bucket Name
 			r.NewRoute().Name(getBucketByBucketNameRouterName).Methods(http.MethodGet).Queries(GetBucketByBucketNameQuery, "").HandlerFunc(g.getBucketByBucketNameHandler)
