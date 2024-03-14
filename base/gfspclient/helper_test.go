@@ -145,6 +145,56 @@ func (*mockApproverServer) GfSpAskApproval(ctx context.Context, req *gfspserver.
 
 type mockAuthenticatorServer struct{}
 
+func (s mockAuthenticatorServer) GetAuthKeyV2(ctx context.Context, req *gfspserver.GetAuthKeyV2Request) (*gfspserver.GetAuthKeyV2Response, error) {
+	if req.GetAccountId() == mockObjectName1 {
+		return nil, mockRPCErr
+	} else if req.GetAccountId() == mockObjectName2 {
+		return &gfspserver.GetAuthKeyV2Response{Err: ErrExceptionsStream}, nil
+	} else {
+		return &gfspserver.GetAuthKeyV2Response{PublicKey: "test", ExpiryDate: 0}, nil
+	}
+}
+
+func (s mockAuthenticatorServer) ListAuthKeysV2(ctx context.Context, req *gfspserver.ListAuthKeysV2Request) (*gfspserver.ListAuthKeysV2Response, error) {
+	if req.GetAccountId() == mockObjectName1 {
+		return nil, mockRPCErr
+	} else if req.GetAccountId() == mockObjectName2 {
+		return &gfspserver.ListAuthKeysV2Response{Err: ErrExceptionsStream}, nil
+	} else {
+		return &gfspserver.ListAuthKeysV2Response{PublicKeys: []string{"key1", "key2"}}, nil
+	}
+}
+
+func (s mockAuthenticatorServer) DeleteAuthKeysV2(ctx context.Context, req *gfspserver.DeleteAuthKeysV2Request) (*gfspserver.DeleteAuthKeysV2Response, error) {
+	if req.GetAccountId() == mockObjectName1 {
+		return nil, mockRPCErr
+	} else if req.GetAccountId() == mockObjectName2 {
+		return &gfspserver.DeleteAuthKeysV2Response{Err: ErrExceptionsStream}, nil
+	} else {
+		return &gfspserver.DeleteAuthKeysV2Response{Result: true}, nil
+	}
+}
+
+func (s mockAuthenticatorServer) UpdateUserPublicKeyV2(ctx context.Context, req *gfspserver.UpdateUserPublicKeyV2Request) (*gfspserver.UpdateUserPublicKeyV2Response, error) {
+	if req.GetAccountId() == mockObjectName1 {
+		return nil, mockRPCErr
+	} else if req.GetAccountId() == mockObjectName2 {
+		return &gfspserver.UpdateUserPublicKeyV2Response{Err: ErrExceptionsStream}, nil
+	} else {
+		return &gfspserver.UpdateUserPublicKeyV2Response{Result: true}, nil
+	}
+}
+
+func (s mockAuthenticatorServer) VerifyGNFD2EddsaSignature(ctx context.Context, req *gfspserver.VerifyGNFD2EddsaSignatureRequest) (*gfspserver.VerifyGNFD2EddsaSignatureResponse, error) {
+	if req.GetAccountId() == mockObjectName1 {
+		return nil, mockRPCErr
+	} else if req.GetAccountId() == mockObjectName2 {
+		return &gfspserver.VerifyGNFD2EddsaSignatureResponse{Err: ErrExceptionsStream}, nil
+	} else {
+		return &gfspserver.VerifyGNFD2EddsaSignatureResponse{Result: true}, nil
+	}
+}
+
 func (mockAuthenticatorServer) GfSpVerifyAuthentication(ctx context.Context, req *gfspserver.GfSpAuthenticationRequest) (
 	*gfspserver.GfSpAuthenticationResponse, error) {
 	if req.GetAuthType() == int32(coremodule.AuthOpAskMigrateBucketApproval) {

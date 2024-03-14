@@ -329,9 +329,9 @@ func (s *TaskRetryScheduler) retryRejectUnsealTask(meta *spdb.UploadObjectMeta) 
 		}
 		return err
 	}
-	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-		log.Infow("object is not in create status", "object_info", objectInfo)
-		return fmt.Errorf("object is not in create status")
+	if objectInfo.GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED && !objectInfo.GetIsUpdating() {
+		log.Infow("object is not in create status nor being updated", "object_info", objectInfo)
+		return fmt.Errorf("object is not in create status nor being updated")
 	}
 
 	rejectUnsealMsg = &storagetypes.MsgRejectSealObject{

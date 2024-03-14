@@ -55,11 +55,9 @@ func (u *UploadModular) PreUploadObject(ctx context.Context, uploadObjectTask co
 		log.CtxErrorw(ctx, "failed to pre upload object, task pointer dangling")
 		return ErrDanglingUploadTask
 	}
-	if uploadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-		if !uploadObjectTask.GetObjectInfo().GetIsUpdating() {
-			log.CtxErrorw(ctx, "failed to pre upload object, object not create or under updating")
-			return ErrNotCreatedState
-		}
+	if uploadObjectTask.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED && !uploadObjectTask.GetObjectInfo().GetIsUpdating() {
+		log.CtxErrorw(ctx, "failed to pre upload object, object not created nor being updated")
+		return ErrNotCreatedState
 	}
 
 	startTime := time.Now()
@@ -246,11 +244,9 @@ func (u *UploadModular) PreResumableUploadObject(ctx context.Context, task coret
 		log.CtxErrorw(ctx, "failed to pre upload object, task pointer dangling")
 		return ErrDanglingUploadTask
 	}
-	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED {
-		if !task.GetObjectInfo().GetIsUpdating() {
-			log.CtxErrorw(ctx, "failed to pre upload object, object not create or under updating")
-			return ErrNotCreatedState
-		}
+	if task.GetObjectInfo().GetObjectStatus() != storagetypes.OBJECT_STATUS_CREATED && !task.GetObjectInfo().GetIsUpdating() {
+		log.CtxErrorw(ctx, "failed to pre upload object, object not created or under updating")
+		return ErrNotCreatedState
 	}
 	if u.resumeableUploadQueue.Has(task.Key()) {
 		log.CtxErrorw(ctx, "failed to pre upload object, task repeated")

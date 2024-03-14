@@ -372,7 +372,7 @@ message GfSpListBucketReadQuotaRequest {
 // GfSpListBucketReadQuotaResponse is response type for the GfSpListBucketReadQuota RPC method.
 message GfSpListBucketReadQuotaResponse {
   base.types.gfsperrors.GfSpError err = 1;
-  map<string,GfSpGetBucketReadQuotaResponse> result = 2;
+  map<string, GfSpGetBucketReadQuotaResponse> result = 2;
 }
 
 // GfSpGetLatestBucketReadQuotaRequest is request type for the GfSpGetLatestBucketReadQuota RPC method.

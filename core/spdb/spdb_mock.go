@@ -71,6 +71,20 @@ func (mr *MockSPDBMockRecorder) CheckQuotaAndAddReadRecord(record, quota any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckQuotaAndAddReadRecord", reflect.TypeOf((*MockSPDB)(nil).CheckQuotaAndAddReadRecord), record, quota)
 }
 
+// ClearExpiredOffChainAuthKeys mocks base method.
+func (m *MockSPDB) ClearExpiredOffChainAuthKeys() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearExpiredOffChainAuthKeys")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClearExpiredOffChainAuthKeys indicates an expected call of ClearExpiredOffChainAuthKeys.
+func (mr *MockSPDBMockRecorder) ClearExpiredOffChainAuthKeys() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearExpiredOffChainAuthKeys", reflect.TypeOf((*MockSPDB)(nil).ClearExpiredOffChainAuthKeys))
+}
+
 // CountRecoverFailedObject mocks base method.
 func (m *MockSPDB) CountRecoverFailedObject() (int64, error) {
 	m.ctrl.T.Helper()
@@ -112,6 +126,21 @@ func (m *MockSPDB) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 func (mr *MockSPDBMockRecorder) DeleteAllReplicatePieceChecksumOptimized(objectID, redundancyIdx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllReplicatePieceChecksumOptimized", reflect.TypeOf((*MockSPDB)(nil).DeleteAllReplicatePieceChecksumOptimized), objectID, redundancyIdx)
+}
+
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockSPDB) DeleteAuthKeysV2(userAddress, domain string, publicKey []string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", userAddress, domain, publicKey)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockSPDBMockRecorder) DeleteAuthKeysV2(userAddress, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockSPDB)(nil).DeleteAuthKeysV2), userAddress, domain, publicKey)
 }
 
 // DeleteExpiredBucketTraffic mocks base method.
@@ -377,6 +406,21 @@ func (m *MockSPDB) GetAuthKey(userAddress, domain string) (*OffChainAuthKey, err
 func (mr *MockSPDBMockRecorder) GetAuthKey(userAddress, domain any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKey", reflect.TypeOf((*MockSPDB)(nil).GetAuthKey), userAddress, domain)
+}
+
+// GetAuthKeyV2 mocks base method.
+func (m *MockSPDB) GetAuthKeyV2(userAddress, domain, publicKey string) (*OffChainAuthKeyV2, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", userAddress, domain, publicKey)
+	ret0, _ := ret[0].(*OffChainAuthKeyV2)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockSPDBMockRecorder) GetAuthKeyV2(userAddress, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockSPDB)(nil).GetAuthKeyV2), userAddress, domain, publicKey)
 }
 
 // GetBucketReadRecord mocks base method.
@@ -768,6 +812,20 @@ func (mr *MockSPDBMockRecorder) InsertAuthKey(newRecord any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKey", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKey), newRecord)
 }
 
+// InsertAuthKeyV2 mocks base method.
+func (m *MockSPDB) InsertAuthKeyV2(newRecord *OffChainAuthKeyV2) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertAuthKeyV2", newRecord)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertAuthKeyV2 indicates an expected call of InsertAuthKeyV2.
+func (mr *MockSPDBMockRecorder) InsertAuthKeyV2(newRecord any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKeyV2", reflect.TypeOf((*MockSPDB)(nil).InsertAuthKeyV2), newRecord)
+}
+
 // InsertGCObjectProgress mocks base method.
 func (m *MockSPDB) InsertGCObjectProgress(gcMeta *GCObjectMeta) error {
 	m.ctrl.T.Helper()
@@ -850,6 +908,21 @@ func (m *MockSPDB) InsertUploadProgress(objectID uint64, isAgentUpload bool) err
 func (mr *MockSPDBMockRecorder) InsertUploadProgress(objectID, isAgentUpload any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUploadProgress", reflect.TypeOf((*MockSPDB)(nil).InsertUploadProgress), objectID, isAgentUpload)
+}
+
+// ListAuthKeysV2 mocks base method.
+func (m *MockSPDB) ListAuthKeysV2(userAddress, domain string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", userAddress, domain)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockSPDBMockRecorder) ListAuthKeysV2(userAddress, domain any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockSPDB)(nil).ListAuthKeysV2), userAddress, domain)
 }
 
 // ListBucketMigrationToConfirm mocks base method.
@@ -2524,6 +2597,102 @@ func (m *MockOffChainAuthKeyDB) UpdateAuthKey(userAddress, domain string, oldNon
 func (mr *MockOffChainAuthKeyDBMockRecorder) UpdateAuthKey(userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthKey", reflect.TypeOf((*MockOffChainAuthKeyDB)(nil).UpdateAuthKey), userAddress, domain, oldNonce, newNonce, newPublicKey, newExpiryDate)
+}
+
+// MockOffChainAuthKeyV2DB is a mock of OffChainAuthKeyV2DB interface.
+type MockOffChainAuthKeyV2DB struct {
+	ctrl     *gomock.Controller
+	recorder *MockOffChainAuthKeyV2DBMockRecorder
+}
+
+// MockOffChainAuthKeyV2DBMockRecorder is the mock recorder for MockOffChainAuthKeyV2DB.
+type MockOffChainAuthKeyV2DBMockRecorder struct {
+	mock *MockOffChainAuthKeyV2DB
+}
+
+// NewMockOffChainAuthKeyV2DB creates a new mock instance.
+func NewMockOffChainAuthKeyV2DB(ctrl *gomock.Controller) *MockOffChainAuthKeyV2DB {
+	mock := &MockOffChainAuthKeyV2DB{ctrl: ctrl}
+	mock.recorder = &MockOffChainAuthKeyV2DBMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockOffChainAuthKeyV2DB) EXPECT() *MockOffChainAuthKeyV2DBMockRecorder {
+	return m.recorder
+}
+
+// ClearExpiredOffChainAuthKeys mocks base method.
+func (m *MockOffChainAuthKeyV2DB) ClearExpiredOffChainAuthKeys() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearExpiredOffChainAuthKeys")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClearExpiredOffChainAuthKeys indicates an expected call of ClearExpiredOffChainAuthKeys.
+func (mr *MockOffChainAuthKeyV2DBMockRecorder) ClearExpiredOffChainAuthKeys() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearExpiredOffChainAuthKeys", reflect.TypeOf((*MockOffChainAuthKeyV2DB)(nil).ClearExpiredOffChainAuthKeys))
+}
+
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockOffChainAuthKeyV2DB) DeleteAuthKeysV2(userAddress, domain string, publicKey []string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", userAddress, domain, publicKey)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockOffChainAuthKeyV2DBMockRecorder) DeleteAuthKeysV2(userAddress, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockOffChainAuthKeyV2DB)(nil).DeleteAuthKeysV2), userAddress, domain, publicKey)
+}
+
+// GetAuthKeyV2 mocks base method.
+func (m *MockOffChainAuthKeyV2DB) GetAuthKeyV2(userAddress, domain, publicKey string) (*OffChainAuthKeyV2, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", userAddress, domain, publicKey)
+	ret0, _ := ret[0].(*OffChainAuthKeyV2)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockOffChainAuthKeyV2DBMockRecorder) GetAuthKeyV2(userAddress, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockOffChainAuthKeyV2DB)(nil).GetAuthKeyV2), userAddress, domain, publicKey)
+}
+
+// InsertAuthKeyV2 mocks base method.
+func (m *MockOffChainAuthKeyV2DB) InsertAuthKeyV2(newRecord *OffChainAuthKeyV2) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertAuthKeyV2", newRecord)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertAuthKeyV2 indicates an expected call of InsertAuthKeyV2.
+func (mr *MockOffChainAuthKeyV2DBMockRecorder) InsertAuthKeyV2(newRecord any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAuthKeyV2", reflect.TypeOf((*MockOffChainAuthKeyV2DB)(nil).InsertAuthKeyV2), newRecord)
+}
+
+// ListAuthKeysV2 mocks base method.
+func (m *MockOffChainAuthKeyV2DB) ListAuthKeysV2(userAddress, domain string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", userAddress, domain)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockOffChainAuthKeyV2DBMockRecorder) ListAuthKeysV2(userAddress, domain any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockOffChainAuthKeyV2DB)(nil).ListAuthKeysV2), userAddress, domain)
 }
 
 // MockMigrateDB is a mock of MigrateDB interface.
