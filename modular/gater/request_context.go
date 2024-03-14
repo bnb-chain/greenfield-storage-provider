@@ -287,7 +287,7 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 		log.Errorw("failed to verify off chain signature", "error", err)
 		return nil, err
 	} else {
-		userAddress := sdk.MustAccAddressFromHex(account)
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
 		return userAddress, nil
 	}
 }
@@ -307,7 +307,7 @@ func (r *RequestContext) verifyGNFD2EddsaSignatureFromPreSignedURL(authenticatio
 		log.Errorw("failed to verify off chain signature", "error", err)
 		return nil, err
 	} else {
-		userAddress := sdk.MustAccAddressFromHex(account)
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
 		return userAddress, nil
 	}
 }
