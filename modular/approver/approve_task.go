@@ -303,3 +303,33 @@ func (a *ApprovalModular) migrateBucketQuotaCheck(ctx context.Context, task core
 	log.CtxDebugw(ctx, "succeed to check bucket source sp quota for bucket migration", "migrate_bucket_msg", migrateBucketMsg)
 	return true, nil
 }
+
+func (a *ApprovalModular) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task coretask.ApprovalDelegateCreateObjectTask) (bool, error) {
+	var (
+		err error
+	)
+	if task == nil || task.GetDelegateCreateObject() == nil {
+		log.CtxErrorw(ctx, "failed to create object approval due to pointer nil")
+		return false, ErrDanglingPointer
+	}
+	defer func() {
+		if err != nil {
+			task.SetError(err)
+		}
+		log.CtxDebugw(ctx, task.Info())
+	}()
+
+	startQueryQueue := time.Now()
+	has := a.objectQueue.Has(task.Key())
+	metrics.PerfApprovalTime.WithLabelValues("approval_object_check_repeated_cost").Observe(time.Since(startQueryQueue).Seconds())
+	if has {
+		shadowTask := a.objectQueue.PopByKey(task.Key())
+		task.SetDelegateCreateObject((shadowTask.(coretask.ApprovalDelegateCreateObjectTask).GetDelegateCreateObject()))
+		_ = a.objectQueue.Push(shadowTask)
+		log.CtxErrorw(ctx, "repeated create object approval task is returned")
+		return true, nil
+	}
+
+	go a.objectQueue.Push(task)
+	return true, nil
+}

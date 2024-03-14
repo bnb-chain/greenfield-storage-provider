@@ -15,6 +15,8 @@ const (
 	approvalRouterName                             = "GetApproval"
 	putObjectRouterName                            = "PutObject"
 	resumablePutObjectRouterName                   = "ResumablePutObject"
+	delegatePutObjectRouterName                    = "DelegatePutObject"
+	delegateResumablePutObjectRouterName           = "DelegateResumablePutObject"
 	queryResumeOffsetName                          = "QueryResumeOffsetName"
 	getObjectRouterName                            = "GetObject"
 	getChallengeInfoRouterName                     = "GetChallengeInfo"
@@ -153,9 +155,13 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())
 	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
 	for _, r := range routers {
+		// Delegate Put Object By Offset
+		r.NewRoute().Name(delegateResumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").Queries(Delegate, "").HandlerFunc(g.delegateResumablePutObjectHandler)
 		// Put Object By Offset
 		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).
 			Queries("offset", "{offset}", "complete", "{complete}")
+		// Delegate Put Object
+		r.NewRoute().Name(delegatePutObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").Queries(Delegate, "").HandlerFunc(g.delegatePutObjectHandler)
 		// Put Object
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 

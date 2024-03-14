@@ -183,6 +183,7 @@ func (m *Module) handleSealObject(ctx context.Context, block *tmctypes.ResultBlo
 		LocalVirtualGroupId: sealObject.LocalVirtualGroupId,
 		Status:              sealObject.Status.String(),
 		SealedTxHash:        txHash,
+		CheckSums:           sealObject.GetChecksums(),
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,

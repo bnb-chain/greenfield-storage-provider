@@ -13,10 +13,10 @@ func TestSpDBImpl_InsertUploadProgressSuccess(t *testing.T) {
 	var objectID = uint64(10)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `upload_object_progress` (`task_state`,`global_virtual_group_id`,`task_state_description`,`error_description`,`secondary_endpoints`,`secondary_signatures`,`create_timestamp_second`,`update_timestamp_second`,`object_id`) VALUES (?,?,?,?,?,?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `upload_object_progress` (`task_state`,`global_virtual_group_id`,`task_state_description`,`error_description`,`secondary_endpoints`,`secondary_signatures`,`create_timestamp_second`,`update_timestamp_second`,`is_agent_upload`,`object_id`) VALUES (?,?,?,?,?,?,?,?,?,?)").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	err := s.InsertUploadProgress(objectID)
+	err := s.InsertUploadProgress(objectID, false)
 	assert.Nil(t, err)
 }
 
@@ -24,11 +24,11 @@ func TestSpDBImpl_InsertUploadProgressFailure(t *testing.T) {
 	var objectID = uint64(10)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `upload_object_progress` (`task_state`,`global_virtual_group_id`,`task_state_description`,`error_description`,`secondary_endpoints`,`secondary_signatures`,`create_timestamp_second`,`update_timestamp_second`,`object_id`) VALUES (?,?,?,?,?,?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `upload_object_progress` (`task_state`,`global_virtual_group_id`,`task_state_description`,`error_description`,`secondary_endpoints`,`secondary_signatures`,`create_timestamp_second`,`update_timestamp_second`,`is_agent_upload`,`object_id`) VALUES (?,?,?,?,?,?,?,?,?,?)").
 		WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
-	err := s.InsertUploadProgress(objectID)
+	err := s.InsertUploadProgress(objectID, false)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 }
 

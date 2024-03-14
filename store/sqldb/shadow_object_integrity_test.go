@@ -114,7 +114,7 @@ func TestSpDBImpl_SetShadowObjectIntegritySuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `shadow_integrity_meta` (`object_id`,`redundancy_index`,`integrity_checksum`,`piece_checksum_list`,`version`) VALUES (?,?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `shadow_integrity_meta` (`object_id`,`redundancy_index`,`integrity_checksum`,`piece_checksum_list`,`version`,`object_size`) VALUES (?,?,?,?,?,?)").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.SetShadowObjectIntegrity(meta)
@@ -132,7 +132,7 @@ func TestSpDBImpl_SetShadowObjectIntegrityFailure1(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `shadow_integrity_meta` (`object_id`,`redundancy_index`,`integrity_checksum`,`piece_checksum_list`,`version`) VALUES (?,?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `shadow_integrity_meta` (`object_id`,`redundancy_index`,`integrity_checksum`,`piece_checksum_list`,`version`,`object_size`) VALUES (?,?,?,?,?,?)").
 		WillReturnError(&mysql.MySQLError{Number: uint16(ErrDuplicateEntryCode), Message: "duplicate entry code"})
 	mock.ExpectRollback()
 	mock.ExpectCommit()
@@ -240,17 +240,18 @@ func TestSpDBImpl_UpdateShadowPieceChecksumSuccess1(t *testing.T) {
 		IntegrityChecksum: "1406e05881e299367766d313e26c05564ec91bf721d31726bd6e46e60689539a",
 		PieceChecksumList: "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
 		Version:           int64(2),
+		ObjectSize:        1,
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `shadow_integrity_meta` WHERE object_id = ? and redundancy_index = ? ORDER BY `shadow_integrity_meta`.`object_id` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "version"}).
-			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.Version))
+		WillReturnRows(sqlmock.NewRows([]string{"object_id", "redundancy_index", "integrity_checksum", "piece_checksum_list", "version", "object_size"}).
+			AddRow(i.ObjectID, i.RedundancyIndex, i.IntegrityChecksum, i.PieceChecksumList, i.Version, i.ObjectSize))
 	mock.ExpectBegin()
-	mock.ExpectExec("UPDATE `shadow_integrity_meta` SET `piece_checksum_list`=? WHERE object_id = ? and redundancy_index = ?").
-		WithArgs(newChecksum, i.ObjectID, i.RedundancyIndex).
+	mock.ExpectExec("UPDATE `shadow_integrity_meta` SET `piece_checksum_list`=?,`object_size`=? WHERE object_id = ? and redundancy_index = ?").
+		WithArgs(newChecksum, 2, i.ObjectID, i.RedundancyIndex).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version)
+	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version, 1)
 	assert.Nil(t, err)
 }
 
@@ -266,10 +267,10 @@ func TestSpDBImpl_UpdateShadowPieceChecksumSuccess2(t *testing.T) {
 	mock.ExpectQuery("SELECT * FROM `shadow_integrity_meta` WHERE object_id = ? and redundancy_index = ? ORDER BY `shadow_integrity_meta`.`object_id` LIMIT 1").
 		WillReturnError(gorm.ErrRecordNotFound)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `shadow_integrity_meta` (`object_id`,`redundancy_index`,`integrity_checksum`,`piece_checksum_list`,`version`) VALUES (?,?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `shadow_integrity_meta` (`object_id`,`redundancy_index`,`integrity_checksum`,`piece_checksum_list`,`version`,`object_size`) VALUES (?,?,?,?,?,?)").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version)
+	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version, 1)
 	assert.Nil(t, err)
 }
 
@@ -289,7 +290,7 @@ func TestSpDBImpl_UpdateShadowPieceChecksumFailure1(t *testing.T) {
 		WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
-	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version)
+	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version, 1)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 }
 
@@ -304,7 +305,7 @@ func TestSpDBImpl_UpdateShadowPieceChecksumFailure2(t *testing.T) {
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `shadow_integrity_meta` WHERE object_id = ? and redundancy_index = ? ORDER BY `shadow_integrity_meta`.`object_id` LIMIT 1").
 		WillReturnError(mockDBInternalError)
-	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version)
+	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version, 1)
 	fmt.Println(err)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 }
@@ -333,7 +334,7 @@ func TestSpDBImpl_UpdateShadowPieceChecksumFailure3(t *testing.T) {
 		WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
-	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version)
+	err := s.UpdateShadowPieceChecksum(objectID, redundancyIndex, checksum, version, 1)
 	fmt.Println(err)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
 }

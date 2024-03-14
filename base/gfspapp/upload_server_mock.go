@@ -5,6 +5,7 @@
 //
 //	mockgen -source=./upload_server.go -destination=./upload_server_mock.go -package=gfspapp
 //
+
 // Package gfspapp is a generated GoMock package.
 package gfspapp
 
