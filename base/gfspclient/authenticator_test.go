@@ -362,3 +362,179 @@ func TestGfSpClient_UpdateUserPublicKeyV2Failure(t *testing.T) {
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 	assert.Equal(t, false, result)
 }
+
+func TestGfSpClient_VerifyGNFD2EddsaSignature(t *testing.T) {
+	cases := []struct {
+		name            string
+		account         string
+		wantedPublicKey string
+		wantedResult    bool
+		wantedIsErr     bool
+		wantedErr       error
+	}{
+		{
+			name:            "success",
+			account:         mockObjectName3,
+			wantedPublicKey: "test",
+			wantedIsErr:     false,
+			wantedResult:    true,
+		},
+		{
+			name:            "mock rpc error",
+			account:         mockObjectName1,
+			wantedPublicKey: "",
+			wantedResult:    false,
+			wantedIsErr:     true,
+			wantedErr:       mockRPCErr,
+		},
+		{
+			name:            "mock response returns error",
+			account:         mockObjectName2,
+			wantedPublicKey: "",
+			wantedResult:    false,
+			wantedIsErr:     true,
+			wantedErr:       ErrExceptionsStream,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := mockBufClient()
+			ctx := context.Background()
+			result, err := s.VerifyGNFD2EddsaSignature(ctx, tt.account, emptyString, emptyString, emptyString, nil, grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErr.Error())
+				assert.Equal(t, tt.wantedResult, result)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tt.wantedResult, result)
+			}
+		})
+	}
+}
+
+func TestGfSpClient_VerifyGNFD2EddsaSignatureFailure(t *testing.T) {
+	t.Log("Failure case description: client failed to connect authenticator")
+	ctx, cancel := context.WithCancel(context.Background())
+	s := mockBufClient()
+	defer s.Close()
+	cancel()
+	result, err := s.VerifyGNFD2EddsaSignature(ctx, emptyString, emptyString, emptyString, emptyString, nil)
+	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Equal(t, false, result)
+}
+
+func TestGfSpClient_DeleteAuthKeysV2(t *testing.T) {
+	cases := []struct {
+		name            string
+		account         string
+		wantedPublicKey string
+		wantedResult    bool
+		wantedIsErr     bool
+		wantedErr       error
+	}{
+		{
+			name:            "success",
+			account:         mockObjectName3,
+			wantedPublicKey: "test",
+			wantedIsErr:     false,
+			wantedResult:    true,
+		},
+		{
+			name:            "mock rpc error",
+			account:         mockObjectName1,
+			wantedPublicKey: "",
+			wantedResult:    false,
+			wantedIsErr:     true,
+			wantedErr:       mockRPCErr,
+		},
+		{
+			name:            "mock response returns error",
+			account:         mockObjectName2,
+			wantedPublicKey: "",
+			wantedResult:    false,
+			wantedIsErr:     true,
+			wantedErr:       ErrExceptionsStream,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := mockBufClient()
+			ctx := context.Background()
+			result, err := s.DeleteAuthKeysV2(ctx, tt.account, emptyString, []string{}, grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErr.Error())
+				assert.Equal(t, tt.wantedResult, result)
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tt.wantedResult, result)
+			}
+		})
+	}
+}
+
+func TestGfSpClient_DeleteAuthKeysV2Failure(t *testing.T) {
+	t.Log("Failure case description: client failed to connect authenticator")
+	ctx, cancel := context.WithCancel(context.Background())
+	s := mockBufClient()
+	defer s.Close()
+	cancel()
+	result, err := s.DeleteAuthKeysV2(ctx, emptyString, emptyString, []string{})
+	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Equal(t, false, result)
+}
+
+func TestGfSpClient_ListAuthKeysV2(t *testing.T) {
+	cases := []struct {
+		name         string
+		account      string
+		wantedResult []string
+		wantedIsErr  bool
+		wantedErr    error
+	}{
+		{
+			name:         "success",
+			account:      mockObjectName3,
+			wantedResult: []string{"key1", "key2"},
+			wantedIsErr:  false,
+		},
+		{
+			name:         "mock rpc error",
+			account:      mockObjectName1,
+			wantedResult: nil,
+			wantedIsErr:  true,
+			wantedErr:    mockRPCErr,
+		},
+		{
+			name:         "mock response returns error",
+			account:      mockObjectName2,
+			wantedResult: nil,
+			wantedIsErr:  true,
+			wantedErr:    ErrExceptionsStream,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := mockBufClient()
+			ctx := context.Background()
+			keys, err := s.ListAuthKeysV2(ctx, tt.account, emptyString, grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if tt.wantedIsErr {
+				assert.Contains(t, err.Error(), tt.wantedErr.Error())
+				assert.Equal(t, tt.wantedResult, []string(nil))
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tt.wantedResult, keys)
+			}
+		})
+	}
+}
+
+func TestGfSpClient_ListAuthKeysV2Failure(t *testing.T) {
+	t.Log("Failure case description: client failed to connect authenticator")
+	ctx, cancel := context.WithCancel(context.Background())
+	s := mockBufClient()
+	defer s.Close()
+	cancel()
+	result, err := s.ListAuthKeysV2(ctx, emptyString, emptyString)
+	assert.Contains(t, err.Error(), context.Canceled.Error())
+	assert.Equal(t, []string(nil), result)
+}
