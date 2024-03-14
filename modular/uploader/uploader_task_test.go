@@ -282,7 +282,7 @@ func TestUploadModular_HandleUploadObjectTaskFailure2(t *testing.T) {
 	m2 := piecestore.NewMockPieceOp(ctrl)
 	u.baseApp.SetPieceOp(m2)
 	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 	m3 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m3)
@@ -418,7 +418,7 @@ func TestUploadModular_HandleUploadObjectTaskFailure6(t *testing.T) {
 	m2 := piecestore.NewMockPieceOp(ctrl)
 	u.baseApp.SetPieceOp(m2)
 	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 	m3 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m3)
@@ -697,7 +697,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure2(t *testing.T) {
 	m2 := piecestore.NewMockPieceOp(ctrl)
 	u.baseApp.SetPieceOp(m2)
 	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 	m3 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m3)
@@ -733,7 +733,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure3(t *testing.T) {
 	m2 := piecestore.NewMockPieceOp(ctrl)
 	u.baseApp.SetPieceOp(m2)
 	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 	m3 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m3)
@@ -745,7 +745,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure3(t *testing.T) {
 
 	m5 := corespdb.NewMockSPDB(ctrl)
 	u.baseApp.SetGfSpDB(m5)
-	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
+	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
@@ -918,7 +918,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure8(t *testing.T) {
 	m2 := piecestore.NewMockPieceOp(ctrl)
 	u.baseApp.SetPieceOp(m2)
 	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 	m3 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m3)
@@ -954,7 +954,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure9(t *testing.T) {
 	m2 := piecestore.NewMockPieceOp(ctrl)
 	u.baseApp.SetPieceOp(m2)
 	m2.EXPECT().MaxSegmentPieceSize(gomock.Any(), gomock.Any()).Return(int64(1)).Times(1)
-	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+	m2.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 	m3 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	u.baseApp.SetGfSpClient(m3)
@@ -966,7 +966,7 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure9(t *testing.T) {
 
 	m5 := corespdb.NewMockSPDB(ctrl)
 	u.baseApp.SetGfSpDB(m5)
-	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
+	m5.EXPECT().UpdatePieceChecksum(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockErr).AnyTimes()
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},

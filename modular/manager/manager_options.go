@@ -87,6 +87,9 @@ const (
 	// on greenfield timeout height, if after current block height + timeout height, the object
 	// is not rejected, it is judged failed to reject unseal object on greenfield.
 	DefaultListenRejectUnSealTimeoutHeight int = 10
+	// DefaultSyncAvailableVGFInterval defines the default interval for available global virtual group family info,
+	// it is used to log and debug.
+	DefaultSyncAvailableVGFInterval int = 5 * 60
 
 	// DefaultDiscontinueTimeInterval defines the default interval for starting discontinue
 	// buckets task , used for test net.
@@ -105,6 +108,8 @@ const (
 	DefaultSubscribeBucketMigrateEventIntervalMillisecond = 2000
 	// DefaultSubscribeSwapOutEventIntervalMillisecond define the default time interval to subscribe gvg swap out event from metadata.
 	DefaultSubscribeSwapOutEventIntervalMillisecond = 2000
+	// DefaultGCExpiredOffChainAuthKeysTimeInterval define the default time interval to gc expired off chain auth keys
+	DefaultGCExpiredOffChainAuthKeysTimeInterval = 24 * 3600
 )
 
 const (
@@ -223,6 +228,9 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	if cfg.Parallel.LoadSealTimeout == 0 {
 		cfg.Parallel.LoadSealTimeout = DefaultLoadSealTimeout
 	}
+	if cfg.GC.GCExpiredOffChainAuthKeysTimeInterval == 0 {
+		cfg.GC.GCExpiredOffChainAuthKeysTimeInterval = DefaultGCExpiredOffChainAuthKeysTimeInterval
+	}
 
 	manager.enableLoadTask = cfg.Manager.EnableLoadTask
 	manager.enableHealthyChecker = cfg.Manager.EnableHealthyChecker
@@ -231,6 +239,7 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.loadTaskLimitToGC = cfg.Parallel.GlobalGCObjectParallel
 
 	manager.statisticsOutputInterval = DefaultStatisticsOutputInterval
+	manager.syncAvailableVGFInterval = DefaultSyncAvailableVGFInterval
 	manager.maxUploadObjectNumber = cfg.Parallel.GlobalMaxUploadingParallel
 	manager.gcObjectTimeInterval = cfg.GC.GCObjectTimeInterval
 	manager.gcObjectBlockInterval = cfg.GC.GCObjectBlockInterval
@@ -243,6 +252,8 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.gcMetaTimeInterval = cfg.GC.GCMetaTimeInterval
 	manager.gcStaleVersionObjectEnabled = cfg.GC.EnableGCStaleVersionObject
 	manager.gcStaleVersionObjectTimeInterval = cfg.GC.GCStaleVersionTimeInterval
+	manager.gcExpiredOffChainAuthKeysEnabled = cfg.GC.EnableGCExpiredOffChainAuthKeys
+	manager.gcExpiredOffChainAuthKeysTimeInterval = cfg.GC.GCExpiredOffChainAuthKeysTimeInterval
 	manager.syncConsensusInfoInterval = cfg.Parallel.GlobalSyncConsensusInfoInterval
 	manager.discontinueBucketEnabled = cfg.Parallel.DiscontinueBucketEnabled
 	manager.discontinueBucketTimeInterval = cfg.Parallel.DiscontinueBucketTimeInterval
@@ -308,6 +319,12 @@ func DefaultManagerOptions(manager *ManageModular, cfg *gfspconfig.GfSpConfig) (
 	manager.rejectUnsealThresholdSecond = cfg.Manager.RejectUnsealThresholdSecond
 
 	manager.enableBucketMigrateCache = cfg.Manager.EnableBucketMigrateCache
+
+	if cfg.Quota.MonthlyFreeQuota == 0 {
+		manager.spMonthlyFreeQuota = gfspapp.DefaultSpMonthlyFreeQuota
+	} else {
+		manager.spMonthlyFreeQuota = cfg.Quota.MonthlyFreeQuota
+	}
 
 	return nil
 }

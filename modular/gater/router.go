@@ -15,6 +15,8 @@ const (
 	approvalRouterName                             = "GetApproval"
 	putObjectRouterName                            = "PutObject"
 	resumablePutObjectRouterName                   = "ResumablePutObject"
+	delegatePutObjectRouterName                    = "DelegatePutObject"
+	delegateResumablePutObjectRouterName           = "DelegateResumablePutObject"
 	queryResumeOffsetName                          = "QueryResumeOffsetName"
 	getObjectRouterName                            = "GetObject"
 	getChallengeInfoRouterName                     = "GetChallengeInfo"
@@ -27,6 +29,9 @@ const (
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
 	requestNonceRouterName                         = "RequestNonce"
 	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
+	updateUserPublicKeyV2RouterName                = "UpdateUserPublicKeyV2"
+	listUserPublicKeyV2RouterName                  = "ListUserPublicKeyV2"
+	deleteUserPublicKeyV2RouterName                = "DeleteUserPublicKeyV2"
 	queryUploadProgressRouterName                  = "QueryUploadProgress"
 	downloadObjectByUniversalEndpointName          = "DownloadObjectByUniversalEndpoint"
 	viewObjectByUniversalEndpointName              = "ViewObjectByUniversalEndpoint"
@@ -99,6 +104,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// off-chain-auth router
 	router.Path(AuthRequestNoncePath).Name(requestNonceRouterName).Methods(http.MethodGet).HandlerFunc(g.requestNonceHandler)
 	router.Path(AuthUpdateKeyPath).Name(updateUserPublicKeyRouterName).Methods(http.MethodPost).HandlerFunc(g.updateUserPublicKeyHandler)
+	router.Path(AuthUpdateKeyV2Path).Name(updateUserPublicKeyV2RouterName).Methods(http.MethodPost).HandlerFunc(g.updateUserPublicKeyV2Handler)
+	router.Path(ListAuthKeyV2Path).Name(listUserPublicKeyV2RouterName).Methods(http.MethodGet).HandlerFunc(g.listUserPublicKeyV2Handler)
+	router.Path(AuthDeleteKeysV2Path).Name(deleteUserPublicKeyV2RouterName).Methods(http.MethodPost).HandlerFunc(g.deleteUserPublicKeyV2Handler)
 
 	// verify permission router
 	router.Path("/permission/{operator:.+}/{bucket:[^/]*}/{action-type:.+}").Name(verifyPermissionRouterName).
@@ -153,9 +161,13 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	routers = append(routers, router.Host("{bucket:.+}."+g.domain).Subrouter())
 	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
 	for _, r := range routers {
+		// Delegate Put Object By Offset
+		r.NewRoute().Name(delegateResumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").Queries(Delegate, "").HandlerFunc(g.delegateResumablePutObjectHandler)
 		// Put Object By Offset
 		r.NewRoute().Name(resumablePutObjectRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.resumablePutObjectHandler).
 			Queries("offset", "{offset}", "complete", "{complete}")
+		// Delegate Put Object
+		r.NewRoute().Name(delegatePutObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").Queries(Delegate, "").HandlerFunc(g.delegatePutObjectHandler)
 		// Put Object
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
 

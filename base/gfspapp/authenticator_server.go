@@ -109,3 +109,115 @@ func (g *GfSpBaseApp) VerifyGNFD1EddsaSignature(ctx context.Context, req *gfspse
 		Result: resp,
 	}, nil
 }
+
+func (g *GfSpBaseApp) GetAuthKeyV2(ctx context.Context, req *gfspserver.GetAuthKeyV2Request) (*gfspserver.GetAuthKeyV2Response, error) {
+	if req == nil {
+		log.Error("failed to GetAuthKeyV2 to pointer dangling")
+		return &gfspserver.GetAuthKeyV2Response{
+			Err: ErrAuthenticatorTaskDangling,
+		}, nil
+	}
+	log.CtxDebugw(ctx, "begin to GetAuthKeyV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.GetUserPublicKey())
+	resp, err := g.authenticator.GetAuthKeyV2(ctx, req.AccountId, req.Domain, req.UserPublicKey)
+	log.CtxDebugw(ctx, "finish to GetAuthKeyV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.GetUserPublicKey(), "error", err)
+	if err != nil {
+		return &gfspserver.GetAuthKeyV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+	if resp == nil {
+		return &gfspserver.GetAuthKeyV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+
+	return &gfspserver.GetAuthKeyV2Response{
+		Err:        gfsperrors.MakeGfSpError(err),
+		PublicKey:  resp.PublicKey,
+		ExpiryDate: resp.ExpiryDate.UnixMilli(),
+	}, nil
+}
+
+func (g *GfSpBaseApp) UpdateUserPublicKeyV2(ctx context.Context, req *gfspserver.UpdateUserPublicKeyV2Request) (*gfspserver.UpdateUserPublicKeyV2Response, error) {
+	if req == nil {
+		log.Error("failed to UpdateUserPublicKeyV2 due to pointer dangling")
+		return &gfspserver.UpdateUserPublicKeyV2Response{
+			Err: ErrAuthenticatorTaskDangling,
+		}, nil
+	}
+	log.CtxDebugw(ctx, "begin to UpdateUserPublicKeyV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.UserPublicKey)
+	resp, err := g.authenticator.UpdateUserPublicKeyV2(ctx, req.AccountId, req.Domain, req.UserPublicKey, req.ExpiryDate)
+	log.CtxDebugw(ctx, "finish to UpdateUserPublicKeyV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.GetUserPublicKey(), "error", err)
+
+	return &gfspserver.UpdateUserPublicKeyV2Response{
+		Err:    gfsperrors.MakeGfSpError(err),
+		Result: resp,
+	}, nil
+}
+
+func (g *GfSpBaseApp) VerifyGNFD2EddsaSignature(ctx context.Context, req *gfspserver.VerifyGNFD2EddsaSignatureRequest) (*gfspserver.VerifyGNFD2EddsaSignatureResponse, error) {
+	if req == nil {
+		log.Error("failed to VerifyGNFD2EddsaSignature due to pointer dangling")
+		return &gfspserver.VerifyGNFD2EddsaSignatureResponse{
+			Err: ErrAuthenticatorTaskDangling,
+		}, nil
+	}
+	log.CtxDebugw(ctx, "begin to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.UserPublicKey,
+		"off_chain_sig", req.OffChainSig, "real_msg_to_sign", req.RealMsgToSign)
+	resp, err := g.authenticator.VerifyGNFD2EddsaSignature(ctx, req.AccountId, req.Domain, req.UserPublicKey, req.OffChainSig, req.RealMsgToSign)
+	log.CtxDebugw(ctx, "finish to verify off-chain signature", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.UserPublicKey,
+		"error", err)
+	return &gfspserver.VerifyGNFD2EddsaSignatureResponse{
+		Err:    gfsperrors.MakeGfSpError(err),
+		Result: resp,
+	}, nil
+}
+
+func (g *GfSpBaseApp) ListAuthKeysV2(ctx context.Context, req *gfspserver.ListAuthKeysV2Request) (*gfspserver.ListAuthKeysV2Response, error) {
+	if req == nil {
+		log.Error("failed to ListAuthKeysV2 to pointer dangling")
+		return &gfspserver.ListAuthKeysV2Response{
+			Err: ErrAuthenticatorTaskDangling,
+		}, nil
+	}
+	log.CtxDebugw(ctx, "begin to ListAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain())
+	resp, err := g.authenticator.ListAuthKeysV2(ctx, req.AccountId, req.Domain)
+	log.CtxDebugw(ctx, "finish to ListAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "error", err)
+	if err != nil {
+		return &gfspserver.ListAuthKeysV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+	if resp == nil {
+		return &gfspserver.ListAuthKeysV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+
+	return &gfspserver.ListAuthKeysV2Response{
+		Err:        gfsperrors.MakeGfSpError(err),
+		PublicKeys: resp,
+	}, nil
+}
+
+func (g *GfSpBaseApp) DeleteAuthKeysV2(ctx context.Context, req *gfspserver.DeleteAuthKeysV2Request) (*gfspserver.DeleteAuthKeysV2Response, error) {
+	if req == nil {
+		log.Error("failed to GetAuthKeyV2 to pointer dangling")
+		return &gfspserver.DeleteAuthKeysV2Response{
+			Err: ErrAuthenticatorTaskDangling,
+		}, nil
+	}
+	log.CtxDebugw(ctx, "begin to DeleteAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_keys", req.GetPublicKeys())
+	result, err := g.authenticator.DeleteAuthKeysV2(ctx, req.AccountId, req.Domain, req.PublicKeys)
+	log.CtxDebugw(ctx, "finish to DeleteAuthKeysV2", "user", req.GetAccountId(), "domain", req.GetDomain(), "public_key", req.GetPublicKeys(), "error", err)
+	if err != nil {
+		return &gfspserver.DeleteAuthKeysV2Response{
+			Err: gfsperrors.MakeGfSpError(err),
+		}, nil
+	}
+
+	return &gfspserver.DeleteAuthKeysV2Response{
+		Err:    gfsperrors.MakeGfSpError(err),
+		Result: result,
+	}, nil
+}

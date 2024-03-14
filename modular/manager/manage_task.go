@@ -92,7 +92,7 @@ func (m *ManageModular) HandleCreateUploadObjectTask(ctx context.Context, task t
 		log.CtxErrorw(ctx, "failed to push upload object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64(), task.GetIsAgentUpload()); err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			log.Infow("insert upload progress with duplicate entry", "task_info", task.Info())
 			return nil
@@ -137,10 +137,10 @@ func (m *ManageModular) HandleDoneUploadObjectTask(ctx context.Context, task tas
 			time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 	}
 	log.Debugw("UploadObjectTask info", "task", task)
-	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task)
+	return m.pickGVGAndReplicate(ctx, task.GetVirtualGroupFamilyId(), task, task.GetIsAgentUpload())
 }
 
-func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task task.ObjectTask) error {
+func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, task task.ObjectTask, isAgentUpload bool) error {
 	startPickGVGTime := time.Now()
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, vgfID, task.GetStorageParams())
 	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
@@ -151,7 +151,7 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
-		m.baseApp.TaskMaxRetry(replicateTask))
+		m.baseApp.TaskMaxRetry(replicateTask), isAgentUpload)
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
@@ -199,7 +199,7 @@ func (m *ManageModular) HandleCreateResumableUploadObjectTask(ctx context.Contex
 		log.CtxErrorw(ctx, "failed to push resumable upload object task to queue", "task_info", task.Info(), "error", err)
 		return err
 	}
-	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64()); err != nil {
+	if err := m.baseApp.GfSpDB().InsertUploadProgress(task.GetObjectInfo().Id.Uint64(), task.GetIsAgentUpload()); err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			return nil
 		} else {
@@ -263,7 +263,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 	replicateTask.InitReplicatePieceTask(task.GetObjectInfo(), task.GetStorageParams(),
 		m.baseApp.TaskPriority(replicateTask),
 		m.baseApp.TaskTimeout(replicateTask, task.GetObjectInfo().GetPayloadSize()),
-		m.baseApp.TaskMaxRetry(replicateTask))
+		m.baseApp.TaskMaxRetry(replicateTask), task.GetIsAgentUpload())
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
@@ -326,6 +326,10 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 			log.Errorw("succeed to update object task state", "task_info", task.Info())
 			_ = m.baseApp.GfSpDB().DeleteUploadProgress(task.GetObjectInfo().Id.Uint64())
 
+			if task.GetIsAgentUpload() {
+				_ = m.baseApp.GfSpDB().DeleteReplicatePieceChecksumsByObjectID(task.GetObjectInfo().Id.Uint64())
+			}
+
 			if task.GetObjectInfo().GetIsUpdating() {
 				shadowIntegrityMeta, err := m.baseApp.GfSpDB().GetShadowObjectIntegrity(task.GetObjectInfo().Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 				if err != nil {
@@ -358,8 +362,8 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 	log.CtxDebugw(ctx, "replicate piece object task fails to combine seal object task", "task_info", task.Info())
 	sealObject := &gfsptask.GfSpSealObjectTask{}
 	sealObject.InitSealObjectTask(task.GetGlobalVirtualGroupId(), task.GetObjectInfo(), task.GetStorageParams(),
-		m.baseApp.TaskPriority(sealObject), task.GetSecondaryAddresses(), task.GetSecondarySignatures(),
-		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject))
+		m.baseApp.TaskPriority(sealObject), task.GetSecondaryEndpoints(), task.GetSecondarySignatures(),
+		m.baseApp.TaskTimeout(sealObject, 0), m.baseApp.TaskMaxRetry(sealObject), task.GetIsAgentUpload())
 	sealObject.SetCreateTime(task.GetCreateTime())
 	sealObject.SetLogs(task.GetLogs())
 	sealObject.AppendLog("manager-create-seal-task")
@@ -438,7 +442,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 				}
 			}
 			m.virtualGroupManager.FreezeSPAndGVGs(sspID, shouldFreezeGVGs)
-			rePickAndReplicateErr := m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask)
+			rePickAndReplicateErr := m.pickGVGAndReplicate(ctx, gvg.FamilyId, handleTask, handleTask.GetIsAgentUpload())
 			log.CtxDebugw(ctx, "add failed sp to freeze pool, re-pick and push task again",
 				"failed_sp_id", sspID, "task_info", handleTask.Info(),
 				"excludedGVGs", shouldFreezeGVGs, "error", rePickAndReplicateErr)

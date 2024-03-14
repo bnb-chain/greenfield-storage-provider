@@ -64,6 +64,9 @@ const (
 	DefaultMediumTaskLimit = 1024
 	// DefaultLowTaskLimit defines the default low priority task limit for resource manager.
 	DefaultLowTaskLimit = 16
+
+	// DefaultSpMonthlyFreeQuota defines the default value of the free quota sp provides to users each month
+	DefaultSpMonthlyFreeQuota = 0
 )
 
 const (
@@ -165,6 +168,11 @@ const (
 
 	SignerSuccessDeleteGlobalVirtualGroup = "signer_delete_global_virtual_group_success"
 	SignerFailureDeleteGlobalVirtualGroup = "signer_delete_global_virtual_group_failure"
+
+	SignerSuccessDelegateUpdateObjectContent = "signer_delegate_update_object_content_success"
+	SignerFailureDelegateUpdateObjectContent = "signer_delegate_update_object_content_failure"
+	SignerSuccessDelegateCreateObject        = "signer_delegate_create_object_success"
+	SignerFailureDelegateCreateObject        = "signer_delegate_create_object_failure"
 
 	UploaderSuccessPutObject = "uploader_put_object_success"
 	UploaderFailurePutObject = "uploader_put_object_failure"

@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	"golang.org/x/exp/slices"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
@@ -25,7 +27,6 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
 
 const (
@@ -100,8 +101,12 @@ type ManageModular struct {
 	gcStaleVersionObjectEnabled      bool
 	gcStaleVersionObjectTimeInterval int
 
+	gcExpiredOffChainAuthKeysEnabled      bool
+	gcExpiredOffChainAuthKeysTimeInterval int
+
 	syncConsensusInfoInterval uint64
 	statisticsOutputInterval  int
+	syncAvailableVGFInterval  int
 
 	discontinueBucketEnabled       bool
 	discontinueBucketTimeInterval  int
@@ -138,6 +143,8 @@ type ManageModular struct {
 	enableTaskRetryScheduler    bool
 	rejectUnsealThresholdSecond uint64
 	taskRetryScheduler          *TaskRetryScheduler
+
+	spMonthlyFreeQuota uint64
 }
 
 func (m *ManageModular) Name() string {
@@ -233,6 +240,8 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 	statisticsTicker := time.NewTicker(time.Duration(m.statisticsOutputInterval) * time.Second)
 	discontinueBucketTicker := time.NewTicker(time.Duration(m.discontinueBucketTimeInterval) * time.Second)
 	gcObjectStaleVersionPieceTicker := time.NewTicker(time.Duration(m.gcStaleVersionObjectTimeInterval) * time.Second)
+	gcExpiredOffChainAuthKeysTicker := time.NewTicker(time.Duration(m.gcExpiredOffChainAuthKeysTimeInterval) * time.Second)
+	syncAvailableVGFTicker := time.NewTicker(time.Duration(m.syncAvailableVGFInterval) * time.Second)
 
 	backupTaskTicker := time.NewTicker(time.Duration(DefaultBackupTaskTimeout) * time.Second)
 	for {
@@ -330,7 +339,15 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 				continue
 			}
 			go m.gcObjectStaleVersionPiece(ctx)
+		case <-gcExpiredOffChainAuthKeysTicker.C:
+			if !m.gcExpiredOffChainAuthKeysEnabled {
+				continue
+			}
+			go m.gcExpiredOffChainAuthKeys(ctx)
+		case <-syncAvailableVGFTicker.C:
+			go m.syncAvailableVGF(ctx)
 		}
+
 	}
 }
 
@@ -360,6 +377,17 @@ func (m *ManageModular) gcObjectStaleVersionPiece(ctx context.Context) {
 		}
 		log.CtxDebugw(ctx, "succeed to push gc stale version object task to queue", "task_info", task.Info())
 	}
+}
+
+func (m *ManageModular) gcExpiredOffChainAuthKeys(ctx context.Context) {
+	log.CtxInfow(ctx, "gcExpiredOffChainAuthKeys starts to execute")
+	err := m.baseApp.GfSpDB().ClearExpiredOffChainAuthKeys()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to gc ExpiredOffChainAuthKeys", "error", err)
+		return
+	}
+
+	log.CtxInfow(ctx, "gcExpiredOffChainAuthKeys ends")
 }
 
 func (m *ManageModular) discontinueBuckets(ctx context.Context) {
@@ -477,7 +505,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		}
 		replicateTask := &gfsptask.GfSpReplicatePieceTask{}
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
-			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask))
+			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask), meta.IsAgentUpload)
 
 		if meta.GlobalVirtualGroupID == 0 {
 			bucketInfo, err := m.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
@@ -531,7 +559,7 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		}
 		sealTask := &gfsptask.GfSpSealObjectTask{}
 		sealTask.InitSealObjectTask(meta.GlobalVirtualGroupID, objectInfo, storageParams, m.baseApp.TaskPriority(sealTask),
-			meta.SecondaryEndpoints, meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask))
+			meta.SecondaryEndpoints, meta.SecondarySignatures, m.baseApp.TaskTimeout(sealTask, 0), m.baseApp.TaskMaxRetry(sealTask), meta.IsAgentUpload)
 		pushErr := m.sealQueue.Push(sealTask)
 		if pushErr != nil {
 			log.Errorw("failed to push seal object task to queue", "object_info", objectInfo, "error", pushErr)
@@ -1192,4 +1220,25 @@ func (m *ManageModular) QueryRecoverProcess(ctx context.Context, vgfID, gvgID ui
 	}
 	flag := m.recoverProcessCount.Load() > 0 || m.verifyTerminationSignal.Load() > 0
 	return res, flag, nil
+}
+
+func (m *ManageModular) syncAvailableVGF(ctx context.Context) {
+	var (
+		err error
+		sp  *sptypes.StorageProvider
+	)
+
+	// query meta
+	if sp, err = m.baseApp.Consensus().QuerySPByID(context.Background(), m.spID); err != nil {
+		log.CtxErrorw(ctx, "failed to list sps", "error", err)
+		return
+	}
+
+	// only pick vgf when sp is STATUS_IN_SERVICE
+	if sp.Status == sptypes.STATUS_IN_SERVICE {
+		if _, err = m.PickVirtualGroupFamily(context.Background(), &task.NullTask{}); err != nil {
+			log.CtxErrorw(ctx, "failed to pick vgf for migrate bucket", "error", err)
+			return
+		}
+	}
 }

@@ -175,6 +175,16 @@ func (r *RequestContext) VerifySignature() (string, error) {
 		return accAddress.String(), nil
 	}
 
+	// GNFD2-EDDSA
+	gnfd2EddsaSignaturePrefix := commonhttp.Gnfd2Eddsa + ","
+	if strings.HasPrefix(requestSignature, gnfd2EddsaSignaturePrefix) {
+		accAddress, err := r.verifySignatureForGNFD2Eddsa(requestSignature[len(gnfd1EddsaSignaturePrefix):])
+		if err != nil {
+			return "", err
+		}
+		return accAddress.String(), nil
+	}
+
 	return "", ErrUnsupportedSignType
 
 }
@@ -262,7 +272,7 @@ func (r *RequestContext) verifySignatureForGNFD1Eddsa(requestSignature string) (
 	}
 }
 
-// verifyOffChainSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed. The auth information will be parsed from URL.
+// verifyGNFD1EddsaSignatureFromPreSignedURL used to verify off-chain-auth signature, return (address, nil) if check succeed. The auth information will be parsed from URL.
 func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticationStr string, account string, domain string) (sdk.AccAddress, error) {
 	var err error
 	offChainSig, err := parseSignatureFromRequest(authenticationStr)
@@ -278,6 +288,50 @@ func (r *RequestContext) verifyGNFD1EddsaSignatureFromPreSignedURL(authenticatio
 		return nil, err
 	} else {
 		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
+		return userAddress, nil
+	}
+}
+
+// verifyGNFD2EddsaSignatureFromPreSignedURL used to verify off-chain-auth-v2 signature, return (address, nil) if check succeed. The auth information will be parsed from URL.
+func (r *RequestContext) verifyGNFD2EddsaSignatureFromPreSignedURL(authenticationStr string, account string, domain string, userPublicKey string) (sdk.AccAddress, error) {
+	var err error
+	offChainSig, err := parseSignatureFromRequest(authenticationStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// check request integrity
+	realMsgToSign := commonhttp.GetMsgToSignInGNFD1AuthForPreSignedURL(r.request)
+	_, err = r.g.baseApp.GfSpClient().VerifyGNFD2EddsaSignature(r.Context(), account, domain, userPublicKey, offChainSig, realMsgToSign)
+	if err != nil {
+		log.Errorw("failed to verify off chain signature", "error", err)
+		return nil, err
+	} else {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(account)
+		return userAddress, nil
+	}
+}
+
+// verifySignatureForGNFD2Eddsa used to verify off-chain-auth signature, return (address, nil) if check succeed
+func (r *RequestContext) verifySignatureForGNFD2Eddsa(requestSignature string) (sdk.AccAddress, error) {
+	var err error
+	offChainSig, err := parseSignatureFromRequest(requestSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	// check request integrity
+	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request) // realMsgToSign is the same between GNFD1Eddsa and GNFD2Eddsa
+	account := r.request.Header.Get(GnfdUserAddressHeader)
+	domain := r.request.Header.Get(GnfdOffChainAuthAppDomainHeader)
+	publicKey := r.request.Header.Get(GnfdOffChainAuthAppRegPublicKeyHeader)
+
+	_, err = r.g.baseApp.GfSpClient().VerifyGNFD2EddsaSignature(r.Context(), account, domain, publicKey, offChainSig, realMsgToSign)
+	if err != nil {
+		log.Errorw("failed to verify signature for GNFD2-Eddsa", "error", err)
+		return nil, err
+	} else {
+		userAddress, _ := sdk.AccAddressFromHexUnsafe(r.request.Header.Get(GnfdUserAddressHeader))
 		return userAddress, nil
 	}
 }

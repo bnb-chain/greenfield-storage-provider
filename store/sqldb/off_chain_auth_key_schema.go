@@ -18,7 +18,7 @@ type OffChainAuthKeyTable struct {
 	ModifiedTime time.Time
 }
 
-// TableName is used to set JobTable Schema's table name in database
+// TableName is used to set OffChainAuthKeyTable Schema's table name in database
 func (OffChainAuthKeyTable) TableName() string {
 	return OffChainAuthKeyTableName
 }

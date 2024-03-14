@@ -45,6 +45,7 @@ type ApproverAPI interface {
 	AskCreateBucketApproval(ctx context.Context, t coretask.ApprovalCreateBucketTask) (bool, coretask.ApprovalCreateBucketTask, error)
 	AskMigrateBucketApproval(ctx context.Context, t coretask.ApprovalMigrateBucketTask) (bool, coretask.ApprovalMigrateBucketTask, error)
 	AskCreateObjectApproval(ctx context.Context, t coretask.ApprovalCreateObjectTask) (bool, coretask.ApprovalCreateObjectTask, error)
+	AskDelegateCreateObjectApproval(ctx context.Context, t coretask.ApprovalDelegateCreateObjectTask) (bool, coretask.ApprovalDelegateCreateObjectTask, error)
 }
 
 // AuthenticatorAPI for mock use
@@ -53,6 +54,11 @@ type AuthenticatorAPI interface {
 	GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.DialOption) (currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error)
 	UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error)
 	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error)
+	GetAuthKeyV2(ctx context.Context, account string, domain string, userPublicKey string, opts ...grpc.DialOption) (string, int64, error)
+	UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error)
+	VerifyGNFD2EddsaSignature(ctx context.Context, account string, domain string, userPublicKey string, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error)
+	ListAuthKeysV2(ctx context.Context, account string, domain string, opts ...grpc.DialOption) ([]string, error)
+	DeleteAuthKeysV2(ctx context.Context, account string, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error)
 }
 
 // DownloaderAPI for mock use
@@ -174,7 +180,10 @@ type SignerAPI interface {
 	SignCreateBucketApproval(ctx context.Context, bucket *storagetypes.MsgCreateBucket) ([]byte, error)
 	SignMigrateBucketApproval(ctx context.Context, bucket *storagetypes.MsgMigrateBucket) ([]byte, error)
 	SignCreateObjectApproval(ctx context.Context, object *storagetypes.MsgCreateObject) ([]byte, error)
+	DelegateCreateObject(ctx context.Context, object *storagetypes.MsgDelegateCreateObject) (string, error)
+	DelegateUpdateObjectContent(ctx context.Context, object *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
+	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 	CreateGlobalVirtualGroup(ctx context.Context, group *gfspserver.GfSpCreateGlobalVirtualGroup) error
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)

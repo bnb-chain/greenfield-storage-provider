@@ -21,6 +21,7 @@ type DownloadModular struct {
 	downloadParallel  int64
 	challenging       int64
 	challengeParallel int64
+	monthlyFreeQuota  uint64
 }
 
 func (d *DownloadModular) Name() string {

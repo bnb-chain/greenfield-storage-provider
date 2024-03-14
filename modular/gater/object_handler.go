@@ -1,6 +1,7 @@
 package gater
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -9,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -28,6 +31,8 @@ import (
 	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
+
+const ContentDefault = "application/octet-stream"
 
 // putObjectHandler handles the upload object request.
 func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +121,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	task := &gfsptask.GfSpUploadObjectTask{}
-	task.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()))
+	task.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()), false)
 	task.SetCreateTime(uploadPrimaryStartTime.Unix())
 	task.AppendLog(fmt.Sprintf("gateway-prepare-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
 	task.AppendLog("gateway-create-upload-task")
@@ -297,7 +302,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	}
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{}
-	task.InitResumableUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()), complete, offset)
+	task.InitResumableUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(task, objectInfo.GetPayloadSize()), complete, offset, false)
 	task.SetCreateTime(uploadPrimaryStartTime.Unix())
 	task.AppendLog(fmt.Sprintf("gateway-prepare-resumable-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
 	task.AppendLog("gateway-create-resumable-upload-task")
@@ -466,21 +471,34 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 			gnfdUserParam := queryParams.Get(GnfdUserAddressHeader)
 			gnfdOffChainAuthAppDomainParam := queryParams.Get(GnfdOffChainAuthAppDomainHeader)
 			gnfdOffChainAuthAppExpiryTimestampParam := queryParams.Get(commonhttp.HTTPHeaderExpiryTimestamp)
+			gnfdOffChainAuthPublicKeyParam := queryParams.Get(GnfdOffChainAuthAppRegPublicKeyHeader)
 			gnfdAuthorizationParam := queryParams.Get(GnfdAuthorizationHeader)
 
 			// GNFD1-EDDSA
 			gnfd1EddsaSignaturePrefix := commonhttp.Gnfd1Eddsa + ","
-			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
+			// GNFD2-EDDSA
+			gnfd2EddsaSignaturePrefix := commonhttp.Gnfd2Eddsa + ","
+			if !strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) && !strings.HasPrefix(gnfdAuthorizationParam, gnfd2EddsaSignaturePrefix) {
 				err = ErrUnsupportedSignType
 				return
 			}
 
 			// if all required off-chain auth headers are passed in as query params, we fill corresponding headers
 			if gnfdUserParam != "" && gnfdOffChainAuthAppDomainParam != "" && gnfdAuthorizationParam != "" && gnfdOffChainAuthAppExpiryTimestampParam != "" {
-				account, preSignedURLErr := reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+				var preSignedURLErr error
+				var account sdk.AccAddress
+				if strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
+					account, preSignedURLErr = reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
+
+				} else if strings.HasPrefix(gnfdAuthorizationParam, gnfd2EddsaSignaturePrefix) && gnfdOffChainAuthPublicKeyParam != "" {
+					account, preSignedURLErr = reqCtx.verifyGNFD2EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam, gnfdOffChainAuthPublicKeyParam)
+
+				}
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
-				} else {
+				}
+
+				if account != nil {
 					reqCtx.account = account.String()
 					reqCtxErr = nil
 					// default set content-disposition to download, if specified in query param as view, then set to view
@@ -983,6 +1001,509 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 		return
 	}
 	log.CtxDebugw(reqCtx.Context(), "succeed to download object for universal endpoint")
+}
+
+// putObjectHandler handles the upload object request.
+func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		bucketInfo    *storagetypes.BucketInfo
+		objectInfo    *storagetypes.ObjectInfo
+		params        *storagetypes.Params
+		approvalMsg   []byte
+		fingerprint   []byte
+		payloadSize   uint64
+		contentType   string
+		visibility    storagetypes.VisibilityType
+		txHash        string
+		isUpdate      bool
+	)
+
+	uploadPrimaryStartTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailurePutObject).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailurePutObject).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+		} else {
+			reqCtx.SetHTTPCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqPieceSize.WithLabelValues(GatewayPutObjectSize).Observe(float64(objectInfo.GetPayloadSize()))
+			metrics.ReqTime.WithLabelValues(GatewaySuccessPutObject).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessPutObject).Inc()
+			metrics.ReqPieceSize.WithLabelValues(GatewaySuccessPutObject).Observe(float64(objectInfo.GetPayloadSize()))
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+	queryParams := reqCtx.request.URL.Query()
+	isUpdateStr := queryParams.Get("is_update")
+	isUpdate, err = strconv.ParseBool(isUpdateStr)
+	if err != nil {
+		log.CtxErrorw(reqCtx.ctx, "failed to parse is_update", "error", err)
+		return
+	}
+
+	err = s3util.CheckValidBucketName(reqCtx.bucketName)
+	if err != nil {
+		return
+	}
+
+	err = s3util.CheckValidObjectName(reqCtx.objectName)
+	if err != nil {
+		return
+	}
+
+	startAuthenticationTime := time.Now()
+	if isUpdate {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentUpdateObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	} else {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+		metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_authorizer").Observe(time.Since(startAuthenticationTime).Seconds())
+	}
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
+	}
+	contentType = reqCtx.vars["content_type"]
+	if contentType == "" {
+		contentType = ContentDefault
+	}
+	if strings.Contains(reqCtx.objectName, "..") ||
+		reqCtx.objectName == "/" ||
+		strings.Contains(reqCtx.objectName, "\\") ||
+		util.IsSQLInjection(reqCtx.objectName) {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName)
+		err = ErrInvalidObjectName
+		return
+	}
+
+	startGetStorageParamTime := time.Now()
+	params, err = g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), startGetStorageParamTime.Unix())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, error" + err.Error())
+		return
+	}
+
+	payloadSizeStr := queryParams.Get("payload_size")
+	payloadSize, err = strconv.ParseUint(payloadSizeStr, 10, 64)
+	if err != nil {
+		log.CtxErrorw(reqCtx.ctx, "failed to parse payload_size", "error", err)
+		return
+	}
+	if payloadSize == 0 || payloadSize > params.GetMaxPayloadSize() {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size error", "size", payloadSize, "size limit", params.GetMaxPayloadSize())
+		err = ErrInvalidPayloadSize
+		return
+	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
+		return
+	}
+
+	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))
+	if err != nil {
+		log.Errorw("failed to parse approval header",
+			"approval", r.Header.Get(GnfdUnsignedApprovalMsgHeader))
+		err = ErrDecodeMsg
+		return
+	}
+	fingerprint = commonhash.GenerateChecksum(approvalMsg)
+
+	startTime := time.Now()
+	if isUpdate {
+		msg := &storagetypes.MsgDelegateUpdateObjectContent{
+			Updater:     reqCtx.account,
+			BucketName:  reqCtx.bucketName,
+			ObjectName:  reqCtx.objectName,
+			PayloadSize: payloadSize,
+			ContentType: contentType,
+		}
+		txHash, err = g.baseApp.GfSpClient().DelegateUpdateObjectContent(reqCtx.ctx, msg)
+		if err != nil {
+			log.CtxErrorw(reqCtx.ctx, "failed to delegate update object", "error", err)
+			return
+		}
+	} else {
+		// if object has been created, we can skip the creation process
+		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
+		if err != nil && !strings.Contains(err.Error(), "No such object") {
+			log.CtxErrorw(reqCtx.ctx, "failed to QueryObjectInfo", "error", err)
+			return
+		} else if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || objectInfo.Creator != reqCtx.account || objectInfo.PayloadSize != payloadSize) {
+			err = ErrInvalidQuery
+			return
+		} else {
+			var visibilityInt int64
+			visibilityStr := queryParams.Get("visibility")
+			visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
+			if err != nil {
+				return
+			}
+			visibility = storagetypes.VisibilityType(visibilityInt)
+			if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
+				visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
+			}
+			task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
+			task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
+				Operator:       g.baseApp.OperatorAddress(),
+				Creator:        reqCtx.account,
+				BucketName:     reqCtx.bucketName,
+				ObjectName:     reqCtx.objectName,
+				PayloadSize:    payloadSize,
+				ContentType:    contentType,
+				Visibility:     visibility,
+				RedundancyType: storagetypes.REDUNDANCY_EC_TYPE,
+			}, fingerprint, g.baseApp.TaskPriority(task))
+			startAskCreateObjectApproval := time.Now()
+			authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
+			metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
+			if err != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
+				return
+			}
+			if !authenticated {
+				log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
+				return
+			}
+			startDelegateCreateObject := time.Now()
+			txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObject())
+			metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+			if err != nil {
+				log.CtxErrorw(reqCtx.ctx, "failed to delegate create object", "error", err)
+				return
+			}
+		}
+	}
+
+	if txHash != "" {
+		_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to ConfirmTransaction", "error", err)
+			return
+		}
+	}
+
+	startGetObjectInfoTime := time.Now()
+	bucketInfo, objectInfo, err = g.baseApp.Consensus().QueryBucketInfoAndObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		return
+	}
+	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		return
+	}
+
+	uploadTask := &gfsptask.GfSpUploadObjectTask{}
+	uploadTask.InitUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(uploadTask, objectInfo.GetPayloadSize()), true)
+	uploadTask.SetCreateTime(uploadPrimaryStartTime.Unix())
+	uploadTask.AppendLog(fmt.Sprintf("gateway-prepare-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
+	uploadTask.AppendLog("gateway-create-upload-task")
+	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, uploadTask.Key().String())
+	uploadDataTime := time.Now()
+	err = g.baseApp.GfSpClient().UploadObject(ctx, uploadTask, r.Body)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_data_end").Observe(time.Since(time.Unix(uploadTask.GetCreateTime(), 0)).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to upload payload data", "error", err)
+		return
+	}
+	log.CtxDebug(ctx, "succeed to upload payload data")
+}
+
+func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		bucketInfo    *storagetypes.BucketInfo
+		objectInfo    *storagetypes.ObjectInfo
+		params        *storagetypes.Params
+		txHash        string
+		approvalMsg   []byte
+		fingerprint   []byte
+		payloadSize   uint64
+		contentType   string
+		visibility    storagetypes.VisibilityType
+		isUpdate      bool
+	)
+
+	uploadPrimaryStartTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+		} else {
+			reqCtx.SetHTTPCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+	queryParams := reqCtx.request.URL.Query()
+	isUpdateStr := queryParams.Get("is_update")
+	isUpdate, err = strconv.ParseBool(isUpdateStr)
+	if err != nil {
+		log.CtxErrorw(reqCtx.ctx, "failed to parse is_update", "error", err)
+		return
+	}
+
+	err = s3util.CheckValidBucketName(reqCtx.bucketName)
+	if err != nil {
+		return
+	}
+
+	err = s3util.CheckValidObjectName(reqCtx.objectName)
+	if err != nil {
+		return
+	}
+	if strings.Contains(reqCtx.objectName, "..") ||
+		reqCtx.objectName == "/" ||
+		strings.Contains(reqCtx.objectName, "\\") ||
+		util.IsSQLInjection(reqCtx.objectName) {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName)
+		err = ErrInvalidObjectName
+		return
+	}
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "resumable put object failed to check sp and bucket status", "error", err)
+		return
+	}
+
+	payloadSizeStr := queryParams.Get("payload_size")
+	payloadSize, err = strconv.ParseUint(payloadSizeStr, 10, 64)
+	if err != nil {
+		return
+	}
+	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
+	startGetStorageParamTime := time.Now()
+	params, err = g.baseApp.Consensus().QueryStorageParams(reqCtx.Context())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_cost").Observe(time.Since(startGetStorageParamTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
+		return
+	}
+	if payloadSize == 0 || payloadSize > params.GetMaxPayloadSize() {
+		log.CtxErrorw(reqCtx.Context(), "failed to put object payload size is too large", "size", payloadSize, "size limit", params.GetMaxPayloadSize())
+		err = ErrInvalidPayloadSize
+		return
+	}
+
+	if isUpdate {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentUpdateObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	} else {
+		authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
+			reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	}
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
+	}
+
+	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))
+	if err != nil {
+		log.Errorw("failed to parse approval header",
+			"approval", r.Header.Get(GnfdUnsignedApprovalMsgHeader))
+		err = ErrDecodeMsg
+		return
+	}
+	fingerprint = commonhash.GenerateChecksum(approvalMsg)
+	startTime := time.Now()
+
+	if isUpdate {
+		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+			err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+			return
+		}
+
+		if !objectInfo.IsUpdating {
+			msg := &storagetypes.MsgDelegateUpdateObjectContent{
+				Updater:     reqCtx.account,
+				BucketName:  reqCtx.bucketName,
+				ObjectName:  reqCtx.objectName,
+				PayloadSize: payloadSize,
+				ContentType: contentType,
+			}
+			txHash, err = g.baseApp.GfSpClient().DelegateUpdateObjectContent(reqCtx.ctx, msg)
+			if err != nil {
+				log.CtxErrorw(reqCtx.ctx, "failed to delegate update object", "error", err)
+				return
+			}
+		}
+
+	} else {
+		var visibilityInt int64
+		visibilityStr := queryParams.Get("visibility")
+		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
+		if err != nil {
+			return
+		}
+		visibility = storagetypes.VisibilityType(visibilityInt)
+		if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
+			visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
+		}
+		task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
+		task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
+			Operator:       g.baseApp.OperatorAddress(),
+			Creator:        reqCtx.account,
+			BucketName:     reqCtx.bucketName,
+			ObjectName:     reqCtx.objectName,
+			PayloadSize:    payloadSize,
+			ContentType:    contentType,
+			Visibility:     visibility,
+			RedundancyType: storagetypes.REDUNDANCY_EC_TYPE,
+		}, fingerprint, g.baseApp.TaskPriority(task))
+
+		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
+		if err != nil && strings.Contains(err.Error(), "No such object") {
+			startAskCreateObjectApproval := time.Now()
+			authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
+			metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_cost").Observe(time.Since(startTime).Seconds())
+			if err != nil {
+				log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
+				return
+			}
+			if !authenticated {
+				log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
+				err = ErrRefuseApproval
+				return
+			}
+			startDelegateCreateObject := time.Now()
+			txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObject())
+			metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+			metrics.PerfApprovalTime.WithLabelValues("approval_object_sign_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+			if err != nil {
+				log.CtxErrorw(reqCtx.ctx, "failed to delegate create object", "error", err)
+				return
+			}
+		} else if err != nil {
+			log.CtxErrorw(reqCtx.ctx, "failed to QueryObjectInfo", "error", err)
+			return
+		} else if objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED {
+			log.CtxErrorw(reqCtx.ctx, "object has been sealed", "status", objectInfo.ObjectStatus)
+			return
+		}
+	}
+	if txHash != "" {
+		_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to WaitForNextBlock", "error", err)
+			return
+		}
+	}
+
+	startGetObjectInfoTime := time.Now()
+	bucketInfo, objectInfo, err = g.baseApp.Consensus().QueryBucketInfoAndObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_object_cost").Observe(time.Since(startGetObjectInfoTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		return
+	}
+
+	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
+		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		return
+	}
+
+	var (
+		complete        bool
+		offset          uint64
+		requestComplete string
+		requestOffset   string
+	)
+	requestComplete = queryParams.Get(ResumableUploadComplete)
+	requestOffset = queryParams.Get(ResumableUploadOffset)
+	if requestComplete != "" {
+		complete, err = util.StringToBool(requestComplete)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse complete from url", "error", err)
+			err = ErrInvalidComplete
+			return
+		}
+	} else {
+		err = ErrInvalidComplete
+		return
+	}
+
+	if requestOffset != "" {
+		offset, err = util.StringToUint64(requestOffset)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to parse offset from url", "error", err)
+			err = ErrInvalidOffset
+			return
+		}
+	} else {
+		err = ErrInvalidOffset
+		return
+	}
+
+	uploadTask := &gfsptask.GfSpResumableUploadObjectTask{}
+	uploadTask.InitResumableUploadObjectTask(bucketInfo.GetGlobalVirtualGroupFamilyId(), objectInfo, params, g.baseApp.TaskTimeout(uploadTask, objectInfo.GetPayloadSize()), complete, offset, true)
+	uploadTask.SetCreateTime(uploadPrimaryStartTime.Unix())
+	uploadTask.AppendLog(fmt.Sprintf("gateway-prepare-resumable-upload-task-cost:%d", time.Now().UnixMilli()-uploadPrimaryStartTime.UnixMilli()))
+	uploadTask.AppendLog("gateway-create-resumable-upload-task")
+	ctx := log.WithValue(reqCtx.Context(), log.CtxKeyTask, uploadTask.Key().String())
+	uploadDataTime := time.Now()
+	err = g.baseApp.GfSpClient().ResumableUploadObject(ctx, uploadTask, r.Body)
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_cost").Observe(time.Since(uploadDataTime).Seconds())
+	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_data_end").Observe(time.Since(time.Unix(uploadTask.GetCreateTime(), 0)).Seconds())
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to resumable upload payload data", "error", err)
+		return
+	}
+	log.CtxDebug(ctx, "succeed to resumable upload payload data")
 }
 
 func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.ObjectInfo) bool {

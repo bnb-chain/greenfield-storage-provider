@@ -1442,7 +1442,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 				return g
 			},
 			request: func() *http.Request {
@@ -1485,7 +1485,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 				return g
 			},
 			request: func() *http.Request {
@@ -2060,7 +2060,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2112,7 +2112,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2164,7 +2164,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2204,7 +2204,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2245,7 +2245,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2292,7 +2292,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2339,7 +2339,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2388,7 +2388,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2449,7 +2449,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2500,7 +2500,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2649,7 +2649,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},
@@ -2720,7 +2720,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
 				g.baseApp.SetPieceOp(pieceOpMock)
 				pieceOpMock.EXPECT().SegmentPieceCount(gomock.Any(), gomock.Any()).Return(uint32(1)).Times(1)
-				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any()).Return("test").AnyTimes()
+				pieceOpMock.EXPECT().SegmentPieceKey(gomock.Any(), gomock.Any(), gomock.Any()).Return("test").AnyTimes()
 
 				return g
 			},

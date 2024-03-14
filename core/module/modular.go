@@ -57,6 +57,9 @@ const (
 	AuthOpTypeGetRecoveryPiece
 	// AuthOpTypeQueryBucketMigrationProgress defines the QueryBucketMigrationProgress operator
 	AuthOpTypeQueryBucketMigrationProgress
+	// AuthOpTypeAgentPutObject defines the agent PutObject operator
+	AuthOpTypeAgentPutObject
+	AuthOpTypeAgentUpdateObject
 )
 
 // Authenticator is an abstract interface to verify users authentication.
@@ -71,6 +74,17 @@ type Authenticator interface {
 		userPublicKey string, expiryDate int64) (bool, error)
 	// VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 	VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string, realMsgToSign []byte) (bool, error)
+
+	// GetAuthKeyV2 can check if the given account/domain/public_key was registered in this system.
+	GetAuthKeyV2(ctx context.Context, account string, domain string, publicKey string) (*spdb.OffChainAuthKeyV2, error)
+	// ListAuthKeysV2 can list user public keys
+	ListAuthKeysV2(ctx context.Context, account string, domain string) ([]string, error)
+	// DeleteAuthKeysV2 can delete user public keys
+	DeleteAuthKeysV2(ctx context.Context, account string, domain string, publicKeys []string) (bool, error)
+	// UpdateUserPublicKeyV2 registered the user public key once the dApp or client generates the EDDSA key pairs.
+	UpdateUserPublicKeyV2(ctx context.Context, account string, domain string, publicKey string, expiryDate int64) (bool, error)
+	// VerifyGNFD2EddsaSignature verifies the signature signed by user's EDDSA private key.
+	VerifyGNFD2EddsaSignature(ctx context.Context, account string, domain string, publicKey string, offChainSig string, realMsgToSign []byte) (bool, error)
 }
 
 // Approver is an abstract interface to handle asking approval requests.
@@ -104,6 +118,8 @@ type Approver interface {
 	PostCreateObjectApproval(ctx context.Context, task task.ApprovalCreateObjectTask)
 	// QueryTasks queries tasks that running on approver by task sub-key.
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
+	// HandleDelegateCreateObjectApprovalTask handles the DelegateCreateObjectApproval,
+	HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error)
 }
 
 // Downloader is an abstract interface to handle getting object requests from users' account, and getting
@@ -291,6 +307,8 @@ type Signer interface {
 	SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
 	// SealObject signs the MsgSealObject and broadcast the tx to greenfield.
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
+	// SealObjectV2 signs the MsgSealObject and broadcast the tx to greenfield.
+	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
 	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
@@ -329,6 +347,10 @@ type Signer interface {
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.
 	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
+	// DelegateCreateObject  broadcast the tx to greenfield.
+	DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)
+	// DelegateUpdateObjectContent  send the delegate update object content tx
+	DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

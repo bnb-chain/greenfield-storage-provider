@@ -1,6 +1,7 @@
 package authenticator
 
 import (
+	"crypto/ed25519"
 	"encoding/hex"
 	"errors"
 
@@ -51,6 +52,19 @@ func VerifyEddsaSignature(pubKey string, sig, message []byte) error {
 		return err
 	}
 	if !valid {
+		return ErrBadSignature
+	}
+	return nil
+}
+
+// VerifyEddsaSignatureV2  EDDSA sig verification
+func VerifyEddsaSignatureV2(pubKey string, sig, message []byte) error {
+	pubKeyBytes, err := hex.DecodeString(pubKey)
+	if err != nil {
+		log.Errorf("failed to parse public key, pubKey=%s, err=%s", pubKey, err.Error())
+		return err
+	}
+	if !ed25519.Verify(pubKeyBytes, message, sig) {
 		return ErrBadSignature
 	}
 	return nil

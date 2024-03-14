@@ -5,6 +5,7 @@
 //
 //	mockgen -source=store/bsdb/database.go -destination=store/bsdb/database_mock.go -package=bsdb
 //
+
 // Package bsdb is a generated GoMock package.
 package bsdb
 

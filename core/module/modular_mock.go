@@ -141,6 +141,36 @@ func (m *MockAuthenticator) EXPECT() *MockAuthenticatorMockRecorder {
 	return m.recorder
 }
 
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockAuthenticator) DeleteAuthKeysV2(ctx context.Context, account, domain string, publicKeys []string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", ctx, account, domain, publicKeys)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockAuthenticatorMockRecorder) DeleteAuthKeysV2(ctx, account, domain, publicKeys any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockAuthenticator)(nil).DeleteAuthKeysV2), ctx, account, domain, publicKeys)
+}
+
+// GetAuthKeyV2 mocks base method.
+func (m *MockAuthenticator) GetAuthKeyV2(ctx context.Context, account, domain, publicKey string) (*spdb.OffChainAuthKeyV2, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", ctx, account, domain, publicKey)
+	ret0, _ := ret[0].(*spdb.OffChainAuthKeyV2)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockAuthenticatorMockRecorder) GetAuthKeyV2(ctx, account, domain, publicKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockAuthenticator)(nil).GetAuthKeyV2), ctx, account, domain, publicKey)
+}
+
 // GetAuthNonce mocks base method.
 func (m *MockAuthenticator) GetAuthNonce(ctx context.Context, account, domain string) (*spdb.OffChainAuthKey, error) {
 	m.ctrl.T.Helper()
@@ -154,6 +184,21 @@ func (m *MockAuthenticator) GetAuthNonce(ctx context.Context, account, domain st
 func (mr *MockAuthenticatorMockRecorder) GetAuthNonce(ctx, account, domain any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthNonce", reflect.TypeOf((*MockAuthenticator)(nil).GetAuthNonce), ctx, account, domain)
+}
+
+// ListAuthKeysV2 mocks base method.
+func (m *MockAuthenticator) ListAuthKeysV2(ctx context.Context, account, domain string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", ctx, account, domain)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockAuthenticatorMockRecorder) ListAuthKeysV2(ctx, account, domain any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockAuthenticator)(nil).ListAuthKeysV2), ctx, account, domain)
 }
 
 // Name mocks base method.
@@ -240,6 +285,21 @@ func (mr *MockAuthenticatorMockRecorder) UpdateUserPublicKey(ctx, account, domai
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockAuthenticator)(nil).UpdateUserPublicKey), ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate)
 }
 
+// UpdateUserPublicKeyV2 mocks base method.
+func (m *MockAuthenticator) UpdateUserPublicKeyV2(ctx context.Context, account, domain, publicKey string, expiryDate int64) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserPublicKeyV2", ctx, account, domain, publicKey, expiryDate)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPublicKeyV2 indicates an expected call of UpdateUserPublicKeyV2.
+func (mr *MockAuthenticatorMockRecorder) UpdateUserPublicKeyV2(ctx, account, domain, publicKey, expiryDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKeyV2", reflect.TypeOf((*MockAuthenticator)(nil).UpdateUserPublicKeyV2), ctx, account, domain, publicKey, expiryDate)
+}
+
 // VerifyAuthentication mocks base method.
 func (m *MockAuthenticator) VerifyAuthentication(ctx context.Context, auth AuthOpType, account, bucket, object string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -268,6 +328,21 @@ func (m *MockAuthenticator) VerifyGNFD1EddsaSignature(ctx context.Context, accou
 func (mr *MockAuthenticatorMockRecorder) VerifyGNFD1EddsaSignature(ctx, account, domain, offChainSig, realMsgToSign any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockAuthenticator)(nil).VerifyGNFD1EddsaSignature), ctx, account, domain, offChainSig, realMsgToSign)
+}
+
+// VerifyGNFD2EddsaSignature mocks base method.
+func (m *MockAuthenticator) VerifyGNFD2EddsaSignature(ctx context.Context, account, domain, publicKey, offChainSig string, realMsgToSign []byte) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyGNFD2EddsaSignature", ctx, account, domain, publicKey, offChainSig, realMsgToSign)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyGNFD2EddsaSignature indicates an expected call of VerifyGNFD2EddsaSignature.
+func (mr *MockAuthenticatorMockRecorder) VerifyGNFD2EddsaSignature(ctx, account, domain, publicKey, offChainSig, realMsgToSign any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD2EddsaSignature", reflect.TypeOf((*MockAuthenticator)(nil).VerifyGNFD2EddsaSignature), ctx, account, domain, publicKey, offChainSig, realMsgToSign)
 }
 
 // MockApprover is a mock of Approver interface.
@@ -321,6 +396,21 @@ func (m *MockApprover) HandleCreateObjectApprovalTask(ctx context.Context, task 
 func (mr *MockApproverMockRecorder) HandleCreateObjectApprovalTask(ctx, task any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleCreateObjectApprovalTask", reflect.TypeOf((*MockApprover)(nil).HandleCreateObjectApprovalTask), ctx, task)
+}
+
+// HandleDelegateCreateObjectApprovalTask mocks base method.
+func (m *MockApprover) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task task.ApprovalDelegateCreateObjectTask) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HandleDelegateCreateObjectApprovalTask", ctx, task)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HandleDelegateCreateObjectApprovalTask indicates an expected call of HandleDelegateCreateObjectApprovalTask.
+func (mr *MockApproverMockRecorder) HandleDelegateCreateObjectApprovalTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleDelegateCreateObjectApprovalTask", reflect.TypeOf((*MockApprover)(nil).HandleDelegateCreateObjectApprovalTask), ctx, task)
 }
 
 // HandleMigrateBucketApprovalTask mocks base method.
@@ -1837,6 +1927,36 @@ func (mr *MockSignerMockRecorder) CreateGlobalVirtualGroup(ctx, gvg any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSigner)(nil).CreateGlobalVirtualGroup), ctx, gvg)
 }
 
+// DelegateCreateObject mocks base method.
+func (m *MockSigner) DelegateCreateObject(ctx context.Context, msg *types0.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, msg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockSignerMockRecorder) DelegateCreateObject(ctx, msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockSigner)(nil).DelegateCreateObject), ctx, msg)
+}
+
+// DelegateUpdateObjectContent mocks base method.
+func (m *MockSigner) DelegateUpdateObjectContent(ctx context.Context, msg *types0.MsgDelegateUpdateObjectContent) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateUpdateObjectContent", ctx, msg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateUpdateObjectContent indicates an expected call of DelegateUpdateObjectContent.
+func (mr *MockSignerMockRecorder) DelegateUpdateObjectContent(ctx, msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateUpdateObjectContent", reflect.TypeOf((*MockSigner)(nil).DelegateUpdateObjectContent), ctx, msg)
+}
+
 // DeleteGlobalVirtualGroup mocks base method.
 func (m *MockSigner) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types1.MsgDeleteGlobalVirtualGroup) (string, error) {
 	m.ctrl.T.Helper()
@@ -1996,6 +2116,21 @@ func (m *MockSigner) SealObject(ctx context.Context, object *types0.MsgSealObjec
 func (mr *MockSignerMockRecorder) SealObject(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSigner)(nil).SealObject), ctx, object)
+}
+
+// SealObjectV2 mocks base method.
+func (m *MockSigner) SealObjectV2(ctx context.Context, object *types0.MsgSealObjectV2) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SealObjectV2", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SealObjectV2 indicates an expected call of SealObjectV2.
+func (mr *MockSignerMockRecorder) SealObjectV2(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObjectV2", reflect.TypeOf((*MockSigner)(nil).SealObjectV2), ctx, object)
 }
 
 // SignBucketMigrationInfo mocks base method.

@@ -107,6 +107,22 @@ func (mr *MockGfSpClientAPIMockRecorder) AskCreateObjectApproval(ctx, t any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateObjectApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskCreateObjectApproval), ctx, t)
 }
 
+// AskDelegateCreateObjectApproval mocks base method.
+func (m *MockGfSpClientAPI) AskDelegateCreateObjectApproval(ctx context.Context, t task.ApprovalDelegateCreateObjectTask) (bool, task.ApprovalDelegateCreateObjectTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AskDelegateCreateObjectApproval", ctx, t)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(task.ApprovalDelegateCreateObjectTask)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// AskDelegateCreateObjectApproval indicates an expected call of AskDelegateCreateObjectApproval.
+func (mr *MockGfSpClientAPIMockRecorder) AskDelegateCreateObjectApproval(ctx, t any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskDelegateCreateObjectApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskDelegateCreateObjectApproval), ctx, t)
+}
+
 // AskMigrateBucketApproval mocks base method.
 func (m *MockGfSpClientAPI) AskMigrateBucketApproval(ctx context.Context, t task.ApprovalMigrateBucketTask) (bool, task.ApprovalMigrateBucketTask, error) {
 	m.ctrl.T.Helper()
@@ -308,6 +324,56 @@ func (mr *MockGfSpClientAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucket
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeductQuotaForBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeductQuotaForBucketMigrate), varargs...)
 }
 
+// DelegateCreateObject mocks base method.
+func (m *MockGfSpClientAPI) DelegateCreateObject(ctx context.Context, object *types3.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockGfSpClientAPIMockRecorder) DelegateCreateObject(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).DelegateCreateObject), ctx, object)
+}
+
+// DelegateUpdateObjectContent mocks base method.
+func (m *MockGfSpClientAPI) DelegateUpdateObjectContent(ctx context.Context, object *types3.MsgDelegateUpdateObjectContent) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateUpdateObjectContent", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateUpdateObjectContent indicates an expected call of DelegateUpdateObjectContent.
+func (mr *MockGfSpClientAPIMockRecorder) DelegateUpdateObjectContent(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateUpdateObjectContent", reflect.TypeOf((*MockGfSpClientAPI)(nil).DelegateUpdateObjectContent), ctx, object)
+}
+
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockGfSpClientAPI) DeleteAuthKeysV2(ctx context.Context, account, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKeys}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockGfSpClientAPIMockRecorder) DeleteAuthKeysV2(ctx, account, domain, userPublicKeys any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKeys}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeleteAuthKeysV2), varargs...)
+}
+
 // DeleteGlobalVirtualGroup mocks base method.
 func (m *MockGfSpClientAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
 	m.ctrl.T.Helper()
@@ -387,6 +453,27 @@ func (m *MockGfSpClientAPI) DoneReplicatePieceToSecondary(ctx context.Context, e
 func (mr *MockGfSpClientAPIMockRecorder) DoneReplicatePieceToSecondary(ctx, endpoint, receive any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoneReplicatePieceToSecondary", reflect.TypeOf((*MockGfSpClientAPI)(nil).DoneReplicatePieceToSecondary), ctx, endpoint, receive)
+}
+
+// GetAuthKeyV2 mocks base method.
+func (m *MockGfSpClientAPI) GetAuthKeyV2(ctx context.Context, account, domain, userPublicKey string, opts ...grpc.DialOption) (string, int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", varargs...)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockGfSpClientAPIMockRecorder) GetAuthKeyV2(ctx, account, domain, userPublicKey any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetAuthKeyV2), varargs...)
 }
 
 // GetAuthNonce mocks base method.
@@ -1107,6 +1194,26 @@ func (m *MockGfSpClientAPI) HTTPClient(ctx context.Context) *http.Client {
 func (mr *MockGfSpClientAPIMockRecorder) HTTPClient(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HTTPClient", reflect.TypeOf((*MockGfSpClientAPI)(nil).HTTPClient), ctx)
+}
+
+// ListAuthKeysV2 mocks base method.
+func (m *MockGfSpClientAPI) ListAuthKeysV2(ctx context.Context, account, domain string, opts ...grpc.DialOption) ([]string, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", varargs...)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockGfSpClientAPIMockRecorder) ListAuthKeysV2(ctx, account, domain any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListAuthKeysV2), varargs...)
 }
 
 // ListBucketReadRecord mocks base method.
@@ -1963,6 +2070,21 @@ func (mr *MockGfSpClientAPIMockRecorder) SealObject(ctx, object any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).SealObject), ctx, object)
 }
 
+// SealObjectV2 mocks base method.
+func (m *MockGfSpClientAPI) SealObjectV2(ctx context.Context, object *types3.MsgSealObjectV2) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SealObjectV2", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SealObjectV2 indicates an expected call of SealObjectV2.
+func (mr *MockGfSpClientAPIMockRecorder) SealObjectV2(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObjectV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).SealObjectV2), ctx, object)
+}
+
 // SecondarySpIncomeDetails mocks base method.
 func (m *MockGfSpClientAPI) SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error) {
 	m.ctrl.T.Helper()
@@ -2249,6 +2371,26 @@ func (mr *MockGfSpClientAPIMockRecorder) UpdateUserPublicKey(ctx, account, domai
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockGfSpClientAPI)(nil).UpdateUserPublicKey), varargs...)
 }
 
+// UpdateUserPublicKeyV2 mocks base method.
+func (m *MockGfSpClientAPI) UpdateUserPublicKeyV2(ctx context.Context, account, domain, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, expiryDate}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateUserPublicKeyV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPublicKeyV2 indicates an expected call of UpdateUserPublicKeyV2.
+func (mr *MockGfSpClientAPIMockRecorder) UpdateUserPublicKeyV2(ctx, account, domain, userPublicKey, expiryDate any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, expiryDate}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKeyV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).UpdateUserPublicKeyV2), varargs...)
+}
+
 // UploadObject mocks base method.
 func (m *MockGfSpClientAPI) UploadObject(ctx context.Context, task task.UploadObjectTask, stream io.Reader, opts ...grpc.DialOption) error {
 	m.ctrl.T.Helper()
@@ -2306,6 +2448,26 @@ func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, account,
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
+}
+
+// VerifyGNFD2EddsaSignature mocks base method.
+func (m *MockGfSpClientAPI) VerifyGNFD2EddsaSignature(ctx context.Context, account, domain, userPublicKey, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyGNFD2EddsaSignature", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyGNFD2EddsaSignature indicates an expected call of VerifyGNFD2EddsaSignature.
+func (mr *MockGfSpClientAPIMockRecorder) VerifyGNFD2EddsaSignature(ctx, account, domain, userPublicKey, offChainSig, realMsgToSign any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD2EddsaSignature", reflect.TypeOf((*MockGfSpClientAPI)(nil).VerifyGNFD2EddsaSignature), varargs...)
 }
 
 // VerifyMigrateGVGPermission mocks base method.
@@ -2423,6 +2585,22 @@ func (mr *MockApproverAPIMockRecorder) AskCreateObjectApproval(ctx, t any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateObjectApproval", reflect.TypeOf((*MockApproverAPI)(nil).AskCreateObjectApproval), ctx, t)
 }
 
+// AskDelegateCreateObjectApproval mocks base method.
+func (m *MockApproverAPI) AskDelegateCreateObjectApproval(ctx context.Context, t task.ApprovalDelegateCreateObjectTask) (bool, task.ApprovalDelegateCreateObjectTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AskDelegateCreateObjectApproval", ctx, t)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(task.ApprovalDelegateCreateObjectTask)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// AskDelegateCreateObjectApproval indicates an expected call of AskDelegateCreateObjectApproval.
+func (mr *MockApproverAPIMockRecorder) AskDelegateCreateObjectApproval(ctx, t any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskDelegateCreateObjectApproval", reflect.TypeOf((*MockApproverAPI)(nil).AskDelegateCreateObjectApproval), ctx, t)
+}
+
 // AskMigrateBucketApproval mocks base method.
 func (m *MockApproverAPI) AskMigrateBucketApproval(ctx context.Context, t task.ApprovalMigrateBucketTask) (bool, task.ApprovalMigrateBucketTask, error) {
 	m.ctrl.T.Helper()
@@ -2462,6 +2640,47 @@ func (m *MockAuthenticatorAPI) EXPECT() *MockAuthenticatorAPIMockRecorder {
 	return m.recorder
 }
 
+// DeleteAuthKeysV2 mocks base method.
+func (m *MockAuthenticatorAPI) DeleteAuthKeysV2(ctx context.Context, account, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKeys}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteAuthKeysV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAuthKeysV2 indicates an expected call of DeleteAuthKeysV2.
+func (mr *MockAuthenticatorAPIMockRecorder) DeleteAuthKeysV2(ctx, account, domain, userPublicKeys any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKeys}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthKeysV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).DeleteAuthKeysV2), varargs...)
+}
+
+// GetAuthKeyV2 mocks base method.
+func (m *MockAuthenticatorAPI) GetAuthKeyV2(ctx context.Context, account, domain, userPublicKey string, opts ...grpc.DialOption) (string, int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAuthKeyV2", varargs...)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAuthKeyV2 indicates an expected call of GetAuthKeyV2.
+func (mr *MockAuthenticatorAPIMockRecorder) GetAuthKeyV2(ctx, account, domain, userPublicKey any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthKeyV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).GetAuthKeyV2), varargs...)
+}
+
 // GetAuthNonce mocks base method.
 func (m *MockAuthenticatorAPI) GetAuthNonce(ctx context.Context, account, domain string, opts ...grpc.DialOption) (int32, int32, string, int64, error) {
 	m.ctrl.T.Helper()
@@ -2485,6 +2704,26 @@ func (mr *MockAuthenticatorAPIMockRecorder) GetAuthNonce(ctx, account, domain an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthNonce", reflect.TypeOf((*MockAuthenticatorAPI)(nil).GetAuthNonce), varargs...)
 }
 
+// ListAuthKeysV2 mocks base method.
+func (m *MockAuthenticatorAPI) ListAuthKeysV2(ctx context.Context, account, domain string, opts ...grpc.DialOption) ([]string, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListAuthKeysV2", varargs...)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAuthKeysV2 indicates an expected call of ListAuthKeysV2.
+func (mr *MockAuthenticatorAPIMockRecorder) ListAuthKeysV2(ctx, account, domain any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).ListAuthKeysV2), varargs...)
+}
+
 // UpdateUserPublicKey mocks base method.
 func (m *MockAuthenticatorAPI) UpdateUserPublicKey(ctx context.Context, account, domain string, currentNonce, nonce int32, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
 	m.ctrl.T.Helper()
@@ -2503,6 +2742,26 @@ func (mr *MockAuthenticatorAPIMockRecorder) UpdateUserPublicKey(ctx, account, do
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, account, domain, currentNonce, nonce, userPublicKey, expiryDate}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKey", reflect.TypeOf((*MockAuthenticatorAPI)(nil).UpdateUserPublicKey), varargs...)
+}
+
+// UpdateUserPublicKeyV2 mocks base method.
+func (m *MockAuthenticatorAPI) UpdateUserPublicKeyV2(ctx context.Context, account, domain, userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, expiryDate}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateUserPublicKeyV2", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPublicKeyV2 indicates an expected call of UpdateUserPublicKeyV2.
+func (mr *MockAuthenticatorAPIMockRecorder) UpdateUserPublicKeyV2(ctx, account, domain, userPublicKey, expiryDate any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, expiryDate}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPublicKeyV2", reflect.TypeOf((*MockAuthenticatorAPI)(nil).UpdateUserPublicKeyV2), varargs...)
 }
 
 // VerifyAuthentication mocks base method.
@@ -2543,6 +2802,26 @@ func (mr *MockAuthenticatorAPIMockRecorder) VerifyGNFD1EddsaSignature(ctx, accou
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, account, domain, offChainSig, realMsgToSign}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD1EddsaSignature", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyGNFD1EddsaSignature), varargs...)
+}
+
+// VerifyGNFD2EddsaSignature mocks base method.
+func (m *MockAuthenticatorAPI) VerifyGNFD2EddsaSignature(ctx context.Context, account, domain, userPublicKey, offChainSig string, realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VerifyGNFD2EddsaSignature", varargs...)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyGNFD2EddsaSignature indicates an expected call of VerifyGNFD2EddsaSignature.
+func (mr *MockAuthenticatorAPIMockRecorder) VerifyGNFD2EddsaSignature(ctx, account, domain, userPublicKey, offChainSig, realMsgToSign any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, account, domain, userPublicKey, offChainSig, realMsgToSign}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyGNFD2EddsaSignature", reflect.TypeOf((*MockAuthenticatorAPI)(nil).VerifyGNFD2EddsaSignature), varargs...)
 }
 
 // MockDownloaderAPI is a mock of DownloaderAPI interface.
@@ -4400,6 +4679,36 @@ func (mr *MockSignerAPIMockRecorder) CreateGlobalVirtualGroup(ctx, group any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSignerAPI)(nil).CreateGlobalVirtualGroup), ctx, group)
 }
 
+// DelegateCreateObject mocks base method.
+func (m *MockSignerAPI) DelegateCreateObject(ctx context.Context, object *types3.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockSignerAPIMockRecorder) DelegateCreateObject(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockSignerAPI)(nil).DelegateCreateObject), ctx, object)
+}
+
+// DelegateUpdateObjectContent mocks base method.
+func (m *MockSignerAPI) DelegateUpdateObjectContent(ctx context.Context, object *types3.MsgDelegateUpdateObjectContent) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateUpdateObjectContent", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateUpdateObjectContent indicates an expected call of DelegateUpdateObjectContent.
+func (mr *MockSignerAPIMockRecorder) DelegateUpdateObjectContent(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateUpdateObjectContent", reflect.TypeOf((*MockSignerAPI)(nil).DelegateUpdateObjectContent), ctx, object)
+}
+
 // DeleteGlobalVirtualGroup mocks base method.
 func (m *MockSignerAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
 	m.ctrl.T.Helper()
@@ -4518,6 +4827,21 @@ func (m *MockSignerAPI) SealObject(ctx context.Context, object *types3.MsgSealOb
 func (mr *MockSignerAPIMockRecorder) SealObject(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSignerAPI)(nil).SealObject), ctx, object)
+}
+
+// SealObjectV2 mocks base method.
+func (m *MockSignerAPI) SealObjectV2(ctx context.Context, object *types3.MsgSealObjectV2) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SealObjectV2", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SealObjectV2 indicates an expected call of SealObjectV2.
+func (mr *MockSignerAPIMockRecorder) SealObjectV2(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObjectV2", reflect.TypeOf((*MockSignerAPI)(nil).SealObjectV2), ctx, object)
 }
 
 // SignBucketMigrationInfo mocks base method.
