@@ -735,7 +735,7 @@ func (s *GfSpClient) DelegateCreateObject(ctx context.Context, object *storagety
 	}
 	resp, err := gfspserver.NewGfSpSignServiceClient(conn).GfSpSign(ctx, req)
 	if err != nil {
-		log.CtxErrorw(ctx, "client failed to sign create object approval", "error", err)
+		log.CtxErrorw(ctx, "client failed to sign create object", "error", err)
 		return "", ErrRPCUnknownWithDetail("client failed to sign create object approval, error: ", err)
 	}
 	if resp.GetErr() != nil {

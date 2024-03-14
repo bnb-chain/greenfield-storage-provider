@@ -651,12 +651,12 @@ type GCBucketMigrationTask interface {
 	SetFinished(bool)
 }
 
-// ApprovalDelegateCreateObjectTask The user account will create MsgDelegateCreateObject, SP should decide whether approved the request based on the MsgDelegateCreateObject.
+// ApprovalDelegateCreateObjectTask The sp will create MsgDelegateCreateObject, approve should decide whether approved the request based on the MsgDelegateCreateObject.
 type ApprovalDelegateCreateObjectTask interface {
 	ApprovalTask
 	// InitApprovalDelegateCreateObjectTask inits the ApprovalDelegateCreateObjectTask by
 	// MsgDelegateCreateObject and task priority. SP only fill the MsgDelegateCreateObject's
-	// PrimarySpApproval field, can not change other fields.
+	// field, can not change other fields.
 	InitApprovalDelegateCreateObjectTask(string, *storagetypes.MsgDelegateCreateObject, []byte, TPriority)
 	// GetDelegateCreateObject returns the task's MsgDelegateCreateObject.
 	GetDelegateCreateObject() *storagetypes.MsgDelegateCreateObject

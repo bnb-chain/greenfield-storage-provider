@@ -933,7 +933,6 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 
 func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateCreateObject) (string, error) {
-	log.Infow("signer starts to delegate create object", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "delegate create object msg pointer dangling")
 		return "", ErrDanglingPointer
@@ -985,7 +984,6 @@ func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Contex
 
 func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
-	log.Infow("signer starts to delegate update object content", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "delegate update object content msg pointer dangling")
 		return "", ErrDanglingPointer

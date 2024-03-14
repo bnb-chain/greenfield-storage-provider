@@ -351,7 +351,7 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 					return err
 				}
 				if task.GetIsAgentUpload() && pieceSize != task.GetObjectInfo().GetPayloadSize() {
-					log.CtxErrorw(ctx, "payload size error", "db size", pieceSize, "objectInfo size", task.GetObjectInfo().GetPayloadSize())
+					log.CtxErrorw(ctx, "payload size error", "expected", pieceSize, "actual", task.GetObjectInfo().GetPayloadSize())
 					go u.rejectCreateObject(ctx, task.GetObjectInfo())
 				}
 				integrityHash := hash.GenerateIntegrityHash(pieceChecksumList)
@@ -480,14 +480,14 @@ func (u *UploadModular) rejectCreateObject(ctx context.Context, objectInfo *stor
 		if err != nil {
 			time.Sleep(RejectUnSealObjectTimeout * time.Second)
 		} else {
-			log.CtxDebugw(ctx, "succeed to reject unseal object")
+			log.CtxDebugw(ctx, "succeed to reject unseal object", "objectID", objectInfo.Id.Uint64())
 			reject, err := u.baseApp.Consensus().ListenRejectUnSealObject(ctx, objectInfo.Id.Uint64(), DefaultListenRejectUnSealTimeoutHeight)
 			if err != nil {
 				log.CtxErrorw(ctx, "failed to reject unseal object", "error", err, "objectID", objectInfo.Id.Uint64())
 				continue
 			}
 			if !reject {
-				log.CtxErrorw(ctx, "failed to reject unseal object")
+				log.CtxErrorw(ctx, "failed to reject unseal object", "objectID", objectInfo.Id.Uint64())
 				continue
 			}
 			break

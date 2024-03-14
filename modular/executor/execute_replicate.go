@@ -69,7 +69,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	sealTime := time.Now()
 	var sealErr error
 	if task.GetIsAgentUpload() {
-		expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryEndpoints()))
+		expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryEndpoints()), task.GetStorageParams())
 		if makeErr != nil {
 			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", err)
 			err = makeErr
@@ -161,7 +161,7 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 		}
 		if rTask.GetIsAgentUpload() {
 			objectInfo := rTask.GetObjectInfo()
-			expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, rTask.GetObjectInfo(), len(rTask.GetSecondaryEndpoints()))
+			expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, rTask.GetObjectInfo(), len(rTask.GetSecondaryEndpoints()), rTask.GetStorageParams())
 			if makeErr != nil {
 				log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload ", "error", makeErr)
 				return makeErr
@@ -415,7 +415,7 @@ func veritySecondarySpBlsSignature(secondarySp *sptypes.StorageProvider, signatu
 	return nil
 }
 
-func (e *ExecuteModular) makeCheckSumsForAgentUpload(ctx context.Context, objectInfo *storagetypes.ObjectInfo, redundancyCount int) ([][]byte, error) {
+func (e *ExecuteModular) makeCheckSumsForAgentUpload(ctx context.Context, objectInfo *storagetypes.ObjectInfo, redundancyCount int, params *storagetypes.Params) ([][]byte, error) {
 	integrityMeta, err := e.baseApp.GfSpDB().GetObjectIntegrity(objectInfo.Id.Uint64(), piecestore.PrimarySPRedundancyIndex)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object integrity",
@@ -424,12 +424,6 @@ func (e *ExecuteModular) makeCheckSumsForAgentUpload(ctx context.Context, object
 	}
 	expectChecksums := make([][]byte, 0)
 	expectChecksums = append(expectChecksums, hash.GenerateIntegrityHash(integrityMeta.PieceChecksumList))
-	params, err := e.baseApp.Consensus().QueryStorageParams(ctx)
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to QueryStorageParams",
-			"objectID", objectInfo.Id.Uint64(), "error", err)
-		return nil, err
-	}
 	spc := e.baseApp.PieceOp().SegmentPieceCount(objectInfo.GetPayloadSize(), params.VersionedParams.GetMaxSegmentSize())
 	for redundancyIdx := 0; redundancyIdx < redundancyCount; redundancyIdx++ {
 		var ecHash [][]byte

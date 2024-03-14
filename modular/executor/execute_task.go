@@ -71,7 +71,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 	}
 	task.AppendLog("executor-begin-handle-seal-task")
 	if task.GetIsAgentUpload() {
-		checksums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryAddresses()))
+		checksums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryAddresses()), task.GetStorageParams())
 		if makeErr != nil {
 			task.SetError(makeErr)
 			return
