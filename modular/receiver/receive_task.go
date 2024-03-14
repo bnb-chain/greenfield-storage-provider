@@ -119,6 +119,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		err = ErrUnfinishedTask
 		return nil, ErrUnfinishedTask
 	}
+
 	expectedIntegrityHash := task.GetObjectInfo().GetChecksums()[task.GetRedundancyIdx()+1]
 	integrityChecksum := hash.GenerateIntegrityHash(pieceChecksums)
 	if !bytes.Equal(expectedIntegrityHash, integrityChecksum) {
@@ -143,6 +144,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 			IntegrityChecksum: integrityChecksum,
 			PieceChecksumList: pieceChecksums,
 			Version:           task.GetObjectInfo().GetVersion(),
+			ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
 		}
 		err = r.baseApp.GfSpDB().SetShadowObjectIntegrity(integrityMeta)
 	} else {
@@ -151,6 +153,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 			RedundancyIndex:   task.GetRedundancyIdx(),
 			IntegrityChecksum: integrityChecksum,
 			PieceChecksumList: pieceChecksums,
+			ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
 		}
 		err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 	}

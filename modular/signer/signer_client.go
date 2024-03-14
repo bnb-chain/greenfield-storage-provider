@@ -931,6 +931,108 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 	return "", ErrDeleteGVGOnChain
 }
 
+func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Context, scope SignType,
+	msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	if msg == nil {
+		log.CtxError(ctx, "delegate create object msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msg.Operator = km.GetAddr().String()
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msg}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrDelegateCreateObjectOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrDelegateCreateObjectOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast delegate create object tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast delegate create object tx", "tx_hash", txHash, "delegate_update_object_msg", msg)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrDelegateCreateObjectOnChain.SetError(fmt.Errorf("failed to delegate create object, error: %v", err))
+	return "", ErrDelegateCreateObjectOnChain
+}
+
+func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context.Context, scope SignType,
+	msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
+	if msg == nil {
+		log.CtxError(ctx, "delegate update object content msg pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+	client.opLock.Lock()
+	defer client.opLock.Unlock()
+
+	msg.Operator = km.GetAddr().String()
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.operatorAccNonce
+		txOpt := &ctypes.TxOption{
+			Nonce: nonce,
+		}
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msg}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
+				ErrDelegateUpdateObjectContentOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
+				return "", ErrDelegateUpdateObjectContentOnChain
+			}
+			client.operatorAccNonce = nonce
+		}
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast delegate update object content tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.operatorAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast delegate update object content tx", "tx_hash", txHash, "delegate_update_object_content_msg", msg)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrDelegateUpdateObjectContentOnChain.SetError(fmt.Errorf("failed to broadcast delegte update object, error: %v", err))
+	return "", ErrDelegateUpdateObjectContentOnChain
+}
+
 func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.GreenfieldClient) (uint64, error) {
 	err := client.signer.baseApp.Consensus().WaitForNextBlock(ctx)
 	if err != nil {
@@ -1120,4 +1222,69 @@ func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope
 	// failed to broadcast tx
 	ErrCancelSwapIn.SetError(fmt.Errorf("failed to broadcast cancel swap in, error: %v", err))
 	return "", ErrCancelSwapIn
+}
+
+// SealObjectV2 seal the object on the greenfield chain.
+func (client *GreenfieldChainSignClient) SealObjectV2(ctx context.Context, scope SignType,
+	sealObject *storagetypes.MsgSealObjectV2) (string, error) {
+	if sealObject == nil {
+		log.CtxError(ctx, "failed to seal object due to pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
+	ctx = log.WithValue(ctx, log.CtxKeyObjectName, sealObject.GetObjectName())
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.sealLock.Lock()
+	defer client.sealLock.Unlock()
+
+	msgSealObject := storagetypes.NewMsgSealObjectV2(km.GetAddr(),
+		sealObject.GetBucketName(), sealObject.GetObjectName(), sealObject.GetGlobalVirtualGroupId(),
+		sealObject.GetSecondarySpBlsAggSignatures(), sealObject.GetExpectChecksums())
+
+	mode := tx.BroadcastMode_BROADCAST_MODE_SYNC
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.sealAccNonce
+		txOpt := &ctypes.TxOption{
+			NoSimulate: true,
+			Mode:       &mode,
+			GasLimit:   client.gasInfo[Seal].GasLimit,
+			FeeAmount:  client.gasInfo[Seal].FeeAmount,
+			Nonce:      nonce,
+		}
+
+		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSealObject}, txOpt)
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
+				ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
+				return "", ErrSealObjectOnChain
+			}
+			client.sealAccNonce = nonce
+		}
+
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.sealAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash, "seal_msg", msgSealObject)
+		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrSealObjectOnChain.SetError(fmt.Errorf("failed to broadcast seal object tx, error: %v", err))
+	return "", ErrSealObjectOnChain
 }

@@ -10,11 +10,12 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
-func (s *SpDBImpl) InsertUploadProgress(objectID uint64) error {
+func (s *SpDBImpl) InsertUploadProgress(objectID uint64, isAgentUpload bool) error {
 	taskState := storetypes.TaskState_TASK_STATE_INIT_UNSPECIFIED
 	if result := s.db.Create(&UploadObjectProgressTable{
 		ObjectID:              objectID,
 		TaskState:             int32(taskState),
+		IsAgentUpload:         isAgentUpload,
 		TaskStateDescription:  taskState.String(),
 		CreateTimestampSecond: GetCurrentUnixTime(),
 		UpdateTimestampSecond: GetCurrentUnixTime(),
@@ -120,6 +121,7 @@ func (s *SpDBImpl) GetUploadMetasToSeal(limit int, timeoutSecond int64) ([]*core
 			GlobalVirtualGroupID: u.GlobalVirtualGroupID,
 			SecondaryEndpoints:   util.SplitByComma(u.SecondaryEndpoints),
 			SecondarySignatures:  secondarySignatures,
+			IsAgentUpload:        u.IsAgentUpload,
 		})
 	}
 	return returnUploadObjectMetas, nil
@@ -150,6 +152,7 @@ func (s *SpDBImpl) GetUploadMetasToReplicateByStartTS(limit int, startTS int64) 
 			SecondaryEndpoints:    util.SplitByComma(u.SecondaryEndpoints),
 			SecondarySignatures:   secondarySignatures,
 			CreateTimeStampSecond: u.CreateTimestampSecond,
+			IsAgentUpload:         u.IsAgentUpload,
 		})
 	}
 	return returnUploadObjectMetas, nil

@@ -25,7 +25,7 @@ type SPDB interface {
 // UploadObjectProgressDB interface which records upload object related progress(includes foreground and background) and state.
 type UploadObjectProgressDB interface {
 	// InsertUploadProgress inserts a new upload object progress.
-	InsertUploadProgress(objectID uint64) error
+	InsertUploadProgress(objectID uint64, isAgentUpload bool) error
 	// DeleteUploadProgress deletes the upload object progress.
 	DeleteUploadProgress(objectID uint64) error
 	// UpdateUploadProgress updates the upload object progress state.
@@ -78,7 +78,7 @@ type SignatureDB interface {
 	// UpdateIntegrityChecksum update IntegrityMetaTable's integrity checksum
 	UpdateIntegrityChecksum(integrity *IntegrityMeta) error
 	// UpdatePieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
-	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) error
+	UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, dataLength uint64) error
 	// UpdateIntegrityMeta update both piece checksum and integrity
 	UpdateIntegrityMeta(integrity *IntegrityMeta) error
 	// ListIntegrityMetaByObjectIDRange list integrity meta in range
@@ -99,6 +99,8 @@ type SignatureDB interface {
 	DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint32, redundancyIdx int32) (err error)
 	// DeleteAllReplicatePieceChecksum deletes all piece hashes.
 	DeleteAllReplicatePieceChecksum(objectID uint64, redundancyIdx int32, pieceCount uint32) error
+	// DeleteReplicatePieceChecksumsByObjectID deletes all piece hashes for a given object, called by primary SP to clear delegated upload object meta.
+	DeleteReplicatePieceChecksumsByObjectID(objectID uint64) error
 	// DeleteAllReplicatePieceChecksumOptimized deletes all piece hashes.
 	DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) error
 	// ListReplicatePieceChecksumByObjectIDRange list replicate piece checksum in range
@@ -117,7 +119,7 @@ type SignatureDB interface {
 	// UpdateShadowIntegrityChecksum update ShadowIntegrityMetaTable's integrity checksum
 	UpdateShadowIntegrityChecksum(integrity *ShadowIntegrityMeta) error
 	// UpdateShadowPieceChecksum if the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
-	UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64) error
+	UpdateShadowPieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, version int64, dataLength uint64) error
 	// ListShadowIntegrityMeta list Shadow IntegrityMeta records with default limit
 	ListShadowIntegrityMeta() ([]*ShadowIntegrityMeta, error)
 }

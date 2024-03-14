@@ -11,6 +11,7 @@ var _ Task = (*NullTask)(nil)
 var _ ApprovalTask = (*NullTask)(nil)
 var _ ApprovalCreateBucketTask = (*NullTask)(nil)
 var _ ApprovalCreateObjectTask = (*NullTask)(nil)
+var _ ApprovalDelegateCreateObjectTask = (*NullTask)(nil)
 var _ ApprovalReplicatePieceTask = (*NullTask)(nil)
 var _ ObjectTask = (*NullTask)(nil)
 var _ UploadObjectTask = (*NullTask)(nil)
@@ -85,15 +86,13 @@ func (*NullTask) GetApprovedSpEndpoint() string        { return "" }
 func (*NullTask) SetApprovedSpEndpoint(string)         {}
 func (*NullTask) GetApprovedSpApprovalAddress() string { return "" }
 func (*NullTask) SetApprovedSpApprovalAddress(string)  {}
-func (*NullTask) InitUploadObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, int64) {
+func (t *NullTask) InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, isAgentUpload bool) {
 }
 func (*NullTask) GetVirtualGroupFamilyId() uint32   { return 0 }
 func (*NullTask) GetGlobalVirtualGroupId() uint32   { return 0 }
 func (*NullTask) SetGlobalVirtualGroupID(uint32)    {}
 func (*NullTask) GetBucketMigration() bool          { return false }
 func (*NullTask) SetBucketMigration(migration bool) {}
-func (*NullTask) InitReplicatePieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, int64, int64) {
-}
 func (*NullTask) InitRecoverPieceTask(*storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, uint64, int64, int64) {
 }
 func (*NullTask) GetSealed() bool                  { return false }
@@ -103,9 +102,9 @@ func (*NullTask) GetSecondarySignatures() [][]byte { return nil }
 func (*NullTask) SetSecondarySignatures([][]byte)  {}
 func (*NullTask) SetSecondaryAddresses([]string)   {}
 func (*NullTask) GetSecondaryEndpoints() []string  { return nil }
-func (*NullTask) InitSealObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64) {
+func (*NullTask) InitSealObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64, bool) {
 }
-func (*NullTask) InitReceivePieceTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64) {
+func (*NullTask) InitReceivePieceTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64, bool) {
 }
 func (*NullTask) GetReplicateIdx() uint32  { return 0 }
 func (*NullTask) SetReplicateIdx(uint32)   {}
@@ -196,3 +195,12 @@ func (*NullTask) GetShadowObjectInfo() *storagetypes.ShadowObjectInfo {
 	return nil
 }
 func (*NullTask) SetShadowObjectInfo(info *storagetypes.ShadowObjectInfo) {}
+func (t *NullTask) InitApprovalDelegateCreateObjectTask(s string, object *storagetypes.MsgDelegateCreateObject, bytes []byte, priority TPriority) {
+}
+
+func (t *NullTask) GetDelegateCreateObject() *storagetypes.MsgDelegateCreateObject { return nil }
+
+func (t *NullTask) SetDelegateCreateObject(object *storagetypes.MsgDelegateCreateObject) {}
+func (t *NullTask) GetIsAgentUpload() bool                                               { return false }
+func (t *NullTask) InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64, isAgentUpload bool) {
+}

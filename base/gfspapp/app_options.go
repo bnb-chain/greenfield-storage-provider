@@ -169,6 +169,11 @@ const (
 	SignerSuccessDeleteGlobalVirtualGroup = "signer_delete_global_virtual_group_success"
 	SignerFailureDeleteGlobalVirtualGroup = "signer_delete_global_virtual_group_failure"
 
+	SignerSuccessDelegateUpdateObjectContent = "signer_delegate_update_object_content_success"
+	SignerFailureDelegateUpdateObjectContent = "signer_delegate_update_object_content_failure"
+	SignerSuccessDelegateCreateObject        = "signer_delegate_create_object_success"
+	SignerFailureDelegateCreateObject        = "signer_delegate_create_object_failure"
+
 	UploaderSuccessPutObject = "uploader_put_object_success"
 	UploaderFailurePutObject = "uploader_put_object_failure"
 )

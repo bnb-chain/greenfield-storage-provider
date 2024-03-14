@@ -42,29 +42,29 @@ func (m *MockPieceOp) EXPECT() *MockPieceOpMockRecorder {
 // ChallengePieceKey mocks base method.
 func (m *MockPieceOp) ChallengePieceKey(objectID uint64, segmentIdx uint32, redundancyIdx int32, version int64) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChallengePieceKey", objectID, segmentIdx, redundancyIdx)
+	ret := m.ctrl.Call(m, "ChallengePieceKey", objectID, segmentIdx, redundancyIdx, version)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // ChallengePieceKey indicates an expected call of ChallengePieceKey.
-func (mr *MockPieceOpMockRecorder) ChallengePieceKey(objectID, segmentIdx, redundancyIdx any) *gomock.Call {
+func (mr *MockPieceOpMockRecorder) ChallengePieceKey(objectID, segmentIdx, redundancyIdx, version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChallengePieceKey", reflect.TypeOf((*MockPieceOp)(nil).ChallengePieceKey), objectID, segmentIdx, redundancyIdx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChallengePieceKey", reflect.TypeOf((*MockPieceOp)(nil).ChallengePieceKey), objectID, segmentIdx, redundancyIdx, version)
 }
 
 // ECPieceKey mocks base method.
 func (m *MockPieceOp) ECPieceKey(objectID uint64, segmentIdx, redundancyIdx uint32, version int64) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ECPieceKey", objectID, segmentIdx, redundancyIdx)
+	ret := m.ctrl.Call(m, "ECPieceKey", objectID, segmentIdx, redundancyIdx, version)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // ECPieceKey indicates an expected call of ECPieceKey.
-func (mr *MockPieceOpMockRecorder) ECPieceKey(objectID, segmentIdx, redundancyIdx any) *gomock.Call {
+func (mr *MockPieceOpMockRecorder) ECPieceKey(objectID, segmentIdx, redundancyIdx, version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ECPieceKey", reflect.TypeOf((*MockPieceOp)(nil).ECPieceKey), objectID, segmentIdx, redundancyIdx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ECPieceKey", reflect.TypeOf((*MockPieceOp)(nil).ECPieceKey), objectID, segmentIdx, redundancyIdx, version)
 }
 
 // ECPieceSize mocks base method.
@@ -143,15 +143,15 @@ func (mr *MockPieceOpMockRecorder) SegmentPieceCount(payloadSize, maxSegmentSize
 // SegmentPieceKey mocks base method.
 func (m *MockPieceOp) SegmentPieceKey(objectID uint64, segmentIdx uint32, version int64) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SegmentPieceKey", objectID, segmentIdx)
+	ret := m.ctrl.Call(m, "SegmentPieceKey", objectID, segmentIdx, version)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // SegmentPieceKey indicates an expected call of SegmentPieceKey.
-func (mr *MockPieceOpMockRecorder) SegmentPieceKey(objectID, segmentIdx any) *gomock.Call {
+func (mr *MockPieceOpMockRecorder) SegmentPieceKey(objectID, segmentIdx, version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SegmentPieceKey", reflect.TypeOf((*MockPieceOp)(nil).SegmentPieceKey), objectID, segmentIdx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SegmentPieceKey", reflect.TypeOf((*MockPieceOp)(nil).SegmentPieceKey), objectID, segmentIdx, version)
 }
 
 // SegmentPieceSize mocks base method.

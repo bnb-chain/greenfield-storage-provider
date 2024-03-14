@@ -106,6 +106,7 @@ func (s *SpDBImpl) GetObjectIntegrity(objectID uint64, redundancyIndex int32) (m
 		ObjectID:          queryReturn.ObjectID,
 		RedundancyIndex:   queryReturn.RedundancyIndex,
 		IntegrityChecksum: integrityChecksum,
+		ObjectSize:        queryReturn.ObjectSize,
 	}
 	meta.PieceChecksumList, err = util.StringToBytesSlice(queryReturn.PieceChecksumList)
 	if err != nil {
@@ -146,6 +147,7 @@ func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) 
 		RedundancyIndex:   meta.RedundancyIndex,
 		PieceChecksumList: util.BytesSliceToString(meta.PieceChecksumList),
 		IntegrityChecksum: hex.EncodeToString(meta.IntegrityChecksum),
+		ObjectSize:        meta.ObjectSize,
 	}
 	shardTableName := GetIntegrityMetasTableName(meta.ObjectID)
 	result := s.db.Table(shardTableName).Create(insertIntegrityMetaRecord)
@@ -302,7 +304,7 @@ func (s *SpDBImpl) ListIntegrityMetaByObjectIDRange(startObjectID int64, endObje
 
 // UpdatePieceChecksum 1) If the IntegrityMetaTable does not exist, it will be created.
 // 2) If the IntegrityMetaTable already exists, it will be appended to the existing PieceChecksumList.
-func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte) (err error) {
+func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, checksum []byte, dataLength uint64) (err error) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -326,6 +328,7 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 			RedundancyIndex:   redundancyIndex,
 			PieceChecksumList: append(checksums, checksum),
 			IntegrityChecksum: integrity,
+			ObjectSize:        dataLength,
 		}
 		err = s.SetObjectIntegrity(integrityMetaNew)
 		if err != nil {
@@ -339,6 +342,7 @@ func (s *SpDBImpl) UpdatePieceChecksum(objectID uint64, redundancyIndex int32, c
 		result := s.db.Table(shardTableName).Where("object_id = ? and redundancy_index = ?", objectID, redundancyIndex).
 			Updates(&IntegrityMetaTable{
 				PieceChecksumList: util.BytesSliceToString(newChecksums),
+				ObjectSize:        integrityMeta.ObjectSize + dataLength,
 			})
 		if result.Error != nil {
 			return fmt.Errorf("failed to update integrity meta table: %s", result.Error)
@@ -557,6 +561,24 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 		ObjectID:        objectID,
 		RedundancyIndex: redundancyIdx,
 	}).Error
+	return err
+}
+
+// DeleteReplicatePieceChecksumsByObjectID deletes all piece checksums for a given objectID.
+func (s *SpDBImpl) DeleteReplicatePieceChecksumsByObjectID(objectID uint64) (err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureDelAllReplicatePieceChecksum).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureDelAllReplicatePieceChecksum).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Observe(
+			time.Since(startTime).Seconds())
+	}()
+	err = s.db.Where("object_id = ?", objectID).Delete(PieceHashTable{}).Error
 	return err
 }
 

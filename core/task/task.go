@@ -234,9 +234,11 @@ type ObjectTask interface {
 type UploadObjectTask interface {
 	ObjectTask
 	// InitUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64)
+	InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, isAgentUpload bool)
 	// GetVirtualGroupFamilyId returns the object's virtual group family which is bind in bucket.
 	GetVirtualGroupFamilyId() uint32
+	// GetIsAgentUpload returns Whether the task is a agent upload
+	GetIsAgentUpload() bool
 }
 
 // The ResumableUploadObjectTask is the interface to record the information for uploading object
@@ -244,7 +246,7 @@ type UploadObjectTask interface {
 type ResumableUploadObjectTask interface {
 	ObjectTask
 	// InitResumableUploadObjectTask inits the UploadObjectTask by ObjectInfo and Params.
-	InitResumableUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64)
+	InitResumableUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, complete bool, offset uint64, isAgentUpload bool)
 	// GetVirtualGroupFamilyId returns the object's virtual group family which is bind in bucket.
 	GetVirtualGroupFamilyId() uint32
 	// GetResumeOffset return resumable offset user-supplied parameters
@@ -257,6 +259,8 @@ type ResumableUploadObjectTask interface {
 	GetCompleted() bool
 	// SetCompleted sets the state from request in InitResumableUploadObjectTask
 	SetCompleted(completed bool)
+	// GetIsAgentUpload returns Whether the task is a agent upload
+	GetIsAgentUpload() bool
 }
 
 // The ReplicatePieceTask is the interface to record the information for replicating
@@ -265,7 +269,7 @@ type ReplicatePieceTask interface {
 	ObjectTask
 	// InitReplicatePieceTask inits the ReplicatePieceTask by ObjectInfo, params,
 	// task priority, timeout and max retry.
-	InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64)
+	InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64, isAgentUpload bool)
 	// GetSealed returns an indicator whether successful seal object on greenfield
 	// after replicate pieces, it is an optimization method. ReplicatePieceTask and
 	// SealObjectTask are combined. Otherwise, the two tasks will be completed in
@@ -292,6 +296,8 @@ type ReplicatePieceTask interface {
 	GetNotAvailableSpIdx() int32
 	// SetNotAvailableSpIdx sets the secondary sp Index in GVG if fail to replicate data
 	SetNotAvailableSpIdx(int32)
+	// GetIsAgentUpload returns the task's isAgentUpload.
+	GetIsAgentUpload() bool
 }
 
 // ReceivePieceTask is an abstract interface to record the information for receiving pieces
@@ -300,7 +306,7 @@ type ReceivePieceTask interface {
 	ObjectTask
 	// InitReceivePieceTask init the ReceivePieceTask.
 	InitReceivePieceTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority,
-		segmentIdx uint32, redundancyIdx int32, pieceSize int64)
+		segmentIdx uint32, redundancyIdx int32, pieceSize int64, isAgentUpload bool)
 	// GetSegmentIdx returns the piece index. The piece index identifies the serial number
 	// of segment of object payload data for object piece copy.
 	GetSegmentIdx() uint32
@@ -353,7 +359,7 @@ type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
 	InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, addresses []string,
-		signatures [][]byte, timeout int64, retry int64)
+		signatures [][]byte, timeout int64, retry int64, isAgentUpload bool)
 	// GetSecondaryAddresses return the secondary SP's addresses.
 	GetSecondaryAddresses() []string
 	// GetSecondarySignatures return the secondary SP's signature, it is used to generate
@@ -361,6 +367,8 @@ type SealObjectTask interface {
 	GetSecondarySignatures() [][]byte
 	// GetGlobalVirtualGroupId returns the object's global virtual group id.
 	GetGlobalVirtualGroupId() uint32
+	// GetIsAgentUpload return the task's is_agent_upload field
+	GetIsAgentUpload() bool
 }
 
 // DownloadObjectTask is an abstract interface to record the information for downloading
@@ -641,4 +649,18 @@ type GCBucketMigrationTask interface {
 	GetFinished() bool
 	// SetFinished sets the bucket migration task status when finished
 	SetFinished(bool)
+}
+
+// ApprovalDelegateCreateObjectTask The sp will create MsgDelegateCreateObject, approve should decide whether approved the request based on the MsgDelegateCreateObject.
+type ApprovalDelegateCreateObjectTask interface {
+	ApprovalTask
+	// InitApprovalDelegateCreateObjectTask inits the ApprovalDelegateCreateObjectTask by
+	// MsgDelegateCreateObject and task priority. SP only fill the MsgDelegateCreateObject's
+	// field, can not change other fields.
+	InitApprovalDelegateCreateObjectTask(string, *storagetypes.MsgDelegateCreateObject, []byte, TPriority)
+	// GetDelegateCreateObject returns the task's MsgDelegateCreateObject.
+	GetDelegateCreateObject() *storagetypes.MsgDelegateCreateObject
+	// SetDelegateCreateObject sets the MsgDelegateCreateObject. Should try to avoid calling
+	// this method, it will change the approval information.
+	SetDelegateCreateObject(*storagetypes.MsgDelegateCreateObject)
 }

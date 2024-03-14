@@ -107,6 +107,22 @@ func (mr *MockGfSpClientAPIMockRecorder) AskCreateObjectApproval(ctx, t any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateObjectApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskCreateObjectApproval), ctx, t)
 }
 
+// AskDelegateCreateObjectApproval mocks base method.
+func (m *MockGfSpClientAPI) AskDelegateCreateObjectApproval(ctx context.Context, t task.ApprovalDelegateCreateObjectTask) (bool, task.ApprovalDelegateCreateObjectTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AskDelegateCreateObjectApproval", ctx, t)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(task.ApprovalDelegateCreateObjectTask)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// AskDelegateCreateObjectApproval indicates an expected call of AskDelegateCreateObjectApproval.
+func (mr *MockGfSpClientAPIMockRecorder) AskDelegateCreateObjectApproval(ctx, t any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskDelegateCreateObjectApproval", reflect.TypeOf((*MockGfSpClientAPI)(nil).AskDelegateCreateObjectApproval), ctx, t)
+}
+
 // AskMigrateBucketApproval mocks base method.
 func (m *MockGfSpClientAPI) AskMigrateBucketApproval(ctx context.Context, t task.ApprovalMigrateBucketTask) (bool, task.ApprovalMigrateBucketTask, error) {
 	m.ctrl.T.Helper()
@@ -306,6 +322,36 @@ func (mr *MockGfSpClientAPIMockRecorder) DeductQuotaForBucketMigrate(ctx, bucket
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, bucketID, deductQuota, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeductQuotaForBucketMigrate", reflect.TypeOf((*MockGfSpClientAPI)(nil).DeductQuotaForBucketMigrate), varargs...)
+}
+
+// DelegateCreateObject mocks base method.
+func (m *MockGfSpClientAPI) DelegateCreateObject(ctx context.Context, object *types3.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockGfSpClientAPIMockRecorder) DelegateCreateObject(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).DelegateCreateObject), ctx, object)
+}
+
+// DelegateUpdateObjectContent mocks base method.
+func (m *MockGfSpClientAPI) DelegateUpdateObjectContent(ctx context.Context, object *types3.MsgDelegateUpdateObjectContent) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateUpdateObjectContent", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateUpdateObjectContent indicates an expected call of DelegateUpdateObjectContent.
+func (mr *MockGfSpClientAPIMockRecorder) DelegateUpdateObjectContent(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateUpdateObjectContent", reflect.TypeOf((*MockGfSpClientAPI)(nil).DelegateUpdateObjectContent), ctx, object)
 }
 
 // DeleteGlobalVirtualGroup mocks base method.
@@ -1963,6 +2009,21 @@ func (mr *MockGfSpClientAPIMockRecorder) SealObject(ctx, object any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockGfSpClientAPI)(nil).SealObject), ctx, object)
 }
 
+// SealObjectV2 mocks base method.
+func (m *MockGfSpClientAPI) SealObjectV2(ctx context.Context, object *types3.MsgSealObjectV2) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SealObjectV2", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SealObjectV2 indicates an expected call of SealObjectV2.
+func (mr *MockGfSpClientAPIMockRecorder) SealObjectV2(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObjectV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).SealObjectV2), ctx, object)
+}
+
 // SecondarySpIncomeDetails mocks base method.
 func (m *MockGfSpClientAPI) SecondarySpIncomeDetails(ctx context.Context, spID uint32, opts ...grpc.DialOption) (int64, []*types.SecondarySpIncomeDetail, error) {
 	m.ctrl.T.Helper()
@@ -2421,6 +2482,22 @@ func (m *MockApproverAPI) AskCreateObjectApproval(ctx context.Context, t task.Ap
 func (mr *MockApproverAPIMockRecorder) AskCreateObjectApproval(ctx, t any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskCreateObjectApproval", reflect.TypeOf((*MockApproverAPI)(nil).AskCreateObjectApproval), ctx, t)
+}
+
+// AskDelegateCreateObjectApproval mocks base method.
+func (m *MockApproverAPI) AskDelegateCreateObjectApproval(ctx context.Context, t task.ApprovalDelegateCreateObjectTask) (bool, task.ApprovalDelegateCreateObjectTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AskDelegateCreateObjectApproval", ctx, t)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(task.ApprovalDelegateCreateObjectTask)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// AskDelegateCreateObjectApproval indicates an expected call of AskDelegateCreateObjectApproval.
+func (mr *MockApproverAPIMockRecorder) AskDelegateCreateObjectApproval(ctx, t any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AskDelegateCreateObjectApproval", reflect.TypeOf((*MockApproverAPI)(nil).AskDelegateCreateObjectApproval), ctx, t)
 }
 
 // AskMigrateBucketApproval mocks base method.
@@ -4400,6 +4477,36 @@ func (mr *MockSignerAPIMockRecorder) CreateGlobalVirtualGroup(ctx, group any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGlobalVirtualGroup", reflect.TypeOf((*MockSignerAPI)(nil).CreateGlobalVirtualGroup), ctx, group)
 }
 
+// DelegateCreateObject mocks base method.
+func (m *MockSignerAPI) DelegateCreateObject(ctx context.Context, object *types3.MsgDelegateCreateObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateCreateObject", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateCreateObject indicates an expected call of DelegateCreateObject.
+func (mr *MockSignerAPIMockRecorder) DelegateCreateObject(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateCreateObject", reflect.TypeOf((*MockSignerAPI)(nil).DelegateCreateObject), ctx, object)
+}
+
+// DelegateUpdateObjectContent mocks base method.
+func (m *MockSignerAPI) DelegateUpdateObjectContent(ctx context.Context, object *types3.MsgDelegateUpdateObjectContent) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DelegateUpdateObjectContent", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelegateUpdateObjectContent indicates an expected call of DelegateUpdateObjectContent.
+func (mr *MockSignerAPIMockRecorder) DelegateUpdateObjectContent(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelegateUpdateObjectContent", reflect.TypeOf((*MockSignerAPI)(nil).DelegateUpdateObjectContent), ctx, object)
+}
+
 // DeleteGlobalVirtualGroup mocks base method.
 func (m *MockSignerAPI) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *types4.MsgDeleteGlobalVirtualGroup) (string, error) {
 	m.ctrl.T.Helper()
@@ -4518,6 +4625,21 @@ func (m *MockSignerAPI) SealObject(ctx context.Context, object *types3.MsgSealOb
 func (mr *MockSignerAPIMockRecorder) SealObject(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObject", reflect.TypeOf((*MockSignerAPI)(nil).SealObject), ctx, object)
+}
+
+// SealObjectV2 mocks base method.
+func (m *MockSignerAPI) SealObjectV2(ctx context.Context, object *types3.MsgSealObjectV2) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SealObjectV2", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SealObjectV2 indicates an expected call of SealObjectV2.
+func (mr *MockSignerAPIMockRecorder) SealObjectV2(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SealObjectV2", reflect.TypeOf((*MockSignerAPI)(nil).SealObjectV2), ctx, object)
 }
 
 // SignBucketMigrationInfo mocks base method.

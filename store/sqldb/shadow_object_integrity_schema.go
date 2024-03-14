@@ -7,6 +7,7 @@ type ShadowIntegrityMetaTable struct {
 	IntegrityChecksum string
 	PieceChecksumList string
 	Version           int64
+	ObjectSize        uint64
 }
 
 // TableName is used to set ShadowIntegrityMetaTable schema's table name in database
