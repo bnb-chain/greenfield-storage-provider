@@ -45,8 +45,6 @@ const (
 	GetSecondaryPieceData   = "get-piece"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
-	// ListBucketReadQuotaQuery defines list bucket read quota query, which is used to route request
-	ListBucketReadQuotaQuery = "list-read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
 	GetBucketReadQuotaMonthQuery = "year-month"
 	// ListBucketReadRecordQuery defines list bucket read record query, which is used to route request
