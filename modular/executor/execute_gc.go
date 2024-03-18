@@ -763,6 +763,7 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 				RedundancyIndex:   task.GetRedundancyIndex(),
 				IntegrityChecksum: task.GetIntegrityChecksum(),
 				PieceChecksumList: task.GetPieceChecksumList(),
+				ObjectSize:        task.GetObjectSize(),
 			}
 			err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 			if err != nil {

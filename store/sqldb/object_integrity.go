@@ -542,7 +542,7 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyId
 	return nil
 }
 
-// DeleteAllReplicatePieceChecksumOptimized deletes all piece checksums for a given objectID.
+// DeleteAllReplicatePieceChecksumOptimized deletes all piece checksums for a given objectID and redundancy_index.
 func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) (err error) {
 	startTime := time.Now()
 	defer func() {
@@ -556,11 +556,7 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Observe(
 			time.Since(startTime).Seconds())
 	}()
-
-	err = s.db.Delete(&PieceHashTable{
-		ObjectID:        objectID,
-		RedundancyIndex: redundancyIdx,
-	}).Error
+	err = s.db.Where("object_id = ? and redundancy_index = ? ", objectID, redundancyIdx).Delete(PieceHashTable{}).Error
 	return err
 }
 
