@@ -1214,3 +1214,67 @@ func Test_VerifyAuth_RecoveryPiece(t *testing.T) {
 	assert.Equal(t, true, verifyResult)
 
 }
+
+func Test_VerifyAuth_GetBucketQuota(t *testing.T) {
+	VerifyAuthBucket(t, coremodule.AuthOpTypeGetBucketQuota)
+}
+func Test_VerifyAuth_ListBucketReadRecord(t *testing.T) {
+	VerifyAuthBucket(t, coremodule.AuthOpTypeListBucketReadRecord)
+
+}
+func VerifyAuthBucket(t *testing.T, authType coremodule.AuthOpType) {
+	a := setup(t)
+	ctrl := gomock.NewController(t)
+	m := spdb.NewMockSPDB(ctrl)
+	a.baseApp.SetGfSpDB(m)
+
+	privateKey, _ := crypto.GenerateKey()
+	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+
+	// bucket does not exist
+	mockedConsensus := consensus.NewMockConsensus(ctrl)
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(nil, errors.New("error")).Times(1)
+	a.baseApp.SetConsensus(mockedConsensus)
+	_, err := a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
+	assert.Equal(t, true, strings.Contains(err.Error(), "failed to get bucket info from consensus, error"))
+
+	// get SP ID returns error
+	mockedConsensus = consensus.NewMockConsensus(ctrl)
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, nil).Times(1)
+	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(nil, errors.New("error")).Times(1)
+	a.baseApp.SetConsensus(mockedConsensus)
+	_, err = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
+	assert.Equal(t, true, strings.Contains(err.Error(), "getSPID error"))
+
+	// GetBucketPrimarySPID get errors
+	mockedConsensus = consensus.NewMockConsensus(ctrl)
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, nil).Times(1)
+	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(nil, errors.New("error")).Times(1)
+	a.baseApp.SetConsensus(mockedConsensus)
+	_, err = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
+	assert.Equal(t, true, strings.Contains(err.Error(), "GetBucketPrimarySPID error"))
+
+	// ErrMismatchSp
+	mockedConsensus = consensus.NewMockConsensus(ctrl)
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, nil).Times(1)
+	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(0)
+	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{
+		PrimarySpId: 2,
+	}, nil).Times(1)
+	a.baseApp.SetConsensus(mockedConsensus)
+	_, err = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
+	assert.Equal(t, ErrMismatchSp, err)
+
+	// Normal Case
+	mockedConsensus = consensus.NewMockConsensus(ctrl)
+	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{Owner: userAddress}, nil).Times(1)
+	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(0)
+	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{
+		PrimarySpId: 1,
+	}, nil).Times(1)
+	a.baseApp.SetConsensus(mockedConsensus)
+	verifyResult, _ := a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
+	assert.Equal(t, true, verifyResult)
+
+}
