@@ -548,11 +548,6 @@ func (a *AuthenticationModular) VerifyAuthentication(
 				"expected_sp_id", bucketSPID)
 			return false, ErrMismatchSp
 		}
-		if bucketInfo.GetOwner() != account {
-			log.CtxErrorw(ctx, "only owner can get bucket quota", "current", account,
-				"bucket_owner", bucketInfo.GetOwner())
-			return false, ErrNoPermission
-		}
 		return true, nil
 	case coremodule.AuthOpTypeGetChallengePieceInfo:
 		challengeIsFromValidator := false

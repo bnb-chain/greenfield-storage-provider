@@ -733,6 +733,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: delegatePutObjectRouterName,
 		},
+		{
+			name:             "list bucket read quota",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/?%s&%s&%s&%s", scheme, testDomain, ListBucketReadRecordQuery, "year_month", "offset", "limit"),
+			shouldMatch:      true,
+			wantedRouterName: listBucketReadQuotaRouterName,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

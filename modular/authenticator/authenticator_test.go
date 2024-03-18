@@ -1266,17 +1266,6 @@ func VerifyAuthBucket(t *testing.T, authType coremodule.AuthOpType) {
 	_, err = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
 	assert.Equal(t, ErrMismatchSp, err)
 
-	// bucketInfo.GetOwner() != account
-	mockedConsensus = consensus.NewMockConsensus(ctrl)
-	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{Owner: "another_account"}, nil).Times(1)
-	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(0)
-	mockedConsensus.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{
-		PrimarySpId: 1,
-	}, nil).Times(1)
-	a.baseApp.SetConsensus(mockedConsensus)
-	_, err = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
-	assert.Equal(t, ErrNoPermission, err)
-
 	// Normal Case
 	mockedConsensus = consensus.NewMockConsensus(ctrl)
 	mockedConsensus.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{Owner: userAddress}, nil).Times(1)

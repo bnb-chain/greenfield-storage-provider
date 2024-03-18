@@ -27,6 +27,8 @@ const (
 	verifyPermissionRouterName                     = "VerifyPermission"
 	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
+	listBucketReadQuotaRouterName                  = "ListBucketReadQuota"
+	getBucketReadQuotaCountRouterName              = "GetBucketReadQuotaCount"
 	requestNonceRouterName                         = "RequestNonce"
 	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
 	updateUserPublicKeyV2RouterName                = "UpdateUserPublicKeyV2"
@@ -250,6 +252,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// List Groups By IDs
 	router.Path("/").Name(listGroupsByIDsRouterName).Methods(http.MethodGet).Queries(ListGroupsByIDsQuery, "").HandlerFunc(g.listGroupsByIDsHandler)
+
+	// List Bucket Read Quota by time
+	router.Path("/").Name(listBucketReadQuotaRouterName).Methods(http.MethodGet).Queries(ListBucketReadRecordQuery, "").HandlerFunc(g.listBucketReadQuotaHandler)
+
+	// List Bucket Read Quota Count
+	router.Path("/").Name(getBucketReadQuotaCountRouterName).Methods(http.MethodGet).Queries(ListBucketReadCountQuery, "").HandlerFunc(g.getBucketReadQuotaCountHandler)
 
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID
