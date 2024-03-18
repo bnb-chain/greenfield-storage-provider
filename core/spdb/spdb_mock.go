@@ -453,6 +453,21 @@ func (mr *MockSPDBMockRecorder) GetBucketTraffic(bucketID, yearMonth any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockSPDB)(nil).GetBucketTraffic), bucketID, yearMonth)
 }
 
+// GetBucketTrafficCount mocks base method.
+func (m *MockSPDB) GetBucketTrafficCount(yearMonth string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketTrafficCount", yearMonth)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketTrafficCount indicates an expected call of GetBucketTrafficCount.
+func (mr *MockSPDBMockRecorder) GetBucketTrafficCount(yearMonth any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTrafficCount", reflect.TypeOf((*MockSPDB)(nil).GetBucketTrafficCount), yearMonth)
+}
+
 // GetGCMetasToGC mocks base method.
 func (m *MockSPDB) GetGCMetasToGC(limit int) ([]*GCObjectMeta, error) {
 	m.ctrl.T.Helper()
@@ -2265,6 +2280,21 @@ func (m *MockTrafficDB) GetBucketTraffic(bucketID uint64, yearMonth string) (*Bu
 func (mr *MockTrafficDBMockRecorder) GetBucketTraffic(bucketID, yearMonth any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTraffic", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTraffic), bucketID, yearMonth)
+}
+
+// GetBucketTrafficCount mocks base method.
+func (m *MockTrafficDB) GetBucketTrafficCount(yearMonth string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBucketTrafficCount", yearMonth)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketTrafficCount indicates an expected call of GetBucketTrafficCount.
+func (mr *MockTrafficDBMockRecorder) GetBucketTrafficCount(yearMonth any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketTrafficCount", reflect.TypeOf((*MockTrafficDB)(nil).GetBucketTrafficCount), yearMonth)
 }
 
 // GetLatestBucketTraffic mocks base method.

@@ -26,8 +26,9 @@ const (
 	listObjectsByBucketRouterName                  = "ListObjectsByBucketName"
 	verifyPermissionRouterName                     = "VerifyPermission"
 	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
-	listBucketReadQuotaRouterName                  = "ListBucketReadQuota"
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
+	listBucketReadQuotaRouterName                  = "ListBucketReadQuota"
+	getBucketReadQuotaCountRouterName              = "GetBucketReadQuotaCount"
 	requestNonceRouterName                         = "RequestNonce"
 	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
 	updateUserPublicKeyV2RouterName                = "UpdateUserPublicKeyV2"
@@ -202,10 +203,6 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(getBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.getBucketReadQuotaHandler).Queries(
 			GetBucketReadQuotaQuery, "", GetBucketReadQuotaMonthQuery, "{year_month}")
 
-		// List Bucket Read Quota
-		r.NewRoute().Name(listBucketReadQuotaRouterName).Methods(http.MethodGet).HandlerFunc(g.listBucketReadQuotaHandler).Queries(
-			ListBucketReadQuotaQuery, "", GetBucketReadQuotaMonthQuery, "{year_month}")
-
 		if g.env != gfspapp.EnvMainnet {
 			// Get Bucket By Bucket Name
 			r.NewRoute().Name(getBucketByBucketNameRouterName).Methods(http.MethodGet).Queries(GetBucketByBucketNameQuery, "").HandlerFunc(g.getBucketByBucketNameHandler)
@@ -255,6 +252,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// List Groups By IDs
 	router.Path("/").Name(listGroupsByIDsRouterName).Methods(http.MethodGet).Queries(ListGroupsByIDsQuery, "").HandlerFunc(g.listGroupsByIDsHandler)
+
+	// List Bucket Read Quota by time
+	router.Path("/").Name(listBucketReadQuotaRouterName).Methods(http.MethodGet).Queries(ListBucketReadRecordQuery, "").HandlerFunc(g.listBucketReadQuotaHandler)
+
+	// List Bucket Read Quota Count
+	router.Path("/").Name(getBucketReadQuotaCountRouterName).Methods(http.MethodGet).Queries(ListBucketReadCountQuery, "").HandlerFunc(g.getBucketReadQuotaCountHandler)
 
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID

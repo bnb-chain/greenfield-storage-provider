@@ -45,12 +45,12 @@ const (
 	GetSecondaryPieceData   = "get-piece"
 	// GetBucketReadQuotaQuery defines bucket read quota query, which is used to route request
 	GetBucketReadQuotaQuery = "read-quota"
-	// ListBucketReadQuotaQuery defines list bucket read quota query, which is used to route request
-	ListBucketReadQuotaQuery = "list-read-quota"
 	// GetBucketReadQuotaMonthQuery defines bucket read quota query month
 	GetBucketReadQuotaMonthQuery = "year-month"
 	// ListBucketReadRecordQuery defines list bucket read record query, which is used to route request
 	ListBucketReadRecordQuery = "list-read-record"
+	// ListBucketReadRecordQuery defines list bucket read record query, which is used to route request
+	ListBucketReadCountQuery = "list-read-count"
 	// ListBucketReadRecordMaxRecordsQuery defines list read record max num
 	ListBucketReadRecordMaxRecordsQuery = "max-records"
 	// ListObjectsMaxKeysQuery defines the maximum number of keys returned to the response

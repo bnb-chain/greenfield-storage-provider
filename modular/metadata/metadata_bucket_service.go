@@ -421,22 +421,42 @@ func (r *MetadataModular) GfSpListBucketReadQuota(
 			return &types.GfSpListBucketReadQuotaResponse{Err: ErrGfSpDBWithDetail("failed to list bucket traffic" + ", error: " + err.Error())}, nil
 		}
 	}
-	result := make(map[string]*types.GfSpGetBucketReadQuotaResponse, len(bucketTraffics))
+	result := make([]*types.BucketReadQuotaRecord, 0, len(bucketTraffics))
 	for _, bucketTraffic := range bucketTraffics {
-		//bucketInfo:=r.baseApp.Consensus().QueryBucketInfo(ctx, bucketTraffic.BucketName)
-		result[bucketTraffic.BucketName] = &types.GfSpGetBucketReadQuotaResponse{
-			//ChargedQuotaSize:            req.GetBucketInfo().GetChargedReadQuota(),
+		result = append(result, &types.BucketReadQuotaRecord{
+			BucketName:                  bucketTraffic.BucketName,
 			SpFreeQuotaSize:             bucketTraffic.FreeQuotaSize,
 			ConsumedSize:                bucketTraffic.ReadConsumedSize,
 			FreeQuotaConsumeSize:        bucketTraffic.FreeQuotaConsumedSize,
 			MonthlyFreeQuotaConsumeSize: bucketTraffic.MonthlyFreeQuotaConsumedSize,
 			SpMonthlyFreeQuotaSize:      bucketTraffic.MonthlyFreeQuotaSize,
 			TotalConsumeSize:            bucketTraffic.MonthlyFreeQuotaConsumedSize + bucketTraffic.FreeQuotaConsumedSize + bucketTraffic.ReadConsumedSize,
-		}
+		})
 	}
 	// if the traffic table has been created, return the db info from meta service
 	return &types.GfSpListBucketReadQuotaResponse{
 		Result: result,
+	}, nil
+}
+
+func (r *MetadataModular) GfSpGetBucketReadQuotaCount(
+	ctx context.Context,
+	req *types.GfSpGetBucketReadQuotaCountRequest) (
+	*types.GfSpGetBucketReadQuotaCountResponse, error) {
+	defer atomic.AddInt64(&r.retrievingRequest, -1)
+	if atomic.AddInt64(&r.retrievingRequest, 1) >
+		atomic.LoadInt64(&r.maxMetadataRequest) {
+		return nil, ErrExceedRequest
+	}
+	count, err := r.baseApp.GfSpDB().GetBucketTrafficCount(req.GetYearMonth())
+	if err != nil {
+		log.Errorw("failed to get bucket traffic count", "error", err)
+		return &types.GfSpGetBucketReadQuotaCountResponse{Err: ErrGfSpDBWithDetail("failed to list bucket traffic" + ", error: " + err.Error())}, nil
+	}
+
+	// if the traffic table has been created, return the db info from meta service
+	return &types.GfSpGetBucketReadQuotaCountResponse{
+		Count: count,
 	}, nil
 }
 

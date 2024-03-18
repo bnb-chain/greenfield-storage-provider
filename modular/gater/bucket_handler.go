@@ -25,7 +25,6 @@ import (
 func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err                                 error
-		authenticated                       bool
 		bucketInfo                          *storagetypes.BucketInfo
 		charge, free, consume, free_consume uint64
 	)
@@ -45,17 +44,6 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	bucketName := vars["bucket"]
 	yearMonth := vars["year_month"]
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(ctx,
-		coremodule.AuthOpTypeGetBucketQuota, "", bucketName, "")
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to verify authentication", "error", err)
-		return
-	}
-	if !authenticated {
-		log.CtxErrorw(ctx, "no permission to operate")
-		err = ErrNoPermission
-		return
-	}
 
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
 	if err != nil {
@@ -322,7 +310,7 @@ func (g *GateModular) listBucketReadQuotaHandler(w http.ResponseWriter, r *http.
 	var (
 		err           error
 		offset, limit uint64
-		result        map[string]*metadatatypes.GfSpGetBucketReadQuotaResponse
+		result        []*metadatatypes.BucketReadQuotaRecord
 	)
 	startTime := time.Now()
 	defer func() {
@@ -337,16 +325,16 @@ func (g *GateModular) listBucketReadQuotaHandler(w http.ResponseWriter, r *http.
 	}()
 
 	ctx := context.Background()
-	vars := mux.Vars(r)
-	yearMonth := vars["year_month"]
-	offsetStr := vars["offset"]
+	queryParams := r.URL.Query()
+	yearMonth := queryParams.Get("year_month")
+	offsetStr := queryParams.Get("offset")
+	limitStr := queryParams.Get("limit")
 	offset, err = strconv.ParseUint(offsetStr, 10, 32)
 	if err != nil {
 		log.Errorw("failed to ParseUint offset", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
-	limitStr := vars["limit"]
 	limit, err = strconv.ParseUint(limitStr, 10, 32)
 	if err != nil {
 		log.Errorw("failed to ParseUint limit", "error", err)
@@ -367,9 +355,9 @@ func (g *GateModular) listBucketReadQuotaHandler(w http.ResponseWriter, r *http.
 	}
 
 	var xmlInfo = struct {
-		XMLName xml.Name `xml:"GetReadQuotaResult"`
-		Version string   `xml:"version,attr"`
-		Result  map[string]*metadatatypes.GfSpGetBucketReadQuotaResponse
+		XMLName xml.Name                               `xml:"GetReadQuotaResult"`
+		Version string                                 `xml:"version,attr"`
+		Result  []*metadatatypes.BucketReadQuotaRecord `xml:"result"`
 	}{
 		Version: GnfdResponseXMLVersion,
 		Result:  result,
@@ -388,4 +376,57 @@ func (g *GateModular) listBucketReadQuotaHandler(w http.ResponseWriter, r *http.
 		return
 	}
 	log.CtxDebugw(ctx, "succeed to get bucket quota", "xml_info", xmlInfo)
+}
+
+// listBucketReadQuotaHandler handles the lost bucket read quota request.
+func (g *GateModular) getBucketReadQuotaCountHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err   error
+		count int64
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	ctx := context.Background()
+	queryParams := r.URL.Query()
+	yearMonth := queryParams.Get("year_month")
+
+	count, err = g.baseApp.GfSpClient().GetBucketReadQuotaCount(
+		ctx, yearMonth)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get bucket read quota count", "error", err)
+		return
+	}
+
+	var xmlInfo = struct {
+		XMLName xml.Name `xml:"GetReadQuotaResult"`
+		Version string   `xml:"version,attr"`
+		Count   int64    `xml:"count"`
+	}{
+		Version: GnfdResponseXMLVersion,
+		Count:   count,
+	}
+
+	xmlBody, err := xml.Marshal(&xmlInfo)
+	if err != nil {
+		log.Errorw("failed to marshal xml", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	if _, err = w.Write(xmlBody); err != nil {
+		log.Errorw("failed to write body", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
+		return
+	}
+	log.CtxDebugw(ctx, "succeed to get bucket quota count", "xml_info", xmlInfo)
 }

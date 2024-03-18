@@ -603,6 +603,26 @@ func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMon
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
+// GetBucketReadQuotaCount mocks base method.
+func (m *MockGfSpClientAPI) GetBucketReadQuotaCount(ctx context.Context, yearMonth string, opts ...grpc.DialOption) (int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, yearMonth}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBucketReadQuotaCount", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketReadQuotaCount indicates an expected call of GetBucketReadQuotaCount.
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuotaCount(ctx, yearMonth any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuotaCount", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketReadQuotaCount), varargs...)
+}
+
 // GetBucketSize mocks base method.
 func (m *MockGfSpClientAPI) GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
@@ -1217,14 +1237,14 @@ func (mr *MockGfSpClientAPIMockRecorder) ListAuthKeysV2(ctx, account, domain any
 }
 
 // ListBucketReadQuota mocks base method.
-func (m *MockGfSpClientAPI) ListBucketReadQuota(ctx context.Context, yearMonth string, offset, limit uint32, opts ...grpc.DialOption) (map[string]*types.GfSpGetBucketReadQuotaResponse, error) {
+func (m *MockGfSpClientAPI) ListBucketReadQuota(ctx context.Context, yearMonth string, offset, limit uint32, opts ...grpc.DialOption) ([]*types.BucketReadQuotaRecord, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, yearMonth, offset, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ListBucketReadQuota", varargs...)
-	ret0, _ := ret[0].(map[string]*types.GfSpGetBucketReadQuotaResponse)
+	ret0, _ := ret[0].([]*types.BucketReadQuotaRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3448,6 +3468,26 @@ func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketReadQuota), varargs...)
 }
 
+// GetBucketReadQuotaCount mocks base method.
+func (m *MockMetadataAPI) GetBucketReadQuotaCount(ctx context.Context, yearMonth string, opts ...grpc.DialOption) (int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, yearMonth}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBucketReadQuotaCount", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketReadQuotaCount indicates an expected call of GetBucketReadQuotaCount.
+func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuotaCount(ctx, yearMonth any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuotaCount", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketReadQuotaCount), varargs...)
+}
+
 // GetBucketSize mocks base method.
 func (m *MockMetadataAPI) GetBucketSize(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (string, error) {
 	m.ctrl.T.Helper()
@@ -3891,14 +3931,14 @@ func (mr *MockMetadataAPIMockRecorder) GetVirtualGroupFamily(ctx, vgfID any, opt
 }
 
 // ListBucketReadQuota mocks base method.
-func (m *MockMetadataAPI) ListBucketReadQuota(ctx context.Context, yearMonth string, offset, limit uint32, opts ...grpc.DialOption) (map[string]*types.GfSpGetBucketReadQuotaResponse, error) {
+func (m *MockMetadataAPI) ListBucketReadQuota(ctx context.Context, yearMonth string, offset, limit uint32, opts ...grpc.DialOption) ([]*types.BucketReadQuotaRecord, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, yearMonth, offset, limit}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ListBucketReadQuota", varargs...)
-	ret0, _ := ret[0].(map[string]*types.GfSpGetBucketReadQuotaResponse)
+	ret0, _ := ret[0].([]*types.BucketReadQuotaRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
