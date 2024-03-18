@@ -369,6 +369,7 @@ func (m *ManageModular) gcObjectStaleVersionPiece(ctx context.Context) {
 			meta.IntegrityChecksum,
 			meta.PieceChecksumList,
 			meta.Version,
+			meta.ObjectSize,
 			m.baseApp.TaskTimeout(task, 0))
 		err = m.gcStaleVersionObjectQueue.Push(task)
 		if err != nil {

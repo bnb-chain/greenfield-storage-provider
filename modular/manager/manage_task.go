@@ -343,6 +343,7 @@ func (m *ManageModular) HandleReplicatePieceTask(ctx context.Context, task task.
 					shadowIntegrityMeta.IntegrityChecksum,
 					shadowIntegrityMeta.PieceChecksumList,
 					shadowIntegrityMeta.Version,
+					shadowIntegrityMeta.ObjectSize,
 					m.baseApp.TaskTimeout(gcStaleVersionObjectTask, 0))
 				err = m.gcStaleVersionObjectQueue.Push(gcStaleVersionObjectTask)
 				log.CtxDebugw(ctx, "push gc stale version object task to queue", "task_info", task.Info(), "error", err)

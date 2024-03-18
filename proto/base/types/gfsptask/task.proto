@@ -188,6 +188,7 @@ message GfSpGCStaleVersionObjectTask {
   int64 version = 4;
   bytes integrity_checksum = 5;
   repeated bytes piece_checksum_list = 6;
+  uint64 object_size = 7;
 }
 
 message GfSpGCMetaTask {

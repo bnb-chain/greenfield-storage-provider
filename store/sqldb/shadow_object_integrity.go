@@ -123,6 +123,7 @@ func (s *SpDBImpl) ListShadowIntegrityMeta() ([]*corespdb.ShadowIntegrityMeta, e
 			RedundancyIndex:   sim.RedundancyIndex,
 			IntegrityChecksum: integrityChecksum,
 			Version:           sim.Version,
+			ObjectSize:        sim.ObjectSize,
 		}
 		meta.PieceChecksumList, err = util.StringToBytesSlice(sim.PieceChecksumList)
 		if err != nil {

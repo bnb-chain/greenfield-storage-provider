@@ -573,13 +573,12 @@ func TestSpDBImpl_DeleteAllReplicatePieceChecksumFailure(t *testing.T) {
 func TestSpDBImpl_DeleteAllReplicatePieceChecksumOptimizedSuccess(t *testing.T) {
 	var (
 		objectID      = uint64(9)
-		segmentIdx    = uint32(0)
 		redundancyIdx = int32(5)
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("DELETE FROM `piece_hash` WHERE (`piece_hash`.`object_id`,`piece_hash`.`segment_index`,`piece_hash`.`redundancy_index`) IN ((?,?,?))").
-		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("DELETE FROM `piece_hash` WHERE object_id = ? and redundancy_index = ?").
+		WithArgs(objectID, redundancyIdx).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.DeleteAllReplicatePieceChecksumOptimized(objectID, redundancyIdx)
 	assert.Nil(t, err)
@@ -592,7 +591,7 @@ func TestSpDBImpl_DeleteAllReplicatePieceChecksumOptimizedFailure(t *testing.T) 
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("DELETE FROM `piece_hash` WHERE (`piece_hash`.`object_id`,`piece_hash`.`segment_index`,`piece_hash`.`redundancy_index`) IN ((?,?,?))").
+	mock.ExpectExec("DELETE FROM `piece_hash` WHERE object_id = ? and redundancy_index = ?").
 		WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
