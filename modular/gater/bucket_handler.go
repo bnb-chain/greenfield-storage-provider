@@ -27,6 +27,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		err                                 error
 		bucketInfo                          *storagetypes.BucketInfo
 		charge, free, consume, free_consume uint64
+		authenticated                       bool
 	)
 	startTime := time.Now()
 	defer func() {
@@ -44,6 +45,18 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	bucketName := vars["bucket"]
 	yearMonth := vars["year_month"]
+
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(ctx,
+		coremodule.AuthOpTypeGetBucketQuota, "", bucketName, "")
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to verify authentication", "error", err)
+		return
+	}
+	if !authenticated {
+		log.CtxErrorw(ctx, "no permission to operate")
+		err = ErrNoPermission
+		return
+	}
 
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
 	if err != nil {
@@ -378,7 +391,7 @@ func (g *GateModular) listBucketReadQuotaHandler(w http.ResponseWriter, r *http.
 	log.CtxDebugw(ctx, "succeed to get bucket quota", "xml_info", xmlInfo)
 }
 
-// listBucketReadQuotaHandler handles the lost bucket read quota request.
+// getBucketReadQuotaCountHandler handles the get bucket read quota count request.
 func (g *GateModular) getBucketReadQuotaCountHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err   error
