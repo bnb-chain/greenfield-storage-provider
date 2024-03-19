@@ -523,32 +523,6 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			allow = true
 		}
 		return allow, nil
-	case coremodule.AuthOpTypeGetBucketQuota, coremodule.AuthOpTypeListBucketReadRecord:
-		queryTime := time.Now()
-		bucketInfo, err := a.baseApp.Consensus().QueryBucketInfo(ctx, bucket)
-		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_bucket_quota_query_bucket_time").Observe(time.Since(queryTime).Seconds())
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to get bucket info from consensus", "error", err)
-			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
-			if strings.Contains(err.Error(), "No such bucket") {
-				return false, ErrNoSuchBucket
-			}
-			return false, ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
-		}
-		spID, err := a.getSPID()
-		if err != nil {
-			return false, ErrConsensusWithDetail("getSPID error: " + err.Error())
-		}
-		bucketSPID, err := util.GetBucketPrimarySPID(ctx, a.baseApp.Consensus(), bucketInfo)
-		if err != nil {
-			return false, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
-		}
-		if bucketSPID != spID {
-			log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
-				"expected_sp_id", bucketSPID)
-			return false, ErrMismatchSp
-		}
-		return true, nil
 	case coremodule.AuthOpTypeGetChallengePieceInfo:
 		challengeIsFromValidator := false
 		queryTime := time.Now()
