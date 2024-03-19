@@ -27,7 +27,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		err                                 error
 		bucketInfo                          *storagetypes.BucketInfo
 		charge, free, consume, free_consume uint64
-		authenticated                       bool
+		bucketSPID                          uint32
 	)
 	startTime := time.Now()
 	defer func() {
@@ -46,22 +46,24 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	bucketName := vars["bucket"]
 	yearMonth := vars["year_month"]
 
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(ctx,
-		coremodule.AuthOpTypeGetBucketQuota, "", bucketName, "")
-	if err != nil {
-		log.CtxErrorw(ctx, "failed to verify authentication", "error", err)
-		return
-	}
-	if !authenticated {
-		log.CtxErrorw(ctx, "no permission to operate")
-		err = ErrNoPermission
-		return
-	}
-
 	bucketInfo, err = g.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
+		return
+	}
+	spID, err := g.getSPID()
+	if err != nil {
+		return
+	}
+	bucketSPID, err = util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return
+	}
+	if bucketSPID != spID {
+		log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
+			"expected_sp_id", bucketSPID)
+		err = ErrMismatchSp
 		return
 	}
 

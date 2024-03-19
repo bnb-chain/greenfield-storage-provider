@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -43,36 +46,18 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 		wantedResult string
 	}{
 		{
-			name: "failed to verify authentication",
-			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, mockErr).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
-				return g
-			},
-			request: func() *http.Request {
-				path := fmt.Sprintf("%s%s.%s/?%s&%s", scheme, mockBucketName, testDomain, GetBucketReadQuotaQuery,
-					GetBucketReadQuotaMonthQuery)
-				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				return req
-			},
-			wantedResult: "mock error",
-		},
-		{
 			name: "no permission to operate",
 			fn: func() *GateModular {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
+				consensusMock := consensus.NewMockConsensus(ctrl)
+				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 2}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
+				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
 			request: func() *http.Request {
@@ -84,7 +69,7 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				return req
 			},
-			wantedResult: "no permission",
+			wantedResult: "mismatch sp",
 		},
 		{
 			name: "failed to get bucket info from consensus",
@@ -93,8 +78,6 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				g.baseApp.SetGfSpClient(clientMock)
-				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(true, nil).Times(1)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -120,11 +103,11 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				clientMock.EXPECT().GetBucketReadQuota(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0),
 					uint64(0), uint64(0), uint64(0), mockErr).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
-				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(true, nil).Times(1)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -148,11 +131,11 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				clientMock.EXPECT().GetBucketReadQuota(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0),
 					uint64(0), uint64(0), uint64(0), nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
-				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(true, nil).Times(1)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
 					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
+				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
