@@ -24,10 +24,10 @@ import (
 // getBucketReadQuotaHandler handles the get bucket read quota request.
 func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		err                                 error
-		bucketInfo                          *storagetypes.BucketInfo
-		charge, free, consume, free_consume uint64
-		bucketSPID                          uint32
+		err                                                                  error
+		bucketInfo                                                           *storagetypes.BucketInfo
+		charge, free, consume, free_consume, monthlyFree, monthlyFreeConsume uint64
+		bucketSPID                                                           uint32
 	)
 	startTime := time.Now()
 	defer func() {
@@ -67,7 +67,7 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	charge, free, consume, free_consume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
+	charge, free, consume, free_consume, monthlyFree, monthlyFreeConsume, err = g.baseApp.GfSpClient().GetBucketReadQuota(
 		ctx, bucketInfo, yearMonth)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket read quota", "error", err)
@@ -75,22 +75,26 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 	}
 
 	var xmlInfo = struct {
-		XMLName             xml.Name `xml:"GetReadQuotaResult"`
-		Version             string   `xml:"version,attr"`
-		BucketName          string   `xml:"BucketName"`
-		BucketID            string   `xml:"BucketID"`
-		ReadQuotaSize       uint64   `xml:"ReadQuotaSize"`
-		SPFreeReadQuotaSize uint64   `xml:"SPFreeReadQuotaSize"`
-		ReadConsumedSize    uint64   `xml:"ReadConsumedSize"`
-		FreeConsumedSize    uint64   `xml:"FreeConsumedSize"`
+		XMLName                  xml.Name `xml:"GetReadQuotaResult"`
+		Version                  string   `xml:"version,attr"`
+		BucketName               string   `xml:"BucketName"`
+		BucketID                 string   `xml:"BucketID"`
+		ReadQuotaSize            uint64   `xml:"ReadQuotaSize"`
+		SPFreeReadQuotaSize      uint64   `xml:"SPFreeReadQuotaSize"`
+		ReadConsumedSize         uint64   `xml:"ReadConsumedSize"`
+		FreeConsumedSize         uint64   `xml:"FreeConsumedSize"`
+		MonthlyFreeQuota         uint64   `xml:"MonthlyFreeQuota"`
+		MonthlyQuotaConsumedSize uint64   `xml:"MonthlyQuotaConsumedSize"`
 	}{
-		Version:             GnfdResponseXMLVersion,
-		BucketName:          bucketInfo.GetBucketName(),
-		BucketID:            util.Uint64ToString(bucketInfo.Id.Uint64()),
-		ReadQuotaSize:       charge,
-		SPFreeReadQuotaSize: free,
-		ReadConsumedSize:    consume,
-		FreeConsumedSize:    free_consume,
+		Version:                  GnfdResponseXMLVersion,
+		BucketName:               bucketInfo.GetBucketName(),
+		BucketID:                 util.Uint64ToString(bucketInfo.Id.Uint64()),
+		ReadQuotaSize:            charge,
+		SPFreeReadQuotaSize:      free,
+		ReadConsumedSize:         consume,
+		FreeConsumedSize:         free_consume,
+		MonthlyFreeQuota:         monthlyFree,
+		MonthlyQuotaConsumedSize: monthlyFreeConsume,
 	}
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
