@@ -101,7 +101,7 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().GetBucketReadQuota(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0),
-					uint64(0), uint64(0), uint64(0), mockErr).Times(1)
+					uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), mockErr).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
@@ -129,7 +129,7 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().GetBucketReadQuota(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0),
-					uint64(0), uint64(0), uint64(0), nil).Times(1)
+					uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
