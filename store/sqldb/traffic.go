@@ -88,25 +88,25 @@ func getUpdatedConsumedQuotaV2(recordQuotaCost, freeQuotaRemain, consumeFreeQuot
 	log.Infow("quota info", "freeQuotaRemain", freeQuotaRemain, "consumeFreeQuota", consumeFreeQuota, "consumeChargedQuota", consumeChargedQuota, "chargedQuota", chargedQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain, "consumeMonthlyFreeQuota", consumeMonthlyFreeQuota)
 	defer log.Infow("quota info", "freeQuotaRemain", freeQuotaRemain, "consumeFreeQuota", consumeFreeQuota, "consumeChargedQuota", consumeChargedQuota, "chargedQuota", chargedQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain, "consumeMonthlyFreeQuota", consumeMonthlyFreeQuota)
 	chargedQuotaInt := int64(chargedQuota) - int64(consumeChargedQuota)
-	if chargedQuotaInt >= int64(recordQuotaCost) {
-		consumeChargedQuota += recordQuotaCost
-		return consumeFreeQuota, consumeChargedQuota, consumeMonthlyFreeQuota, freeQuotaRemain, monthlyFreeQuotaRemain, nil
-	}
-	if chargedQuotaInt > 0 {
-		consumeChargedQuota += uint64(chargedQuotaInt)
-		recordQuotaCost -= uint64(chargedQuotaInt)
-	}
-
 	if monthlyFreeQuotaRemain >= recordQuotaCost {
 		consumeMonthlyFreeQuota += recordQuotaCost
 		monthlyFreeQuotaRemain -= recordQuotaCost
 		return consumeFreeQuota, consumeChargedQuota, consumeMonthlyFreeQuota, freeQuotaRemain, monthlyFreeQuotaRemain, nil
 	}
-
 	if monthlyFreeQuotaRemain > 0 {
 		consumeMonthlyFreeQuota += monthlyFreeQuotaRemain
 		recordQuotaCost -= monthlyFreeQuotaRemain
 		monthlyFreeQuotaRemain = 0
+	}
+
+	if chargedQuotaInt >= int64(recordQuotaCost) {
+		consumeChargedQuota += recordQuotaCost
+		return consumeFreeQuota, consumeChargedQuota, consumeMonthlyFreeQuota, freeQuotaRemain, monthlyFreeQuotaRemain, nil
+	}
+
+	if chargedQuotaInt > 0 {
+		consumeChargedQuota += uint64(chargedQuotaInt)
+		recordQuotaCost -= uint64(chargedQuotaInt)
 	}
 
 	if freeQuotaRemain >= recordQuotaCost {
