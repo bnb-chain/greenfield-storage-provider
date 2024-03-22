@@ -424,6 +424,7 @@ func (r *MetadataModular) GfSpListBucketReadQuota(
 	result := make([]*types.BucketReadQuotaRecord, 0, len(bucketTraffics))
 	for _, bucketTraffic := range bucketTraffics {
 		result = append(result, &types.BucketReadQuotaRecord{
+			BucketId:                    bucketTraffic.BucketID,
 			BucketName:                  bucketTraffic.BucketName,
 			SpFreeQuotaSize:             bucketTraffic.FreeQuotaSize,
 			ConsumedSize:                bucketTraffic.ReadConsumedSize,
