@@ -115,8 +115,6 @@ func (g *GateModular) getBucketReadQuotaHandler(w http.ResponseWriter, r *http.R
 func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err              error
-		reqCtx           *RequestContext
-		authenticated    bool
 		startTimestampUs int64
 		endTimestampUs   int64
 		maxRecordNum     int64
@@ -125,59 +123,56 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	)
 	startTime := time.Now()
 	defer func() {
-		reqCtx.Cancel()
 		if err != nil {
-			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
-			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
 			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
 			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
 		} else {
-			reqCtx.SetHTTPCode(http.StatusOK)
 			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
 			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
 		}
-		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		return
-	}
-	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(),
-		coremodule.AuthOpTypeListBucketReadRecord, reqCtx.Account(), reqCtx.bucketName, "")
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
-		return
-	}
-	if !authenticated {
-		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
-		err = ErrNoPermission
-		return
-	}
+	ctx := context.Background()
+	vars := mux.Vars(r)
+	bucketName := vars["bucket"]
 
-	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(reqCtx.Context(), reqCtx.bucketName)
+	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, bucketName)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
+		log.CtxErrorw(ctx, "failed to get bucket info from consensus", "error", err)
 		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
 		return
 	}
+	spID, err := g.getSPID()
+	if err != nil {
+		return
+	}
+	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
+	if err != nil {
+		return
+	}
+	if bucketSPID != spID {
+		log.CtxErrorw(ctx, "sp operator address mismatch", "actual_sp_id", spID,
+			"expected_sp_id", bucketSPID)
+		err = ErrMismatchSp
+		return
+	}
 
-	startTimestampUs, err = util.StringToInt64(reqCtx.vars["start_ts"])
+	startTimestampUs, err = util.StringToInt64(vars["start_ts"])
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse start_ts query", "error", err)
+		log.CtxErrorw(ctx, "failed to parse start_ts query", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
-	endTimestampUs, err = util.StringToInt64(reqCtx.vars["end_ts"])
+	endTimestampUs, err = util.StringToInt64(vars["end_ts"])
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse end_ts query", "error", err)
+		log.CtxErrorw(ctx, "failed to parse end_ts query", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
-	maxRecordNum, err = util.StringToInt64(reqCtx.vars["max_records"])
+	maxRecordNum, err = util.StringToInt64(vars["max_records"])
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to parse max_records num query", "error", err)
+		log.CtxErrorw(ctx, "failed to parse max_records num query", "error", err)
 		err = ErrInvalidQuery
 		return
 	}
@@ -186,9 +181,9 @@ func (g *GateModular) listBucketReadRecordHandler(w http.ResponseWriter, r *http
 	}
 
 	records, nextTimestampUs, err = g.baseApp.GfSpClient().ListBucketReadRecord(
-		reqCtx.Context(), bucketInfo, startTimestampUs, endTimestampUs, maxRecordNum)
+		ctx, bucketInfo, startTimestampUs, endTimestampUs, maxRecordNum)
 	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to list bucket read record", "error", err)
+		log.CtxErrorw(ctx, "failed to list bucket read record", "error", err)
 		return
 	}
 
