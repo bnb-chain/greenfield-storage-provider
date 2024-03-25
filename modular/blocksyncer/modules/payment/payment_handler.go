@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	EventPaymentAccountUpdate = proto.MessageName(&paymenttypes.EventPaymentAccountUpdate{})
-	EventStreamRecordUpdate   = proto.MessageName(&paymenttypes.EventStreamRecordUpdate{})
+	EventPaymentAccountUpdate      = proto.MessageName(&paymenttypes.EventPaymentAccountUpdate{})
+	EventStreamRecordUpdate        = proto.MessageName(&paymenttypes.EventStreamRecordUpdate{})
+	EventBucketFlowRateLimitStatus = proto.MessageName(&paymenttypes.EventBucketFlowRateLimitStatus{})
 )
 
 var PaymentEvents = map[string]bool{

@@ -45,6 +45,7 @@ var (
 	ErrInvalidAddressOrDomainOrPublicKey = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20017, "userAddress, domain or publicKey can't be null")
 	ErrInvalidPublicKeyLength            = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20018, "The length of publicKeys must be less or equal to 100")
 	ErrPublicKeyNotExist                 = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20019, "The publicKey was not registered")
+	ErrBucketIsRateLimited               = gfsperrors.Register(module.AuthenticationModularName, http.StatusBadRequest, 20020, "bucket is rate limited")
 )
 
 func ErrUnexpectedObjectStatusWithDetail(objectName string, expectedStatus storagetypes.ObjectStatus, actualStatus storagetypes.ObjectStatus) *gfsperrors.GfSpError {
@@ -440,6 +441,17 @@ func (a *AuthenticationModular) VerifyAuthentication(
 				return false, ErrNoSuchObject
 			}
 			return false, ErrConsensusWithDetail("failed to get bucket and object info from consensus, error: " + err.Error())
+		}
+		bucketExtraInfo, err := a.baseApp.Consensus().QueryBucketExtraInfo(ctx, bucket)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to get bucket extra info from consensus", "error", err)
+			if strings.Contains(err.Error(), "No such bucket") {
+				return false, ErrNoSuchBucket
+			}
+			return false, ErrConsensusWithDetail("failed to get bucket extra info from consensus, error: " + err.Error())
+		}
+		if bucketExtraInfo.IsRateLimited {
+			return false, ErrBucketIsRateLimited
 		}
 		spID, err := a.getSPID()
 		if err != nil {

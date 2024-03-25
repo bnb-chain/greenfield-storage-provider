@@ -509,6 +509,36 @@ func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (bucketInfo *
 	return resp.GetBucketInfo(), nil
 }
 
+// QueryBucketExtraInfo returns the bucket extra info by name.
+func (g *Gnfd) QueryBucketExtraInfo(ctx context.Context, bucket string) (bucketInfo *storagetypes.BucketExtraInfo, err error) {
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureQueryBucketInfo).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureQueryBucketInfo).Observe(
+				time.Since(startTime).Seconds())
+			metrics.GnfdChainCounter.WithLabelValues(ChainFailureTotal).Inc()
+			metrics.GnfdChainTime.WithLabelValues(ChainFailureTotal).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessQueryBucketInfo).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessQueryBucketInfo).Observe(
+			time.Since(startTime).Seconds())
+		metrics.GnfdChainCounter.WithLabelValues(ChainSuccessTotal).Inc()
+		metrics.GnfdChainTime.WithLabelValues(ChainSuccessTotal).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	client := g.getCurrentClient().GnfdClient()
+	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to query bucket", "bucket_name", bucket, "error", err)
+		return nil, err
+	}
+	return resp.GetExtraInfo(), nil
+}
+
 // QueryBucketInfoById returns the bucket info by name.
 func (g *Gnfd) QueryBucketInfoById(ctx context.Context, bucketId uint64) (bucketInfo *storagetypes.BucketInfo, err error) {
 	startTime := time.Now()
