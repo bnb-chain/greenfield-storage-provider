@@ -847,7 +847,9 @@ func VerifyObjectAndBucketAndSPID(t *testing.T, authType coremodule.AuthOpType) 
 	// object exists but get SP ID returns error
 	mockedConsensus = consensus.NewMockConsensus(ctrl)
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{}, nil).Times(1)
-
+	if authType == coremodule.AuthOpTypeGetObject {
+		mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
+	}
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(nil, errors.New("error")).Times(1)
 	a.baseApp.SetConsensus(mockedConsensus)
 	_, err = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
@@ -856,6 +858,9 @@ func VerifyObjectAndBucketAndSPID(t *testing.T, authType coremodule.AuthOpType) 
 	// QueryVirtualGroupFamily returns error
 	mockedConsensus = consensus.NewMockConsensus(ctrl)
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{}, nil).Times(1)
+	if authType == coremodule.AuthOpTypeGetObject {
+		mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
+	}
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 		Id: 1,
 	}, nil).Times(1)
@@ -867,6 +872,9 @@ func VerifyObjectAndBucketAndSPID(t *testing.T, authType coremodule.AuthOpType) 
 	// bucketSPID != spID
 	mockedConsensus = consensus.NewMockConsensus(ctrl)
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{}, nil).Times(1)
+	if authType == coremodule.AuthOpTypeGetObject {
+		mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
+	}
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 		Id: 1,
 	}, nil).Times(0) // the SPID query result is cached already in above tests
@@ -980,6 +988,7 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
 		ObjectStatus: storagetypes.OBJECT_STATUS_CREATED,
 	}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 		Id: 1,
 	}, nil).Times(1)
@@ -996,6 +1005,7 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
 		ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 	}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 		Id: 1,
 	}, nil).Times(0) // the SPID query result is cached already in above tests
@@ -1012,6 +1022,7 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
 		ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 	}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 		Id: 1,
 	}, nil).Times(0) // the SPID query result is cached already in above tests
@@ -1030,6 +1041,7 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
 		ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 	}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 		Id: 1,
 	}, nil).Times(0) // the SPID query result is cached already in above tests
@@ -1053,6 +1065,7 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	mockedConsensus.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{
 		ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 	}, nil).Times(1)
+	mockedConsensus.EXPECT().QueryBucketExtraInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketExtraInfo{IsRateLimited: false}, nil).Times(1)
 	mockedConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
 		Id: 1,
 	}, nil).Times(0) // the SPID query result is cached already in above tests
