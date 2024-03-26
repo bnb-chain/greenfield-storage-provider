@@ -63,6 +63,8 @@ type Bucket struct {
 	Tags datatypes.JSON `gorm:"column:tags;TYPE:json"` // tags
 	// OffChainStatus represents the status of a bucket in the off-chain storage.
 	// It is used to track the current state of the bucket with respect to off-chain operations,
+	// 1 means 0001 -> OffChainStatusIsLimited is true
+	// 0 means 0000 -> OffChainStatusIsLimited is false
 	OffChainStatus int `gorm:"column:off_chain_status;type:int"`
 }
 
