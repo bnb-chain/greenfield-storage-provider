@@ -114,14 +114,15 @@ func (r *MetadataModular) GfSpListPaymentAccountStreams(ctx context.Context, req
 				BucketStatus:               storagetypes.BucketStatus(storagetypes.BucketStatus_value[bucket.Status]),
 				Tags:                       bucket.GetResourceTags(),
 			},
-			Removed:      bucket.Removed,
-			DeleteAt:     bucket.DeleteAt,
-			DeleteReason: bucket.DeleteReason,
-			Operator:     bucket.Operator.String(),
-			CreateTxHash: bucket.CreateTxHash.String(),
-			UpdateTxHash: bucket.UpdateTxHash.String(),
-			UpdateAt:     bucket.UpdateAt,
-			UpdateTime:   bucket.UpdateTime,
+			Removed:        bucket.Removed,
+			DeleteAt:       bucket.DeleteAt,
+			DeleteReason:   bucket.DeleteReason,
+			Operator:       bucket.Operator.String(),
+			CreateTxHash:   bucket.CreateTxHash.String(),
+			UpdateTxHash:   bucket.UpdateTxHash.String(),
+			UpdateAt:       bucket.UpdateAt,
+			UpdateTime:     bucket.UpdateTime,
+			OffChainStatus: int32(bucket.OffChainStatus),
 		}
 	}
 

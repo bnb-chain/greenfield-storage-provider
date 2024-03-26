@@ -31,6 +31,27 @@ var BucketEvents = map[string]bool{
 	EventCompleteMigrationBucket: true,
 }
 
+type OffChainStatus int
+
+const (
+	OffChainStatusIsLimited OffChainStatus = 0
+)
+
+// UpdateOffChainStatus updates the current status by adding the specified status to it.
+func UpdateOffChainStatus(currentStatus OffChainStatus, addStatus OffChainStatus) OffChainStatus {
+	return currentStatus | addStatus
+}
+
+// RemoveOffChainStatus removes the specified status from the current status.
+func RemoveOffChainStatus(currentStatus OffChainStatus, removeStatus OffChainStatus) OffChainStatus {
+	return currentStatus &^ removeStatus
+}
+
+// IsStatusSet checks if the specified status is set in the current status.
+func IsStatusSet(currentStatus OffChainStatus, status OffChainStatus) bool {
+	return currentStatus&status != 0
+}
+
 func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
 	if !BucketEvents[event.Type] {
 		return nil, nil

@@ -138,6 +138,9 @@ func (*NullConsensus) QueryStorageParamsByTimestamp(context.Context, int64) (*st
 func (*NullConsensus) QueryBucketInfo(context.Context, string) (*storagetypes.BucketInfo, error) {
 	return nil, nil
 }
+func (*NullConsensus) QueryBucketExtraInfo(context.Context, string) (*storagetypes.BucketExtraInfo, error) {
+	return nil, nil
+}
 func (*NullConsensus) QueryBucketInfoById(context.Context, uint64) (*storagetypes.BucketInfo, error) {
 	return nil, nil
 }

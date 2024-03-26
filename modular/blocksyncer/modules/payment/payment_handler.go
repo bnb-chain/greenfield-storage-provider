@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 
+	bucketmodule "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+	"gorm.io/gorm"
 
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
@@ -18,12 +21,13 @@ import (
 var (
 	EventPaymentAccountUpdate      = proto.MessageName(&paymenttypes.EventPaymentAccountUpdate{})
 	EventStreamRecordUpdate        = proto.MessageName(&paymenttypes.EventStreamRecordUpdate{})
-	EventBucketFlowRateLimitStatus = proto.MessageName(&paymenttypes.EventBucketFlowRateLimitStatus{})
+	EventBucketFlowRateLimitStatus = proto.MessageName(&storagetypes.EventBucketFlowRateLimitStatus{})
 )
 
 var PaymentEvents = map[string]bool{
-	EventPaymentAccountUpdate: true,
-	EventStreamRecordUpdate:   true,
+	EventPaymentAccountUpdate:      true,
+	EventStreamRecordUpdate:        true,
+	EventBucketFlowRateLimitStatus: true,
 }
 
 func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, event sdk.Event) (map[string][]interface{}, error) {
@@ -89,6 +93,29 @@ func (m *Module) handleEventStreamRecordUpdate(ctx context.Context, streamRecord
 	}
 
 	k, v := m.db.SaveStreamRecordToSQL(ctx, streamRecord)
+	return map[string][]interface{}{
+		k: v,
+	}
+}
+
+func (m *Module) handleEventBucketFlowRateLimitStatus(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, bucketFlowRateLimitStatus *storagetypes.EventBucketFlowRateLimitStatus) map[string][]interface{} {
+	bucket, err := m.db.GetBucketByBucketName(ctx, bucketFlowRateLimitStatus.BucketName)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+	}
+
+	bucketStatus := &models.Bucket{
+		BucketName:     bucketFlowRateLimitStatus.BucketName,
+		OffChainStatus: int(bucketmodule.UpdateOffChainStatus(bucketmodule.OffChainStatus(bucket.OffChainStatus), bucketmodule.OffChainStatusIsLimited)),
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	k, v := m.db.UpdateBucketByNameToSQL(ctx, bucketStatus)
 	return map[string][]interface{}{
 		k: v,
 	}
