@@ -209,6 +209,21 @@ func (mr *MockConsensusMockRecorder) ListenRejectUnSealObject(ctx, objectID, tim
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListenRejectUnSealObject", reflect.TypeOf((*MockConsensus)(nil).ListenRejectUnSealObject), ctx, objectID, timeoutHeight)
 }
 
+// QueryBucketExtraInfo mocks base method.
+func (m *MockConsensus) QueryBucketExtraInfo(ctx context.Context, bucket string) (*types1.BucketExtraInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryBucketExtraInfo", ctx, bucket)
+	ret0, _ := ret[0].(*types1.BucketExtraInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryBucketExtraInfo indicates an expected call of QueryBucketExtraInfo.
+func (mr *MockConsensusMockRecorder) QueryBucketExtraInfo(ctx, bucket any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBucketExtraInfo", reflect.TypeOf((*MockConsensus)(nil).QueryBucketExtraInfo), ctx, bucket)
+}
+
 // QueryBucketInfo mocks base method.
 func (m *MockConsensus) QueryBucketInfo(ctx context.Context, bucket string) (*types1.BucketInfo, error) {
 	m.ctrl.T.Helper()

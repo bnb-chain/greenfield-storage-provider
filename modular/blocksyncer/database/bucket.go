@@ -113,3 +113,17 @@ func (db *DB) UpdateChargeSizeToSQL(ctx context.Context, objectID common.Hash, b
 	finalSql := fmt.Sprintf(sql, operation, tableName, tableName)
 	return finalSql, vars
 }
+
+// GetBucketByBucketName get bucket by bucket name
+func (db *DB) GetBucketByBucketName(ctx context.Context, bucketName string) (*models.Bucket, error) {
+	var (
+		bucket *models.Bucket
+		err    error
+	)
+	err = db.Db.WithContext(ctx).Table((&models.Bucket{}).TableName()).
+		Where("bucket_name = ? AND removed = ?", bucketName, false).Take(&bucket).Error
+	if err != nil {
+		return nil, err
+	}
+	return bucket, nil
+}
