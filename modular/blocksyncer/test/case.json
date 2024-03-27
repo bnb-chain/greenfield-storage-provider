@@ -337,6 +337,6 @@
   {
     "name": "update bucket",
     "block": "{\"block\":{\"header\":{\"height\":\"68\",\"time\":\"2024-01-17T06:18:32.636521739Z\"},\"data\":{\"txs\":[\"CvoBCvcBCiMvZ3JlZW5maWVsZC5zdG9yYWdlLk1zZ0NyZWF0ZUJ1Y2tldBLPAQoqMHg4NjljNDBkNDk2YTc5NjM0QkVmNDNhZjhFRWI4MTdGMmI4QTFDQjJjEihmdWxsLW5vZGUtdjEtYWNjMDAwMDAwMDA3Mi1idWMwMDAwMDAwMDAwGAIqKjB4MzM0NEVFYTlGQkQ3ZERBMWM3MWJhZTgzYkY3MjNDODVEOTRlODY1OTJJCPCeDBARGkF1QxEUgocG3uzLeeSImESkzZrlsD9RznBjdMSkQsbRKmAfhTBiV5VDpSpwCzOotaZcCcvH7+i8uGQ/hDw7g28EARJ2ClgKTQomL2Nvc21vcy5jcnlwdG8uZXRoLmV0aHNlY3AyNTZrMS5QdWJLZXkSIwohAjPGjCB4AldgyL0SXau5XO9VPOWF0Am7LH3CMogJhcwxEgUKAwjIBRg0EhoKFQoDQk5CEg4xMjAwMDAwMDAwMDAwMBDgEhpBJYtn8jCJvroTA72YUcY0CdkJlVth7xJvt+voqLZi+MlE845j+GX1tvXCpyCPQjcQHs7pibXQPImBrupKxENk5QA=\"]}}}",
-    "block_results": "{\"height\":\"68\",\"txs_results\":[{\"events\":[{\"type\":\"greenfield.storage.EventBucketFlowRateLimitStatus\",\"attributes\":[{\"key\":\"bucket_name\",\"value\":\"\\\"phugwly1grq\\\"\",\"index\":true},{\"key\":\"is_limited\",\"value\":\"\\\"true\\\"\",\"index\":true}]}]}]}"
+    "block_results": "{\"height\":\"68\",\"txs_results\":[{\"events\":[{\"type\":\"greenfield.storage.EventBucketFlowRateLimitStatus\",\"attributes\":[{\"key\":\"bucket_name\",\"value\":\"\\\"phugwly1grq\\\"\"},{\"key\":\"is_limited\",\"value\":\"true\"}]}]}]}"
   }
 ]
