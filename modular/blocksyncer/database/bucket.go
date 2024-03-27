@@ -44,12 +44,7 @@ func (db *DB) UpdateBucketOffChainStatus(ctx context.Context, bucket *models.Buc
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Bucket{}).TableName()).
 		Where("bucket_name = ?", bucket.BucketName).
 		Select("off_chain_status", "update_at", "update_tx_hash", "update_time").
-		Updates(models.Bucket{
-			OffChainStatus: bucket.OffChainStatus,
-			UpdateAt:       bucket.UpdateAt,
-			UpdateTxHash:   bucket.UpdateTxHash,
-			UpdateTime:     bucket.UpdateTime,
-		}).Statement
+		Updates(bucket).Statement
 	return stat.SQL.String(), stat.Vars
 }
 

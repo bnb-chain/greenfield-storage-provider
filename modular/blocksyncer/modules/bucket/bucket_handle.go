@@ -38,8 +38,11 @@ var BucketEvents = map[string]bool{
 type OffChainStatus int
 
 const (
+	// OffChainStatusIsLimited has the value of 1 (binary: 00000001)
 	OffChainStatusIsLimited OffChainStatus = 1 << iota // 1
-	OffChainStatusSpAsDelegatedAgentDisabled
+
+	// OffChainStatusSpAsDelegatedAgentDisabled has the value of 2 (binary: 00000010)
+	OffChainStatusSpAsDelegatedAgentDisabled // 1 << 1
 )
 
 // AddStatus updates the current status by adding the specified status to it.
