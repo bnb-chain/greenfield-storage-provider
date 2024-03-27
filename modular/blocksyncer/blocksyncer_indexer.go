@@ -207,6 +207,7 @@ func (i *Impl) Process(height uint64) error {
 				finalVal = append(finalVal, v...)
 			}
 		}
+		log.CtxInfo(ctx, "sql:", finalSQL, "param", finalVal)
 		tx := i.DB.Begin(context.TODO())
 		if txErr := tx.Db.Session(&gorm.Session{DryRun: false}).Exec(finalSQL, finalVal...).Error; txErr != nil {
 			log.Errorw("failed to exec sql", "error", txErr)
