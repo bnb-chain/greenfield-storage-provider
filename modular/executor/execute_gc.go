@@ -524,14 +524,12 @@ func (e *ExecuteModular) gcZombiePieceFromIntegrityMeta(ctx context.Context, tas
 			if strings.Contains(err.Error(), "no such object from metadata") {
 				// If deletion is possible, has integrity hash, lacks object info, perform a chain check, and verify against the chain.
 				if objInfoFromChain, err = e.baseApp.Consensus().QueryObjectInfoByID(ctx, strconv.FormatUint(objID, 10)); err != nil {
-					if strings.Contains(err.Error(), "No such object") {
-						// 1) This object does not exist on the chain
-						e.gcWorker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject, objInfoFromChain.Version)
-					}
+					log.Errorf("failed to get object info from chain", "error", err)
+					continue
 				} else {
 					// 2) query metadata error, but chain has the object info, gvg  primary sp should have integrity meta
 					if e.gcWorker.checkGVGMatchSP(ctx, objInfoFromChain, integrityObject.RedundancyIndex) == ErrInvalidRedundancyIndex {
-						e.gcWorker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject, objInfoFromMetaData.Version)
+						e.gcWorker.deleteObjectPiecesAndIntegrityMeta(ctx, integrityObject, objInfoFromChain.Version)
 					}
 					continue
 				}
@@ -737,6 +735,25 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 						staleIntegrityMeta = sim
 						break
 					}
+				}
+				// it might be already GC by the GCZombie job
+				if staleIntegrityMeta == nil {
+					integrityMeta := &spdb.IntegrityMeta{
+						ObjectID:          task.GetObjectId(),
+						RedundancyIndex:   task.GetRedundancyIndex(),
+						IntegrityChecksum: task.GetIntegrityChecksum(),
+						PieceChecksumList: task.GetPieceChecksumList(),
+					}
+					err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
+					if err != nil {
+						return err
+					}
+					err = e.baseApp.GfSpDB().DeleteShadowObjectIntegrity(task.GetObjectId(), task.GetRedundancyIndex())
+					if err != nil {
+						log.Errorw("failed to delete shadow object integrity meta", "object_id", task.GetObjectId())
+						return err
+					}
+					return nil
 				}
 				for segIdx := uint32(0); segIdx < uint32(len(staleIntegrityMeta.PieceChecksumList)); segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(task.GetObjectId(), segIdx, uint32(staleIntegrityMeta.RedundancyIndex), task.GetVersion()-1)
