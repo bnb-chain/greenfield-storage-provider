@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	bucketmodules "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/models"
 	"github.com/shopspring/decimal"
@@ -733,7 +734,7 @@ func verify68(t *testing.T, db *gorm.DB) error {
 	if err := db.Table((&models.Bucket{}).TableName()).Where("bucket_name=?", "phugwly1grq").Find(&bucket).Error; err != nil {
 		assert.NoError(t, err)
 	}
-	if bucket.OffChainStatus != 0 {
+	if !bucketmodules.IsStatusSet(bucket.OffChainStatus, int(bucketmodules.OffChainStatusIsLimited)) {
 		return errors.New("update bucket flow rate limit status error")
 	}
 	return nil
