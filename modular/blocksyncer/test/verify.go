@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	bucketmodules "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/models"
 	"github.com/shopspring/decimal"
@@ -17,6 +16,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	bucketmodules "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
