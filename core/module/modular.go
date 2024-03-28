@@ -59,6 +59,7 @@ const (
 	AuthOpTypeQueryBucketMigrationProgress
 	// AuthOpTypeAgentPutObject defines the agent PutObject operator
 	AuthOpTypeAgentPutObject
+	// AuthOpTypeAgentUpdateObject  defines the agent UpdateObject operator
 	AuthOpTypeAgentUpdateObject
 )
 

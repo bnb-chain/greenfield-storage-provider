@@ -17,6 +17,7 @@ const (
 	resumablePutObjectRouterName                   = "ResumablePutObject"
 	delegatePutObjectRouterName                    = "DelegatePutObject"
 	delegateResumablePutObjectRouterName           = "DelegateResumablePutObject"
+	delegateCreateFolderRouterName                 = "DelegateCreateFolder"
 	queryResumeOffsetName                          = "QueryResumeOffsetName"
 	getObjectRouterName                            = "GetObject"
 	getChallengeInfoRouterName                     = "GetChallengeInfo"
@@ -172,6 +173,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(delegatePutObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").Queries(Delegate, "").HandlerFunc(g.delegatePutObjectHandler)
 		// Put Object
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
+		// create folder
+		r.NewRoute().Name(delegateCreateFolderRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.delegateCreateFolderHandler).Queries(CreateFolderQuery, "")
 
 		// QueryPutObjectOffset
 		r.NewRoute().Name(queryResumeOffsetName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryResumeOffsetHandler).
