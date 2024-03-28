@@ -127,7 +127,7 @@ func (m *Module) handleEventBucketFlowRateLimitStatus(ctx context.Context, block
 		UpdateTime:   block.Block.Time.UTC().Unix(),
 	}
 
-	k, v := m.db.UpdateBucketByNameToSQL(ctx, bucketStatus)
+	k, v := m.db.UpdateBucketOffChainStatus(ctx, bucketStatus)
 	return map[string][]interface{}{
 		k: v,
 	}

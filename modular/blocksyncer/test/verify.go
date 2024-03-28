@@ -16,6 +16,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	bucketmodules "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 )
@@ -27,7 +28,7 @@ var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
 	verify31, verify32, verify33, verify34, verify35, verify36, verify37, verify38, verify39, verify40,
 	verify41, verify42, verify43, verify44, verify45, verify46, verify47, verify48, verify49, verify50,
 	verify51, verify52, verify53, verify54, verify55, verify56, verify57, verify58, verify59, verify60,
-	verify61, verify62, verify63, verify64, verify65, verify66, verify67, verify68,
+	verify61, verify62, verify63, verify64, verify65, verify66, verify67, verify68, verify69, verify70,
 }
 
 func Verify(t *testing.T) error {
@@ -733,11 +734,32 @@ func verify68(t *testing.T, db *gorm.DB) error {
 	if err := db.Table((&models.Bucket{}).TableName()).Where("bucket_name=?", "phugwly1grq").Find(&bucket).Error; err != nil {
 		assert.NoError(t, err)
 	}
-	if bucket.OffChainStatus != 0 {
+	if !bucketmodules.IsStatusSet(bucket.OffChainStatus, int(bucketmodules.OffChainStatusIsLimited)) {
 		return errors.New("update bucket flow rate limit status error")
 	}
 	return nil
+}
 
+func verify69(t *testing.T, db *gorm.DB) error {
+	var bucket models.Bucket
+	if err := db.Table((&models.Bucket{}).TableName()).Where("bucket_name=?", "phugwly1grq").Find(&bucket).Error; err != nil {
+		assert.NoError(t, err)
+	}
+	if !bucketmodules.IsStatusSet(bucket.OffChainStatus, int(bucketmodules.OffChainStatusSpAsDelegatedAgentDisabled)) {
+		return errors.New("update bucket ToggleSPAsDelegatedAgent status error")
+	}
+	return nil
+}
+
+func verify70(t *testing.T, db *gorm.DB) error {
+	var bucket models.Bucket
+	if err := db.Table((&models.Bucket{}).TableName()).Where("bucket_name=?", "phugwly1grq").Find(&bucket).Error; err != nil {
+		assert.NoError(t, err)
+	}
+	if bucketmodules.IsStatusSet(bucket.OffChainStatus, int(bucketmodules.OffChainStatusSpAsDelegatedAgentDisabled)) {
+		return errors.New("update bucket ToggleSPAsDelegatedAgent status error")
+	}
+	return nil
 }
 
 const ObjectsNumberOfShards = 64
