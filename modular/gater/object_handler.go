@@ -166,23 +166,23 @@ func parseRange(rangeStr string) (bool, int64, int64) {
 	rangeStr = rangeStr[len("bytes="):]
 	if strings.HasSuffix(rangeStr, "-") {
 		rangeStr = rangeStr[:len(rangeStr)-1]
-		rangeStart, err := util.StringToUint64(rangeStr)
+		rangeStart, err := util.StringToInt64(rangeStr)
 		if err != nil {
 			return false, -1, -1
 		}
-		return true, int64(rangeStart), -1
+		return true, rangeStart, -1
 	}
 	pair := strings.Split(rangeStr, "-")
 	if len(pair) == 2 {
-		rangeStart, err := util.StringToUint64(pair[0])
+		rangeStart, err := util.StringToInt64(pair[0])
 		if err != nil {
 			return false, -1, -1
 		}
-		rangeEnd, err := util.StringToUint64(pair[1])
+		rangeEnd, err := util.StringToInt64(pair[1])
 		if err != nil {
 			return false, -1, -1
 		}
-		return true, int64(rangeStart), int64(rangeEnd)
+		return true, rangeStart, rangeEnd
 	}
 	return false, -1, -1
 }

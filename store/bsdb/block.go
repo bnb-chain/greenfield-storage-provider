@@ -5,9 +5,9 @@ import (
 )
 
 // GetLatestBlockNumber get current latest block number
-func (b *BsDBImpl) GetLatestBlockNumber() (int64, error) {
+func (b *BsDBImpl) GetLatestBlockNumber() (uint64, error) {
 	var (
-		latestBlockNumber int64
+		latestBlockNumber uint64
 		err               error
 	)
 	startTime := time.Now()

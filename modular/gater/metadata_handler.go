@@ -1012,7 +1012,7 @@ func (g *GateModular) listDeletedObjectsByBlockNumberRangeHandler(w http.Respons
 
 	grpcResponse := &types.GfSpListDeletedObjectsByBlockNumberRangeResponse{
 		Objects:        objects,
-		EndBlockNumber: int64(block),
+		EndBlockNumber: block,
 	}
 
 	respBytes, err = xml.Marshal(grpcResponse)
