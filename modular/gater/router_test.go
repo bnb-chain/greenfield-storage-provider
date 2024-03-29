@@ -741,6 +741,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: listBucketReadQuotaRouterName,
 		},
+		{
+			name:             "delegate create folder",
+			router:           gwRouter,
+			method:           http.MethodPost,
+			url:              fmt.Sprintf("%s%s.%s/%s?%s", scheme, mockBucketName, testDomain, mockObjectName, CreateFolderQuery),
+			shouldMatch:      true,
+			wantedRouterName: delegateCreateFolderRouterName,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

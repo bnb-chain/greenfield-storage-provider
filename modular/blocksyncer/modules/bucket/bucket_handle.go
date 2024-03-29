@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"gorm.io/gorm"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,25 +18,31 @@ import (
 )
 
 var (
-	EventCreateBucket            = proto.MessageName(&storagetypes.EventCreateBucket{})
-	EventDeleteBucket            = proto.MessageName(&storagetypes.EventDeleteBucket{})
-	EventUpdateBucketInfo        = proto.MessageName(&storagetypes.EventUpdateBucketInfo{})
-	EventDiscontinueBucket       = proto.MessageName(&storagetypes.EventDiscontinueBucket{})
-	EventCompleteMigrationBucket = proto.MessageName(&storagetypes.EventCompleteMigrationBucket{})
+	EventCreateBucket             = proto.MessageName(&storagetypes.EventCreateBucket{})
+	EventDeleteBucket             = proto.MessageName(&storagetypes.EventDeleteBucket{})
+	EventUpdateBucketInfo         = proto.MessageName(&storagetypes.EventUpdateBucketInfo{})
+	EventDiscontinueBucket        = proto.MessageName(&storagetypes.EventDiscontinueBucket{})
+	EventCompleteMigrationBucket  = proto.MessageName(&storagetypes.EventCompleteMigrationBucket{})
+	EventToggleSPAsDelegatedAgent = proto.MessageName(&storagetypes.EventToggleSPAsDelegatedAgent{})
 )
 
 var BucketEvents = map[string]bool{
-	EventCreateBucket:            true,
-	EventDeleteBucket:            true,
-	EventUpdateBucketInfo:        true,
-	EventDiscontinueBucket:       true,
-	EventCompleteMigrationBucket: true,
+	EventCreateBucket:             true,
+	EventDeleteBucket:             true,
+	EventUpdateBucketInfo:         true,
+	EventDiscontinueBucket:        true,
+	EventCompleteMigrationBucket:  true,
+	EventToggleSPAsDelegatedAgent: true,
 }
 
 type OffChainStatus int
 
 const (
+	// OffChainStatusIsLimited has the value of 1 (binary: 00000001)
 	OffChainStatusIsLimited OffChainStatus = 1 << iota // 1
+
+	// OffChainStatusSpAsDelegatedAgentDisabled has the value of 2 (binary: 00000010)
+	OffChainStatusSpAsDelegatedAgentDisabled // 1 << 1
 )
 
 // AddStatus updates the current status by adding the specified status to it.
@@ -99,6 +107,13 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 			return nil, errors.New("complete migrate bucket event assert error")
 		}
 		return m.handleCompleteMigrationBucket(ctx, block, txHash, completeMigrationBucket), nil
+	case EventToggleSPAsDelegatedAgent:
+		toggleSPAsDelegatedAgent, ok := typedEvent.(*storagetypes.EventToggleSPAsDelegatedAgent)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventCompleteMigrationBucket", "event", typedEvent)
+			return nil, errors.New("complete migrate bucket event assert error")
+		}
+		return m.handleToggleSPAsDelegatedAgent(ctx, block, txHash, toggleSPAsDelegatedAgent), nil
 	}
 
 	return nil, nil
@@ -205,6 +220,34 @@ func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmcty
 	}
 
 	k, v := m.db.UpdateBucketToSQL(ctx, bucket)
+	return map[string][]interface{}{
+		k: v,
+	}
+}
+
+func (m *Module) handleToggleSPAsDelegatedAgent(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, toggleSPAsDelegatedAgent *storagetypes.EventToggleSPAsDelegatedAgent) map[string][]interface{} {
+	bucket, err := m.db.GetBucketByBucketName(ctx, toggleSPAsDelegatedAgent.BucketName)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+	}
+	var offChainStatus int
+	if toggleSPAsDelegatedAgent.SpAsDelegatedAgentDisabled {
+		offChainStatus = AddStatus(bucket.OffChainStatus, int(OffChainStatusSpAsDelegatedAgentDisabled))
+	} else {
+		offChainStatus = RemoveStatus(bucket.OffChainStatus, int(OffChainStatusSpAsDelegatedAgentDisabled))
+	}
+	bucketStatus := &models.Bucket{
+		BucketName:     toggleSPAsDelegatedAgent.BucketName,
+		OffChainStatus: offChainStatus,
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	k, v := m.db.UpdateBucketOffChainStatus(ctx, bucketStatus)
 	return map[string][]interface{}{
 		k: v,
 	}

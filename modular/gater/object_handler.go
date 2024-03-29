@@ -1506,6 +1506,175 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	log.CtxDebug(ctx, "succeed to resumable upload payload data")
 }
 
+// delegateCreateFolderHandler handles the delegate create folder request.
+func (g *GateModular) delegateCreateFolderHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err           error
+		reqCtx        *RequestContext
+		authenticated bool
+		objectInfo    *storagetypes.ObjectInfo
+		approvalMsg   []byte
+		fingerprint   []byte
+		contentType   string
+		visibility    storagetypes.VisibilityType
+		txHash        string
+	)
+
+	uploadPrimaryStartTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewayFailurePutObject).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayFailurePutObject).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+		} else {
+			reqCtx.SetHTTPCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqPieceSize.WithLabelValues(GatewayPutObjectSize).Observe(float64(objectInfo.GetPayloadSize()))
+			metrics.ReqTime.WithLabelValues(GatewaySuccessPutObject).Observe(time.Since(uploadPrimaryStartTime).Seconds())
+			metrics.ReqCounter.WithLabelValues(GatewaySuccessPutObject).Inc()
+			metrics.ReqPieceSize.WithLabelValues(GatewaySuccessPutObject).Observe(float64(objectInfo.GetPayloadSize()))
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+	queryParams := reqCtx.request.URL.Query()
+
+	err = s3util.CheckValidBucketName(reqCtx.bucketName)
+	if err != nil {
+		return
+	}
+
+	err = s3util.CheckValidObjectName(reqCtx.objectName)
+	if err != nil {
+		return
+	}
+
+	authenticated, err = g.baseApp.GfSpClient().VerifyAuthentication(reqCtx.Context(), coremodule.AuthOpTypeAgentPutObject,
+		reqCtx.Account(), reqCtx.bucketName, reqCtx.objectName)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify authentication", "error", err)
+		return
+	}
+
+	if !authenticated {
+		log.CtxErrorw(reqCtx.Context(), "no permission to operate")
+		err = ErrNoPermission
+		return
+	}
+	contentType = reqCtx.vars["content_type"]
+	if contentType == "" {
+		contentType = ContentDefault
+	}
+	if strings.Contains(reqCtx.objectName, "..") ||
+		reqCtx.objectName == "/" ||
+		strings.Contains(reqCtx.objectName, "\\") ||
+		util.IsSQLInjection(reqCtx.objectName) {
+		log.Errorw("failed to check object name", "object_name", reqCtx.objectName)
+		err = ErrInvalidObjectName
+		return
+	}
+
+	if err = g.checkSPAndBucketStatus(reqCtx.Context(), reqCtx.bucketName, reqCtx.account); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "put object failed to check sp and bucket status", "error", err)
+		return
+	}
+
+	approvalMsg, err = hex.DecodeString(r.Header.Get(GnfdUnsignedApprovalMsgHeader))
+	if err != nil {
+		log.Errorw("failed to parse approval header",
+			"approval", r.Header.Get(GnfdUnsignedApprovalMsgHeader))
+		err = ErrDecodeMsg
+		return
+	}
+	fingerprint = commonhash.GenerateChecksum(approvalMsg)
+
+	startTime := time.Now()
+	// if object has been created, we can skip the creation process
+	objectInfo, _ = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
+	if objectInfo != nil {
+		err = ErrInvalidQuery
+		return
+	} else {
+		var visibilityInt int64
+		visibilityStr := queryParams.Get("visibility")
+		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
+		if err != nil {
+			return
+		}
+		visibility = storagetypes.VisibilityType(visibilityInt)
+		if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
+			visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
+		}
+		task := &gfsptask.GfSpDelegateCreateObjectApprovalTask{}
+		task.InitApprovalDelegateCreateObjectTask(reqCtx.Account(), &storagetypes.MsgDelegateCreateObject{
+			Operator:       g.baseApp.OperatorAddress(),
+			Creator:        reqCtx.account,
+			BucketName:     reqCtx.bucketName,
+			ObjectName:     reqCtx.objectName,
+			PayloadSize:    0,
+			ContentType:    contentType,
+			Visibility:     visibility,
+			RedundancyType: storagetypes.REDUNDANCY_EC_TYPE,
+		}, fingerprint, g.baseApp.TaskPriority(task))
+		startAskCreateObjectApproval := time.Now()
+		authenticated, _, err = g.baseApp.GfSpClient().AskDelegateCreateObjectApproval(reqCtx.Context(), task)
+		metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_cost").Observe(time.Since(startAskCreateObjectApproval).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("gateway_delegate_create_object_ask_approval_end").Observe(time.Since(startTime).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to ask object approval", "error", err)
+			return
+		}
+		if !authenticated {
+			log.CtxErrorw(reqCtx.Context(), "refuse the ask create object approval")
+			return
+		}
+		startDelegateCreateObject := time.Now()
+		txHash, err = g.baseApp.GfSpClient().DelegateCreateObject(reqCtx.ctx, task.GetDelegateCreateObject())
+		metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_cost").Observe(time.Since(startDelegateCreateObject).Seconds())
+		metrics.PerfApprovalTime.WithLabelValues("delegate_create_object_end").Observe(time.Since(startDelegateCreateObject).Seconds())
+		if err != nil {
+			log.CtxErrorw(reqCtx.ctx, "failed to delegate create object", "error", err)
+			return
+		}
+	}
+
+	if txHash != "" {
+		_, err = g.baseApp.Consensus().ConfirmTransaction(reqCtx.ctx, txHash)
+		if err != nil {
+			log.CtxErrorw(reqCtx.Context(), "failed to ConfirmTransaction", "error", err)
+			return
+		}
+	}
+
+	type CreateHash struct {
+		TxHash string `xml:"TxHash"`
+	}
+	respBytes, err := xml.Marshal(CreateHash{TxHash: txHash})
+	if err != nil {
+		log.Errorf("failed to Marshal response", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+
+	if _, err = w.Write(respBytes); err != nil {
+		log.Errorw("failed to write body", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
+		return
+	}
+	log.Debugw("succeed to delegate create folder", "xml_info", respBytes)
+}
+
 func isPrivateObject(bucket *storagetypes.BucketInfo, object *storagetypes.ObjectInfo) bool {
 	return object.GetVisibility() == storagetypes.VISIBILITY_TYPE_PRIVATE ||
 		(object.GetVisibility() == storagetypes.VISIBILITY_TYPE_INHERIT &&
