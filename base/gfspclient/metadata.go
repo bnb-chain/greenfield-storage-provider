@@ -42,8 +42,8 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, s
 	}
 	defer conn.Close()
 	req := &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: int64(startBlockNumber),
-		EndBlockNumber:   int64(endBlockNumber),
+		StartBlockNumber: startBlockNumber,
+		EndBlockNumber:   endBlockNumber,
 		IncludePrivate:   includePrivate,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListDeletedObjectsByBlockNumberRange(ctx, req)
