@@ -736,6 +736,25 @@ func (e *ExecuteModular) gcStaleVersionObjectFromShadowIntegrityMeta(ctx context
 						break
 					}
 				}
+				// it might be already GC by the GCZombie job
+				if staleIntegrityMeta == nil {
+					integrityMeta := &spdb.IntegrityMeta{
+						ObjectID:          task.GetObjectId(),
+						RedundancyIndex:   task.GetRedundancyIndex(),
+						IntegrityChecksum: task.GetIntegrityChecksum(),
+						PieceChecksumList: task.GetPieceChecksumList(),
+					}
+					err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
+					if err != nil {
+						return err
+					}
+					err = e.baseApp.GfSpDB().DeleteShadowObjectIntegrity(task.GetObjectId(), task.GetRedundancyIndex())
+					if err != nil {
+						log.Errorw("failed to delete shadow object integrity meta", "object_id", task.GetObjectId())
+						return err
+					}
+					return nil
+				}
 				for segIdx := uint32(0); segIdx < uint32(len(staleIntegrityMeta.PieceChecksumList)); segIdx++ {
 					pieceKey := e.baseApp.PieceOp().ECPieceKey(task.GetObjectId(), segIdx, uint32(staleIntegrityMeta.RedundancyIndex), task.GetVersion()-1)
 					err = e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
