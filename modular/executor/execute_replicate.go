@@ -33,8 +33,9 @@ var (
 
 func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
 	var (
-		err    error
-		blsSig []bls.Signature
+		err        error
+		blsSig     []bls.Signature
+		objectInfo *storagetypes.ObjectInfo
 	)
 	startReplicateTime := time.Now()
 	defer func() {
@@ -43,6 +44,17 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	}()
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		err = ErrDanglingPointer
+		return
+	}
+
+	objectInfo, err = e.baseApp.Consensus().QueryObjectInfo(ctx, task.GetObjectInfo().GetBucketName(), task.GetObjectInfo().ObjectName)
+	if err != nil {
+		// If an error occurs in the query, ignore the error and continue the process
+		log.CtxErrorw(ctx, "failed to query object info", "error", err)
+	}
+	if objectInfo != nil && objectInfo.ObjectStatus == storagetypes.OBJECT_STATUS_SEALED && !objectInfo.GetIsUpdating() {
+		task.SetSealed(true)
+		log.CtxInfow(ctx, "object has been sealed", "bucket_name", task.GetObjectInfo().GetBucketName(), "object_id", task.GetObjectInfo().Id, "object_name", task.GetObjectInfo().GetObjectName())
 		return
 	}
 
