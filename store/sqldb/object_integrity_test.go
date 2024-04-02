@@ -436,8 +436,7 @@ func TestSpDBImpl_SetReplicatePieceChecksumFailure1(t *testing.T) {
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`,`version`) VALUES (?,?,?,?,?)").
-		WillReturnError(&mysql.MySQLError{Number: uint16(ErrDuplicateEntryCode), Message: "duplicate entry code"})
-	mock.ExpectRollback()
+		WithArgs(objectID, segmentIdx, redundancyIdx, hex.EncodeToString(pieceChecksum), version).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum, version)
 	assert.Nil(t, err)
@@ -469,7 +468,7 @@ func TestSpDBImpl_DeleteReplicatePieceChecksumSuccess(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("DELETE FROM `piece_hash` WHERE (`piece_hash`.`object_id`,`piece_hash`.`segment_index`,`piece_hash`.`redundancy_index`) IN ((?,?,?))").
+	mock.ExpectExec("DELETE FROM `piece_hash` WHERE object_id = ? and segment_idx = ? and redundancy_index = ?").
 		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.DeleteReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx)
@@ -547,7 +546,7 @@ func TestSpDBImpl_DeleteAllReplicatePieceChecksumSuccess(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("DELETE FROM `piece_hash` WHERE (`piece_hash`.`object_id`,`piece_hash`.`segment_index`,`piece_hash`.`redundancy_index`) IN ((?,?,?))").
+	mock.ExpectExec("DELETE FROM `piece_hash` WHERE object_id = ? and segment_idx = ? and redundancy_index = ?").
 		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.DeleteAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount)
@@ -558,12 +557,13 @@ func TestSpDBImpl_DeleteAllReplicatePieceChecksumFailure(t *testing.T) {
 	var (
 		objectID      = uint64(9)
 		redundancyIdx = int32(5)
+		segmentIdx    = uint32(0)
 		pieceCount    = uint32(1)
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("DELETE FROM `piece_hash` WHERE (`piece_hash`.`object_id`,`piece_hash`.`segment_index`,`piece_hash`.`redundancy_index`) IN ((?,?,?))").
-		WillReturnError(mockDBInternalError)
+	mock.ExpectExec("DELETE FROM `piece_hash` WHERE object_id = ? and segment_idx = ? and redundancy_index = ?").
+		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
 	err := s.DeleteAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount)

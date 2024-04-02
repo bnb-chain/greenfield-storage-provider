@@ -410,6 +410,7 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 	}
 	result = s.db.Create(insertPieceHash)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
+		//return nil
 		result = s.db.Save(insertPieceHash)
 		return result.Error
 	}
