@@ -105,7 +105,7 @@ func (p *GfSpPieceOp) ParseECPieceKeyIdx(ecPieceKey string) (uint32, int32, erro
 	if err != nil {
 		return 0, 0, err
 	}
-	redundancyIndex, err := strconv.ParseUint(keyParts[2][len(redundancyPrefix):], 10, 32)
+	redundancyIndex, err := strconv.ParseInt(keyParts[2][len(redundancyPrefix):], 10, 32)
 	if err != nil {
 		return 0, 0, err
 	}

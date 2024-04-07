@@ -42,8 +42,8 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, s
 	}
 	defer conn.Close()
 	req := &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: int64(startBlockNumber),
-		EndBlockNumber:   int64(endBlockNumber),
+		StartBlockNumber: startBlockNumber,
+		EndBlockNumber:   endBlockNumber,
 		IncludePrivate:   includePrivate,
 	}
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListDeletedObjectsByBlockNumberRange(ctx, req)
@@ -51,7 +51,7 @@ func (s *GfSpClient) ListDeletedObjectsByBlockNumberRange(ctx context.Context, s
 		log.CtxErrorw(ctx, "failed to list deleted objects by block number range", "error", err)
 		return nil, uint64(0), ErrRPCUnknownWithDetail("failed to list deleted objects by block number range, error: ", err)
 	}
-	return resp.GetObjects(), uint64(resp.GetEndBlockNumber()), nil
+	return resp.GetObjects(), resp.GetEndBlockNumber(), nil
 }
 
 func (s *GfSpClient) GetUserBuckets(ctx context.Context, account string, includeRemoved bool, opts ...grpc.DialOption) ([]*types.VGFInfoBucket, error) {

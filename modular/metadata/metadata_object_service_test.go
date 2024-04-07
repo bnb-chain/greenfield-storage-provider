@@ -364,12 +364,12 @@ func TestMetadataModular_GfSpListDeletedObjectsByBlockNumberRange_Success(t *tes
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 10, nil
 		},
 	).Times(1)
 	m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(int64, int64, bool) ([]*bsdb.Object, error) {
+		func(uint64, uint64, bool) ([]*bsdb.Object, error) {
 			return []*bsdb.Object{
 				&bsdb.Object{
 					ID:                  1,
@@ -404,8 +404,8 @@ func TestMetadataModular_GfSpListDeletedObjectsByBlockNumberRange_Success(t *tes
 		},
 	).Times(1)
 	objects, err := a.GfSpListDeletedObjectsByBlockNumberRange(context.Background(), &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: 0,
-		EndBlockNumber:   8,
+		StartBlockNumber: uint64(0),
+		EndBlockNumber:   uint64(8),
 		IncludePrivate:   false,
 	})
 	assert.Nil(t, err)
@@ -423,8 +423,8 @@ func TestMetadataModular_GfSpListDeletedObjectsByBlockNumberRange_Failed(t *test
 		},
 	).Times(1)
 	_, err := a.GfSpListDeletedObjectsByBlockNumberRange(context.Background(), &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: 0,
-		EndBlockNumber:   8,
+		StartBlockNumber: uint64(0),
+		EndBlockNumber:   uint64(8),
 		IncludePrivate:   false,
 	})
 	assert.NotNil(t, err)
@@ -436,18 +436,18 @@ func TestMetadataModular_GfSpListDeletedObjectsByBlockNumberRange_Failed2(t *tes
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 10, nil
 		},
 	).Times(1)
 	m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(int64, int64, bool) ([]*bsdb.Object, error) {
+		func(uint64, uint64, bool) ([]*bsdb.Object, error) {
 			return nil, ErrExceedRequest
 		},
 	).Times(1)
 	_, err := a.GfSpListDeletedObjectsByBlockNumberRange(context.Background(), &types.GfSpListDeletedObjectsByBlockNumberRangeRequest{
-		StartBlockNumber: 0,
-		EndBlockNumber:   8,
+		StartBlockNumber: uint64(0),
+		EndBlockNumber:   uint64(8),
 		IncludePrivate:   false,
 	})
 	assert.NotNil(t, err)
