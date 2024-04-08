@@ -523,7 +523,7 @@ type GCStaleVersionObjectTask interface {
 		redundancyIndex int32,
 		integrityChecksum []byte,
 		pieceChecksumList [][]byte,
-		version, timeout int64)
+		version int64, objectSize uint64, timeout int64)
 	SetObjectID(uint64)
 	GetObjectId() uint64
 	SetVersion(int64)
@@ -534,6 +534,8 @@ type GCStaleVersionObjectTask interface {
 	GetIntegrityChecksum() []byte
 	SetPieceChecksumList(pieceChecksumList [][]byte)
 	GetPieceChecksumList() [][]byte
+	SetObjectSize(uint64)
+	GetObjectSize() uint64
 }
 
 // GCMetaTask is an abstract interface to record the information for collecting the SP

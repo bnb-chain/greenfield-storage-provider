@@ -40,6 +40,14 @@ func (db *DB) UpdateBucketByNameToSQL(ctx context.Context, bucket *models.Bucket
 	return stat.SQL.String(), stat.Vars
 }
 
+func (db *DB) UpdateBucketOffChainStatus(ctx context.Context, bucket *models.Bucket) (string, []interface{}) {
+	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&models.Bucket{}).TableName()).
+		Where("bucket_name = ?", bucket.BucketName).
+		Select("off_chain_status", "update_at", "update_tx_hash", "update_time").
+		Updates(bucket).Statement
+	return stat.SQL.String(), stat.Vars
+}
+
 func (db *DB) BatchUpdateBucketSize(ctx context.Context, buckets []*models.Bucket) error {
 	return db.Db.Table((&models.Bucket{}).TableName()).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bucket_id"}},
@@ -112,4 +120,18 @@ func (db *DB) UpdateChargeSizeToSQL(ctx context.Context, objectID common.Hash, b
 	vars := []interface{}{objectID, objectID, bucketName}
 	finalSql := fmt.Sprintf(sql, operation, tableName, tableName)
 	return finalSql, vars
+}
+
+// GetBucketByBucketName get bucket by bucket name
+func (db *DB) GetBucketByBucketName(ctx context.Context, bucketName string) (*models.Bucket, error) {
+	var (
+		bucket *models.Bucket
+		err    error
+	)
+	err = db.Db.WithContext(ctx).Table((&models.Bucket{}).TableName()).
+		Where("bucket_name = ? AND removed = ?", bucketName, false).Take(&bucket).Error
+	if err != nil {
+		return nil, err
+	}
+	return bucket, nil
 }

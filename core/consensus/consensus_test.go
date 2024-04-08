@@ -24,6 +24,7 @@ func TestNullConsensus(t *testing.T) {
 	_, _ = nc.QueryStorageParams(context.TODO())
 	_, _ = nc.QueryStorageParamsByTimestamp(context.TODO(), 0)
 	_, _ = nc.QueryBucketInfo(context.TODO(), "")
+	_, _ = nc.QueryBucketExtraInfo(context.TODO(), "")
 	_, _ = nc.QueryBucketInfoById(context.TODO(), 0)
 	_, _ = nc.QueryObjectInfo(context.TODO(), "", "")
 	_, _ = nc.QueryObjectInfoByID(context.TODO(), "")

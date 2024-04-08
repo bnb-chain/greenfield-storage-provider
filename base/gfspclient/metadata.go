@@ -332,11 +332,11 @@ func (s *GfSpClient) GetEndpointBySpID(ctx context.Context, spId uint32, opts ..
 }
 
 func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_types.BucketInfo, yearMonth string, opts ...grpc.DialOption) (
-	uint64, uint64, uint64, uint64, error) {
+	uint64, uint64, uint64, uint64, uint64, uint64, error) {
 	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
-		return uint64(0), uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)
+		return uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)
 	}
 	defer conn.Close()
 	req := &types.GfSpGetBucketReadQuotaRequest{
@@ -346,12 +346,35 @@ func (s *GfSpClient) GetBucketReadQuota(ctx context.Context, bucket *storage_typ
 	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketReadQuota(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to get bucket read quota", "error", err)
-		return uint64(0), uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to get bucket read quota, error: ", err)
+		return uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), ErrRPCUnknownWithDetail("client failed to get bucket read quota, error: ", err)
 	}
 	if resp.GetErr() != nil {
-		return uint64(0), uint64(0), uint64(0), uint64(0), resp.GetErr()
+		return uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), uint64(0), resp.GetErr()
 	}
-	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), resp.FreeQuotaConsumeSize, nil
+	return resp.GetChargedQuotaSize(), resp.GetSpFreeQuotaSize(), resp.GetConsumedSize(), resp.FreeQuotaConsumeSize, resp.GetSpMonthlyFreeQuotaSize(), resp.GetMonthlyFreeQuotaConsumeSize(), nil
+}
+
+func (s *GfSpClient) ListBucketReadQuota(ctx context.Context, yearMonth string, offset, limit uint32, opts ...grpc.DialOption) ([]*types.BucketReadQuotaRecord, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)
+	}
+	defer conn.Close()
+	req := &types.GfSpListBucketReadQuotaRequest{
+		YearMonth: yearMonth,
+		Offset:    offset,
+		Limit:     limit,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpListBucketReadQuota(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to list bucket read quota", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to list bucket read quota, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return nil, resp.GetErr()
+	}
+	return resp.GetResult(), nil
 }
 
 func (s *GfSpClient) GetLatestBucketReadQuota(ctx context.Context, bucketID uint64, opts ...grpc.DialOption) (
@@ -1088,4 +1111,25 @@ func (s *GfSpClient) GetBucketInfoByBucketName(ctx context.Context, bucketName s
 		return nil, ErrRPCUnknownWithDetail("failed to send get all bucket rpc by bucket name, error: ", err)
 	}
 	return resp.GetBucket(), nil
+}
+
+func (s *GfSpClient) GetBucketReadQuotaCount(ctx context.Context, yearMonth string, opts ...grpc.DialOption) (int64, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return 0, ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)
+	}
+	defer conn.Close()
+	req := &types.GfSpGetBucketReadQuotaCountRequest{
+		YearMonth: yearMonth,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBucketReadQuotaCount(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get bucket read quota count", "error", err)
+		return 0, ErrRPCUnknownWithDetail("client failed to get bucket read quota count, error: ", err)
+	}
+	if resp.GetErr() != nil {
+		return 0, resp.GetErr()
+	}
+	return resp.GetCount(), nil
 }

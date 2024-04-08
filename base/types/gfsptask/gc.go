@@ -313,12 +313,15 @@ func (m *GfSpGCStaleVersionObjectTask) InitGCStaleVersionObjectTask(priority cor
 	redundancyIndex int32,
 	integrityChecksum []byte,
 	pieceChecksumList [][]byte,
-	version, timeout int64) {
+	version int64,
+	objectSize uint64,
+	timeout int64) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetObjectID(objectID)
 	m.SetRedundancyIndex(redundancyIndex)
 	m.SetVersion(version)
+	m.SetObjectSize(objectSize)
 	m.SetIntegrityChecksum(integrityChecksum)
 	m.SetPieceChecksumList(pieceChecksumList)
 	m.SetPriority(priority)
@@ -452,6 +455,10 @@ func (m *GfSpGCStaleVersionObjectTask) SetObjectID(id uint64) {
 
 func (m *GfSpGCStaleVersionObjectTask) SetVersion(version int64) {
 	m.Version = version
+}
+
+func (m *GfSpGCStaleVersionObjectTask) SetObjectSize(objectSize uint64) {
+	m.ObjectSize = objectSize
 }
 
 func (m *GfSpGCStaleVersionObjectTask) SetRedundancyIndex(redundancyIndex int32) {

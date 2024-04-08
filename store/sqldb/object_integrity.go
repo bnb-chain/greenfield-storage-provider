@@ -410,7 +410,9 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 	}
 	result = s.db.Create(insertPieceHash)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
-		return nil
+		//return nil
+		result = s.db.Save(insertPieceHash)
+		return result.Error
 	}
 	if result.Error != nil || result.RowsAffected != 1 {
 		err = fmt.Errorf("failed to insert piece hash record: %s", result.Error)
@@ -433,12 +435,7 @@ func (s *SpDBImpl) DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint
 		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelReplicatePieceChecksum).Observe(
 			time.Since(startTime).Seconds())
 	}()
-
-	err = s.db.Delete(&PieceHashTable{
-		ObjectID:        objectID,
-		SegmentIndex:    segmentIdx,
-		RedundancyIndex: redundancyIdx,
-	}).Error
+	err = s.db.Where("object_id = ? and segment_idx = ? and redundancy_index = ? ", objectID, segmentIdx, redundancyIdx).Delete(PieceHashTable{}).Error
 	return err
 }
 
@@ -542,7 +539,7 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksum(objectID uint64, redundancyId
 	return nil
 }
 
-// DeleteAllReplicatePieceChecksumOptimized deletes all piece checksums for a given objectID.
+// DeleteAllReplicatePieceChecksumOptimized deletes all piece checksums for a given objectID and redundancy_index.
 func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, redundancyIdx int32) (err error) {
 	startTime := time.Now()
 	defer func() {
@@ -556,11 +553,7 @@ func (s *SpDBImpl) DeleteAllReplicatePieceChecksumOptimized(objectID uint64, red
 		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelAllReplicatePieceChecksum).Observe(
 			time.Since(startTime).Seconds())
 	}()
-
-	err = s.db.Delete(&PieceHashTable{
-		ObjectID:        objectID,
-		RedundancyIndex: redundancyIdx,
-	}).Error
+	err = s.db.Where("object_id = ? and redundancy_index = ? ", objectID, redundancyIdx).Delete(PieceHashTable{}).Error
 	return err
 }
 

@@ -581,7 +581,7 @@ func (mr *MockGfSpClientAPIMockRecorder) GetBucketMeta(ctx, bucketName, includeP
 }
 
 // GetBucketReadQuota mocks base method.
-func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error) {
+func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, bucket, yearMonth}
 	for _, a := range opts {
@@ -592,8 +592,10 @@ func (m *MockGfSpClientAPI) GetBucketReadQuota(ctx context.Context, bucket *type
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(uint64)
 	ret3, _ := ret[3].(uint64)
-	ret4, _ := ret[4].(error)
-	return ret0, ret1, ret2, ret3, ret4
+	ret4, _ := ret[4].(uint64)
+	ret5, _ := ret[5].(uint64)
+	ret6, _ := ret[6].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5, ret6
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
@@ -601,6 +603,26 @@ func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMon
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, bucket, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketReadQuota), varargs...)
+}
+
+// GetBucketReadQuotaCount mocks base method.
+func (m *MockGfSpClientAPI) GetBucketReadQuotaCount(ctx context.Context, yearMonth string, opts ...grpc.DialOption) (int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, yearMonth}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBucketReadQuotaCount", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketReadQuotaCount indicates an expected call of GetBucketReadQuotaCount.
+func (mr *MockGfSpClientAPIMockRecorder) GetBucketReadQuotaCount(ctx, yearMonth any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuotaCount", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBucketReadQuotaCount), varargs...)
 }
 
 // GetBucketSize mocks base method.
@@ -1214,6 +1236,26 @@ func (mr *MockGfSpClientAPIMockRecorder) ListAuthKeysV2(ctx, account, domain any
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, account, domain}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAuthKeysV2", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListAuthKeysV2), varargs...)
+}
+
+// ListBucketReadQuota mocks base method.
+func (m *MockGfSpClientAPI) ListBucketReadQuota(ctx context.Context, yearMonth string, offset, limit uint32, opts ...grpc.DialOption) ([]*types.BucketReadQuotaRecord, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, yearMonth, offset, limit}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListBucketReadQuota", varargs...)
+	ret0, _ := ret[0].([]*types.BucketReadQuotaRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBucketReadQuota indicates an expected call of ListBucketReadQuota.
+func (mr *MockGfSpClientAPIMockRecorder) ListBucketReadQuota(ctx, yearMonth, offset, limit any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, yearMonth, offset, limit}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketReadQuota", reflect.TypeOf((*MockGfSpClientAPI)(nil).ListBucketReadQuota), varargs...)
 }
 
 // ListBucketReadRecord mocks base method.
@@ -3406,7 +3448,7 @@ func (mr *MockMetadataAPIMockRecorder) GetBucketMeta(ctx, bucketName, includePri
 }
 
 // GetBucketReadQuota mocks base method.
-func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, error) {
+func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3.BucketInfo, yearMonth string, opts ...grpc.DialOption) (uint64, uint64, uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, bucket, yearMonth}
 	for _, a := range opts {
@@ -3417,8 +3459,10 @@ func (m *MockMetadataAPI) GetBucketReadQuota(ctx context.Context, bucket *types3
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(uint64)
 	ret3, _ := ret[3].(uint64)
-	ret4, _ := ret[4].(error)
-	return ret0, ret1, ret2, ret3, ret4
+	ret4, _ := ret[4].(uint64)
+	ret5, _ := ret[5].(uint64)
+	ret6, _ := ret[6].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5, ret6
 }
 
 // GetBucketReadQuota indicates an expected call of GetBucketReadQuota.
@@ -3426,6 +3470,26 @@ func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuota(ctx, bucket, yearMonth
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, bucket, yearMonth}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketReadQuota), varargs...)
+}
+
+// GetBucketReadQuotaCount mocks base method.
+func (m *MockMetadataAPI) GetBucketReadQuotaCount(ctx context.Context, yearMonth string, opts ...grpc.DialOption) (int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, yearMonth}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBucketReadQuotaCount", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBucketReadQuotaCount indicates an expected call of GetBucketReadQuotaCount.
+func (mr *MockMetadataAPIMockRecorder) GetBucketReadQuotaCount(ctx, yearMonth any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, yearMonth}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBucketReadQuotaCount", reflect.TypeOf((*MockMetadataAPI)(nil).GetBucketReadQuotaCount), varargs...)
 }
 
 // GetBucketSize mocks base method.
@@ -3868,6 +3932,26 @@ func (mr *MockMetadataAPIMockRecorder) GetVirtualGroupFamily(ctx, vgfID any, opt
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, vgfID}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVirtualGroupFamily", reflect.TypeOf((*MockMetadataAPI)(nil).GetVirtualGroupFamily), varargs...)
+}
+
+// ListBucketReadQuota mocks base method.
+func (m *MockMetadataAPI) ListBucketReadQuota(ctx context.Context, yearMonth string, offset, limit uint32, opts ...grpc.DialOption) ([]*types.BucketReadQuotaRecord, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, yearMonth, offset, limit}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListBucketReadQuota", varargs...)
+	ret0, _ := ret[0].([]*types.BucketReadQuotaRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBucketReadQuota indicates an expected call of ListBucketReadQuota.
+func (mr *MockMetadataAPIMockRecorder) ListBucketReadQuota(ctx, yearMonth, offset, limit any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, yearMonth, offset, limit}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBucketReadQuota", reflect.TypeOf((*MockMetadataAPI)(nil).ListBucketReadQuota), varargs...)
 }
 
 // ListBucketReadRecord mocks base method.

@@ -33,8 +33,9 @@ var (
 
 func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
 	var (
-		err    error
-		blsSig []bls.Signature
+		err        error
+		blsSig     []bls.Signature
+		objectInfo *storagetypes.ObjectInfo
 	)
 	startReplicateTime := time.Now()
 	defer func() {
@@ -43,6 +44,17 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	}()
 	if task == nil || task.GetObjectInfo() == nil || task.GetStorageParams() == nil {
 		err = ErrDanglingPointer
+		return
+	}
+
+	objectInfo, err = e.baseApp.Consensus().QueryObjectInfo(ctx, task.GetObjectInfo().GetBucketName(), task.GetObjectInfo().ObjectName)
+	if err != nil {
+		// If an error occurs in the query, ignore the error and continue the process
+		log.CtxErrorw(ctx, "failed to query object info", "error", err)
+	}
+	if objectInfo != nil && objectInfo.ObjectStatus == storagetypes.OBJECT_STATUS_SEALED && !objectInfo.GetIsUpdating() {
+		task.SetSealed(true)
+		log.CtxInfow(ctx, "object has been sealed", "bucket_name", task.GetObjectInfo().GetBucketName(), "object_id", task.GetObjectInfo().Id, "object_name", task.GetObjectInfo().GetObjectName())
 		return
 	}
 
@@ -281,14 +293,16 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 		e.baseApp.TaskPriority(rTask), segmentIdx, redundancyIdx, int64(len(data)), rTask.GetIsAgentUpload())
 	pieceHash := hash.GenerateChecksum(data)
 	// save EC Chunk hash to db
-	objectId := rTask.GetObjectInfo().Id.Uint64()
-	if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(rTask.GetObjectInfo().Id.Uint64(), segmentIdx, redundancyIdx, pieceHash, rTask.GetObjectInfo().GetVersion()); err != nil {
-		log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", objectId,
-			"segment_index", segmentIdx, "redundancy_index", redundancyIdx, "error", err)
-		detail := fmt.Sprintf("failed to set replicate piece checksum, object_id: %d, segment_index: %v, redundancy_index: %v, error: %s",
-			objectId, segmentIdx, redundancyIdx, err.Error())
-		err = ErrGfSpDBWithDetail(detail)
-		return
+	if rTask.GetIsAgentUpload() {
+		objectId := rTask.GetObjectInfo().Id.Uint64()
+		if err = e.baseApp.GfSpDB().SetReplicatePieceChecksum(rTask.GetObjectInfo().Id.Uint64(), segmentIdx, redundancyIdx, pieceHash, rTask.GetObjectInfo().GetVersion()); err != nil {
+			log.CtxErrorw(ctx, "failed to set replicate piece checksum", "object_id", objectId,
+				"segment_index", segmentIdx, "redundancy_index", redundancyIdx, "error", err)
+			detail := fmt.Sprintf("failed to set replicate piece checksum, object_id: %d, segment_index: %v, redundancy_index: %v, error: %s",
+				objectId, segmentIdx, redundancyIdx, err.Error())
+			err = ErrGfSpDBWithDetail(detail)
+			return
+		}
 	}
 	receive.SetPieceChecksum(pieceHash)
 	ctx = log.WithValue(ctx, log.CtxKeyTask, receive.Key().String())
@@ -382,20 +396,6 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 		log.CtxErrorw(ctx, "failed to done replicate piece, replicate idx out of bounds", "redundancy_idx", redundancyIdx)
 		return nil, ErrReplicateIdsOutOfBounds
 	}
-
-	// TODO:
-	// veritySignatureTime := time.Now()
-	// TODO get gvgID and blsPubKey from task, bls pub key already injected via key manager for current sp
-	// var blsPubKey bls.PublicKey
-	// err = veritySignature(ctx, rTask.GetObjectInfo().Id.Uint64(), rTask.GetGlobalVirtualGroupId(), integrity,
-	//	storagetypes.GenerateHash(rTask.GetObjectInfo().GetChecksums()[:]), signature, blsPubKey)
-	// metrics.PerfUploadTimeHistogram.WithLabelValues("background_verity_seal_signature_time").Observe(time.Since(veritySignatureTime).Seconds())
-	// metrics.PerfPutObjectTime.WithLabelValues("background_verity_seal_signature_end_time").Observe(time.Since(signTime).Seconds())
-	// if err != nil {
-	// 	log.CtxErrorw(ctx, "failed verify secondary signature", "endpoint", spEndpoint,
-	// 		"redundancy_idx", redundancyIdx, "error", err)
-	// 	return nil, err
-	// }
 	log.CtxDebugw(ctx, "succeed to done replicate", "endpoint", spEndpoint, "redundancy_idx", redundancyIdx)
 	return signature, nil
 }

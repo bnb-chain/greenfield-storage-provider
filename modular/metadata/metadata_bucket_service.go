@@ -90,15 +90,16 @@ func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfS
 				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
 				Tags:                       bucket.GetResourceTags(),
 			},
-			Removed:      bucket.Removed,
-			DeleteAt:     bucket.DeleteAt,
-			DeleteReason: bucket.DeleteReason,
-			Operator:     bucket.Operator.String(),
-			CreateTxHash: bucket.CreateTxHash.String(),
-			UpdateTxHash: bucket.UpdateTxHash.String(),
-			UpdateAt:     bucket.UpdateAt,
-			UpdateTime:   bucket.UpdateTime,
-			StorageSize:  bucket.StorageSize.String(),
+			Removed:        bucket.Removed,
+			DeleteAt:       bucket.DeleteAt,
+			DeleteReason:   bucket.DeleteReason,
+			Operator:       bucket.Operator.String(),
+			CreateTxHash:   bucket.CreateTxHash.String(),
+			UpdateTxHash:   bucket.UpdateTxHash.String(),
+			UpdateAt:       bucket.UpdateAt,
+			UpdateTime:     bucket.UpdateTime,
+			StorageSize:    bucket.StorageSize.String(),
+			OffChainStatus: int32(bucket.OffChainStatus),
 		}
 		if vgf != nil {
 			b.Vgf = &virtual_types.GlobalVirtualGroupFamily{
@@ -149,15 +150,16 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
 				Tags:                       bucket.GetResourceTags(),
 			},
-			Removed:      bucket.Removed,
-			DeleteAt:     bucket.DeleteAt,
-			DeleteReason: bucket.DeleteReason,
-			Operator:     bucket.Operator.String(),
-			CreateTxHash: bucket.CreateTxHash.String(),
-			UpdateTxHash: bucket.UpdateTxHash.String(),
-			UpdateAt:     bucket.UpdateAt,
-			UpdateTime:   bucket.UpdateTime,
-			StorageSize:  bucket.StorageSize.String(),
+			Removed:        bucket.Removed,
+			DeleteAt:       bucket.DeleteAt,
+			DeleteReason:   bucket.DeleteReason,
+			Operator:       bucket.Operator.String(),
+			CreateTxHash:   bucket.CreateTxHash.String(),
+			UpdateTxHash:   bucket.UpdateTxHash.String(),
+			UpdateAt:       bucket.UpdateAt,
+			UpdateTime:     bucket.UpdateTime,
+			StorageSize:    bucket.StorageSize.String(),
+			OffChainStatus: int32(bucket.OffChainStatus),
 		}
 	}
 	resp = &types.GfSpGetBucketByBucketNameResponse{Bucket: res}
@@ -195,15 +197,16 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
 				Tags:                       bucket.GetResourceTags(),
 			},
-			Removed:      bucket.Removed,
-			DeleteAt:     bucket.DeleteAt,
-			DeleteReason: bucket.DeleteReason,
-			Operator:     bucket.Operator.String(),
-			CreateTxHash: bucket.CreateTxHash.String(),
-			UpdateTxHash: bucket.UpdateTxHash.String(),
-			UpdateAt:     bucket.UpdateAt,
-			UpdateTime:   bucket.UpdateTime,
-			StorageSize:  bucket.StorageSize.String(),
+			Removed:        bucket.Removed,
+			DeleteAt:       bucket.DeleteAt,
+			DeleteReason:   bucket.DeleteReason,
+			Operator:       bucket.Operator.String(),
+			CreateTxHash:   bucket.CreateTxHash.String(),
+			UpdateTxHash:   bucket.UpdateTxHash.String(),
+			UpdateAt:       bucket.UpdateAt,
+			UpdateTime:     bucket.UpdateTime,
+			StorageSize:    bucket.StorageSize.String(),
+			OffChainStatus: int32(bucket.OffChainStatus),
 		}
 	}
 	resp = &types.GfSpGetBucketByBucketIDResponse{Bucket: res}
@@ -253,9 +256,10 @@ func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *t
 				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
 				Tags:                       bucket.GetResourceTags(),
 			},
-			Removed:      bucket.Removed,
-			DeleteAt:     bucket.DeleteAt,
-			DeleteReason: bucket.DeleteReason,
+			Removed:        bucket.Removed,
+			DeleteAt:       bucket.DeleteAt,
+			DeleteReason:   bucket.DeleteReason,
+			OffChainStatus: int32(bucket.OffChainStatus),
 		})
 	}
 	resp = &types.GfSpListExpiredBucketsBySpResponse{Buckets: res}
@@ -320,7 +324,8 @@ func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSp
 				GlobalVirtualGroupIds: family[0].GlobalVirtualGroupIds,
 				VirtualPaymentAddress: family[0].VirtualPaymentAddress.String(),
 			},
-			StorageSize: bucket.StorageSize.String(),
+			StorageSize:    bucket.StorageSize.String(),
+			OffChainStatus: int32(bucket.OffChainStatus),
 		}
 	}
 
@@ -399,6 +404,65 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 		SpMonthlyFreeQuotaSize:      bucketTraffic.MonthlyFreeQuotaSize,
 		TotalConsumeSize:            bucketTraffic.MonthlyFreeQuotaConsumedSize + bucketTraffic.FreeQuotaConsumedSize + bucketTraffic.ReadConsumedSize,
 		RemainQuotaSize:             bucketTraffic.FreeQuotaSize + bucketTraffic.MonthlyFreeQuotaSize + req.GetBucketInfo().GetChargedReadQuota() - bucketTraffic.ReadConsumedSize,
+	}, nil
+}
+
+func (r *MetadataModular) GfSpListBucketReadQuota(
+	ctx context.Context,
+	req *types.GfSpListBucketReadQuotaRequest) (
+	*types.GfSpListBucketReadQuotaResponse, error) {
+	defer atomic.AddInt64(&r.retrievingRequest, -1)
+	if atomic.AddInt64(&r.retrievingRequest, 1) >
+		atomic.LoadInt64(&r.maxMetadataRequest) {
+		return nil, ErrExceedRequest
+	}
+	bucketTraffics, err := r.baseApp.GfSpDB().ListBucketTraffic(req.GetYearMonth(), int(req.GetOffset()), int(req.GetLimit()))
+	if err != nil {
+		// if the traffic table has not been created and initialized yet, return the chain info
+		if errors.Is(err, gorm.ErrRecordNotFound) || bucketTraffics == nil {
+			return &types.GfSpListBucketReadQuotaResponse{}, nil
+		} else {
+			log.Errorw("failed to list bucket traffic", "error", err)
+			return &types.GfSpListBucketReadQuotaResponse{Err: ErrGfSpDBWithDetail("failed to list bucket traffic" + ", error: " + err.Error())}, nil
+		}
+	}
+	result := make([]*types.BucketReadQuotaRecord, 0, len(bucketTraffics))
+	for _, bucketTraffic := range bucketTraffics {
+		result = append(result, &types.BucketReadQuotaRecord{
+			BucketId:                    bucketTraffic.BucketID,
+			BucketName:                  bucketTraffic.BucketName,
+			SpFreeQuotaSize:             bucketTraffic.FreeQuotaSize,
+			ConsumedSize:                bucketTraffic.ReadConsumedSize,
+			FreeQuotaConsumeSize:        bucketTraffic.FreeQuotaConsumedSize,
+			MonthlyFreeQuotaConsumeSize: bucketTraffic.MonthlyFreeQuotaConsumedSize,
+			SpMonthlyFreeQuotaSize:      bucketTraffic.MonthlyFreeQuotaSize,
+			TotalConsumeSize:            bucketTraffic.MonthlyFreeQuotaConsumedSize + bucketTraffic.FreeQuotaConsumedSize + bucketTraffic.ReadConsumedSize,
+		})
+	}
+	// if the traffic table has been created, return the db info from meta service
+	return &types.GfSpListBucketReadQuotaResponse{
+		Result: result,
+	}, nil
+}
+
+func (r *MetadataModular) GfSpGetBucketReadQuotaCount(
+	ctx context.Context,
+	req *types.GfSpGetBucketReadQuotaCountRequest) (
+	*types.GfSpGetBucketReadQuotaCountResponse, error) {
+	defer atomic.AddInt64(&r.retrievingRequest, -1)
+	if atomic.AddInt64(&r.retrievingRequest, 1) >
+		atomic.LoadInt64(&r.maxMetadataRequest) {
+		return nil, ErrExceedRequest
+	}
+	count, err := r.baseApp.GfSpDB().GetBucketTrafficCount(req.GetYearMonth())
+	if err != nil {
+		log.Errorw("failed to get bucket traffic count", "error", err)
+		return &types.GfSpGetBucketReadQuotaCountResponse{Err: ErrGfSpDBWithDetail("failed to list bucket traffic" + ", error: " + err.Error())}, nil
+	}
+
+	// if the traffic table has been created, return the db info from meta service
+	return &types.GfSpGetBucketReadQuotaCountResponse{
+		Count: count,
 	}, nil
 }
 
@@ -567,15 +631,16 @@ func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.G
 				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
 				Tags:                       bucket.GetResourceTags(),
 			},
-			Removed:      bucket.Removed,
-			DeleteAt:     bucket.DeleteAt,
-			DeleteReason: bucket.DeleteReason,
-			Operator:     bucket.Operator.String(),
-			CreateTxHash: bucket.CreateTxHash.String(),
-			UpdateTxHash: bucket.UpdateTxHash.String(),
-			UpdateAt:     bucket.UpdateAt,
-			UpdateTime:   bucket.UpdateTime,
-			StorageSize:  bucket.StorageSize.String(),
+			Removed:        bucket.Removed,
+			DeleteAt:       bucket.DeleteAt,
+			DeleteReason:   bucket.DeleteReason,
+			Operator:       bucket.Operator.String(),
+			CreateTxHash:   bucket.CreateTxHash.String(),
+			UpdateTxHash:   bucket.UpdateTxHash.String(),
+			UpdateAt:       bucket.UpdateAt,
+			UpdateTime:     bucket.UpdateTime,
+			StorageSize:    bucket.StorageSize.String(),
+			OffChainStatus: int32(bucket.OffChainStatus),
 		}
 	}
 	resp = &types.GfSpListBucketsByIDsResponse{Buckets: bucketsMap}
@@ -635,15 +700,16 @@ func (r *MetadataModular) GfSpGetBucketInfoByBucketName(ctx context.Context, req
 				BucketStatus:               storage_types.BucketStatus(storage_types.BucketStatus_value[bucket.Status]),
 				Tags:                       bucket.GetResourceTags(),
 			},
-			Removed:      bucket.Removed,
-			DeleteAt:     bucket.DeleteAt,
-			DeleteReason: bucket.DeleteReason,
-			Operator:     bucket.Operator.String(),
-			CreateTxHash: bucket.CreateTxHash.String(),
-			UpdateTxHash: bucket.UpdateTxHash.String(),
-			UpdateAt:     bucket.UpdateAt,
-			UpdateTime:   bucket.UpdateTime,
-			StorageSize:  bucket.StorageSize.String(),
+			Removed:        bucket.Removed,
+			DeleteAt:       bucket.DeleteAt,
+			DeleteReason:   bucket.DeleteReason,
+			Operator:       bucket.Operator.String(),
+			CreateTxHash:   bucket.CreateTxHash.String(),
+			UpdateTxHash:   bucket.UpdateTxHash.String(),
+			UpdateAt:       bucket.UpdateAt,
+			UpdateTime:     bucket.UpdateTime,
+			StorageSize:    bucket.StorageSize.String(),
+			OffChainStatus: int32(bucket.OffChainStatus),
 		}
 	}
 	resp = &types.GfSpGetBucketInfoByBucketNameResponse{Bucket: res}

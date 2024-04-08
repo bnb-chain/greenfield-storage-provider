@@ -17,6 +17,7 @@ const (
 	resumablePutObjectRouterName                   = "ResumablePutObject"
 	delegatePutObjectRouterName                    = "DelegatePutObject"
 	delegateResumablePutObjectRouterName           = "DelegateResumablePutObject"
+	delegateCreateFolderRouterName                 = "DelegateCreateFolder"
 	queryResumeOffsetName                          = "QueryResumeOffsetName"
 	getObjectRouterName                            = "GetObject"
 	getChallengeInfoRouterName                     = "GetChallengeInfo"
@@ -27,6 +28,8 @@ const (
 	verifyPermissionRouterName                     = "VerifyPermission"
 	getBucketReadQuotaRouterName                   = "GetBucketReadQuota"
 	listBucketReadRecordRouterName                 = "ListBucketReadRecord"
+	listBucketReadQuotaRouterName                  = "ListBucketReadQuota"
+	getBucketReadQuotaCountRouterName              = "GetBucketReadQuotaCount"
 	requestNonceRouterName                         = "RequestNonce"
 	updateUserPublicKeyRouterName                  = "UpdateUserPublicKey"
 	updateUserPublicKeyV2RouterName                = "UpdateUserPublicKeyV2"
@@ -170,6 +173,8 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 		r.NewRoute().Name(delegatePutObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").Queries(Delegate, "").HandlerFunc(g.delegatePutObjectHandler)
 		// Put Object
 		r.NewRoute().Name(putObjectRouterName).Methods(http.MethodPut).Path("/{object:.+}").HandlerFunc(g.putObjectHandler)
+		// create folder
+		r.NewRoute().Name(delegateCreateFolderRouterName).Methods(http.MethodPost).Path("/{object:.+}").HandlerFunc(g.delegateCreateFolderHandler).Queries(CreateFolderQuery, "")
 
 		// QueryPutObjectOffset
 		r.NewRoute().Name(queryResumeOffsetName).Methods(http.MethodGet).Path("/{object:.+}").HandlerFunc(g.queryResumeOffsetHandler).
@@ -250,6 +255,12 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// List Groups By IDs
 	router.Path("/").Name(listGroupsByIDsRouterName).Methods(http.MethodGet).Queries(ListGroupsByIDsQuery, "").HandlerFunc(g.listGroupsByIDsHandler)
+
+	// List Bucket Read Quota by time
+	router.Path("/").Name(listBucketReadQuotaRouterName).Methods(http.MethodGet).Queries(ListBucketReadRecordQuery, "").HandlerFunc(g.listBucketReadQuotaHandler)
+
+	// List Bucket Read Quota Count
+	router.Path("/").Name(getBucketReadQuotaCountRouterName).Methods(http.MethodGet).Queries(ListBucketReadCountQuery, "").HandlerFunc(g.getBucketReadQuotaCountHandler)
 
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID

@@ -278,7 +278,6 @@ func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, tas
 		return err
 	}
 	defer u.resumeableUploadQueue.PopByKey(task.Key())
-
 	segmentSize := u.baseApp.PieceOp().MaxSegmentPieceSize(task.GetObjectInfo().GetPayloadSize(), task.GetStorageParams().GetMaxSegmentSize())
 	offset := task.GetResumeOffset()
 	isUpdate := task.GetObjectInfo().GetIsUpdating()

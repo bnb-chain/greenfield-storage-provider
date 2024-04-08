@@ -40,6 +40,8 @@ message Bucket {
   int64 update_time = 9;
   // storage_size defines the size of bucket
   string storage_size = 10;
+  // off_chain_status defines the status of a bucket in the off-chain storage
+  int32 off_chain_status = 11;
 }
 
 // Object is the structure for user object
@@ -100,6 +102,8 @@ message VGFInfoBucket {
   greenfield.virtualgroup.GlobalVirtualGroupFamily vgf = 10;
   // storage_size defines the size of bucket
   string storage_size = 11;
+  // off_chain_status defines the status of a bucket in the off-chain storage
+  int32 off_chain_status = 12;
 }
 
 // PaymentAccount is the structure for user payment account info
@@ -358,6 +362,52 @@ message GfSpGetBucketReadQuotaResponse {
   uint64 total_consume_size = 8;
   // remain_quota_size is currently remaining quota
   uint64 remain_quota_size = 9;
+}
+
+// GfSpGetBucketReadQuotaCountRequest is request type for the GfSpGetBucketReadQuotaCount RPC method.
+message GfSpGetBucketReadQuotaCountRequest {
+  // year_month is the query bucket quota's month, like "2023-03"
+  string year_month = 1;
+}
+
+// GfSpListBucketReadQuotaResponse is response type for the GfSpGetBucketReadQuotaCountResponse RPC method.
+message GfSpGetBucketReadQuotaCountResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  int64 count = 2;
+}
+
+// GfSpListBucketReadQuotaRequest is request type for the GfSpListBucketReadQuota RPC method.
+message GfSpListBucketReadQuotaRequest {
+  // year_month is the query bucket quota's month, like "2023-03"
+  string year_month = 1;
+  // offset, limit is param for paging query
+  uint32 offset = 2;
+  uint32 limit = 3;
+}
+
+message BucketReadQuotaRecord {
+  // bucket_name
+  string bucket_name = 1;
+  // bucket_id
+  uint64 bucket_id = 2;
+  // sp_free_quota_size is the sp default free quota
+  uint64 sp_free_quota_size = 3;
+  // consumed_size is currently consumed size
+  uint64 consumed_size = 4;
+  // free_quota_consume_siz is currently consumed size
+  uint64 free_quota_consume_size = 5;
+  // sp_monthly_free_quota_size is the sp monthly free quota
+  uint64 sp_monthly_free_quota_size = 6;
+  // monthly_free_quota_consume_siz is currently consumed monthly size
+  uint64 monthly_free_quota_consume_size = 7;
+  // total_consume_size is currently consumed total size
+  uint64 total_consume_size = 8;
+}
+
+// GfSpListBucketReadQuotaResponse is response type for the GfSpListBucketReadQuota RPC method.
+message GfSpListBucketReadQuotaResponse {
+  base.types.gfsperrors.GfSpError err = 1;
+  repeated BucketReadQuotaRecord result = 2;
 }
 
 // GfSpGetLatestBucketReadQuotaRequest is request type for the GfSpGetLatestBucketReadQuota RPC method.
@@ -1082,6 +1132,8 @@ service GfSpMetadataService {
   rpc GfSpGetBucketMeta(GfSpGetBucketMetaRequest) returns (GfSpGetBucketMetaResponse) {}
   rpc GfSpGetEndpointBySpID(GfSpGetEndpointBySpIDRequest) returns (GfSpGetEndpointBySpIDResponse) {}
   rpc GfSpGetBucketReadQuota(GfSpGetBucketReadQuotaRequest) returns (GfSpGetBucketReadQuotaResponse) {}
+  rpc GfSpListBucketReadQuota(GfSpListBucketReadQuotaRequest) returns (GfSpListBucketReadQuotaResponse) {}
+  rpc GfSpGetBucketReadQuotaCount(GfSpGetBucketReadQuotaCountRequest) returns (GfSpGetBucketReadQuotaCountResponse) {}
   rpc GfSpGetLatestBucketReadQuota(GfSpGetLatestBucketReadQuotaRequest) returns (GfSpGetLatestBucketReadQuotaResponse) {}
   rpc GfSpListBucketReadRecord(GfSpListBucketReadRecordRequest) returns (GfSpListBucketReadRecordResponse) {}
   rpc GfSpQueryUploadProgress(GfSpQueryUploadProgressRequest) returns (GfSpQueryUploadProgressResponse) {}

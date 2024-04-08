@@ -286,6 +286,81 @@ func (s *SpDBImpl) GetBucketTraffic(bucketID uint64, yearMonth string) (traffic 
 	}, nil
 }
 
+// ListBucketTraffic return bucket traffic info by the year and month info
+// year_month is the query bucket quota's month, like "2023-03"
+// Support paging query
+func (s *SpDBImpl) ListBucketTraffic(yearMonth string, offset, limit int) (traffics []*corespdb.BucketTraffic, err error) {
+	var (
+		dbResult *gorm.DB
+		result   []BucketTrafficTable
+	)
+
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetBucketTraffic).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureGetBucketTraffic).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetBucketTraffic).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessGetBucketTraffic).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	dbResult = s.db.Where("month = ?", yearMonth).Offset(offset).Limit(limit).Find(&result)
+	if errors.Is(dbResult.Error, gorm.ErrRecordNotFound) {
+		err = dbResult.Error
+		return nil, err
+	}
+	if dbResult.Error != nil {
+		err = fmt.Errorf("failed to query bucket traffic table: %s", dbResult.Error)
+		return nil, err
+	}
+
+	for _, res := range result {
+		traffics = append(traffics, &corespdb.BucketTraffic{
+			BucketID:                     res.BucketID,
+			YearMonth:                    res.Month,
+			FreeQuotaSize:                res.FreeQuotaSize,
+			FreeQuotaConsumedSize:        res.FreeQuotaConsumedSize,
+			BucketName:                   res.BucketName,
+			ReadConsumedSize:             res.ReadConsumedSize,
+			ChargedQuotaSize:             res.ChargedQuotaSize,
+			MonthlyFreeQuotaConsumedSize: res.MonthlyFreeQuotaConsumedSize,
+			MonthlyFreeQuotaSize:         res.MonthlyQuotaSize,
+			ModifyTime:                   res.ModifiedTime.Unix(),
+		})
+	}
+	return
+}
+
+func (s *SpDBImpl) GetBucketTrafficCount(yearMonth string) (count int64, err error) {
+	var (
+		dbResult *gorm.DB
+	)
+
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			metrics.SPDBCounter.WithLabelValues(SPDBFailureGetBucketTraffic).Inc()
+			metrics.SPDBTime.WithLabelValues(SPDBFailureGetBucketTraffic).Observe(
+				time.Since(startTime).Seconds())
+			return
+		}
+		metrics.SPDBCounter.WithLabelValues(SPDBSuccessGetBucketTraffic).Inc()
+		metrics.SPDBTime.WithLabelValues(SPDBSuccessGetBucketTraffic).Observe(
+			time.Since(startTime).Seconds())
+	}()
+
+	dbResult = s.db.Model(&BucketTrafficTable{}).Where("month = ?", yearMonth).Count(&count)
+	if dbResult.Error != nil {
+		err = fmt.Errorf("failed to query bucket traffic table: %s", dbResult.Error)
+		return 0, err
+	}
+	return
+}
+
 // UpdateExtraQuota update the read consumed quota and free consumed quota in traffic db with the extra quota
 func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth string) error {
 	log.CtxErrorw(context.Background(), "begin to update extra quota for traffic db", "extra quota", extraQuota)

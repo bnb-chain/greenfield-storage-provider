@@ -39,7 +39,7 @@ var (
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in RFC3339, e.g. 2006-01-02T15:04:05Z07:00 . ")
 	ErrInvalidExpiryDateParam = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50024, "The "+commonhttp.HTTPHeaderExpiryTimestamp+" parameter is incorrect. "+
 		"The expiry date is expected to be within "+strconv.Itoa(int(MaxExpiryAgeInSec))+" seconds and formatted in RFC3339, e.g. 2006-01-02T15:04:05Z07:00 . ")
-	ErrNoSuchObject           = gfsperrors.Register(module.AuthenticationModularName, http.StatusNotFound, 50025, "no such object")
+	ErrNoSuchObject           = gfsperrors.Register(module.GateModularName, http.StatusNotFound, 50025, "no such object")
 	ErrForbidden              = gfsperrors.Register(module.GateModularName, http.StatusForbidden, 50026, "Forbidden to access")
 	ErrInvalidComplete        = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50027, "invalid complete")
 	ErrInvalidOffset          = gfsperrors.Register(module.GateModularName, http.StatusBadRequest, 50028, "invalid offset")
