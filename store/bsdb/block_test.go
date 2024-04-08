@@ -14,7 +14,7 @@ const (
 )
 
 func TestBsDBImpl_GetLatestBlockNumberSuccess(t *testing.T) {
-	expectedBlockHeight := int64(12345)
+	expectedBlockHeight := uint64(12345)
 
 	s, mock := setupDB(t)
 	mock.ExpectQuery(mockBlockHeightQuerySQL).
@@ -34,7 +34,7 @@ func TestBsDBImpl_GetLatestBlockNumberNoRecords(t *testing.T) {
 	blockNum, err := s.GetLatestBlockNumber()
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, gorm.ErrRecordNotFound))
-	assert.Equal(t, int64(0), blockNum)
+	assert.Equal(t, uint64(0), blockNum)
 }
 
 func TestBsDBImpl_GetLatestBlockNumberDBError(t *testing.T) {
@@ -44,7 +44,7 @@ func TestBsDBImpl_GetLatestBlockNumberDBError(t *testing.T) {
 	blockNum, err := s.GetLatestBlockNumber()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), mockDBInternalError.Error())
-	assert.Equal(t, int64(0), blockNum)
+	assert.Equal(t, uint64(0), blockNum)
 }
 
 func TestBsDBImpl_GetLatestBlockNumberMultipleRecords(t *testing.T) {
@@ -55,5 +55,5 @@ func TestBsDBImpl_GetLatestBlockNumberMultipleRecords(t *testing.T) {
 
 	blockNum, err := s.GetLatestBlockNumber()
 	assert.Nil(t, err)
-	assert.Equal(t, int64(54321), blockNum)
+	assert.Equal(t, uint64(54321), blockNum)
 }

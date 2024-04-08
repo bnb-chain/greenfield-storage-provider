@@ -2,6 +2,7 @@ package gfspapp
 
 import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/bnb-chain/greenfield-storage-provider/util"
 )
 
 const (
@@ -103,32 +104,32 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 	case coretask.TypeTaskReplicatePieceApproval:
 		return NotUseTimeout
 	case coretask.TypeTaskUpload:
-		timeout := int64(size) / (g.uploadSpeed + 1) / (MinSpeed)
-		if timeout < MinUploadTime {
+		timeout := size / uint64(g.uploadSpeed+1) / (MinSpeed)
+		if timeout < uint64(MinUploadTime) {
 			return MinUploadTime
 		}
-		if timeout > MaxUploadTime {
+		if timeout > uint64(MaxUploadTime) {
 			return MaxUploadTime
 		}
-		return timeout
+		return util.Uint64ToInt64(timeout)
 	case coretask.TypeTaskReplicatePiece:
-		timeout := int64(size) / (g.replicateSpeed + 1) / (MinSpeed)
-		if timeout < MinReplicateTime {
+		timeout := size / (uint64(g.replicateSpeed) + 1) / (MinSpeed)
+		if timeout < uint64(MinReplicateTime) {
 			return MinReplicateTime
 		}
-		if timeout > MaxReplicateTime {
+		if timeout > uint64(MaxReplicateTime) {
 			return MaxReplicateTime
 		}
-		return timeout
+		return util.Uint64ToInt64(timeout)
 	case coretask.TypeTaskReceivePiece:
-		timeout := int64(size) / (g.replicateSpeed + 1) / (MinSpeed)
-		if timeout < MinReceiveTime {
+		timeout := size / (uint64(g.replicateSpeed) + 1) / (MinSpeed)
+		if timeout < uint64(MinReceiveTime) {
 			return MinReceiveTime
 		}
-		if timeout > MaxReceiveTime {
+		if timeout > uint64(MaxReceiveTime) {
 			return MaxReceiveTime
 		}
-		return timeout
+		return util.Uint64ToInt64(timeout)
 	case coretask.TypeTaskSealObject:
 		if g.sealObjectTimeout < MinSealObjectTime {
 			return MinSealObjectTime
@@ -138,23 +139,23 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		}
 		return g.sealObjectTimeout
 	case coretask.TypeTaskDownloadObject:
-		timeout := int64(size) / (g.downloadSpeed + 1) / (MinSpeed)
-		if timeout < MinDownloadTime {
+		timeout := size / (uint64(g.downloadSpeed) + 1) / (MinSpeed)
+		if timeout < uint64(MinDownloadTime) {
 			return MinDownloadTime
 		}
-		if timeout > MaxDownloadTime {
+		if timeout > uint64(MaxDownloadTime) {
 			return MaxDownloadTime
 		}
-		return timeout
+		return util.Uint64ToInt64(timeout)
 	case coretask.TypeTaskChallengePiece:
-		timeout := int64(size) / (g.downloadSpeed + 1) / (MinSpeed)
-		if timeout < MinDownloadTime {
+		timeout := size / (uint64(g.downloadSpeed) + 1) / (MinSpeed)
+		if timeout < uint64(MinDownloadTime) {
 			return MinDownloadTime
 		}
-		if timeout > MaxDownloadTime {
+		if timeout > uint64(MaxDownloadTime) {
 			return MaxDownloadTime
 		}
-		return timeout
+		return util.Uint64ToInt64(timeout)
 	case coretask.TypeTaskGCObject:
 		if g.gcObjectTimeout < MinGCObjectTime {
 			return MinGCObjectTime
@@ -180,14 +181,14 @@ func (g *GfSpBaseApp) TaskTimeout(task coretask.Task, size uint64) int64 {
 		}
 		return g.gcMetaTimeout
 	case coretask.TypeTaskRecoverPiece:
-		timeout := int64(size)/(g.replicateSpeed+1)/(MinSpeed) + 1
-		if timeout < MinRecoveryTime {
+		timeout := size/(uint64(g.replicateSpeed)+1)/(MinSpeed) + 1
+		if timeout < uint64(MinRecoveryTime) {
 			return MinRecoveryTime
 		}
-		if timeout > MaxRecoveryTime {
+		if timeout > uint64(MaxRecoveryTime) {
 			return MaxRecoveryTime
 		}
-		return timeout
+		return util.Uint64ToInt64(timeout)
 	case coretask.TypeTaskMigrateGVG:
 		if g.migrateGVGTimeout < MinMigrateGVGTime {
 			return MinMigrateGVGTime
