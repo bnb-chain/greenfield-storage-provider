@@ -178,8 +178,8 @@ github.com/bits-and-blooms/bitset v1.7.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edY
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/bnb-chain/greenfield v1.6.0 h1:AAEJjtwED6XVckPRqMSa6nUciEeBNszeJhNiO/2KNiE=
 github.com/bnb-chain/greenfield v1.6.0/go.mod h1:KCjy1bsc5q2G4IjyhKX0r3BQM+4rooZ1/fNnGlq8o3I=
-github.com/bnb-chain/greenfield-cometbft v1.2.0 h1:LTStppZS9WkVj0TfEYKkk5OAQDGfYlUefWByr7Zr018=
-github.com/bnb-chain/greenfield-cometbft v1.2.0/go.mod h1:WVOEZ59UYM2XePQH47/IQfcInspDn8wbRXhFSJrbU1c=
+github.com/bnb-chain/greenfield-cometbft v0.0.0-20240402065323-40677309d454 h1:mLXDQRfTUbOKOrbaaxbTsVy6V2kZhPZmsIPwsyIGBTs=
+github.com/bnb-chain/greenfield-cometbft v0.0.0-20240402065323-40677309d454/go.mod h1:q9/nqW19iXvxyma5XgcZfxL/OkWI9s5e7yX9ecePz8A=
 github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1 h1:XcWulGacHVRiSCx90Q8Y//ajOrLNBQWR/KDB89dy3cU=
 github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1/go.mod h1:ey1CiK4bYo1RBNJLRiVbYr5CMdSxci9S/AZRINLtppI=
 github.com/bnb-chain/greenfield-common/go v0.0.0-20240228080631-2683b0ee669a h1:VjUknQkIcqkjYCt1hmfpinM7kToOBuUU+KykrrqFsEM=
