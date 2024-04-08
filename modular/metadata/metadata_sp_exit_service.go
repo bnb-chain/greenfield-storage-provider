@@ -152,7 +152,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		rejectEventsMap   map[common.Hash]*model.EventRejectMigrateBucket
 		res               []*types.ListMigrateBucketEvents
 		filters           []func(*gorm.DB) *gorm.DB
-		latestBlock       int64
+		latestBlock       uint64
 	)
 
 	ctx = log.Context(ctx, req)
@@ -161,7 +161,7 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
 	}
-	if uint64(latestBlock) < req.BlockId {
+	if latestBlock < req.BlockId {
 		log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
 		return nil, ErrExceedBlockHeight
 	}
@@ -252,7 +252,7 @@ func (r *MetadataModular) GfSpListCompleteMigrationBucketEvents(ctx context.Cont
 		completeEventsMap map[common.Hash]*model.EventCompleteMigrationBucket
 		res               []*storage_types.EventCompleteMigrationBucket
 		filters           []func(*gorm.DB) *gorm.DB
-		latestBlock       int64
+		latestBlock       uint64
 	)
 
 	ctx = log.Context(ctx, req)
@@ -260,7 +260,7 @@ func (r *MetadataModular) GfSpListCompleteMigrationBucketEvents(ctx context.Cont
 		log.CtxErrorw(ctx, "failed to list migrate bucket events", "error", err)
 		return nil, err
 	}
-	if uint64(latestBlock) < req.BlockId {
+	if latestBlock < req.BlockId {
 		//log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
 		return nil, ErrExceedBlockHeight
 	}
@@ -307,7 +307,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		cancelEventsMap   map[string]*model.EventCancelSwapOut
 		res               []*types.ListSwapOutEvents
 		idx               string
-		latestBlock       int64
+		latestBlock       uint64
 	)
 
 	ctx = log.Context(ctx, req)
@@ -316,7 +316,7 @@ func (r *MetadataModular) GfSpListSwapOutEvents(ctx context.Context, req *types.
 		log.CtxErrorw(ctx, "failed to list migrate swap out events", "error", err)
 		return nil, err
 	}
-	if uint64(latestBlock) < req.BlockId {
+	if latestBlock < req.BlockId {
 		log.CtxError(ctx, "failed to list migrate swap out events due to request block id exceed current block syncer block height")
 		return nil, ErrExceedBlockHeight
 	}
@@ -459,7 +459,7 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		completeEvent   *model.EventCompleteStorageProviderExit
 		spEvent         *virtual_types.EventStorageProviderExit
 		spCompleteEvent *virtual_types.EventCompleteStorageProviderExit
-		latestBlock     int64
+		latestBlock     uint64
 	)
 	ctx = log.Context(ctx, req)
 	latestBlock, err = r.baseApp.GfBsDB().GetLatestBlockNumber()
@@ -467,7 +467,7 @@ func (r *MetadataModular) GfSpListSpExitEvents(ctx context.Context, req *types.G
 		log.CtxErrorw(ctx, "failed to list sp exit events", "error", err)
 		return nil, err
 	}
-	if uint64(latestBlock) < req.BlockId {
+	if latestBlock < req.BlockId {
 		log.CtxError(ctx, "failed to list sp exit events due to request block id exceed current block syncer block height")
 		return nil, ErrExceedBlockHeight
 	}

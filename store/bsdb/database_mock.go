@@ -298,10 +298,10 @@ func (mr *MockMetadataMockRecorder) GetGvgByBucketAndLvgID(bucketID, lvgID any) 
 }
 
 // GetLatestBlockNumber mocks base method.
-func (m *MockMetadata) GetLatestBlockNumber() (int64, error) {
+func (m *MockMetadata) GetLatestBlockNumber() (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLatestBlockNumber")
-	ret0, _ := ret[0].(int64)
+	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -692,7 +692,7 @@ func (mr *MockMetadataMockRecorder) ListCompleteMigrationBucket(srcSpID any, fil
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.
-func (m *MockMetadata) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
+func (m *MockMetadata) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber uint64, includePrivate bool) ([]*Object, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDeletedObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, includePrivate)
 	ret0, _ := ret[0].([]*Object)
@@ -1351,10 +1351,10 @@ func (mr *MockBSDBMockRecorder) GetGvgByBucketAndLvgID(bucketID, lvgID any) *gom
 }
 
 // GetLatestBlockNumber mocks base method.
-func (m *MockBSDB) GetLatestBlockNumber() (int64, error) {
+func (m *MockBSDB) GetLatestBlockNumber() (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLatestBlockNumber")
-	ret0, _ := ret[0].(int64)
+	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1745,7 +1745,7 @@ func (mr *MockBSDBMockRecorder) ListCompleteMigrationBucket(srcSpID any, filters
 }
 
 // ListDeletedObjectsByBlockNumberRange mocks base method.
-func (m *MockBSDB) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
+func (m *MockBSDB) ListDeletedObjectsByBlockNumberRange(startBlockNumber, endBlockNumber uint64, includePrivate bool) ([]*Object, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDeletedObjectsByBlockNumberRange", startBlockNumber, endBlockNumber, includePrivate)
 	ret0, _ := ret[0].([]*Object)

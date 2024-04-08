@@ -97,7 +97,7 @@ func (a ByUpdateAtAndObjectID) Less(i, j int) bool {
 func (a ByUpdateAtAndObjectID) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 // ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error) {
+func (b *BsDBImpl) ListDeletedObjectsByBlockNumberRange(startBlockNumber uint64, endBlockNumber uint64, includePrivate bool) ([]*Object, error) {
 	var (
 		totalObjects []*Object
 		objects      []*Object

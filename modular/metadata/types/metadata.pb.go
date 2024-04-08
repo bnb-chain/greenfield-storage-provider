@@ -1190,10 +1190,10 @@ func (m *GfSpGetBucketByBucketIDResponse) GetBucket() *Bucket {
 type GfSpListDeletedObjectsByBlockNumberRangeRequest struct {
 	// start_block_number defines the start of range
 	// [start_block_number, end_block_number], start_block_number > end_block_number is invalid
-	StartBlockNumber int64 `protobuf:"varint,1,opt,name=start_block_number,json=startBlockNumber,proto3" json:"start_block_number,omitempty"`
+	StartBlockNumber uint64 `protobuf:"varint,1,opt,name=start_block_number,json=startBlockNumber,proto3" json:"start_block_number,omitempty"`
 	// end_block_number defines the end of range
 	// end_block_number < 0 or start_block_number > end_block_number is invalid
-	EndBlockNumber int64 `protobuf:"varint,2,opt,name=end_block_number,json=endBlockNumber,proto3" json:"end_block_number,omitempty"`
+	EndBlockNumber uint64 `protobuf:"varint,2,opt,name=end_block_number,json=endBlockNumber,proto3" json:"end_block_number,omitempty"`
 	// include_private indicates whether this request can get the private objects information
 	IncludePrivate bool `protobuf:"varint,3,opt,name=include_private,json=includePrivate,proto3" json:"include_private,omitempty"`
 }
@@ -1235,14 +1235,14 @@ func (m *GfSpListDeletedObjectsByBlockNumberRangeRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GfSpListDeletedObjectsByBlockNumberRangeRequest proto.InternalMessageInfo
 
-func (m *GfSpListDeletedObjectsByBlockNumberRangeRequest) GetStartBlockNumber() int64 {
+func (m *GfSpListDeletedObjectsByBlockNumberRangeRequest) GetStartBlockNumber() uint64 {
 	if m != nil {
 		return m.StartBlockNumber
 	}
 	return 0
 }
 
-func (m *GfSpListDeletedObjectsByBlockNumberRangeRequest) GetEndBlockNumber() int64 {
+func (m *GfSpListDeletedObjectsByBlockNumberRangeRequest) GetEndBlockNumber() uint64 {
 	if m != nil {
 		return m.EndBlockNumber
 	}
@@ -1261,7 +1261,7 @@ type GfSpListDeletedObjectsByBlockNumberRangeResponse struct {
 	// objects defines the list of object
 	Objects []*Object `protobuf:"bytes,1,rep,name=objects,proto3" json:"objects,omitempty"`
 	// latest_block_number defines the response objects latest block number
-	EndBlockNumber int64 `protobuf:"varint,2,opt,name=end_block_number,json=endBlockNumber,proto3" json:"end_block_number,omitempty"`
+	EndBlockNumber uint64 `protobuf:"varint,2,opt,name=end_block_number,json=endBlockNumber,proto3" json:"end_block_number,omitempty"`
 }
 
 func (m *GfSpListDeletedObjectsByBlockNumberRangeResponse) Reset() {
@@ -1308,7 +1308,7 @@ func (m *GfSpListDeletedObjectsByBlockNumberRangeResponse) GetObjects() []*Objec
 	return nil
 }
 
-func (m *GfSpListDeletedObjectsByBlockNumberRangeResponse) GetEndBlockNumber() int64 {
+func (m *GfSpListDeletedObjectsByBlockNumberRangeResponse) GetEndBlockNumber() uint64 {
 	if m != nil {
 		return m.EndBlockNumber
 	}
@@ -20692,7 +20692,7 @@ func (m *GfSpListDeletedObjectsByBlockNumberRangeRequest) Unmarshal(dAtA []byte)
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.StartBlockNumber |= int64(b&0x7F) << shift
+				m.StartBlockNumber |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -20711,7 +20711,7 @@ func (m *GfSpListDeletedObjectsByBlockNumberRangeRequest) Unmarshal(dAtA []byte)
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.EndBlockNumber |= int64(b&0x7F) << shift
+				m.EndBlockNumber |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -20834,7 +20834,7 @@ func (m *GfSpListDeletedObjectsByBlockNumberRangeResponse) Unmarshal(dAtA []byte
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.EndBlockNumber |= int64(b&0x7F) << shift
+				m.EndBlockNumber |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

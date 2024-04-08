@@ -34,6 +34,14 @@ func StringToInt64(str string) (int64, error) {
 	return i64, nil
 }
 
+// Uint64ToInt64 converts uint64 to int64
+// This method ignores errors when the size of n exceeds the int64 range. Please determine the value before use
+func Uint64ToInt64(n uint64) int64 {
+	str := Uint64ToString(n)
+	res, _ := StringToInt64(str)
+	return res
+}
+
 // StringToUint32 coverts string to uint32
 func StringToUint32(str string) (uint32, error) {
 	ui64, err := StringToUint64(str)
