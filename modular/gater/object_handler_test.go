@@ -365,7 +365,7 @@ func Test_parseRange(t *testing.T) {
 		},
 		{
 			name:          "3",
-			rangeStr:      "bytes=-1-",
+			rangeStr:      "bytes=a-1-",
 			wantedResult1: false,
 			wantedResult2: -1,
 			wantedResult3: -1,

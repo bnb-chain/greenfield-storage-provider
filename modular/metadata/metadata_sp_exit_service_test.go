@@ -214,7 +214,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -283,7 +283,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -339,7 +339,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Fail(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -361,7 +361,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Fail2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -378,7 +378,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Fail3(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 0, ErrExceedRequest
 		},
 	).Times(1)
@@ -552,7 +552,7 @@ func TestMetadataModularGfSpListSwapOutEvents_Success(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -610,7 +610,7 @@ func TestMetadataModularGfSpGfSpListSwapOutEvents_Success2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -656,7 +656,7 @@ func TestMetadataModularGfSpGfSpListSwapOutEvents_Fail(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -679,7 +679,7 @@ func TestMetadataModularGfSpGfSpListSwapOutEvents_Fail2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -696,7 +696,7 @@ func TestMetadataModularGfSpListSwapOutEvents_Fail3(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 0, ErrExceedRequest
 		},
 	).Times(1)
@@ -713,7 +713,7 @@ func TestMetadataModularGfSpListSpExitEvents_Success(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -752,7 +752,7 @@ func TestMetadataModularGfSpGfSpGfSpListSpExitEvents_Success2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -782,7 +782,7 @@ func TestMetadataModularGfSpListSpExitEvents_Fail(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -805,7 +805,7 @@ func TestMetadataModularGfSpListSpExitEvents_Fail2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -822,7 +822,7 @@ func TestMetadataModularGfSpGfSpListSpExitEvents_Fail3(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 0, ErrExceedRequest
 		},
 	).Times(1)
@@ -839,7 +839,7 @@ func TestMetadataModularGfSpListCompleteMigrationBucketEvents_Success(t *testing
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)
@@ -874,7 +874,7 @@ func TestMetadataModularGfSpListCompleteMigrationBucketEvents_Fail(t *testing.T)
 	m := bsdb.NewMockBSDB(ctrl)
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetLatestBlockNumber().DoAndReturn(
-		func() (int64, error) {
+		func() (uint64, error) {
 			return 100000, nil
 		},
 	).Times(1)

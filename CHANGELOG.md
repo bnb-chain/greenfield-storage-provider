@@ -1,4 +1,17 @@
 # Changelog
+
+## v1.6.0
+
+BUGFIXES
+* [#1375](https://github.com/bnb-chain/greenfield-storage-provider/pull/1375)  fix: fix GC issue
+* [#1379](https://github.com/bnb-chain/greenfield-storage-provider/pull/1379)  perf: replicate piece
+* [#1378](https://github.com/bnb-chain/greenfield-storage-provider/pull/1378)  fix: deletion on checksum not fully performed and fail to override duplicate checksum
+
+FEATURES
+* [#1354](https://github.com/bnb-chain/greenfield-storage-provider/pull/1354)  feat: simplify off-chain-auth
+* [#1353](https://github.com/bnb-chain/greenfield-storage-provider/pull/1353)  feat: Primary SP as the upload agent
+* [#1351](https://github.com/bnb-chain/greenfield-storage-provider/pull/1351)  feat: sp monthly free quota
+
 ## v1.5.0
 
 BUGFIXES

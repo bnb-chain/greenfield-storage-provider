@@ -410,7 +410,12 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 	}
 	result = s.db.Create(insertPieceHash)
 	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
-		return nil
+		// If all columns are identical to previous, the db.Save will also encounter ErrDuplicateEntryCode, then it should skip.
+		err = s.db.Save(insertPieceHash).Error
+		if MysqlErrCode(err) == ErrDuplicateEntryCode {
+			return nil
+		}
+		return err
 	}
 	if result.Error != nil || result.RowsAffected != 1 {
 		err = fmt.Errorf("failed to insert piece hash record: %s", result.Error)
@@ -433,12 +438,7 @@ func (s *SpDBImpl) DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint
 		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelReplicatePieceChecksum).Observe(
 			time.Since(startTime).Seconds())
 	}()
-
-	err = s.db.Delete(&PieceHashTable{
-		ObjectID:        objectID,
-		SegmentIndex:    segmentIdx,
-		RedundancyIndex: redundancyIdx,
-	}).Error
+	err = s.db.Where("object_id = ? and segment_idx = ? and redundancy_index = ? ", objectID, segmentIdx, redundancyIdx).Delete(PieceHashTable{}).Error
 	return err
 }
 
