@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -204,6 +205,9 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	go worker.Start(ctx)
+
+	// data statistics
+	go b.dbStatistics(ctx)
 }
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
@@ -372,6 +376,38 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 		}
 	}
 	return nil
+}
+
+func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
+	latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
+	latestBlockHeight := latestBlockHeightAny.(int64) - 10
+	var totalCount, sealCount []int64
+	var err error
+	for range ticker.C {
+		b.getLatestBlockHeight(ctx)
+		totalCount, err = db.Cast(b.parserCtx.Database).GetObjectCount(false, latestBlockHeight)
+		if err != nil {
+			// todo metric
+			continue
+		}
+		sealCount, err = db.Cast(b.parserCtx.Database).GetObjectCount(true, latestBlockHeight)
+		if err != nil {
+			// todo metric
+			continue
+		}
+		totalCountArr, _ := json.Marshal(totalCount)
+		sealCountArr, _ := json.Marshal(sealCount)
+		err = db.Cast(b.parserCtx.Database).SaveStat(ctx, &models.DataStat{
+			BlockHeight:      latestBlockHeight,
+			ObjectSealCount:  string(sealCountArr),
+			ObjectTotalCount: string(totalCountArr),
+		})
+		if err != nil {
+			// todo metric
+		}
+	}
 }
 
 // makeBlockSyncerConfig make block syncer service config from StorageProviderConfig

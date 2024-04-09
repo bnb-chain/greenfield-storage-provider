@@ -114,6 +114,7 @@ func (i *Impl) Process(height uint64) error {
 			return err
 		}
 		metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
+		go i.SaveBlockResult(height, events)
 		txHash = block.Block.Data.Txs
 		txs = make(map[common.Hash][]cometbfttypes.Event)
 		for idx := 0; idx < len(events.TxsResults); idx++ {
@@ -134,6 +135,7 @@ func (i *Impl) Process(height uint64) error {
 			log.Warnf("failed to get map data height: %d", height)
 			return ErrBlockNotFound
 		}
+		go i.SaveBlockResult(height, events)
 	}
 
 	startTime := time.Now()
@@ -411,4 +413,26 @@ func (i *Impl) CreateMasterTable() error {
 
 func (i *Impl) GetServiceName() string {
 	return i.ServiceName
+}
+
+func (i *Impl) SaveBlockResult(blockHeight uint64, result *coretypes.ResultBlockResults) {
+	res, err := json.Marshal(result)
+	if err != nil {
+		log.Errorw("failed to marshal block result", "error", err)
+		// todo
+		return
+	}
+	for n := 0; n < 5; n++ {
+		err = localDB.Cast(i.DB).SaveBlockResult(context.Background(), &models.BlockResult{
+			BlockHeight: blockHeight,
+			Result:      string(res),
+		})
+		if err == nil {
+			break
+		} else {
+			// todo
+			log.Errorw("failed to save block result", "error", err)
+		}
+	}
+
 }
