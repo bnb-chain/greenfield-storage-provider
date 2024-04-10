@@ -2,9 +2,9 @@ package database
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"gorm.io/gorm"
 	"time"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 
 	"github.com/forbole/juno/v4/models"
 	"gorm.io/gorm/clause"
@@ -30,11 +30,11 @@ func (db *DB) GetObjectCount(needSeal bool, blockHeight int64) ([]int64, error) 
 			var err error
 			tmpDB := db.Db.Table(bsdb.GetObjectsTableNameByShardNumber(i))
 			if needSeal {
-				err = tmpDB.Where("id > ? and id <= ? and status = ? and block_height <= ?", primaryKey, primaryKey+step, "OBJECT_STATUS_SEALED", blockHeight).Count(&count).Error
+				err = tmpDB.Where("id > ? and id <= ? and status = ? and update_at <= ?", primaryKey, primaryKey+step, "OBJECT_STATUS_SEALED", blockHeight).Count(&count).Error
 			} else {
-				err = tmpDB.Where("id > ? and id <= ? and block_height <= ?", primaryKey, primaryKey+step, blockHeight).Count(&count).Error
+				err = tmpDB.Where("id > ? and id <= ? and update_at <= ?", primaryKey, primaryKey+step, blockHeight).Count(&count).Error
 			}
-			if err != nil && err == gorm.ErrRecordNotFound {
+			if err == nil && count == 0 {
 				break
 			}
 			if err != nil {

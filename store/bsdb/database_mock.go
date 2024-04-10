@@ -42,6 +42,21 @@ func (m *MockMetadata) EXPECT() *MockMetadataMockRecorder {
 	return m.recorder
 }
 
+// GetBsDBDataStatistics mocks base method.
+func (m *MockMetadata) GetBsDBDataStatistics(blockHeight uint64) (*DataStat, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBsDBDataStatistics", blockHeight)
+	ret0, _ := ret[0].(*DataStat)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBsDBDataStatistics indicates an expected call of GetBsDBDataStatistics.
+func (mr *MockMetadataMockRecorder) GetBsDBDataStatistics(blockHeight any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBsDBDataStatistics", reflect.TypeOf((*MockMetadata)(nil).GetBsDBDataStatistics), blockHeight)
+}
+
 // GetBucketByID mocks base method.
 func (m *MockMetadata) GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error) {
 	m.ctrl.T.Helper()
@@ -1093,6 +1108,21 @@ func NewMockBSDB(ctrl *gomock.Controller) *MockBSDB {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockBSDB) EXPECT() *MockBSDBMockRecorder {
 	return m.recorder
+}
+
+// GetBsDBDataStatistics mocks base method.
+func (m *MockBSDB) GetBsDBDataStatistics(blockHeight uint64) (*DataStat, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBsDBDataStatistics", blockHeight)
+	ret0, _ := ret[0].(*DataStat)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBsDBDataStatistics indicates an expected call of GetBsDBDataStatistics.
+func (mr *MockBSDBMockRecorder) GetBsDBDataStatistics(blockHeight any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBsDBDataStatistics", reflect.TypeOf((*MockBSDB)(nil).GetBsDBDataStatistics), blockHeight)
 }
 
 // GetBucketByID mocks base method.

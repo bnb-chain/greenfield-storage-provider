@@ -27,15 +27,16 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 )
 
-func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string, commitNumber uint64) parser.Indexer {
+func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string, commitNumber uint64, blockResultStorageEnable bool) parser.Indexer {
 	return &Impl{
-		codec:           codec,
-		Node:            proxy,
-		DB:              db,
-		Modules:         modules,
-		ServiceName:     serviceName,
-		ProcessedHeight: 0,
-		CommitNumber:    commitNumber,
+		codec:                    codec,
+		Node:                     proxy,
+		DB:                       db,
+		Modules:                  modules,
+		ServiceName:              serviceName,
+		ProcessedHeight:          0,
+		CommitNumber:             commitNumber,
+		BlockResultStorageEnable: blockResultStorageEnable,
 	}
 }
 
@@ -48,7 +49,8 @@ type Impl struct {
 	LatestBlockHeight atomic.Value
 	ProcessedHeight   uint64
 
-	CommitNumber uint64
+	CommitNumber             uint64
+	BlockResultStorageEnable bool
 
 	ServiceName string
 }
@@ -114,7 +116,9 @@ func (i *Impl) Process(height uint64) error {
 			return err
 		}
 		metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
-		go i.SaveBlockResult(height, events)
+		if i.BlockResultStorageEnable {
+			go i.SaveBlockResult(height, events)
+		}
 		txHash = block.Block.Data.Txs
 		txs = make(map[common.Hash][]cometbfttypes.Event)
 		for idx := 0; idx < len(events.TxsResults); idx++ {
@@ -135,7 +139,9 @@ func (i *Impl) Process(height uint64) error {
 			log.Warnf("failed to get map data height: %d", height)
 			return ErrBlockNotFound
 		}
-		go i.SaveBlockResult(height, events)
+		if i.BlockResultStorageEnable {
+			go i.SaveBlockResult(height, events)
+		}
 	}
 
 	startTime := time.Now()
@@ -419,7 +425,7 @@ func (i *Impl) SaveBlockResult(blockHeight uint64, result *coretypes.ResultBlock
 	res, err := json.Marshal(result)
 	if err != nil {
 		log.Errorw("failed to marshal block result", "error", err)
-		// todo
+		metrics.SaveBlockResultErr.Inc()
 		return
 	}
 	for n := 0; n < 5; n++ {
@@ -430,7 +436,7 @@ func (i *Impl) SaveBlockResult(blockHeight uint64, result *coretypes.ResultBlock
 		if err == nil {
 			break
 		} else {
-			// todo
+			metrics.SaveBlockResultErr.Inc()
 			log.Errorw("failed to save block result", "error", err)
 		}
 	}

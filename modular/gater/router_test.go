@@ -749,6 +749,14 @@ func TestRouters(t *testing.T) {
 			shouldMatch:      true,
 			wantedRouterName: delegateCreateFolderRouterName,
 		},
+		{
+			name:             "get block syncer data info",
+			router:           gwRouter,
+			method:           http.MethodGet,
+			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, BsDBInfo, "block_height"),
+			shouldMatch:      true,
+			wantedRouterName: getBsDBDataInfo,
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

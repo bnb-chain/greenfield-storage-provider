@@ -1,6 +1,7 @@
 package bsdb
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -499,4 +500,28 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 		allObjects = allObjects[:limit]
 	}
 	return allObjects, buckets, err
+}
+
+// GetBsDBDataStatistics get the record of BsDB data statistics
+func (b *BsDBImpl) GetBsDBDataStatistics(blockHeight uint64) (*DataStat, error) {
+	var (
+		dataRecord DataStat
+		err        error
+	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	err = b.db.Table((&DataStat{}).TableName()).Where("block_height = ?", blockHeight).Find(&dataRecord).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &dataRecord, err
 }

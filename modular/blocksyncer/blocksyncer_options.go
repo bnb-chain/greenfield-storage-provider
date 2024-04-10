@@ -44,9 +44,13 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	junoCfg := makeBlockSyncerConfig(cfg)
 
 	MainService = &BlockSyncerModular{
-		config:  junoCfg,
-		name:    coremodule.BlockSyncerModularName,
-		baseApp: app,
+		config:                 junoCfg,
+		name:                   coremodule.BlockSyncerModularName,
+		baseApp:                app,
+		DataMonitorEnable:      cfg.BlockSyncer.DataMonitor,
+		DataStatisticsDuration: cfg.BlockSyncer.DataStatisticsDuration,
+		BlockResultStorage:     cfg.BlockSyncer.ChainDataStorage.EnableStorage,
+		MaxBlockNum:            int64(cfg.BlockSyncer.ChainDataStorage.MaximumStorageCount),
 	}
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
@@ -134,7 +138,7 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,
-		b.Name(), commitNumber)
+		b.Name(), commitNumber, b.BlockResultStorage)
 	return nil
 }
 
@@ -155,6 +159,18 @@ func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 			}
 		}
 	}
+
+	err = db.Cast(b.parserCtx.Database).Database.PrepareTables(context.TODO(), []schema.Tabler{&models.BlockResult{}})
+	if err != nil {
+		log.Errorw("failed to PrepareTables/AutoMigrate tables", "error", err)
+		return err
+	}
+	err = db.Cast(b.parserCtx.Database).Database.PrepareTables(context.TODO(), []schema.Tabler{&models.DataStat{}})
+	if err != nil {
+		log.Errorw("failed to PrepareTables/AutoMigrate tables", "error", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -207,7 +223,9 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 	go worker.Start(ctx)
 
 	// data statistics
-	go b.dbStatistics(ctx)
+	if b.DataMonitorEnable {
+		go b.dbStatistics(ctx)
+	}
 }
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
@@ -379,22 +397,34 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 }
 
 func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
-	ticker := time.NewTicker(time.Hour)
+	duration := b.DataStatisticsDuration
+	if duration == 0 {
+		duration = 3600
+	}
+	ticker := time.NewTicker(time.Duration(duration) * time.Second)
 	defer ticker.Stop()
-	latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
-	latestBlockHeight := latestBlockHeightAny.(int64) - 10
 	var totalCount, sealCount []int64
 	var err error
 	for range ticker.C {
-		b.getLatestBlockHeight(ctx)
+		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
+		latestBlockHeight := latestBlockHeightAny.(int64)
+		if latestBlockHeight < 10 {
+			continue
+		}
+		if b.BlockResultStorage && latestBlockHeight-b.MaxBlockNum > 0 {
+			if delErr := db.Cast(b.parserCtx.Database).DeleteBlockResult(ctx, latestBlockHeight-b.MaxBlockNum); delErr != nil {
+				log.Errorw("failed to delete the expired block result", "error", delErr)
+				metrics.DataStatisticsErr.Inc()
+			}
+		}
 		totalCount, err = db.Cast(b.parserCtx.Database).GetObjectCount(false, latestBlockHeight)
 		if err != nil {
-			// todo metric
+			metrics.DataStatisticsErr.Inc()
 			continue
 		}
 		sealCount, err = db.Cast(b.parserCtx.Database).GetObjectCount(true, latestBlockHeight)
 		if err != nil {
-			// todo metric
+			metrics.DataStatisticsErr.Inc()
 			continue
 		}
 		totalCountArr, _ := json.Marshal(totalCount)
@@ -403,9 +433,11 @@ func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
 			BlockHeight:      latestBlockHeight,
 			ObjectSealCount:  string(sealCountArr),
 			ObjectTotalCount: string(totalCountArr),
+			UpdateTime:       time.Now().Unix(),
 		})
 		if err != nil {
-			// todo metric
+			log.CtxErrorw(ctx, "failed to save statistic data", "error", err)
+			metrics.DataStatisticsErr.Inc()
 		}
 	}
 }
