@@ -753,7 +753,7 @@ func TestRouters(t *testing.T) {
 			name:             "get block syncer data info",
 			router:           gwRouter,
 			method:           http.MethodGet,
-			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, BsDBInfo, "block_height"),
+			url:              fmt.Sprintf("%s%s/?%s&%s", scheme, testDomain, BsDBInfoQuery, "block_height"),
 			shouldMatch:      true,
 			wantedRouterName: getBsDBDataInfo,
 		},

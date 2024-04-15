@@ -4,11 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-
 	"github.com/forbole/juno/v4/models"
 	"gorm.io/gorm/clause"
 
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 )
 

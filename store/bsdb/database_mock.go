@@ -417,6 +417,21 @@ func (mr *MockMetadataMockRecorder) GetObjectByName(objectName, bucketName, incl
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockMetadata)(nil).GetObjectByName), objectName, bucketName, includePrivate)
 }
 
+// GetObjectCount mocks base method.
+func (m *MockMetadata) GetObjectCount(blockHeight int64, objectStatus string) ([]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetObjectCount", blockHeight, objectStatus)
+	ret0, _ := ret[0].([]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetObjectCount indicates an expected call of GetObjectCount.
+func (mr *MockMetadataMockRecorder) GetObjectCount(blockHeight, objectStatus any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectCount", reflect.TypeOf((*MockMetadata)(nil).GetObjectCount), blockHeight, objectStatus)
+}
+
 // GetPaymentByBucketID mocks base method.
 func (m *MockMetadata) GetPaymentByBucketID(bucketID int64, includePrivate bool) (*StreamRecord, error) {
 	m.ctrl.T.Helper()
@@ -1483,6 +1498,21 @@ func (m *MockBSDB) GetObjectByName(objectName, bucketName string, includePrivate
 func (mr *MockBSDBMockRecorder) GetObjectByName(objectName, bucketName, includePrivate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectByName", reflect.TypeOf((*MockBSDB)(nil).GetObjectByName), objectName, bucketName, includePrivate)
+}
+
+// GetObjectCount mocks base method.
+func (m *MockBSDB) GetObjectCount(blockHeight int64, objectStatus string) ([]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetObjectCount", blockHeight, objectStatus)
+	ret0, _ := ret[0].([]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetObjectCount indicates an expected call of GetObjectCount.
+func (mr *MockBSDBMockRecorder) GetObjectCount(blockHeight, objectStatus any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectCount", reflect.TypeOf((*MockBSDB)(nil).GetObjectCount), blockHeight, objectStatus)
 }
 
 // GetPaymentByBucketID mocks base method.

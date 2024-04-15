@@ -224,6 +224,7 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 	// data statistics
 	if b.DataMonitorEnable {
+		b.baseApp.SetGfBsDB(b.baseApp.GfBsDBMaster())
 		go b.dbStatistics(ctx)
 	}
 }
@@ -403,7 +404,7 @@ func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
 	}
 	ticker := time.NewTicker(time.Duration(duration) * time.Second)
 	defer ticker.Stop()
-	var totalCount, sealCount []int64
+	var totalCount, sealCount, delCount []int64
 	var err error
 	for range ticker.C {
 		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
@@ -417,22 +418,29 @@ func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
 				metrics.DataStatisticsErr.Inc()
 			}
 		}
-		totalCount, err = db.Cast(b.parserCtx.Database).GetObjectCount(false, latestBlockHeight)
+		totalCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "")
 		if err != nil {
 			metrics.DataStatisticsErr.Inc()
 			continue
 		}
-		sealCount, err = db.Cast(b.parserCtx.Database).GetObjectCount(true, latestBlockHeight)
+		sealCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "OBJECT_STATUS_SEALED")
+		if err != nil {
+			metrics.DataStatisticsErr.Inc()
+			continue
+		}
+		delCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "OBJECT_STATUS_DISCONTINUED")
 		if err != nil {
 			metrics.DataStatisticsErr.Inc()
 			continue
 		}
 		totalCountArr, _ := json.Marshal(totalCount)
 		sealCountArr, _ := json.Marshal(sealCount)
+		delCountArr, _ := json.Marshal(delCount)
 		err = db.Cast(b.parserCtx.Database).SaveStat(ctx, &models.DataStat{
 			BlockHeight:      latestBlockHeight,
 			ObjectSealCount:  string(sealCountArr),
 			ObjectTotalCount: string(totalCountArr),
+			ObjectDelCount:   string(delCountArr),
 			UpdateTime:       time.Now().Unix(),
 		})
 		if err != nil {

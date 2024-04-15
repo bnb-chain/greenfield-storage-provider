@@ -38,6 +38,8 @@ function make_config() {
   sed -i -e "s/EnableStorage = .*/EnableStorage = true/g" config.toml
   sed -i -e "s/MaximumStorageCount = 0/MaximumStorageCount = 50/g" config.toml
 
+  sed -i -e "s/Server = \[.*\]/Server = \['BlockSyncer'\]/g" config.toml
+
   echo "succeed to make config"
 }
 

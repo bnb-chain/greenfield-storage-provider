@@ -2805,7 +2805,7 @@ func (g *GateModular) getBsDBDataInfoHandler(w http.ResponseWriter, r *http.Requ
 	ctx := context.Background()
 	queryParams := r.URL.Query()
 	blockHeightStr := queryParams.Get("block_height")
-	blockHeight, err = strconv.ParseInt(blockHeightStr, 10, 64)
+	blockHeight, err = util.StringToInt64(blockHeightStr)
 	if err != nil {
 		log.Errorw("failed parse block height", "error", err)
 		err = ErrInvalidQuery
