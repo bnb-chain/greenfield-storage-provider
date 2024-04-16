@@ -86,6 +86,7 @@ const (
 	getSPMigratingBucketNumberRouterName           = "GetSPMigratingBucketNumber"
 	verifyMigrateGVGPermissionRouterName           = "VerifyMigrateGVGPermission"
 	getBucketSizeRouterName                        = "GetBucketSize"
+	getBsDBDataInfo                                = "GetBsDBDataInfo"
 )
 
 const (
@@ -261,6 +262,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 
 	// List Bucket Read Quota Count
 	router.Path("/").Name(getBucketReadQuotaCountRouterName).Methods(http.MethodGet).Queries(ListBucketReadCountQuery, "").HandlerFunc(g.getBucketReadQuotaCountHandler)
+
+	// Get BsDB data statistics Info
+	router.Path("/").Name(getBsDBDataInfo).Methods(http.MethodGet).Queries(BsDBInfoQuery, "").HandlerFunc(g.getBsDBDataInfoHandler)
 
 	if g.env != gfspapp.EnvMainnet {
 		// Get Payment By Bucket ID

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -43,9 +44,13 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	junoCfg := makeBlockSyncerConfig(cfg)
 
 	MainService = &BlockSyncerModular{
-		config:  junoCfg,
-		name:    coremodule.BlockSyncerModularName,
-		baseApp: app,
+		config:                 junoCfg,
+		name:                   coremodule.BlockSyncerModularName,
+		baseApp:                app,
+		DataMonitorEnable:      cfg.BlockSyncer.DataMonitor,
+		DataStatisticsDuration: cfg.BlockSyncer.DataStatisticsDuration,
+		BlockResultStorage:     cfg.BlockSyncer.ChainDataStorage.EnableStorage,
+		MaxBlockNum:            int64(cfg.BlockSyncer.ChainDataStorage.MaximumStorageCount),
 	}
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
@@ -133,7 +138,7 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,
-		b.Name(), commitNumber)
+		b.Name(), commitNumber, b.BlockResultStorage)
 	return nil
 }
 
@@ -154,6 +159,18 @@ func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 			}
 		}
 	}
+
+	err = db.Cast(b.parserCtx.Database).Database.PrepareTables(context.TODO(), []schema.Tabler{&models.BlockResult{}})
+	if err != nil {
+		log.Errorw("failed to PrepareTables/AutoMigrate tables", "error", err)
+		return err
+	}
+	err = db.Cast(b.parserCtx.Database).Database.PrepareTables(context.TODO(), []schema.Tabler{&models.DataStat{}})
+	if err != nil {
+		log.Errorw("failed to PrepareTables/AutoMigrate tables", "error", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -204,6 +221,12 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	go worker.Start(ctx)
+
+	// data statistics
+	if b.DataMonitorEnable {
+		b.baseApp.SetGfBsDB(b.baseApp.GfBsDBMaster())
+		go b.dbStatistics(ctx)
+	}
 }
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
@@ -372,6 +395,59 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 		}
 	}
 	return nil
+}
+
+func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
+	duration := b.DataStatisticsDuration
+	if duration == 0 {
+		duration = 3600
+	}
+	ticker := time.NewTicker(time.Duration(duration) * time.Second)
+	defer ticker.Stop()
+	var totalCount, sealCount, delCount []int64
+	var err error
+	for range ticker.C {
+		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
+		latestBlockHeight := latestBlockHeightAny.(int64)
+		if latestBlockHeight < 10 {
+			continue
+		}
+		if b.BlockResultStorage && latestBlockHeight-b.MaxBlockNum > 0 {
+			if delErr := db.Cast(b.parserCtx.Database).DeleteBlockResult(ctx, latestBlockHeight-b.MaxBlockNum); delErr != nil {
+				log.Errorw("failed to delete the expired block result", "error", delErr)
+				metrics.DataStatisticsErr.Inc()
+			}
+		}
+		totalCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "")
+		if err != nil {
+			metrics.DataStatisticsErr.Inc()
+			continue
+		}
+		sealCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "OBJECT_STATUS_SEALED")
+		if err != nil {
+			metrics.DataStatisticsErr.Inc()
+			continue
+		}
+		delCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "OBJECT_STATUS_DISCONTINUED")
+		if err != nil {
+			metrics.DataStatisticsErr.Inc()
+			continue
+		}
+		totalCountArr, _ := json.Marshal(totalCount)
+		sealCountArr, _ := json.Marshal(sealCount)
+		delCountArr, _ := json.Marshal(delCount)
+		err = db.Cast(b.parserCtx.Database).SaveStat(ctx, &models.DataStat{
+			BlockHeight:      latestBlockHeight,
+			ObjectSealCount:  string(sealCountArr),
+			ObjectTotalCount: string(totalCountArr),
+			ObjectDelCount:   string(delCountArr),
+			UpdateTime:       time.Now().Unix(),
+		})
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to save statistic data", "error", err)
+			metrics.DataStatisticsErr.Inc()
+		}
+	}
 }
 
 // makeBlockSyncerConfig make block syncer service config from StorageProviderConfig

@@ -95,3 +95,16 @@ func (o *Object) GetResourceTags() *storagetypes.ResourceTags {
 	}
 	return tags
 }
+
+type DataStat struct {
+	OneRowId         bool   `gorm:"one_row_id;not null;default:true;primaryKey"`
+	BlockHeight      int64  `gorm:"column:block_height;type:bigint(64)"`
+	ObjectTotalCount string `gorm:"column:object_total_count;type:VARCHAR(2048)"`
+	ObjectSealCount  string `gorm:"column:object_seal_count;type:VARCHAR(2048)"`
+	BucketCount      int64  `gorm:"column:bucket_count;type:int"`
+	UpdateTime       int64  `gorm:"update_time;type:bigint(64)"`
+}
+
+func (*DataStat) TableName() string {
+	return "data_stat"
+}
