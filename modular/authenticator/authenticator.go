@@ -450,8 +450,10 @@ func (a *AuthenticationModular) VerifyAuthentication(
 			}
 			return false, ErrConsensusWithDetail("failed to get bucket extra info from consensus, error: " + err.Error())
 		}
-		if bucketExtraInfo.IsRateLimited {
-			return false, ErrBucketIsRateLimited
+		if bucketExtraInfo != nil {
+			if bucketExtraInfo.IsRateLimited {
+				return false, ErrBucketIsRateLimited
+			}
 		}
 		spID, err := a.getSPID()
 		if err != nil {
