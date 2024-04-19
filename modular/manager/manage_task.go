@@ -159,6 +159,7 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	replicateTask.SetLogs(task.GetLogs())
 	replicateTask.SetRetry(task.GetRetry())
 	replicateTask.AppendLog("manager-create-replicate-task")
+	log.Debugw("Debug Info", "object_id", replicateTask.GetObjectInfo().Id, "IsAgentUpload", replicateTask.GetIsAgentUploadTask())
 	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
@@ -267,6 +268,7 @@ func (m *ManageModular) HandleDoneResumableUploadObjectTask(ctx context.Context,
 	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
 	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
 	log.Debugw("replicate task info", "task", replicateTask, "gvg_meta", gvgMeta)
+	log.Debugw("Debug Info", "object_id", replicateTask.GetObjectInfo().Id, "IsAgentUpload", replicateTask.GetIsAgentUploadTask())
 	err = m.replicateQueue.Push(replicateTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to push replicate piece task to queue", "error", err)
@@ -449,6 +451,7 @@ func (m *ManageModular) handleFailedReplicatePieceTask(ctx context.Context, hand
 				"excludedGVGs", shouldFreezeGVGs, "error", rePickAndReplicateErr)
 			return rePickAndReplicateErr
 		} else {
+			log.Debugw("Debug Info", "object_id", handleTask.GetObjectInfo().Id, "IsAgentUpload", handleTask.GetIsAgentUpload())
 			pushErr := m.replicateQueue.Push(handleTask)
 			log.CtxDebugw(ctx, "push task again to retry", "task_info", handleTask.Info(), "error", pushErr)
 			return pushErr
