@@ -80,6 +80,7 @@ func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint str
 	}
 
 	receiveTask := receive.(*gfsptask.GfSpReceivePieceTask)
+	log.CtxInfow(ctx, "gateway debug info", "receiveTask", receiveTask)
 	receiveMsg, err := json.Marshal(receiveTask)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to replicate piece to secondary sp due to marshal error", "error", err)

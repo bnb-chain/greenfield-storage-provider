@@ -352,6 +352,8 @@ type ReceivePieceTask interface {
 	GetBucketMigration() bool
 	// SetBucketMigration sets the bucket migration
 	SetBucketMigration(bool)
+	// GetIsAgentUploadTask set the is agent upload flag
+	GetIsAgentUploadTask() bool
 }
 
 // SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.
