@@ -1157,7 +1157,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		} else if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || (objectInfo.Creator != reqCtx.account && objectInfo.Owner != reqCtx.account) || objectInfo.PayloadSize != payloadSize) {
 			err = ErrInvalidQuery
 			return
-		} else {
+		} else if objectInfo == nil {
 			var visibilityInt int64
 			visibilityStr := queryParams.Get("visibility")
 			visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
