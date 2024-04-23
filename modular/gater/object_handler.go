@@ -1154,10 +1154,12 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		if err != nil && !strings.Contains(err.Error(), "No such object") {
 			log.CtxErrorw(reqCtx.ctx, "failed to QueryObjectInfo", "error", err)
 			return
-		} else if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || (objectInfo.Creator != reqCtx.account && objectInfo.Owner != reqCtx.account) || objectInfo.PayloadSize != payloadSize) {
+		}
+		if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || (objectInfo.Creator != reqCtx.account && objectInfo.Owner != reqCtx.account) || objectInfo.PayloadSize != payloadSize) {
 			err = ErrInvalidQuery
 			return
-		} else if objectInfo == nil {
+		}
+		if objectInfo == nil {
 			var visibilityInt int64
 			visibilityStr := queryParams.Get("visibility")
 			visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
