@@ -400,20 +400,34 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
 	duration := b.DataStatisticsDuration
 	if duration == 0 {
-		duration = 3600
+		duration = 2000
 	}
-	ticker := time.NewTicker(time.Duration(duration) * time.Second)
+	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
-	var totalCount, sealCount, delCount []int64
-	var err error
+	var (
+		totalCount, sealCount, delCount []int64
+		preHeight                       int64
+	)
+	lastDbBlockHeight := int64(0)
+	preHeight = 0
 	for range ticker.C {
-		latestBlockHeightAny := Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Load()
-		latestBlockHeight := latestBlockHeightAny.(int64)
-		if latestBlockHeight < 10 {
+		epoch, err := b.parserCtx.Database.GetEpoch(context.TODO())
+		if err != nil {
+			log.Errorw("failed to get last block height from database", "error", err)
 			continue
 		}
-		if b.BlockResultStorage && latestBlockHeight-b.MaxBlockNum > 0 {
-			if delErr := db.Cast(b.parserCtx.Database).DeleteBlockResult(ctx, latestBlockHeight-b.MaxBlockNum); delErr != nil {
+		lastDbBlockHeight = epoch.BlockHeight
+		if lastDbBlockHeight < duration {
+			continue
+		}
+		if lastDbBlockHeight/duration == preHeight/duration {
+			log.Infow("The current height has been counted. Skip", "lastDbBlockHeight", lastDbBlockHeight, "preHeight", preHeight)
+			continue
+		}
+		//if duration = 2000 then 20001 -> 20000, 4050300 -> 4050000
+		latestBlockHeight := lastDbBlockHeight / duration * duration
+		if b.BlockResultStorage && lastDbBlockHeight-b.MaxBlockNum > 0 {
+			if delErr := db.Cast(b.parserCtx.Database).DeleteBlockResult(ctx, lastDbBlockHeight-b.MaxBlockNum); delErr != nil {
 				log.Errorw("failed to delete the expired block result", "error", delErr)
 				metrics.DataStatisticsErr.Inc()
 			}
@@ -447,6 +461,7 @@ func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
 			log.CtxErrorw(ctx, "failed to save statistic data", "error", err)
 			metrics.DataStatisticsErr.Inc()
 		}
+		preHeight = latestBlockHeight
 	}
 }
 
