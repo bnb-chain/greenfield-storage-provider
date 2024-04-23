@@ -1085,7 +1085,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrNoPermission
 		return
 	}
-	contentType = reqCtx.vars["content_type"]
+	contentType = r.Header.Get(ContentTypeHeader)
 	if contentType == "" {
 		contentType = ContentDefault
 	}
@@ -1355,6 +1355,10 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 	fingerprint = commonhash.GenerateChecksum(approvalMsg)
+	contentType = r.Header.Get(ContentTypeHeader)
+	if contentType == "" {
+		contentType = ContentDefault
+	}
 	startTime := time.Now()
 
 	if isUpdate {
@@ -1573,7 +1577,7 @@ func (g *GateModular) delegateCreateFolderHandler(w http.ResponseWriter, r *http
 		err = ErrNoPermission
 		return
 	}
-	contentType = reqCtx.vars["content_type"]
+	contentType = r.Header.Get(ContentTypeHeader)
 	if contentType == "" {
 		contentType = ContentDefault
 	}

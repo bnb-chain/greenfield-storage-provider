@@ -231,7 +231,6 @@ func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) err
 		replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
 		replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
 	}
-
 	err = s.manager.replicateQueue.Push(replicateTask)
 	if err != nil {
 		if errors.Is(err, gfsptqueue.ErrTaskQueueExceed) {
