@@ -1085,7 +1085,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrNoPermission
 		return
 	}
-	contentType = reqCtx.vars["content_type"]
+	contentType = r.Header.Get(ContentTypeHeader)
 	if contentType == "" {
 		contentType = ContentDefault
 	}
