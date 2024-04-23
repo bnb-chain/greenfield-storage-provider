@@ -38,7 +38,6 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 		objectInfo *storagetypes.ObjectInfo
 	)
 	startReplicateTime := time.Now()
-	log.Debugw("Debug Info", "object_id", task.GetObjectInfo().Id, "IsAgentUpload", task.GetIsAgentUpload())
 	defer func() {
 		task.SetError(err)
 		metrics.PerfPutObjectTime.WithLabelValues("background_replicate_cost").Observe(time.Since(startReplicateTime).Seconds())
@@ -129,7 +128,6 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 	)
 
 	log.Debugw("replicate task info", "task_sps", rTask.GetSecondaryEndpoints())
-	log.Debugw("Debug Info", "object_id", rTask.GetObjectInfo().Id, "IsAgentUpload", rTask.GetIsAgentUpload())
 
 	doReplicateECPiece := func(ctx context.Context, segIdx uint32, data [][]byte, errChan chan error) {
 		log.Debug("start to replicate ec piece")
@@ -274,7 +272,6 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 		log.CtxErrorw(ctx, "ReplicatePieceTask object info is empty")
 		return ErrInvalidReplicatePieceTask
 	}
-	log.Debugw("Debug Info", "object_id", rTask.GetObjectInfo().Id, "IsAgentUpload", rTask.GetIsAgentUpload())
 	rTask.AppendLog(fmt.Sprintf("executor-begin-replicate-piece-sIdx:%d-rIdx-%d", segmentIdx, redundancyIdx))
 	startTime := time.Now()
 	defer func() {
@@ -320,12 +317,10 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
-	log.Debugw("Debug Info", "object_id", receive.GetObjectInfo().Id, "IsAgentUpload", receive.GetIsAgentUploadTask())
 	if err = retry.Do(func() error {
 		// timeout for single piece replication
 		ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)
 		defer cancel()
-		log.Debugw("Debug Info", "object_id", receive.GetObjectInfo().Id, "IsAgentUpload", receive.GetIsAgentUploadTask())
 		return e.baseApp.GfSpClient().ReplicatePieceToSecondary(ctxWithTimeout, spEndpoint, receive, data)
 	}, RtyAttem,
 		RtyDelay,

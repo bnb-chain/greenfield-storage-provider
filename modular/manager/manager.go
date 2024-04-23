@@ -525,7 +525,6 @@ func (m *ManageModular) LoadTaskFromDB() error {
 			replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
 			replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
 		}
-		log.Debugw("Debug Info", "object_id", replicateTask.GetObjectInfo().Id, "IsAgentUpload", replicateTask.GetIsAgentUpload())
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)
@@ -999,7 +998,6 @@ func (m *ManageModular) backUpTask() {
 func (m *ManageModular) repushTask(reserved task.Task) {
 	switch t := reserved.(type) {
 	case *gfsptask.GfSpReplicatePieceTask:
-		log.Debugw("Debug Info", "object_id", t.GetObjectInfo().Id, "IsAgentUpload", t.GetIsAgentUpload())
 		err := m.replicateQueue.Push(t)
 		log.Infow("retry push replicate task to queue after dispatching", "error", err)
 	case *gfsptask.GfSpSealObjectTask:
