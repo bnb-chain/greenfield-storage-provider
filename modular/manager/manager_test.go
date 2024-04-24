@@ -239,7 +239,10 @@ func TestManageModular_LoadTaskFromDB(t *testing.T) {
 	m3.EXPECT().GetBucketByBucketName(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 		&types.Bucket{BucketInfo: &types0.BucketInfo{
 			GlobalVirtualGroupFamilyId: 1,
-		}}, nil)
+		}}, nil).AnyTimes()
+
+	m1.EXPECT().UpdateUploadProgress(gomock.Any()).Return(
+		nil).AnyTimes()
 
 	vgm := vgmgr.NewMockVirtualGroupManager(ctrl)
 	manage.virtualGroupManager = vgm
