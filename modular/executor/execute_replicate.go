@@ -83,7 +83,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	if task.GetIsAgentUpload() {
 		expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryEndpoints()), task.GetStorageParams())
 		if makeErr != nil {
-			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", err)
+			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", makeErr)
 			err = makeErr
 			return
 		}
