@@ -163,12 +163,24 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		return nil, ErrGfSpDBWithDetail("failed to write integrity meta to db, error: " + err.Error())
 	}
 	deletePieceHashTime := time.Now()
-	if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksumOptimized(
-		task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx()); err != nil {
-		log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "task", task, "error", err)
-		// ignore the error,let the request go, the background task will gc the meta again later
-		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
-			Observe(time.Since(deletePieceHashTime).Seconds())
+	gvg, queryErr := r.baseApp.Consensus().QueryGlobalVirtualGroup(ctx, task.GetGlobalVirtualGroupId())
+	if queryErr != nil {
+		log.CtxErrorw(ctx, "failed to QueryGlobalVirtualGroup", "error", queryErr)
+		return nil, ErrGfSpDBWithDetail("failed to QueryGlobalVirtualGroup, error: " + queryErr.Error())
+	}
+	spID, idErr := r.getSPID()
+	if idErr != nil {
+		log.CtxErrorw(ctx, "failed to getSPID", "error", idErr)
+		return nil, ErrGfSpDBWithDetail("failed to getSPID, error: " + idErr.Error())
+	}
+	if spID != gvg.PrimarySpId {
+		if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksumOptimized(
+			task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx()); err != nil {
+			log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "task", task, "error", err)
+			// ignore the error,let the request go, the background task will gc the meta again later
+			metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
+				Observe(time.Since(deletePieceHashTime).Seconds())
+		}
 	}
 
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
