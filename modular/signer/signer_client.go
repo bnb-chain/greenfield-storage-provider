@@ -1258,8 +1258,8 @@ func (client *GreenfieldChainSignClient) SealObjectV2(ctx context.Context, scope
 		txOpt := &ctypes.TxOption{
 			NoSimulate: true,
 			Mode:       &mode,
-			GasLimit:   client.gasInfo[Seal].GasLimit,
-			FeeAmount:  client.gasInfo[Seal].FeeAmount,
+			GasLimit:   120, // we temporarily set it 120 to match the mainnet setting and will change it back once a new proposal to change the GasLimit is applied in mainnet later.
+			FeeAmount:  sdk.NewCoins(sdk.NewCoin(ctypes.Denom, sdk.NewInt(int64(600000000000)))),
 			Nonce:      nonce,
 		}
 
