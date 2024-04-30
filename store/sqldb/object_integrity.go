@@ -413,8 +413,8 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 		Columns:   []clause.Column{{Name: "object_id"}, {Name: "segment_index"}, {Name: "redundancy_index"}},
 		UpdateAll: true,
 	}).Create(insertPieceHash)
-	if result.Error != nil || result.RowsAffected != 1 {
-		err = fmt.Errorf("failed to insert piece hash record: %s", result.Error)
+	if result.Error != nil {
+		err = fmt.Errorf("failed to insert piece hash record: %v", result.Error)
 		return err
 	}
 	return nil
