@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
@@ -408,17 +409,12 @@ func (s *SpDBImpl) SetReplicatePieceChecksum(objectID uint64, segmentIdx uint32,
 		PieceChecksum:   hex.EncodeToString(checksum),
 		Version:         version,
 	}
-	result = s.db.Create(insertPieceHash)
-	if result.Error != nil && MysqlErrCode(result.Error) == ErrDuplicateEntryCode {
-		// If all columns are identical to previous, the db.Save will also encounter ErrDuplicateEntryCode, then it should skip.
-		err = s.db.Save(insertPieceHash).Error
-		if MysqlErrCode(err) == ErrDuplicateEntryCode {
-			return nil
-		}
-		return err
-	}
-	if result.Error != nil || result.RowsAffected != 1 {
-		err = fmt.Errorf("failed to insert piece hash record: %s", result.Error)
+	result = s.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "object_id"}, {Name: "segment_index"}, {Name: "redundancy_index"}},
+		UpdateAll: true,
+	}).Create(insertPieceHash)
+	if result.Error != nil {
+		err = fmt.Errorf("failed to insert piece hash record: %v", result.Error)
 		return err
 	}
 	return nil
