@@ -20,7 +20,7 @@ type Metadata interface {
 	// GetBucketByID get buckets info by by a bucket id
 	GetBucketByID(bucketID int64, includePrivate bool) (*Bucket, error)
 	// GetLatestBlockNumber get current latest block number
-	GetLatestBlockNumber() (int64, error)
+	GetLatestBlockNumber() (uint64, error)
 	// GetPaymentByBucketName get bucket payment info by a bucket name
 	GetPaymentByBucketName(bucketName string, includePrivate bool) (*StreamRecord, error)
 	// GetPaymentByBucketID get bucket payment info by a bucket id
@@ -38,7 +38,7 @@ type Metadata interface {
 	// ListObjectsByBucketName list objects info by a bucket name
 	ListObjectsByBucketName(bucketName, continuationToken, prefix, delimiter string, maxKeys int, includeRemoved bool) ([]*ListObjectsResult, error)
 	// ListDeletedObjectsByBlockNumberRange list deleted objects info by a block number range
-	ListDeletedObjectsByBlockNumberRange(startBlockNumber int64, endBlockNumber int64, includePrivate bool) ([]*Object, error)
+	ListDeletedObjectsByBlockNumberRange(startBlockNumber uint64, endBlockNumber uint64, includePrivate bool) ([]*Object, error)
 	// ListExpiredBucketsBySp list expired buckets by sp
 	ListExpiredBucketsBySp(createAt int64, primarySpID uint32, limit int64) ([]*Bucket, error)
 	// GetObjectByName get object info by an object name

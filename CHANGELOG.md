@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.7.0
+BUGFIXES
+* [#1394](https://github.com/bnb-chain/greenfield-storage-provider/pull/1394)  fix: pick new gvg when retry failed replicate piece task
+* [#1391](https://github.com/bnb-chain/greenfield-storage-provider/pull/1391)  fix: check if it is AgentUploadTask
+* [#1390](https://github.com/bnb-chain/greenfield-storage-provider/pull/1390)  fix: delegate upload param check
+* [#1389](https://github.com/bnb-chain/greenfield-storage-provider/pull/1389)  fix: delegate upload param check
+* [#1387](https://github.com/bnb-chain/greenfield-storage-provider/pull/1387)  fix: upgrade deps for fixing vulnerabilities
+* [#1386](https://github.com/bnb-chain/greenfield-storage-provider/pull/1386)  fix: check if BucketExtraInfo is nil
+* [#1384](https://github.com/bnb-chain/greenfield-storage-provider/pull/1384)  fix: fix db override
+
+FEATURES
+* [#1392](https://github.com/bnb-chain/greenfield-storage-provider/pull/1392)  feat: provide recommended vgf
+
 ## v1.6.0
 
 BUGFIXES
