@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -134,6 +135,7 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 	}()
 	startTime := time.Now()
 	for {
+		log.CtxInfow(ctx, "DebugInfo", "readSize", readSize)
 		if err != nil {
 			return err
 		}
@@ -144,6 +146,10 @@ func (u *UploadModular) HandleUploadObjectTask(ctx context.Context, uploadObject
 		metrics.PerfPutObjectTime.WithLabelValues("uploader_put_object_server_read_data_end").Observe(time.Since(time.Unix(uploadObjectTask.GetCreateTime(), 0)).Seconds())
 		readSize += readN
 		data = data[0:readN]
+
+		var v interface{}
+		_ = json.Unmarshal(data, v)
+		log.CtxInfow(ctx, "DebugInfo", "JsonString", string(data), "JsonData", v)
 
 		if err == io.EOF {
 			err = nil
