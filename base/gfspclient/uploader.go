@@ -46,8 +46,10 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_read_data_cost").Observe(time.Since(startReadFromSDK).Seconds())
 		metrics.PerfPutObjectTime.WithLabelValues("client_put_object_read_data_end").Observe(time.Since(time.Unix(task.GetCreateTime(), 0)).Seconds())
 		sendSize += n
+		log.CtxInfow(ctx, "DebugInfo", "sendSize", sendSize)
 		if streamErr == io.EOF {
 			if n != 0 {
+				log.CtxInfow(ctx, "DebugInfo", "buf", string(buf[0:n]))
 				req := &gfspserver.GfSpUploadObjectRequest{
 					UploadObjectTask: task.(*gfsptask.GfSpUploadObjectTask),
 					Payload:          buf[0:n],
@@ -78,6 +80,7 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 			log.CtxErrorw(ctx, "failed to read upload data stream", "error", streamErr)
 			return ErrExceptionsStream
 		}
+		log.CtxInfow(ctx, "DebugInfo", "buf", string(buf[0:n]))
 		req := &gfspserver.GfSpUploadObjectRequest{
 			UploadObjectTask: task.(*gfsptask.GfSpUploadObjectTask),
 			Payload:          buf[0:n],

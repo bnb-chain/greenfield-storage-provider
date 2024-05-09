@@ -162,6 +162,7 @@ func (r *RequestContext) VerifySignature() (string, error) {
 		if err != nil {
 			return "", err
 		}
+		log.Infow("DebugInfo", "address", accAddress.String())
 		return accAddress.String(), nil
 	}
 
@@ -212,22 +213,26 @@ func (r *RequestContext) verifySignatureForGNFD1Ecdsa(requestSignature string) (
 		signature []byte
 		err       error
 	)
+	log.Infow("DebugInfo", "requestSignature", requestSignature)
 	sigStr, err := parseSignatureFromRequest(requestSignature)
 	if err != nil {
 		return nil, err
 	}
+	log.Infow("DebugInfo", "sigStr", sigStr)
 	if signature, err = hex.DecodeString(sigStr); err != nil {
 		return nil, err
 	}
+	log.Infow("DebugInfo", "signature", signature)
 	// check request integrity
 	realMsgToSign := commonhttp.GetMsgToSignInGNFD1Auth(r.request)
-
+	log.Infow("DebugInfo", "realMsgToSign", realMsgToSign)
 	// check signature consistent
 	addr, _, err := commonhash.RecoverAddr(realMsgToSign, signature)
 	if err != nil {
 		log.CtxError(r.ctx, "failed to recover address")
 		return nil, ErrRequestConsistent
 	}
+	log.Infow("DebugInfo", "addr", addr)
 	return addr, nil
 }
 

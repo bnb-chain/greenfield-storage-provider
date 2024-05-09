@@ -76,6 +76,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 			req, err = stream.Recv()
 			if err == io.EOF {
 				if len(req.GetPayload()) != 0 {
+					log.CtxInfow(ctx, "DebugInfo", "Write", string(req.GetPayload()))
 					_, _ = pWrite.Write(req.GetPayload())
 				}
 				log.CtxDebug(ctx, "received last upload stream data")
@@ -120,6 +121,7 @@ func (g *GfSpBaseApp) GfSpUploadObject(stream gfspserver.GfSpUploadService_GfSpU
 				close(initChan)
 			}
 			receiveSize += len(req.GetPayload())
+			log.CtxInfow(ctx, "DebugInfo", "Write", string(req.GetPayload()))
 			_, _ = pWrite.Write(req.GetPayload())
 		}
 	}()
