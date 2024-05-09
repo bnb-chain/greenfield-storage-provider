@@ -215,14 +215,14 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				GlobalVirtualGroupFamilyId: complete.GlobalVirtualGroupFamilyId,
 			}
 		}
-		if cancel != nil && cancel.CreateAt >= event.CreateAt && complete == nil {
+		if cancel != nil && cancel.CreateAt >= event.CreateAt && (complete == nil || cancel.CreateAt > complete.CreateAt) {
 			spCancelEvent = &storage_types.EventCancelMigrationBucket{
 				Operator:   cancel.Operator.String(),
 				BucketName: cancel.BucketName,
 				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
 			}
 		}
-		if reject != nil && reject.CreateAt >= event.CreateAt && complete == nil {
+		if reject != nil && reject.CreateAt >= event.CreateAt && (complete == nil || reject.CreateAt > complete.CreateAt) {
 			spRejectEvent = &storage_types.EventRejectMigrateBucket{
 				Operator:   reject.Operator.String(),
 				BucketName: reject.BucketName,
