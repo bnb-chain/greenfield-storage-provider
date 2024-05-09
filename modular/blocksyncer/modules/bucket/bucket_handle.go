@@ -22,6 +22,9 @@ var (
 	EventDeleteBucket             = proto.MessageName(&storagetypes.EventDeleteBucket{})
 	EventUpdateBucketInfo         = proto.MessageName(&storagetypes.EventUpdateBucketInfo{})
 	EventDiscontinueBucket        = proto.MessageName(&storagetypes.EventDiscontinueBucket{})
+	EventMigrationBucket          = proto.MessageName(&storagetypes.EventMigrationBucket{})
+	EventCancelMigrationBucket    = proto.MessageName(&storagetypes.EventCancelMigrationBucket{})
+	EventRejectMigrateBucket      = proto.MessageName(&storagetypes.EventRejectMigrateBucket{})
 	EventCompleteMigrationBucket  = proto.MessageName(&storagetypes.EventCompleteMigrationBucket{})
 	EventToggleSPAsDelegatedAgent = proto.MessageName(&storagetypes.EventToggleSPAsDelegatedAgent{})
 )
@@ -31,6 +34,9 @@ var BucketEvents = map[string]bool{
 	EventDeleteBucket:             true,
 	EventUpdateBucketInfo:         true,
 	EventDiscontinueBucket:        true,
+	EventMigrationBucket:          true,
+	EventCancelMigrationBucket:    true,
+	EventRejectMigrateBucket:      true,
 	EventCompleteMigrationBucket:  true,
 	EventToggleSPAsDelegatedAgent: true,
 }
@@ -100,6 +106,27 @@ func (m *Module) ExtractEventStatements(ctx context.Context, block *tmctypes.Res
 			return nil, errors.New("discontinue bucket event assert error")
 		}
 		return m.handleDiscontinueBucket(ctx, block, txHash, discontinueBucket), nil
+	case EventMigrationBucket:
+		migrationBucket, ok := typedEvent.(*storagetypes.EventMigrationBucket)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventMigrationBucket", "event", typedEvent)
+			return nil, errors.New("migration bucket event assert error")
+		}
+		return m.handleEventMigrationBucket(ctx, block, txHash, migrationBucket), nil
+	case EventCancelMigrationBucket:
+		cancelMigrationBucket, ok := typedEvent.(*storagetypes.EventCancelMigrationBucket)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventCancelMigrationBucket", "event", typedEvent)
+			return nil, errors.New("cancel migration bucket event assert error")
+		}
+		return m.handleEventCancelMigrationBucket(ctx, block, txHash, cancelMigrationBucket), nil
+	case EventRejectMigrateBucket:
+		rejectMigrateBucket, ok := typedEvent.(*storagetypes.EventRejectMigrateBucket)
+		if !ok {
+			log.Errorw("type assert error", "type", "EventRejectMigrateBucket", "event", typedEvent)
+			return nil, errors.New("reject migration bucket event assert error")
+		}
+		return m.handleEventRejectMigrateBucket(ctx, block, txHash, rejectMigrateBucket), nil
 	case EventCompleteMigrationBucket:
 		completeMigrationBucket, ok := typedEvent.(*storagetypes.EventCompleteMigrationBucket)
 		if !ok {
@@ -208,11 +235,63 @@ func (m *Module) handleUpdateBucketInfo(ctx context.Context, block *tmctypes.Res
 	}
 }
 
+func (m *Module) handleEventMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, migrationBucket *storagetypes.EventMigrationBucket) map[string][]interface{} {
+	bucket := &models.Bucket{
+		BucketID:   common.BigToHash(migrationBucket.BucketId.BigInt()),
+		BucketName: migrationBucket.BucketName,
+		Status:     storagetypes.BUCKET_STATUS_MIGRATING.String(),
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	k, v := m.db.UpdateBucketToSQL(ctx, bucket)
+	return map[string][]interface{}{
+		k: v,
+	}
+}
+
+func (m *Module) handleEventCancelMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelMigrationBucket *storagetypes.EventCancelMigrationBucket) map[string][]interface{} {
+	bucket := &models.Bucket{
+		BucketID:   common.BigToHash(cancelMigrationBucket.BucketId.BigInt()),
+		BucketName: cancelMigrationBucket.BucketName,
+		Status:     storagetypes.BUCKET_STATUS_CREATED.String(),
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	k, v := m.db.UpdateBucketToSQL(ctx, bucket)
+	return map[string][]interface{}{
+		k: v,
+	}
+}
+
+func (m *Module) handleEventRejectMigrateBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, rejectMigrateBucket *storagetypes.EventRejectMigrateBucket) map[string][]interface{} {
+	bucket := &models.Bucket{
+		BucketID:   common.BigToHash(rejectMigrateBucket.BucketId.BigInt()),
+		BucketName: rejectMigrateBucket.BucketName,
+		Status:     storagetypes.BUCKET_STATUS_CREATED.String(),
+
+		UpdateAt:     block.Block.Height,
+		UpdateTxHash: txHash,
+		UpdateTime:   block.Block.Time.UTC().Unix(),
+	}
+
+	k, v := m.db.UpdateBucketToSQL(ctx, bucket)
+	return map[string][]interface{}{
+		k: v,
+	}
+}
+
 func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, completeMigrationBucket *storagetypes.EventCompleteMigrationBucket) map[string][]interface{} {
 	bucket := &models.Bucket{
 		BucketID:                   common.BigToHash(completeMigrationBucket.BucketId.BigInt()),
 		BucketName:                 completeMigrationBucket.BucketName,
 		GlobalVirtualGroupFamilyId: completeMigrationBucket.GlobalVirtualGroupFamilyId,
+		Status:                     storagetypes.BUCKET_STATUS_CREATED.String(),
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
