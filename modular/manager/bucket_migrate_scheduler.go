@@ -696,7 +696,10 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 		log.Errorw("failed to get bucket by bucket id", "bucket_id", bucketID, "error", err)
 		return
 	}
-
+	if bucket == nil {
+		log.Errorw("can not find bucket info", "bucket_id", bucketID)
+		return
+	}
 	if bucket.BucketInfo.GetBucketStatus() == storagetypes.BUCKET_STATUS_CREATED {
 		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_WAIT_COMPLETE_TX_EVENT_DONE); err != nil {
 			return
