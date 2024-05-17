@@ -204,3 +204,4 @@ func (t *NullTask) SetDelegateCreateObject(object *storagetypes.MsgDelegateCreat
 func (t *NullTask) GetIsAgentUpload() bool                                               { return false }
 func (t *NullTask) InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64, isAgentUpload bool) {
 }
+func (t *NullTask) GetIsAgentUploadTask() bool { return false }

@@ -317,7 +317,6 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
-
 	if err = retry.Do(func() error {
 		// timeout for single piece replication
 		ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)

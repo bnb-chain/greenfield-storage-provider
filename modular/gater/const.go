@@ -34,6 +34,8 @@ const (
 
 	// GetApprovalPath defines get-approval path style suffix
 	GetApprovalPath = "/greenfield/admin/v1/get-approval"
+	// GetRecommendedVirtualGroupFamilyPath defines get-recommended-vgf path style suffix
+	GetRecommendedVirtualGroupFamilyPath = "/greenfield/admin/v1/get-recommended-vgf"
 	// ActionQuery defines get-approval's type, currently include create bucket and create object
 	ActionQuery = "action"
 	// UploadProgressQuery defines upload progress query, which is used to route request

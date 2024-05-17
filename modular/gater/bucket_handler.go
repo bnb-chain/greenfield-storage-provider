@@ -12,6 +12,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
 	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
@@ -443,4 +444,64 @@ func (g *GateModular) getBucketReadQuotaCountHandler(w http.ResponseWriter, r *h
 		return
 	}
 	log.CtxDebugw(ctx, "succeed to get bucket quota count", "xml_info", xmlInfo)
+}
+
+func (g *GateModular) getRecommendedVGFIDHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		reqCtx *RequestContext
+	)
+	startTime := time.Now()
+	defer func() {
+		reqCtx.Cancel()
+		if err != nil {
+			reqCtx.SetError(gfsperrors.MakeGfSpError(err))
+			reqCtx.SetHTTPCode(int(gfsperrors.MakeGfSpError(err).GetHttpStatusCode()))
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			reqCtx.SetHTTPCode(http.StatusOK)
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
+	}()
+
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		return
+	}
+
+	vgfID, err := g.baseApp.GfSpClient().PickVirtualGroupFamilyID(
+		reqCtx.Context(), &gfsptask.GfSpCreateBucketApprovalTask{
+			Task:             &gfsptask.GfSpTask{},
+			CreateBucketInfo: &storagetypes.MsgCreateBucket{},
+		})
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to get recommended virtual group family", "error", err)
+		return
+	}
+
+	var xmlInfo = struct {
+		XMLName xml.Name `xml:"VirtualGroupFamily"`
+		Id      uint32   `xml:"Id"`
+	}{
+		Id: vgfID,
+	}
+
+	xmlBody, err := xml.Marshal(&xmlInfo)
+	if err != nil {
+		log.Errorw("failed to marshal xml", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
+		return
+	}
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+
+	if _, err = w.Write(xmlBody); err != nil {
+		log.Errorw("failed to write body", "error", err)
+		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
+		return
+	}
+	log.CtxDebugw(reqCtx.Context(), "succeed to get recommended virtual group family", "xml_info", xmlInfo)
 }
