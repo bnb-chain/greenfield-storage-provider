@@ -1,12 +1,17 @@
+---
+title: Gateway
+---
+
 # Gateway
 
 The Gateway service serves as the unified entrance of HTTP requests for SP, providing a standardized `HTTP RESTful API` for application programming.
-If you are interested in the HTTP Restful API, we invite you to the [following page](https://greenfield.bnbchain.org/docs/api-sdk/storgae-provider-rest/).
+If you are interested in the HTTP Restful API, we invite you to the [following page](../../../../docs/api/storage-provider-rest/README.md).
 
 ## Overview
 
-<div align=center><img src="../asset/11-gater.jpg" width="700px"></div>
-<div align="center"><i>Gateway Architecture</i></div>
+<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/06-gateway.jpg" width="500" height="100" /></div>
+
+<div style={{textAlign:'center'}}><i>Gateway Architecture</i></div>
 
 ### Authorization Checker
 
@@ -45,19 +50,20 @@ Explanation:
 - `object_name` is the name of the object and is mandatory.
 - The parameter is an optional list of key-value pairs that provide additional information for the URI.
 
-Each SP will register multiple endpoints to access their services, e.g. "SP1" may ask their users to download objects via https://gnfd-testnet-sp-1.bnbchain.org/download.
-And the full download RESTful API would be like: https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg.
+Each SP will register multiple endpoints to access their services, e.g. "SP1" may ask their users to download objects via `https://gnfd-testnet-sp-1.bnbchain.org/download`.
+And the full download RESTful API would be like: `https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg`.
 
 Universal Endpoint supports using any valid endpoint for any SP, and automatically redirects to the correct endpoint containing the object for downloading.
 
-For instance, when users access a testnet endpoint `gnfd-testnet-sp-1.bnbchain.org` of SP1, the request URL will be: https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg. Universal Endpoint will find the correct endpoint for myobject.jpg, here SP3, and redirect the user to:https://gnfd-testnet-sp-3.bnbchain.org/download/mybucket/myobject.jpg and download the file.
+For instance, when users access a testnet endpoint `gnfd-testnet-sp-1.bnbchain.org` of SP1, the request URL will be: `https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg`. Universal Endpoint will find the correct endpoint for myobject.jpg, here SP3, and redirect the user to: `https://gnfd-testnet-sp-3.bnbchain.org/download/mybucket/myobject.jpg` and download the file.
 
-<div align=center><img src="../../..//asset/501-SP-Gateway-Universal-Endpoint.png"></div>
-<div align="center"><i>Universal Endpoint Logic Flow</i></div>
+<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/501-SP-Gateway-Universal-Endpoint.png" width="500" height="100" /></div>
+
+<div style={{textAlign:'center'}}><i>Universal Endpoint Logic Flow</i></div>
 
 #### Download File
 
-If you want to download a file using Universal Endpoint, downloading URL is like: https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg. This is enforced by adding this Content-Type to HTTP headers:
+If you want to download a file using Universal Endpoint, downloading URL is like: `https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg`. This is enforced by adding this Content-Type to HTTP headers:
 
 ```text
 Content-Disposition=attachment
@@ -65,7 +71,7 @@ Content-Disposition=attachment
 
 #### View File
 
-If you want to view a file using Universal Endpoint, viewing url is like: https://gnfd-testnet-sp-1.bnbchain.org/view/mybucket/myobject.jpg. This is enforced by adding this Content-Type to HTTP headers:
+If you want to view a file using Universal Endpoint, viewing url is like: `https://gnfd-testnet-sp-1.bnbchain.org/view/mybucket/myobject.jpg`. This is enforced by adding this Content-Type to HTTP headers:
 
 ```text
 Content-Disposition=inline
@@ -81,4 +87,16 @@ Public files can be downloaded/viewed with the following points to notice:
 
 #### Private File Access
 
-Access private file is in design and will be provided in the new few releases. Currently, if you try to download or view a private file, an error will be thrown to let you know the object key you are using is illegal.
+Accessing private file via Universal Endpoints is available now. 
+1. Just browse an universal endpoint URL link, which points to a private file that you have access to read.
+2. Click the "connect wallet" button in the page
+
+    ![Connect wallet](../../../../static/asset/503-univ_connect_wallet.png#univ)
+
+3. Sign via the wallet to provide your identity, so that later SPs can verify your access permission
+
+    ![Sign](../../../../static/asset/505-univ_sign.png#univ)
+
+4. If your account doesn't have the read access to the target object, you can contact the object owner to ask for access permission.
+
+    ![Need Access](../../../../static/asset/504-univ_need_access.png#univ)

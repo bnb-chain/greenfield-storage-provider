@@ -110,7 +110,7 @@ func (s *SpDBImpl) ListShadowIntegrityMeta() ([]*corespdb.ShadowIntegrityMeta, e
 	err = s.db.Table(ShadowIntegrityMetaTableName).
 		Select("*").
 		Limit(ListShadowIntegrityMetaDefaultSize).
-		Order("object_id asc").
+		Order("object_id desc").
 		Find(&shadowIntegrityMetas).Error
 
 	for _, sim := range shadowIntegrityMetas {
