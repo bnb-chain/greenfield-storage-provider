@@ -239,7 +239,7 @@ func (m *Module) handleEventMigrationBucket(ctx context.Context, block *tmctypes
 	bucket := &models.Bucket{
 		BucketID:   common.BigToHash(migrationBucket.BucketId.BigInt()),
 		BucketName: migrationBucket.BucketName,
-		Status:     storagetypes.BUCKET_STATUS_MIGRATING.String(),
+		Status:     migrationBucket.Status.String(),
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
@@ -256,7 +256,7 @@ func (m *Module) handleEventCancelMigrationBucket(ctx context.Context, block *tm
 	bucket := &models.Bucket{
 		BucketID:   common.BigToHash(cancelMigrationBucket.BucketId.BigInt()),
 		BucketName: cancelMigrationBucket.BucketName,
-		Status:     storagetypes.BUCKET_STATUS_CREATED.String(),
+		Status:     cancelMigrationBucket.Status.String(),
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
@@ -273,7 +273,7 @@ func (m *Module) handleEventRejectMigrateBucket(ctx context.Context, block *tmct
 	bucket := &models.Bucket{
 		BucketID:   common.BigToHash(rejectMigrateBucket.BucketId.BigInt()),
 		BucketName: rejectMigrateBucket.BucketName,
-		Status:     storagetypes.BUCKET_STATUS_CREATED.String(),
+		Status:     rejectMigrateBucket.Status.String(),
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
@@ -291,7 +291,7 @@ func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmcty
 		BucketID:                   common.BigToHash(completeMigrationBucket.BucketId.BigInt()),
 		BucketName:                 completeMigrationBucket.BucketName,
 		GlobalVirtualGroupFamilyId: completeMigrationBucket.GlobalVirtualGroupFamilyId,
-		Status:                     storagetypes.BUCKET_STATUS_CREATED.String(),
+		Status:                     completeMigrationBucket.Status.String(),
 
 		UpdateAt:     block.Block.Height,
 		UpdateTxHash: txHash,
