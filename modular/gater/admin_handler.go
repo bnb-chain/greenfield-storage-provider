@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
@@ -25,7 +27,6 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -701,6 +702,9 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 		break
 	}
 	if err != nil {
+		if strings.Contains(err.Error(), "No such object") {
+			err = ErrNoSuchObject
+		}
 		return err
 	}
 	if receiveTask.BucketMigration {
