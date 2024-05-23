@@ -134,6 +134,7 @@ func (m *Module) handleMigrationBucket(ctx context.Context, block *tmctypes.Resu
 		Operator:       common.HexToAddress(migrationBucket.Operator),
 		BucketName:     migrationBucket.BucketName,
 		DstPrimarySpId: migrationBucket.DstPrimarySpId,
+		Status:         migrationBucket.Status.String(),
 
 		CreateAt:     block.Block.Height,
 		CreateTxHash: txHash,
@@ -155,6 +156,7 @@ func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmcty
 		BucketName:                 completeMigrationBucket.BucketName,
 		GlobalVirtualGroupFamilyId: completeMigrationBucket.GlobalVirtualGroupFamilyId,
 		SrcPrimarySpId:             completeMigrationBucket.SrcPrimarySpId,
+		Status:                     completeMigrationBucket.Status.String(),
 
 		CreateAt:     block.Block.Height,
 		CreateTxHash: txHash,
@@ -261,11 +263,11 @@ func (m *Module) handleCompleteStorageProviderExit(ctx context.Context, block *t
 }
 
 func (m *Module) handleCancelMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelMigrationBucket *storagetypes.EventCancelMigrationBucket) map[string][]interface{} {
-
 	eventCancelMigrationBucket := &bsdb.EventCancelMigrationBucket{
 		BucketID:   common.BigToHash(cancelMigrationBucket.BucketId.BigInt()),
 		Operator:   common.HexToAddress(cancelMigrationBucket.Operator),
 		BucketName: cancelMigrationBucket.BucketName,
+		Status:     cancelMigrationBucket.Status.String(),
 
 		CreateAt:     block.Block.Height,
 		CreateTxHash: txHash,
@@ -283,6 +285,7 @@ func (m *Module) handleRejectMigrateBucket(ctx context.Context, block *tmctypes.
 		BucketID:   common.BigToHash(migrationBucket.BucketId.BigInt()),
 		Operator:   common.HexToAddress(migrationBucket.Operator),
 		BucketName: migrationBucket.BucketName,
+		Status:     migrationBucket.Status.String(),
 
 		CreateAt:     block.Block.Height,
 		CreateTxHash: txHash,
