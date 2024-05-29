@@ -61,6 +61,8 @@ var MetricsItems = []prometheus.Collector{
 	ManagerCounter,
 	ManagerTime,
 	GCBlockNumberGauge,
+	SPHealthCheckerTime,
+	SPHealthCheckerFailureCounter,
 
 	// workflow metrics category
 	PerfApprovalTime,
@@ -247,6 +249,20 @@ var (
 		Name: "gc_block_number",
 		Help: "Track the next gc block number.",
 	}, []string{"gc_block_number"})
+	SPHealthCheckerTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "sp_health_checker_request_time",
+			Help: "Request duration in seconds.",
+		},
+		[]string{"sp_id"},
+	)
+	SPHealthCheckerFailureCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "sp_health_checker_request_counter",
+			Help: "Request failure count.",
+		},
+		[]string{"sp_id"},
+	)
 )
 
 // workflow metrics items
