@@ -162,13 +162,34 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		log.CtxErrorw(ctx, "failed to write integrity meta to db", "task", task, "error", err)
 		return nil, ErrGfSpDBWithDetail("failed to write integrity meta to db, error: " + err.Error())
 	}
+
+	// only in the case when the secondary sp is the primary SP in a GVG and it is delegated upload, it should not delete the piece hash at this moment.(will be deleted when the sealing is success)
+	// in all other cases, piece hash should be deleted from DB
+	var skipDeleteChecksum bool
+	if task.GetIsAgentUploadTask() {
+		gvg, queryErr := r.baseApp.Consensus().QueryGlobalVirtualGroup(ctx, task.GetGlobalVirtualGroupId())
+		if queryErr != nil {
+			log.CtxErrorw(ctx, "failed to QueryGlobalVirtualGroup", "error", queryErr)
+			return nil, ErrGfSpDBWithDetail("failed to QueryGlobalVirtualGroup, error: " + queryErr.Error())
+		}
+		spID, idErr := r.getSPID()
+		if idErr != nil {
+			log.CtxErrorw(ctx, "failed to getSPID", "error", idErr)
+			return nil, ErrGfSpDBWithDetail("failed to getSPID, error: " + idErr.Error())
+		}
+		if spID == gvg.PrimarySpId {
+			skipDeleteChecksum = true
+		}
+	}
 	deletePieceHashTime := time.Now()
-	if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksumOptimized(
-		task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx()); err != nil {
-		log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "task", task, "error", err)
-		// ignore the error,let the request go, the background task will gc the meta again later
-		metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
-			Observe(time.Since(deletePieceHashTime).Seconds())
+	if !skipDeleteChecksum {
+		if err = r.baseApp.GfSpDB().DeleteAllReplicatePieceChecksumOptimized(
+			task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx()); err != nil {
+			log.CtxErrorw(ctx, "failed to delete all replicate piece checksum", "task", task, "error", err)
+			// ignore the error,let the request go, the background task will gc the meta again later
+			metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").
+				Observe(time.Since(deletePieceHashTime).Seconds())
+		}
 	}
 
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_delete_piece_hash_time").

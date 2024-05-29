@@ -83,7 +83,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	if task.GetIsAgentUpload() {
 		expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryEndpoints()), task.GetStorageParams())
 		if makeErr != nil {
-			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", err)
+			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", makeErr)
 			err = makeErr
 			return
 		}
@@ -317,7 +317,6 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
-
 	if err = retry.Do(func() error {
 		// timeout for single piece replication
 		ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)

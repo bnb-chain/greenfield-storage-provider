@@ -1,6 +1,10 @@
+---
+title: Downloader
+---
+
 # Downloader
 
-Downloader is responsible for downloading object data (including range download) and challenge piece. The workflow of Downloader users can refer [Downloader](../workflow/workflow.md#downloader). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Downloader module provides an abstract interface, which is called `Downloader`, as follows:
+Downloader is responsible for downloading object data (including range download) and challenge piece. The workflow of Downloader users can refer [Downloader](../introduction/workflow.md#downloader). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Downloader module provides an abstract interface, which is called `Downloader`, as follows:
 
 Downloader is an abstract interface to handle getting object requests from users' account, and getting challenge info requests from other components in the system.
 

@@ -1085,7 +1085,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrNoPermission
 		return
 	}
-	contentType = reqCtx.vars["content_type"]
+	contentType = r.Header.Get(ContentTypeHeader)
 	if contentType == "" {
 		contentType = ContentDefault
 	}
@@ -1154,10 +1154,12 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		if err != nil && !strings.Contains(err.Error(), "No such object") {
 			log.CtxErrorw(reqCtx.ctx, "failed to QueryObjectInfo", "error", err)
 			return
-		} else if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || objectInfo.Creator != reqCtx.account || objectInfo.PayloadSize != payloadSize) {
+		}
+		if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || (objectInfo.Creator != reqCtx.account && objectInfo.Owner != reqCtx.account) || objectInfo.PayloadSize != payloadSize) {
 			err = ErrInvalidQuery
 			return
-		} else {
+		}
+		if objectInfo == nil {
 			var visibilityInt int64
 			visibilityStr := queryParams.Get("visibility")
 			visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
@@ -1353,6 +1355,10 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 	fingerprint = commonhash.GenerateChecksum(approvalMsg)
+	contentType = r.Header.Get(ContentTypeHeader)
+	if contentType == "" {
+		contentType = ContentDefault
+	}
 	startTime := time.Now()
 
 	if isUpdate {
@@ -1571,7 +1577,7 @@ func (g *GateModular) delegateCreateFolderHandler(w http.ResponseWriter, r *http
 		err = ErrNoPermission
 		return
 	}
-	contentType = reqCtx.vars["content_type"]
+	contentType = r.Header.Get(ContentTypeHeader)
 	if contentType == "" {
 		contentType = ContentDefault
 	}
