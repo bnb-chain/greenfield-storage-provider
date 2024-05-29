@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/gorilla/mux"
@@ -22,7 +22,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 func mockGetBucketReadQuotaRoute(t *testing.T, g *GateModular) *mux.Router {

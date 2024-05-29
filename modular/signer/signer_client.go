@@ -14,14 +14,14 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield/sdk/client"
-	"github.com/bnb-chain/greenfield/sdk/keys"
-	ctypes "github.com/bnb-chain/greenfield/sdk/types"
-	"github.com/bnb-chain/greenfield/types"
-	"github.com/bnb-chain/greenfield/types/common"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/evmos/evmos/v12/sdk/client"
+	"github.com/evmos/evmos/v12/sdk/keys"
+	ctypes "github.com/evmos/evmos/v12/sdk/types"
+	"github.com/evmos/evmos/v12/types"
+	"github.com/evmos/evmos/v12/types/common"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 // SignType is the type of msg signature

@@ -2,7 +2,7 @@ version: v1
 name: buf.build/bnb-chain/greenfield-storage-provider
 deps:
   - buf.build/cosmos/cosmos-proto
-  - buf.build/bnb-chain/greenfield
+  - buf.build/evmos/evmos
   - buf.build/cosmos/gogo-proto
 breaking:
   use:

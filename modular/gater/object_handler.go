@@ -27,9 +27,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/types/s3util"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 const ContentDefault = "application/octet-stream"

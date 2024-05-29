@@ -6,11 +6,11 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
 	"github.com/forbole/juno/v4/models"

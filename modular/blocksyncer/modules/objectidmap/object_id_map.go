@@ -12,7 +12,7 @@ import (
 	"github.com/forbole/juno/v4/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 var (

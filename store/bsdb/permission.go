@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	gnfdresource "github.com/bnb-chain/greenfield/types/resource"
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+	gnfdresource "github.com/evmos/evmos/v12/types/resource"
+	permtypes "github.com/evmos/evmos/v12/x/permission/types"
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 )

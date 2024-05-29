@@ -12,8 +12,8 @@ import (
 	"github.com/forbole/juno/v4/log"
 
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	vgtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	vgtypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 var (

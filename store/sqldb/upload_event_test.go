@@ -10,7 +10,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
+	storage_types "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 func TestSpDBImpl_InsertPutEventSuccess1(t *testing.T) {

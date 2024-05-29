@@ -13,9 +13,9 @@ import (
 	"github.com/forbole/juno/v4/models"
 
 	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
-	"github.com/bnb-chain/greenfield/types"
-	"github.com/bnb-chain/greenfield/types/resource"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/types"
+	"github.com/evmos/evmos/v12/types/resource"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 var (

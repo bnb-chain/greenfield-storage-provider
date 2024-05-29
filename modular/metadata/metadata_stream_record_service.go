@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
+	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
 )
 
 func (r *MetadataModular) GfSpPrimarySpIncomeDetails(ctx context.Context, req *types.GfSpPrimarySpIncomeDetailsRequest) (resp *types.GfSpPrimarySpIncomeDetailsResponse, err error) {

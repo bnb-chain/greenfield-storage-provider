@@ -8,8 +8,8 @@ import (
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield/sdk/keys"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/sdk/keys"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 func setupKM() (keys.KeyManager, error) {

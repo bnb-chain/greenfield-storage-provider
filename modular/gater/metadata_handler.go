@@ -20,14 +20,14 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/types/resource"
-	resource_types "github.com/bnb-chain/greenfield/types/resource"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
-	sp_types "github.com/bnb-chain/greenfield/x/sp/types"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/evmos/evmos/v12/types/resource"
+	resource_types "github.com/evmos/evmos/v12/types/resource"
+	"github.com/evmos/evmos/v12/types/s3util"
+	payment_types "github.com/evmos/evmos/v12/x/payment/types"
+	permission_types "github.com/evmos/evmos/v12/x/permission/types"
+	sp_types "github.com/evmos/evmos/v12/x/sp/types"
+	storage_types "github.com/evmos/evmos/v12/x/storage/types"
+	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 const (

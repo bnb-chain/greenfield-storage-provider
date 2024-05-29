@@ -18,7 +18,7 @@ import (
 
 	bucketmodules "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{

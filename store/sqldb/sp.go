@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 )
 
 // UpdateAllSp update(maybe overwrite) all sp info in db

@@ -9,7 +9,7 @@ import (
 	gfsperrors "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	gfsplimit "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	gfsptask "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	types "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"

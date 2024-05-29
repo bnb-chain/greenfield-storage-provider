@@ -12,9 +12,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	types0 "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	types0 "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"

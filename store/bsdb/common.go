@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+	permtypes "github.com/evmos/evmos/v12/x/permission/types"
 )
 
 // ListObjectsResult represents the result of a List Objects operation.

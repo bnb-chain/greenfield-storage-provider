@@ -4,7 +4,7 @@ import (
 	"time"
 
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 // SpAddressType identify address type of SP.

@@ -13,7 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	jsonclient "github.com/bnb-chain/greenfield-storage-provider/util/rpc/jsonrpc/client"
-	chainClient "github.com/bnb-chain/greenfield/sdk/client"
+	chainClient "github.com/evmos/evmos/v12/sdk/client"
 )
 
 const (

@@ -19,9 +19,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 var (

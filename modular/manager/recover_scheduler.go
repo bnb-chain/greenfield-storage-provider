@@ -17,8 +17,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/x/storage/types"
-	types2 "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/evmos/evmos/v12/x/storage/types"
+	types2 "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	"gorm.io/gorm"
 )
 

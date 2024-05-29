@@ -9,8 +9,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 // GfSpGetPaymentByBucketName get bucket payment info by a bucket name

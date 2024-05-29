@@ -9,7 +9,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
 	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 func (m *GfSpRecoverPieceTask) InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,

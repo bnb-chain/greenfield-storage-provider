@@ -17,9 +17,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 
 	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield/types/common"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/types/common"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 func TestErrSignerWithDetail(t *testing.T) {

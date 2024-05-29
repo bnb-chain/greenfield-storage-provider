@@ -3,7 +3,7 @@ package gfspvgmgr
 import (
 	"testing"
 
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	"github.com/stretchr/testify/assert"
 )
 

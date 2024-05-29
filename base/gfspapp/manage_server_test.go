@@ -13,7 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 func TestGfSpBaseApp_GfSpBeginTaskSuccess1(t *testing.T) {

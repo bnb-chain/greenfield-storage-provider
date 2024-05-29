@@ -18,7 +18,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 func TestUploadModular_PreUploadObject(t *testing.T) {

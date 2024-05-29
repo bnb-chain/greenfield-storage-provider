@@ -14,13 +14,13 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	chaintypes "github.com/bnb-chain/greenfield/types"
-	"github.com/bnb-chain/greenfield/types/resource"
-	gnfdresource "github.com/bnb-chain/greenfield/types/resource"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
-	"github.com/bnb-chain/greenfield/x/storage/keeper"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	chaintypes "github.com/evmos/evmos/v12/types"
+	"github.com/evmos/evmos/v12/types/resource"
+	gnfdresource "github.com/evmos/evmos/v12/types/resource"
+	"github.com/evmos/evmos/v12/types/s3util"
+	permtypes "github.com/evmos/evmos/v12/x/permission/types"
+	"github.com/evmos/evmos/v12/x/storage/keeper"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 // GfSpVerifyPermission Verify the input account’s permission to input items

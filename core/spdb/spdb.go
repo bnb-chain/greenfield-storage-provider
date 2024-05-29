@@ -5,7 +5,7 @@ import (
 
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 )
 
 // SPDB contains all sp db operations

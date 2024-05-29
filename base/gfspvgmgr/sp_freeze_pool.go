@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 const (

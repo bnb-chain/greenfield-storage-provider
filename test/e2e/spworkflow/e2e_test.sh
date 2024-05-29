@@ -99,7 +99,7 @@ function build_cmd() {
   touch config.toml
   {
     echo rpcAddr = \"http://localhost:26750\"
-    echo chainId = \"greenfield_9000-121\"
+    echo chainId = \"mechain_1000000-121\"
   } > config.toml
 }
 

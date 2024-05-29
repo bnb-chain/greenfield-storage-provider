@@ -10,8 +10,8 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield/types/common"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/types/common"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 )
 
 func TestGfSpTQueue_Len(t *testing.T) {

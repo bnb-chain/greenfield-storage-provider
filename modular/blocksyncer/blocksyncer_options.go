@@ -129,7 +129,7 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 	if cfg.BlockSyncer.CommitNumber != 0 {
 		commitNumber = cfg.BlockSyncer.CommitNumber
 	}
-	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
+	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Codec,
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,

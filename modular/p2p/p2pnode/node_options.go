@@ -104,7 +104,7 @@ func VerifySignature(spOpAddr string, signBytes []byte, sig []byte) error {
 	if err != nil {
 		return err
 	}
-	sigHash := sdk.Keccak256(signBytes)
+	sigHash := ethcrypto.Keccak256(signBytes)
 
 	if len(sig) != ethcrypto.SignatureLength {
 		return errors.Wrapf(sdkerrors.ErrorInvalidSigner, "signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes", len(sig))

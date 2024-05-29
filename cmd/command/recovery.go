@@ -15,7 +15,7 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/x/storage/types"
 )
 
 const (

@@ -1,7 +1,7 @@
 package bsdb
 
 import (
-	"github.com/bnb-chain/greenfield/x/permission/types"
+	"github.com/evmos/evmos/v12/x/permission/types"
 	"github.com/forbole/juno/v4/common"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"

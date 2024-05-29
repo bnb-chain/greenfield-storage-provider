@@ -12,9 +12,9 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/evmos/evmos/v12/types/s3util"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualtypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 // GfSpListObjectsByBucketName list objects info by a bucket name

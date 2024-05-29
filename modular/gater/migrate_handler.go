@@ -9,7 +9,7 @@ import (
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
@@ -17,10 +17,10 @@ import (
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield/types/common"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/evmos/evmos/v12/types/common"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
 // dest sp receive migrate gvg notify from src sp.
