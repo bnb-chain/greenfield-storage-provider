@@ -499,6 +499,26 @@ func (mr *MockGfSpClientAPIMockRecorder) GetAuthNonce(ctx, account, domain any, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthNonce", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetAuthNonce), varargs...)
 }
 
+// GetBsDBInfo mocks base method.
+func (m *MockGfSpClientAPI) GetBsDBInfo(ctx context.Context, blockHeight uint64, opts ...grpc.DialOption) (*types.GfSpGetBsDBInfoResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, blockHeight}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBsDBInfo", varargs...)
+	ret0, _ := ret[0].(*types.GfSpGetBsDBInfoResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBsDBInfo indicates an expected call of GetBsDBInfo.
+func (mr *MockGfSpClientAPIMockRecorder) GetBsDBInfo(ctx, blockHeight any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, blockHeight}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBsDBInfo", reflect.TypeOf((*MockGfSpClientAPI)(nil).GetBsDBInfo), varargs...)
+}
+
 // GetBucketByBucketID mocks base method.
 func (m *MockGfSpClientAPI) GetBucketByBucketID(ctx context.Context, bucketID int64, includePrivate bool, opts ...grpc.DialOption) (*types.Bucket, error) {
 	m.ctrl.T.Helper()
@@ -3364,6 +3384,26 @@ func NewMockMetadataAPI(ctrl *gomock.Controller) *MockMetadataAPI {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockMetadataAPI) EXPECT() *MockMetadataAPIMockRecorder {
 	return m.recorder
+}
+
+// GetBsDBInfo mocks base method.
+func (m *MockMetadataAPI) GetBsDBInfo(ctx context.Context, blockHeight uint64, opts ...grpc.DialOption) (*types.GfSpGetBsDBInfoResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, blockHeight}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetBsDBInfo", varargs...)
+	ret0, _ := ret[0].(*types.GfSpGetBsDBInfoResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBsDBInfo indicates an expected call of GetBsDBInfo.
+func (mr *MockMetadataAPIMockRecorder) GetBsDBInfo(ctx, blockHeight any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, blockHeight}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBsDBInfo", reflect.TypeOf((*MockMetadataAPI)(nil).GetBsDBInfo), varargs...)
 }
 
 // GetBucketByBucketID mocks base method.

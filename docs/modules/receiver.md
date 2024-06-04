@@ -1,3 +1,7 @@
+---
+title: Receiver
+---
+
 # Receiver
 
 Receiver is responsible for accepting piece data that replicated from primary SP. When receiving piece data from primary SP, piece data is transferred from Gateway and then use gRPC to receiver module.

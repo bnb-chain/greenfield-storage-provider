@@ -30,9 +30,10 @@ const (
 )
 
 var (
-	ErrExceptionsStream = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98002, "stream closed abnormally")
-	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98101, "response type mismatch")
-	ErrNoSuchObject     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 98093, "no such object from metadata")
+	ErrExceptionsStream = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 980001, "stream closed abnormally")
+	ErrTypeMismatch     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 980002, "response type mismatch")
+	ErrNoSuchObject     = gfsperrors.Register(ClientCodeSpace, http.StatusBadRequest, 980901, "no such object from metadata")
+	ErrNoEnoughQuota    = gfsperrors.Register(ClientCodeSpace, http.StatusNotAcceptable, 980003, "the bucket does not have enough quota")
 )
 
 func ErrRPCUnknownWithDetail(detail string, err error) *gfsperrors.GfSpError {

@@ -204,6 +204,13 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 	if err != nil {
 		return err
 	}
+	if bucket == nil {
+		log.Debugw("send complete migrate bucket has been deleted", "bucket_id", plan.bucketID)
+		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED); err != nil {
+			return err
+		}
+		return nil
+	}
 	var gvgMappings []*storagetypes.GVGMapping
 	for _, migrateGVGUnit := range plan.gvgUnitMap {
 		aggBlsSig, getBlsError := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateGVGUnit)
@@ -238,6 +245,13 @@ func (plan *BucketMigrateExecutePlan) rejectBucketMigration() error {
 	bucket, err := plan.manager.baseApp.GfSpClient().GetBucketByBucketID(ctx, int64(plan.bucketID), true)
 	if err != nil {
 		return err
+	}
+	if bucket == nil {
+		log.Debugw("reject bucket migration has been deleted", "bucket_id", plan.bucketID)
+		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED); err != nil {
+			return err
+		}
+		return nil
 	}
 	rejectMigrateBucket := &storagetypes.MsgRejectMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
 		BucketName: bucket.BucketInfo.GetBucketName()}
@@ -591,6 +605,23 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 	return err
 }
 
+func (s *BucketMigrateScheduler) deleteMigrateBucket(bucketID uint64) error {
+	executePlan, err := s.getExecutePlanByBucketID(bucketID)
+	// 1) Received the CompleteEvents event for the first time.
+	// 2) Subsequently received the CompleteEvents event.
+	if err != nil {
+		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket, the event may already finished", "bucket_id", bucketID)
+		return err
+	}
+
+	s.deleteExecutePlanByBucketID(bucketID)
+	executePlan.stopSPSchedule()
+	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
+	log.Infow("succeed to delete migrate bucket", "bucket_id", bucketID, "error", err)
+
+	return err
+}
+
 func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject bool) error {
 	var (
 		executePlan *BucketMigrateExecutePlan
@@ -696,7 +727,17 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 		log.Errorw("failed to get bucket by bucket id", "bucket_id", bucketID, "error", err)
 		return
 	}
-
+	if bucket == nil {
+		if err = s.deleteMigrateBucket(bucketID); err != nil {
+			log.Errorw("failed to done migrate bucket", "EventMigrationBucket", event, "error", err)
+			return
+		}
+		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED); err != nil {
+			return
+		}
+		log.CtxInfow(ctx, "succeed to remove deleted bucket migrate event", "EventMigrationBucket", event)
+		return
+	}
 	if bucket.BucketInfo.GetBucketStatus() == storagetypes.BUCKET_STATUS_CREATED {
 		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_WAIT_COMPLETE_TX_EVENT_DONE); err != nil {
 			return

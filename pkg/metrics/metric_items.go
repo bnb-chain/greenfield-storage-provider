@@ -61,6 +61,8 @@ var MetricsItems = []prometheus.Collector{
 	ManagerCounter,
 	ManagerTime,
 	GCBlockNumberGauge,
+	SPHealthCheckerTime,
+	SPHealthCheckerFailureCounter,
 
 	// workflow metrics category
 	PerfApprovalTime,
@@ -79,6 +81,7 @@ var MetricsItems = []prometheus.Collector{
 	BlocksyncerWriteDBTime,
 	ChainLatestHeight,
 	ChainRPCTime,
+	SaveBlockResultErr,
 
 	// metadata metrics category
 	MetadataReqTime,
@@ -246,6 +249,20 @@ var (
 		Name: "gc_block_number",
 		Help: "Track the next gc block number.",
 	}, []string{"gc_block_number"})
+	SPHealthCheckerTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "sp_health_checker_request_time",
+			Help: "Request duration in seconds.",
+		},
+		[]string{"sp_id"},
+	)
+	SPHealthCheckerFailureCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "sp_health_checker_request_counter",
+			Help: "Request failure count.",
+		},
+		[]string{"sp_id"},
+	)
 )
 
 // workflow metrics items
@@ -309,6 +326,14 @@ var (
 	ChainLatestHeight = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "chain_latest_height",
 		Help: "Track the height of chain. ",
+	})
+	SaveBlockResultErr = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "save_block_result_err",
+		Help: "Track the save block result err",
+	})
+	DataStatisticsErr = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "data_statistics_err",
+		Help: "Track the data statistics err",
 	})
 )
 

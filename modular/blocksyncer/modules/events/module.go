@@ -71,8 +71,11 @@ func (m *Module) PrepareTables() error {
 func (m *Module) AutoMigrate() error {
 	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{
 		&bsdb.EventSwapOut{},
+		&bsdb.EventCompleteSwapOut{},
+		&bsdb.EventCancelSwapOut{},
 		&bsdb.EventMigrationBucket{},
 		&bsdb.EventCompleteMigrationBucket{},
+		&bsdb.EventCancelMigrationBucket{},
 		&bsdb.EventStorageProviderExit{},
 		&bsdb.EventCompleteStorageProviderExit{},
 		&bsdb.EventRejectMigrateBucket{},

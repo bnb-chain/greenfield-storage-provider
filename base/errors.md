@@ -31,6 +31,9 @@ It sorts from 50...
 * `53`: is used for Resource manager code.
 * `54`: is used for VirtualGroup manager code.
 
+### No Dependencies
+* `00`: no dependencies
+
 ### Modular Code
 It sorts from 0... to 49
 * `01`: is used for Approver modular code.

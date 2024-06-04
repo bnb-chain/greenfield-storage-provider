@@ -267,10 +267,18 @@ type LogConfig struct {
 }
 
 type BlockSyncerConfig struct {
-	Modules          []string `comment:"required"`
-	Workers          uint     `comment:"required"`
-	CommitNumber     uint64   `comment:"optional"`
-	BsDBWriteAddress string   `comment:"optional"`
+	Modules                []string         `comment:"required"`
+	Workers                uint             `comment:"required"`
+	CommitNumber           uint64           `comment:"optional"`
+	BsDBWriteAddress       string           `comment:"optional"`
+	DataMonitor            bool             `comment:"optional"`
+	DataStatisticsDuration int64            `comment:"optinal"`
+	ChainDataStorage       ChainDataStorage `comment:"optional"`
+}
+
+type ChainDataStorage struct {
+	EnableStorage       bool   `comment:"optional"`
+	MaximumStorageCount uint64 `comment:"required"`
 }
 
 type MetadataConfig struct {

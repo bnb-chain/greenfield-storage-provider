@@ -1,6 +1,10 @@
+---
+title: Uploader
+---
+
 # Uploader
 
-Uploader is responsible for receiving and cutting the object payload data into segments, then storing it into PieceStore, and notifying the downstream service to asynchronously replicate the object payload data that processed by EC algorithm to the secondary SP. The workflow of Uploader users can refer [Uploader](../workflow/workflow.md#uploader). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Uploader module provides an abstract interface, which is called `Uploader`, as follows:
+Uploader is responsible for receiving and cutting the object payload data into segments, then storing it into PieceStore, and notifying the downstream service to asynchronously replicate the object payload data that processed by EC algorithm to the secondary SP. The workflow of Uploader users can refer [Uploader](../introduction/workflow.md#uploader). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Uploader module provides an abstract interface, which is called `Uploader`, as follows:
 
 Uploader is an abstract interface to handle putting object requests from users' account and store their payload data into primary SP piece store.
 

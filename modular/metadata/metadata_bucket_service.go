@@ -520,7 +520,17 @@ func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
 				", bucket_id: " + util.Uint64ToString(req.GetBucketId()) + ", error: " + err.Error())}, nil
 		}
 	}
+
 	// if the traffic table has been created, return the db info from meta service
+	var chargedQuotaSize uint64
+	bucketInfo, err := r.baseApp.Consensus().QueryBucketInfoById(ctx, req.BucketId)
+	if err != nil {
+		log.Errorw("failed to get bucketInfo on chain",
+			"bucket_id", req.GetBucketId(), "error", err)
+		chargedQuotaSize = bucketTraffic.ChargedQuotaSize
+	} else {
+		chargedQuotaSize = bucketInfo.ChargedReadQuota
+	}
 	quota := &gfsptask.GfSpBucketQuotaInfo{
 		BucketName:                   bucketTraffic.BucketName,
 		BucketId:                     bucketTraffic.BucketID,
@@ -528,7 +538,7 @@ func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
 		ReadConsumedSize:             bucketTraffic.ReadConsumedSize,
 		FreeQuotaConsumedSize:        bucketTraffic.FreeQuotaConsumedSize,
 		FreeQuotaSize:                bucketTraffic.FreeQuotaSize,
-		ChargedQuotaSize:             bucketTraffic.ChargedQuotaSize,
+		ChargedQuotaSize:             chargedQuotaSize,
 		MonthlyFreeQuotaSize:         bucketTraffic.MonthlyFreeQuotaSize,
 		MonthlyFreeQuotaConsumedSize: bucketTraffic.MonthlyFreeQuotaConsumedSize,
 	}

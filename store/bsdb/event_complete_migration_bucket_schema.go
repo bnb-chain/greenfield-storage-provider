@@ -11,6 +11,7 @@ type EventCompleteMigrationBucket struct {
 	BucketName                 string         `gorm:"column:bucket_name;type:varchar(64);index:idx_bucket_name"`
 	GlobalVirtualGroupFamilyId uint32         `gorm:"column:global_virtual_group_family_id"`
 	SrcPrimarySpId             uint32         `gorm:"column:src_primary_sp_id"`
+	Status                     string         `gorm:"column:status"`
 
 	CreateAt     int64       `gorm:"column:create_at"`
 	CreateTxHash common.Hash `gorm:"column:create_tx_hash;type:BINARY(32);not null"`

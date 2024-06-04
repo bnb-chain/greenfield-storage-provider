@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
@@ -656,6 +657,7 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Success(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	spDBMocker := spdb.NewMockSPDB(ctrl)
 
+	consensusChargedQuotaSize := uint64(100)
 	bucketTraffic := &spdb.BucketTraffic{
 		BucketID:              1,
 		YearMonth:             "2024-01",
@@ -670,6 +672,20 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Success(t *testing.T) {
 
 	consensusMock := consensus.NewMockConsensus(ctrl)
 	consensusMock.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(10000), nil).Times(0)
+	consensusMock.EXPECT().QueryBucketInfoById(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
+		Owner:                      "0x11E0A11A7A01E2E757447B52FBD7152004AC699D",
+		BucketName:                 "",
+		Visibility:                 0,
+		Id:                         math.NewUint(1),
+		SourceType:                 0,
+		CreateAt:                   0,
+		PaymentAddress:             "",
+		GlobalVirtualGroupFamilyId: 0,
+		ChargedReadQuota:           consensusChargedQuotaSize,
+		BucketStatus:               0,
+		Tags:                       nil,
+		SpAsDelegatedAgentDisabled: false,
+	}, nil).AnyTimes()
 	a.baseApp.SetConsensus(consensusMock)
 
 	resp, err := a.GfSpGetLatestBucketReadQuota(context.Background(), &types.GfSpGetLatestBucketReadQuotaRequest{
@@ -684,7 +700,7 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Success(t *testing.T) {
 			ReadConsumedSize:      bucketTraffic.ReadConsumedSize,
 			FreeQuotaConsumedSize: bucketTraffic.FreeQuotaConsumedSize,
 			FreeQuotaSize:         bucketTraffic.FreeQuotaSize,
-			ChargedQuotaSize:      bucketTraffic.ChargedQuotaSize,
+			ChargedQuotaSize:      consensusChargedQuotaSize,
 		},
 	}, resp)
 }

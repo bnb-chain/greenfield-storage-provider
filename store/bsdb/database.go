@@ -143,6 +143,10 @@ type Metadata interface {
 	GetBucketSizeByID(bucketID uint64) (decimal.Decimal, error)
 	// GetDataMigrationRecordByProcessKey  get the record of data migration by the given process key
 	GetDataMigrationRecordByProcessKey(processKey string) (*DataMigrationRecord, error)
+	// GetBsDBDataStatistics get the record of BsDB data statistics
+	GetBsDBDataStatistics(blockHeight uint64) (*DataStat, error)
+	// GetObjectCount get object count by update_at
+	GetObjectCount(blockHeight int64, objectStatus string) ([]int64, error)
 }
 
 // BSDB contains all the methods required by block syncer database

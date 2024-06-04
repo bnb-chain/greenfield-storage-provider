@@ -5,10 +5,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
@@ -25,7 +28,6 @@ import (
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -317,7 +319,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 		if strings.Contains(err.Error(), "No such object") {
 			err = ErrNoSuchObject
 		} else {
-			err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+			err = ErrConsensusWithDetail("failed to get object info from consensus, object_id: " + fmt.Sprint(objectID) + "error: " + err.Error())
 		}
 		return
 	}
@@ -341,7 +343,7 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_bucket_time").Observe(time.Since(getBucketTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, bucket_name: " + objectInfo.GetBucketName() + ", error: " + err.Error())
 		return
 	}
 	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
@@ -458,7 +460,7 @@ func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.R
 		if strings.Contains(err.Error(), "No such object") {
 			err = ErrNoSuchObject
 		} else {
-			err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+			err = ErrConsensusWithDetail("failed to get object info from consensus, object_id:" + reqCtx.request.Header.Get(GnfdObjectIDHeader) + ", error: " + err.Error())
 		}
 		return
 	}
@@ -482,7 +484,7 @@ func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.R
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_bucket_time").Observe(time.Since(getBucketTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, bucket_name: " + objectInfo.GetBucketName() + ", error: " + err.Error())
 		return
 	}
 	redundancyIdx, err := util.StringToInt32(reqCtx.request.Header.Get(GnfdRedundancyIndexHeader))
@@ -548,7 +550,7 @@ func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.R
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
+		err = ErrEncodeResponseWithDetail("failed to marshal xml, object_id: " + reqCtx.request.Header.Get(GnfdObjectIDHeader) + "error: " + err.Error())
 		return
 	}
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
@@ -694,13 +696,16 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 	for retry := 0; retry < checkPermissionRetry; retry++ {
 		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(ctx, receiveTask.ObjectInfo.BucketName, receiveTask.ObjectInfo.ObjectName)
 		if err != nil {
-			err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
+			err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + receiveTask.ObjectInfo.ObjectName + "bucket_name: " + receiveTask.ObjectInfo.BucketName + ", error:" + err.Error())
 			time.Sleep(checkPermissionSleepTime)
 			continue
 		}
 		break
 	}
 	if err != nil {
+		if strings.Contains(err.Error(), "No such object") {
+			err = ErrNoSuchObject
+		}
 		return err
 	}
 	if receiveTask.BucketMigration {
@@ -718,17 +723,17 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 	// check if the request account is the primary SP of the object of the receiving task
 	gvg, err := g.baseApp.GfSpClient().GetGlobalVirtualGroupByGvgID(ctx, receiveTask.GetGlobalVirtualGroupID())
 	if err != nil {
-		return ErrConsensusWithDetail("QueryGVGInfo error: " + err.Error())
+		return ErrConsensusWithDetail("failed to get queryGVGInfo, gvg id: " + fmt.Sprint(receiveTask.GetGlobalVirtualGroupID()) + ", error: " + err.Error())
 	}
 
 	if gvg == nil {
-		return ErrConsensusWithDetail("QueryGVGInfo nil")
+		return ErrConsensusWithDetail("QueryGVGInfo nil, with gvg id: " + fmt.Sprint(receiveTask.GetGlobalVirtualGroupID()))
 	}
 
 	// judge if sender is the primary sp of the gvg
 	primarySp, err := g.baseApp.Consensus().QuerySPByID(ctx, gvg.PrimarySpId)
 	if err != nil {
-		return ErrConsensusWithDetail("QuerySPInfo error: " + err.Error())
+		return ErrConsensusWithDetail("failed to querySPInfo, primarySpId: " + fmt.Sprint(gvg.PrimarySpId) + ", error: " + err.Error())
 	}
 
 	if primarySp.GetOperatorAccAddress().String() != signatureAddr {
@@ -740,7 +745,7 @@ func (g *GateModular) checkReplicatePermission(ctx context.Context, receiveTask 
 	// judge if myself is the right secondary sp of the gvg
 	spID, err := g.getSPID()
 	if err != nil {
-		return ErrConsensusWithDetail("getSPID error: " + err.Error())
+		return ErrConsensusWithDetail("failed to getSPID, gvg info:" + gvg.String() + ", error: " + err.Error())
 	}
 
 	expectSecondarySPID := gvg.GetSecondarySpIds()[int(receiveTask.GetRedundancyIdx())]
@@ -854,12 +859,12 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 
 	spID, err := g.getSPID()
 	if err != nil {
-		err = ErrConsensusWithDetail("getSPID error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to getSPID, operator_address: " + g.baseApp.OperatorAddress() + ", error: " + err.Error())
 		return
 	}
 	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), bucketInfo)
 	if err != nil {
-		err = ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to getBucketPrimarySPID, bucket_name: " + bucketInfo.GetBucketName() + ", error: " + err.Error())
 		return
 	}
 
@@ -926,7 +931,7 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		if err == nil {
 			successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
 			if err != nil {
-				return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
+				return nil, ErrConsensusWithDetail("failed to query sp, SuccessorSpId: " + fmt.Sprint(swapInInfo.SuccessorSpId) + ", err: " + err.Error())
 			}
 			if primarySp.Id == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
 				isSuccessorPrimary = true
@@ -934,11 +939,11 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 		} else {
 			swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, virtualgrouptypes.NoSpecifiedFamilyId, gvg.Id)
 			if err != nil {
-				return nil, ErrConsensusWithDetail("query swapInInfo err: " + err.Error())
+				return nil, ErrConsensusWithDetail("failed to query swapInInfo, gvg_id: " + fmt.Sprint(gvg.Id) + ", err: " + err.Error())
 			}
 			successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
 			if err != nil {
-				return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
+				return nil, ErrConsensusWithDetail("failed to query sp, SuccessorSpId: " + fmt.Sprint(swapInInfo.SuccessorSpId) + ", err: " + err.Error())
 			}
 			for _, sspID := range gvg.SecondarySpIds {
 				if sspID == swapInInfo.TargetSpId && successorSP.OperatorAddress == signatureAddr.String() {
@@ -1011,11 +1016,11 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	// if the handler is not the primary SP of the object, return error
 	spID, err := g.getSPID()
 	if err != nil {
-		return nil, ErrConsensusWithDetail("getSPID error: " + err.Error())
+		return nil, ErrConsensusWithDetail("failed to getSPID , object_name: " + objectInfo.GetObjectName() + "bucket_name:" + bucketInfo.GetBucketName() + ", error: " + err.Error())
 	}
 	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
 	if err != nil {
-		return nil, ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
+		return nil, ErrConsensusWithDetail("GetBucketPrimarySPID, bucket_name: " + bucketInfo.GetBucketName() + ",  error: " + err.Error())
 	}
 
 	if bucketSPID != spID {
@@ -1038,11 +1043,11 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 	if recoveryTask.GetBySuccessorSp() {
 		swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, 0, gvg.Id)
 		if err != nil {
-			return nil, ErrConsensusWithDetail("query swapInInfo err: " + err.Error())
+			return nil, ErrConsensusWithDetail("failed to query swapInInfo, gvg_id: " + fmt.Sprint(gvg.Id) + ", err: " + err.Error())
 		}
 		successorSP, err = g.baseApp.Consensus().QuerySPByID(ctx, swapInInfo.SuccessorSpId)
 		if err != nil {
-			return nil, ErrConsensusWithDetail("query sp err: " + err.Error())
+			return nil, ErrConsensusWithDetail("failed to query sp, swapInInfo.SuccessorSpId: " + fmt.Sprint(swapInInfo.SuccessorSpId) + ", err: " + err.Error())
 		}
 	}
 
@@ -1050,7 +1055,7 @@ func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storage
 		ssp, err := g.baseApp.Consensus().QuerySPByID(ctx, sspId)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to query SP by ID", "sp_id", sspId, "error", err)
-			return nil, ErrConsensusWithDetail("QuerySPByID error: " + err.Error())
+			return nil, ErrConsensusWithDetail("failed to querySPByID, sp_id : " + fmt.Sprint(sspId) + ", error: " + err.Error())
 		}
 
 		if ssp.OperatorAddress == signatureAddr.String() {

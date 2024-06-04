@@ -2,6 +2,7 @@ package gater
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -64,19 +65,19 @@ func (g *GateModular) getObjectChainMeta(ctx context.Context, objectName, bucket
 	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(ctx, bucketName, objectName)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
-		return nil, nil, nil, ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		return nil, nil, nil, ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + objectName + ", bucket_name: " + bucketName + ", error: " + err.Error())
 	}
 
 	bucketInfo, err := g.baseApp.Consensus().QueryBucketInfo(ctx, objectInfo.GetBucketName())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get bucket info from consensus", "error", err)
-		return nil, nil, nil, ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
+		return nil, nil, nil, ErrConsensusWithDetail("failed to get bucket info from consensus, object_name: " + objectName + ", bucket_name: " + bucketName + ", error: " + err.Error())
 	}
 
 	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(ctx, objectInfo.GetLatestUpdatedTime())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get storage params", "error", err)
-		return nil, nil, nil, ErrConsensusWithDetail("failed to get storage params, error: " + err.Error())
+		return nil, nil, nil, ErrConsensusWithDetail("failed to get storage params, object_name: " + objectName + ", bucket_name: " + bucketName + "GetLatestUpdatedTime: " + fmt.Sprint(objectInfo.GetLatestUpdatedTime()) + ", error: " + err.Error())
 	}
 
 	return objectInfo, bucketInfo, params, nil

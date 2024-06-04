@@ -97,13 +97,13 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ",  error: " + err.Error())
 		return
 	}
 	if objectInfo.GetPayloadSize() == 0 || objectInfo.GetPayloadSize() > g.maxPayloadSize {
@@ -117,7 +117,7 @@ func (g *GateModular) putObjectHandler(w http.ResponseWriter, r *http.Request) {
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error" + err.Error())
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 	task := &gfsptask.GfSpUploadObjectTask{}
@@ -242,7 +242,7 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ",error: " + err.Error())
 		return
 	}
 
@@ -252,13 +252,13 @@ func (g *GateModular) resumablePutObjectHandler(w http.ResponseWriter, r *http.R
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ",error: " + err.Error())
 		return
 	}
 	// the resumable upload utilizes the on-chain MaxPayloadSize as the maximum file size
@@ -365,14 +365,14 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + "bucket_name: " + reqCtx.bucketName + " ,error: " + err.Error())
 		return
 	}
 
 	params, err := g.baseApp.Consensus().QueryStorageParamsByTimestamp(reqCtx.Context(), objectInfo.GetLatestUpdatedTime())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, object_name: " + reqCtx.objectName + "bucket_name: " + reqCtx.bucketName + " ,error: " + err.Error())
 		return
 	}
 
@@ -396,13 +396,13 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
+		err = ErrEncodeResponseWithDetail("failed to marshal xml， object_name: " + reqCtx.objectName + "bucket_name: " + reqCtx.bucketName + " ,error: " + err.Error())
 		return
 	}
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
+		err = ErrEncodeResponseWithDetail("failed to write body, object_name: " + reqCtx.objectName + "bucket_name: " + reqCtx.bucketName + " , error: " + err.Error())
 		return
 	}
 	log.Debugw("succeed to query resumable offset", "xml_info", xmlInfo)
@@ -583,7 +583,7 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error:" + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error:" + err.Error())
 		return err
 	}
 
@@ -592,7 +592,7 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_bucket_info_time").Observe(time.Since(getBucketTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get bucket info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get bucket info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get bucket info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return err
 	}
 
@@ -601,7 +601,7 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_storage_param_time").Observe(time.Since(getParamTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return err
 	}
 
@@ -731,7 +731,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 	objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.Context(), reqCtx.bucketName, reqCtx.objectName)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + " ,error: " + err.Error())
 		return
 	}
 	if objectInfo.GetObjectStatus() == storagetypes.OBJECT_STATUS_CREATED {
@@ -768,13 +768,13 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 	xmlBody, err := xml.Marshal(&xmlInfo)
 	if err != nil {
 		log.Errorw("failed to marshal xml", "error", err)
-		err = ErrEncodeResponseWithDetail("failed to marshal xml, error: " + err.Error())
+		err = ErrEncodeResponseWithDetail("failed to marshal xml for query upload progress, object_name: " + reqCtx.objectName + "bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
 	if _, err = w.Write(xmlBody); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
+		err = ErrEncodeResponseWithDetail("failed to write body, object_name: " + reqCtx.objectName + "bucket_name: " + reqCtx.bucketName + ",error: " + err.Error())
 		return
 	}
 	log.Debugw("succeed to query upload progress", "xml_info", xmlInfo)
@@ -858,12 +858,12 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 	// TODO get from config
 	spID, err := g.getSPID()
 	if err != nil {
-		err = ErrConsensusWithDetail("getSPID error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to getSPID, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + " ,error: " + err.Error())
 		return
 	}
 	bucketSPID, err := util.GetBucketPrimarySPID(reqCtx.Context(), g.baseApp.Consensus(), getBucketInfoRes.GetBucketInfo())
 	if err != nil {
-		err = ErrConsensusWithDetail("GetBucketPrimarySPID error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to GetBucketPrimarySPID, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ",error: " + err.Error())
 		return
 	}
 	if spID != bucketSPID {
@@ -1104,7 +1104,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error" + err.Error())
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error" + err.Error())
 		return
 	}
 
@@ -1218,13 +1218,13 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_agent_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 
@@ -1325,7 +1325,7 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_params_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get storage params from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get storage params from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get storage params from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 	if payloadSize == 0 || payloadSize > params.GetMaxPayloadSize() {
@@ -1365,7 +1365,7 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		objectInfo, err = g.baseApp.Consensus().QueryObjectInfo(reqCtx.ctx, reqCtx.bucketName, reqCtx.objectName)
 		if err != nil {
 			log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-			err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+			err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 			return
 		}
 
@@ -1452,14 +1452,14 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 	metrics.PerfPutObjectTime.WithLabelValues("gateway_resumable_put_object_query_object_end").Observe(time.Since(uploadPrimaryStartTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 
 	err = g.checkAndAssignShadowObjectInfo(reqCtx, objectInfo)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, error: " + err.Error())
+		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 
@@ -1675,7 +1675,7 @@ func (g *GateModular) delegateCreateFolderHandler(w http.ResponseWriter, r *http
 
 	if _, err = w.Write(respBytes); err != nil {
 		log.Errorw("failed to write body", "error", err)
-		err = ErrEncodeResponseWithDetail("failed to write body, error: " + err.Error())
+		err = ErrEncodeResponseWithDetail("failed to write body, object_name: " + reqCtx.objectName + "bucket_name: " + reqCtx.bucketName + ", error: " + err.Error())
 		return
 	}
 	log.Debugw("succeed to delegate create folder", "xml_info", respBytes)

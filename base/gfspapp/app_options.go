@@ -349,7 +349,7 @@ var bsdbOnce = sync.Once{}
 
 func DefaultGfBsDBOption(app *GfSpBaseApp, cfg *gfspconfig.GfSpConfig) error {
 	for _, v := range cfg.Server {
-		if v != coremodule.MetadataModularName {
+		if v != coremodule.MetadataModularName && v != coremodule.BlockSyncerModularName {
 			log.Infof("[%s] module doesn't need bs db", v)
 			continue
 		}

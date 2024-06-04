@@ -17,9 +17,10 @@ import (
 )
 
 var (
-	ErrDanglingPointer     = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
-	ErrExceedBucketNumber  = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
-	ErrExceedApprovalLimit = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10003, "SP is too busy to approve the request, please come back later")
+	ErrDanglingPointer       = gfsperrors.Register(module.ApprovalModularName, http.StatusBadRequest, 10001, "OoooH.... request lost")
+	ErrExceedBucketNumber    = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10002, "account buckets exceed the limit")
+	ErrExceedApprovalLimit   = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10003, "SP is too busy to approve the request, please come back later")
+	ErrBucketMigrationStatus = gfsperrors.Register(module.ApprovalModularName, http.StatusNotAcceptable, 10004, "the bucket is migrating or gc, try it after gc done")
 )
 
 const (
@@ -176,7 +177,7 @@ func (a *ApprovalModular) HandleMigrateBucketApprovalTask(ctx context.Context, t
 		}
 	} else if state != int(storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_INIT_UNSPECIFIED) {
 		log.CtxInfow(ctx, "the bucket is migrating or gc, migrated to this sp should be reject", "bucket_id", bucketID)
-		return false, fmt.Errorf("the bucket is migrating or gc, try it after gc done")
+		return false, ErrBucketMigrationStatus
 	}
 
 	// check src sp has enough quota

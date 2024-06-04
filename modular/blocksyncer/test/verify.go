@@ -61,7 +61,9 @@ func Verify(t *testing.T) error {
 		golog.Printf("%d case pass", i)
 
 		// height increase
-		StatusRes = fmt.Sprintf("{\"sync_info\":{\"latest_block_height\":\"%d\"}}", i+1)
+		if i != LatestHeight {
+			StatusRes = fmt.Sprintf("{\"sync_info\":{\"latest_block_height\":\"%d\"}}", i+1)
+		}
 	}
 
 	// verify height
@@ -69,6 +71,13 @@ func Verify(t *testing.T) error {
 	db.Table("epoch").First(&epoch)
 	if epoch.BlockHeight != int64(LatestHeight) {
 		return errors.New("height error")
+	}
+
+	time.Sleep(3 * time.Second)
+	var count int64
+	db.Table("block_result").Count(&count)
+	if count <= 0 {
+		return errors.New("block result count error")
 	}
 
 	return nil

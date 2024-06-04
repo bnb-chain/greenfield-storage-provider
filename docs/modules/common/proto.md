@@ -49,6 +49,16 @@ message GfSpCreateObjectApprovalTask {
 }
 ```
 
+### GfSpDelegateCreateObjectApprovalTask Proto
+
+```proto
+message GfSpDelegateCreateObjectApprovalTask {
+  GfSpTask task = 1;
+  greenfield.storage.MsgDelegateCreateObject delegate_create_object = 2;
+  bytes fingerprint = 3;
+}
+```
+
 ### GfSpReplicatePieceApprovalTask Proto
 
 ```proto
@@ -74,6 +84,7 @@ message GfSpUploadObjectTask {
   uint32 virtual_group_family_id = 2;
   greenfield.storage.ObjectInfo object_info = 3;
   greenfield.storage.Params storage_params = 4;
+  bool is_agent_upload = 5;
 }
 ```
 
@@ -88,6 +99,7 @@ message GfSpResumableUploadObjectTask {
   uint64 length = 5;
   bool completed = 6;
   uint32 virtual_group_family_id = 7;
+  bool is_agent_upload = 8;
 }
 ```
 
@@ -103,6 +115,8 @@ message GfSpReplicatePieceTask {
   bool sealed = 6;
   uint32 global_virtual_group_id = 7;
   repeated string secondary_endpoints = 8;
+  int32 not_available_sp_idx = 9;
+  bool is_agent_upload_task = 10;
 }
 ```
 
@@ -118,6 +132,10 @@ message GfSpRecoverPieceTask {
   uint64 piece_size = 7;
   bytes signature = 8;
   bool recovered = 9;
+  bool finished = 10;
+  uint32 global_virtual_group_id = 11;
+  bool bucket_migration = 12;
+  bool is_agent_upload_task = 13;
 }
 ```
 
@@ -151,6 +169,7 @@ message GfSpSealObjectTask {
   repeated bytes secondary_signatures = 5;
   uint32 global_virtual_group_id = 6;
   repeated string secondary_endpoints = 7;
+  bool is_agent_upload_task = 8;
 }
 ```
 
