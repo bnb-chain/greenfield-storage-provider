@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -39,9 +40,6 @@ const (
 	defaultSPHealthCheckerRetryInterval = 1 * time.Second
 	defaultSPHealthCheckerMaxRetries    = 5
 	httpStatusPath                      = "/status"
-
-	SPHealthCheckerDuration = "check_sp_health_duration"
-	SPHealthCheckerFailure  = "check_sp_health_total_failure"
 
 	emptyGVGSafeDeletePeriod = int64(60) * 60 * 24
 )
@@ -779,7 +777,7 @@ func (checker *HealthChecker) checkAllSPHealth() {
 
 func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
 	if !sp.IsInService() {
-		log.CtxInfow(context.Background(), "the sp is not in service,sp is treated as unhealthy", "sp", sp)
+		log.CtxInfow(context.Background(), "the sp is not in service, sp is treated as unhealthy", "sp", sp)
 		return false
 	}
 
@@ -806,7 +804,7 @@ func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
 
 		resp, err := client.Do(req)
 		duration := time.Since(start)
-		metrics.ReqTime.WithLabelValues(SPHealthCheckerDuration).Observe(duration.Seconds())
+		metrics.SPHealthCheckerTime.WithLabelValues(strconv.Itoa(int(sp.Id))).Observe(duration.Seconds())
 		if err != nil {
 			log.CtxErrorw(context.Background(), "failed to connect to sp", "sp", sp, "error", err, "duration", duration)
 			time.Sleep(defaultSPHealthCheckerRetryInterval)
@@ -818,8 +816,8 @@ func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
 			log.CtxInfow(context.Background(), "succeed to check the sp healthy", "sp", sp, "duration", duration)
 			return true
 		} else {
-			metrics.ReqCounter.WithLabelValues(SPHealthCheckerFailure).Inc()
-			log.CtxErrorw(context.Background(), "failed to check sp healthy", "sp", sp, "http_status_code", resp.StatusCode, "resp_body", resp.Body, "duration", duration)
+			metrics.SPHealthCheckerFailureCounter.WithLabelValues(strconv.Itoa(int(sp.Id))).Inc()
+			log.CtxErrorw(context.Background(), "failed to check sp healthy", "sp", sp, "http_status_code", resp.StatusCode, "duration", duration)
 			time.Sleep(defaultSPHealthCheckerRetryInterval)
 		}
 	}
