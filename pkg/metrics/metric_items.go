@@ -81,6 +81,7 @@ var MetricsItems = []prometheus.Collector{
 	BlocksyncerWriteDBTime,
 	ChainLatestHeight,
 	ChainRPCTime,
+	SaveBlockResultErr,
 
 	// metadata metrics category
 	MetadataReqTime,
@@ -325,6 +326,14 @@ var (
 	ChainLatestHeight = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "chain_latest_height",
 		Help: "Track the height of chain. ",
+	})
+	SaveBlockResultErr = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "save_block_result_err",
+		Help: "Track the save block result err",
+	})
+	DataStatisticsErr = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "data_statistics_err",
+		Help: "Track the data statistics err",
 	})
 )
 

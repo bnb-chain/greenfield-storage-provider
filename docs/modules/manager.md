@@ -1,16 +1,21 @@
+---
+title: Manager
+---
+
 # Manager
 
-Manager is responsible for task scheduling such as dispatching tasks to Executor module, GC objects, GC zombie piece tasks, migrate object and so on. Therefore, Manager module is somewhat similar to daemon process to help do some works. The workflow of Manager users can refer [Manager](../workflow/workflow.md#manager). 
+Manager is responsible for task scheduling such as dispatching tasks to Executor module, GC objects, GC zombie piece tasks, migrate object and so on. Therefore, Manager module is somewhat similar to daemon process to help do some works.
 
 Manager is an abstract interface to do some internal service management, it is responsible for task scheduling and other management of SP.
 
 ## Overview
 
-<div align=center><img src="../asset/12-manager.jpg" width="700px"></div>
-<div align=center><i>Gateway Architecture</i></div>
+<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/07-manager.jpg" width="500" height="100" /></div>
 
+<div style={{textAlign:'center'}}><i>Manager Architecture</i></div>
 
 We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Manager module provides an abstract interface, which is called `Manager`, as follows:
+
 ```go
 type Manager interface {
     Modular
@@ -76,14 +81,6 @@ In terms of the functions provided by Manager module, there are multiple handlin
 
 Manager module only schedules ReplicatePiece, SealObject, GCTask, MigrateTask which belong to background tasks. For front tasks, Manager module just responds and don't schedule them. As we can see from the second parameter of the methods defined in `Manager` interface, different is split into different tasks. They are also defined as an interface.
 
-
-
-
-
-## GfSp Framework Manager Code
-
-Manager module code implementation: [Manager](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/manager)
-
 ### Task Dispatcher
 
 Manager module dispatches tasks to Executor. When dispatching tasks, Manager module should consider limiting resources to prevent resources from being exhausted. So the second param of DispatchTask functions is rcmgr.Limit that is an interface to alloc system resources. Limit is an interface that that specifies basic resource limits.
@@ -104,3 +101,24 @@ and the tasks contained in the migration plan are dispatched to the task dispatc
 By subscribing to metadata events about SP Exit, an exit plan is generated internally,
 and the tasks contained in the exit plan are dispatched to the task dispatcher. Manage the lifecycle of the entire sp exit plan.
 
+Stop Serving is the background service running in primary SP, which is used to activelydelete buckets stored by it.
+
+**It only runs in testnet environment for remove historical data, and it will NOT run in mainnet.**
+
+<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/502-Stop-Serving-Workflow.png" width="1000" height="100" /></div>
+
+<div style={{textAlign:'center'}}><i>Stop Serving Main Workflows</i></div>
+
+Stop Serving is running in background periodically. The main workflows are as follows:
+
+- When the SP starts up, it loads the "BucketKeepAliveDays" config to indicate how long a bucket will remain alive (7 days on testnet);
+- Then it calls the metadata service to retrieve buckets created earlier than the specified number of days;
+- Then it sends discontinue bucket transactions to the Greenfield chain, and the blockchain will emit discontinue bucket events;
+- After a set amount of time (7 days on testnet), the discontinued buckets are deleted on the chain, and delete object and delete bucket events are emitted;
+- Finally, the GC service recycles the storage space of the deleted objects and buckets.
+
+This service is still under development and will be online soon.
+
+## GfSp Framework Manager Code
+
+Manager module code implementation: [Manager](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/manager)
