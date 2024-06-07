@@ -7,18 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/manager"
-	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/manager"
+	metadatatypes "github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 type GCWorker struct {
@@ -354,9 +354,7 @@ func (e *ExecuteModular) HandleGCZombiePieceTask(ctx context.Context, task coret
 }
 
 func (e *ExecuteModular) HandleGCMetaTask(ctx context.Context, task coretask.GCMetaTask) {
-	var (
-		err error
-	)
+	var err error
 	reportProgress := func() {
 		reportErr := e.ReportTask(ctx, task)
 		log.CtxDebugw(ctx, "gc meta task report progress", "task_info", task.Info(), "error", reportErr)

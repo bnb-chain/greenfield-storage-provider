@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 func TestGfSpBaseApp_GfSpDownloadObjectSuccess(t *testing.T) {
@@ -234,7 +234,7 @@ func TestGfSpBaseApp_GfSpGetChallengeInfoSuccess(t *testing.T) {
 	m1.EXPECT().Done().AnyTimes()
 	m.EXPECT().ReserveResource(gomock.Any(), gomock.Any()).Return(m1, nil).Times(1)
 	m.EXPECT().PreChallengePiece(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-	m.EXPECT().HandleChallengePiece(gomock.Any(), gomock.Any()).Return([]byte{1}, [][]byte{[]byte{2}}, []byte("mockData"),
+	m.EXPECT().HandleChallengePiece(gomock.Any(), gomock.Any()).Return([]byte{1}, [][]byte{{2}}, []byte("mockData"),
 		nil).Times(1)
 	m.EXPECT().PostChallengePiece(gomock.Any(), gomock.Any()).Return().Times(1)
 	req := &gfspserver.GfSpGetChallengeInfoRequest{ChallengePieceTask: &gfsptask.GfSpChallengePieceTask{

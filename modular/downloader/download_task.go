@@ -9,18 +9,18 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	payment_types "github.com/evmos/evmos/v12/x/payment/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 var (
@@ -414,7 +414,8 @@ func (d *DownloadModular) PreChallengePiece(ctx context.Context, challengePieceT
 }
 
 func (d *DownloadModular) HandleChallengePiece(ctx context.Context, challengePieceTask task.ChallengePieceTask) (
-	[]byte, [][]byte, []byte, error) {
+	[]byte, [][]byte, []byte, error,
+) {
 	var (
 		err       error
 		integrity *corespdb.IntegrityMeta

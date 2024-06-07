@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
 )
 
 const (

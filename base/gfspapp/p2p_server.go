@@ -4,20 +4,19 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
-var (
-	ErrReplicatePieceApprovalTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990701, "OoooH... request lost")
-)
+var ErrReplicatePieceApprovalTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990701, "OoooH... request lost")
 
 var _ gfspserver.GfSpP2PServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpAskSecondaryReplicatePieceApproval(ctx context.Context, req *gfspserver.GfSpAskSecondaryReplicatePieceApprovalRequest) (
-	*gfspserver.GfSpAskSecondaryReplicatePieceApprovalResponse, error) {
+	*gfspserver.GfSpAskSecondaryReplicatePieceApprovalResponse, error,
+) {
 	task := req.GetReplicatePieceApprovalTask()
 	if task == nil {
 		log.CtxError(ctx, "failed to ask replicate piece approval due to task pointer dangling")
@@ -37,7 +36,8 @@ func (g *GfSpBaseApp) GfSpAskSecondaryReplicatePieceApproval(ctx context.Context
 }
 
 func (g *GfSpBaseApp) GfSpQueryP2PBootstrap(ctx context.Context, req *gfspserver.GfSpQueryP2PNodeRequest) (
-	*gfspserver.GfSpQueryP2PNodeResponse, error) {
+	*gfspserver.GfSpQueryP2PNodeResponse, error,
+) {
 	nodes, err := g.p2p.HandleQueryBootstrap(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query p2p bootstrap", "error", err)

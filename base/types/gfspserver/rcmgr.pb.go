@@ -6,8 +6,8 @@ package gfspserver
 import (
 	context "context"
 	fmt "fmt"
-	gfsperrors "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	gfsplimit "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
+	gfsperrors "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	gfsplimit "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"

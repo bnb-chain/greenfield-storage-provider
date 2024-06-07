@@ -16,9 +16,9 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	bucketmodules "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	bucketmodules "github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/bucket"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 var verifyFuncs = []func(t *testing.T, db *gorm.DB) error{
@@ -96,6 +96,7 @@ func verify2(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify3(t *testing.T, db *gorm.DB) error {
 	var bucket models.Bucket
 	if err := db.Table(bsdb.BucketTableName).Where("bucket_name = ?", "full-node-v1-acc0000000072-buc0000000000").Find(&bucket).Error; err != nil {
@@ -106,6 +107,7 @@ func verify3(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify4(t *testing.T, db *gorm.DB) error {
 	var bucket models.Bucket
 	if err := db.Table(bsdb.BucketTableName).Where("bucket_name = ?", "cxz").Find(&bucket).Error; err != nil {
@@ -116,6 +118,7 @@ func verify4(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify5(t *testing.T, db *gorm.DB) error {
 	var bucket models.Bucket
 	if err := db.Table(bsdb.BucketTableName).Where("bucket_name = ?", "cxz").Find(&bucket).Error; err != nil {
@@ -126,6 +129,7 @@ func verify5(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify6(t *testing.T, db *gorm.DB) error {
 	var bucket models.Bucket
 	if err := db.Table(bsdb.BucketTableName).Where("bucket_name = ?", "cxz").Find(&bucket).Error; err != nil {
@@ -136,6 +140,7 @@ func verify6(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify7(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002")).Find(&g).Error; err != nil {
@@ -143,6 +148,7 @@ func verify7(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify8(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_id = ? and account_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"), common.HexToAddress("0x92b7976702C064C7e2e791854497Ec73C853CEB5")).Find(&g).Error; err != nil {
@@ -153,6 +159,7 @@ func verify8(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify9(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_id = ? and account_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"), common.HexToAddress("0x4d57d300AfaF9f407e26552965ce355786206cF4")).Find(&g).Error; err != nil {
@@ -163,6 +170,7 @@ func verify9(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify10(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table(bsdb.GroupTableName).Where("group_id = ? and account_id = ?", common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"), common.HexToAddress("0x0000000000000000000000000000000000000000")).Find(&g).Error; err != nil {
@@ -173,6 +181,7 @@ func verify10(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify11(t *testing.T, db *gorm.DB) error {
 	table := GetObjectsTableName("cxz")
 	var o models.Object
@@ -181,6 +190,7 @@ func verify11(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify12(t *testing.T, db *gorm.DB) error {
 	table := GetObjectsTableName("cxz")
 	var o models.Object
@@ -202,6 +212,7 @@ func verify12(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify13(t *testing.T, db *gorm.DB) error {
 	table := GetObjectsTableName("cxz")
 	var o models.Object
@@ -213,6 +224,7 @@ func verify13(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify14(t *testing.T, db *gorm.DB) error {
 	var sr models.StreamRecord
 	if err := db.Table((&models.StreamRecord{}).TableName()).Where("account = ?", common.HexToAddress("0x51D2c7dFa2a58C73853c2657Dc505e7430879B1b")).Find(&sr).Error; err != nil {
@@ -220,6 +232,7 @@ func verify14(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify15(t *testing.T, db *gorm.DB) error {
 	var p models.PaymentAccount
 	if err := db.Table((&models.PaymentAccount{}).TableName()).Where("addr = ?", common.HexToAddress("0x68bd245Df652435321989b999F9F70Cd31281b66")).Find(&p).Error; err != nil {
@@ -227,6 +240,7 @@ func verify15(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify16(t *testing.T, db *gorm.DB) error {
 	var lvg models.LocalVirtualGroup
 	if err := db.Table((&models.LocalVirtualGroup{}).TableName()).Where("local_virtual_group_id = ?", 1).Find(&lvg).Error; err != nil {
@@ -260,6 +274,7 @@ func verify18(t *testing.T, db *gorm.DB) error {
 
 	return nil
 }
+
 func verify19(t *testing.T, db *gorm.DB) error {
 	var gvg bsdb.GlobalVirtualGroup
 	if err := db.Table((&bsdb.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", 1).Find(&gvg).Error; err != nil {
@@ -270,6 +285,7 @@ func verify19(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify20(t *testing.T, db *gorm.DB) error {
 	var gvg bsdb.GlobalVirtualGroup
 	if err := db.Table((&bsdb.GlobalVirtualGroup{}).TableName()).Where("global_virtual_group_id = ?", 1).Find(&gvg).Error; err != nil {
@@ -324,6 +340,7 @@ func verify24(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify25(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
@@ -331,6 +348,7 @@ func verify25(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify26(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
@@ -341,6 +359,7 @@ func verify26(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify27(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
@@ -381,6 +400,7 @@ func verify30(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify31(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
@@ -391,9 +411,11 @@ func verify31(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify32(t *testing.T, db *gorm.DB) error {
 	return nil
 }
+
 func verify33(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
@@ -404,6 +426,7 @@ func verify33(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify34(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1201))).Find(&object).Error; err != nil {
@@ -414,6 +437,7 @@ func verify34(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify35(t *testing.T, db *gorm.DB) error {
 	var object models.Object
 	if err := db.Table(GetObjectsTableName("cxz")).Where("object_id = ?", common.BigToHash(big.NewInt(1204))).Find(&object).Error; err != nil {
@@ -421,6 +445,7 @@ func verify35(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify36(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCompleteMigrationBucket
 	if err := db.Table(bsdb.EventCompleteMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
@@ -428,6 +453,7 @@ func verify36(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify37(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventMigrationBucket
 	if err := db.Table(bsdb.EventMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
@@ -435,6 +461,7 @@ func verify37(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify38(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCancelMigrationBucket
 	if err := db.Table(bsdb.EventCancelMigrationTableName).Where("bucket_id = ?", common.BigToHash(big.NewInt(4))).Find(&cmb).Error; err != nil {
@@ -442,6 +469,7 @@ func verify38(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify39(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventStorageProviderExit
 	if err := db.Table(bsdb.EventStorageProviderExitTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
@@ -449,6 +477,7 @@ func verify39(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify40(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventSwapOut
 	if err := db.Table(bsdb.EventSwapOutTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
@@ -456,6 +485,7 @@ func verify40(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify41(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCompleteSwapOut
 	if err := db.Table(bsdb.EventCompleteSwapOutTableName).Where("storage_provider_id = ?", 9).Find(&cmb).Error; err != nil {
@@ -463,6 +493,7 @@ func verify41(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify42(t *testing.T, db *gorm.DB) error {
 	var cmb bsdb.EventCompleteStorageProviderExit
 	if err := db.Table(bsdb.EventCompleteStorageProviderExitTableName).Where("storage_provider_id = ?", 10).Find(&cmb).Error; err != nil {
@@ -470,6 +501,7 @@ func verify42(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify43(t *testing.T, db *gorm.DB) error {
 	var g models.Group
 	if err := db.Table((&models.Group{}).TableName()).Where("account_id = ? and group_id = ?", common.HexToAddress("0x4d57d300AfaF9f407e26552965ce355786206cF4"), common.HexToHash("2")).Find(&g).Error; err != nil {
@@ -480,6 +512,7 @@ func verify43(t *testing.T, db *gorm.DB) error {
 	}
 	return nil
 }
+
 func verify44(t *testing.T, db *gorm.DB) error {
 	var sp models.StorageProvider
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
@@ -726,7 +759,6 @@ func verify67(t *testing.T, db *gorm.DB) error {
 		return errors.New("update object error")
 	}
 	return nil
-
 }
 
 func verify68(t *testing.T, db *gorm.DB) error {
@@ -762,8 +794,10 @@ func verify70(t *testing.T, db *gorm.DB) error {
 	return nil
 }
 
-const ObjectsNumberOfShards = 64
-const ObjectTableName = "objects"
+const (
+	ObjectsNumberOfShards = 64
+	ObjectTableName       = "objects"
+)
 
 func GetObjectsTableName(bucketName string) string {
 	return GetObjectsTableNameByShardNumber(int(GetObjectsShardNumberByBucketName(bucketName)))
@@ -777,8 +811,10 @@ func GetObjectsTableNameByShardNumber(shard int) string {
 	return fmt.Sprintf("%s_%02d", ObjectTableName, shard)
 }
 
-const PrefixesNumberOfShards = 64
-const PrefixTreeTableName = "slash_prefix_tree_nodes"
+const (
+	PrefixesNumberOfShards = 64
+	PrefixTreeTableName    = "slash_prefix_tree_nodes"
+)
 
 func GetPrefixesTableName(bucketName string) string {
 	return GetPrefixesTableNameByShardNumber(int(GetPrefixesShardNumberByBucketName(bucketName)))

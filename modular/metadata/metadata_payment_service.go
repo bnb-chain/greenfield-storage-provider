@@ -6,11 +6,11 @@ import (
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	model "github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 // GfSpGetPaymentByBucketName get bucket payment info by a bucket name

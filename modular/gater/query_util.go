@@ -5,11 +5,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -60,7 +60,8 @@ func (s *SPCachePool) loopCheckExpire() {
 }
 
 func (g *GateModular) getObjectChainMeta(ctx context.Context, objectName, bucketName string) (*storagetypes.ObjectInfo,
-	*storagetypes.BucketInfo, *storagetypes.Params, error) {
+	*storagetypes.BucketInfo, *storagetypes.Params, error,
+) {
 	objectInfo, err := g.baseApp.Consensus().QueryObjectInfo(ctx, bucketName, objectName)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
@@ -128,6 +129,7 @@ func (g *GateModular) getBucketTotalSize(ctx context.Context, bucketID uint64) (
 	}
 	return quotaNeed, nil
 }
+
 func fromSpMaintenanceAcct(spStatus sptypes.Status, spMaintenanceAddr, creatorAddr string) bool {
 	return spStatus == sptypes.STATUS_IN_MAINTENANCE && spMaintenanceAddr == creatorAddr
 }

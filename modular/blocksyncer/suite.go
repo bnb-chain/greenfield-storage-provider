@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/cmd/utils"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 type BlockSyncerE2eBaseSuite struct {

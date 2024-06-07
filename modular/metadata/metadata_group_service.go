@@ -6,10 +6,10 @@ import (
 	"cosmossdk.io/math"
 	"github.com/forbole/juno/v4/common"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storage_types "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	model "github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 // GfSpGetGroupList get group list by queryName/prefix/sourceType
@@ -88,7 +88,7 @@ func (r *MetadataModular) GfSpGetUserGroups(ctx context.Context, req *types.GfSp
 
 	ctx = log.Context(ctx, req)
 	limit = int(req.Limit)
-	//if the user doesn't specify a limit, the default value is ListGroupsDefaultMaxKeys
+	// if the user doesn't specify a limit, the default value is ListGroupsDefaultMaxKeys
 	if req.Limit == 0 {
 		limit = model.ListGroupsDefaultLimit
 	}
@@ -141,7 +141,7 @@ func (r *MetadataModular) GfSpGetGroupMembers(ctx context.Context, req *types.Gf
 
 	ctx = log.Context(ctx, req)
 	limit = int(req.Limit)
-	//if the user doesn't specify a limit, the default value is ListGroupsDefaultMaxKeys
+	// if the user doesn't specify a limit, the default value is ListGroupsDefaultMaxKeys
 	if req.Limit == 0 {
 		limit = model.ListGroupsDefaultLimit
 	}
@@ -199,7 +199,7 @@ func (r *MetadataModular) GfSpGetUserOwnedGroups(ctx context.Context, req *types
 
 	ctx = log.Context(ctx, req)
 	limit = int(req.Limit)
-	//if the user doesn't specify a limit, the default value is ListGroupsDefaultMaxKeys
+	// if the user doesn't specify a limit, the default value is ListGroupsDefaultMaxKeys
 	if req.Limit == 0 {
 		limit = model.ListGroupsDefaultLimit
 	}

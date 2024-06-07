@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 func TestGfSpBaseApp_GfSpBeginTaskSuccess1(t *testing.T) {
@@ -30,7 +30,8 @@ func TestGfSpBaseApp_GfSpBeginTaskSuccess1(t *testing.T) {
 			},
 			VirtualGroupFamilyId: 1,
 			ObjectInfo:           mockObjectInfo,
-		}}}
+		},
+	}}
 	result, err := g.GfSpBeginTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, gfsperrors.MakeGfSpError(nil), result.GetErr())
@@ -50,7 +51,8 @@ func TestGfSpBaseApp_GfSpBeginTaskSuccess2(t *testing.T) {
 			},
 			VirtualGroupFamilyId: 1,
 			ObjectInfo:           mockObjectInfo,
-		}}}
+		},
+	}}
 	result, err := g.GfSpBeginTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, gfsperrors.MakeGfSpError(nil), result.GetErr())
@@ -346,7 +348,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess1(t *testing.T) {
 			VirtualGroupFamilyId: 1,
 			ObjectInfo:           mockObjectInfo,
 			StorageParams:        mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -365,7 +368,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess2(t *testing.T) {
 			VirtualGroupFamilyId: 1,
 			ObjectInfo:           mockObjectInfo,
 			StorageParams:        mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -383,7 +387,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess3(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{Retry: 0},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -401,7 +406,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess4(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{Retry: 0},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -419,7 +425,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess5(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{Retry: 0},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -435,7 +442,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess6(t *testing.T) {
 	req := &gfspserver.GfSpReportTaskRequest{Request: &gfspserver.GfSpReportTaskRequest_GcObjectTask{
 		GcObjectTask: &gfsptask.GfSpGCObjectTask{
 			Task: &gfsptask.GfSpTask{Retry: 0},
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -451,7 +459,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess7(t *testing.T) {
 	req := &gfspserver.GfSpReportTaskRequest{Request: &gfspserver.GfSpReportTaskRequest_GcZombiePieceTask{
 		GcZombiePieceTask: &gfsptask.GfSpGCZombiePieceTask{
 			Task: &gfsptask.GfSpTask{Retry: 0},
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -467,7 +476,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess8(t *testing.T) {
 	req := &gfspserver.GfSpReportTaskRequest{Request: &gfspserver.GfSpReportTaskRequest_GcZombiePieceTask{
 		GcZombiePieceTask: &gfsptask.GfSpGCZombiePieceTask{
 			Task: &gfsptask.GfSpTask{Retry: 0},
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -483,7 +493,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess9(t *testing.T) {
 	req := &gfspserver.GfSpReportTaskRequest{Request: &gfspserver.GfSpReportTaskRequest_GcMetaTask{
 		GcMetaTask: &gfsptask.GfSpGCMetaTask{
 			Task: &gfsptask.GfSpTask{Retry: 0},
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -501,7 +512,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess10(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{Retry: 0},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -519,7 +531,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess11(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{Retry: 0},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -537,7 +550,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess12(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{Retry: 0},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -553,7 +567,8 @@ func TestGfSpBaseApp_GfSpReportTaskSuccess13(t *testing.T) {
 	req := &gfspserver.GfSpReportTaskRequest{Request: &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{
 		MigrateGvgTask: &gfsptask.GfSpMigrateGVGTask{
 			Task: &gfsptask.GfSpTask{Retry: 0},
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, &gfspserver.GfSpReportTaskResponse{}, result)
@@ -569,7 +584,8 @@ func TestGfSpBaseApp_GfSpReportTaskFailure1(t *testing.T) {
 	req := &gfspserver.GfSpReportTaskRequest{Request: &gfspserver.GfSpReportTaskRequest_MigrateGvgTask{
 		MigrateGvgTask: &gfsptask.GfSpMigrateGVGTask{
 			Task: &gfsptask.GfSpTask{Retry: 0},
-		}}}
+		},
+	}}
 	result, err := g.GfSpReportTask(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())

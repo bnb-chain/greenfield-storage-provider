@@ -8,7 +8,7 @@ import "greenfield/storage/tx.proto";
 import "greenfield/storage/types.proto";
 import "greenfield/virtualgroup/types.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask";
+option go_package = "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask";
 
 message GfSpTask {
   string address = 1;
@@ -228,7 +228,7 @@ message GfSpGCBucketMigrationTask {
   uint64 last_gc_gvg_id = 4;
   // whether the gc of bucket migration succeed
   bool finished = 5;
-  uint64 total_gvg_num = 6; // the bucket migration gc total gvg num
+  uint64 total_gvg_num = 6;       // the bucket migration gc total gvg num
   uint64 gc_finished_gvg_num = 7; // gc has finished gvg num
 }
 

@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util/maps"
 )
 
 const (
@@ -23,8 +23,10 @@ var (
 	ErrTaskQueueExceed = gfsperrors.Register(TaskQueue, http.StatusBadRequest, 970002, "request exceed limit")
 )
 
-var _ taskqueue.TQueue = &GfSpTQueue{}
-var _ taskqueue.TQueueOnStrategy = &GfSpTQueue{}
+var (
+	_ taskqueue.TQueue           = &GfSpTQueue{}
+	_ taskqueue.TQueueOnStrategy = &GfSpTQueue{}
+)
 
 type GfSpTQueue struct {
 	name    string

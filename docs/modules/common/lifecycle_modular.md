@@ -40,7 +40,7 @@ type Lifecycle interface {
 }
 ```
 
-- [Lifecycle Code Snippet](https://github.com/bnb-chain/greenfield-storage-provider/blob/master/core/lifecycle/lifecycle.go)
+- [Lifecycle Code Snippet](https://github.com/zkMeLabs/mechain-storage-provider/blob/master/core/lifecycle/lifecycle.go)
 
 ## Modular Interface
 
@@ -57,7 +57,7 @@ type Modular interface {
 }
 ```
 
-- [Modular Code Snippet](https://github.com/bnb-chain/greenfield-storage-provider/blob/master/core/module/modular.go)
+- [Modular Code Snippet](https://github.com/zkMeLabs/mechain-storage-provider/blob/master/core/module/modular.go)
 
 ## Limit
 

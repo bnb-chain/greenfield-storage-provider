@@ -3,7 +3,7 @@ package probe
 import (
 	"sync"
 
-	coreprober "github.com/bnb-chain/greenfield-storage-provider/core/prober"
+	coreprober "github.com/zkMeLabs/mechain-storage-provider/core/prober"
 )
 
 type combined struct {

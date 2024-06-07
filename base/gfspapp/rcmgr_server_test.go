@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
 )
 
 func TestGfSpBaseApp_GfSpSetResourceLimit(t *testing.T) {

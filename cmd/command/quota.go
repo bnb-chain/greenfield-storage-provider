@@ -6,8 +6,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	"github.com/zkMeLabs/mechain-storage-provider/cmd/utils"
 )
 
 var freeQuotaFlag = &cli.Uint64Flag{

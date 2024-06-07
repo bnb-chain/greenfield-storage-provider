@@ -10,18 +10,18 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/evmos/evmos/v12/types/s3util"
 	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
 	storage_types "github.com/evmos/evmos/v12/x/storage/types"
 	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	model "github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 var (
@@ -49,7 +49,8 @@ func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
 }
 
 func (r *MetadataModular) GfSpGetUserBuckets(ctx context.Context, req *types.GfSpGetUserBucketsRequest) (
-	resp *types.GfSpGetUserBucketsResponse, err error) {
+	resp *types.GfSpGetUserBucketsResponse, err error,
+) {
 	ctx = log.Context(ctx, req)
 	buckets, err := r.baseApp.GfBsDB().GetUserBuckets(common.HexToAddress(req.AccountId), req.GetIncludeRemoved())
 	if err != nil {
@@ -169,7 +170,8 @@ func (r *MetadataModular) GfSpGetBucketByBucketName(ctx context.Context, req *ty
 
 // GfSpGetBucketByBucketID get buckets info by by a bucket id
 func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *types.GfSpGetBucketByBucketIDRequest) (
-	resp *types.GfSpGetBucketByBucketIDResponse, err error) {
+	resp *types.GfSpGetBucketByBucketIDResponse, err error,
+) {
 	var (
 		bucket *model.Bucket
 		res    *types.Bucket
@@ -216,7 +218,8 @@ func (r *MetadataModular) GfSpGetBucketByBucketID(ctx context.Context, req *type
 
 // GfSpGetUserBucketsCount get buckets count by a user address
 func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *types.GfSpGetUserBucketsCountRequest) (
-	resp *types.GfSpGetUserBucketsCountResponse, err error) {
+	resp *types.GfSpGetUserBucketsCountResponse, err error,
+) {
 	ctx = log.Context(ctx, req)
 
 	count, err := r.baseApp.GfBsDB().GetUserBucketsCount(common.HexToAddress(req.AccountId), req.GetIncludeRemoved())
@@ -232,7 +235,8 @@ func (r *MetadataModular) GfSpGetUserBucketsCount(ctx context.Context, req *type
 
 // GfSpListExpiredBucketsBySp list expired bucket by sp
 func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *types.GfSpListExpiredBucketsBySpRequest) (
-	resp *types.GfSpListExpiredBucketsBySpResponse, err error) {
+	resp *types.GfSpListExpiredBucketsBySpResponse, err error,
+) {
 	ctx = log.Context(ctx, req)
 	buckets, err := r.baseApp.GfBsDB().ListExpiredBucketsBySp(req.GetCreateAt(), req.GetPrimarySpId(), req.GetLimit())
 	if err != nil {
@@ -269,7 +273,8 @@ func (r *MetadataModular) GfSpListExpiredBucketsBySp(ctx context.Context, req *t
 
 // GfSpGetBucketMeta get bucket metadata
 func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSpGetBucketMetaRequest) (
-	resp *types.GfSpGetBucketMetaResponse, err error) {
+	resp *types.GfSpGetBucketMetaResponse, err error,
+) {
 	var (
 		bucket          *model.Bucket
 		bucketRes       *types.VGFInfoBucket
@@ -352,7 +357,8 @@ func (r *MetadataModular) GfSpGetBucketMeta(ctx context.Context, req *types.GfSp
 func (r *MetadataModular) GfSpGetBucketReadQuota(
 	ctx context.Context,
 	req *types.GfSpGetBucketReadQuotaRequest) (
-	*types.GfSpGetBucketReadQuotaResponse, error) {
+	*types.GfSpGetBucketReadQuotaResponse, error,
+) {
 	if req.GetBucketInfo() == nil {
 		return nil, ErrDanglingPointer
 	}
@@ -410,7 +416,8 @@ func (r *MetadataModular) GfSpGetBucketReadQuota(
 func (r *MetadataModular) GfSpListBucketReadQuota(
 	ctx context.Context,
 	req *types.GfSpListBucketReadQuotaRequest) (
-	*types.GfSpListBucketReadQuotaResponse, error) {
+	*types.GfSpListBucketReadQuotaResponse, error,
+) {
 	defer atomic.AddInt64(&r.retrievingRequest, -1)
 	if atomic.AddInt64(&r.retrievingRequest, 1) >
 		atomic.LoadInt64(&r.maxMetadataRequest) {
@@ -448,7 +455,8 @@ func (r *MetadataModular) GfSpListBucketReadQuota(
 func (r *MetadataModular) GfSpGetBucketReadQuotaCount(
 	ctx context.Context,
 	req *types.GfSpGetBucketReadQuotaCountRequest) (
-	*types.GfSpGetBucketReadQuotaCountResponse, error) {
+	*types.GfSpGetBucketReadQuotaCountResponse, error,
+) {
 	defer atomic.AddInt64(&r.retrievingRequest, -1)
 	if atomic.AddInt64(&r.retrievingRequest, 1) >
 		atomic.LoadInt64(&r.maxMetadataRequest) {
@@ -469,8 +477,8 @@ func (r *MetadataModular) GfSpGetBucketReadQuotaCount(
 func (r *MetadataModular) GfSpGetLatestBucketReadQuota(
 	ctx context.Context,
 	req *types.GfSpGetLatestBucketReadQuotaRequest) (
-	*types.GfSpGetLatestBucketReadQuotaResponse, error) {
-
+	*types.GfSpGetLatestBucketReadQuotaResponse, error,
+) {
 	defer atomic.AddInt64(&r.retrievingRequest, -1)
 	if atomic.AddInt64(&r.retrievingRequest, 1) >
 		atomic.LoadInt64(&r.maxMetadataRequest) {
@@ -551,7 +559,8 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 	ctx context.Context,
 	req *types.GfSpListBucketReadRecordRequest) (
 	*types.GfSpListBucketReadRecordResponse,
-	error) {
+	error,
+) {
 	if req.GetBucketInfo() == nil {
 		return nil, ErrDanglingPointer
 	}
@@ -602,7 +611,8 @@ func (r *MetadataModular) GfSpListBucketReadRecord(
 
 // GfSpListBucketsByIDs list buckets by bucket ids
 func (r *MetadataModular) GfSpListBucketsByIDs(ctx context.Context, req *types.GfSpListBucketsByIDsRequest) (
-	resp *types.GfSpListBucketsByIDsResponse, err error) {
+	resp *types.GfSpListBucketsByIDsResponse, err error,
+) {
 	var (
 		buckets    []*model.Bucket
 		ids        []common.Hash

@@ -20,11 +20,11 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	ma "github.com/multiformats/go-multiaddr"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // Node defines the p2p protocol node, encapsulates the go-lib.p2p
@@ -48,7 +48,8 @@ type Node struct {
 
 // NewNode return an instance of Node
 func NewNode(baseApp *gfspapp.GfSpBaseApp, privateKey string, address string, bootstrap []string, pingPeriod int,
-	secondaryApprovalExpiredHeight uint64, p2pAntAddress string) (*Node, error) {
+	secondaryApprovalExpiredHeight uint64, p2pAntAddress string,
+) (*Node, error) {
 	if pingPeriod < PingPeriodMin {
 		pingPeriod = PingPeriodMin
 	}
@@ -175,7 +176,8 @@ func (n *Node) PeersProvider() *PeerProvider {
 // GetSecondaryReplicatePieceApproval broadcast get approval request and blocking
 // goroutine until timeout or collect expect accept approval response number
 func (n *Node) GetSecondaryReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask,
-	expectedAccept int, timeout int64) (accept []coretask.ApprovalReplicatePieceTask, err error) {
+	expectedAccept int, timeout int64,
+) (accept []coretask.ApprovalReplicatePieceTask, err error) {
 	approvalCh, err := n.approval.hangApprovalRequest(task.GetObjectInfo().Id.Uint64())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to hang replicate piece approval request")
@@ -259,7 +261,8 @@ func (n *Node) eventLoop() {
 func (n *Node) broadcast(
 	ctx context.Context,
 	pc protocol.ID,
-	data proto.Message) {
+	data proto.Message,
+) {
 	for _, peerID := range n.node.Peerstore().PeersWithAddrs() {
 		if strings.Compare(n.node.ID().String(), peerID.String()) == 0 {
 			continue
@@ -277,7 +280,8 @@ func (n *Node) sendToPeer(
 	ctx context.Context,
 	peerID peer.ID,
 	pc protocol.ID,
-	data proto.Message) error {
+	data proto.Message,
+) error {
 	host := n.node
 	addrs := n.node.Peerstore().Addrs(peerID)
 	s, err := host.NewStream(ctx, peerID, pc)

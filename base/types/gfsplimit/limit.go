@@ -1,11 +1,13 @@
 package gfsplimit
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
-var _ rcmgr.Limit = &GfSpLimit{}
-var _ rcmgr.Limiter = &GfSpLimiter{}
+var (
+	_ rcmgr.Limit   = &GfSpLimit{}
+	_ rcmgr.Limiter = &GfSpLimiter{}
+)
 
 func (m *GfSpLimit) GetMemoryLimit() int64 {
 	return m.GetMemory()

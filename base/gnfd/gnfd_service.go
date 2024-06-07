@@ -16,13 +16,13 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
 	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 const (
@@ -314,7 +314,8 @@ func (g *Gnfd) ListVirtualGroupFamilies(ctx context.Context, spID uint32) ([]*vi
 		resp, err := client.VirtualGroupQueryClient.GlobalVirtualGroupFamilies(ctx, &virtualgrouptypes.QueryGlobalVirtualGroupFamiliesRequest{
 			Pagination: &query.PageRequest{
 				Key:   nextKey,
-				Limit: 1000},
+				Limit: 1000,
+			},
 		})
 		if err != nil {
 			log.Errorw("failed to list virtual group families", "error", err)
@@ -637,8 +638,8 @@ func (g *Gnfd) QueryObjectInfoByID(ctx context.Context, objectID string) (object
 
 // QueryBucketInfoAndObjectInfo returns bucket info and object info, if not found, return the corresponding error code
 func (g *Gnfd) QueryBucketInfoAndObjectInfo(ctx context.Context, bucket, object string) (bucketInfo *storagetypes.BucketInfo,
-	objectInfo *storagetypes.ObjectInfo, err error) {
-
+	objectInfo *storagetypes.ObjectInfo, err error,
+) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {

@@ -16,7 +16,7 @@ import (
 
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // RequestContext generates from http request, it records the common info
@@ -119,8 +119,8 @@ func (r *RequestContext) SetError(err error) {
 
 // String shows the detail result of the request for logging and debugging.
 func (r *RequestContext) String() string {
-	var headerToString = func(header http.Header) string {
-		var sb = strings.Builder{}
+	headerToString := func(header http.Header) string {
+		sb := strings.Builder{}
 		for k := range header {
 			if k == GnfdUnsignedApprovalMsgHeader || k == GnfdReplicatePieceApprovalHeader || k == GnfdReceiveMsgHeader ||
 				k == GnfdRecoveryMsgHeader || k == GnfdMigratePieceMsgHeader || k == commonhttp.HTTPHeaderAuthorization {
@@ -133,7 +133,7 @@ func (r *RequestContext) String() string {
 		}
 		return "{" + sb.String() + "}"
 	}
-	var getRequestIP = func(r *http.Request) string {
+	getRequestIP := func(r *http.Request) string {
 		IPAddress := r.Header.Get("X-Real-Ip")
 		if IPAddress == "" {
 			IPAddress = r.Header.Get("X-Forwarded-For")
@@ -186,7 +186,6 @@ func (r *RequestContext) VerifySignature() (string, error) {
 	}
 
 	return "", ErrUnsupportedSignType
-
 }
 
 func (r *RequestContext) CheckIfSigExpiry() error {

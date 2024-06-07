@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 func TestSpDBImpl_InsertAuthKeySuccess(t *testing.T) {
@@ -75,8 +75,10 @@ func TestSpDBImpl_UpdateAuthKeySuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? and current_nonce=? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
-		WithArgs(userAddress, domain, oldNonce).WillReturnRows(sqlmock.NewRows([]string{"user_address", "domain", "current_nonce",
-		"current_public_key", "next_nonce", "expiry_date", "created_time", "modified_time"}).AddRow(
+		WithArgs(userAddress, domain, oldNonce).WillReturnRows(sqlmock.NewRows([]string{
+		"user_address", "domain", "current_nonce",
+		"current_public_key", "next_nonce", "expiry_date", "created_time", "modified_time",
+	}).AddRow(
 		o.UserAddress, o.Domain, o.CurrentNonce, o.CurrentPublicKey, o.NextNonce, o.ExpiryDate, o.CreatedTime, o.ModifiedTime))
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE `off_chain_auth_key` SET `current_nonce`=?,`current_public_key`=?,`next_nonce`=?,`expiry_date`=?,`modified_time`=? WHERE `user_address` = ? AND `domain` = ?").
@@ -162,8 +164,10 @@ func TestSpDBImpl_UpdateAuthKeyFailure2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? and current_nonce=? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
-		WithArgs(userAddress, domain, oldNonce).WillReturnRows(sqlmock.NewRows([]string{"user_address", "domain", "current_nonce",
-		"current_public_key", "next_nonce", "expiry_date", "created_time", "modified_time"}).AddRow(
+		WithArgs(userAddress, domain, oldNonce).WillReturnRows(sqlmock.NewRows([]string{
+		"user_address", "domain", "current_nonce",
+		"current_public_key", "next_nonce", "expiry_date", "created_time", "modified_time",
+	}).AddRow(
 		o.UserAddress, o.Domain, o.CurrentNonce, o.CurrentPublicKey, o.NextNonce, o.ExpiryDate, o.CreatedTime, o.ModifiedTime))
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE `off_chain_auth_key` SET `current_nonce`=?,`current_public_key`=?,`next_nonce`=?,`expiry_date`=?,`modified_time`=? WHERE `user_address` = ? AND `domain` = ?").
@@ -222,8 +226,10 @@ func TestSpDBImpl_GetAuthKeySuccess1(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `off_chain_auth_key` WHERE user_address = ? and domain =? ORDER BY `off_chain_auth_key`.`user_address` LIMIT 1").
-		WithArgs(userAddress, domain).WillReturnRows(sqlmock.NewRows([]string{"user_address", "domain", "current_nonce",
-		"current_public_key", "next_nonce", "expiry_date", "created_time", "modified_time"}).AddRow(o.UserAddress,
+		WithArgs(userAddress, domain).WillReturnRows(sqlmock.NewRows([]string{
+		"user_address", "domain", "current_nonce",
+		"current_public_key", "next_nonce", "expiry_date", "created_time", "modified_time",
+	}).AddRow(o.UserAddress,
 		o.Domain, o.CurrentNonce, o.CurrentPublicKey, o.NextNonce, o.ExpiryDate, o.CreatedTime, o.ModifiedTime))
 	result, err := s.GetAuthKey(userAddress, domain)
 	assert.Nil(t, err)

@@ -4,7 +4,7 @@ import (
 	openmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 // GetDefaultServerInterceptor returns default gRPC server interceptor

@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsptqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -211,7 +211,7 @@ func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) err
 	replicateTask.InitReplicatePieceTask(objectInfo, storageParams, s.manager.baseApp.TaskPriority(replicateTask),
 		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask), meta.IsAgentUpload)
 
-	//retrieve objects from the database that have not completed the replicate piece, reselect gvg, and then add them to the replicate queue
+	// retrieve objects from the database that have not completed the replicate piece, reselect gvg, and then add them to the replicate queue
 	bucketInfo, err := s.manager.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
 	if err != nil || bucketInfo == nil {
 		log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)

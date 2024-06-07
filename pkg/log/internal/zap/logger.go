@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/metadata"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log/internal/metadata"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log/internal/types"
 )
 
 const (
@@ -326,7 +326,6 @@ func (zl *logger) sweetenFields(args []interface{}, skipCaller int) []zap.Field 
 			usedFields[keyStr] += 1
 			if usedFields[keyStr] > 1 {
 				keyStr += strconv.Itoa(usedFields[keyStr])
-
 			}
 			fields = append(fields, zap.Any(keyStr, val))
 		}

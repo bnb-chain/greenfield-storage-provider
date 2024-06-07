@@ -6,9 +6,9 @@ package gfspserver
 import (
 	context "context"
 	fmt "fmt"
-	gfsperrors "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	gfspp2p "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	gfsptask "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	gfsperrors "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	gfspp2p "github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	gfsptask "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 	types "github.com/cosmos/cosmos-sdk/types"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"

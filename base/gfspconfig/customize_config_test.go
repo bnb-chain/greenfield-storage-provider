@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretaskqueue "github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
 )
 
 func TestCustomizeGfSpDBSuccess(t *testing.T) {

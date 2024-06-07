@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
 )
 
 var _ piecestore.PieceOp = &GfSpPieceOp{}

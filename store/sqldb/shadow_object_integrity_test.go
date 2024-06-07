@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 	"gorm.io/gorm"
 )
 

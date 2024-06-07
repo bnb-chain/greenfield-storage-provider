@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 type check func() bool

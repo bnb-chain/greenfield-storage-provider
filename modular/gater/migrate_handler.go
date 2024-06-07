@@ -11,16 +11,16 @@ import (
 
 	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/evmos/evmos/v12/types/common"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // dest sp receive migrate gvg notify from src sp.

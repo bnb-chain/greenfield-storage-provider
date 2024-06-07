@@ -10,17 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 var _ ObjectStorage = &ldfsStore{}
 
-var (
-	// re-used ldfs sessions dramatically improve performance
-	ldfsSessionCache = &SessionCache{
-		sessions: map[ObjectStorageConfig]*session.Session{},
-	}
-)
+// re-used ldfs sessions dramatically improve performance
+var ldfsSessionCache = &SessionCache{
+	sessions: map[ObjectStorageConfig]*session.Session{},
+}
 
 type ldfsStore struct {
 	s3Store

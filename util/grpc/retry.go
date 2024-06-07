@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // RetryConfig defines the retry config of gRPC
@@ -120,7 +120,8 @@ func GetDefaultGRPCRetryPolicy(service string) (grpc.DialOption, error) {
 					RetryableStatusCodes: GetGRPCErrorCodes(),
 				},
 			},
-		}})
+		},
+	})
 }
 
 // SetGRPCRetryPolicy sets gRPC retry policy
@@ -135,7 +136,9 @@ func SetGRPCRetryPolicy(retryConfig *RetryConfig) (grpc.DialOption, error) {
 
 // GetGRPCErrorCodes returns all gRPC error codes
 func GetGRPCErrorCodes() []string {
-	return []string{"CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND", "ALREADY_EXISTS",
+	return []string{
+		"CANCELLED", "UNKNOWN", "INVALID_ARGUMENT", "DEADLINE_EXCEEDED", "NOT_FOUND", "ALREADY_EXISTS",
 		"PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION", "ABORTED", "OUT_OF_RANGE", "UNIMPLEMENTED",
-		"INTERNAL", "UNAVAILABLE", "DATA_LOSS", "UNAUTHENTICATED"}
+		"INTERNAL", "UNAVAILABLE", "DATA_LOSS", "UNAUTHENTICATED",
+	}
 }

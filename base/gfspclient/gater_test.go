@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 )
 
 func TestGfSpClient_ReplicatePieceToSecondary(t *testing.T) {

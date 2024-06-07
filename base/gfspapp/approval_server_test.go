@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func TestGfSpBaseApp_GfSpAskApprovalSuccess1(t *testing.T) {
@@ -203,7 +203,8 @@ func TestGfSpBaseApp_GfSpAskApprovalFailure4(t *testing.T) {
 				Creator:    "mockCreator",
 				BucketName: "mockBucketName",
 			},
-		}}}
+		},
+	}}
 	result, err := g.GfSpAskApproval(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, result.GetErr(), ErrApprovalExhaustResource)

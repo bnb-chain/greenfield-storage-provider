@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 const (
@@ -44,7 +44,7 @@ func (d *diskFileStore) String() string {
 func (d *diskFileStore) CreateBucket(ctx context.Context) error {
 	rootPath := d.root
 	log.Debugf("directory path: %s", rootPath)
-	if err := os.MkdirAll(rootPath, 0755); err != nil {
+	if err := os.MkdirAll(rootPath, 0o755); err != nil {
 		return fmt.Errorf("failed to create directory %s : %q", rootPath, err)
 	}
 	return nil
@@ -95,17 +95,17 @@ func (d *diskFileStore) PutObject(ctx context.Context, key string, reader io.Rea
 	p := d.path(key)
 
 	if strings.HasSuffix(key, dirSuffix) || key == "" && strings.HasSuffix(d.root, dirSuffix) {
-		return os.MkdirAll(p, os.FileMode(0755))
+		return os.MkdirAll(p, os.FileMode(0o755))
 	}
 
 	tmp := filepath.Join(filepath.Dir(p), "."+filepath.Base(p)+".tmp"+strconv.Itoa(rand.Int()))
-	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil && os.IsNotExist(err) {
-		if err = os.MkdirAll(filepath.Dir(p), os.FileMode(0755)); err != nil {
+		if err = os.MkdirAll(filepath.Dir(p), os.FileMode(0o755)); err != nil {
 			log.Errorw("failed to put object due to mkdir", "error", err)
 			return err
 		}
-		f, err = os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		f, err = os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 	}
 	if err != nil {
 		log.Errorw("failed to put object due to open file", "error", err)

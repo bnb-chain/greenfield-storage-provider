@@ -7,20 +7,23 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
-var _ coretask.ApprovalCreateBucketTask = &GfSpCreateBucketApprovalTask{}
-var _ coretask.ApprovalMigrateBucketTask = &GfSpMigrateBucketApprovalTask{}
-var _ coretask.ApprovalCreateObjectTask = &GfSpCreateObjectApprovalTask{}
-var _ coretask.ApprovalReplicatePieceTask = &GfSpReplicatePieceApprovalTask{}
-var _ coretask.ApprovalDelegateCreateObjectTask = &GfSpDelegateCreateObjectApprovalTask{}
+var (
+	_ coretask.ApprovalCreateBucketTask         = &GfSpCreateBucketApprovalTask{}
+	_ coretask.ApprovalMigrateBucketTask        = &GfSpMigrateBucketApprovalTask{}
+	_ coretask.ApprovalCreateObjectTask         = &GfSpCreateObjectApprovalTask{}
+	_ coretask.ApprovalReplicatePieceTask       = &GfSpReplicatePieceApprovalTask{}
+	_ coretask.ApprovalDelegateCreateObjectTask = &GfSpDelegateCreateObjectApprovalTask{}
+)
 
 func (m *GfSpCreateBucketApprovalTask) InitApprovalCreateBucketTask(account string, bucket *storagetypes.MsgCreateBucket,
-	fingerprint []byte, priority coretask.TPriority) {
+	fingerprint []byte, priority coretask.TPriority,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.Fingerprint = fingerprint
@@ -306,7 +309,8 @@ func (m *GfSpMigrateBucketApprovalTask) SetUserAddress(address string) {
 }
 
 func (m *GfSpCreateObjectApprovalTask) InitApprovalCreateObjectTask(account string, object *storagetypes.MsgCreateObject,
-	fingerprint []byte, priority coretask.TPriority) {
+	fingerprint []byte, priority coretask.TPriority,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.Fingerprint = fingerprint
@@ -454,7 +458,8 @@ func (m *GfSpCreateObjectApprovalTask) SetCreateObjectInfo(object *storagetypes.
 }
 
 func (m *GfSpReplicatePieceApprovalTask) InitApprovalReplicatePieceTask(object *storagetypes.ObjectInfo,
-	params *storagetypes.Params, priority coretask.TPriority, askOpAddress string) {
+	params *storagetypes.Params, priority coretask.TPriority, askOpAddress string,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetStorageParams(params)
@@ -636,7 +641,8 @@ func (m *GfSpReplicatePieceApprovalTask) SetApprovedSpApprovalAddress(address st
 }
 
 func (m *GfSpDelegateCreateObjectApprovalTask) InitApprovalDelegateCreateObjectTask(account string, object *storagetypes.MsgDelegateCreateObject,
-	fingerprint []byte, priority coretask.TPriority) {
+	fingerprint []byte, priority coretask.TPriority,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.Fingerprint = fingerprint

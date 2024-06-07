@@ -7,22 +7,23 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjectTask, stream io.Reader,
-	opts ...grpc.DialOption) error {
+	opts ...grpc.DialOption,
+) error {
 	startTime := time.Now()
 	conn, connErr := s.Connection(ctx, s.uploaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect uploader", "error", connErr)
 		return ErrRPCUnknownWithDetail("client failed to connect uploader, error: ", connErr)
 	}
-	var sendSize = 0
+	sendSize := 0
 	defer func() {
 		_ = conn.Close()
 		if task != nil {
@@ -94,13 +95,14 @@ func (s *GfSpClient) UploadObject(ctx context.Context, task coretask.UploadObjec
 }
 
 func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.ResumableUploadObjectTask, stream io.Reader,
-	opts ...grpc.DialOption) error {
+	opts ...grpc.DialOption,
+) error {
 	conn, connErr := s.Connection(ctx, s.uploaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect uploader", "error", connErr)
 		return ErrRPCUnknownWithDetail("client failed to connect uploader, error: ", connErr)
 	}
-	var sendSize = 0
+	sendSize := 0
 	defer func() {
 		conn.Close()
 		if task != nil {
@@ -111,14 +113,11 @@ func (s *GfSpClient) ResumableUploadObject(ctx context.Context, task coretask.Re
 		}
 	}()
 	client, err := gfspserver.NewGfSpUploadServiceClient(conn).GfSpResumableUploadObject(ctx)
-
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to new uploader stream client", "error", err)
 		return ErrRPCUnknownWithDetail("failed to new uploader stream client, error: ", connErr)
 	}
-	var (
-		buf = make([]byte, DefaultStreamBufSize)
-	)
+	buf := make([]byte, DefaultStreamBufSize)
 	for {
 		n, streamErr := stream.Read(buf)
 		sendSize += n

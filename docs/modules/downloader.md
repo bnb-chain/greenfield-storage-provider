@@ -109,4 +109,4 @@ The corresponding protobuf definition is shown below:
 
 ## GfSp Framework Downloader Code
 
-Downloader module code implementation: [Downloader](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/downloader)
+Downloader module code implementation: [Downloader](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/downloader)

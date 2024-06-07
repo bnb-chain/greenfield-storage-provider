@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 func TestGfSpBaseApp_GfSpVerifyAuthenticationSuccess(t *testing.T) {

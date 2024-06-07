@@ -1,7 +1,7 @@
 syntax = "proto3";
 package store.types;
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/store/types";
+option go_package = "github.com/zkMeLabs/mechain-storage-provider/store/types";
 
 enum TaskState {
   TASK_STATE_INIT_UNSPECIFIED = 0;

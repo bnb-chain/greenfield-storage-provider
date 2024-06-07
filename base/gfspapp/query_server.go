@@ -4,19 +4,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 var _ gfspserver.GfSpQueryTaskServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpQueryTasks(ctx context.Context, req *gfspserver.GfSpQueryTasksRequest) (
-	*gfspserver.GfSpQueryTasksResponse, error) {
+	*gfspserver.GfSpQueryTasksResponse, error,
+) {
 	subKey := req.GetTaskSubKey()
 	if len(subKey) == 0 {
 		return &gfspserver.GfSpQueryTasksResponse{
-			Err: gfsperrors.MakeGfSpError(fmt.Errorf("invalid query key"))}, nil
+			Err: gfsperrors.MakeGfSpError(fmt.Errorf("invalid query key")),
+		}, nil
 	}
 	approverTasks, _ := g.approver.QueryTasks(ctx, coretask.TKey(subKey))
 	downloaderTasks, _ := g.downloader.QueryTasks(ctx, coretask.TKey(subKey))
@@ -46,19 +48,22 @@ func (g *GfSpBaseApp) GfSpQueryTasks(ctx context.Context, req *gfspserver.GfSpQu
 	}
 	if len(taskInfo) == 0 {
 		return &gfspserver.GfSpQueryTasksResponse{
-			Err: gfsperrors.MakeGfSpError(fmt.Errorf("no match tasks"))}, nil
+			Err: gfsperrors.MakeGfSpError(fmt.Errorf("no match tasks")),
+		}, nil
 	}
 	return &gfspserver.GfSpQueryTasksResponse{TaskInfo: taskInfo}, nil
 }
 
 func (g *GfSpBaseApp) GfSpQueryBucketMigrate(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrateRequest) (
-	*gfspserver.GfSpQueryBucketMigrateResponse, error) {
+	*gfspserver.GfSpQueryBucketMigrateResponse, error,
+) {
 	res, err := g.manager.QueryBucketMigrate(ctx)
 	return res, err
 }
 
 func (g *GfSpBaseApp) GfSpQuerySpExit(ctx context.Context, req *gfspserver.GfSpQuerySpExitRequest) (
-	*gfspserver.GfSpQuerySpExitResponse, error) {
+	*gfspserver.GfSpQuerySpExitResponse, error,
+) {
 	res, err := g.manager.QuerySpExit(ctx)
 	return res, err
 }

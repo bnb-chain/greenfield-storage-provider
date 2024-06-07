@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	utilgrpc "github.com/zkMeLabs/mechain-storage-provider/util/grpc"
 )
 
 const (
@@ -63,7 +63,8 @@ type GfSpClient struct {
 }
 
 func NewGfSpClient(approverEndpoint, managerEndpoint, downloaderEndpoint, receiverEndpoint, metadataEndpoint,
-	uploaderEndpoint, p2pEndpoint, signerEndpoint, authenticatorEndpoint string, metrics bool) *GfSpClient {
+	uploaderEndpoint, p2pEndpoint, signerEndpoint, authenticatorEndpoint string, metrics bool,
+) *GfSpClient {
 	return &GfSpClient{
 		approverEndpoint:      approverEndpoint,
 		managerEndpoint:       managerEndpoint,
@@ -167,7 +168,8 @@ func (s *GfSpClient) HTTPClient(ctx context.Context) *http.Client {
 				MaxIdleConns:    HTTPMaxIdleConns,
 				IdleConnTimeout: HTTPIdleConnTimout,
 				TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
-			}}
+			},
+		}
 	}
 	return s.httpClient
 }

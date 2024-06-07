@@ -93,7 +93,7 @@ The PutObject process uses the remaining space weight algorithm to pick a group 
 
 ### Bucket Migrate Scheduler
 
-By subscribing to metadata events about bucket migration, a migration plan is generated internally, 
+By subscribing to metadata events about bucket migration, a migration plan is generated internally,
 and the tasks contained in the migration plan are dispatched to the task dispatcher. Manage the lifecycle of the entire bucket migration plan.
 
 ### SP Exit Scheduler
@@ -121,4 +121,4 @@ This service is still under development and will be online soon.
 
 ## GfSp Framework Manager Code
 
-Manager module code implementation: [Manager](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/manager)
+Manager module code implementation: [Manager](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/manager)

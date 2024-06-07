@@ -1,31 +1,33 @@
 package task
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
-var _ Task = (*NullTask)(nil)
-var _ ApprovalTask = (*NullTask)(nil)
-var _ ApprovalCreateBucketTask = (*NullTask)(nil)
-var _ ApprovalCreateObjectTask = (*NullTask)(nil)
-var _ ApprovalDelegateCreateObjectTask = (*NullTask)(nil)
-var _ ApprovalReplicatePieceTask = (*NullTask)(nil)
-var _ ObjectTask = (*NullTask)(nil)
-var _ UploadObjectTask = (*NullTask)(nil)
-var _ ReplicatePieceTask = (*NullTask)(nil)
-var _ SealObjectTask = (*NullTask)(nil)
-var _ ReceivePieceTask = (*NullTask)(nil)
-var _ DownloadObjectTask = (*NullTask)(nil)
-var _ ChallengePieceTask = (*NullTask)(nil)
-var _ GCTask = (*NullTask)(nil)
-var _ GCZombiePieceTask = (*NullTask)(nil)
-var _ GCMetaTask = (*NullTask)(nil)
-var _ RecoveryPieceTask = (*NullTask)(nil)
-var _ MigrateGVGTask = (*NullTask)(nil)
-var _ GCBucketMigrationTask = (*NullTask)(nil)
+var (
+	_ Task                             = (*NullTask)(nil)
+	_ ApprovalTask                     = (*NullTask)(nil)
+	_ ApprovalCreateBucketTask         = (*NullTask)(nil)
+	_ ApprovalCreateObjectTask         = (*NullTask)(nil)
+	_ ApprovalDelegateCreateObjectTask = (*NullTask)(nil)
+	_ ApprovalReplicatePieceTask       = (*NullTask)(nil)
+	_ ObjectTask                       = (*NullTask)(nil)
+	_ UploadObjectTask                 = (*NullTask)(nil)
+	_ ReplicatePieceTask               = (*NullTask)(nil)
+	_ SealObjectTask                   = (*NullTask)(nil)
+	_ ReceivePieceTask                 = (*NullTask)(nil)
+	_ DownloadObjectTask               = (*NullTask)(nil)
+	_ ChallengePieceTask               = (*NullTask)(nil)
+	_ GCTask                           = (*NullTask)(nil)
+	_ GCZombiePieceTask                = (*NullTask)(nil)
+	_ GCMetaTask                       = (*NullTask)(nil)
+	_ RecoveryPieceTask                = (*NullTask)(nil)
+	_ MigrateGVGTask                   = (*NullTask)(nil)
+	_ GCBucketMigrationTask            = (*NullTask)(nil)
+)
 
 type NullTask struct{}
 
@@ -104,6 +106,7 @@ func (*NullTask) SetSecondaryAddresses([]string)   {}
 func (*NullTask) GetSecondaryEndpoints() []string  { return nil }
 func (*NullTask) InitSealObjectTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, []string, [][]byte, int64, int64, bool) {
 }
+
 func (*NullTask) InitReceivePieceTask(uint32, *storagetypes.ObjectInfo, *storagetypes.Params, TPriority, uint32, int32, int64, bool) {
 }
 func (*NullTask) GetReplicateIdx() uint32  { return 0 }

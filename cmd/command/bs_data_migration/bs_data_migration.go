@@ -9,10 +9,10 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	fixv101 "github.com/bnb-chain/greenfield-storage-provider/cmd/command/bs_data_migration/v1.0.1"
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	fixv101 "github.com/zkMeLabs/mechain-storage-provider/cmd/command/bs_data_migration/v1.0.1"
+	"github.com/zkMeLabs/mechain-storage-provider/cmd/utils"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 var JobNameFlag = &cli.StringFlag{

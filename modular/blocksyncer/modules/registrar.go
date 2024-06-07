@@ -6,23 +6,21 @@ import (
 	"github.com/forbole/juno/v4/modules/messages"
 	"github.com/forbole/juno/v4/modules/registrar"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/events"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/general"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/group"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/object"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/objectidmap"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/payment"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/permission"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/prefixtree"
-	sp "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/storage_provider"
-	virtualgroup "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/virtual_group"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/database"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/bucket"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/events"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/general"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/group"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/object"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/objectidmap"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/payment"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/permission"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/prefixtree"
+	sp "github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/storage_provider"
+	virtualgroup "github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/virtual_group"
 )
 
-var (
-	_ registrar.Registrar = &BlockSyncerRegistrar{}
-)
+var _ registrar.Registrar = &BlockSyncerRegistrar{}
 
 // BlockSyncerRegistrar represents the modules.Registrar that allows to register all modules that are supported by blocksyncer
 type BlockSyncerRegistrar struct {
@@ -50,9 +48,9 @@ func (r *BlockSyncerRegistrar) BuildModules(ctx registrar.Context) modules.Modul
 		sp.NewModule(db),
 		prefixtree.NewModule(db),
 
-		//vg related module
+		// vg related module
 		virtualgroup.NewModule(db),
-		//vg event module
+		// vg event module
 		events.NewModule(db),
 		objectidmap.NewModule(db),
 		general.NewModule(db),

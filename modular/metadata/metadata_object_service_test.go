@@ -9,8 +9,8 @@ import (
 	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func TestMetadataModular_GfSpListObjectsByBucketName_Success(t *testing.T) {
@@ -20,7 +20,7 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListObjectsByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, string, string, int, bool) ([]*bsdb.ListObjectsResult, error) {
-			return []*bsdb.ListObjectsResult{&bsdb.ListObjectsResult{
+			return []*bsdb.ListObjectsResult{{
 				PathName:   "/folder1",
 				ResultType: "Object",
 				Object: &bsdb.Object{
@@ -76,7 +76,7 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success2(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListObjectsByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, string, string, int, bool) ([]*bsdb.ListObjectsResult, error) {
-			return []*bsdb.ListObjectsResult{&bsdb.ListObjectsResult{
+			return []*bsdb.ListObjectsResult{{
 				PathName:   "/folder1",
 				ResultType: "Object",
 				Object: &bsdb.Object{
@@ -133,7 +133,7 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success3(t *testing.T) {
 	m.EXPECT().ListObjectsByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, string, string, int, bool) ([]*bsdb.ListObjectsResult, error) {
 			return []*bsdb.ListObjectsResult{
-				&bsdb.ListObjectsResult{
+				{
 					PathName:   "/folder1",
 					ResultType: "object",
 					Object: &bsdb.Object{
@@ -164,8 +164,9 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success3(t *testing.T) {
 						CreateTxHash:        common.HexToHash("1"),
 						UpdateTxHash:        common.HexToHash("1"),
 						SealTxHash:          common.HexToHash("1"),
-					}},
-				&bsdb.ListObjectsResult{
+					},
+				},
+				{
 					PathName:   "/folder1",
 					ResultType: "common_prefix",
 					Object: &bsdb.Object{
@@ -196,8 +197,9 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success3(t *testing.T) {
 						CreateTxHash:        common.HexToHash("2"),
 						UpdateTxHash:        common.HexToHash("2"),
 						SealTxHash:          common.HexToHash("2"),
-					}},
-				&bsdb.ListObjectsResult{
+					},
+				},
+				{
 					PathName:   "/folder1",
 					ResultType: "common_prefix",
 					Object: &bsdb.Object{
@@ -228,7 +230,8 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success3(t *testing.T) {
 						CreateTxHash:        common.HexToHash("3"),
 						UpdateTxHash:        common.HexToHash("3"),
 						SealTxHash:          common.HexToHash("3"),
-					}},
+					},
+				},
 			}, nil
 		},
 	).Times(1)
@@ -254,7 +257,7 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success4(t *testing.T) {
 	m.EXPECT().ListObjectsByBucketName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, string, string, int, bool) ([]*bsdb.ListObjectsResult, error) {
 			return []*bsdb.ListObjectsResult{
-				&bsdb.ListObjectsResult{
+				{
 					PathName:   "/folder1",
 					ResultType: "object",
 					Object: &bsdb.Object{
@@ -285,8 +288,9 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success4(t *testing.T) {
 						CreateTxHash:        common.HexToHash("1"),
 						UpdateTxHash:        common.HexToHash("1"),
 						SealTxHash:          common.HexToHash("1"),
-					}},
-				&bsdb.ListObjectsResult{
+					},
+				},
+				{
 					PathName:   "/folder1",
 					ResultType: "common_prefix",
 					Object: &bsdb.Object{
@@ -317,7 +321,8 @@ func TestMetadataModular_GfSpListObjectsByBucketName_Success4(t *testing.T) {
 						CreateTxHash:        common.HexToHash("2"),
 						UpdateTxHash:        common.HexToHash("2"),
 						SealTxHash:          common.HexToHash("2"),
-					}},
+					},
+				},
 			}, nil
 		},
 	).Times(1)
@@ -371,7 +376,7 @@ func TestMetadataModular_GfSpListDeletedObjectsByBlockNumberRange_Success(t *tes
 	m.EXPECT().ListDeletedObjectsByBlockNumberRange(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(uint64, uint64, bool) ([]*bsdb.Object, error) {
 			return []*bsdb.Object{
-				&bsdb.Object{
+				{
 					ID:                  1,
 					Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 					Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -558,7 +563,7 @@ func TestMetadataModular_GfSpListObjectsByIDs_Success(t *testing.T) {
 	m.EXPECT().ListObjectsByIDs(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Object, error) {
 			return []*bsdb.Object{
-				&bsdb.Object{
+				{
 					ID:                  1,
 					Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 					Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -623,7 +628,7 @@ func TestMetadataModular_GfSpListObjectsInGVGAndBucket_Success(t *testing.T) {
 	m.EXPECT().ListObjectsInGVGAndBucket(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -717,7 +722,7 @@ func TestMetadataModular_GfSpListObjectsInGVGAndBucket_Success2(t *testing.T) {
 	m.EXPECT().ListObjectsInGVGAndBucket(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -811,7 +816,7 @@ func TestMetadataModular_GfSpListObjectsInGVGAndBucket_Failed(t *testing.T) {
 	m.EXPECT().ListObjectsInGVGAndBucket(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -907,7 +912,7 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Success(t *testing.T
 	m.EXPECT().ListObjectsByGVGAndBucketForGC(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -1001,7 +1006,7 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Success2(t *testing.
 	m.EXPECT().ListObjectsByGVGAndBucketForGC(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -1095,7 +1100,7 @@ func TestMetadataModular_GfSpListObjectsByGVGAndBucketForGC_Failed(t *testing.T)
 	m.EXPECT().ListObjectsByGVGAndBucketForGC(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -1210,7 +1215,7 @@ func TestMetadataModular_GfSpListObjectsInGVG_Success(t *testing.T) {
 	m.EXPECT().ListObjectsInGVG(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -1303,7 +1308,7 @@ func TestMetadataModular_GfSpListObjectsInGVG_Success2(t *testing.T) {
 	m.EXPECT().ListObjectsInGVG(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(uint32, common.Hash, int) ([]*bsdb.Object, []*bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
@@ -1333,7 +1338,7 @@ func TestMetadataModular_GfSpListObjectsInGVG_Success2(t *testing.T) {
 						SealTxHash:          common.HexToHash("2"),
 					},
 				}, []*bsdb.Bucket{
-					&bsdb.Bucket{
+					{
 						ID:                         848,
 						Owner:                      common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
 						Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -1355,7 +1360,8 @@ func TestMetadataModular_GfSpListObjectsInGVG_Success2(t *testing.T) {
 						UpdateAt:                   0,
 						UpdateTxHash:               common.HexToHash("0x0F508E101FF83B79DF357212029B05D1FCC585B50D479FB7E68D6E1A68E8BDD4"),
 						UpdateTime:                 0,
-					}}, nil
+					},
+				}, nil
 		},
 	).Times(1)
 	m.EXPECT().GetGvgByBucketAndLvgID(gomock.Any(), gomock.Any()).DoAndReturn(
@@ -1396,7 +1402,7 @@ func TestMetadataModular_GfSpListObjectsInGVG_Failed(t *testing.T) {
 	m.EXPECT().ListObjectsInGVG(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(uint32, common.Hash, int) ([]*bsdb.Object, *bsdb.Bucket, error) {
 			return []*bsdb.Object{
-					&bsdb.Object{
+					{
 						ID:                  1,
 						Creator:             common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),
 						Operator:            common.HexToAddress("0xe978A9160BC061f602fa083e9C68539C549A421D"),

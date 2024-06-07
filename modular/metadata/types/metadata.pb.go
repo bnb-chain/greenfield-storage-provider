@@ -6,9 +6,9 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	gfsperrors "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	gfsptask "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	types3 "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	gfsperrors "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	gfsptask "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	types3 "github.com/zkMeLabs/mechain-storage-provider/store/types"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"

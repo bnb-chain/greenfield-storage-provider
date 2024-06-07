@@ -3,9 +3,9 @@ package metadata
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 const (

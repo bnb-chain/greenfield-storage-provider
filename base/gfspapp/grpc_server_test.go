@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"

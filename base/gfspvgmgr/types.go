@@ -1,6 +1,6 @@
 package gfspvgmgr
 
-import "github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
+import "github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
 
 func NewIDSetFromList(list []uint32) vgmgr.IDSet {
 	set := make(map[uint32]struct{}, 0)

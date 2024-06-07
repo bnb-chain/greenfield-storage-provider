@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 var _ database.Database = &DB{}
@@ -101,7 +101,6 @@ func (db *DB) PrepareTables(ctx context.Context, tables []schema.Tabler) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil

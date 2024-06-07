@@ -3,7 +3,7 @@ package gfsprcmgr
 import (
 	"sync"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 // resourceManager manager resource scopes, include the top level system scope

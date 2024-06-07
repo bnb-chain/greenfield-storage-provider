@@ -6,9 +6,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	"github.com/evmos/evmos/v12/types/common"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 var (
@@ -316,14 +316,12 @@ func TestGfSpCreateBucketApprovalTask_SetCreateBucketInfo(t *testing.T) {
 	m.SetCreateBucketInfo(mockCreateBucketInfo)
 }
 
-var (
-	mockMigrateBucketInfo = &storagetypes.MsgMigrateBucket{
-		Operator:             "mockOperator",
-		BucketName:           "mockBucketName",
-		DstPrimarySpId:       01,
-		DstPrimarySpApproval: &common.Approval{},
-	}
-)
+var mockMigrateBucketInfo = &storagetypes.MsgMigrateBucket{
+	Operator:             "mockOperator",
+	BucketName:           "mockBucketName",
+	DstPrimarySpId:       0o1,
+	DstPrimarySpApproval: &common.Approval{},
+}
 
 func TestInitApprovalMigrateBucketTask(t *testing.T) {
 	m := &GfSpMigrateBucketApprovalTask{}
@@ -586,19 +584,17 @@ func TestGfSpMigrateBucketApprovalTask_SetMigrateBucketInfo(t *testing.T) {
 	m.SetMigrateBucketInfo(mockMigrateBucketInfo)
 }
 
-var (
-	mockCreateObjectInfo = &storagetypes.MsgCreateObject{
-		Creator:           "mockCreator",
-		BucketName:        "mockBucketName",
-		ObjectName:        "mockObjectName",
-		PayloadSize:       10,
-		Visibility:        1,
-		ContentType:       "application/json",
-		PrimarySpApproval: &common.Approval{},
-		ExpectChecksums:   [][]byte{[]byte("test")},
-		RedundancyType:    1,
-	}
-)
+var mockCreateObjectInfo = &storagetypes.MsgCreateObject{
+	Creator:           "mockCreator",
+	BucketName:        "mockBucketName",
+	ObjectName:        "mockObjectName",
+	PayloadSize:       10,
+	Visibility:        1,
+	ContentType:       "application/json",
+	PrimarySpApproval: &common.Approval{},
+	ExpectChecksums:   [][]byte{[]byte("test")},
+	RedundancyType:    1,
+}
 
 func TestInitApprovalCreateObjectTask(t *testing.T) {
 	m := &GfSpCreateObjectApprovalTask{}

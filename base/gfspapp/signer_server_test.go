@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 var (
@@ -48,7 +48,8 @@ func TestGfSpBaseApp_GfSpSignSuccess2(t *testing.T) {
 			Operator:       "mockOperator",
 			BucketName:     "mockBucketName",
 			DstPrimarySpId: 1,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -65,7 +66,8 @@ func TestGfSpBaseApp_GfSpSignSuccess3(t *testing.T) {
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
 			ObjectName: "mockObjectName",
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -82,7 +84,8 @@ func TestGfSpBaseApp_GfSpSignSuccess4(t *testing.T) {
 		SealObjectInfo: &storagetypes.MsgSealObject{
 			ObjectName: "mockObjectName",
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -99,7 +102,8 @@ func TestGfSpBaseApp_GfSpSignSuccess5(t *testing.T) {
 		RejectObjectInfo: &storagetypes.MsgRejectSealObject{
 			ObjectName: "mockObjectName",
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -115,7 +119,8 @@ func TestGfSpBaseApp_GfSpSignSuccess6(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_DiscontinueBucketInfo{
 		DiscontinueBucketInfo: &storagetypes.MsgDiscontinueBucket{
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -131,7 +136,8 @@ func TestGfSpBaseApp_GfSpSignSuccess7(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SignSecondarySealBls{
 		SignSecondarySealBls: &gfspserver.GfSpSignSecondarySealBls{
 			ObjectId: 1,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -147,7 +153,8 @@ func TestGfSpBaseApp_GfSpSignSuccess8(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_PingMsg{
 		PingMsg: &gfspp2p.GfSpPing{
 			SpOperatorAddress: "mockSpOperatorAddress",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -163,7 +170,8 @@ func TestGfSpBaseApp_GfSpSignSuccess9(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_PongMsg{
 		PongMsg: &gfspp2p.GfSpPong{
 			SpOperatorAddress: "mockSpOperatorAddress",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -181,7 +189,8 @@ func TestGfSpBaseApp_GfSpSignSuccess10(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -199,7 +208,8 @@ func TestGfSpBaseApp_GfSpSignSuccess11(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -217,7 +227,8 @@ func TestGfSpBaseApp_GfSpSignSuccess12(t *testing.T) {
 		CreateGlobalVirtualGroup: &gfspserver.GfSpCreateGlobalVirtualGroup{
 			VirtualGroupFamilyId: 1,
 			Deposit:              &coin,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -235,7 +246,8 @@ func TestGfSpBaseApp_GfSpSignSuccess13(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -264,7 +276,8 @@ func TestGfSpBaseApp_GfSpSignSuccess15(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_CompleteMigrateBucket{
 		CompleteMigrateBucket: &storagetypes.MsgCompleteMigrateBucket{
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -280,7 +293,8 @@ func TestGfSpBaseApp_GfSpSignSuccess16(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SignSecondarySpMigrationBucket{
 		SignSecondarySpMigrationBucket: &storagetypes.SecondarySpMigrationBucketSignDoc{
 			BucketId: sdk.NewUint(1),
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -296,7 +310,8 @@ func TestGfSpBaseApp_GfSpSignSuccess17(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SwapOut{
 		SwapOut: &virtual_types.MsgSwapOut{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -312,7 +327,8 @@ func TestGfSpBaseApp_GfSpSignSuccess18(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SignSwapOut{
 		SignSwapOut: &virtual_types.MsgSwapOut{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockSig, result.GetSignature())
@@ -328,7 +344,8 @@ func TestGfSpBaseApp_GfSpSignSuccess19(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_CompleteSwapOut{
 		CompleteSwapOut: &virtual_types.MsgCompleteSwapOut{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -344,7 +361,8 @@ func TestGfSpBaseApp_GfSpSignSuccess20(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SpExit{
 		SpExit: &virtual_types.MsgStorageProviderExit{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -360,7 +378,8 @@ func TestGfSpBaseApp_GfSpSignSuccess21(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_CompleteSpExit{
 		CompleteSpExit: &virtual_types.MsgCompleteStorageProviderExit{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -376,7 +395,8 @@ func TestGfSpBaseApp_GfSpSignSuccess22(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SpStoragePrice{
 		SpStoragePrice: &sptypes.MsgUpdateSpStoragePrice{
 			SpAddress: "mockSpAddress",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockTxHash, result.GetTxHash())
@@ -415,7 +435,8 @@ func TestGfSpBaseApp_GfSpSignFailure3(t *testing.T) {
 			Operator:       "mockOperator",
 			BucketName:     "mockBucketName",
 			DstPrimarySpId: 1,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -432,7 +453,8 @@ func TestGfSpBaseApp_GfSpSignFailure4(t *testing.T) {
 		CreateObjectInfo: &storagetypes.MsgCreateObject{
 			ObjectName: "mockObjectName",
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -449,7 +471,8 @@ func TestGfSpBaseApp_GfSpSignFailure5(t *testing.T) {
 		SealObjectInfo: &storagetypes.MsgSealObject{
 			ObjectName: "mockObjectName",
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -466,7 +489,8 @@ func TestGfSpBaseApp_GfSpSignFailure6(t *testing.T) {
 		RejectObjectInfo: &storagetypes.MsgRejectSealObject{
 			ObjectName: "mockObjectName",
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -482,7 +506,8 @@ func TestGfSpBaseApp_GfSpSignFailure7(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_DiscontinueBucketInfo{
 		DiscontinueBucketInfo: &storagetypes.MsgDiscontinueBucket{
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -498,7 +523,8 @@ func TestGfSpBaseApp_GfSpSignFailure8(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SignSecondarySealBls{
 		SignSecondarySealBls: &gfspserver.GfSpSignSecondarySealBls{
 			ObjectId: 1,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -514,7 +540,8 @@ func TestGfSpBaseApp_GfSpSignFailure9(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_PingMsg{
 		PingMsg: &gfspp2p.GfSpPing{
 			SpOperatorAddress: "mockSpOperatorAddress",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -530,7 +557,8 @@ func TestGfSpBaseApp_GfSpSignFailure10(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_PongMsg{
 		PongMsg: &gfspp2p.GfSpPong{
 			SpOperatorAddress: "mockSpOperatorAddress",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -548,7 +576,8 @@ func TestGfSpBaseApp_GfSpSignFailure11(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -566,7 +595,8 @@ func TestGfSpBaseApp_GfSpSignFailure12(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -584,7 +614,8 @@ func TestGfSpBaseApp_GfSpSignFailure13(t *testing.T) {
 		CreateGlobalVirtualGroup: &gfspserver.GfSpCreateGlobalVirtualGroup{
 			VirtualGroupFamilyId: 1,
 			Deposit:              &coin,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -602,7 +633,8 @@ func TestGfSpBaseApp_GfSpSignFailure14(t *testing.T) {
 			Task:          &gfsptask.GfSpTask{},
 			ObjectInfo:    mockObjectInfo,
 			StorageParams: mockStorageParams,
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -631,7 +663,8 @@ func TestGfSpBaseApp_GfSpSignFailure16(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_CompleteMigrateBucket{
 		CompleteMigrateBucket: &storagetypes.MsgCompleteMigrateBucket{
 			BucketName: "mockBucketName",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -647,7 +680,8 @@ func TestGfSpBaseApp_GfSpSignFailure17(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SignSecondarySpMigrationBucket{
 		SignSecondarySpMigrationBucket: &storagetypes.SecondarySpMigrationBucketSignDoc{
 			BucketId: sdk.NewUint(1),
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -663,7 +697,8 @@ func TestGfSpBaseApp_GfSpSignFailure18(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SwapOut{
 		SwapOut: &virtual_types.MsgSwapOut{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -679,7 +714,8 @@ func TestGfSpBaseApp_GfSpSignFailure19(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SignSwapOut{
 		SignSwapOut: &virtual_types.MsgSwapOut{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -695,7 +731,8 @@ func TestGfSpBaseApp_GfSpSignFailure20(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_CompleteSwapOut{
 		CompleteSwapOut: &virtual_types.MsgCompleteSwapOut{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -711,7 +748,8 @@ func TestGfSpBaseApp_GfSpSignFailure21(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SpExit{
 		SpExit: &virtual_types.MsgStorageProviderExit{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -727,7 +765,8 @@ func TestGfSpBaseApp_GfSpSignFailure22(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_CompleteSpExit{
 		CompleteSpExit: &virtual_types.MsgCompleteStorageProviderExit{
 			StorageProvider: "mockSP",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())
@@ -743,7 +782,8 @@ func TestGfSpBaseApp_GfSpSignFailure23(t *testing.T) {
 	req := &gfspserver.GfSpSignRequest{Request: &gfspserver.GfSpSignRequest_SpStoragePrice{
 		SpStoragePrice: &sptypes.MsgUpdateSpStoragePrice{
 			SpAddress: "mockSpAddress",
-		}}}
+		},
+	}}
 	result, err := g.GfSpSign(context.TODO(), req)
 	assert.Nil(t, err)
 	assert.Equal(t, mockErr.Error(), result.GetErr().GetDescription())

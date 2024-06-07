@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func TestInitGCObjectTask(t *testing.T) {

@@ -1,10 +1,10 @@
 package vgmgr
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
 )
 
 // GlobalVirtualGroupMeta defines global virtual group meta which is used by sp.
@@ -115,6 +115,7 @@ func NewExcludeIDFilter(ids IDSet) ExcludeFilter {
 		ExcludeIDs: ids,
 	}
 }
+
 func (f *ExcludeIDFilter) Apply(id uint32) bool {
 	_, ok := f.ExcludeIDs[id]
 	return ok

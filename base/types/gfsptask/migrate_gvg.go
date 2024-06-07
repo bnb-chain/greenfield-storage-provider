@@ -6,17 +6,20 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
-var _ coretask.MigrateGVGTask = &GfSpMigrateGVGTask{}
-var _ coretask.GCBucketMigrationTask = &GfSpGCBucketMigrationTask{}
+var (
+	_ coretask.MigrateGVGTask        = &GfSpMigrateGVGTask{}
+	_ coretask.GCBucketMigrationTask = &GfSpGCBucketMigrationTask{}
+)
 
 func (m *GfSpMigrateGVGTask) InitMigrateGVGTask(priority coretask.TPriority, bucketID uint64, srcGvg *virtualgrouptypes.GlobalVirtualGroup,
-	redundancyIndex int32, srcSP *sptypes.StorageProvider, timeout, retry int64) {
+	redundancyIndex int32, srcSP *sptypes.StorageProvider, timeout, retry int64,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetPriority(priority)
@@ -401,6 +404,7 @@ func (m *GfSpGCBucketMigrationTask) SetTotalGvgNum(gvgNum uint64) {
 func (m *GfSpGCBucketMigrationTask) GetGCFinishedGvgNum() uint64 {
 	return m.GetGcFinishedGvgNum()
 }
+
 func (m *GfSpGCBucketMigrationTask) SetGCFinishedGvgNum(gvgGcNum uint64) {
 	m.GcFinishedGvgNum = gvgGcNum
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/datatypes"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // Group is the structure for group information

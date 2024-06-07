@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 var (
@@ -20,7 +20,8 @@ var (
 var _ gfspserver.GfSpApprovalServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpAskApprovalRequest) (
-	*gfspserver.GfSpAskApprovalResponse, error) {
+	*gfspserver.GfSpAskApprovalResponse, error,
+) {
 	if req == nil || req.GetRequest() == nil {
 		log.Error("failed to ask approval due to pointer dangling")
 		return &gfspserver.GfSpAskApprovalResponse{Err: ErrApprovalTaskDangling}, nil
@@ -41,7 +42,8 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 			Allowed: allow,
 			Response: &gfspserver.GfSpAskApprovalResponse_CreateBucketApprovalTask{
 				CreateBucketApprovalTask: approvalTask,
-			}}, nil
+			},
+		}, nil
 	case *gfspserver.GfSpAskApprovalRequest_MigrateBucketApprovalTask:
 		approvalTask := taskType.MigrateBucketApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())
@@ -57,7 +59,8 @@ func (g *GfSpBaseApp) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpA
 			Allowed: allow,
 			Response: &gfspserver.GfSpAskApprovalResponse_MigrateBucketApprovalTask{
 				MigrateBucketApprovalTask: approvalTask,
-			}}, nil
+			},
+		}, nil
 	case *gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask:
 		approvalTask := taskType.CreateObjectApprovalTask
 		ctx = log.WithValue(ctx, log.CtxKeyTask, approvalTask.Key().String())

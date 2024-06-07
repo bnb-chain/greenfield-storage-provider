@@ -3,9 +3,9 @@ package downloader
 import (
 	lru "github.com/hashicorp/golang-lru"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 const (

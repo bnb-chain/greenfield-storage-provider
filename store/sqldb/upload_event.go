@@ -3,8 +3,8 @@ package sqldb
 import (
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func (s *SpDBImpl) InsertPutEvent(task coretask.Task) error {

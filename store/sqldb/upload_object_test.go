@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	"github.com/stretchr/testify/assert"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
 )
 
 func TestSpDBImpl_InsertUploadProgressSuccess(t *testing.T) {
-	var objectID = uint64(10)
+	objectID := uint64(10)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO `upload_object_progress` (`task_state`,`global_virtual_group_id`,`task_state_description`,`error_description`,`secondary_endpoints`,`secondary_signatures`,`create_timestamp_second`,`update_timestamp_second`,`is_agent_upload`,`object_id`) VALUES (?,?,?,?,?,?,?,?,?,?)").
@@ -21,7 +21,7 @@ func TestSpDBImpl_InsertUploadProgressSuccess(t *testing.T) {
 }
 
 func TestSpDBImpl_InsertUploadProgressFailure(t *testing.T) {
-	var objectID = uint64(10)
+	objectID := uint64(10)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO `upload_object_progress` (`task_state`,`global_virtual_group_id`,`task_state_description`,`error_description`,`secondary_endpoints`,`secondary_signatures`,`create_timestamp_second`,`update_timestamp_second`,`is_agent_upload`,`object_id`) VALUES (?,?,?,?,?,?,?,?,?,?)").
@@ -33,7 +33,7 @@ func TestSpDBImpl_InsertUploadProgressFailure(t *testing.T) {
 }
 
 func TestSpDBImpl_DeleteUploadProgressSuccess(t *testing.T) {
-	var objectID = uint64(10)
+	objectID := uint64(10)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec("DELETE FROM `upload_object_progress` WHERE `upload_object_progress`.`object_id` = ?").
@@ -44,7 +44,7 @@ func TestSpDBImpl_DeleteUploadProgressSuccess(t *testing.T) {
 }
 
 func TestSpDBImpl_DeleteUploadProgressFailure(t *testing.T) {
-	var objectID = uint64(10)
+	objectID := uint64(10)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec("DELETE FROM `upload_object_progress` WHERE `upload_object_progress`.`object_id` = ?").
@@ -131,7 +131,7 @@ func TestSpDBImpl_UpdateUploadProgressFailure2(t *testing.T) {
 }
 
 func TestSpDBImpl_GetUploadStateSuccess(t *testing.T) {
-	var objectID = uint64(1)
+	objectID := uint64(1)
 	u := &UploadObjectProgressTable{
 		ObjectID:              objectID,
 		TaskState:             2,
@@ -145,8 +145,10 @@ func TestSpDBImpl_GetUploadStateSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `upload_object_progress` WHERE object_id = ? ORDER BY `upload_object_progress`.`object_id` LIMIT 1").
-		WithArgs(objectID).WillReturnRows(sqlmock.NewRows([]string{"object_id", "task_state", "global_virtual_group_id", "task_state_description",
-		"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second"}).
+		WithArgs(objectID).WillReturnRows(sqlmock.NewRows([]string{
+		"object_id", "task_state", "global_virtual_group_id", "task_state_description",
+		"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second",
+	}).
 		AddRow(u.ObjectID, u.TaskState, u.GlobalVirtualGroupID, u.TaskStateDescription, u.ErrorDescription, u.SecondaryEndpoints,
 			u.SecondarySignatures, u.CreateTimestampSecond, u.UpdateTimestampSecond))
 	result1, result2, err := s.GetUploadState(objectID)
@@ -156,7 +158,7 @@ func TestSpDBImpl_GetUploadStateSuccess(t *testing.T) {
 }
 
 func TestSpDBImpl_GetUploadStateFailure(t *testing.T) {
-	var objectID = uint64(1)
+	objectID := uint64(1)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `upload_object_progress` WHERE object_id = ? ORDER BY `upload_object_progress`.`object_id` LIMIT 1").
 		WillReturnError(mockDBInternalError)
@@ -185,8 +187,10 @@ func TestSpDBImpl_GetUploadMetasToReplicateSuccess1(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `upload_object_progress` WHERE task_state IN (?,?) ORDER BY update_timestamp_second DESC LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"object_id", "task_state", "global_virtual_group_id", "task_state_description",
-			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second"}).AddRow(
+		WillReturnRows(sqlmock.NewRows([]string{
+			"object_id", "task_state", "global_virtual_group_id", "task_state_description",
+			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second",
+		}).AddRow(
 			u.ObjectID, u.TaskState, u.GlobalVirtualGroupID, u.TaskStateDescription, u.ErrorDescription, u.SecondaryEndpoints,
 			u.SecondarySignatures, u.CreateTimestampSecond, u.UpdateTimestampSecond))
 	result, err := s.GetUploadMetasToReplicate(limit, timeoutSecond)
@@ -213,8 +217,10 @@ func TestSpDBImpl_GetUploadMetasToReplicateSuccess2(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `upload_object_progress` WHERE task_state IN (?,?) ORDER BY update_timestamp_second DESC LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"object_id", "task_state", "global_virtual_group_id", "task_state_description",
-			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second"}).AddRow(
+		WillReturnRows(sqlmock.NewRows([]string{
+			"object_id", "task_state", "global_virtual_group_id", "task_state_description",
+			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second",
+		}).AddRow(
 			u.ObjectID, u.TaskState, u.GlobalVirtualGroupID, u.TaskStateDescription, u.ErrorDescription, u.SecondaryEndpoints,
 			u.SecondarySignatures, u.CreateTimestampSecond, u.UpdateTimestampSecond))
 	result, err := s.GetUploadMetasToReplicate(limit, timeoutSecond)
@@ -254,8 +260,10 @@ func TestSpDBImpl_GetUploadMetasToSealSuccess1(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `upload_object_progress` WHERE task_state IN (?,?) ORDER BY update_timestamp_second DESC LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"object_id", "task_state", "global_virtual_group_id", "task_state_description",
-			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second"}).AddRow(
+		WillReturnRows(sqlmock.NewRows([]string{
+			"object_id", "task_state", "global_virtual_group_id", "task_state_description",
+			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second",
+		}).AddRow(
 			u.ObjectID, u.TaskState, u.GlobalVirtualGroupID, u.TaskStateDescription, u.ErrorDescription, u.SecondaryEndpoints,
 			u.SecondarySignatures, u.CreateTimestampSecond, u.UpdateTimestampSecond))
 	result, err := s.GetUploadMetasToSeal(limit, timeoutSecond)
@@ -282,8 +290,10 @@ func TestSpDBImpl_GetUploadMetasToSealSuccess2(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `upload_object_progress` WHERE task_state IN (?,?) ORDER BY update_timestamp_second DESC LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"object_id", "task_state", "global_virtual_group_id", "task_state_description",
-			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second"}).AddRow(
+		WillReturnRows(sqlmock.NewRows([]string{
+			"object_id", "task_state", "global_virtual_group_id", "task_state_description",
+			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second",
+		}).AddRow(
 			u.ObjectID, u.TaskState, u.GlobalVirtualGroupID, u.TaskStateDescription, u.ErrorDescription, u.SecondaryEndpoints,
 			u.SecondarySignatures, u.CreateTimestampSecond, u.UpdateTimestampSecond))
 	result, err := s.GetUploadMetasToSeal(limit, timeoutSecond)
@@ -324,8 +334,10 @@ func TestSpDBImpl_GetUploadMetasToSealFailure2(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `upload_object_progress` WHERE task_state IN (?,?) ORDER BY update_timestamp_second DESC LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"object_id", "task_state", "global_virtual_group_id", "task_state_description",
-			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second"}).AddRow(
+		WillReturnRows(sqlmock.NewRows([]string{
+			"object_id", "task_state", "global_virtual_group_id", "task_state_description",
+			"error_description", "secondary_endpoints", "secondary_signatures", "create_timestamp_second", "update_timestamp_second",
+		}).AddRow(
 			u.ObjectID, u.TaskState, u.GlobalVirtualGroupID, u.TaskStateDescription, u.ErrorDescription, u.SecondaryEndpoints,
 			u.SecondarySignatures, u.CreateTimestampSecond, u.UpdateTimestampSecond))
 	result, err := s.GetUploadMetasToSeal(limit, timeoutSecond)

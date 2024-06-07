@@ -10,17 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 var _ ObjectStorage = &b2Store{}
 
-var (
-	// re-used b2 sessions dramatically improve performance
-	b2SessionCache = &SessionCache{
-		sessions: map[ObjectStorageConfig]*session.Session{},
-	}
-)
+// re-used b2 sessions dramatically improve performance
+var b2SessionCache = &SessionCache{
+	sessions: map[ObjectStorageConfig]*session.Session{},
+}
 
 type b2Store struct {
 	s3Store

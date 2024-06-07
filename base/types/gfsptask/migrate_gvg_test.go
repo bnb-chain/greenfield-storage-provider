@@ -6,9 +6,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 var (

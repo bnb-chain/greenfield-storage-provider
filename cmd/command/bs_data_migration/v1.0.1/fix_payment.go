@@ -8,7 +8,7 @@ import (
 	"github.com/forbole/juno/v4/models"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 type Account struct {

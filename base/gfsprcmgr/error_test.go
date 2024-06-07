@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 var mockErr = errors.New("mock error")

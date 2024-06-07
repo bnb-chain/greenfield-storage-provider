@@ -3,7 +3,7 @@ package storageprovider
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/database"
 
 	"gorm.io/gorm/schema"
 

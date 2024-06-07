@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/test"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/test"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 type BasicTestSuite struct {

@@ -1,4 +1,4 @@
-module github.com/bnb-chain/greenfield-storage-provider
+module github.com/zkMeLabs/mechain-storage-provider
 
 go 1.20
 
