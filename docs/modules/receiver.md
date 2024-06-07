@@ -46,4 +46,4 @@ The corresponding `protobuf` definition is shown below:
 
 ## GfSp Framework Receiver Code
 
-Receiver module code implementation: [Receiver](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/receiver)
+Receiver module code implementation: [Receiver](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/receiver)

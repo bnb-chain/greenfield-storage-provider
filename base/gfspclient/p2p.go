@@ -3,14 +3,15 @@ package gfspclient
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) AskSecondaryReplicatePieceApproval(ctx context.Context, task coretask.ApprovalReplicatePieceTask,
-	low, high int, timeout int64) ([]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
+	low, high int, timeout int64,
+) ([]*gfsptask.GfSpReplicatePieceApprovalTask, error) {
 	conn, connErr := s.P2PConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect p2p", "error", connErr)

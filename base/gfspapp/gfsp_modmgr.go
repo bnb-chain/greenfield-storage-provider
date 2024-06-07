@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/util/maps"
 )
 
 // Option defines the GfSpBaseApp and module init options func type.
@@ -29,8 +29,10 @@ type ModularManager struct {
 	mux            sync.RWMutex
 }
 
-var modMgr *ModularManager
-var once sync.Once
+var (
+	modMgr *ModularManager
+	once   sync.Once
+)
 
 func init() {
 	once.Do(func() {

@@ -60,4 +60,4 @@ The corresponding protobuf definition is shown below:
 
 ## GfSp Framework P2P Code
 
-P2P module code implementation: [P2P](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/p2p)
+P2P module code implementation: [P2P](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/p2p)

@@ -7,12 +7,13 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
 )
 
 func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *types.GfSpQueryUploadProgressRequest) (
-	*types.GfSpQueryUploadProgressResponse, error) {
+	*types.GfSpQueryUploadProgressResponse, error,
+) {
 	state, errDescription, err := r.baseApp.GfSpDB().GetUploadState(req.GetObjectId())
 	if err != nil {
 		if strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) { // ErrRecordNotFound is not an actual error
@@ -32,7 +33,8 @@ func (r *MetadataModular) GfSpQueryUploadProgress(ctx context.Context, req *type
 }
 
 func (r *MetadataModular) GfSpQueryResumableUploadSegment(ctx context.Context, req *types.GfSpQueryResumableUploadSegmentRequest) (
-	*types.GfSpQueryResumableUploadSegmentResponse, error) {
+	*types.GfSpQueryResumableUploadSegmentResponse, error,
+) {
 	integrityMeta, err := r.baseApp.GfSpDB().GetObjectIntegrity(req.GetObjectId(), -1)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

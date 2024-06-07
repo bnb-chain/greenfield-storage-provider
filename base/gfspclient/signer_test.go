@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func TestGfSpClient_SignCreateBucketApproval(t *testing.T) {
@@ -438,20 +438,23 @@ func TestGfSpClient_SignReplicatePieceApproval(t *testing.T) {
 		{
 			name: "success",
 			task: &gfsptask.GfSpReplicatePieceApprovalTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName3}},
+				ObjectName: mockObjectName3,
+			}},
 			wantedIsErr: false,
 		},
 		{
 			name: "mock rpc error",
 			task: &gfsptask.GfSpReplicatePieceApprovalTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName1}},
+				ObjectName: mockObjectName1,
+			}},
 			wantedIsErr: true,
 			wantedErr:   mockRPCErr,
 		},
 		{
 			name: "mock response returns error",
 			task: &gfsptask.GfSpReplicatePieceApprovalTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName2}},
+				ObjectName: mockObjectName2,
+			}},
 			wantedIsErr: true,
 			wantedErr:   ErrExceptionsStream,
 		},
@@ -545,20 +548,23 @@ func TestGfSpClient_SignReceiveTask(t *testing.T) {
 		{
 			name: "success",
 			receiveTask: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName3}},
+				ObjectName: mockObjectName3,
+			}},
 			wantedIsErr: false,
 		},
 		{
 			name: "mock rpc error",
 			receiveTask: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName1}},
+				ObjectName: mockObjectName1,
+			}},
 			wantedIsErr: true,
 			wantedErr:   mockRPCErr,
 		},
 		{
 			name: "mock response returns error",
 			receiveTask: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName2}},
+				ObjectName: mockObjectName2,
+			}},
 			wantedIsErr: true,
 			wantedErr:   ErrExceptionsStream,
 		},
@@ -600,20 +606,23 @@ func TestGfSpClient_SignRecoveryTask(t *testing.T) {
 		{
 			name: "success",
 			recoveryTask: &gfsptask.GfSpRecoverPieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName3}},
+				ObjectName: mockObjectName3,
+			}},
 			wantedIsErr: false,
 		},
 		{
 			name: "mock rpc error",
 			recoveryTask: &gfsptask.GfSpRecoverPieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName1}},
+				ObjectName: mockObjectName1,
+			}},
 			wantedIsErr: true,
 			wantedErr:   mockRPCErr,
 		},
 		{
 			name: "mock response returns error",
 			recoveryTask: &gfsptask.GfSpRecoverPieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName2}},
+				ObjectName: mockObjectName2,
+			}},
 			wantedIsErr: true,
 			wantedErr:   ErrExceptionsStream,
 		},

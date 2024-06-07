@@ -12,20 +12,20 @@ import (
 
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/executor"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/downloader"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/executor"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -527,7 +527,7 @@ func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var xmlInfo = struct {
+	xmlInfo := struct {
 		XMLName         xml.Name `xml:"GetChallengeInfo"`
 		Version         string   `xml:"version,attr"`
 		ObjectID        string   `xml:"ObjectID"`
@@ -888,7 +888,8 @@ func (g *GateModular) getRecoverDataHandler(w http.ResponseWriter, r *http.Reque
 
 // getRecoverPiece get EC piece data from handler and return
 func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagetypes.ObjectInfo, bucketInfo *storagetypes.BucketInfo,
-	recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+	recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress,
+) ([]byte, error) {
 	var err error
 
 	bucketSPID, err := util.GetBucketPrimarySPID(ctx, g.baseApp.Consensus(), bucketInfo)
@@ -1004,7 +1005,8 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 
 // getRecoverSegment get segment piece data from handler and return the EC piece data based on recovery task info
 func (g *GateModular) getRecoverSegment(ctx context.Context, objectInfo *storagetypes.ObjectInfo, bucketInfo *storagetypes.BucketInfo,
-	recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress) ([]byte, error) {
+	recoveryTask gfsptask.GfSpRecoverPieceTask, params *storagetypes.Params, signatureAddr sdktypes.AccAddress,
+) ([]byte, error) {
 	ECPieceSize := g.baseApp.PieceOp().ECPieceSize(objectInfo.PayloadSize, recoveryTask.GetSegmentIdx(),
 		params.GetMaxSegmentSize(), params.GetRedundantDataChunkNum())
 

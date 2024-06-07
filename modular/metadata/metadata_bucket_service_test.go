@@ -13,14 +13,14 @@ import (
 	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func TestErrGfSpDBWithDetail(t *testing.T) {
@@ -62,7 +62,7 @@ func TestMetadataModular_GfSpGetUserBuckets2(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	m.EXPECT().GetUserBuckets(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Address, bool) ([]*bsdb.Bucket, error) {
-			return []*bsdb.Bucket{&bsdb.Bucket{
+			return []*bsdb.Bucket{{
 				ID:                         848,
 				Owner:                      common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
 				Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -91,7 +91,7 @@ func TestMetadataModular_GfSpGetUserBuckets2(t *testing.T) {
 	).Times(1)
 	m.EXPECT().ListVirtualGroupFamiliesByVgfIDs(gomock.Any()).DoAndReturn(
 		func([]uint32) ([]*bsdb.GlobalVirtualGroupFamily, error) {
-			return []*bsdb.GlobalVirtualGroupFamily{&bsdb.GlobalVirtualGroupFamily{
+			return []*bsdb.GlobalVirtualGroupFamily{{
 				ID:                         4,
 				GlobalVirtualGroupFamilyId: 4,
 				PrimarySpId:                4,
@@ -122,7 +122,7 @@ func TestMetadataModular_GfSpGetUserBuckets_Failed(t *testing.T) {
 	m := bsdb.NewMockBSDB(ctrl)
 	m.EXPECT().GetUserBuckets(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Address, bool) ([]*bsdb.Bucket, error) {
-			return []*bsdb.Bucket{&bsdb.Bucket{
+			return []*bsdb.Bucket{{
 				ID:                         848,
 				Owner:                      common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
 				Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -380,7 +380,7 @@ func TestMetadataModular_GfSpListExpiredBucketsBySp_Success(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListExpiredBucketsBySp(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(int64, uint32, int64) ([]*bsdb.Bucket, error) {
-			return []*bsdb.Bucket{&bsdb.Bucket{
+			return []*bsdb.Bucket{{
 				ID:                         848,
 				Owner:                      common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
 				Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -488,7 +488,7 @@ func TestMetadataModular_GfSpGetBucketMeta_Success(t *testing.T) {
 	m.EXPECT().ListVirtualGroupFamiliesByVgfIDs(gomock.Any()).DoAndReturn(
 		func([]uint32) ([]*bsdb.GlobalVirtualGroupFamily, error) {
 			return []*bsdb.GlobalVirtualGroupFamily{
-				&bsdb.GlobalVirtualGroupFamily{
+				{
 					ID:                         1,
 					GlobalVirtualGroupFamilyId: 1,
 					PrimarySpId:                0,
@@ -539,7 +539,7 @@ func TestMetadataModular_GfSpListBucketsByIDs_Success(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListBucketsByIDs(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Bucket, error) {
-			return []*bsdb.Bucket{&bsdb.Bucket{
+			return []*bsdb.Bucket{{
 				ID:                         848,
 				Owner:                      common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
 				Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -606,7 +606,8 @@ func TestMetadataModular_GfSpGetLatestBucketReadQuota_Failure1(t *testing.T) {
 	consensusMock := consensus.NewMockConsensus(ctrl)
 	consensusMock.EXPECT().QuerySPFreeQuota(gomock.Any(), gomock.Any()).Return(uint64(0), mockErr).Times(1)
 	consensusMock.EXPECT().QueryBucketInfoById(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-		BucketName: "testBucketName", ChargedReadQuota: 10000000}, nil).Times(1)
+		BucketName: "testBucketName", ChargedReadQuota: 10000000,
+	}, nil).Times(1)
 	a.baseApp.SetConsensus(consensusMock)
 
 	resp, err := a.GfSpGetLatestBucketReadQuota(context.Background(), &types.GfSpGetLatestBucketReadQuotaRequest{

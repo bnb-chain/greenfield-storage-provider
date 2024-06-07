@@ -3,8 +3,8 @@ package taskqueue
 import (
 	"strings"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 // NewTQueue defines the new func type of TQueue
@@ -110,11 +110,13 @@ func ScanTQueueWithLimitBySubKey(queue TQueueWithLimit, subKey task.TKey) ([]tas
 	return tasks, nil
 }
 
-var _ TQueue = (*NilQueue)(nil)
-var _ TQueueWithLimit = (*NilQueue)(nil)
-var _ TQueueOnStrategy = (*NilQueue)(nil)
-var _ TQueueOnStrategyWithLimit = (*NilQueue)(nil)
-var _ TQueueStrategy = (*NilQueue)(nil)
+var (
+	_ TQueue                    = (*NilQueue)(nil)
+	_ TQueueWithLimit           = (*NilQueue)(nil)
+	_ TQueueOnStrategy          = (*NilQueue)(nil)
+	_ TQueueOnStrategyWithLimit = (*NilQueue)(nil)
+	_ TQueueStrategy            = (*NilQueue)(nil)
+)
 
 type NilQueue struct{}
 

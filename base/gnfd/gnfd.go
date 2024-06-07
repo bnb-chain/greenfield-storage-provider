@@ -9,11 +9,11 @@ import (
 
 	chttp "github.com/cometbft/cometbft/rpc/client/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	jsonclient "github.com/bnb-chain/greenfield-storage-provider/util/rpc/jsonrpc/client"
 	chainClient "github.com/evmos/evmos/v12/sdk/client"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	jsonclient "github.com/zkMeLabs/mechain-storage-provider/util/rpc/jsonrpc/client"
 )
 
 const (

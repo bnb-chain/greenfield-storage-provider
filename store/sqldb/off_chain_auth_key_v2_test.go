@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 func TestSpDBImpl_InsertAuthKeyV2Success(t *testing.T) {
@@ -113,6 +113,6 @@ func TestSpDBImpl_ClearExpiredOffChainAuthKeysSuccess(t *testing.T) {
 	mock.ExpectExec("DELETE FROM `off_chain_auth_key_v2` WHERE expiry_date < ?").WithArgs(sqlmock.AnyArg()).WillReturnResult(sqlmock.NewResult(0, 0))
 	mock.ExpectCommit()
 	err := s.ClearExpiredOffChainAuthKeys()
-	//assert.Nil(t, result)
+	// assert.Nil(t, result)
 	assert.Nil(t, err)
 }

@@ -6,14 +6,15 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.AuthOpType, account, bucket, object string,
-	opts ...grpc.DialOption) (bool, error) {
+	opts ...grpc.DialOption,
+) (bool, error) {
 	startTime := time.Now()
 	defer func() {
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_client_total_time").Observe(time.Since(startTime).Seconds())
@@ -46,7 +47,8 @@ func (s *GfSpClient) VerifyAuthentication(ctx context.Context, auth coremodule.A
 
 // GetAuthNonce get the auth nonce for which the Dapp or client can generate EDDSA key pairs.
 func (s *GfSpClient) GetAuthNonce(ctx context.Context, account string, domain string, opts ...grpc.DialOption) (
-	currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error) {
+	currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64, err error,
+) {
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
@@ -71,7 +73,8 @@ func (s *GfSpClient) GetAuthNonce(ctx context.Context, account string, domain st
 
 // UpdateUserPublicKey updates the user public key once the Dapp or client generates the EDDSA key pairs.
 func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, domain string, currentNonce int32, nonce int32,
-	userPublicKey string, expiryDate int64, opts ...grpc.DialOption) (bool, error) {
+	userPublicKey string, expiryDate int64, opts ...grpc.DialOption,
+) (bool, error) {
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
@@ -100,7 +103,8 @@ func (s *GfSpClient) UpdateUserPublicKey(ctx context.Context, account string, do
 
 // VerifyGNFD1EddsaSignature verifies the signature signed by user's EDDSA private key.
 func (s *GfSpClient) VerifyGNFD1EddsaSignature(ctx context.Context, account string, domain string, offChainSig string,
-	realMsgToSign []byte, opts ...grpc.DialOption) (bool, error) {
+	realMsgToSign []byte, opts ...grpc.DialOption,
+) (bool, error) {
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect authenticator", "error", connErr)
@@ -222,6 +226,7 @@ func (s *GfSpClient) ListAuthKeysV2(ctx context.Context, account string, domain 
 	}
 	return resp.GetPublicKeys(), nil
 }
+
 func (s *GfSpClient) DeleteAuthKeysV2(ctx context.Context, account string, domain string, userPublicKeys []string, opts ...grpc.DialOption) (bool, error) {
 	conn, connErr := s.Connection(ctx, s.authenticatorEndpoint, opts...)
 	if connErr != nil {

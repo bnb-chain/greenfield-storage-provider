@@ -60,4 +60,4 @@ The corresponding `protobuf` definition is shown below:
 
 ## GfSp Framework Approver Code
 
-Approver module code implementation: [Approver](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/approver)
+Approver module code implementation: [Approver](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/approver)

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/cmd/utils"
 
 	"github.com/urfave/cli/v2"
 )
@@ -251,7 +251,7 @@ func RecoverGVGAction(ctx *cli.Context) error {
 		return errors.New("sp is not successor sp")
 	}
 
-	//get replicateIndex
+	// get replicateIndex
 	gvgInfo, err := spClient.GetGlobalVirtualGroupByGvgID(ctx.Context, uint32(gvgID))
 	if err != nil {
 		println(err.Error())

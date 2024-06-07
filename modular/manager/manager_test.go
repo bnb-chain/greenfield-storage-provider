@@ -11,19 +11,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	types0 "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsptqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 )
 
 var mockErr = errors.New("mock error")
@@ -95,9 +95,11 @@ func TestExecuteModular_StartSuccess(t *testing.T) {
 	}).AnyTimes()
 
 	m2.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_GRACEFUL_EXITING}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_GRACEFUL_EXITING},
+	}, nil).AnyTimes()
 	m2.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}, nil).AnyTimes()
+		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE,
+	}, nil).AnyTimes()
 	m2.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(100), nil).AnyTimes()
 
 	m4 := spdb.NewMockSPDB(ctrl)
@@ -138,9 +140,11 @@ func TestManageModular_EventLoop(t *testing.T) {
 	m1 := consensus.NewMockConsensus(ctrl)
 	manage.baseApp.SetConsensus(m1)
 	m1.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE},
+	}, nil).AnyTimes()
 	m1.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}, nil).AnyTimes()
+		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE,
+	}, nil).AnyTimes()
 	m1.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(0), nil).AnyTimes()
 	m2 := spdb.NewMockSPDB(ctrl)
 	manage.baseApp.SetGfSpDB(m2)
@@ -171,7 +175,8 @@ func TestManageModular_EventLoop1(t *testing.T) {
 	m1 := consensus.NewMockConsensus(ctrl)
 	manage.baseApp.SetConsensus(m1)
 	m1.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint"}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint"},
+	}, nil).AnyTimes()
 	m1.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(0), nil).AnyTimes()
 	m2 := spdb.NewMockSPDB(ctrl)
 	manage.baseApp.SetGfSpDB(m2)
@@ -188,7 +193,8 @@ func TestManageModular_EventLoop1(t *testing.T) {
 		}, nil).AnyTimes()
 	m3.EXPECT().DiscontinueBucket(gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 	m1.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE}, nil).AnyTimes()
+		Id: 1, Endpoint: "endpoint", Status: sptypes.STATUS_IN_SERVICE,
+	}, nil).AnyTimes()
 	ctx, cancel := context.WithTimeout(context.TODO(), 10)
 	manage.eventLoop(ctx)
 	time.Sleep(10 * time.Second)
@@ -202,7 +208,8 @@ func TestManageModular_EventLoopErr1(t *testing.T) {
 	m1 := consensus.NewMockConsensus(ctrl)
 	manage.baseApp.SetConsensus(m1)
 	m1.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint"}}, nil).AnyTimes()
+		{Id: 1, Endpoint: "endpoint"},
+	}, nil).AnyTimes()
 	m1.EXPECT().CurrentHeight(gomock.Any()).Return(uint64(0), mockErr).AnyTimes()
 	m2 := spdb.NewMockSPDB(ctrl)
 	manage.baseApp.SetGfSpDB(m2)
@@ -415,7 +422,7 @@ func TestManageModular_QueryBucketMigrationProgress(t *testing.T) {
 
 func TestManageModular_QueryTasksStats(t *testing.T) {
 	manage := setup(t)
-	//ctrl := gomock.NewController(t)
+	// ctrl := gomock.NewController(t)
 
 	uploadTasks, replicateCount, sealCount, resumableUploadCount, maxUploadCount, migrateGVGCount, recoveryProcessCount, _ := manage.QueryTasksStats(context.TODO())
 	assert.Equal(t, 0, uploadTasks)

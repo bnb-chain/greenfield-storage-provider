@@ -13,22 +13,22 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspvgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -220,12 +220,16 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 		}
 		vgfID = migrateGVGUnit.DestGVG.GetFamilyId()
 		log.Infow("get bls aggregate signature", "bucket_id", bucket.BucketInfo.Id, "migrateGVGUnit", migrateGVGUnit, "aggBlsSig", hex.EncodeToString(aggBlsSig))
-		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.SrcGVG.GetId(),
-			DstGlobalVirtualGroupId: migrateGVGUnit.DestGVGID, SecondarySpBlsSignature: aggBlsSig})
+		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{
+			SrcGlobalVirtualGroupId: migrateGVGUnit.SrcGVG.GetId(),
+			DstGlobalVirtualGroupId: migrateGVGUnit.DestGVGID, SecondarySpBlsSignature: aggBlsSig,
+		})
 	}
 
-	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
-		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
+	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{
+		Operator:   plan.manager.baseApp.OperatorAddress(),
+		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID,
+	}
 	log.Infow("before sent complete migrate bucket msg to chain", "msg", migrateBucket, "gvgUnitMap", plan.gvgUnitMap)
 	txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
 	if txErr != nil {
@@ -253,8 +257,10 @@ func (plan *BucketMigrateExecutePlan) rejectBucketMigration() error {
 		}
 		return nil
 	}
-	rejectMigrateBucket := &storagetypes.MsgRejectMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
-		BucketName: bucket.BucketInfo.GetBucketName()}
+	rejectMigrateBucket := &storagetypes.MsgRejectMigrateBucket{
+		Operator:   plan.manager.baseApp.OperatorAddress(),
+		BucketName: bucket.BucketInfo.GetBucketName(),
+	}
 	txHash, txErr := plan.manager.baseApp.GfSpClient().RejectMigrateBucket(ctx, rejectMigrateBucket)
 	if txErr != nil {
 		log.Errorw("failed to send reject migrate bucket msg to chain", "msg", rejectMigrateBucket, "tx_hash", txHash, "err", txErr)
@@ -1651,8 +1657,10 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromMemory(primarySP
 			return nil, err
 		}
 		destFamilyID = destGVG.FamilyID
-		destGlobalVirtualGroup := &virtualgrouptypes.GlobalVirtualGroup{Id: destGVG.ID, FamilyId: destGVG.FamilyID, PrimarySpId: destGVG.PrimarySPID,
-			SecondarySpIds: destGVG.SecondarySPIDs, StoredSize: destGVG.StakingStorageSize}
+		destGlobalVirtualGroup := &virtualgrouptypes.GlobalVirtualGroup{
+			Id: destGVG.ID, FamilyId: destGVG.FamilyID, PrimarySpId: destGVG.PrimarySPID,
+			SecondarySpIds: destGVG.SecondarySPIDs, StoredSize: destGVG.StakingStorageSize,
+		}
 
 		bucketUnit := newBucketMigrateGVGExecuteUnit(checker.bucketID, srcGVG, checker.srcSP, checker.selfSP, WaitForMigrate, destGVG.ID, 0, destGlobalVirtualGroup)
 		bucketMigrateUnits = append(bucketMigrateUnits, bucketUnit)

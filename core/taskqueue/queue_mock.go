@@ -12,8 +12,8 @@ package taskqueue
 import (
 	reflect "reflect"
 
-	rcmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	task "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	rcmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	task "github.com/zkMeLabs/mechain-storage-provider/core/task"
 	gomock "go.uber.org/mock/gomock"
 )
 

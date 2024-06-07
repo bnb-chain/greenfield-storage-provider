@@ -19,12 +19,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	payment_types "github.com/evmos/evmos/v12/x/payment/types"
 	storage_types "github.com/evmos/evmos/v12/x/storage/types"
 	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
 )
 
 const (
@@ -39,26 +39,27 @@ func mockListObjectsByBucketNameRoute(t *testing.T, g *GateModular) *mux.Router 
 	routers = append(routers, router.PathPrefix("/{bucket}").Subrouter())
 	for _, r := range routers {
 		r.NewRoute().Name(listObjectsByBucketRouterName).Methods(http.MethodGet).Path("/").HandlerFunc(g.listObjectsByBucketNameHandler)
-
 	}
 	return router
 }
 
 func getSampleChecksum() [][]byte {
-	checksumsInBase64 := [7]string{"tPsLBcgLxRVKTRJCeYw5FVj0jjqPsqFnbDCr77pf7RA=",
+	checksumsInBase64 := [7]string{
+		"tPsLBcgLxRVKTRJCeYw5FVj0jjqPsqFnbDCr77pf7RA=",
 		"7YqCbwK/qC+zaAoJvd971fuJCE0OVQ9ky8bgomUkmRI=",
 		"i59qS3vgvN8QIcNKOJggtN4JsZRLYt1ugeGDtP6x7Sk=",
 		"tBBu4BPpANbc12SO5TVeQ64DtKwl0F2inE29H9jAw54=",
 		"vOw+loeUIXXPEvfYNFmnElTIxj/b0dEEBBF1YbKOoEI=",
 		"e0nSN4a5u3EDPaAqemGDZ5gYJ0l6NUjtalmj/BH2uWE=",
-		"rRm6iKPMc8gZbw1WKKF2kPXveU2VFEh2izs9e8ovfwk="}
+		"rRm6iKPMc8gZbw1WKKF2kPXveU2VFEh2izs9e8ovfwk=",
+	}
 	checksums := make([][]byte, len(checksumsInBase64))
 	for j := 0; j < len(checksums); j++ {
 		checksums[j], _ = base64.StdEncoding.DecodeString(checksumsInBase64[j])
 	}
 	return checksums
-
 }
+
 func getTestGroupsInIdMap(length int) map[uint64]*types.Group {
 	groupsMap := make(map[uint64]*types.Group)
 	groups := getTestGroupsResponse(length)
@@ -692,7 +693,6 @@ func mockListObjectsByIDsHandlerRoute(t *testing.T, g *GateModular) *mux.Router 
 }
 
 func TestGateModular_ListObjectsByIDsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -869,7 +869,6 @@ func mockListGroupsByIDsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 }
 
 func TestGateModular_ListGroupsByIDsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -990,7 +989,6 @@ func mockGetGroupListHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 }
 
 func TestGateModular_GetGroupListHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -1211,7 +1209,6 @@ func mockListPaymentAccountStreamsHandlerRoute(t *testing.T, g *GateModular) *mu
 }
 
 func TestGateModular_ListPaymentAccountStreamsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -1297,7 +1294,6 @@ func mockListUserPaymentAccountsHandlerRoute(t *testing.T, g *GateModular) *mux.
 }
 
 func TestGateModular_ListUserPaymentAccountsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -1389,7 +1385,6 @@ func mockListBucketsByIDsHandlerRoute(t *testing.T, g *GateModular) *mux.Router 
 }
 
 func TestGateModular_ListBucketsByIDsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -1510,7 +1505,6 @@ func mockGetUserGroupsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 }
 
 func TestGateModular_GetUserGroupsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -1669,7 +1663,6 @@ func mockGetGroupMembersHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 }
 
 func TestGateModular_GetGroupMembersHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -1821,7 +1814,6 @@ func mockGetUserOwnedGroupsHandlerRoute(t *testing.T, g *GateModular) *mux.Route
 }
 
 func TestGateModular_GetUserOwnedGroupsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -1985,7 +1977,6 @@ func mockGetBucketMetaHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 }
 
 func TestGateModular_GetBucketMetaHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular
@@ -2068,7 +2059,6 @@ func mockGetUserBucketsHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
 }
 
 func TestGateModular_GetUserBucketsHandler(t *testing.T) {
-
 	cases := []struct {
 		name           string
 		fn             func() *GateModular

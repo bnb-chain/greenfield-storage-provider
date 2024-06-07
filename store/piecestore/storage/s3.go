@@ -27,7 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/viki-org/dnscache"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 var (

@@ -7,14 +7,12 @@ import (
 
 	"github.com/gorilla/mux"
 
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
-var (
-	ProbeModularName = strings.ToLower("Probe")
-)
+var ProbeModularName = strings.ToLower("Probe")
 
 var _ coremodule.Modular = &Probe{}
 

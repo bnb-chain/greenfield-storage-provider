@@ -1,7 +1,7 @@
 syntax = "proto3";
 package base.types.gfspp2p;
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p";
+option go_package = "github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p";
 
 // Ping defines the heartbeat request between p2p nodes
 message GfSpPing {

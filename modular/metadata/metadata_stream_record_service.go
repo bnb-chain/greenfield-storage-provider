@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 func (r *MetadataModular) GfSpPrimarySpIncomeDetails(ctx context.Context, req *types.GfSpPrimarySpIncomeDetailsRequest) (resp *types.GfSpPrimarySpIncomeDetailsResponse, err error) {
@@ -47,6 +47,7 @@ func (r *MetadataModular) GfSpPrimarySpIncomeDetails(ctx context.Context, req *t
 	log.CtxInfow(ctx, "succeed to get primary sp income details")
 	return resp, nil
 }
+
 func (r *MetadataModular) GfSpSecondarySpIncomeDetails(ctx context.Context, req *types.GfSpSecondarySpIncomeDetailsRequest) (resp *types.GfSpSecondarySpIncomeDetailsResponse, err error) {
 	resp = &types.GfSpSecondarySpIncomeDetailsResponse{}
 

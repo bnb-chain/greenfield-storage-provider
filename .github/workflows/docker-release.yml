@@ -8,14 +8,14 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
-  IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
+  IMAGE_SOURCE: https://github.com/zkMeLabs/mechain-storage-provider
 
 jobs:
   # Push image to GitHub Packages.
   push:
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push'
 
@@ -27,7 +27,7 @@ jobs:
           version: 1.14.0
           buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
           buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-      
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
 

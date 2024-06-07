@@ -13,7 +13,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
+	"github.com/zkMeLabs/mechain-storage-provider/store/config"
 )
 
 const (

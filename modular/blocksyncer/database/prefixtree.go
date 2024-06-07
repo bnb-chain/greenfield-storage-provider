@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
@@ -38,7 +38,6 @@ func (db *DB) DeletePrefixTree(ctx context.Context, prefixTree []*bsdb.SlashPref
 	}
 	stmt2 := stmt.Unscoped().Delete(&bsdb.SlashPrefixTreeNode{}).Statement
 	return stmt2.SQL.String(), stmt2.Vars
-
 }
 
 // GetPrefixTree get prefix tree node by full name and bucket name

@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm/clause"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 // GetMasterDB get master db info

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 func setupResources(t *testing.T) *resources {

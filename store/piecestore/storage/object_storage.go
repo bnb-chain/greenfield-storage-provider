@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 func NewObjectStorage(cfg ObjectStorageConfig) (ObjectStorage, error) {

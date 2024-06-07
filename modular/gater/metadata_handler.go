@@ -14,12 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gorilla/mux"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/evmos/evmos/v12/types/resource"
 	resource_types "github.com/evmos/evmos/v12/types/resource"
 	"github.com/evmos/evmos/v12/types/s3util"
@@ -28,6 +22,12 @@ import (
 	sp_types "github.com/evmos/evmos/v12/x/sp/types"
 	storage_types "github.com/evmos/evmos/v12/x/storage/types"
 	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -244,17 +244,16 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 		delimiter,
 		commonPrefixes,
 		continuationToken,
-		err :=
-		g.baseApp.GfSpClient().ListObjectsByBucketName(
-			reqCtx.Context(),
-			requestBucketName,
-			"",
-			maxKeys,
-			requestStartAfter,
-			continuationToken,
-			requestDelimiter,
-			requestPrefix,
-			includedRemoved)
+		err := g.baseApp.GfSpClient().ListObjectsByBucketName(
+		reqCtx.Context(),
+		requestBucketName,
+		"",
+		maxKeys,
+		requestStartAfter,
+		continuationToken,
+		requestDelimiter,
+		requestPrefix,
+		includedRemoved)
 	if err != nil {
 		log.Errorf("failed to list objects by bucket name", "error", err)
 		return
@@ -274,7 +273,6 @@ func (g *GateModular) listObjectsByBucketNameHandler(w http.ResponseWriter, r *h
 	}
 
 	respBytes, err = xml.Marshal(grpcResponse)
-
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to list objects by given bucket name", "error", err)
 		return
@@ -331,7 +329,6 @@ func (g *GateModular) getObjectMetaHandler(w http.ResponseWriter, r *http.Reques
 		Object: resp,
 	}
 	respBytes, err = xml.Marshal(grpcResponse)
-
 	if err != nil {
 		log.Errorf("failed to get object meta", "error", err)
 		return

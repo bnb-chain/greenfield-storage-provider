@@ -156,4 +156,4 @@ The corresponding `protobuf` definition is shown below:
 
 ## GfSp Framework Signer Code
 
-Signer module code implementation: [Signer](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/signer)
+Signer module code implementation: [Signer](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/signer)

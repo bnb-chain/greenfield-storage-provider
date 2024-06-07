@@ -6,14 +6,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func (m *GfSpRecoverPieceTask) InitRecoverPieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	priority coretask.TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64) {
+	priority coretask.TPriority, segmentIdx uint32, ecIdx int32, pieceSize uint64, timeout int64, retry int64,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetCreateTime(time.Now().Unix())

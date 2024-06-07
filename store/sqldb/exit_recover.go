@@ -3,7 +3,7 @@ package sqldb
 import (
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 func (s *SpDBImpl) GetRecoverGVGStats(gvgID uint32) (*spdb.RecoverGVGStats, error) {

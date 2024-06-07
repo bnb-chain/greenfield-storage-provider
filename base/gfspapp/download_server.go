@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
 )
 
 var (
@@ -23,7 +23,8 @@ var (
 var _ gfspserver.GfSpDownloadServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpDownloadObject(ctx context.Context, req *gfspserver.GfSpDownloadObjectRequest) (
-	*gfspserver.GfSpDownloadObjectResponse, error) {
+	*gfspserver.GfSpDownloadObjectResponse, error,
+) {
 	downloadObjectTask := req.GetDownloadObjectTask()
 	if downloadObjectTask == nil {
 		log.Error("failed to download object due to task pointer dangling")
@@ -65,7 +66,8 @@ func (g *GfSpBaseApp) OnDownloadObjectTask(ctx context.Context, downloadObjectTa
 }
 
 func (g *GfSpBaseApp) GfSpDownloadPiece(ctx context.Context, req *gfspserver.GfSpDownloadPieceRequest) (
-	*gfspserver.GfSpDownloadPieceResponse, error) {
+	*gfspserver.GfSpDownloadPieceResponse, error,
+) {
 	downloadPieceTask := req.GetDownloadPieceTask()
 	startTime := time.Now()
 	defer func() {
@@ -91,7 +93,8 @@ func (g *GfSpBaseApp) GfSpDownloadPiece(ctx context.Context, req *gfspserver.GfS
 }
 
 func (g *GfSpBaseApp) OnDownloadPieceTask(ctx context.Context, downloadPieceTask task.DownloadPieceTask) (
-	data []byte, err error) {
+	data []byte, err error,
+) {
 	if downloadPieceTask == nil || downloadPieceTask.GetObjectInfo() == nil {
 		log.CtxError(ctx, "failed to download piece due to task pointer dangling")
 		return nil, ErrDownloadTaskDangling
@@ -123,7 +126,8 @@ func (g *GfSpBaseApp) OnDownloadPieceTask(ctx context.Context, downloadPieceTask
 }
 
 func (g *GfSpBaseApp) GfSpGetChallengeInfo(ctx context.Context, req *gfspserver.GfSpGetChallengeInfoRequest) (
-	*gfspserver.GfSpGetChallengeInfoResponse, error) {
+	*gfspserver.GfSpGetChallengeInfoResponse, error,
+) {
 	startTime := time.Now()
 	defer func() {
 		metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_server_total_time").Observe(time.Since(startTime).Seconds())
@@ -151,7 +155,8 @@ func (g *GfSpBaseApp) GfSpGetChallengeInfo(ctx context.Context, req *gfspserver.
 }
 
 func (g *GfSpBaseApp) OnChallengePieceTask(ctx context.Context, challengePieceTask task.ChallengePieceTask) (
-	integrity []byte, checksums [][]byte, data []byte, err error) {
+	integrity []byte, checksums [][]byte, data []byte, err error,
+) {
 	if challengePieceTask == nil || challengePieceTask.GetObjectInfo() == nil {
 		log.CtxError(ctx, "failed to challenge piece due to task pointer dangling")
 		return nil, nil, nil, ErrDownloadTaskDangling

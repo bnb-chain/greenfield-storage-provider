@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/piecestore/storage"
 )
 
 // NewPieceStore returns an instance of PieceStore
@@ -108,7 +108,7 @@ func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 }
 
 func setDefaultFileStorePath() string {
-	var defaultBucket = "/var/piecestore"
+	defaultBucket := "/var/piecestore"
 	switch runtime.GOOS {
 	case "linux":
 		if os.Getuid() == 0 {

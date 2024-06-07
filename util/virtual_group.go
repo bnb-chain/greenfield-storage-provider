@@ -8,16 +8,14 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
 )
 
-var (
-	// ErrNotInSecondarySPs define the specified sp does not exist error.
-	ErrNotInSecondarySPs = errors.New("target sp is not in the gvg secondary sp list")
-)
+// ErrNotInSecondarySPs define the specified sp does not exist error.
+var ErrNotInSecondarySPs = errors.New("target sp is not in the gvg secondary sp list")
 
 // GetSecondarySPIndexFromGVG returns secondary sp index in the secondary sp list.
 func GetSecondarySPIndexFromGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, spID uint32) (int32, error) {
@@ -40,7 +38,8 @@ func TotalStakingStoreSizeOfGVG(gvg *virtualgrouptypes.GlobalVirtualGroup, staki
 
 // ValidateAndGetSPIndexWithinGVGSecondarySPs return whether current sp is one of the object gvg's secondary sp and its index within GVG(if is)
 func ValidateAndGetSPIndexWithinGVGSecondarySPs(ctx context.Context, client gfspclient.GfSpClientAPI, selfSpID uint32,
-	bucketID uint64, lvgID uint32) (int, bool, error) {
+	bucketID uint64, lvgID uint32,
+) (int, bool, error) {
 	gvg, err := client.GetGlobalVirtualGroup(ctx, bucketID, lvgID)
 	if err != nil {
 		return -1, false, err

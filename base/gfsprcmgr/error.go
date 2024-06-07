@@ -3,7 +3,7 @@ package gfsprcmgr
 import (
 	"errors"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 // ErrResourceLimitExceeded is returned when attempting to perform an operation that would

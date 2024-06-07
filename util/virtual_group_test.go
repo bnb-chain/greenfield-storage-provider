@@ -11,10 +11,10 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
 )
 
 func TestGetSecondarySPIndexFromGVG(t *testing.T) {
@@ -59,7 +59,8 @@ func TestValidateAndGetSPIndexWithinGVGSecondarySPsSuccess1(t *testing.T) {
 	m := gfspclient.NewMockGfSpClientAPI(ctrl)
 	m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (
-			*virtualgrouptypes.GlobalVirtualGroup, error) {
+			*virtualgrouptypes.GlobalVirtualGroup, error,
+		) {
 			return &virtualgrouptypes.GlobalVirtualGroup{SecondarySpIds: []uint32{1, 2, 3, 4, 5}}, nil
 		}).AnyTimes()
 	result1, result2, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), m, 3, 1, 2)
@@ -74,7 +75,8 @@ func TestValidateAndGetSPIndexWithinGVGSecondarySPsSuccess2(t *testing.T) {
 	m := gfspclient.NewMockGfSpClientAPI(ctrl)
 	m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (
-			*virtualgrouptypes.GlobalVirtualGroup, error) {
+			*virtualgrouptypes.GlobalVirtualGroup, error,
+		) {
 			return &virtualgrouptypes.GlobalVirtualGroup{SecondarySpIds: []uint32{1, 2, 3, 4, 5}}, nil
 		}).AnyTimes()
 	result1, result2, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), m, 8, 1, 2)
@@ -89,7 +91,8 @@ func TestValidateAndGetSPIndexWithinGVGSecondarySPsFailure(t *testing.T) {
 	m := gfspclient.NewMockGfSpClientAPI(ctrl)
 	m.EXPECT().GetGlobalVirtualGroup(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, bucketID uint64, lvgID uint32, opts ...grpc.DialOption) (
-			*virtualgrouptypes.GlobalVirtualGroup, error) {
+			*virtualgrouptypes.GlobalVirtualGroup, error,
+		) {
 			return nil, errors.New("mock error")
 		}).AnyTimes()
 	result1, result2, err := ValidateAndGetSPIndexWithinGVGSecondarySPs(context.Background(), m, 8, 1, 2)
@@ -186,7 +189,7 @@ func TestBlsAggregate(t *testing.T) {
 		},
 		{
 			name:          "Cannot aggregate bls signature",
-			secondarySigs: [][]byte{[]byte{1}},
+			secondarySigs: [][]byte{{1}},
 			wantedIsErr:   true,
 		},
 	}

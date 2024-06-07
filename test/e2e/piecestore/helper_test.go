@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/piecestore/piece"
+	"github.com/zkMeLabs/mechain-storage-provider/store/piecestore/storage"
 )
 
 const (

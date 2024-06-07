@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/blake2b"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 func TestEd25519PrivateKeyAndVerify(t *testing.T) {
@@ -134,7 +134,6 @@ func TestErrorCases(t *testing.T) {
 	if err != nil {
 		log.Errorf("%s", err)
 	}
-
 }
 
 func TestParsePK(t *testing.T) {
@@ -180,7 +179,6 @@ func GetEddsaPublicKey(seed string) string {
 }
 
 func GetEddsaCompressedPublicKey(seed string) string {
-
 	sk, err := GenerateEddsaPrivateKey(seed)
 	if err != nil {
 		return err.Error()
@@ -208,7 +206,6 @@ const (
 )
 
 func GenerateKey(r io.Reader) (*PrivateKey, error) {
-
 	c := twistededwards.GetEdwardsCurve()
 
 	var (
@@ -263,7 +260,7 @@ func GenerateKey(r io.Reader) (*PrivateKey, error) {
 	subtle.ConstantTimeCopy(1, res[sizeFr:2*sizeFr], scalar[:])
 	subtle.ConstantTimeCopy(1, res[2*sizeFr:], randSrc[:])
 
-	var sk = &PrivateKey{}
+	sk := &PrivateKey{}
 	// make sure sk is not nil
 
 	_, err = sk.SetBytes(res[:])

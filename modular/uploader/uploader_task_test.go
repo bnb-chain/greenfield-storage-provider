@@ -11,14 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	servicetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
 )
 
 func TestUploadModular_PreUploadObject(t *testing.T) {
@@ -203,8 +203,10 @@ func TestUploadModular_HandleUploadObjectTaskSuccess1(t *testing.T) {
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
 		ObjectInfo: &storagetypes.ObjectInfo{
 			Id: sdkmath.NewUint(1),
-			Checksums: [][]byte{{227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65,
-				228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85}},
+			Checksums: [][]byte{{
+				227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65,
+				228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85,
+			}},
 		},
 		StorageParams: &storagetypes.Params{},
 	}
@@ -242,8 +244,10 @@ func TestUploadModular_HandleUploadObjectForUpdateTaskSuccess1(t *testing.T) {
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
 		ObjectInfo: &storagetypes.ObjectInfo{
 			Id: sdkmath.NewUint(1),
-			Checksums: [][]byte{{227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65,
-				228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85}},
+			Checksums: [][]byte{{
+				227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65,
+				228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85,
+			}},
 			IsUpdating: true,
 		},
 		StorageParams: &storagetypes.Params{},
@@ -360,8 +364,10 @@ func TestUploadModular_HandleUploadObjectTaskFailure4(t *testing.T) {
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
 		ObjectInfo: &storagetypes.ObjectInfo{
 			Id: sdkmath.NewUint(1),
-			Checksums: [][]byte{{227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65,
-				228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85}},
+			Checksums: [][]byte{{
+				227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36, 39, 174, 65,
+				228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85,
+			}},
 		},
 		StorageParams: &storagetypes.Params{},
 	}
@@ -817,7 +823,8 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure5(t *testing.T) {
 	m4 := corespdb.NewMockSPDB(ctrl)
 	u.baseApp.SetGfSpDB(m4)
 	m4.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).Return(&corespdb.IntegrityMeta{
-		PieceChecksumList: [][]byte{[]byte("test")}}, nil).AnyTimes()
+		PieceChecksumList: [][]byte{[]byte("test")},
+	}, nil).AnyTimes()
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
@@ -855,15 +862,18 @@ func TestUploadModular_HandleResumableUploadObjectTaskFailure6(t *testing.T) {
 	m4 := corespdb.NewMockSPDB(ctrl)
 	u.baseApp.SetGfSpDB(m4)
 	m4.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).Return(&corespdb.IntegrityMeta{
-		PieceChecksumList: [][]byte{[]byte("test")}}, nil).AnyTimes()
+		PieceChecksumList: [][]byte{[]byte("test")},
+	}, nil).AnyTimes()
 	m4.EXPECT().UpdateIntegrityChecksum(gomock.Any()).Return(mockErr).AnyTimes()
 
 	task := &gfsptask.GfSpResumableUploadObjectTask{
 		Task: &gfsptask.GfSpTask{TaskPriority: 1},
 		ObjectInfo: &storagetypes.ObjectInfo{
 			Id: sdkmath.NewUint(1),
-			Checksums: [][]byte{{159, 134, 208, 129, 136, 76, 125, 101, 154, 47, 234, 160, 197, 90, 208, 21, 163, 191,
-				79, 27, 43, 11, 130, 44, 209, 93, 108, 21, 176, 240, 10, 8}},
+			Checksums: [][]byte{{
+				159, 134, 208, 129, 136, 76, 125, 101, 154, 47, 234, 160, 197, 90, 208, 21, 163, 191,
+				79, 27, 43, 11, 130, 44, 209, 93, 108, 21, 176, 240, 10, 8,
+			}},
 		},
 		StorageParams: &storagetypes.Params{},
 		Completed:     true,

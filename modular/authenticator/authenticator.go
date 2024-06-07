@@ -10,18 +10,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
 	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 var (
@@ -103,7 +103,8 @@ func (a *AuthenticationModular) ReserveResource(
 	ctx context.Context,
 	state *rcmgr.ScopeStat) (
 	rcmgr.ResourceScopeSpan,
-	error) {
+	error,
+) {
 	span, err := a.scope.BeginSpan()
 	if err != nil {
 		return nil, err
@@ -117,7 +118,8 @@ func (a *AuthenticationModular) ReserveResource(
 
 func (a *AuthenticationModular) ReleaseResource(
 	ctx context.Context,
-	span rcmgr.ResourceScopeSpan) {
+	span rcmgr.ResourceScopeSpan,
+) {
 	span.Done()
 }
 
@@ -274,7 +276,8 @@ func (a *AuthenticationModular) VerifyAuthentication(
 	ctx context.Context,
 	authType coremodule.AuthOpType,
 	account, bucket, object string) (
-	bool, error) {
+	bool, error,
+) {
 	// check the account if it is a valid address
 	_, err := sdk.AccAddressFromHexUnsafe(account)
 	if err != nil {

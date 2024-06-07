@@ -3,14 +3,15 @@ package gfspclient
 import (
 	"context"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.ApprovalCreateBucketTask) (
-	bool, coretask.ApprovalCreateBucketTask, error) {
+	bool, coretask.ApprovalCreateBucketTask, error,
+) {
 	conn, connErr := s.ApproverConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
@@ -19,7 +20,8 @@ func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_CreateBucketApprovalTask{
 			CreateBucketApprovalTask: task.(*gfsptask.GfSpCreateBucketApprovalTask),
-		}}
+		},
+	}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask create bucket approval", "error", err)
@@ -38,7 +40,8 @@ func (s *GfSpClient) AskCreateBucketApproval(ctx context.Context, task coretask.
 }
 
 func (s *GfSpClient) AskMigrateBucketApproval(ctx context.Context, task coretask.ApprovalMigrateBucketTask) (
-	bool, coretask.ApprovalMigrateBucketTask, error) {
+	bool, coretask.ApprovalMigrateBucketTask, error,
+) {
 	conn, connErr := s.ApproverConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
@@ -47,7 +50,8 @@ func (s *GfSpClient) AskMigrateBucketApproval(ctx context.Context, task coretask
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_MigrateBucketApprovalTask{
 			MigrateBucketApprovalTask: task.(*gfsptask.GfSpMigrateBucketApprovalTask),
-		}}
+		},
+	}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask create bucket approval", "error", err)
@@ -66,7 +70,8 @@ func (s *GfSpClient) AskMigrateBucketApproval(ctx context.Context, task coretask
 }
 
 func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.ApprovalCreateObjectTask) (
-	bool, coretask.ApprovalCreateObjectTask, error) {
+	bool, coretask.ApprovalCreateObjectTask, error,
+) {
 	conn, connErr := s.ApproverConn(ctx)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect approver", "error", connErr)
@@ -75,7 +80,8 @@ func (s *GfSpClient) AskCreateObjectApproval(ctx context.Context, task coretask.
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask{
 			CreateObjectApprovalTask: task.(*gfsptask.GfSpCreateObjectApprovalTask),
-		}}
+		},
+	}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask create object approval", "error", err)
@@ -102,7 +108,8 @@ func (s *GfSpClient) AskDelegateCreateObjectApproval(ctx context.Context, task c
 	req := &gfspserver.GfSpAskApprovalRequest{
 		Request: &gfspserver.GfSpAskApprovalRequest_DelegateCreateObjectApprovalTask{
 			DelegateCreateObjectApprovalTask: task.(*gfsptask.GfSpDelegateCreateObjectApprovalTask),
-		}}
+		},
+	}
 	resp, err := gfspserver.NewGfSpApprovalServiceClient(conn).GfSpAskApproval(ctx, req)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to ask delegate create object approval", "error", err)

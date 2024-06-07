@@ -9,17 +9,17 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
 
-	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
 	"github.com/evmos/evmos/v12/types/common"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	metadatatypes "github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 )
 
 func TestErrSignerWithDetail(t *testing.T) {
@@ -91,15 +91,18 @@ func TestApprovalModular_HandleCreateBucketApprovalTaskSuccess2(t *testing.T) {
 	m1 := gfspclient.NewMockGfSpClientAPI(ctrl)
 	a.baseApp.SetGfSpClient(m1)
 	m1.EXPECT().GetUserBucketsCount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, account string,
-		includeRemoved bool, opts ...grpc.DialOption) (int64, error) {
+		includeRemoved bool, opts ...grpc.DialOption,
+	) (int64, error) {
 		return 1, nil
 	}).Times(1)
 	m1.EXPECT().PickVirtualGroupFamilyID(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context,
-		task coretask.ApprovalCreateBucketTask) (uint32, error) {
+		task coretask.ApprovalCreateBucketTask,
+	) (uint32, error) {
 		return 10, nil
 	}).Times(1)
 	m1.EXPECT().SignCreateBucketApproval(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context,
-		bucket *storagetypes.MsgCreateBucket) ([]byte, error) {
+		bucket *storagetypes.MsgCreateBucket,
+	) ([]byte, error) {
 		return []byte("mockSig"), nil
 	}).Times(1)
 	m.EXPECT().Push(gomock.Any()).DoAndReturn(func(coretask.Task) error { return nil }).AnyTimes()
@@ -328,7 +331,8 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskSuccess2(t *testing.T) {
 	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	m1.EXPECT().SignBucketMigrationInfo(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	m1.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
-		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).AnyTimes()
+		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)},
+	}, nil, nil).AnyTimes()
 
 	m.EXPECT().Push(gomock.Any()).Return(nil).AnyTimes()
 	// mock consensus
@@ -380,7 +384,8 @@ func TestApprovalModular_HandleMigrateBucketApprovalTaskFailure2(t *testing.T) {
 	m1.EXPECT().QuerySPHasEnoughQuotaForMigrateBucket(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	m1.EXPECT().SignBucketMigrationInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
 	m1.EXPECT().GetBucketMeta(gomock.Any(), gomock.Any(), true).Return(&metadatatypes.VGFInfoBucket{
-		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)}}, nil, nil).AnyTimes()
+		BucketInfo: &storagetypes.BucketInfo{Id: math.NewUint(1)},
+	}, nil, nil).AnyTimes()
 
 	// mock consensus
 	mockedConsensus := consensus.NewMockConsensus(ctrl)

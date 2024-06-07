@@ -12,17 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 var _ ObjectStorage = &minioStore{}
 
-var (
-	// re-used minio sessions dramatically improve performance
-	minioSessionCache = &SessionCache{
-		sessions: map[ObjectStorageConfig]*session.Session{},
-	}
-)
+// re-used minio sessions dramatically improve performance
+var minioSessionCache = &SessionCache{
+	sessions: map[ObjectStorageConfig]*session.Session{},
+}
 
 type minioStore struct {
 	s3Store

@@ -8,8 +8,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"gorm.io/gorm"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 // UpdateAllSp update(maybe overwrite) all sp info in db

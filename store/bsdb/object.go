@@ -10,7 +10,7 @@ import (
 	"github.com/spaolacci/murmur3"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 const ObjectsNumberOfShards = 64

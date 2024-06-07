@@ -13,8 +13,8 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 var (

@@ -6,22 +6,19 @@ import "base/types/gfsplimit/limit.proto";
 import "base/types/gfsptask/task.proto";
 import "greenfield/virtualgroup/tx.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+option go_package = "github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver";
 
 message GfSpBeginTaskRequest {
   oneof request {
     base.types.gfsptask.GfSpUploadObjectTask upload_object_task = 1;
-    base.types.gfsptask.GfSpResumableUploadObjectTask resumable_upload_object_task = 2;
+    base.types.gfsptask.GfSpResumableUploadObjectTask
+        resumable_upload_object_task = 2;
   }
 }
 
-message GfSpBeginTaskResponse {
-  base.types.gfsperrors.GfSpError err = 1;
-}
+message GfSpBeginTaskResponse { base.types.gfsperrors.GfSpError err = 1; }
 
-message GfSpAskTaskRequest {
-  base.types.gfsplimit.GfSpLimit node_limit = 1;
-}
+message GfSpAskTaskRequest { base.types.gfsplimit.GfSpLimit node_limit = 1; }
 
 message GfSpAskTaskResponse {
   base.types.gfsperrors.GfSpError err = 1;
@@ -35,7 +32,8 @@ message GfSpAskTaskResponse {
     base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 8;
     base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 9;
     base.types.gfsptask.GfSpGCBucketMigrationTask gc_bucket_migration_task = 10;
-    base.types.gfsptask.GfSpGCStaleVersionObjectTask gc_stale_version_object_task = 11;
+    base.types.gfsptask.GfSpGCStaleVersionObjectTask
+        gc_stale_version_object_task = 11;
   }
 }
 
@@ -50,20 +48,21 @@ message GfSpReportTaskRequest {
     base.types.gfsptask.GfSpDownloadObjectTask download_object_task = 7;
     base.types.gfsptask.GfSpChallengePieceTask challenge_piece_task = 8;
     base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 9;
-    base.types.gfsptask.GfSpResumableUploadObjectTask resumable_upload_object_task = 10;
+    base.types.gfsptask.GfSpResumableUploadObjectTask
+        resumable_upload_object_task = 10;
     base.types.gfsptask.GfSpRecoverPieceTask recover_piece_task = 11;
     base.types.gfsptask.GfSpMigrateGVGTask migrate_gvg_task = 12;
     base.types.gfsptask.GfSpGCBucketMigrationTask gc_bucket_migration_task = 13;
-    base.types.gfsptask.GfSpGCStaleVersionObjectTask gc_stale_version_object_task = 14;
+    base.types.gfsptask.GfSpGCStaleVersionObjectTask
+        gc_stale_version_object_task = 14;
   }
 }
 
-message GfSpReportTaskResponse {
-  base.types.gfsperrors.GfSpError err = 1;
-}
+message GfSpReportTaskResponse { base.types.gfsperrors.GfSpError err = 1; }
 
 message GfSpPickVirtualGroupFamilyRequest {
-  base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task = 1;
+  base.types.gfsptask.GfSpCreateBucketApprovalTask create_bucket_approval_task =
+      1;
 }
 
 message GfSpPickVirtualGroupFamilyResponse {
@@ -102,9 +101,7 @@ message GfSpNotifyPostMigrateBucketResponse {
 
 message GfSpQueryTasksStatsRequest {}
 
-message GfSpQueryTasksStatsResponse {
-  TasksStats stats = 1;
-}
+message GfSpQueryTasksStatsResponse { TasksStats stats = 1; }
 
 message TasksStats {
   uint32 upload_count = 1;
@@ -117,9 +114,7 @@ message TasksStats {
   repeated string recovery_failed_list = 8;
 }
 
-message GfSpQueryBucketMigrationProgressRequest {
-  uint64 bucket_id = 1;
-}
+message GfSpQueryBucketMigrationProgressRequest { uint64 bucket_id = 1; }
 
 message GfSpQueryBucketMigrationProgressResponse {
   MigrateBucketProgressMeta progress = 1;
@@ -134,10 +129,14 @@ message MigrateBucketProgressMeta {
   uint32 migrated_finished_gvg_num = 5; // Number of successfully migrated GVGs
   uint32 gc_finished_gvg_num = 6; // Number of successfully gc finished GVGs
 
-  uint64 pre_deducted_quota = 7; // Quota pre-deducted by the source sp in the pre-migrate bucket phase
-  uint64 recoup_quota = 8; // In case of migration failure, the dest sp recoup the quota for the source sp
+  uint64 pre_deducted_quota =
+      7; // Quota pre-deducted by the source sp in the pre-migrate bucket phase
+  uint64 recoup_quota = 8; // In case of migration failure, the dest sp recoup
+                           // the quota for the source sp
 
-  uint64 last_gc_object_id = 9; // After bucket migration is complete, the progress of GC, up to which object is GC performed.
+  uint64 last_gc_object_id =
+      9; // After bucket migration is complete, the progress of GC, up to which
+         // object is GC performed.
   uint64 last_gc_gvg_id = 10; // which GVG is GC performed.
   uint64 migrated_bytes = 11;
 }
@@ -192,13 +191,23 @@ service GfSpManageService {
   rpc GfSpBeginTask(GfSpBeginTaskRequest) returns (GfSpBeginTaskResponse) {}
   rpc GfSpAskTask(GfSpAskTaskRequest) returns (GfSpAskTaskResponse) {}
   rpc GfSpReportTask(GfSpReportTaskRequest) returns (GfSpReportTaskResponse) {}
-  rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest) returns (GfSpPickVirtualGroupFamilyResponse) {}
-  rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest) returns (GfSpNotifyMigrateSwapOutResponse) {}
-  rpc GfSpQueryTasksStats(GfSpQueryTasksStatsRequest) returns (GfSpQueryTasksStatsResponse) {}
-  rpc GfSpQueryBucketMigrationProgress(GfSpQueryBucketMigrationProgressRequest) returns (GfSpQueryBucketMigrationProgressResponse) {}
-  rpc GfSpNotifyPreMigrateBucketAndDeductQuota(GfSpNotifyPreMigrateBucketRequest) returns (GfSpNotifyPreMigrateBucketResponse) {}
-  rpc GfSpNotifyPostMigrateAndRecoupQuota(GfSpNotifyPostMigrateBucketRequest) returns (GfSpNotifyPostMigrateBucketResponse) {}
-  rpc GfSpResetRecoveryFailedList(GfSpResetRecoveryFailedListRequest) returns (GfSpResetRecoveryFailedListResponse) {}
-  rpc GfSpTriggerRecoverForSuccessorSP(GfSpTriggerRecoverForSuccessorSPRequest) returns (GfSpTriggerRecoverForSuccessorSPResponse) {}
-  rpc GfSpQueryRecoverProcess(GfSpQueryRecoverProcessRequest) returns (GfSpQueryRecoverProcessResponse) {}
+  rpc GfSpPickVirtualGroupFamily(GfSpPickVirtualGroupFamilyRequest)
+      returns (GfSpPickVirtualGroupFamilyResponse) {}
+  rpc GfSpNotifyMigrateSwapOut(GfSpNotifyMigrateSwapOutRequest)
+      returns (GfSpNotifyMigrateSwapOutResponse) {}
+  rpc GfSpQueryTasksStats(GfSpQueryTasksStatsRequest)
+      returns (GfSpQueryTasksStatsResponse) {}
+  rpc GfSpQueryBucketMigrationProgress(GfSpQueryBucketMigrationProgressRequest)
+      returns (GfSpQueryBucketMigrationProgressResponse) {}
+  rpc GfSpNotifyPreMigrateBucketAndDeductQuota(
+      GfSpNotifyPreMigrateBucketRequest)
+      returns (GfSpNotifyPreMigrateBucketResponse) {}
+  rpc GfSpNotifyPostMigrateAndRecoupQuota(GfSpNotifyPostMigrateBucketRequest)
+      returns (GfSpNotifyPostMigrateBucketResponse) {}
+  rpc GfSpResetRecoveryFailedList(GfSpResetRecoveryFailedListRequest)
+      returns (GfSpResetRecoveryFailedListResponse) {}
+  rpc GfSpTriggerRecoverForSuccessorSP(GfSpTriggerRecoverForSuccessorSPRequest)
+      returns (GfSpTriggerRecoverForSuccessorSPResponse) {}
+  rpc GfSpQueryRecoverProcess(GfSpQueryRecoverProcessRequest)
+      returns (GfSpQueryRecoverProcessResponse) {}
 }

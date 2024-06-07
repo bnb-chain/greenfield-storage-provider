@@ -128,7 +128,7 @@ func GfSpErrorList() []*GfSpError {
 //
 // The InnerCode detailed specifications can be found at:
 //
-//	"github.com/bnb-chain/greenfield-storage-provider/base/errors.md"
+//	"github.com/zkMeLabs/mechain-storage-provider/base/errors.md"
 type GfSpErrorManager struct {
 	innerCode2Err map[int32]*GfSpError
 	mux           sync.RWMutex

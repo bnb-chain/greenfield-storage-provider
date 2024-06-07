@@ -15,15 +15,15 @@ import (
 	"go.uber.org/mock/gomock"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
 	"github.com/evmos/evmos/v12/sdk/keys"
 	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 func mockNotifyMigrateSwapOutHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
@@ -398,11 +398,14 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					ObjectName: mockObjectName, CreateAt: 1}, nil).Times(1)
+					ObjectName: mockObjectName, CreateAt: 1,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: DefaultMaxPayloadSize}, nil).Times(1)
+					MaxPayloadSize: DefaultMaxPayloadSize,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				chainMock := consensus.NewMockConsensus(ctrl)
 				chainMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{}, nil).Times(1)
@@ -436,11 +439,14 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					ObjectName: mockObjectName, CreateAt: 1}, nil).Times(1)
+					ObjectName: mockObjectName, CreateAt: 1,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: DefaultMaxPayloadSize}, nil).Times(1)
+					MaxPayloadSize: DefaultMaxPayloadSize,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)
@@ -479,11 +485,14 @@ func TestGateModular_migratePieceHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					ObjectName: mockObjectName, CreateAt: 1}, nil).Times(1)
+					ObjectName: mockObjectName, CreateAt: 1,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: DefaultMaxPayloadSize}, nil).Times(1)
+					MaxPayloadSize: DefaultMaxPayloadSize,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 
 				pieceOpMock := piecestore.NewMockPieceOp(ctrl)

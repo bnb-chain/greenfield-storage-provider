@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 var mockErr = errors.New("mock error")
@@ -46,7 +46,8 @@ func TestExecuteModular_StartSuccess(t *testing.T) {
 	m2 := consensus.NewMockConsensus(ctrl)
 	e.baseApp.SetConsensus(m2)
 	m2.EXPECT().ListSPs(gomock.Any()).Return([]*sptypes.StorageProvider{
-		{Id: 1, Endpoint: "endpoint"}}, nil).Times(1)
+		{Id: 1, Endpoint: "endpoint"},
+	}, nil).Times(1)
 	err := e.Start(context.TODO())
 	assert.Nil(t, err)
 }

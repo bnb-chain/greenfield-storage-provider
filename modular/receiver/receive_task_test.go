@@ -7,14 +7,14 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsppieceop"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
 	"go.uber.org/mock/gomock"
 )
 
@@ -42,7 +42,8 @@ func TestHandleReceivePieceTask_RepeatedTask(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
-		}}
+		},
+	}
 	err := r.HandleReceivePieceTask(context.TODO(), mockTask, nil)
 	assert.NotNil(t, err)
 }
@@ -60,7 +61,8 @@ func TestHandleReceivePieceTask_PushTaskFailed(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
-		}}
+		},
+	}
 	err := r.HandleReceivePieceTask(context.TODO(), mockTask, nil)
 	assert.NotNil(t, err)
 }
@@ -79,7 +81,8 @@ func TestHandleReceivePieceTask_CheckChecksumFailed(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
-		}}
+		},
+	}
 	err := r.HandleReceivePieceTask(context.TODO(), mockTask, nil)
 	assert.NotNil(t, err)
 }
@@ -183,7 +186,8 @@ func TestHandleDoneReceivePieceTask_PushTaskFailed(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
-		}}
+		},
+	}
 	_, err := r.HandleDoneReceivePieceTask(context.TODO(), mockTask)
 	assert.NotNil(t, err)
 }
@@ -206,7 +210,9 @@ func TestHandleDoneReceivePieceTask_GetAllPieceChecksumFailed(t *testing.T) {
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
 				MaxSegmentSize: 16 * 1024 * 1024,
-			}}}
+			},
+		},
+	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed to get all piece checksum")).Times(1)
@@ -232,7 +238,9 @@ func TestHandleDoneReceivePieceTask_PieceCountMismatch(t *testing.T) {
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
 				MaxSegmentSize: 16 * 1024 * 1024,
-			}}}
+			},
+		},
+	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
@@ -259,7 +267,9 @@ func TestHandleDoneReceivePieceTask_Integarty_Mismatch(t *testing.T) {
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
 				MaxSegmentSize: 16 * 1024 * 1024,
-			}}}
+			},
+		},
+	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)
@@ -283,13 +293,17 @@ func TestHandleDoneReceivePieceTask_SignSecondarySealBlsFailed(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
-			Checksums: [][]byte{{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
-				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129}},
+			Checksums: [][]byte{
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+			},
 		},
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
 				MaxSegmentSize: 16 * 1024 * 1024,
-			}}}
+			},
+		},
+	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)
@@ -314,13 +328,17 @@ func TestHandleDoneReceivePieceTask_SetObjectIntegrityFailed(t *testing.T) {
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
-			Checksums: [][]byte{{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
-				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129}},
+			Checksums: [][]byte{
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+			},
 		},
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
 				MaxSegmentSize: 16 * 1024 * 1024,
-			}}}
+			},
+		},
+	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)
@@ -346,13 +364,17 @@ func TestHandleDoneReceivePieceTask_HandleDoneReceivePieceTaskSucceed(t *testing
 			Id:           sdkmath.NewUint(100),
 			ObjectStatus: storagetypes.OBJECT_STATUS_SEALED,
 			PayloadSize:  100,
-			Checksums: [][]byte{{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
-				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129}},
+			Checksums: [][]byte{
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+				{3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129},
+			},
 		},
 		StorageParams: &storagetypes.Params{
 			VersionedParams: storagetypes.VersionedParams{
 				MaxSegmentSize: 16 * 1024 * 1024,
-			}}}
+			},
+		},
+	}
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return([][]byte{{1, 2, 3}}, nil).Times(1)

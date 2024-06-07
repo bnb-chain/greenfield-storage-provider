@@ -6,15 +6,16 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.DownloadObjectTask, opts ...grpc.DialOption) (
-	[]byte, error) {
+	[]byte, error,
+) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
@@ -36,7 +37,8 @@ func (s *GfSpClient) GetObject(ctx context.Context, downloadObjectTask coretask.
 }
 
 func (s *GfSpClient) GetPiece(ctx context.Context, downloadPieceTask coretask.DownloadPieceTask, opts ...grpc.DialOption) (
-	[]byte, error) {
+	[]byte, error,
+) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)
@@ -106,7 +108,8 @@ func (s *GfSpClient) DeductQuotaForBucketMigrate(ctx context.Context, bucketID, 
 }
 
 func (s *GfSpClient) GetChallengeInfo(ctx context.Context, challengePieceTask coretask.ChallengePieceTask, opts ...grpc.DialOption) (
-	[]byte, [][]byte, []byte, error) {
+	[]byte, [][]byte, []byte, error,
+) {
 	conn, connErr := s.Connection(ctx, s.downloaderEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect downloader", "error", connErr)

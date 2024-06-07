@@ -8,7 +8,7 @@ import (
 
 	"gorm.io/gorm"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 // InsertAuthKey insert a new record into OffChainAuthKeyTable
@@ -53,7 +53,6 @@ func (s *SpDBImpl) UpdateAuthKey(userAddress string, domain string, oldNonce int
 		} else {
 			return fmt.Errorf("failed to query OffChainAuthKey table: %s", result.Error)
 		}
-
 	}
 	queryCondition := &OffChainAuthKeyTable{
 		UserAddress:  userAddress,

@@ -68,4 +68,4 @@ The corresponding `protobuf` definition is shown below:
 
 ## GfSp Framework Uploader Code
 
-Uploader module code implementation: [Uploader](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/uploader)
+Uploader module code implementation: [Uploader](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/uploader)

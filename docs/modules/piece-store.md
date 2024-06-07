@@ -23,7 +23,7 @@ The core function of PieceStore module is to be compatible with multiple object 
 
 <div style={{textAlign:'center'}}><i>PieceStore Architecture</i></div>
 
-[PieceStore code](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/store/piecestore)
+[PieceStore code](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/store/piecestore)
 
 ### API Interfaces
 
@@ -82,7 +82,7 @@ PieceStore provides sharding function for data high availability. PieceStore use
 ### Compatible With Multi Object Storage
 
 PieceStore is vendor-agnostic, so it will be compatible with multi object storage. Now SP supports based storage such as `S3, MinIO, LDFS, OSS, DiskFile and Memory`.
-Recommend using S3 or MinIO in production environment and [the releated config document is here](https://github.com/bnb-chain/greenfield-storage-provider/blob/master/store/piecestore/README.md). Users can experience PieceStore in local by DiskFile or Memory. The common interface is as follows:
+Recommend using S3 or MinIO in production environment and [the releated config document is here](https://github.com/zkMeLabs/mechain-storage-provider/blob/master/store/piecestore/README.md). Users can experience PieceStore in local by DiskFile or Memory. The common interface is as follows:
 
 ```go
 // ObjectStorage is a common interface that must be implemented if some users want to use an object

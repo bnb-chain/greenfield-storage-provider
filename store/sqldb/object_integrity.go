@@ -11,9 +11,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -124,9 +124,7 @@ func MysqlErrCode(err error) int {
 	return int(mysqlErr.Number)
 }
 
-var (
-	ErrDuplicateEntryCode = 1062
-)
+var ErrDuplicateEntryCode = 1062
 
 // SetObjectIntegrity puts(overwrites) integrity hash info to db
 func (s *SpDBImpl) SetObjectIntegrity(meta *corespdb.IntegrityMeta) (err error) {

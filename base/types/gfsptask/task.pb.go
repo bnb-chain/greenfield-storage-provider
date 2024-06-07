@@ -5,7 +5,7 @@ package gfsptask
 
 import (
 	fmt "fmt"
-	gfsperrors "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
+	gfsperrors "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	proto "github.com/cosmos/gogoproto/proto"
 	types2 "github.com/evmos/evmos/v12/x/sp/types"
 	types "github.com/evmos/evmos/v12/x/storage/types"

@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
 	"github.com/forbole/juno/v4/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 	"go.uber.org/mock/gomock"
 )
 
@@ -21,7 +21,7 @@ func TestGfSpPrimarySpIncomeDetails_Success(t *testing.T) {
 	big, _ := new(big.Int).SetString("123456789012345678901234567890", 10)
 	m.EXPECT().GetPrimarySPStreamRecordBySpID(gomock.Any()).DoAndReturn(
 		func(spID any) ([]*bsdb.PrimarySpIncomeMeta, error) {
-			return []*bsdb.PrimarySpIncomeMeta{&bsdb.PrimarySpIncomeMeta{
+			return []*bsdb.PrimarySpIncomeMeta{{
 				GlobalVirtualGroupFamilyId: 48,
 				StreamRecord: bsdb.StreamRecord{
 					ID:                0,
@@ -73,7 +73,7 @@ func TestGfSpSecondarySpIncomeDetails_Success(t *testing.T) {
 	big, _ := new(big.Int).SetString("123456789012345678901234567890", 10)
 	m.EXPECT().GetSecondarySPStreamRecordBySpID(gomock.Any()).DoAndReturn(
 		func(spID any) ([]*bsdb.SecondarySpIncomeMeta, error) {
-			return []*bsdb.SecondarySpIncomeMeta{&bsdb.SecondarySpIncomeMeta{
+			return []*bsdb.SecondarySpIncomeMeta{{
 				GlobalVirtualGroupId: 4,
 				StreamRecord: bsdb.StreamRecord{
 					ID:                0,

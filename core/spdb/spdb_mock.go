@@ -13,8 +13,8 @@ import (
 	reflect "reflect"
 	time "time"
 
-	task "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	types "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	task "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	types "github.com/zkMeLabs/mechain-storage-provider/store/types"
 	types0 "github.com/evmos/evmos/v12/x/sp/types"
 	gomock "go.uber.org/mock/gomock"
 )

@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func TestGfSpClient_ReplicatePiece(t *testing.T) {
@@ -23,20 +23,23 @@ func TestGfSpClient_ReplicatePiece(t *testing.T) {
 		{
 			name: "success",
 			task: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName3}},
+				ObjectName: mockObjectName3,
+			}},
 			wantedIsErr: false,
 		},
 		{
 			name: "mock rpc error",
 			task: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName1}},
+				ObjectName: mockObjectName1,
+			}},
 			wantedIsErr: true,
 			wantedErr:   mockRPCErr,
 		},
 		{
 			name: "mock response returns error",
 			task: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName2}},
+				ObjectName: mockObjectName2,
+			}},
 			wantedIsErr: true,
 			wantedErr:   ErrExceptionsStream,
 		},
@@ -76,20 +79,23 @@ func TestGfSpClient_DoneReplicatePiece(t *testing.T) {
 		{
 			name: "success",
 			task: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName3}},
+				ObjectName: mockObjectName3,
+			}},
 			wantedIsErr: false,
 		},
 		{
 			name: "mock rpc error",
 			task: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName1}},
+				ObjectName: mockObjectName1,
+			}},
 			wantedIsErr: true,
 			wantedErr:   mockRPCErr,
 		},
 		{
 			name: "mock response returns error",
 			task: &gfsptask.GfSpReceivePieceTask{ObjectInfo: &storagetypes.ObjectInfo{
-				ObjectName: mockObjectName2}},
+				ObjectName: mockObjectName2,
+			}},
 			wantedIsErr: true,
 			wantedErr:   ErrExceptionsStream,
 		},

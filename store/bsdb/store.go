@@ -10,9 +10,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/config"
 )
 
 var _ BSDB = &BsDBImpl{}
@@ -24,7 +24,7 @@ type BsDBImpl struct {
 
 // NewBsDB return a block syncer db instance or a block syncer db backup instance based on the isBackup flag
 func NewBsDB(cfg *gfspconfig.GfSpConfig) (*BsDBImpl, error) {
-	//LoadDBConfigFromEnv(config)
+	// LoadDBConfigFromEnv(config)
 	dbConfig := cfg.BsDB
 
 	db, err := InitDB(&dbConfig)

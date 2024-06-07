@@ -128,4 +128,4 @@ The corresponding `protobuf` definition is shown below:
 
 ## GfSp Framework TaskExecutor Code
 
-TaskExecutor module code implementation: [TaskExecutor](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/taskexecutor)
+TaskExecutor module code implementation: [TaskExecutor](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/taskexecutor)

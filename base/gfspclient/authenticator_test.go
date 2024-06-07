@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 func TestGfSpClient_VerifyAuthentication(t *testing.T) {

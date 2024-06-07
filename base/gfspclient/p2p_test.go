@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 )
 
 func TestGfSpClient_AskSecondaryReplicatePieceApproval(t *testing.T) {

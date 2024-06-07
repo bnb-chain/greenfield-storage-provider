@@ -5,16 +5,18 @@ import (
 	"sync"
 	"time"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util/maps"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util/maps"
 )
 
-var _ taskqueue.TQueueWithLimit = &GfSpTQueueWithLimit{}
-var _ taskqueue.TQueueOnStrategyWithLimit = &GfSpTQueueWithLimit{}
+var (
+	_ taskqueue.TQueueWithLimit           = &GfSpTQueueWithLimit{}
+	_ taskqueue.TQueueOnStrategyWithLimit = &GfSpTQueueWithLimit{}
+)
 
 type GfSpTQueueWithLimit struct {
 	name    string
