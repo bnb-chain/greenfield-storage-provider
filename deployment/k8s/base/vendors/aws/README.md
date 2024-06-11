@@ -1,11 +1,13 @@
 ## Pre-requisites for deployment
+
 - MySql Database which is accessible from the k8s cluster where SP will be running in.
-- storage_provider_db is created in MySql DB. (DB name is configurable in config.toml of gnfd-sp)
+- storage_provider_db is created in MySql DB. (DB name is configurable in config.toml of mechain-sp)
 - block_syncer is created in Mysql DB. (can be in a different mysql to storage_provider_db one)
 - S3 bucket created(equivalent object storage on other supported Cloud provider).
 - AWS Secrets Manager store(equivalent Secret vault on other supported Cloud provider) for holding credentials, such as /dev/greenfield/gf-sp-devops/secrets
 - IAM role with permission to S3 bucket and secret valut, and binding the role to the ServiceAccount used by SP pods.
 - Put this as the content of the AWS Secrets Manager store with actual values:
+
 ```json
 {
     "SP_DB_USER":"xxx",

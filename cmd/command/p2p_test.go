@@ -12,6 +12,6 @@ func TestCreateKeys(t *testing.T) {
 	app.Commands = []*cli.Command{
 		P2PCreateKeysCmd,
 	}
-	err := app.Run([]string{"./gnfd-sp", "p2p.create.key", "-n", "10"})
+	err := app.Run([]string{"./mechain-sp", "p2p.create.key", "-n", "10"})
 	assert.Nil(t, err)
 }

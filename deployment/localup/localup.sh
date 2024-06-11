@@ -1,34 +1,37 @@
 #!/usr/bin/env bash
 
-basedir=$(cd `dirname $0`; pwd)
+basedir=$(
+  cd $(dirname $0)
+  pwd
+)
 workspace=${basedir}
 source ${workspace}/env.info
-sp_bin_name=gnfd-sp
+sp_bin_name=mechain-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
 
 #########################
 # the command line help #
 #########################
 function display_help() {
-    echo "Usage: $0 [option...] {help|generate|reset|start|stop|print}" >&2
-    echo
-    echo "   --help           display help info"
-    echo "   --generate       generate sp.info and db.info that accepts four args: the first arg is json file path, the second arg is db username, the third arg is db password and the fourth arg is db address"
-    echo "   --reset          reset env"
-    echo "   --start          start storage providers"
-    echo "   --stop           stop storage providers"
-    echo "   --clean          clean local sp env"
-    echo "   --rebuild        rebuild sp code"
-    echo "   --print          print sp local env work directory"
-    echo
-    exit 0
+  echo "Usage: $0 [option...] {help|generate|reset|start|stop|print}" >&2
+  echo
+  echo "   --help           display help info"
+  echo "   --generate       generate sp.info and db.info that accepts four args: the first arg is json file path, the second arg is db username, the third arg is db password and the fourth arg is db address"
+  echo "   --reset          reset env"
+  echo "   --start          start storage providers"
+  echo "   --stop           stop storage providers"
+  echo "   --clean          clean local sp env"
+  echo "   --rebuild        rebuild sp code"
+  echo "   --print          print sp local env work directory"
+  echo
+  exit 0
 }
 
 ################################
 # generate sp.info and db.info #
 ################################
 function generate_sp_db_info() {
-  if [ $# != 4 ] ; then
+  if [ $# != 4 ]; then
     echo "failed to generate sp.info and db.info, please check args by help info"
     exit 1
   fi
@@ -39,33 +42,33 @@ function generate_sp_db_info() {
   db_user=$2
   db_password=$3
   db_address=$4
-  for ((i=0;i<${SP_NUM};i++));do
+  for ((i = 0; i < ${SP_NUM}; i++)); do
     mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
     cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
     cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/ || exit 1
-    ./${sp_bin_name}${i}  config.dump
+    ./${sp_bin_name}${i} config.dump
 
     # generate sp info
-    i_port=`expr ${SP_START_ENDPOINT_PORT} + $i`
+    i_port=$(expr ${SP_START_ENDPOINT_PORT} + $i)
     endpoint="127.0.0.1:${i_port}"
     {
       echo "#!/usr/bin/env bash"
       echo "SP_ENDPOINT=\"${endpoint}\""
-    } > sp.info
+    } >sp.info
     op_address=$(jq -r ".sp${i}.OperatorAddress" ${sp_json_file})
-    echo "OPERATOR_ADDRESS=\"${op_address}\"" >> sp.info
+    echo "OPERATOR_ADDRESS=\"${op_address}\"" >>sp.info
     opk=$(jq -r ".sp${i}.OperatorPrivateKey" ${sp_json_file})
-    echo "OPERATOR_PRIVATE_KEY=\"${opk}\"" >> sp.info
+    echo "OPERATOR_PRIVATE_KEY=\"${opk}\"" >>sp.info
     fpk=$(jq -r ".sp${i}.FundingPrivateKey" ${sp_json_file})
-    echo "FUNDING_PRIVATE_KEY=\"${fpk}\"" >> sp.info
+    echo "FUNDING_PRIVATE_KEY=\"${fpk}\"" >>sp.info
     spk=$(jq -r ".sp${i}.SealPrivateKey" ${sp_json_file})
-    echo "SEAL_PRIVATE_KEY=\"${spk}\"" >> sp.info
+    echo "SEAL_PRIVATE_KEY=\"${spk}\"" >>sp.info
     apk=$(jq -r ".sp${i}.ApprovalPrivateKey" ${sp_json_file})
-    echo "APPROVAL_PRIVATE_KEY=\"${apk}\"" >> sp.info
+    echo "APPROVAL_PRIVATE_KEY=\"${apk}\"" >>sp.info
     gpk=$(jq -r ".sp${i}.GcPrivateKey" ${sp_json_file})
-    echo "GC_PRIVATE_KEY=\"${gpk}\"" >> sp.info
+    echo "GC_PRIVATE_KEY=\"${gpk}\"" >>sp.info
     bpk=$(jq -r ".sp${i}.BlsPrivateKey" ${sp_json_file})
-    echo "BLS_PRIVATE_KEY=\"${bpk}\"" >> sp.info
+    echo "BLS_PRIVATE_KEY=\"${bpk}\"" >>sp.info
 
     # generate db info
     {
@@ -74,7 +77,7 @@ function generate_sp_db_info() {
       echo "PWD=\"${db_password}\""
       echo "ADDRESS=\"${db_address}\""
       echo "DATABASE=sp_${i}"
-    } > db.info
+    } >db.info
     cd - >/dev/null
   done
   print_work_dir
@@ -86,8 +89,8 @@ function generate_sp_db_info() {
 #############################################################
 function make_config() {
   index=0
-  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
-    cur_port=$((SP_START_PORT+1000*$index))
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
+    cur_port=$((SP_START_PORT + 1000 * $index))
     cd ${sp_dir} || exit 1
     source db.info
     source sp.info
@@ -122,12 +125,11 @@ function make_config() {
     sed -i -e "s/BsDBSwitchCheckIntervalSec = .*/BsDBSwitchCheckIntervalSec = 30/g" config.toml
 
     # p2p
-    if [ ${index} -eq 0 ];
-      then
-        sed -i -e "s/P2PAddress = '.*'/P2PAddress = '127.0.0.1:9633'/g" config.toml
-        sed -i -e "s/P2PPrivateKey = '.*'/P2PPrivateKey = '${SP0_P2P_PRIVATE_KEY}'/g" config.toml
+    if [ ${index} -eq 0 ]; then
+      sed -i -e "s/P2PAddress = '.*'/P2PAddress = '127.0.0.1:9633'/g" config.toml
+      sed -i -e "s/P2PPrivateKey = '.*'/P2PPrivateKey = '${SP0_P2P_PRIVATE_KEY}'/g" config.toml
     else
-      p2p_port="127.0.0.1:"$((SP_START_PORT+1000*$index + 1))
+      p2p_port="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 1))
       sed -i -e "s/P2PAddress = '.*'/P2PAddress = '${p2p_port}'/g" config.toml
       sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\'\]/g" config.toml
     fi
@@ -138,11 +140,11 @@ function make_config() {
     #sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
     #sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
     #sed -i -e "s/DisableProbe = false/DisableProbe = true/" config.toml
-    metrics_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 367))
+    metrics_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 367))
     sed -i -e "s/MetricsHTTPAddress = '.*'/MetricsHTTPAddress = '${metrics_address}'/g" config.toml
-    pprof_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 368))
+    pprof_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 368))
     sed -i -e "s/PProfHTTPAddress = '.*'/PProfHTTPAddress = '${pprof_address}'/g" config.toml
-    probe_address="127.0.0.1:"$((SP_START_PORT+1000*$index + 369))
+    probe_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 369))
     sed -i -e "s/ProbeHTTPAddress = '.*'/ProbeHTTPAddress = '${probe_address}'/g" config.toml
 
     # blocksyncer
@@ -173,7 +175,7 @@ function make_config() {
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null
-    index=$(($index+1))
+    index=$(($index + 1))
   done
 }
 
@@ -182,12 +184,12 @@ function make_config() {
 #############
 function start_sp() {
   index=0
-  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
     cd ${sp_dir} || exit 1
-    nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1&
+    nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1 &
     echo "succeed to start sp in "${sp_dir}
     cd - >/dev/null
-    index=$(($index+1))
+    index=$(($index + 1))
   done
   echo "succeed to start storage providers"
 }
@@ -204,7 +206,7 @@ function stop_sp() {
 # drop databases and recreate new databases #
 #############################################
 function reset_sql_db() {
-  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
     cd ${sp_dir} || exit 1
     source db.info
     hostname=$(echo ${ADDRESS} | cut -d : -f 1)
@@ -220,7 +222,7 @@ function reset_sql_db() {
 # clean piece-store data #
 ##########################
 function reset_piece_store() {
-  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
     cd ${sp_dir} || exit 1
     rm -rf ./data
     echo "succeed to reset piece store in "${sp_dir}
@@ -232,7 +234,7 @@ function reset_piece_store() {
 # print work dir #
 ##################
 function print_work_dir() {
-  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/* ; do
+  for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
     echo "  "${sp_dir}
   done
 }
@@ -243,7 +245,7 @@ function print_work_dir() {
 function rebuild() {
   bash ${workspace}/../../build.sh
   mkdir -p ${workspace}/${SP_DEPLOY_DIR}
-  for ((i=0;i<${SP_NUM};i++));do
+  for ((i = 0; i < ${SP_NUM}; i++)); do
     mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
     cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
   done
@@ -292,7 +294,7 @@ function main() {
   --rebuild)
     rebuild
     ;;
-  --help|*)
+  --help | *)
     display_help
     ;;
   esac

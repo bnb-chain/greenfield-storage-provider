@@ -9,7 +9,7 @@ Users also supply **Arguments**, such as the db address that uploading configura
 ## Commands
 
 ```shell
-$ ./gnfd-sp version
+$ ./mechain-sp version
 
 Greenfield Storage Provider
     __                                                       _     __
@@ -26,13 +26,13 @@ Build   : go1.20.3 darwin arm64 2023-10-08 10:31
 ```
 
 ```shell
-$ ./gnfd-sp --help
+$ ./mechain-sp --help
 
 NAME:
-   gnfd-sp - the Greenfield Storage Provider command line interface
+   mechain-sp - the Greenfield Storage Provider command line interface
 
 USAGE:
-   gnfd-sp [global options] command [command options] [arguments...]
+   mechain-sp [global options] command [command options] [arguments...]
 
 COMMANDS:
    help, h  Shows a list of commands or help for one command
@@ -67,7 +67,7 @@ Dump default configuration to the `./config.toml` file for editing:
 
 ```shell
 Example:
-$ ./gnfd-sp config.dump
+$ ./mechain-sp config.dump
 ```
 
 ### Migrate Commands
@@ -82,10 +82,10 @@ Using this command, it will send an transaction to Greenfield blockchain to tell
 
 ```shell
 USAGE:
-   gnfd-sp sp.exit [command options] [arguments...]
+   mechain-sp sp.exit [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp sp.exit --operatorAddress ${operator_address}
+$ ./mechain-sp sp.exit --operatorAddress ${operator_address}
 ```
 
 #### sp.complete.exit
@@ -96,10 +96,10 @@ Only used in debugging scenarios, online use not allowed.
 
 ```shell
 USAGE:
-   gnfd-sp sp.complete.exit [command options] [arguments...]
+   mechain-sp sp.complete.exit [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp sp.complete.exit --operatorAddress {operator_address}
+$ ./mechain-sp sp.complete.exit --operatorAddress {operator_address}
 ```
 
 #### sp.complete.swapout
@@ -110,9 +110,9 @@ Only used in debugging scenarios, online use not allowed.
 
 ```shell
 USAGE:
-   gnfd-sp sp.complete.swapout [command options] [arguments...]
+   mechain-sp sp.complete.swapout [command options] [arguments...]
 
-$ ./gnfd-sp sp.complete.swapout --operatorAddress {openrator_address} --familyID 2 --gvgIDList '1,2,3'
+$ ./mechain-sp sp.complete.swapout --operatorAddress {openrator_address} --familyID 2 --gvgIDList '1,2,3'
 ```
 
 ### Query Commands
@@ -123,10 +123,10 @@ List the modules in greenfield storage provider.
 
 ```shell
 USAGE:
-   gnfd-sp list.modules [command options] [arguments...]
+   mechain-sp list.modules [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp list.modules
+$ ./mechain-sp list.modules
 
 # Output
 approver             Handles the ask crate bucket/object and replicates piece approval request.
@@ -149,10 +149,10 @@ List the predefine errors in Greenfield storage provider.
 
 ```shell
 USAGE:
-   gnfd-sp list.errors [command options] [arguments...]
+   mechain-sp list.errors [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp list.errors
+$ ./mechain-sp list.errors
 
 # Output
 code_space:"approver" http_status_code:400 inner_code:10001 description:"OoooH.... request lost"
@@ -168,10 +168,10 @@ The get.object command send rpc request to downloader server to get object paylo
 
 ```shell
 USAGE:
-   gnfd-sp get.object [command options] [arguments...]
+   mechain-sp get.object [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp get.object -i 123 --config ./config.toml
+$ ./mechain-sp get.object -i 123 --config ./config.toml
 ```
 
 #### challenge.piece
@@ -180,10 +180,10 @@ The challenge.piece command send rpc request to downloader get integrity meta an
 
 ```shell
 USAGE:
-   gnfd-sp challenge.piece [command options] [arguments...]
+   mechain-sp challenge.piece [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp challenge.piece -i 123 -r 1 -s 2 --config ./config.toml
+$ ./mechain-sp challenge.piece -i 123 -r 1 -s 2 --config ./config.toml
 ```
 
 #### get.piece.integrity
@@ -192,10 +192,10 @@ The get.piece.integrity command send rpc request to spdb get integrity hash and 
 
 ```shell
 USAGE:
-   gnfd-sp get.piece.integrity [command options] [arguments...]
+   mechain-sp get.piece.integrity [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp get.piece.integrity -i 10 --config ./config.toml
+$ ./mechain-sp get.piece.integrity -i 10 --config ./config.toml
 ```
 
 #### query.bucket.migrate
@@ -204,10 +204,10 @@ The query.bucket.migrate command send rpc request to manager get plan and status
 
 ```shell
 USAGE:
-   gnfd-sp query.bucket.migrate [command options] [arguments...]
+   mechain-sp query.bucket.migrate [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp query.bucket.migrate --config ./config.toml
+$ ./mechain-sp query.bucket.migrate --config ./config.toml
 ```
 
 #### update.quota
@@ -216,10 +216,10 @@ The update.quota command is used to update the free quota of the SP on greenfiel
 
 ```shell
 USAGE:
-   gnfd-sp update.quota [command options] [arguments...]
+   mechain-sp update.quota [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp update.quota --quota 100000 --config ./config.toml
+$ ./mechain-sp update.quota --quota 100000 --config ./config.toml
 ```
 
 #### recover.object
@@ -228,10 +228,10 @@ The recover.object command is used to recover the object  data on the primarySP 
 
 ```shell
 USAGE:
-   gnfd-sp recover.object [command options] [arguments...]
+   mechain-sp recover.object [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp recover.object -b testbucket -o testobject --config ./config.toml
+$ ./mechain-sp recover.object -b testbucket -o testobject --config ./config.toml
 ```
 
 #### recover.piece
@@ -240,8 +240,8 @@ The recover.piece command is used to recover the object piece data on the primar
 
 ```shell
 USAGE:
-   gnfd-sp recover.piece [command options] [arguments...]
+   mechain-sp recover.piece [command options] [arguments...]
 
 Example:
-$ ./gnfd-sp recover.object -b testbucket -o testobject -s 1 --config ./config.toml
+$ ./mechain-sp recover.object -b testbucket -o testobject -s 1 --config ./config.toml
 ```

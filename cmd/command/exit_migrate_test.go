@@ -29,16 +29,16 @@ func TestSPExit(t *testing.T) {
 		SPExitCmd,
 	}
 	// failed due to check operator address
-	err := app.Run([]string{"./gnfd-sp", "sp.exit", "--operatorAddress", "abc"})
+	err := app.Run([]string{"./mechain-sp", "sp.exit", "--operatorAddress", "abc"})
 	assert.NotNil(t, err)
 
 	// succeed
 	CW.config.SpAccount.SpOperatorAddress = "abc"
-	err = app.Run([]string{"./gnfd-sp", "sp.exit", "--operatorAddress", "abc"})
+	err = app.Run([]string{"./mechain-sp", "sp.exit", "--operatorAddress", "abc"})
 	assert.Nil(t, err)
 
 	// failed due to send signer error
-	err = app.Run([]string{"./gnfd-sp", "sp.exit", "--operatorAddress", "abc"})
+	err = app.Run([]string{"./mechain-sp", "sp.exit", "--operatorAddress", "abc"})
 	assert.NotNil(t, err)
 }
 
@@ -58,16 +58,16 @@ func TestCompleteSPExit(t *testing.T) {
 		CompleteSPExitCmd,
 	}
 	// failed due to check operator address
-	err := app.Run([]string{"./gnfd-sp", "sp.complete.exit", "--operatorAddress", "abc"})
+	err := app.Run([]string{"./mechain-sp", "sp.complete.exit", "--operatorAddress", "abc"})
 	assert.NotNil(t, err)
 
 	// succeed
 	CW.config.SpAccount.SpOperatorAddress = "abc"
-	err = app.Run([]string{"./gnfd-sp", "sp.complete.exit", "--operatorAddress", "abc"})
+	err = app.Run([]string{"./mechain-sp", "sp.complete.exit", "--operatorAddress", "abc"})
 	assert.Nil(t, err)
 
 	// failed due to send signer error
-	err = app.Run([]string{"./gnfd-sp", "sp.complete.exit", "--operatorAddress", "abc"})
+	err = app.Run([]string{"./mechain-sp", "sp.complete.exit", "--operatorAddress", "abc"})
 	assert.NotNil(t, err)
 }
 
@@ -87,19 +87,19 @@ func TestCompleteSwapOut(t *testing.T) {
 		CompleteSwapOutCmd,
 	}
 	// failed due to check operator address
-	err := app.Run([]string{"./gnfd-sp", "sp.complete.swapout", "--operatorAddress", "abc", "-gvgIDList", ""})
+	err := app.Run([]string{"./mechain-sp", "sp.complete.swapout", "--operatorAddress", "abc", "-gvgIDList", ""})
 	assert.NotNil(t, err)
 
 	// failed due to invalid gvg list
-	err = app.Run([]string{"./gnfd-sp", "sp.complete.swapout", "--operatorAddress", "abc", "-gvgIDList", "abc"})
+	err = app.Run([]string{"./mechain-sp", "sp.complete.swapout", "--operatorAddress", "abc", "-gvgIDList", "abc"})
 	assert.NotNil(t, err)
 
 	// succeed
 	CW.config.SpAccount.SpOperatorAddress = "abc"
-	err = app.Run([]string{"./gnfd-sp", "sp.complete.swapout", "--operatorAddress", "abc", "--gvgIDList", "1,2,3", "--familyID", "1"})
+	err = app.Run([]string{"./mechain-sp", "sp.complete.swapout", "--operatorAddress", "abc", "--gvgIDList", "1,2,3", "--familyID", "1"})
 	assert.Nil(t, err)
 
 	// failed due to send signer error
-	err = app.Run([]string{"./gnfd-sp", "sp.complete.swapout", "--operatorAddress", "abc", "--gvgIDList", "1,2,3"})
+	err = app.Run([]string{"./mechain-sp", "sp.complete.swapout", "--operatorAddress", "abc", "--gvgIDList", "1,2,3"})
 	assert.NotNil(t, err)
 }

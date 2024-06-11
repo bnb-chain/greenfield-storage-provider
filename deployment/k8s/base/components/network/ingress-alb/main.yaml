@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: gnfd-sp-alb
+  name: mechain-sp-alb
   annotations:
     alb.ingress.kubernetes.io/security-groups: null
     alb.ingress.kubernetes.io/subnets: null
@@ -25,23 +25,21 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-  - host: null
-    http:
-      paths:
-      - backend:
-          service:
-            name: ingress-nginx-controller
-            port:
-              number: 80
-        pathType: ImplementationSpecific
-  - host: null
-    http:
-      paths:
-      - backend:
-          service:
-            name: ingress-nginx-controller
-            port:
-              number: 80
-        pathType: ImplementationSpecific
-
-
+    - host: null
+      http:
+        paths:
+          - backend:
+              service:
+                name: ingress-nginx-controller
+                port:
+                  number: 80
+            pathType: ImplementationSpecific
+    - host: null
+      http:
+        paths:
+          - backend:
+              service:
+                name: ingress-nginx-controller
+                port:
+                  number: 80
+            pathType: ImplementationSpecific
