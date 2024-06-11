@@ -12,7 +12,7 @@ if [ ! -d build ]; then
 fi
 
 #buf generate
-#echo "go build -ldflags \" -extldflags=${EXT_LD_FLAGS} -X 'main.Version=${Version}' -X 'main.CommitID=${CommitID}' -X 'main.BranchName=${BranchName}' -X 'main.BuildTime=${BuildTime}' -X '${REPO}/store/bsdb.AppVersion=${Version}' -X '${REPO}/store/bsdb.GitCommit=${CommitID}' -X '${REPO}/store/bsdb.GitCommitDate=${CommitDate}'\" -o ./build/gnfd-sp cmd/storage_provider/*.go"
+#echo "go build -ldflags \" -extldflags=${EXT_LD_FLAGS} -X 'main.Version=${Version}' -X 'main.CommitID=${CommitID}' -X 'main.BranchName=${BranchName}' -X 'main.BuildTime=${BuildTime}' -X '${REPO}/store/bsdb.AppVersion=${Version}' -X '${REPO}/store/bsdb.GitCommit=${CommitID}' -X '${REPO}/store/bsdb.GitCommitDate=${CommitDate}'\" -o ./build/mechain-sp cmd/storage_provider/*.go"
 go build -ldflags "\
   -extldflags=${EXT_LD_FLAGS}
   -X 'main.Version=${Version}' \
@@ -22,7 +22,7 @@ go build -ldflags "\
   -X '${REPO}/store/bsdb.AppVersion=${Version}' \
   -X '${REPO}/store/bsdb.GitCommit=${CommitID}' \
   -X '${REPO}/store/bsdb.GitCommitDate=${CommitDate}'" \
-  -o ./build/gnfd-sp cmd/storage_provider/*.go
+  -o ./build/mechain-sp cmd/storage_provider/*.go
 
 if [ $? -ne 0 ]; then
   echo "build failed Ooooooh!!!"

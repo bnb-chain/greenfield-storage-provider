@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         go-version: [1.20.x]
-        os: [ ubuntu-latest ]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
@@ -62,7 +62,7 @@ jobs:
           version: 1.14.0
           buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
           buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-      
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
 
@@ -77,7 +77,7 @@ jobs:
       - name: Build Binary for ${{matrix.os}}
         run: |
           make build
-          
+
       # ==============================
       #       Upload artifacts
       # ==============================
@@ -87,8 +87,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         with:
           name: linux
-          path: ./build/gnfd-sp
-
+          path: ./build/mechain-sp
 
   release:
     name: Release
@@ -110,10 +109,10 @@ jobs:
         with:
           name: linux
           path: ./linux
-      
+
       # Rename assets
       - run: |
-          mv ./linux/gnfd-sp ./linux/linux
+          mv ./linux/mechain-sp ./linux/linux
       # ==============================
       #       Create release
       # ==============================

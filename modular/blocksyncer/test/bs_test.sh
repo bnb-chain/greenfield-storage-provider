@@ -14,7 +14,7 @@ function make_config() {
   cd ${workspace} || exit
   make install-tools
   make build
-  ./build/gnfd-sp config.dump
+  ./build/mechain-sp config.dump
   cp config.toml "${workspace}"/modular/blocksyncer/config.toml
   cd "${workspace}"/modular/blocksyncer/ || exit 1
 

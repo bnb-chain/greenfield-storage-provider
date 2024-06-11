@@ -42,4 +42,4 @@ COPY --from=builder /greenfield-storage-provider/build/* ${WORKDIR}/
 RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
-ENTRYPOINT ["/app/gnfd-sp"]
+ENTRYPOINT ["/app/mechain-sp"]

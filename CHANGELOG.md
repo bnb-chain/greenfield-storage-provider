@@ -768,7 +768,7 @@ This release includes features, mainly:
    2.4 stonehub: works as state machine to handle all background jobs, each job includes several tasks;
    2.5 stonenode: works as the execute unit, it watches the stonehub tasks(the smallest unit of a job) and executes them;
    2.6 syncer: receives data pieces from primary sp and stores them in the piece store when sp works as a secondary sp;
-3. Implement one-click deployment and one-click running test, which is convenient for developers and testers to experience the gnfd-sp.
+3. Implement one-click deployment and one-click running test, which is convenient for developers and testers to experience the mechain-sp.
 
 * [\#7](https://github.com/zkMeLabs/mechain-storage-provider/pull/7) feat(gateway/uploader): add gateway and uploader skeleton
 * [\#16](https://github.com/zkMeLabs/mechain-storage-provider/pull/16) Add secondary syncer service

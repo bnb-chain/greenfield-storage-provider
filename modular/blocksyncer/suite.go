@@ -40,7 +40,7 @@ var (
 )
 
 var (
-	appName  = "gnfd-sp"
+	appName  = "mechain-sp"
 	appUsage = "the Greenfield Storage Provider command line interface"
 )
 

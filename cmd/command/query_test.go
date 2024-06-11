@@ -25,7 +25,7 @@ func TestListModules(t *testing.T) {
 	app.Commands = []*cli.Command{
 		ListModulesCmd,
 	}
-	err := app.Run([]string{"./gnfd-sp", "list.modules"})
+	err := app.Run([]string{"./mechain-sp", "list.modules"})
 	assert.Nil(t, err)
 }
 
@@ -34,7 +34,7 @@ func TestListErrors(t *testing.T) {
 	app.Commands = []*cli.Command{
 		ListErrorsCmd,
 	}
-	err := app.Run([]string{"./gnfd-sp", "list.errors"})
+	err := app.Run([]string{"./mechain-sp", "list.errors"})
 	assert.Nil(t, err)
 }
 
@@ -53,7 +53,7 @@ func TestQueryTasks(t *testing.T) {
 	}
 
 	// failed due to config file is not found
-	err := app.Run([]string{"./gnfd-sp", "query.task", "--task.key", "abc", "--config", "not_exist_config"})
+	err := app.Run([]string{"./mechain-sp", "query.task", "--task.key", "abc", "--config", "not_exist_config"})
 	assert.NotNil(t, err)
 
 	// failed due to query task error
@@ -62,11 +62,11 @@ func TestQueryTasks(t *testing.T) {
 	_, err = os.Stat(DefaultConfigFile)
 	assert.Equal(t, nil, err)
 
-	err = app.Run([]string{"./gnfd-sp", "query.task", "--task.key", "abc", "--config", DefaultConfigFile})
+	err = app.Run([]string{"./mechain-sp", "query.task", "--task.key", "abc", "--config", DefaultConfigFile})
 	assert.NotNil(t, err)
 
 	// succeed
-	err = app.Run([]string{"./gnfd-sp", "query.task", "--task.key", "abc", "--config", DefaultConfigFile})
+	err = app.Run([]string{"./mechain-sp", "query.task", "--task.key", "abc", "--config", DefaultConfigFile})
 	assert.Nil(t, err)
 
 	// clear temp config file
@@ -93,7 +93,7 @@ func TestGetObject(t *testing.T) {
 	app.Commands = []*cli.Command{
 		GetObjectCmd,
 	}
-	err := app.Run([]string{"./gnfd-sp", "get.object", "--object.id", "100"})
+	err := app.Run([]string{"./mechain-sp", "get.object", "--object.id", "100"})
 	assert.Nil(t, err)
 }
 
@@ -118,7 +118,7 @@ func TestGetChallengePieceInfo(t *testing.T) {
 	app.Commands = []*cli.Command{
 		ChallengePieceCmd,
 	}
-	err := app.Run([]string{"./gnfd-sp", "challenge.piece", "--object.id", "100", "--redundancy.index", "0", "--segment.index", "0"})
+	err := app.Run([]string{"./mechain-sp", "challenge.piece", "--object.id", "100", "--redundancy.index", "0", "--segment.index", "0"})
 	assert.NotNil(t, err)
 }
 
@@ -144,7 +144,7 @@ func TestGetSegmentIntegrity(t *testing.T) {
 	app.Commands = []*cli.Command{
 		GetSegmentIntegrityCmd,
 	}
-	err := app.Run([]string{"./gnfd-sp", "get.piece.integrity", "--object.id", "100"})
+	err := app.Run([]string{"./mechain-sp", "get.piece.integrity", "--object.id", "100"})
 	assert.Nil(t, err)
 }
 
@@ -167,7 +167,7 @@ func TestQueryBucketMigrate(t *testing.T) {
 	_, err = os.Stat(DefaultConfigFile)
 	assert.Equal(t, nil, err)
 
-	err = app.Run([]string{"./gnfd-sp", "query.bucket.migrate", "--config", DefaultConfigFile, "--endpoint", "localhost:2012"})
+	err = app.Run([]string{"./mechain-sp", "query.bucket.migrate", "--config", DefaultConfigFile, "--endpoint", "localhost:2012"})
 	assert.Nil(t, err)
 	// clear temp config file
 	os.Remove(DefaultConfigFile)
@@ -192,7 +192,7 @@ func TestQuerySPExit(t *testing.T) {
 	_, err = os.Stat(DefaultConfigFile)
 	assert.Equal(t, nil, err)
 
-	err = app.Run([]string{"./gnfd-sp", "query.sp.exit", "--config", DefaultConfigFile, "--endpoint", "localhost:2012"})
+	err = app.Run([]string{"./mechain-sp", "query.sp.exit", "--config", DefaultConfigFile, "--endpoint", "localhost:2012"})
 	assert.Nil(t, err)
 	// clear temp config file
 	os.Remove(DefaultConfigFile)
@@ -221,7 +221,7 @@ func TestGetPrimarySPIncome(t *testing.T) {
 	_, err = os.Stat(DefaultConfigFile)
 	assert.Equal(t, nil, err)
 
-	err = app.Run([]string{"./gnfd-sp", "query.primary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
+	err = app.Run([]string{"./mechain-sp", "query.primary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
 	assert.Nil(t, err)
 	// clear temp config file
 	os.Remove(DefaultConfigFile)
@@ -250,7 +250,7 @@ func TestGetSecondarySPIncome(t *testing.T) {
 	_, err = os.Stat(DefaultConfigFile)
 	assert.Equal(t, nil, err)
 
-	err = app.Run([]string{"./gnfd-sp", "query.secondary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
+	err = app.Run([]string{"./mechain-sp", "query.secondary.sp.income", "--config", DefaultConfigFile, "--sp.id", "1"})
 	assert.Nil(t, err)
 	// clear temp config file
 	os.Remove(DefaultConfigFile)

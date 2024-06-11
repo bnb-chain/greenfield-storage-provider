@@ -105,14 +105,14 @@ func TestPutObject(t *testing.T) {
 		DebugPutObjectCmd,
 	}
 	// failed, due to not exist file
-	err := app.Run([]string{"./gnfd-sp", "debug.put.object", "--file", "./not_exist_file"})
+	err := app.Run([]string{"./mechain-sp", "debug.put.object", "--file", "./not_exist_file"})
 	assert.NotNil(t, err)
 
 	// failed, due to file too large
 	fileContent := util.RandomString(DefaultMaxSegmentPieceSize + 1)
 	err = os.WriteFile("./too_large_file", []byte(fileContent), os.ModePerm)
 	assert.Nil(t, err)
-	err = app.Run([]string{"./gnfd-sp", "debug.put.object", "--file", "./too_large_file"})
+	err = app.Run([]string{"./mechain-sp", "debug.put.object", "--file", "./too_large_file"})
 	assert.NotNil(t, err)
 	os.Remove("./too_large_file")
 
@@ -120,11 +120,11 @@ func TestPutObject(t *testing.T) {
 	fileContent = util.RandomString(8 * 1024 * 1024)
 	err = os.WriteFile("./normal_file", []byte(fileContent), os.ModePerm)
 	assert.Nil(t, err)
-	err = app.Run([]string{"./gnfd-sp", "debug.put.object", "--file", "./normal_file"})
+	err = app.Run([]string{"./mechain-sp", "debug.put.object", "--file", "./normal_file"})
 	assert.NotNil(t, err)
 
 	// succeed
-	err = app.Run([]string{"./gnfd-sp", "debug.put.object", "--file", "./normal_file"})
+	err = app.Run([]string{"./mechain-sp", "debug.put.object", "--file", "./normal_file"})
 	assert.Nil(t, err)
 	os.Remove("./normal_file")
 }

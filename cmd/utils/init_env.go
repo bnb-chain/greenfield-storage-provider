@@ -75,7 +75,7 @@ func initLog(ctx *cli.Context, cfg *gfspconfig.GfSpConfig) error {
 		cfg.Log.Level = "debug"
 	}
 	if cfg.Log.Path == "" {
-		cfg.Log.Path = "./gnfd-sp.log"
+		cfg.Log.Path = "./mechain-sp.log"
 	}
 	if ctx.IsSet(LogLevelFlag.Name) {
 		cfg.Log.Level = ctx.String(LogLevelFlag.Name)
