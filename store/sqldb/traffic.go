@@ -9,9 +9,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 const (
@@ -170,7 +170,6 @@ func (s *SpDBImpl) updateConsumedQuota(record *corespdb.ReadRecord, quota *cores
 
 		return nil
 	})
-
 	if err != nil {
 		log.CtxErrorw(context.Background(), "updated quota transaction fail", "error", err)
 	}
@@ -234,7 +233,6 @@ func (s *SpDBImpl) InitBucketTraffic(record *corespdb.ReadRecord, quota *corespd
 
 		return nil
 	})
-
 	if err != nil {
 		log.CtxErrorw(context.Background(), "init traffic table error ", "bucket name", bucketName, "error", err)
 	}
@@ -336,9 +334,7 @@ func (s *SpDBImpl) ListBucketTraffic(yearMonth string, offset, limit int) (traff
 }
 
 func (s *SpDBImpl) GetBucketTrafficCount(yearMonth string) (count int64, err error) {
-	var (
-		dbResult *gorm.DB
-	)
+	var dbResult *gorm.DB
 
 	startTime := time.Now()
 	defer func() {
@@ -454,7 +450,6 @@ func (s *SpDBImpl) UpdateExtraQuota(bucketID, extraQuota uint64, yearMonth strin
 
 		return nil
 	})
-
 	if err != nil {
 		log.CtxErrorw(context.Background(), "failed to update the table by extra quota ", "bucket id", bucketID, "error", err)
 	}

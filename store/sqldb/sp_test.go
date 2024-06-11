@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 func TestSpDBImpl_UpdateAllSpSuccess1(t *testing.T) {
@@ -77,8 +77,10 @@ func TestSpDBImpl_UpdateAllSpSuccess2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE operator_address = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	mock.ExpectBegin()
@@ -185,8 +187,10 @@ func TestSpDBImpl_UpdateAllSpFailure3(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE operator_address = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	mock.ExpectBegin()
@@ -218,8 +222,10 @@ func TestSpDBImpl_FetchAllSpSuccess1(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = false").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.FetchAllSp()
@@ -247,8 +253,10 @@ func TestSpDBImpl_FetchAllSpSuccess2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = false and status = ?").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.FetchAllSp(sptypes.STATUS_IN_SERVICE)
@@ -296,8 +304,10 @@ func TestSpDBImpl_FetchAllSpFailure3(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = false and status = ?").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.FetchAllSp(sptypes.STATUS_IN_SERVICE)
@@ -325,13 +335,17 @@ func TestSpDBImpl_FetchAllSpWithoutOwnSpSuccess1(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE operator_address != ?").WillReturnRows(sqlmock.NewRows(
-		[]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address", "total_deposit",
-			"status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).AddRow(sp.OperatorAddress,
+		[]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address", "total_deposit",
+			"status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).AddRow(sp.OperatorAddress,
 		sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit, sp.Status, sp.Endpoint,
 		sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.FetchAllSpWithoutOwnSp()
@@ -359,13 +373,17 @@ func TestSpDBImpl_FetchAllSpWithoutOwnSpSuccess2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE status = ? and operator_address != ?").WillReturnRows(sqlmock.NewRows(
-		[]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address", "total_deposit",
-			"status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).AddRow(sp.OperatorAddress,
+		[]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address", "total_deposit",
+			"status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).AddRow(sp.OperatorAddress,
 		sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit, sp.Status, sp.Endpoint,
 		sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.FetchAllSpWithoutOwnSp(sptypes.STATUS_IN_SERVICE)
@@ -404,8 +422,10 @@ func TestSpDBImpl_FetchAllSpWithoutOwnSpFailure2(t *testing.T) {
 	s, mock := setupDB(t)
 
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE operator_address != ?").WillReturnError(mockDBInternalError)
@@ -434,8 +454,10 @@ func TestSpDBImpl_FetchAllSpWithoutOwnSpFailure3(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE status = ? and operator_address != ?").
@@ -464,8 +486,10 @@ func TestSpDBImpl_GetSpByAddressSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE operator_address = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetSpByAddress(sp.OperatorAddress, corespdb.OperatorAddressType)
@@ -528,8 +552,10 @@ func TestSpDBImpl_GetSpByAddressFailure3(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE operator_address = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetSpByAddress(sp.OperatorAddress, corespdb.OperatorAddressType)
@@ -605,8 +631,10 @@ func TestSpDBImpl_GetSpByEndpointSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE endpoint = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetSpByEndpoint(endpoint)
@@ -646,8 +674,10 @@ func TestSpDBImpl_GetSpByEndpointFailure2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE endpoint = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetSpByEndpoint(endpoint)
@@ -675,8 +705,10 @@ func TestSpDBImpl_GetSpByIDSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE id = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetSpByID(id)
@@ -716,8 +748,10 @@ func TestSpDBImpl_GetSpByIDFailure2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE id = ? and is_own = false ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetSpByID(id)
@@ -744,8 +778,10 @@ func TestSpDBImpl_GetOwnSpInfoSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetOwnSpInfo()
@@ -783,8 +819,10 @@ func TestSpDBImpl_GetOwnSpInfoFailure2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(sp.OperatorAddress, sp.IsOwn, sp.ID, sp.FundingAddress, sp.SealAddress, sp.ApprovalAddress, sp.TotalDeposit,
 				sp.Status, sp.Endpoint, sp.Moniker, sp.Identity, sp.Website, sp.SecurityContact, sp.Details))
 	result, err := s.GetOwnSpInfo()
@@ -881,8 +919,10 @@ func TestSpDBImpl_SetOwnSpInfoSuccess2(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(ta.OperatorAddress, ta.IsOwn, ta.ID, ta.FundingAddress, ta.SealAddress, ta.ApprovalAddress, ta.TotalDeposit,
 				ta.Status, ta.Endpoint, ta.Moniker, ta.Identity, ta.Website, ta.SecurityContact, ta.Details))
 	mock.ExpectBegin()
@@ -1028,8 +1068,10 @@ func TestSpDBImpl_SetOwnSpInfoFailure3(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `sp_info` WHERE is_own = true ORDER BY `sp_info`.`operator_address` LIMIT 1").
-		WillReturnRows(sqlmock.NewRows([]string{"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
-			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"operator_address", "is_own", "id", "funding_address", "seal_address", "approval_address",
+			"total_deposit", "status", "endpoint", "moniker", "identity", "website", "security_contract", "details",
+		}).
 			AddRow(ta.OperatorAddress, ta.IsOwn, ta.ID, ta.FundingAddress, ta.SealAddress, ta.ApprovalAddress, ta.TotalDeposit,
 				ta.Status, ta.Endpoint, ta.Moniker, ta.Identity, ta.Website, ta.SecurityContact, ta.Details))
 	mock.ExpectBegin()

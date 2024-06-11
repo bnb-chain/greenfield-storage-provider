@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield/sdk/types"
+	"github.com/evmos/evmos/v12/sdk/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 const (

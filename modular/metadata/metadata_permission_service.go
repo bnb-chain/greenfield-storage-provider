@@ -11,16 +11,16 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	chaintypes "github.com/bnb-chain/greenfield/types"
-	"github.com/bnb-chain/greenfield/types/resource"
-	gnfdresource "github.com/bnb-chain/greenfield/types/resource"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
-	"github.com/bnb-chain/greenfield/x/storage/keeper"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	chaintypes "github.com/evmos/evmos/v12/types"
+	"github.com/evmos/evmos/v12/types/resource"
+	gnfdresource "github.com/evmos/evmos/v12/types/resource"
+	"github.com/evmos/evmos/v12/types/s3util"
+	permtypes "github.com/evmos/evmos/v12/x/permission/types"
+	"github.com/evmos/evmos/v12/x/storage/keeper"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 // GfSpVerifyPermission Verify the input account’s permission to input items
@@ -221,7 +221,8 @@ func (r *MetadataModular) verifyGroup(ctx context.Context, req *types.GfSpVerify
 
 // VerifyBucketPermission verify bucket permission
 func (r *MetadataModular) VerifyBucketPermission(ctx context.Context, bucketInfo *bsdb.Bucket, operator sdk.AccAddress,
-	action permtypes.ActionType, options *permtypes.VerifyOptions) (permtypes.Effect, error) {
+	action permtypes.ActionType, options *permtypes.VerifyOptions,
+) (permtypes.Effect, error) {
 	var (
 		err    error
 		owner  sdk.AccAddress
@@ -259,7 +260,8 @@ func (r *MetadataModular) VerifyBucketPermission(ctx context.Context, bucketInfo
 
 // VerifyObjectPermission verify object permission
 func (r *MetadataModular) VerifyObjectPermission(ctx context.Context, bucketInfo *bsdb.Bucket, objectInfo *bsdb.Object,
-	operator sdk.AccAddress, action permtypes.ActionType) (permtypes.Effect, error) {
+	operator sdk.AccAddress, action permtypes.ActionType,
+) (permtypes.Effect, error) {
 	var (
 		visibility   bool
 		err          error
@@ -315,7 +317,8 @@ func (r *MetadataModular) VerifyObjectPermission(ctx context.Context, bucketInfo
 
 // VerifyGroupPermission verify group permission
 func (r *MetadataModular) VerifyGroupPermission(ctx context.Context, groupInfo *bsdb.Group, operator sdk.AccAddress,
-	action permtypes.ActionType) (permtypes.Effect, error) {
+	action permtypes.ActionType,
+) (permtypes.Effect, error) {
 	var (
 		err    error
 		effect permtypes.Effect
@@ -341,7 +344,8 @@ func (r *MetadataModular) VerifyGroupPermission(ctx context.Context, groupInfo *
 
 // VerifyPolicy verify policy of permission
 func (r *MetadataModular) VerifyPolicy(ctx context.Context, resourceID math.Uint, resourceType resource.ResourceType,
-	operator sdk.AccAddress, action permtypes.ActionType, opts *permtypes.VerifyOptions) (permtypes.Effect, error) {
+	operator sdk.AccAddress, action permtypes.ActionType, opts *permtypes.VerifyOptions,
+) (permtypes.Effect, error) {
 	var (
 		err                    error
 		allowed                bool
@@ -451,7 +455,7 @@ func (r *MetadataModular) GfSpListObjectPolicies(ctx context.Context, req *types
 
 	ctx = log.Context(ctx, req)
 	limit = int(req.Limit)
-	//if the user doesn't specify a limit, the default value is LisPoliciesDefaultLimit
+	// if the user doesn't specify a limit, the default value is LisPoliciesDefaultLimit
 	if req.Limit == 0 {
 		limit = bsdb.LisPoliciesDefaultLimit
 	}

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 type memoryStore struct {

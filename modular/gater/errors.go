@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 var (

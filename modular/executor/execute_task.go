@@ -12,15 +12,15 @@ import (
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 var (
@@ -424,7 +424,7 @@ func (e *ExecuteModular) recoverBySecondarySP(ctx context.Context, task coretask
 		return ErrRecoveryPieceNotEnough
 	}
 
-	var recoveryDataSources = make([][]byte, secondaryCount)
+	recoveryDataSources := make([][]byte, secondaryCount)
 	doneCh := make(chan bool, secondaryCount)
 	quitCh := make(chan bool)
 
@@ -555,7 +555,8 @@ loop:
 
 // getECPieceBySegment return the EC encodes data based on the redundancyIdx and the segment data
 func (e *ExecuteModular) getECPieceBySegment(ctx context.Context, redundancyIdx int32, objectInfo *storagetypes.ObjectInfo,
-	params *storagetypes.Params, recoverySegData []byte, segmentIdx uint32) ([]byte, error) {
+	params *storagetypes.Params, recoverySegData []byte, segmentIdx uint32,
+) ([]byte, error) {
 	dataShards := params.GetRedundantDataChunkNum()
 	parityShards := params.GetRedundantParityChunkNum()
 	if redundancyIdx < 0 || redundancyIdx > int32(dataShards+parityShards-1) {
@@ -598,7 +599,8 @@ func (e *ExecuteModular) checkRecoveryChecksum(ctx context.Context, task coretas
 }
 
 func (e *ExecuteModular) doRecoveryPiece(ctx context.Context, rTask coretask.RecoveryPieceTask, endpoint string) (
-	data []byte, err error) {
+	data []byte, err error,
+) {
 	var pieceData []byte
 	// timeout for single piece recover
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)

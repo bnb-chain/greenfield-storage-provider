@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	vgtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	vgtypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	"github.com/forbole/juno/v4/log"
 
 	"github.com/forbole/juno/v4/common"

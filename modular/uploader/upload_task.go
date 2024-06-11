@@ -12,16 +12,16 @@ import (
 	"github.com/avast/retry-go/v4"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/types"
 )
 
 var (
@@ -272,7 +272,8 @@ func (u *UploadModular) PreResumableUploadObject(ctx context.Context, task coret
 }
 
 func (u *UploadModular) HandleResumableUploadObjectTask(ctx context.Context, task coretask.ResumableUploadObjectTask,
-	stream io.Reader) error {
+	stream io.Reader,
+) error {
 	if err := u.resumeableUploadQueue.Push(task); err != nil {
 		log.CtxErrorw(ctx, "failed to push upload queue", "error", err)
 		return err

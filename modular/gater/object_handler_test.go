@@ -14,24 +14,24 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/downloader"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	metadatatypes "github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
 )
 
 func mockPutObjectHandlerRoute(t *testing.T, g *GateModular) *mux.Router {
@@ -113,9 +113,11 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -143,9 +145,11 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -173,9 +177,11 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil,
 					nil, mockErr).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -205,9 +211,11 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					nil, &storagetypes.ObjectInfo{}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -238,9 +246,11 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil,
@@ -274,9 +284,11 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
@@ -310,9 +322,11 @@ func TestGateModular_putObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
@@ -498,9 +512,11 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -529,9 +545,11 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -560,9 +578,11 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil,
 					nil, mockErr).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -593,9 +613,11 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					nil, &storagetypes.ObjectInfo{}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(nil, mockErr).Times(1)
@@ -627,9 +649,11 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{}, nil).Times(1)
@@ -661,13 +685,16 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: 100}, nil).Times(1)
+					MaxPayloadSize: 100,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -696,13 +723,16 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: 100}, nil).Times(1)
+					MaxPayloadSize: 100,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -731,13 +761,16 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: 100}, nil).Times(1)
+					MaxPayloadSize: 100,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -766,13 +799,16 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: 100}, nil).Times(1)
+					MaxPayloadSize: 100,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -802,13 +838,16 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: 100}, nil).Times(1)
+					MaxPayloadSize: 100,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -838,13 +877,16 @@ func TestGateModular_resumablePutObjectHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfoAndObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.BucketInfo{}, &storagetypes.ObjectInfo{PayloadSize: 10}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParams(gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: 100}, nil).Times(1)
+					MaxPayloadSize: 100,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -1029,7 +1071,8 @@ func TestGateModular_queryResumeOffsetHandlerHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					Id: sdkmath.NewUint(1)}, nil).Times(1)
+					Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -1060,7 +1103,8 @@ func TestGateModular_queryResumeOffsetHandlerHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					Id: sdkmath.NewUint(1)}, nil).Times(1)
+					Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{VersionedParams: storagetypes.VersionedParams{MaxSegmentSize: 10}}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -1156,7 +1200,6 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 		{
 			name: "failed to verify authentication for getting public object",
 			fn: func() *GateModular {
-
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
@@ -1185,7 +1228,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_DENY
+				a := permissiontypes.EFFECT_DENY
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -1209,7 +1252,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				c1 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_DENY
+				a := permissiontypes.EFFECT_DENY
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				c2 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
@@ -1237,7 +1280,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				c1 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_DENY
+				a := permissiontypes.EFFECT_DENY
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				c2 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
@@ -1267,7 +1310,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				c1 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_DENY
+				a := permissiontypes.EFFECT_DENY
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				c2 := clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
@@ -1297,7 +1340,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -1325,7 +1368,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -1355,7 +1398,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -1364,7 +1407,8 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{Id: sdkmath.NewUint(1)}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
@@ -1387,7 +1431,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -1396,7 +1440,8 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{Id: sdkmath.NewUint(1)}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -1421,7 +1466,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return(nil, mockErr).AnyTimes()
@@ -1434,7 +1479,8 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 						PayloadSize: 10,
 					}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -1464,7 +1510,7 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(1)
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -1477,7 +1523,8 @@ func TestGateModular_getObjectHandler(t *testing.T) {
 						PayloadSize: 10,
 					}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -2034,7 +2081,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PUBLIC_READ}},
 					nil).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // public file, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2052,7 +2099,8 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 						PayloadSize: 10,
 					}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -2086,7 +2134,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PUBLIC_READ}},
 					nil).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // public file, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2104,7 +2152,8 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 						PayloadSize: 10,
 					}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -2138,7 +2187,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PUBLIC_READ}},
 					nil).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // public file, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2156,7 +2205,8 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 						PayloadSize: 10,
 					}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -2190,7 +2240,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
 					nil).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // public file, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2231,7 +2281,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
 					nil).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2278,7 +2328,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
 					nil).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2325,7 +2375,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				clientMock.EXPECT().GetObjectMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					&metadatatypes.Object{ObjectInfo: &storagetypes.ObjectInfo{ObjectStatus: storagetypes.OBJECT_STATUS_SEALED, Visibility: storagetypes.VISIBILITY_TYPE_PRIVATE}},
 					nil).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2374,7 +2424,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 					nil).Times(1)
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, mockErr).Times(1)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2393,7 +2443,6 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				return g
 			},
 			request: func() *http.Request {
-
 				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				req.Header.Set("User-Agent", "Chrome")
@@ -2435,7 +2484,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 					nil).Times(1)
 				clientMock.EXPECT().VerifyAuthentication(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any()).Return(false, nil)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2454,7 +2503,6 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				return g
 			},
 			request: func() *http.Request {
-
 				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				req.Header.Set("User-Agent", "Chrome")
@@ -2489,7 +2537,7 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				var a = permissiontypes.EFFECT_ALLOW
+				a := permissiontypes.EFFECT_ALLOW
 				clientMock.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&a, nil).Times(0) // can't reach here, so no need to verify permission
 				clientMock.EXPECT().GetPiece(gomock.Any(), gomock.Any()).Return([]byte("a"), nil).AnyTimes()
@@ -2641,7 +2689,8 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 						PayloadSize: 10,
 					}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -2654,7 +2703,6 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				return g
 			},
 			request: func() *http.Request {
-
 				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				req.Header.Set("User-Agent", "Chrome")
@@ -2712,7 +2760,8 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 						PayloadSize: 10,
 					}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					Id: sdkmath.NewUint(2)}, nil).Times(1)
+					Id: sdkmath.NewUint(2),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -2725,7 +2774,6 @@ func TestGateModular_getObjectByUniversalEndpointHandler(t *testing.T) {
 				return g
 			},
 			request: func() *http.Request {
-
 				path := fmt.Sprintf("%s%s/view/%s/%s", scheme, testDomain, mockBucketName, mockObjectName)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				req.Header.Set("User-Agent", "Chrome")

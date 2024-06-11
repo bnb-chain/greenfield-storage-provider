@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
-var _ coretask.GCObjectTask = &GfSpGCObjectTask{}
-var _ coretask.GCZombiePieceTask = &GfSpGCZombiePieceTask{}
-var _ coretask.GCMetaTask = &GfSpGCMetaTask{}
+var (
+	_ coretask.GCObjectTask      = &GfSpGCObjectTask{}
+	_ coretask.GCZombiePieceTask = &GfSpGCZombiePieceTask{}
+	_ coretask.GCMetaTask        = &GfSpGCMetaTask{}
+)
 
 func (m *GfSpGCObjectTask) InitGCObjectTask(priority coretask.TPriority, start, end uint64, timeout int64) {
 	m.Reset()
@@ -315,7 +317,8 @@ func (m *GfSpGCStaleVersionObjectTask) InitGCStaleVersionObjectTask(priority cor
 	pieceChecksumList [][]byte,
 	version int64,
 	objectSize uint64,
-	timeout int64) {
+	timeout int64,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.SetObjectID(objectID)

@@ -7,19 +7,19 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield/types/resource"
-	payment_types "github.com/bnb-chain/greenfield/x/payment/types"
-	permission_types "github.com/bnb-chain/greenfield/x/permission/types"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/evmos/evmos/v12/types/resource"
+	payment_types "github.com/evmos/evmos/v12/x/payment/types"
+	permission_types "github.com/evmos/evmos/v12/x/permission/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 )
 
 // GfSpClientAPI for mock use

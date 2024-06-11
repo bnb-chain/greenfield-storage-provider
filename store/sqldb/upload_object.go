@@ -5,9 +5,9 @@ import (
 
 	"gorm.io/gorm"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 func (s *SpDBImpl) InsertUploadProgress(objectID uint64, isAgentUpload bool) error {

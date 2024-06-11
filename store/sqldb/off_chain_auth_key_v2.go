@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // InsertAuthKeyV2 insert a new record into OffChainAuthKeyV2

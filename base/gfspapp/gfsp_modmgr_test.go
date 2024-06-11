@@ -3,8 +3,8 @@ package gfspapp
 import (
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
 	"github.com/stretchr/testify/assert"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 func TestRegisterModularFailure1(t *testing.T) {

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
 	"github.com/stretchr/testify/assert"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 	"go.uber.org/mock/gomock"
 )
 

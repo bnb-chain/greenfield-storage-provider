@@ -6,14 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	corevgmgr "github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
+	corevgmgr "github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
 )
 
 func Test_addVirtualGroupFamily(t *testing.T) {
@@ -108,7 +108,8 @@ func Test_pickVirtualGroupFamilySuccess(t *testing.T) {
 		FamilyID: 1,
 	}
 	vgfm := &virtualGroupFamilyManager{vgfIDToVgf: map[uint32]*corevgmgr.VirtualGroupFamilyMeta{
-		1: {FamilyUsedStorageSize: 1, FamilyStakingStorageSize: 100, GVGMap: gvg}}}
+		1: {FamilyUsedStorageSize: 1, FamilyStakingStorageSize: 100, GVGMap: gvg},
+	}}
 	filter := corevgmgr.NewPickVGFFilter([]uint32{1, 2})
 	result, err := vgfm.pickVirtualGroupFamily(filter, corevgmgr.NewPickVGFByGVGFilter([]uint32{2, 3}), nil)
 	assert.Nil(t, err)

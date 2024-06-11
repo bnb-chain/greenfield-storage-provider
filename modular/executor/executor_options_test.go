@@ -3,9 +3,9 @@ package executor
 import (
 	"testing"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
 	"github.com/stretchr/testify/assert"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
 )
 
 func TestNewExecuteModular(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func (db *DB) SaveEventMigrationBucket(ctx context.Context, eventMigrationBucket *bsdb.EventMigrationBucket) (string, []interface{}) {
@@ -26,7 +26,6 @@ func (db *DB) SaveEventCompleteMigrationBucket(ctx context.Context, eventComplet
 func (db *DB) SaveEventCancelMigrationBucket(ctx context.Context, eventCancelMigrationBucket *bsdb.EventCancelMigrationBucket) (string, []interface{}) {
 	stat := db.Db.Session(&gorm.Session{DryRun: true}).Table((&bsdb.EventCancelMigrationBucket{}).TableName()).Create(eventCancelMigrationBucket).Statement
 	return stat.SQL.String(), stat.Vars
-
 }
 
 func (db *DB) SaveEventSwapOut(ctx context.Context, eventSwapOut *bsdb.EventSwapOut) (string, []interface{}) {

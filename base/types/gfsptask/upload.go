@@ -9,17 +9,19 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
-var _ coretask.UploadObjectTask = &GfSpUploadObjectTask{}
-var _ coretask.ResumableUploadObjectTask = &GfSpResumableUploadObjectTask{}
-var _ coretask.ReplicatePieceTask = &GfSpReplicatePieceTask{}
-var _ coretask.SealObjectTask = &GfSpSealObjectTask{}
-var _ coretask.ReceivePieceTask = &GfSpReceivePieceTask{}
+var (
+	_ coretask.UploadObjectTask          = &GfSpUploadObjectTask{}
+	_ coretask.ResumableUploadObjectTask = &GfSpResumableUploadObjectTask{}
+	_ coretask.ReplicatePieceTask        = &GfSpReplicatePieceTask{}
+	_ coretask.SealObjectTask            = &GfSpSealObjectTask{}
+	_ coretask.ReceivePieceTask          = &GfSpReceivePieceTask{}
+)
 
 func (m *GfSpUploadObjectTask) InitUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, timeout int64, isAgentUpload bool) {
 	m.Reset()
@@ -170,7 +172,8 @@ func (m *GfSpUploadObjectTask) SetStorageParams(param *storagetypes.Params) {
 }
 
 func (m *GfSpResumableUploadObjectTask) InitResumableUploadObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	timeout int64, complete bool, offset uint64, isAgentUpload bool) {
+	timeout int64, complete bool, offset uint64, isAgentUpload bool,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.VirtualGroupFamilyId = vgfID
@@ -333,7 +336,8 @@ func (m *GfSpResumableUploadObjectTask) SetStorageParams(param *storagetypes.Par
 }
 
 func (m *GfSpReplicatePieceTask) InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	priority coretask.TPriority, timeout int64, retry int64, isAgentUploadTask bool) {
+	priority coretask.TPriority, timeout int64, retry int64, isAgentUploadTask bool,
+) {
 	m.Reset()
 	m.IsAgentUploadTask = isAgentUploadTask
 	m.Task = &GfSpTask{}
@@ -521,7 +525,8 @@ func (m *GfSpReplicatePieceTask) GetIsAgentUpload() bool {
 }
 
 func (m *GfSpSealObjectTask) InitSealObjectTask(vgfID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params, priority coretask.TPriority,
-	endpoints []string, signatures [][]byte, timeout int64, retry int64, isAgentUpload bool) {
+	endpoints []string, signatures [][]byte, timeout int64, retry int64, isAgentUpload bool,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GlobalVirtualGroupId = vgfID
@@ -681,7 +686,8 @@ func (m *GfSpSealObjectTask) SetError(err error) {
 }
 
 func (m *GfSpReceivePieceTask) InitReceivePieceTask(gvgID uint32, object *storagetypes.ObjectInfo, params *storagetypes.Params,
-	priority coretask.TPriority, segmentIdx uint32, redundancyIdx int32, pieceSize int64, isAgentUpload bool) {
+	priority coretask.TPriority, segmentIdx uint32, redundancyIdx int32, pieceSize int64, isAgentUpload bool,
+) {
 	m.Reset()
 	m.Task = &GfSpTask{}
 	m.GlobalVirtualGroupId = gvgID

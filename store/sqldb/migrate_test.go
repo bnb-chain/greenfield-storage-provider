@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -321,7 +321,7 @@ func TestSpDBImpl_InsertSwapOutUnitFailure(t *testing.T) {
 }
 
 func TestSpDBImpl_UpdateSwapOutUnitCompletedGVGListSuccess(t *testing.T) {
-	var completedGVGList = []uint32{1, 2}
+	completedGVGList := []uint32{1, 2}
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE `swap_out_unit` SET `completed_gvg_list`=? WHERE swap_out_key = ? and is_dest_sp = 1").
@@ -333,7 +333,7 @@ func TestSpDBImpl_UpdateSwapOutUnitCompletedGVGListSuccess(t *testing.T) {
 
 func TestSpDBImpl_QuerySwapOutUnitInSrcSPSuccess(t *testing.T) {
 	s, mock := setupDB(t)
-	var completedGVGList = []uint32{1, 2}
+	completedGVGList := []uint32{1, 2}
 	msgSwapOut := &virtualgrouptypes.MsgSwapOut{
 		StorageProvider:            "0x1a2b3c4d5e67890654",
 		GlobalVirtualGroupFamilyId: 1,
@@ -425,7 +425,7 @@ func TestSpDBImpl_QuerySwapOutUnitInSrcSPFailure4(t *testing.T) {
 }
 
 func TestSpDBImpl_ListDestSPSwapOutUnitsSuccess(t *testing.T) {
-	var completedGVGList = []uint32{1, 2}
+	completedGVGList := []uint32{1, 2}
 	msgSwapOut := &virtualgrouptypes.MsgSwapOut{
 		StorageProvider:            "0x1a2b3c4d5e67890654",
 		GlobalVirtualGroupFamilyId: 1,
@@ -681,8 +681,10 @@ func TestSpDBImpl_QueryMigrateGVGUnitSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `migrate_gvg` WHERE migrate_key = ? ORDER BY `migrate_gvg`.`migrate_key` LIMIT 1").
-		WithArgs(migrateKey).WillReturnRows(sqlmock.NewRows([]string{"global_virtual_group_id", "dest_global_virtual_group_id",
-		"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status"}).
+		WithArgs(migrateKey).WillReturnRows(sqlmock.NewRows([]string{
+		"global_virtual_group_id", "dest_global_virtual_group_id",
+		"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status",
+	}).
 		AddRow(m.GlobalVirtualGroupID, m.DestGlobalVirtualGroupID, m.VirtualGroupFamilyID, m.RedundancyIndex, m.BucketID,
 			m.SrcSPID, m.DestSPID, m.LastMigratedObjectID, m.MigrateStatus))
 	result, err := s.QueryMigrateGVGUnit(migrateKey)
@@ -701,7 +703,7 @@ func TestSpDBImpl_QueryMigrateGVGUnitFailure(t *testing.T) {
 }
 
 func TestSpDBImpl_ListMigrateGVGUnitsByBucketIDSuccess(t *testing.T) {
-	var bucketID = uint64(4)
+	bucketID := uint64(4)
 	m := MigrateGVGTable{
 		MigrateKey:               "mock_migrate_key",
 		SwapOutKey:               "mock_swap_out_key",
@@ -717,8 +719,10 @@ func TestSpDBImpl_ListMigrateGVGUnitsByBucketIDSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `migrate_gvg` WHERE bucket_id = ?").WithArgs(bucketID).
-		WillReturnRows(sqlmock.NewRows([]string{"migrate_key", "swap_out_key", "global_virtual_group_id", "dest_global_virtual_group_id",
-			"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"migrate_key", "swap_out_key", "global_virtual_group_id", "dest_global_virtual_group_id",
+			"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status",
+		}).
 			AddRow(m.MigrateKey, m.SwapOutKey, m.GlobalVirtualGroupID, m.DestGlobalVirtualGroupID, m.VirtualGroupFamilyID, m.BucketID,
 				m.RedundancyIndex, m.SrcSPID, m.DestSPID, m.LastMigratedObjectID, m.MigrateStatus))
 	result, err := s.ListMigrateGVGUnitsByBucketID(bucketID)
@@ -728,7 +732,7 @@ func TestSpDBImpl_ListMigrateGVGUnitsByBucketIDSuccess(t *testing.T) {
 }
 
 func TestSpDBImpl_ListMigrateGVGUnitsByBucketIDFailure(t *testing.T) {
-	var bucketID = uint64(4)
+	bucketID := uint64(4)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `migrate_gvg` WHERE bucket_id = ?").WillReturnError(mockDBInternalError)
 	result, err := s.ListMigrateGVGUnitsByBucketID(bucketID)
@@ -737,7 +741,7 @@ func TestSpDBImpl_ListMigrateGVGUnitsByBucketIDFailure(t *testing.T) {
 }
 
 func TestSpDBImpl_DeleteMigrateGVGUnitsByBucketIDSuccess(t *testing.T) {
-	var bucketID = uint64(4)
+	bucketID := uint64(4)
 	m := MigrateGVGTable{
 		MigrateKey:               "mock_migrate_key",
 		SwapOutKey:               "mock_swap_out_key",
@@ -753,8 +757,10 @@ func TestSpDBImpl_DeleteMigrateGVGUnitsByBucketIDSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `migrate_gvg` WHERE bucket_id = ?").WithArgs(bucketID).
-		WillReturnRows(sqlmock.NewRows([]string{"migrate_key", "swap_out_key", "global_virtual_group_id", "dest_global_virtual_group_id",
-			"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"migrate_key", "swap_out_key", "global_virtual_group_id", "dest_global_virtual_group_id",
+			"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status",
+		}).
 			AddRow(m.MigrateKey, m.SwapOutKey, m.GlobalVirtualGroupID, m.DestGlobalVirtualGroupID, m.VirtualGroupFamilyID, m.BucketID,
 				m.RedundancyIndex, m.SrcSPID, m.DestSPID, m.LastMigratedObjectID, m.MigrateStatus))
 	mock.ExpectBegin()
@@ -766,7 +772,7 @@ func TestSpDBImpl_DeleteMigrateGVGUnitsByBucketIDSuccess(t *testing.T) {
 }
 
 func TestSpDBImpl_DeleteMigrateGVGUnitsByBucketIDFailure(t *testing.T) {
-	var bucketID = uint64(4)
+	bucketID := uint64(4)
 	m := MigrateGVGTable{
 		MigrateKey:               "mock_migrate_key",
 		SwapOutKey:               "mock_swap_out_key",
@@ -782,8 +788,10 @@ func TestSpDBImpl_DeleteMigrateGVGUnitsByBucketIDFailure(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `migrate_gvg` WHERE bucket_id = ?").WithArgs(bucketID).
-		WillReturnRows(sqlmock.NewRows([]string{"migrate_key", "swap_out_key", "global_virtual_group_id", "dest_global_virtual_group_id",
-			"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status"}).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"migrate_key", "swap_out_key", "global_virtual_group_id", "dest_global_virtual_group_id",
+			"virtual_group_family_id", "redundancy_index", "bucket_id", "src_sp_id", "dest_sp_id", "last_migrated_object_id", "migrate_status",
+		}).
 			AddRow(m.MigrateKey, m.SwapOutKey, m.GlobalVirtualGroupID, m.DestGlobalVirtualGroupID, m.VirtualGroupFamilyID, m.BucketID,
 				m.RedundancyIndex, m.SrcSPID, m.DestSPID, m.LastMigratedObjectID, m.MigrateStatus))
 	mock.ExpectBegin()

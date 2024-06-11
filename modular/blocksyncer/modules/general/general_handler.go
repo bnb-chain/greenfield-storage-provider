@@ -12,15 +12,13 @@ import (
 	"github.com/forbole/juno/v4/log"
 	"github.com/forbole/juno/v4/models"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/util"
-	"github.com/bnb-chain/greenfield/types"
-	"github.com/bnb-chain/greenfield/types/resource"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/types"
+	"github.com/evmos/evmos/v12/types/resource"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/util"
 )
 
-var (
-	EventSetTag = proto.MessageName(&storagetypes.EventSetTag{})
-)
+var EventSetTag = proto.MessageName(&storagetypes.EventSetTag{})
 
 var GeneralEvents = map[string]bool{
 	EventSetTag: true,
@@ -90,7 +88,7 @@ func (m *Module) handleSetTag(ctx context.Context, block *tmctypes.ResultBlock, 
 		return res
 	case resource.RESOURCE_TYPE_GROUP:
 		groupOwner, groupName, _ := grn.GetGroupOwnerAndAccount() // err will never happen here
-		//update group item
+		// update group item
 		groupItem := &models.Group{
 			Owner:      common.Address(groupOwner),
 			GroupName:  groupName,

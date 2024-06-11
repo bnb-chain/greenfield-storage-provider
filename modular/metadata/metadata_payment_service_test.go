@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func TestMetadataModular_GfSpGetPaymentByBucketName_Success(t *testing.T) {
@@ -117,7 +117,7 @@ func TestMetadataModular_GfSpListPaymentAccountStreams_Success(t *testing.T) {
 	m.EXPECT().ListPaymentAccountStreams(gomock.Any()).DoAndReturn(
 		func(common.Address) ([]*bsdb.Bucket, error) {
 			return []*bsdb.Bucket{
-				&bsdb.Bucket{
+				{
 					ID:                         848,
 					Owner:                      common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
 					Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -172,7 +172,7 @@ func TestMetadataModular_GfSpListUserPaymentAccounts_Success(t *testing.T) {
 	m.EXPECT().ListUserPaymentAccounts(gomock.Any()).DoAndReturn(
 		func(common.Address) ([]*bsdb.StreamRecordPaymentAccount, error) {
 			return []*bsdb.StreamRecordPaymentAccount{
-				&bsdb.StreamRecordPaymentAccount{
+				{
 					PaymentAccount: bsdb.PaymentAccount{
 						ID:         0,
 						Addr:       common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),

@@ -7,7 +7,7 @@ import (
 	"github.com/forbole/juno/v4/modules"
 	"gorm.io/gorm/schema"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/database"
 )
 
 const (

@@ -12,10 +12,10 @@ package task
 import (
 	reflect "reflect"
 
-	rcmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	types "github.com/bnb-chain/greenfield/x/sp/types"
-	types0 "github.com/bnb-chain/greenfield/x/storage/types"
-	types1 "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	rcmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	types "github.com/evmos/evmos/v12/x/sp/types"
+	types0 "github.com/evmos/evmos/v12/x/storage/types"
+	types1 "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -5218,6 +5218,20 @@ func (m *MockReceivePieceTask) GetGlobalVirtualGroupId() uint32 {
 func (mr *MockReceivePieceTaskMockRecorder) GetGlobalVirtualGroupId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalVirtualGroupId", reflect.TypeOf((*MockReceivePieceTask)(nil).GetGlobalVirtualGroupId))
+}
+
+// GetIsAgentUploadTask mocks base method.
+func (m *MockReceivePieceTask) GetIsAgentUploadTask() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIsAgentUploadTask")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetIsAgentUploadTask indicates an expected call of GetIsAgentUploadTask.
+func (mr *MockReceivePieceTaskMockRecorder) GetIsAgentUploadTask() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIsAgentUploadTask", reflect.TypeOf((*MockReceivePieceTask)(nil).GetIsAgentUploadTask))
 }
 
 // GetLogs mocks base method.

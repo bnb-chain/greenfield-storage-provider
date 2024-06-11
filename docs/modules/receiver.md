@@ -1,3 +1,7 @@
+---
+title: Receiver
+---
+
 # Receiver
 
 Receiver is responsible for accepting piece data that replicated from primary SP. When receiving piece data from primary SP, piece data is transferred from Gateway and then use gRPC to receiver module.
@@ -42,4 +46,4 @@ The corresponding `protobuf` definition is shown below:
 
 ## GfSp Framework Receiver Code
 
-Receiver module code implementation: [Receiver](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/receiver)
+Receiver module code implementation: [Receiver](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/receiver)

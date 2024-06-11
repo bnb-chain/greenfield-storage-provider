@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	utilgrpc "github.com/bnb-chain/greenfield-storage-provider/util/grpc"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	utilgrpc "github.com/zkMeLabs/mechain-storage-provider/util/grpc"
 )
 
 const (

@@ -19,23 +19,25 @@ import (
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
-var mockErr = errors.New("mock error")
-var TestSpAddress = "TestSpAddress"
-var TestUnsignedMsg = "I want to get approval from sp before creating the bucket."
+var (
+	mockErr         = errors.New("mock error")
+	TestSpAddress   = "TestSpAddress"
+	TestUnsignedMsg = "I want to get approval from sp before creating the bucket."
+)
 
 func setup(t *testing.T) *AuthenticationModular {
 	return &AuthenticationModular{baseApp: &gfspapp.GfSpBaseApp{}}
@@ -943,8 +945,8 @@ func Test_VerifyAuth_PutObject(t *testing.T) {
 	a.baseApp.SetConsensus(mockedConsensus)
 	verifyResult, _ = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
 	assert.Equal(t, true, verifyResult)
-
 }
+
 func Test_VerifyAuth_GetUploadingState(t *testing.T) {
 	authType := coremodule.AuthOpTypeGetUploadingState
 	VerifyObjectAndBucketAndSPID(t, authType)
@@ -1082,14 +1084,14 @@ func Test_VerifyAuth_GetObject(t *testing.T) {
 	resp := &storagetypes.QueryVerifyPermissionResponse{Effect: permissiontypes.EFFECT_ALLOW}
 	mockedSpClient.EXPECT().VerifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(permissiontypes.ACTION_GET_OBJECT)).DoAndReturn(
 		func(ctx context.Context, Operator string, bucketName string, objectName string,
-			actionType permissiontypes.ActionType, opts ...grpc.DialOption) (*permissiontypes.Effect, error) {
+			actionType permissiontypes.ActionType, opts ...grpc.DialOption,
+		) (*permissiontypes.Effect, error) {
 			return &resp.Effect, nil
 		},
 	).Times(1)
 
 	verifyResult, _ = a.VerifyAuthentication(context.Background(), coremodule.AuthOpTypeGetObject, userAddress, "test_bucket", "test_object")
 	assert.Equal(t, true, verifyResult)
-
 }
 
 func Test_VerifyAuth_RecoveryPiece(t *testing.T) {
@@ -1225,5 +1227,4 @@ func Test_VerifyAuth_RecoveryPiece(t *testing.T) {
 
 	verifyResult, _ = a.VerifyAuthentication(context.Background(), authType, userAddress, "test_bucket", "test_object")
 	assert.Equal(t, true, verifyResult)
-
 }

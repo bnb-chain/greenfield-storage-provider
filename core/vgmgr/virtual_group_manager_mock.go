@@ -12,8 +12,8 @@ package vgmgr
 import (
 	reflect "reflect"
 
-	types "github.com/bnb-chain/greenfield/x/sp/types"
-	types0 "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	types "github.com/evmos/evmos/v12/x/sp/types"
+	types0 "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	gomock "go.uber.org/mock/gomock"
 )
 

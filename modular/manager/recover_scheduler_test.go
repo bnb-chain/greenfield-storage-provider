@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	types0 "github.com/bnb-chain/greenfield/x/storage/types"
-	types1 "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	types0 "github.com/evmos/evmos/v12/x/storage/types"
+	types1 "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsptqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 )
 
 func TestManageModular_RecoverVGFScheduler(t *testing.T) {

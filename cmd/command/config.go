@@ -6,7 +6,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
 )
 
 const (

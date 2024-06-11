@@ -5,16 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
-var (
-	ErrSingTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 991001, "OoooH... request lost")
-)
+var ErrSingTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 991001, "OoooH... request lost")
 
 var _ gfspserver.GfSpSignServiceServer = &GfSpBaseApp{}
 

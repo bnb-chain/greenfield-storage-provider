@@ -29,14 +29,14 @@ import (
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm/schema"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	db "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
-	registrar "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	db "github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/database"
+	registrar "github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig) (coremodule.Modular, error) {
@@ -129,7 +129,7 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 	if cfg.BlockSyncer.CommitNumber != 0 {
 		commitNumber = cfg.BlockSyncer.CommitNumber
 	}
-	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Marshaler,
+	b.parserCtx.Indexer = NewIndexer(ctx.EncodingConfig.Codec,
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,
@@ -139,7 +139,6 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 
 // initDB create tables needed by block syncer. It depends on which modules are configured
 func (b *BlockSyncerModular) initDB(useMigrate bool) error {
-
 	var err error
 	for _, module := range b.parserCtx.Modules {
 		if module, ok := module.(modules.PrepareTablesModule); ok {

@@ -17,13 +17,13 @@ import (
 	"go.uber.org/mock/gomock"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
 )
 
 func mockGetApprovalRoute(t *testing.T, g *GateModular) *mux.Router {
@@ -122,7 +122,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_JAILED}, nil).Times(1)
+					Status: sptypes.STATUS_IN_JAILED,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -149,7 +150,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -176,7 +178,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -198,7 +201,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
@@ -227,7 +231,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
@@ -256,7 +261,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
@@ -287,7 +293,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
@@ -318,7 +325,8 @@ func TestGateModular_getApprovalHandlerCreateBucketApproval(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
@@ -635,9 +643,11 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_DISCONTINUED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_DISCONTINUED,
+				}, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
 			},
@@ -667,9 +677,11 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				return g
 			},
 			request: func() *http.Request {
@@ -698,9 +710,11 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				return g
 			},
 			request: func() *http.Request {
@@ -731,9 +745,11 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				return g
 			},
 			request: func() *http.Request {
@@ -764,9 +780,11 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				return g
 			},
 			request: func() *http.Request {
@@ -801,9 +819,11 @@ func TestGateModular_getApprovalHandlerCreateObjectApproval(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				return g
 			},
 			request: func() *http.Request {
@@ -1065,7 +1085,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -1097,7 +1118,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -1130,7 +1152,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil, mockErr)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
@@ -1166,7 +1189,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -1207,7 +1231,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -1431,7 +1456,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -1463,7 +1489,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -1496,7 +1523,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil, mockErr)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
@@ -1532,7 +1560,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -1573,7 +1602,8 @@ func TestGateModular_getChallengeInfoHandler(t *testing.T) {
 				consensusMock.EXPECT().QueryObjectInfoByID(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.ObjectInfo{ObjectName: mockObjectName}, nil).Times(1)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				consensusMock.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(
 					&storagetypes.Params{MaxPayloadSize: 10}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -2114,7 +2144,8 @@ func TestGateModular_getRecoverSegment(t *testing.T) {
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(
 					&virtualgrouptypes.GlobalVirtualGroupFamily{PrimarySpId: 1}, nil).Times(1)
 				consensusMock.EXPECT().QuerySPByID(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Id: 1, OperatorAddress: "a"}, nil).Times(1)
+					Id: 1, OperatorAddress: "a",
+				}, nil).Times(1)
 
 				g.baseApp.SetConsensus(consensusMock)
 

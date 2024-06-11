@@ -2,18 +2,18 @@ name: Docker-CI
 
 on:
   push:
-    branches: [ develop, master]
+    branches: [develop, master]
 
 env:
   IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider-invisible
-  IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
+  IMAGE_SOURCE: https://github.com/zkMeLabs/mechain-storage-provider
 
 jobs:
   # Push image to GitHub Packages.
   push:
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push'
 
@@ -41,7 +41,7 @@ jobs:
           --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
           --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
           -f ./Dockerfile -t "${IMAGE_NAME}"
-          
+
           docker build . \
           --build-arg "GH_TOKEN=${{ secrets.GH_SECRET }}" \
           --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \

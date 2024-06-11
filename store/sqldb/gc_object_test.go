@@ -6,7 +6,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 const (
@@ -115,8 +115,10 @@ func TestSpDBImpl_GetGCMetasToGCSuccess(t *testing.T) {
 	}
 	s, mock := setupDB(t)
 	mock.ExpectQuery(mockGCObjectProgressQuerySQL).
-		WillReturnRows(sqlmock.NewRows([]string{"task_key", "start_gc_block_id", "end_gc_block_id", "current_gc_block_id",
-			"last_deleted_object_id", "create_timestamp_second", "update_timestamp_second"}).AddRow(gcMeta1.TaskKey, gcMeta1.StartGCBlockID,
+		WillReturnRows(sqlmock.NewRows([]string{
+			"task_key", "start_gc_block_id", "end_gc_block_id", "current_gc_block_id",
+			"last_deleted_object_id", "create_timestamp_second", "update_timestamp_second",
+		}).AddRow(gcMeta1.TaskKey, gcMeta1.StartGCBlockID,
 			gcMeta1.EndGCBlockID, gcMeta1.CurrentGCBlockID, gcMeta1.LastDeletedObjectID, gcMeta1.CreateTimestampSecond, gcMeta1.UpdateTimestampSecond))
 	limit := 1
 	data, err := s.GetGCMetasToGC(limit)

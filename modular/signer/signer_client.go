@@ -13,15 +13,15 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield/sdk/client"
-	"github.com/bnb-chain/greenfield/sdk/keys"
-	ctypes "github.com/bnb-chain/greenfield/sdk/types"
-	"github.com/bnb-chain/greenfield/types"
-	"github.com/bnb-chain/greenfield/types/common"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	"github.com/evmos/evmos/v12/sdk/client"
+	"github.com/evmos/evmos/v12/sdk/keys"
+	ctypes "github.com/evmos/evmos/v12/sdk/types"
+	"github.com/evmos/evmos/v12/types"
+	"github.com/evmos/evmos/v12/types/common"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // SignType is the type of msg signature
@@ -81,7 +81,8 @@ type GreenfieldChainSignClient struct {
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
 func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
-	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, blsPrivKey string) (*GreenfieldChainSignClient, error) {
+	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, blsPrivKey string,
+) (*GreenfieldChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -196,7 +197,8 @@ func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, si
 
 // SealObject seal the object on the greenfield chain.
 func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType,
-	sealObject *storagetypes.MsgSealObject) (string, error) {
+	sealObject *storagetypes.MsgSealObject,
+) (string, error) {
 	if sealObject == nil {
 		log.CtxError(ctx, "failed to seal object due to pointer dangling")
 		return "", ErrDanglingPointer
@@ -261,7 +263,8 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 
 // RejectUnSealObject reject seal object on the greenfield chain.
 func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context, scope SignType,
-	rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
+	rejectObject *storagetypes.MsgRejectSealObject,
+) (string, error) {
 	if rejectObject == nil {
 		log.CtxError(ctx, "failed to reject unseal object due to pointer dangling")
 		return "", ErrDanglingPointer
@@ -366,7 +369,8 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 }
 
 func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType,
-	gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
+	gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup,
+) (string, error) {
 	log.Infow("signer starts to create a new global virtual group", "scope", scope)
 	if gvg == nil {
 		log.CtxError(ctx, "failed to create virtual group due to pointer dangling")
@@ -427,7 +431,8 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 }
 
 func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Context, scope SignType,
-	migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	migrateBucket *storagetypes.MsgCompleteMigrateBucket,
+) (string, error) {
 	log.Infow("signer starts to complete migrate bucket", "scope", scope)
 	if migrateBucket == nil {
 		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
@@ -484,7 +489,8 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 }
 
 func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scope SignType,
-	priceInfo *sptypes.MsgUpdateSpStoragePrice) (string, error) {
+	priceInfo *sptypes.MsgUpdateSpStoragePrice,
+) (string, error) {
 	log.Infow("signer starts to complete update SP price info", "scope", scope)
 	if priceInfo == nil {
 		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
@@ -539,7 +545,8 @@ func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scop
 }
 
 func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope SignType,
-	swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	swapOut *virtualgrouptypes.MsgSwapOut,
+) (string, error) {
 	log.Infow("signer starts to swap out", "scope", scope)
 	if swapOut == nil {
 		log.CtxError(ctx, "failed to swap out due to pointer dangling")
@@ -603,7 +610,8 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 }
 
 func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, scope SignType,
-	completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
+	completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut,
+) (string, error) {
 	log.Infow("signer starts to complete swap out", "scope", scope)
 	if completeSwapOut == nil {
 		log.CtxError(ctx, "complete swap out msg pointer dangling")
@@ -661,7 +669,8 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 }
 
 func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignType,
-	spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	spExit *virtualgrouptypes.MsgStorageProviderExit,
+) (string, error) {
 	log.Infow("signer starts to sp exit", "scope", scope)
 	if spExit == nil {
 		log.CtxError(ctx, "sp exit msg pointer dangling")
@@ -718,7 +727,8 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 }
 
 func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, scope SignType,
-	completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit,
+) (string, error) {
 	log.Infow("signer starts to complete sp exit", "scope", scope)
 	if completeSPExit == nil {
 		log.CtxError(ctx, "complete sp exit msg pointer dangling")
@@ -773,7 +783,8 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 }
 
 func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context, scope SignType,
-	msg *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	msg *storagetypes.MsgRejectMigrateBucket,
+) (string, error) {
 	log.Infow("signer starts to reject migrate bucket", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "reject migrate bucket msg pointer dangling")
@@ -826,7 +837,8 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context
 }
 
 func (client *GreenfieldChainSignClient) Deposit(ctx context.Context, scope SignType,
-	msg *virtualgrouptypes.MsgDeposit) (string, error) {
+	msg *virtualgrouptypes.MsgDeposit,
+) (string, error) {
 	log.Infow("signer starts to make deposit into GVG", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "deposit msg pointer dangling")
@@ -879,7 +891,8 @@ func (client *GreenfieldChainSignClient) Deposit(ctx context.Context, scope Sign
 }
 
 func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Context, scope SignType,
-	msg *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
+	msg *virtualgrouptypes.MsgDeleteGlobalVirtualGroup,
+) (string, error) {
 	log.Infow("signer starts to delete GVG", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "delete GVG msg pointer dangling")
@@ -932,7 +945,8 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 }
 
 func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Context, scope SignType,
-	msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	msg *storagetypes.MsgDelegateCreateObject,
+) (string, error) {
 	if msg == nil {
 		log.CtxError(ctx, "delegate create object msg pointer dangling")
 		return "", ErrDanglingPointer
@@ -983,7 +997,8 @@ func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Contex
 }
 
 func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context.Context, scope SignType,
-	msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
+	msg *storagetypes.MsgDelegateUpdateObjectContent,
+) (string, error) {
 	if msg == nil {
 		log.CtxError(ctx, "delegate update object content msg pointer dangling")
 		return "", ErrDanglingPointer
@@ -1048,7 +1063,8 @@ func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gn
 }
 
 func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdClient *client.GreenfieldClient,
-	msgs []sdk.Msg, txOpt *ctypes.TxOption, opts ...grpc.CallOption) (string, error) {
+	msgs []sdk.Msg, txOpt *ctypes.TxOption, opts ...grpc.CallOption,
+) (string, error) {
 	resp, err := gnfdClient.BroadcastTx(ctx, msgs, txOpt, opts...)
 	if err != nil {
 		if strings.Contains(err.Error(), "account sequence mismatch") {
@@ -1066,7 +1082,8 @@ func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdCl
 }
 
 func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scope SignType,
-	msg *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	msg *virtualgrouptypes.MsgReserveSwapIn,
+) (string, error) {
 	log.Infow("signer starts to reserve swap in", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "reserve swap in msg pointer dangling")
@@ -1119,7 +1136,8 @@ func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scop
 }
 
 func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, scope SignType,
-	msg *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	msg *virtualgrouptypes.MsgCompleteSwapIn,
+) (string, error) {
 	log.Infow("signer starts to complete swap in", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "complete swap in msg pointer dangling")
@@ -1172,7 +1190,8 @@ func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, sco
 }
 
 func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope SignType,
-	msg *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	msg *virtualgrouptypes.MsgCancelSwapIn,
+) (string, error) {
 	log.Infow("signer starts to cancel swap in", "scope", scope)
 	if msg == nil {
 		log.CtxError(ctx, "cancel swap in msg pointer dangling")
@@ -1226,7 +1245,8 @@ func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope
 
 // SealObjectV2 seal the object on the greenfield chain.
 func (client *GreenfieldChainSignClient) SealObjectV2(ctx context.Context, scope SignType,
-	sealObject *storagetypes.MsgSealObjectV2) (string, error) {
+	sealObject *storagetypes.MsgSealObjectV2,
+) (string, error) {
 	if sealObject == nil {
 		log.CtxError(ctx, "failed to seal object due to pointer dangling")
 		return "", ErrDanglingPointer

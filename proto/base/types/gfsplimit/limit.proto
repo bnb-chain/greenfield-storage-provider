@@ -1,7 +1,7 @@
 syntax = "proto3";
 package base.types.gfsplimit;
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit";
+option go_package = "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit";
 
 message GfSpLimit {
   int64 memory = 1;

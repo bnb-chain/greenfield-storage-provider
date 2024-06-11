@@ -9,15 +9,15 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/config"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
 )
 
 func TestDefaultStaticOption(t *testing.T) {
@@ -264,9 +264,12 @@ func TestDefaultGfSpModuleOptionSuccess(t *testing.T) {
 	mockRegisterModular(t)
 	defer ClearRegisterModules()
 	cfg := &gfspconfig.GfSpConfig{
-		Server: []string{module.ApprovalModularName, module.AuthenticationModularName, module.DownloadModularName,
+		Server: []string{
+			module.ApprovalModularName, module.AuthenticationModularName, module.DownloadModularName,
 			module.GateModularName, module.ManageModularName, module.P2PModularName, module.ReceiveModularName,
-			module.SignModularName, module.UploadModularName, module.ExecuteModularName, module.GateModularName}}
+			module.SignModularName, module.UploadModularName, module.ExecuteModularName, module.GateModularName,
+		},
+	}
 	err := DefaultGfSpModuleOption(g, cfg)
 	assert.Nil(t, err)
 }

@@ -22,9 +22,9 @@ import (
 	"github.com/forbole/juno/v4/types"
 	"gorm.io/gorm"
 
-	localDB "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/database"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	localDB "github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/database"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 func NewIndexer(codec codec.Codec, proxy node.Node, db database.Database, modules []modules.Module, serviceName string, commitNumber uint64) parser.Indexer {
@@ -401,11 +401,9 @@ func (i *Impl) GetLastBlockRecordHeight(ctx context.Context) (uint64, error) {
 
 func (i *Impl) GetLatestBlockHeight() *atomic.Value {
 	return &(i.LatestBlockHeight)
-
 }
 
 func (i *Impl) CreateMasterTable() error {
-
 	return nil
 }
 

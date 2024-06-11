@@ -9,10 +9,10 @@ import (
 	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 )
 
 func TestMetadataModular_GfSpQueryUploadProgress_Success(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 
-	metricshttp "github.com/bnb-chain/greenfield-storage-provider/pkg/metrics/http"
+	metricshttp "github.com/zkMeLabs/mechain-storage-provider/pkg/metrics/http"
 )
 
 var MetricsItems = []prometheus.Collector{
@@ -312,20 +312,16 @@ var (
 	})
 )
 
-var (
-	MetadataReqTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "metadata_request_time",
-		Help:    "Track the metadata request time.",
-		Buckets: prometheus.DefBuckets,
-	}, []string{"status", "level", "method_name", "code_or_msg"})
-)
+var MetadataReqTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name:    "metadata_request_time",
+	Help:    "Track the metadata request time.",
+	Buckets: prometheus.DefBuckets,
+}, []string{"status", "level", "method_name", "code_or_msg"})
 
-var (
-	GoRoutineCount = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "go_routine_count",
-		Help: "Track the current go routine count. ",
-	})
-)
+var GoRoutineCount = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "go_routine_count",
+	Help: "Track the current go routine count. ",
+})
 
 // SP exit and bucket migration metrics
 var (

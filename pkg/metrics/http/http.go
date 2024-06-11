@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 const (

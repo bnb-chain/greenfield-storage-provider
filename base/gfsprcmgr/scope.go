@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"sync"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
-var _ corercmgr.ResourceScope = &resourceScope{}
-var _ corercmgr.ResourceScopeSpan = &resourceScope{}
+var (
+	_ corercmgr.ResourceScope     = &resourceScope{}
+	_ corercmgr.ResourceScopeSpan = &resourceScope{}
+)
 
 // A resourceScope can be a DAG, where a downstream node is not allowed to outlive an upstream node
 // (ie cannot call Done in the upstream node before the downstream node) and account for resources

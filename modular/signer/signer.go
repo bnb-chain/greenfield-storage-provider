@@ -7,17 +7,17 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 var (
@@ -63,7 +63,8 @@ func (s *SignModular) Stop(ctx context.Context) error {
 }
 
 func (s *SignModular) ReserveResource(ctx context.Context, state *rcmgr.ScopeStat) (
-	rcmgr.ResourceScopeSpan, error) {
+	rcmgr.ResourceScopeSpan, error,
+) {
 	return &rcmgr.NullScope{}, nil
 }
 
@@ -127,7 +128,8 @@ func (s *SignModular) SignSecondarySealBls(ctx context.Context, objectID uint64,
 }
 
 func (s *SignModular) SignRecoveryPieceTask(ctx context.Context, task task.RecoveryPieceTask) (
-	[]byte, error) {
+	[]byte, error,
+) {
 	msg := task.GetSignBytes()
 	sig, err := s.client.Sign(SignOperator, msg)
 	if err != nil {
@@ -253,6 +255,7 @@ func (s *SignModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.Ms
 func (s *SignModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
 	return s.client.DeleteGlobalVirtualGroup(ctx, SignOperator, deleteGVG)
 }
+
 func (s *SignModular) DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
 	return s.client.DelegateUpdateObjectContent(ctx, SignOperator, msg)
 }

@@ -14,10 +14,10 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/test/bufconn"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
 )
 
 const (
@@ -88,7 +88,8 @@ func bufDialer(ctx context.Context, address string) (net.Conn, error) {
 type mockApproverServer struct{}
 
 func (*mockApproverServer) GfSpAskApproval(ctx context.Context, req *gfspserver.GfSpAskApprovalRequest) (
-	*gfspserver.GfSpAskApprovalResponse, error) {
+	*gfspserver.GfSpAskApprovalResponse, error,
+) {
 	switch req.Request.(type) {
 	case *gfspserver.GfSpAskApprovalRequest_CreateBucketApprovalTask:
 		if req.GetCreateBucketApprovalTask().GetCreateBucketInfo().GetBucketName() == mockBucketName1 {
@@ -102,7 +103,8 @@ func (*mockApproverServer) GfSpAskApproval(ctx context.Context, req *gfspserver.
 					CreateBucketApprovalTask: &gfsptask.GfSpCreateBucketApprovalTask{
 						Task:             &gfsptask.GfSpTask{},
 						CreateBucketInfo: &storagetypes.MsgCreateBucket{BucketName: mockBucketName3},
-					}},
+					},
+				},
 			}, nil
 		}
 	case *gfspserver.GfSpAskApprovalRequest_MigrateBucketApprovalTask:
@@ -117,7 +119,8 @@ func (*mockApproverServer) GfSpAskApproval(ctx context.Context, req *gfspserver.
 					MigrateBucketApprovalTask: &gfsptask.GfSpMigrateBucketApprovalTask{
 						Task:              &gfsptask.GfSpTask{},
 						MigrateBucketInfo: &storagetypes.MsgMigrateBucket{BucketName: mockBucketName3},
-					}},
+					},
+				},
 			}, nil
 		}
 	case *gfspserver.GfSpAskApprovalRequest_CreateObjectApprovalTask:
@@ -135,7 +138,8 @@ func (*mockApproverServer) GfSpAskApproval(ctx context.Context, req *gfspserver.
 							BucketName: mockBucketName3,
 							ObjectName: mockObjectName3,
 						},
-					}},
+					},
+				},
 			}, nil
 		}
 	default:
@@ -196,7 +200,8 @@ func (s mockAuthenticatorServer) VerifyGNFD2EddsaSignature(ctx context.Context, 
 }
 
 func (mockAuthenticatorServer) GfSpVerifyAuthentication(ctx context.Context, req *gfspserver.GfSpAuthenticationRequest) (
-	*gfspserver.GfSpAuthenticationResponse, error) {
+	*gfspserver.GfSpAuthenticationResponse, error,
+) {
 	if req.GetAuthType() == int32(coremodule.AuthOpAskMigrateBucketApproval) {
 		return nil, mockRPCErr
 	} else if req.GetAuthType() == int32(coremodule.AuthOpAskCreateObjectApproval) {
@@ -207,7 +212,8 @@ func (mockAuthenticatorServer) GfSpVerifyAuthentication(ctx context.Context, req
 }
 
 func (mockAuthenticatorServer) GetAuthNonce(ctx context.Context, req *gfspserver.GetAuthNonceRequest) (
-	*gfspserver.GetAuthNonceResponse, error) {
+	*gfspserver.GetAuthNonceResponse, error,
+) {
 	if req.GetAccountId() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetAccountId() == mockObjectName2 {
@@ -218,7 +224,8 @@ func (mockAuthenticatorServer) GetAuthNonce(ctx context.Context, req *gfspserver
 }
 
 func (mockAuthenticatorServer) UpdateUserPublicKey(ctx context.Context, req *gfspserver.UpdateUserPublicKeyRequest) (
-	*gfspserver.UpdateUserPublicKeyResponse, error) {
+	*gfspserver.UpdateUserPublicKeyResponse, error,
+) {
 	if req.GetAccountId() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetAccountId() == mockObjectName2 {
@@ -229,7 +236,8 @@ func (mockAuthenticatorServer) UpdateUserPublicKey(ctx context.Context, req *gfs
 }
 
 func (mockAuthenticatorServer) VerifyGNFD1EddsaSignature(ctx context.Context, req *gfspserver.VerifyGNFD1EddsaSignatureRequest) (
-	*gfspserver.VerifyGNFD1EddsaSignatureResponse, error) {
+	*gfspserver.VerifyGNFD1EddsaSignatureResponse, error,
+) {
 	if req.GetAccountId() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetAccountId() == mockObjectName2 {
@@ -242,7 +250,8 @@ func (mockAuthenticatorServer) VerifyGNFD1EddsaSignature(ctx context.Context, re
 type mockDownloaderServer struct{}
 
 func (mockDownloaderServer) GfSpDownloadObject(ctx context.Context, req *gfspserver.GfSpDownloadObjectRequest) (
-	*gfspserver.GfSpDownloadObjectResponse, error) {
+	*gfspserver.GfSpDownloadObjectResponse, error,
+) {
 	if req.GetDownloadObjectTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetDownloadObjectTask().GetObjectInfo().GetObjectName() == mockObjectName2 {
@@ -253,7 +262,8 @@ func (mockDownloaderServer) GfSpDownloadObject(ctx context.Context, req *gfspser
 }
 
 func (mockDownloaderServer) GfSpDownloadPiece(ctx context.Context, req *gfspserver.GfSpDownloadPieceRequest) (
-	*gfspserver.GfSpDownloadPieceResponse, error) {
+	*gfspserver.GfSpDownloadPieceResponse, error,
+) {
 	if req.GetDownloadPieceTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetDownloadPieceTask().GetObjectInfo().GetObjectName() == mockObjectName2 {
@@ -264,7 +274,8 @@ func (mockDownloaderServer) GfSpDownloadPiece(ctx context.Context, req *gfspserv
 }
 
 func (mockDownloaderServer) GfSpGetChallengeInfo(ctx context.Context, req *gfspserver.GfSpGetChallengeInfoRequest) (
-	*gfspserver.GfSpGetChallengeInfoResponse, error) {
+	*gfspserver.GfSpGetChallengeInfoResponse, error,
+) {
 	if req.GetChallengePieceTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetChallengePieceTask().GetObjectInfo().GetObjectName() == mockObjectName2 {
@@ -275,12 +286,14 @@ func (mockDownloaderServer) GfSpGetChallengeInfo(ctx context.Context, req *gfsps
 }
 
 func (mockDownloaderServer) GfSpReimburseQuota(ctx context.Context, req *gfspserver.GfSpReimburseQuotaRequest) (
-	*gfspserver.GfSpReimburseQuotaResponse, error) {
+	*gfspserver.GfSpReimburseQuotaResponse, error,
+) {
 	return &gfspserver.GfSpReimburseQuotaResponse{Err: ErrExceptionsStream}, nil
 }
 
 func (mockDownloaderServer) GfSpDeductQuotaForBucketMigrate(ctx context.Context, fixRequest *gfspserver.GfSpDeductQuotaForBucketMigrateRequest) (
-	*gfspserver.GfSpDeductQuotaForBucketMigrateResponse, error) {
+	*gfspserver.GfSpDeductQuotaForBucketMigrateResponse, error,
+) {
 	return &gfspserver.GfSpDeductQuotaForBucketMigrateResponse{Err: ErrExceptionsStream}, nil
 }
 
@@ -295,7 +308,8 @@ func (s mockManagerServer) GfSpQueryRecoverProcess(ctx context.Context, request 
 }
 
 func (mockManagerServer) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSpBeginTaskRequest) (
-	*gfspserver.GfSpBeginTaskResponse, error) {
+	*gfspserver.GfSpBeginTaskResponse, error,
+) {
 	switch req.Request.(type) {
 	case *gfspserver.GfSpBeginTaskRequest_UploadObjectTask:
 		if req.GetUploadObjectTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
@@ -319,7 +333,8 @@ func (mockManagerServer) GfSpBeginTask(ctx context.Context, req *gfspserver.GfSp
 }
 
 func (mockManagerServer) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAskTaskRequest) (
-	*gfspserver.GfSpAskTaskResponse, error) {
+	*gfspserver.GfSpAskTaskResponse, error,
+) {
 	switch req.GetNodeLimit().GetMemoryLimit() {
 	case -2:
 		return nil, mockRPCErr
@@ -365,7 +380,8 @@ func (mockManagerServer) GfSpAskTask(ctx context.Context, req *gfspserver.GfSpAs
 }
 
 func (mockManagerServer) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpReportTaskRequest) (
-	*gfspserver.GfSpReportTaskResponse, error) {
+	*gfspserver.GfSpReportTaskResponse, error,
+) {
 	if req.GetUploadObjectTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetUploadObjectTask().GetObjectInfo().GetObjectName() == mockObjectName2 {
@@ -376,7 +392,8 @@ func (mockManagerServer) GfSpReportTask(ctx context.Context, req *gfspserver.GfS
 }
 
 func (mockManagerServer) GfSpPickVirtualGroupFamily(ctx context.Context, req *gfspserver.GfSpPickVirtualGroupFamilyRequest) (
-	*gfspserver.GfSpPickVirtualGroupFamilyResponse, error) {
+	*gfspserver.GfSpPickVirtualGroupFamilyResponse, error,
+) {
 	if req.GetCreateBucketApprovalTask().GetCreateBucketInfo().GetBucketName() == mockBucketName1 {
 		return nil, mockRPCErr
 	} else if req.GetCreateBucketApprovalTask().GetCreateBucketInfo().GetBucketName() == mockBucketName2 {
@@ -387,7 +404,8 @@ func (mockManagerServer) GfSpPickVirtualGroupFamily(ctx context.Context, req *gf
 }
 
 func (mockManagerServer) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspserver.GfSpNotifyMigrateSwapOutRequest) (
-	*gfspserver.GfSpNotifyMigrateSwapOutResponse, error) {
+	*gfspserver.GfSpNotifyMigrateSwapOutResponse, error,
+) {
 	if req.GetSwapOut().GlobalVirtualGroupFamilyId == 0 {
 		return nil, mockRPCErr
 	} else if req.GetSwapOut().GlobalVirtualGroupFamilyId == 1 {
@@ -441,7 +459,8 @@ func (s mockManagerServer) GfSpResetRecoveryFailedList(ctx context.Context, req 
 type mockP2PServer struct{}
 
 func (mockP2PServer) GfSpAskSecondaryReplicatePieceApproval(ctx context.Context, req *gfspserver.GfSpAskSecondaryReplicatePieceApprovalRequest) (
-	*gfspserver.GfSpAskSecondaryReplicatePieceApprovalResponse, error) {
+	*gfspserver.GfSpAskSecondaryReplicatePieceApprovalResponse, error,
+) {
 	if req.GetMin() == -2 {
 		return nil, mockRPCErr
 	} else if req.GetMin() == -1 {
@@ -480,7 +499,8 @@ func (mockP2PServer) GfSpQueryP2PBootstrap(ctx context.Context, req *gfspserver.
 type mockQueryServer struct{}
 
 func (mockQueryServer) GfSpQueryTasks(ctx context.Context, req *gfspserver.GfSpQueryTasksRequest) (
-	*gfspserver.GfSpQueryTasksResponse, error) {
+	*gfspserver.GfSpQueryTasksResponse, error,
+) {
 	if req.GetTaskSubKey() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetTaskSubKey() == mockObjectName2 {
@@ -491,7 +511,8 @@ func (mockQueryServer) GfSpQueryTasks(ctx context.Context, req *gfspserver.GfSpQ
 }
 
 func (mockQueryServer) GfSpQueryBucketMigrate(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrateRequest) (
-	*gfspserver.GfSpQueryBucketMigrateResponse, error) {
+	*gfspserver.GfSpQueryBucketMigrateResponse, error,
+) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		log.Println("failed to get metadata")
@@ -511,7 +532,8 @@ func (mockQueryServer) GfSpQueryBucketMigrate(ctx context.Context, req *gfspserv
 }
 
 func (mockQueryServer) GfSpQuerySpExit(ctx context.Context, req *gfspserver.GfSpQuerySpExitRequest) (
-	*gfspserver.GfSpQuerySpExitResponse, error) {
+	*gfspserver.GfSpQuerySpExitResponse, error,
+) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		log.Println("failed to get metadata")
@@ -533,7 +555,8 @@ func (mockQueryServer) GfSpQuerySpExit(ctx context.Context, req *gfspserver.GfSp
 type mockReceiverServer struct{}
 
 func (mockReceiverServer) GfSpReplicatePiece(ctx context.Context, req *gfspserver.GfSpReplicatePieceRequest) (
-	*gfspserver.GfSpReplicatePieceResponse, error) {
+	*gfspserver.GfSpReplicatePieceResponse, error,
+) {
 	if req.GetReceivePieceTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetReceivePieceTask().GetObjectInfo().GetObjectName() == mockObjectName2 {
@@ -544,7 +567,8 @@ func (mockReceiverServer) GfSpReplicatePiece(ctx context.Context, req *gfspserve
 }
 
 func (mockReceiverServer) GfSpDoneReplicatePiece(ctx context.Context, req *gfspserver.GfSpDoneReplicatePieceRequest) (
-	*gfspserver.GfSpDoneReplicatePieceResponse, error) {
+	*gfspserver.GfSpDoneReplicatePieceResponse, error,
+) {
 	if req.GetReceivePieceTask().GetObjectInfo().GetObjectName() == mockObjectName1 {
 		return nil, mockRPCErr
 	} else if req.GetReceivePieceTask().GetObjectInfo().GetObjectName() == mockObjectName2 {

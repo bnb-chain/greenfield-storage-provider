@@ -8,17 +8,18 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 // GfSpGetEndpointBySpID get endpoint by sp id
 func (r *MetadataModular) GfSpGetEndpointBySpID(
 	ctx context.Context,
 	req *types.GfSpGetEndpointBySpIDRequest) (
-	resp *types.GfSpGetEndpointBySpIDResponse, err error) {
+	resp *types.GfSpGetEndpointBySpIDResponse, err error,
+) {
 	ctx = log.Context(ctx, req)
 
 	sp, err := r.baseApp.GfSpDB().GetSpByID(req.SpId)

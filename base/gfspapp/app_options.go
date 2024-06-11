@@ -6,24 +6,24 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsprcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/pprof"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/probe"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	"github.com/bnb-chain/greenfield-storage-provider/store/config"
-	psclient "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/client"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsppieceop"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsprcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsptqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspvgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gnfd"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/pprof"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/probe"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/config"
+	psclient "github.com/zkMeLabs/mechain-storage-provider/store/piecestore/client"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
 )
 
 const (
@@ -50,7 +50,7 @@ const (
 	DefaultProbeAddress = "localhost:24369"
 
 	// DefaultChainID defines the default greenfield chainID.
-	DefaultChainID = "greenfield_9000-121"
+	DefaultChainID = "mechain_1000000-121"
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 

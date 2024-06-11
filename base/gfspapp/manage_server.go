@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 var (
@@ -203,7 +203,8 @@ func (g *GfSpBaseApp) OnAskTask(ctx context.Context, limit corercmgr.Limit) (cor
 }
 
 func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpReportTaskRequest) (
-	*gfspserver.GfSpReportTaskResponse, error) {
+	*gfspserver.GfSpReportTaskResponse, error,
+) {
 	var (
 		reportTask = req.GetRequest()
 		err        error
@@ -333,7 +334,8 @@ func (g *GfSpBaseApp) GfSpReportTask(ctx context.Context, req *gfspserver.GfSpRe
 }
 
 func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context, req *gfspserver.GfSpPickVirtualGroupFamilyRequest) (
-	*gfspserver.GfSpPickVirtualGroupFamilyResponse, error) {
+	*gfspserver.GfSpPickVirtualGroupFamilyResponse, error,
+) {
 	vgfID, err := g.manager.PickVirtualGroupFamily(ctx, req.GetCreateBucketApprovalTask())
 	if err != nil {
 		return nil, err
@@ -344,7 +346,8 @@ func (g *GfSpBaseApp) GfSpPickVirtualGroupFamily(ctx context.Context, req *gfsps
 }
 
 func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspserver.GfSpNotifyMigrateSwapOutRequest) (
-	*gfspserver.GfSpNotifyMigrateSwapOutResponse, error) {
+	*gfspserver.GfSpNotifyMigrateSwapOutResponse, error,
+) {
 	if err := g.manager.NotifyMigrateSwapOut(ctx, req.GetSwapOut()); err != nil {
 		log.CtxErrorw(ctx, "failed to notify migrate swap out", "swap_out", req.GetSwapOut(), "error", err)
 		return nil, err
@@ -353,7 +356,8 @@ func (g *GfSpBaseApp) GfSpNotifyMigrateSwapOut(ctx context.Context, req *gfspser
 }
 
 func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfSpQueryTasksStatsRequest) (
-	*gfspserver.GfSpQueryTasksStatsResponse, error) {
+	*gfspserver.GfSpQueryTasksStatsResponse, error,
+) {
 	uploadTaskCount, replicateTaskCount, sealTaskCount, resumeUploadTaskCount, maxUploadingNumber, migrateGVGCount, recoveryCount, recoveryFailedList := g.manager.QueryTasksStats(ctx)
 	stats := &gfspserver.TasksStats{
 		UploadCount:          uint32(uploadTaskCount),
@@ -371,7 +375,8 @@ func (g *GfSpBaseApp) GfSpQueryTasksStats(ctx context.Context, _ *gfspserver.GfS
 }
 
 func (g *GfSpBaseApp) GfSpQueryBucketMigrationProgress(ctx context.Context, req *gfspserver.GfSpQueryBucketMigrationProgressRequest) (
-	*gfspserver.GfSpQueryBucketMigrationProgressResponse, error) {
+	*gfspserver.GfSpQueryBucketMigrationProgressResponse, error,
+) {
 	var (
 		progress *gfspserver.MigrateBucketProgressMeta
 		err      error
@@ -387,7 +392,8 @@ func (g *GfSpBaseApp) GfSpQueryBucketMigrationProgress(ctx context.Context, req 
 }
 
 func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Context, req *gfspserver.GfSpNotifyPreMigrateBucketRequest) (
-	*gfspserver.GfSpNotifyPreMigrateBucketResponse, error) {
+	*gfspserver.GfSpNotifyPreMigrateBucketResponse, error,
+) {
 	var (
 		quota *gfsptask.GfSpBucketQuotaInfo
 		err   error
@@ -401,7 +407,8 @@ func (g *GfSpBaseApp) GfSpNotifyPreMigrateBucketAndDeductQuota(ctx context.Conte
 }
 
 func (g *GfSpBaseApp) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, req *gfspserver.GfSpNotifyPostMigrateBucketRequest) (
-	*gfspserver.GfSpNotifyPostMigrateBucketResponse, error) {
+	*gfspserver.GfSpNotifyPostMigrateBucketResponse, error,
+) {
 	var (
 		quota *gfsptask.GfSpBucketQuotaInfo
 		err   error
@@ -415,7 +422,8 @@ func (g *GfSpBaseApp) GfSpNotifyPostMigrateAndRecoupQuota(ctx context.Context, r
 }
 
 func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspserver.GfSpResetRecoveryFailedListRequest) (
-	*gfspserver.GfSpResetRecoveryFailedListResponse, error) {
+	*gfspserver.GfSpResetRecoveryFailedListResponse, error,
+) {
 	recoveryFailedList := g.manager.ResetRecoveryFailedList(ctx)
 	return &gfspserver.GfSpResetRecoveryFailedListResponse{
 		RecoveryFailedList: recoveryFailedList,
@@ -423,7 +431,8 @@ func (g *GfSpBaseApp) GfSpResetRecoveryFailedList(ctx context.Context, _ *gfspse
 }
 
 func (g *GfSpBaseApp) GfSpTriggerRecoverForSuccessorSP(ctx context.Context, req *gfspserver.GfSpTriggerRecoverForSuccessorSPRequest) (
-	*gfspserver.GfSpTriggerRecoverForSuccessorSPResponse, error) {
+	*gfspserver.GfSpTriggerRecoverForSuccessorSPResponse, error,
+) {
 	err := g.manager.TriggerRecoverForSuccessorSP(ctx, req.GetVgfId(), req.GetGvgId(), req.ReplicateIndex)
 	if err != nil {
 		return nil, err

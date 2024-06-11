@@ -6,11 +6,11 @@ import (
 	"io"
 	"time"
 
-	corepiecestore "github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/piece"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	corepiecestore "github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/piecestore/piece"
+	"github.com/zkMeLabs/mechain-storage-provider/store/piecestore/storage"
 )
 
 const (

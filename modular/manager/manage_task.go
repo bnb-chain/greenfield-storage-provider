@@ -10,26 +10,26 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
 	"golang.org/x/exp/slices"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspvgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 var (
@@ -1058,8 +1058,8 @@ func (p *GenerateGVGSecondarySPsPolicyByPrefer) AddCandidateSP(spID uint32) {
 	} else {
 		p.backupSPIDList = append(p.backupSPIDList, spID)
 	}
-
 }
+
 func (p *GenerateGVGSecondarySPsPolicyByPrefer) GenerateGVGSecondarySPs() ([]uint32, error) {
 	if p.expectedSecondarySPNumber > len(p.preferSPIDList)+len(p.backupSPIDList) {
 		return nil, fmt.Errorf("no enough sp")

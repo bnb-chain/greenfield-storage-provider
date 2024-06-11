@@ -19,9 +19,9 @@ import (
 	"gorm.io/gorm"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // Now used for test
@@ -89,7 +89,6 @@ func TestAuthHandlerVerifySignedContent(t *testing.T) {
 
 	// Test case 7: when expiry date does not match
 	assert.NotNil(t, gateway.verifySignedContent(unSignedContent, SampleDAppDomain, SampleNonce, SamplePublicKey, "invalid_expiry_date"))
-
 }
 
 func TestRequestNonceHandler(t *testing.T) {
@@ -222,7 +221,6 @@ func TestRequestNonceHandler(t *testing.T) {
 			if tt.wantRespStatus == http.StatusOK {
 				assert.Equal(t, tt.wantRespBody, string(data))
 			}
-
 		})
 	}
 }
@@ -775,14 +773,13 @@ func TestUpdateUserPublicKeyHandler(t *testing.T) {
 			if tt.wantRespStatus == http.StatusOK {
 				assert.Equal(t, tt.wantRespBody, string(data))
 			}
-
 		})
 	}
 }
 
 // msgToString a util method to convert msg from getAuthNonce API to string
 func msgToString(currentNonce int32, nextNonce int32, currentPublicKey string, expiryDate int64) string {
-	var resp = &RequestNonceResp{
+	resp := &RequestNonceResp{
 		CurrentNonce:     currentNonce,
 		NextNonce:        nextNonce,
 		CurrentPublicKey: currentPublicKey,
@@ -794,7 +791,7 @@ func msgToString(currentNonce int32, nextNonce int32, currentPublicKey string, e
 
 // msgToStringForUpdateKey a util method to convert msg from UpdateUserPublicKey API to string
 func msgToStringForUpdateKey(updateUserPublicKeyResult bool) string {
-	var resp = &UpdateUserPublicKeyResp{
+	resp := &UpdateUserPublicKeyResp{
 		Result: updateUserPublicKeyResult,
 	}
 	b, _ := xml.Marshal(resp)
@@ -803,7 +800,7 @@ func msgToStringForUpdateKey(updateUserPublicKeyResult bool) string {
 
 // msgToStringForListUserPublicKeyV2 a util method to convert msg from ListUserPublicKeyV2Resp to string
 func msgToStringForListUserPublicKeyV2(keys []string) string {
-	var resp = &ListUserPublicKeyV2Resp{
+	resp := &ListUserPublicKeyV2Resp{
 		PublicKeys: keys,
 	}
 	b, _ := xml.Marshal(resp)
@@ -1056,7 +1053,6 @@ func TestUpdateUserPublicKeyV2Handler(t *testing.T) {
 			if tt.wantRespStatus == http.StatusOK {
 				assert.Equal(t, tt.wantRespBody, string(data))
 			}
-
 		})
 	}
 }
@@ -1160,7 +1156,6 @@ func TestListUserPublicKeyV2Handler(t *testing.T) {
 			if tt.wantRespStatus == http.StatusOK {
 				assert.Equal(t, tt.wantRespBody, string(data))
 			}
-
 		})
 	}
 }

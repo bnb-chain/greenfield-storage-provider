@@ -10,8 +10,8 @@ import (
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	ma "github.com/multiformats/go-multiaddr"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 const (

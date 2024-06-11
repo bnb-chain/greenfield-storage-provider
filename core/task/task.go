@@ -1,10 +1,10 @@
 package task
 
 import (
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 // Task is an abstract interface to describe the smallest unit of SP service how to interact.
@@ -352,6 +352,8 @@ type ReceivePieceTask interface {
 	GetBucketMigration() bool
 	// SetBucketMigration sets the bucket migration
 	SetBucketMigration(bool)
+	// GetIsAgentUploadTask set the is agent upload flag
+	GetIsAgentUploadTask() bool
 }
 
 // SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.

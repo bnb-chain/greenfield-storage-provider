@@ -3,7 +3,7 @@ package bsdb
 import (
 	"regexp"
 
-	permtypes "github.com/bnb-chain/greenfield/x/permission/types"
+	permtypes "github.com/evmos/evmos/v12/x/permission/types"
 )
 
 // Eval is used to evaluate the execution results of statement policies.

@@ -8,14 +8,14 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gnfd"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gnfd"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 // MakeConfig loads the configuration from local file and replace the fields by flags.

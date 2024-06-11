@@ -4,16 +4,14 @@ package base.types.gfspserver;
 import "base/types/gfsperrors/error.proto";
 import "base/types/gfsptask/task.proto";
 
-option go_package = "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver";
+option go_package = "github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver";
 
 message GfSpReplicatePieceRequest {
   base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 1;
   bytes piece_data = 2;
 }
 
-message GfSpReplicatePieceResponse {
-  base.types.gfsperrors.GfSpError err = 1;
-}
+message GfSpReplicatePieceResponse { base.types.gfsperrors.GfSpError err = 1; }
 
 message GfSpDoneReplicatePieceRequest {
   base.types.gfsptask.GfSpReceivePieceTask receive_piece_task = 1;
@@ -26,6 +24,8 @@ message GfSpDoneReplicatePieceResponse {
 }
 
 service GfSpReceiveService {
-  rpc GfSpReplicatePiece(GfSpReplicatePieceRequest) returns (GfSpReplicatePieceResponse) {}
-  rpc GfSpDoneReplicatePiece(GfSpDoneReplicatePieceRequest) returns (GfSpDoneReplicatePieceResponse) {}
+  rpc GfSpReplicatePiece(GfSpReplicatePieceRequest)
+      returns (GfSpReplicatePieceResponse) {}
+  rpc GfSpDoneReplicatePiece(GfSpDoneReplicatePieceRequest)
+      returns (GfSpDoneReplicatePieceResponse) {}
 }

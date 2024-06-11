@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // customS3Retryer wraps aws-sdk-go's built-in DefaultRetryer and adding additional error codes

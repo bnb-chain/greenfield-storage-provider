@@ -9,12 +9,12 @@ import (
 	"sync"
 	"time"
 
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
 	slimiter "github.com/ulule/limiter/v3"
 	smemory "github.com/ulule/limiter/v3/drivers/store/memory"
+	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 const (
@@ -22,9 +22,7 @@ const (
 	MethodSeparator = "-"
 )
 
-var (
-	ErrTooManyRequest = gfsperrors.Register(Middleware, http.StatusTooManyRequests, 960001, "too many requests, please try it again later")
-)
+var ErrTooManyRequest = gfsperrors.Register(Middleware, http.StatusTooManyRequests, 960001, "too many requests, please try it again later")
 
 type KeyToRateLimiterNameCell struct {
 	Key    string

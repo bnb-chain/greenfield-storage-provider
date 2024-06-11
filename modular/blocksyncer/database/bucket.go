@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func (db *DB) SaveBucket(ctx context.Context, bucket *models.Bucket) error {

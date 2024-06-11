@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 // CreateObjectIDMap create object id map table entry

@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 var crc32c = crc32.MakeTable(crc32.Castagnoli)
@@ -57,7 +57,6 @@ func verifyChecksum(rc io.ReadCloser, checksum string) io.ReadCloser {
 		return rc
 	}
 	expected, err := strconv.ParseInt(checksum, 10, 32)
-
 	if err != nil {
 		log.Errorf("invalid crc32c: %s", checksum)
 		return rc

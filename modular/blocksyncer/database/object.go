@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func (db *DB) SaveObject(ctx context.Context, object *models.Object) error {
@@ -22,7 +22,6 @@ func (db *DB) UpdateObject(ctx context.Context, object *models.Object) error {
 func (db *DB) GetObject(ctx context.Context, objectId common.Hash) (*models.Object, error) {
 	var object models.Object
 	bucketName, err := db.GetBucketNameByObjectID(objectId)
-
 	if err != nil {
 		return nil, err
 	}

@@ -3,16 +3,16 @@ package gfspconfig
 import (
 	"github.com/pelletier/go-toml/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	mwhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
-	storeconfig "github.com/bnb-chain/greenfield-storage-provider/store/config"
-	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretaskqueue "github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
+	mwhttp "github.com/zkMeLabs/mechain-storage-provider/pkg/middleware/http"
+	storeconfig "github.com/zkMeLabs/mechain-storage-provider/store/config"
+	"github.com/zkMeLabs/mechain-storage-provider/store/piecestore/storage"
 )
 
 type Option = func(cfg *GfSpConfig) error

@@ -11,14 +11,16 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/libp2p/go-libp2p/core/network"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // pattern: /protocol-name/request-or-response-message/version
-const GetApprovalRequest = "/approval/request/0.0.1"
-const GetApprovalResponse = "/approval/response/0.0.1"
+const (
+	GetApprovalRequest  = "/approval/request/0.0.1"
+	GetApprovalResponse = "/approval/response/0.0.1"
+)
 
 // ResponseChannelSize defines the approval response size
 const ResponseChannelSize = 12
@@ -67,7 +69,8 @@ func (a *ApprovalProtocol) cancelApprovalRequest(id uint64) {
 
 // notifyApprovalResponse notifies the approval response by the approval related channel
 func (a *ApprovalProtocol) notifyApprovalResponse(
-	resp coretask.ApprovalReplicatePieceTask) error {
+	resp coretask.ApprovalReplicatePieceTask,
+) error {
 	a.mux.Lock()
 	defer a.mux.Unlock()
 	object := resp.GetObjectInfo()

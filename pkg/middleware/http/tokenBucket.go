@@ -5,21 +5,23 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 type BandwidthLimiterConfig struct {
-	Enable bool       //Enable Whether to enable bandwidth limiting
-	R      rate.Limit //R The speed at which tokens are generated R per second
-	B      int        //B The size of the token bucket
+	Enable bool       // Enable Whether to enable bandwidth limiting
+	R      rate.Limit // R The speed at which tokens are generated R per second
+	B      int        // B The size of the token bucket
 }
 
 type BandwidthLimiter struct {
 	Limiter *rate.Limiter
 }
 
-var LimiterOnce sync.Once
-var BandwidthLimit *BandwidthLimiter
+var (
+	LimiterOnce    sync.Once
+	BandwidthLimit *BandwidthLimiter
+)
 
 func NewBandwidthLimiter(r rate.Limit, b int) {
 	log.Infof("config r: %v, b:%d", r, b)

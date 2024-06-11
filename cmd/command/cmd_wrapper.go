@@ -3,11 +3,11 @@ package command
 import (
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspconfig"
-	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
+	"github.com/zkMeLabs/mechain-storage-provider/cmd/utils"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 var CW CMDWrapper

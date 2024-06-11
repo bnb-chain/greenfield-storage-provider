@@ -3,11 +3,11 @@ package gfspconfig
 import (
 	"errors"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretaskqueue "github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretaskqueue "github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
 )
 
 func CustomizeGfSpDB(db spdb.SPDB) Option {

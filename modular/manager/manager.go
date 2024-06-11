@@ -10,23 +10,23 @@ import (
 	"sync/atomic"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	"golang.org/x/exp/slices"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -347,7 +347,6 @@ func (m *ManageModular) eventLoop(ctx context.Context) {
 		case <-syncAvailableVGFTicker.C:
 			go m.syncAvailableVGF(ctx)
 		}
-
 	}
 }
 
@@ -508,23 +507,25 @@ func (m *ManageModular) LoadTaskFromDB() error {
 		replicateTask.InitReplicatePieceTask(objectInfo, storageParams, m.baseApp.TaskPriority(replicateTask),
 			m.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), m.baseApp.TaskMaxRetry(replicateTask), meta.IsAgentUpload)
 
-		if meta.GlobalVirtualGroupID == 0 {
-			bucketInfo, err := m.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
-			if err != nil || bucketInfo == nil {
-				log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)
-				return err
-			}
-			gvgMeta, err := m.pickGlobalVirtualGroup(context.Background(), bucketInfo.BucketInfo.GlobalVirtualGroupFamilyId, storageParams)
-			log.Infow("pick global virtual group", "gvg_meta", gvgMeta, "error", err)
-			if err != nil {
-				return err
-			}
-			replicateTask.GlobalVirtualGroupId = gvgMeta.ID
-			replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
-		} else {
-			replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
-			replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
+		// retrieve objects from the database that have not completed the replicate piece, reselect gvg, and then add them to the replicate queue
+		bucketInfo, err := m.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
+		if err != nil || bucketInfo == nil {
+			log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)
+			return err
 		}
+		gvgMeta, err := m.pickGlobalVirtualGroup(context.Background(), bucketInfo.BucketInfo.GlobalVirtualGroupFamilyId, storageParams)
+		log.Infow("pick global virtual group", "gvg_meta", gvgMeta, "error", err)
+		if err != nil {
+			return err
+		}
+		replicateTask.GlobalVirtualGroupId = gvgMeta.ID
+		replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+		meta.GlobalVirtualGroupID = gvgMeta.ID
+		meta.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+		if err = m.baseApp.GfSpDB().UpdateUploadProgress(meta); err != nil {
+			log.Errorw("failed to update object task state", "task_info", replicateTask.Info(), "error", err)
+		}
+
 		pushErr := m.replicateQueue.Push(replicateTask)
 		if pushErr != nil {
 			log.Errorw("failed to push replicate piece task to queue", "object_info", objectInfo, "error", pushErr)

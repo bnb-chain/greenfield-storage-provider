@@ -13,22 +13,22 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspvgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspvgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/vgmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -204,6 +204,13 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 	if err != nil {
 		return err
 	}
+	if bucket == nil {
+		log.Debugw("send complete migrate bucket has been deleted", "bucket_id", plan.bucketID)
+		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED); err != nil {
+			return err
+		}
+		return nil
+	}
 	var gvgMappings []*storagetypes.GVGMapping
 	for _, migrateGVGUnit := range plan.gvgUnitMap {
 		aggBlsSig, getBlsError := plan.getBlsAggregateSigForBucketMigration(context.Background(), migrateGVGUnit)
@@ -213,12 +220,16 @@ func (plan *BucketMigrateExecutePlan) sendCompleteMigrateBucketTx(migrateExecute
 		}
 		vgfID = migrateGVGUnit.DestGVG.GetFamilyId()
 		log.Infow("get bls aggregate signature", "bucket_id", bucket.BucketInfo.Id, "migrateGVGUnit", migrateGVGUnit, "aggBlsSig", hex.EncodeToString(aggBlsSig))
-		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{SrcGlobalVirtualGroupId: migrateGVGUnit.SrcGVG.GetId(),
-			DstGlobalVirtualGroupId: migrateGVGUnit.DestGVGID, SecondarySpBlsSignature: aggBlsSig})
+		gvgMappings = append(gvgMappings, &storagetypes.GVGMapping{
+			SrcGlobalVirtualGroupId: migrateGVGUnit.SrcGVG.GetId(),
+			DstGlobalVirtualGroupId: migrateGVGUnit.DestGVGID, SecondarySpBlsSignature: aggBlsSig,
+		})
 	}
 
-	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
-		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID}
+	migrateBucket := &storagetypes.MsgCompleteMigrateBucket{
+		Operator:   plan.manager.baseApp.OperatorAddress(),
+		BucketName: bucket.BucketInfo.GetBucketName(), GvgMappings: gvgMappings, GlobalVirtualGroupFamilyId: vgfID,
+	}
 	log.Infow("before sent complete migrate bucket msg to chain", "msg", migrateBucket, "gvgUnitMap", plan.gvgUnitMap)
 	txHash, txErr := plan.manager.baseApp.GfSpClient().CompleteMigrateBucket(context.Background(), migrateBucket)
 	if txErr != nil {
@@ -239,8 +250,17 @@ func (plan *BucketMigrateExecutePlan) rejectBucketMigration() error {
 	if err != nil {
 		return err
 	}
-	rejectMigrateBucket := &storagetypes.MsgRejectMigrateBucket{Operator: plan.manager.baseApp.OperatorAddress(),
-		BucketName: bucket.BucketInfo.GetBucketName()}
+	if bucket == nil {
+		log.Debugw("reject bucket migration has been deleted", "bucket_id", plan.bucketID)
+		if err = UpdateBucketMigrationProgress(plan.manager.baseApp, plan.bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED); err != nil {
+			return err
+		}
+		return nil
+	}
+	rejectMigrateBucket := &storagetypes.MsgRejectMigrateBucket{
+		Operator:   plan.manager.baseApp.OperatorAddress(),
+		BucketName: bucket.BucketInfo.GetBucketName(),
+	}
 	txHash, txErr := plan.manager.baseApp.GfSpClient().RejectMigrateBucket(ctx, rejectMigrateBucket)
 	if txErr != nil {
 		log.Errorw("failed to send reject migrate bucket msg to chain", "msg", rejectMigrateBucket, "tx_hash", txHash, "err", txErr)
@@ -591,6 +611,23 @@ func (s *BucketMigrateScheduler) doneMigrateBucket(bucketID uint64) error {
 	return err
 }
 
+func (s *BucketMigrateScheduler) deleteMigrateBucket(bucketID uint64) error {
+	executePlan, err := s.getExecutePlanByBucketID(bucketID)
+	// 1) Received the CompleteEvents event for the first time.
+	// 2) Subsequently received the CompleteEvents event.
+	if err != nil {
+		log.Errorw("bucket migrate schedule received EventCompleteMigrationBucket, the event may already finished", "bucket_id", bucketID)
+		return err
+	}
+
+	s.deleteExecutePlanByBucketID(bucketID)
+	executePlan.stopSPSchedule()
+	err = s.manager.baseApp.GfSpDB().DeleteMigrateGVGUnitsByBucketID(bucketID)
+	log.Infow("succeed to delete migrate bucket", "bucket_id", bucketID, "error", err)
+
+	return err
+}
+
 func (s *BucketMigrateScheduler) cancelMigrateBucket(bucketID uint64, reject bool) error {
 	var (
 		executePlan *BucketMigrateExecutePlan
@@ -696,7 +733,17 @@ func (s *BucketMigrateScheduler) confirmCompleteTxEvents(ctx context.Context, ev
 		log.Errorw("failed to get bucket by bucket id", "bucket_id", bucketID, "error", err)
 		return
 	}
-
+	if bucket == nil {
+		if err = s.deleteMigrateBucket(bucketID); err != nil {
+			log.Errorw("failed to done migrate bucket", "EventMigrationBucket", event, "error", err)
+			return
+		}
+		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_MIGRATION_FINISHED); err != nil {
+			return
+		}
+		log.CtxInfow(ctx, "succeed to remove deleted bucket migrate event", "EventMigrationBucket", event)
+		return
+	}
 	if bucket.BucketInfo.GetBucketStatus() == storagetypes.BUCKET_STATUS_CREATED {
 		if err = UpdateBucketMigrationProgress(s.manager.baseApp, bucketID, storetypes.BucketMigrationState_BUCKET_MIGRATION_STATE_WAIT_COMPLETE_TX_EVENT_DONE); err != nil {
 			return
@@ -1610,8 +1657,10 @@ func (checker *SPConflictChecker) generateMigrateBucketUnitsFromMemory(primarySP
 			return nil, err
 		}
 		destFamilyID = destGVG.FamilyID
-		destGlobalVirtualGroup := &virtualgrouptypes.GlobalVirtualGroup{Id: destGVG.ID, FamilyId: destGVG.FamilyID, PrimarySpId: destGVG.PrimarySPID,
-			SecondarySpIds: destGVG.SecondarySPIDs, StoredSize: destGVG.StakingStorageSize}
+		destGlobalVirtualGroup := &virtualgrouptypes.GlobalVirtualGroup{
+			Id: destGVG.ID, FamilyId: destGVG.FamilyID, PrimarySpId: destGVG.PrimarySPID,
+			SecondarySpIds: destGVG.SecondarySPIDs, StoredSize: destGVG.StakingStorageSize,
+		}
 
 		bucketUnit := newBucketMigrateGVGExecuteUnit(checker.bucketID, srcGVG, checker.srcSP, checker.selfSP, WaitForMigrate, destGVG.ID, 0, destGlobalVirtualGroup)
 		bucketMigrateUnits = append(bucketMigrateUnits, bucketUnit)

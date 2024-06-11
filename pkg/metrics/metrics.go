@@ -11,14 +11,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
-var (
-	MetricsModularName = strings.ToLower("Metrics")
-)
+var MetricsModularName = strings.ToLower("Metrics")
 
 var _ coremodule.Modular = &Metrics{}
 

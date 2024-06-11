@@ -5,21 +5,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
-var (
-	ErrAuthenticatorTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990101, "OoooH... request lost")
-)
+var ErrAuthenticatorTaskDangling = gfsperrors.Register(BaseCodeSpace, http.StatusBadRequest, 990101, "OoooH... request lost")
 
 var _ gfspserver.GfSpAuthenticationServiceServer = &GfSpBaseApp{}
 
 func (g *GfSpBaseApp) GfSpVerifyAuthentication(ctx context.Context, req *gfspserver.GfSpAuthenticationRequest) (
-	*gfspserver.GfSpAuthenticationResponse, error) {
+	*gfspserver.GfSpAuthenticationResponse, error,
+) {
 	if req == nil {
 		log.Error("failed to verify authentication due to pointer dangling")
 		return &gfspserver.GfSpAuthenticationResponse{

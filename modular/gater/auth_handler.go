@@ -17,11 +17,11 @@ import (
 
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -94,13 +94,12 @@ func (g *GateModular) requestNonceHandler(w http.ResponseWriter, r *http.Request
 
 	ctx := log.Context(context.Background(), account, domain)
 	currentNonce, nextNonce, currentPublicKey, expiryDate, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, account, domain)
-
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get auth nonce", "error", err)
 		return
 	}
 
-	var resp = &RequestNonceResp{
+	resp := &RequestNonceResp{
 		CurrentNonce:     currentNonce,
 		NextNonce:        nextNonce,
 		CurrentPublicKey: currentPublicKey,
@@ -187,7 +186,6 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 
 	ctx := log.Context(context.Background(), account, domain)
 	currentNonce, nextNonce, _, _, err := g.baseApp.GfSpClient().GetAuthNonce(ctx, account, domain)
-
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to GetAuthNonce", "error", err)
 		return
@@ -224,7 +222,7 @@ func (g *GateModular) updateUserPublicKeyHandler(w http.ResponseWriter, r *http.
 		log.Errorw("failed to updateUserPublicKey when saving key")
 		return
 	}
-	var resp = &UpdateUserPublicKeyResp{
+	resp := &UpdateUserPublicKeyResp{
 		Result: updateUserPublicKeyResp,
 	}
 	b, err = xml.Marshal(resp)
@@ -329,7 +327,7 @@ func (g *GateModular) updateUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 		log.Errorw("failed to updateUserPublicKeyV2 when saving key")
 		return
 	}
-	var resp = &UpdateUserPublicKeyResp{
+	resp := &UpdateUserPublicKeyResp{
 		Result: updateUserPublicKeyResp,
 	}
 	b, err = xml.Marshal(resp)
@@ -385,13 +383,12 @@ func (g *GateModular) listUserPublicKeyV2Handler(w http.ResponseWriter, r *http.
 	}
 
 	userPublicKeys, err := g.baseApp.GfSpClient().ListAuthKeysV2(reqCtx.ctx, account, domain)
-
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to listUserPublicKeyV2", "error", err)
 		return
 	}
 
-	var resp = &ListUserPublicKeyV2Resp{
+	resp := &ListUserPublicKeyV2Resp{
 		PublicKeys: userPublicKeys,
 	}
 	b, err = xml.Marshal(resp)
@@ -461,13 +458,12 @@ func (g *GateModular) deleteUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 	}
 
 	result, err := g.baseApp.GfSpClient().DeleteAuthKeysV2(reqCtx.ctx, account, domain, publicKeys)
-
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to deleteUserPublicKeyV2", "error", err)
 		return
 	}
 
-	var resp = &DeleteUserPublicKeyV2Resp{
+	resp := &DeleteUserPublicKeyV2Resp{
 		Result: result,
 	}
 	b, err = xml.Marshal(resp)
@@ -565,7 +561,7 @@ func (g *GateModular) verifySignedContent(signedContent string, expectedDomain s
 	spsRe := regexp.MustCompile(spsPattern)
 	spsMatch := spsRe.FindAllStringSubmatch(spsText, -1)
 
-	var found = false
+	found := false
 	for _, spInfoMatches := range spsMatch {
 		if len(spInfoMatches) < 4 {
 			return ErrSignedMsgNotMatchTemplate

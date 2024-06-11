@@ -6,10 +6,10 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield/sdk/keys"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/sdk/keys"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspp2p"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 )
 
 func setupKM() (keys.KeyManager, error) {
@@ -38,7 +38,7 @@ func Test_verifyPongMsgSignature(t *testing.T) {
 	assert.NoError(t, err)
 	pongMsg := &gfspp2p.GfSpPong{
 		Nodes: []*gfspp2p.GfSpNode{
-			&gfspp2p.GfSpNode{
+			{
 				NodeId:    "1234567890",
 				MultiAddr: []string{"/tcp/localhost:7133"},
 			},

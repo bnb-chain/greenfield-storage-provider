@@ -12,7 +12,7 @@ package bsdb
 import (
 	reflect "reflect"
 
-	types "github.com/bnb-chain/greenfield/x/permission/types"
+	types "github.com/evmos/evmos/v12/x/permission/types"
 	common "github.com/forbole/juno/v4/common"
 	decimal "github.com/shopspring/decimal"
 	gomock "go.uber.org/mock/gomock"

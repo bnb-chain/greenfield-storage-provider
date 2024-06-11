@@ -7,11 +7,11 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	model "github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storage_types "github.com/bnb-chain/greenfield/x/storage/types"
-	virtual_types "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	storage_types "github.com/evmos/evmos/v12/x/storage/types"
+	virtual_types "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	model "github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 // GfSpListVirtualGroupFamiliesBySpID list virtual group families by sp id
@@ -215,14 +215,14 @@ func (r *MetadataModular) GfSpListMigrateBucketEvents(ctx context.Context, req *
 				GlobalVirtualGroupFamilyId: complete.GlobalVirtualGroupFamilyId,
 			}
 		}
-		if cancel != nil && cancel.CreateAt >= event.CreateAt && complete == nil {
+		if cancel != nil && cancel.CreateAt >= event.CreateAt && (complete == nil || cancel.CreateAt > complete.CreateAt) {
 			spCancelEvent = &storage_types.EventCancelMigrationBucket{
 				Operator:   cancel.Operator.String(),
 				BucketName: cancel.BucketName,
 				BucketId:   math.NewUintFromBigInt(cancel.BucketID.Big()),
 			}
 		}
-		if reject != nil && reject.CreateAt >= event.CreateAt && complete == nil {
+		if reject != nil && reject.CreateAt >= event.CreateAt && (complete == nil || reject.CreateAt > complete.CreateAt) {
 			spRejectEvent = &storage_types.EventRejectMigrateBucket{
 				Operator:   reject.Operator.String(),
 				BucketName: reject.BucketName,
@@ -261,7 +261,7 @@ func (r *MetadataModular) GfSpListCompleteMigrationBucketEvents(ctx context.Cont
 		return nil, err
 	}
 	if latestBlock < req.BlockId {
-		//log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
+		// log.CtxError(ctx, "failed to list migrate bucket events due to request block id exceed current block syncer block height")
 		return nil, ErrExceedBlockHeight
 	}
 	log.Debugw("GfSpListCompleteMigrationBucketEvents", "src_sp_id", req.SrcSpId, "block_id", req.BlockId)

@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	metadatatypes "github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -131,7 +131,8 @@ func (e *ExecuteModular) checkAndTryRenewSig(gvgTask *gfsptask.GfSpMigrateGVGTas
 }
 
 func (e *ExecuteModular) doObjectMigration(ctx context.Context, gvgTask coretask.MigrateGVGTask, bucketID uint64,
-	objectDetails *metadatatypes.ObjectDetails) error {
+	objectDetails *metadatatypes.ObjectDetails,
+) error {
 	var (
 		err                    error
 		isBucketMigrate        bool
@@ -221,7 +222,8 @@ func (e *ExecuteModular) doObjectMigrationRetry(ctx context.Context, gvgTask cor
 }
 
 func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *virtualgrouptypes.GlobalVirtualGroup,
-	objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params) error {
+	objectInfo *storagetypes.ObjectInfo, params *storagetypes.Params,
+) error {
 	index := util.ContainOnlyOneDifferentElement(srcGvg.GetSecondarySpIds(), destGvg.GetSecondarySpIds())
 	if index == piecestore.PrimarySPRedundancyIndex {
 		// no conflict
@@ -277,7 +279,8 @@ func (e *ExecuteModular) checkGVGConflict(ctx context.Context, srcGvg, destGvg *
 }
 
 func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gvgID uint32, objectInfo *storagetypes.ObjectInfo,
-	params *storagetypes.Params, destSPEndpoint string, segmentIdx, redundancyIdx uint32, data []byte) error {
+	params *storagetypes.Params, destSPEndpoint string, segmentIdx, redundancyIdx uint32, data []byte,
+) error {
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, segmentIdx,
 		int32(redundancyIdx), int64(len(data)), false)
@@ -304,7 +307,8 @@ func (e *ExecuteModular) doBucketMigrationReplicatePiece(ctx context.Context, gv
 }
 
 func (e *ExecuteModular) doneBucketMigrationReplicatePiece(ctx context.Context, gvgID uint32, objectInfo *storagetypes.ObjectInfo,
-	params *storagetypes.Params, destSPEndpoint string, redundancyIdx uint32) error {
+	params *storagetypes.Params, destSPEndpoint string, redundancyIdx uint32,
+) error {
 	receive := &gfsptask.GfSpReceivePieceTask{}
 	receive.InitReceivePieceTask(gvgID, objectInfo, params, coretask.DefaultSmallerPriority, 0 /* useless */, int32(redundancyIdx), 0, false)
 	taskSignature, err := e.baseApp.GfSpClient().SignReceiveTask(ctx, receive)
@@ -408,9 +412,7 @@ func (e *ExecuteModular) sendRequest(ctx context.Context, gvgTask *gfsptask.GfSp
 // 1. get piece checksum list from db and generate integrity hash
 // 2. compare generated integrity hash to chain integrity hash, if they are equal write to db
 func (e *ExecuteModular) setMigratePiecesMetadata(objectInfo *storagetypes.ObjectInfo, segmentCount uint32, redundancyIdx int32) error {
-	var (
-		objectID = objectInfo.Id.Uint64()
-	)
+	objectID := objectInfo.Id.Uint64()
 	pieceChecksums, err := e.baseApp.GfSpDB().GetAllReplicatePieceChecksumOptimized(objectID, redundancyIdx, segmentCount)
 	if err != nil {
 		log.Errorw("failed to get checksum from db", "object_info", objectInfo, "error", err)

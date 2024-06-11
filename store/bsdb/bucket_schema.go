@@ -7,8 +7,8 @@ import (
 	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // Bucket is the structure for user bucket

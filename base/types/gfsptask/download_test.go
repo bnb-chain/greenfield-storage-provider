@@ -6,18 +6,16 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
-var (
-	mockBucketInfo = &storagetypes.BucketInfo{
-		Owner:      "mockOwner",
-		BucketName: "mockBucketName",
-		Visibility: 1,
-		Id:         sdkmath.NewUint(1),
-	}
-)
+var mockBucketInfo = &storagetypes.BucketInfo{
+	Owner:      "mockOwner",
+	BucketName: "mockBucketName",
+	Visibility: 1,
+	Id:         sdkmath.NewUint(1),
+}
 
 func TestInitDownloadObjectTask(t *testing.T) {
 	m := &GfSpDownloadObjectTask{}

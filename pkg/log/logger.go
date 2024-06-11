@@ -14,8 +14,8 @@ import (
 	"github.com/bytedance/gopkg/cloud/metainfo"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/types"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log/internal/zap"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log/internal/types"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log/internal/zap"
 )
 
 type (
@@ -93,7 +93,7 @@ func Init(lvl Level, path string) {
 	if path != "" {
 		dir := filepath.Dir(path)
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			if err := os.MkdirAll(dir, 0755); err != nil {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
 				logger.With("err", err).Panicf("make log dir failed")
 			}
 		} else if err != nil {

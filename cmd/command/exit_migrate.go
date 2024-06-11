@@ -5,8 +5,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const migrateCommands = "MIGRATE COMMANDS"
@@ -124,7 +124,8 @@ func (w *CMDWrapper) completeSwapOut(ctx *cli.Context) error {
 	txHash, err := w.grpcAPI.CompleteSwapOut(ctx.Context, &virtualgrouptypes.MsgCompleteSwapOut{
 		StorageProvider:            operatorAddress,
 		GlobalVirtualGroupFamilyId: familyID,
-		GlobalVirtualGroupIds:      gvgIDList})
+		GlobalVirtualGroupIds:      gvgIDList,
+	})
 	if err != nil {
 		fmt.Printf("failed to send complete swap out txn, operatorAddress: %s\n", operatorAddress)
 		return err

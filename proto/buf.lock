@@ -2,11 +2,6 @@
 version: v1
 deps:
   - remote: buf.build
-    owner: bnb-chain
-    repository: greenfield
-    commit: ba00a92bbeb44b85ad8fe2d7ada60f59
-    digest: shake256:384cf4a63870385cbbcee34e6b8ceb370d6dc43435b18467e251a125dc9b1584a03c8ddd1670a341c5ae7f5e37b961249d3e049c502c5c9aff0855b4a5fd75a8
-  - remote: buf.build
     owner: cosmos
     repository: cosmos-proto
     commit: 1935555c206d4afb9e94615dfd0fad31

@@ -9,12 +9,12 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
 	"github.com/cosmos/gogoproto/proto"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // spilt server and client const definition avoids circular references
@@ -72,7 +72,8 @@ const (
 )
 
 func (s *GfSpClient) ReplicatePieceToSecondary(ctx context.Context, endpoint string, receive coretask.ReceivePieceTask,
-	data []byte) error {
+	data []byte,
+) error {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, bytes.NewReader(data))
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
@@ -127,7 +128,8 @@ func (s *GfSpClient) GetPieceFromECChunks(ctx context.Context, endpoint string, 
 }
 
 func (s *GfSpClient) DoneReplicatePieceToSecondary(ctx context.Context, endpoint string,
-	receive coretask.ReceivePieceTask) ([]byte, error) {
+	receive coretask.ReceivePieceTask,
+) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodPut, endpoint+ReplicateObjectPiecePath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "endpoint", endpoint, "error", err)
@@ -379,7 +381,8 @@ func (s *GfSpClient) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, 
 }
 
 func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string,
-	signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
+	signDoc *storagetypes.SecondarySpMigrationBucketSignDoc,
+) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, secondarySPEndpoint+SecondarySPMigrationBucketApprovalPath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "secondary_sp_endpoint", secondarySPEndpoint, "error", err)
@@ -409,7 +412,8 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 }
 
 func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint string, swapOutApproval *virtualgrouptypes.MsgSwapOut) (
-	*virtualgrouptypes.MsgSwapOut, error) {
+	*virtualgrouptypes.MsgSwapOut, error,
+) {
 	req, err := http.NewRequest(http.MethodGet, destSPEndpoint+SwapOutApprovalPath, nil)
 	if err != nil {
 		log.CtxErrorw(ctx, "client failed to connect to gateway", "dest_sp_endpoint", destSPEndpoint, "error", err)

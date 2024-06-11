@@ -9,8 +9,8 @@ import (
 	"go.uber.org/mock/gomock"
 	"gorm.io/datatypes"
 
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 func TestMetadataModular_GfSpGetGroupList_Success(t *testing.T) {
@@ -20,7 +20,7 @@ func TestMetadataModular_GfSpGetGroupList_Success(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListGroupsByNameAndSourceType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, string, int, int, bool) ([]*bsdb.Group, int64, error) {
-			return []*bsdb.Group{&bsdb.Group{
+			return []*bsdb.Group{{
 				ID:             1,
 				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
@@ -40,7 +40,7 @@ func TestMetadataModular_GfSpGetGroupList_Success(t *testing.T) {
 	).Times(1)
 	m.EXPECT().GetGroupMembersCount(gomock.Any()).DoAndReturn(
 		func([]common.Hash) ([]*bsdb.GroupCount, error) {
-			return []*bsdb.GroupCount{&bsdb.GroupCount{
+			return []*bsdb.GroupCount{{
 				GroupID: common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
 				Count:   1,
 			}}, nil
@@ -86,7 +86,7 @@ func TestMetadataModular_GfSpGetGroupList_Failed2(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListGroupsByNameAndSourceType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, string, int, int, bool) ([]*bsdb.Group, int64, error) {
-			return []*bsdb.Group{&bsdb.Group{
+			return []*bsdb.Group{{
 				ID:             1,
 				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
@@ -128,7 +128,7 @@ func TestMetadataModular_GfSpGetUserGroups_Success(t *testing.T) {
 	m.EXPECT().GetUserGroups(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Address, common.Hash, int) ([]*bsdb.GroupMemberMeta, error) {
 			return []*bsdb.GroupMemberMeta{
-				&bsdb.GroupMemberMeta{
+				{
 					Group: bsdb.Group{
 						ID:             1,
 						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
@@ -170,7 +170,7 @@ func TestMetadataModular_GfSpGetUserGroups_Success2(t *testing.T) {
 	m.EXPECT().GetUserGroups(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Address, common.Hash, int) ([]*bsdb.GroupMemberMeta, error) {
 			return []*bsdb.GroupMemberMeta{
-				&bsdb.GroupMemberMeta{
+				{
 					Group: bsdb.Group{
 						ID:             1,
 						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
@@ -230,7 +230,7 @@ func TestMetadataModular_GfSpGetGroupMembers_Success(t *testing.T) {
 	m.EXPECT().GetGroupMembers(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, common.Address, int) ([]*bsdb.GroupMemberMeta, error) {
 			return []*bsdb.GroupMemberMeta{
-				&bsdb.GroupMemberMeta{
+				{
 					Group: bsdb.Group{
 						ID:             1,
 						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
@@ -272,7 +272,7 @@ func TestMetadataModular_GfSpGetGroupMembers_Success2(t *testing.T) {
 	m.EXPECT().GetGroupMembers(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, common.Address, int) ([]*bsdb.GroupMemberMeta, error) {
 			return []*bsdb.GroupMemberMeta{
-				&bsdb.GroupMemberMeta{
+				{
 					Group: bsdb.Group{
 						ID:             1,
 						Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
@@ -331,7 +331,7 @@ func TestMetadataModular_GfSpGetUserOwnedGroups_Success(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetUserOwnedGroups(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Address, common.Hash, int) ([]*bsdb.Group, error) {
-			return []*bsdb.Group{&bsdb.Group{
+			return []*bsdb.Group{{
 				ID:             1,
 				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
@@ -365,7 +365,7 @@ func TestMetadataModular_GfSpGetUserOwnedGroups_Success2(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().GetUserOwnedGroups(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Address, common.Hash, int) ([]*bsdb.Group, error) {
-			return []*bsdb.Group{&bsdb.Group{
+			return []*bsdb.Group{{
 				ID:             1,
 				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),
@@ -417,7 +417,7 @@ func TestMetadataModular_GfSpListGroupsByIDs_Success(t *testing.T) {
 	a.baseApp.SetGfBsDB(m)
 	m.EXPECT().ListGroupsByIDs(gomock.Any()).DoAndReturn(
 		func([]common.Hash) ([]*bsdb.Group, error) {
-			return []*bsdb.Group{&bsdb.Group{
+			return []*bsdb.Group{{
 				ID:             1,
 				Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 				GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000001"),

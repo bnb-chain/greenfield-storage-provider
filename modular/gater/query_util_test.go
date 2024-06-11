@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
 )
 
 func TestSPCachePool_QuerySP(t *testing.T) {
@@ -37,11 +37,14 @@ func Test_getObjectChainMeta(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				m := consensus.NewMockConsensus(ctrl)
 				m.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					ObjectName: mockObjectName, CreateAt: 1}, nil).Times(1)
+					ObjectName: mockObjectName, CreateAt: 1,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				m.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(&storagetypes.Params{
-					MaxPayloadSize: DefaultMaxPayloadSize}, nil).Times(1)
+					MaxPayloadSize: DefaultMaxPayloadSize,
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(m)
 				return g
 			},
@@ -69,7 +72,8 @@ func Test_getObjectChainMeta(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					ObjectName: mockObjectName}, nil).Times(1)
+					ObjectName: mockObjectName,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				return g
 			},
@@ -84,9 +88,11 @@ func Test_getObjectChainMeta(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QueryObjectInfo(gomock.Any(), gomock.Any(), gomock.Any()).Return(&storagetypes.ObjectInfo{
-					ObjectName: mockObjectName, CreateAt: 1}, nil).Times(1)
+					ObjectName: mockObjectName, CreateAt: 1,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName}, nil).Times(1)
+					BucketName: mockBucketName,
+				}, nil).Times(1)
 				m.EXPECT().QueryStorageParamsByTimestamp(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				return g
 			},
@@ -129,9 +135,11 @@ func Test_checkSPAndBucketStatus(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_CREATED}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_CREATED,
+				}, nil).Times(1)
 				return g
 			},
 			bucketName:  mockBucketName,
@@ -162,7 +170,8 @@ func Test_checkSPAndBucketStatus(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_JAILED}, nil).Times(1)
+					Status: sptypes.STATUS_IN_JAILED,
+				}, nil).Times(1)
 				return g
 			},
 			bucketName:  mockBucketName,
@@ -178,7 +187,8 @@ func Test_checkSPAndBucketStatus(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				return g
 			},
@@ -195,9 +205,11 @@ func Test_checkSPAndBucketStatus(t *testing.T) {
 				m := consensus.NewMockConsensus(ctrl)
 				g.baseApp.SetConsensus(m)
 				m.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{
-					Status: sptypes.STATUS_IN_SERVICE}, nil).Times(1)
+					Status: sptypes.STATUS_IN_SERVICE,
+				}, nil).Times(1)
 				m.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketStatus: storagetypes.BUCKET_STATUS_MIGRATING}, nil).Times(1)
+					BucketStatus: storagetypes.BUCKET_STATUS_MIGRATING,
+				}, nil).Times(1)
 				return g
 			},
 			bucketName:  mockBucketName,

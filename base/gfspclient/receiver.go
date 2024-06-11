@@ -6,15 +6,16 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 func (s *GfSpClient) ReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, data []byte,
-	opts ...grpc.DialOption) error {
+	opts ...grpc.DialOption,
+) error {
 	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect receiver", "error", connErr)
@@ -39,7 +40,8 @@ func (s *GfSpClient) ReplicatePiece(ctx context.Context, task coretask.ReceivePi
 }
 
 func (s *GfSpClient) DoneReplicatePiece(ctx context.Context, task coretask.ReceivePieceTask, opts ...grpc.DialOption) (
-	[]byte, []byte, error) {
+	[]byte, []byte, error,
+) {
 	conn, connErr := s.Connection(ctx, s.receiverEndpoint, opts...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect receiver", "error", connErr)

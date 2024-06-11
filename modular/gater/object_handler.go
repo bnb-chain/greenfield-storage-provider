@@ -16,20 +16,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	modelgateway "github.com/bnb-chain/greenfield-storage-provider/model/gateway"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/downloader"
-	"github.com/bnb-chain/greenfield-storage-provider/modular/metadata"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	servicetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	"github.com/bnb-chain/greenfield/types/s3util"
-	permissiontypes "github.com/bnb-chain/greenfield/x/permission/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/types/s3util"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/downloader"
+	"github.com/zkMeLabs/mechain-storage-provider/modular/metadata"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
+	servicetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const ContentDefault = "application/octet-stream"
@@ -385,7 +385,7 @@ func (g *GateModular) queryResumeOffsetHandler(w http.ResponseWriter, r *http.Re
 
 	offset = uint64(segmentCount) * params.GetMaxSegmentSize()
 
-	var xmlInfo = struct {
+	xmlInfo := struct {
 		XMLName xml.Name `xml:"QueryResumeOffset"`
 		Version string   `xml:"version,attr"`
 		Offset  uint64   `xml:"Offset"`
@@ -489,10 +489,8 @@ func (g *GateModular) getObjectHandler(w http.ResponseWriter, r *http.Request) {
 				var account sdk.AccAddress
 				if strings.HasPrefix(gnfdAuthorizationParam, gnfd1EddsaSignaturePrefix) {
 					account, preSignedURLErr = reqCtx.verifyGNFD1EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam)
-
 				} else if strings.HasPrefix(gnfdAuthorizationParam, gnfd2EddsaSignaturePrefix) && gnfdOffChainAuthPublicKeyParam != "" {
 					account, preSignedURLErr = reqCtx.verifyGNFD2EddsaSignatureFromPreSignedURL(gnfdAuthorizationParam[len(gnfd1EddsaSignaturePrefix):], gnfdUserParam, gnfdOffChainAuthAppDomainParam, gnfdOffChainAuthPublicKeyParam)
-
 				}
 				if preSignedURLErr != nil {
 					reqCtxErr = preSignedURLErr
@@ -755,7 +753,7 @@ func (g *GateModular) queryUploadProgressHandler(w http.ResponseWriter, r *http.
 		taskStateDescription = servicetypes.StateToDescription(servicetypes.TaskState(taskState))
 	}
 
-	var xmlInfo = struct {
+	xmlInfo := struct {
 		XMLName             xml.Name `xml:"QueryUploadProgress"`
 		Version             string   `xml:"version,attr"`
 		ProgressDescription string   `xml:"ProgressDescription"`
@@ -969,7 +967,7 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 				return
 			}
 			// if the request comes from browser, we will return a built-in dapp for users to make the signature
-			var htmlConfigMap = map[string]string{
+			htmlConfigMap := map[string]string{
 				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
 				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
 				"greenfield_5600-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
@@ -1085,7 +1083,7 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		err = ErrNoPermission
 		return
 	}
-	contentType = reqCtx.vars["content_type"]
+	contentType = r.Header.Get(ContentTypeHeader)
 	if contentType == "" {
 		contentType = ContentDefault
 	}
@@ -1154,10 +1152,12 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 		if err != nil && !strings.Contains(err.Error(), "No such object") {
 			log.CtxErrorw(reqCtx.ctx, "failed to QueryObjectInfo", "error", err)
 			return
-		} else if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || objectInfo.Creator != reqCtx.account || objectInfo.PayloadSize != payloadSize) {
+		}
+		if objectInfo != nil && (objectInfo.ObjectStatus != storagetypes.OBJECT_STATUS_CREATED || (objectInfo.Creator != reqCtx.account && objectInfo.Owner != reqCtx.account) || objectInfo.PayloadSize != payloadSize) {
 			err = ErrInvalidQuery
 			return
-		} else {
+		}
+		if objectInfo == nil {
 			var visibilityInt int64
 			visibilityStr := queryParams.Get("visibility")
 			visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
@@ -1353,6 +1353,10 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		return
 	}
 	fingerprint = commonhash.GenerateChecksum(approvalMsg)
+	contentType = r.Header.Get(ContentTypeHeader)
+	if contentType == "" {
+		contentType = ContentDefault
+	}
 	startTime := time.Now()
 
 	if isUpdate {
@@ -1571,7 +1575,7 @@ func (g *GateModular) delegateCreateFolderHandler(w http.ResponseWriter, r *http
 		err = ErrNoPermission
 		return
 	}
-	contentType = reqCtx.vars["content_type"]
+	contentType = r.Header.Get(ContentTypeHeader)
 	if contentType == "" {
 		contentType = ContentDefault
 	}

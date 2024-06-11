@@ -6,20 +6,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 var (
@@ -83,7 +83,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	if task.GetIsAgentUpload() {
 		expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryEndpoints()), task.GetStorageParams())
 		if makeErr != nil {
-			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", err)
+			log.CtxErrorw(ctx, "failed to makeCheckSumsForAgentUpload", "error", makeErr)
 			err = makeErr
 			return
 		}
@@ -266,7 +266,8 @@ func (e *ExecuteModular) handleReplicatePiece(ctx context.Context, rTask coretas
 }
 
 func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.WaitGroup, rTask coretask.ReplicatePieceTask,
-	spEndpoint string, segmentIdx uint32, redundancyIdx int32, data []byte) (err error) {
+	spEndpoint string, segmentIdx uint32, redundancyIdx int32, data []byte,
+) (err error) {
 	var signature []byte
 	if rTask.GetObjectInfo() == nil {
 		log.CtxErrorw(ctx, "ReplicatePieceTask object info is empty")
@@ -317,7 +318,6 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 	}
 	receive.SetSignature(signature)
 	replicateOnePieceTime := time.Now()
-
 	if err = retry.Do(func() error {
 		// timeout for single piece replication
 		ctxWithTimeout, cancel := context.WithTimeout(ctx, replicateTimeOut)
@@ -340,7 +340,8 @@ func (e *ExecuteModular) doReplicatePiece(ctx context.Context, waitGroup *sync.W
 }
 
 func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.ReplicatePieceTask,
-	spEndpoint string, redundancyIdx int32) ([]byte, error) {
+	spEndpoint string, redundancyIdx int32,
+) ([]byte, error) {
 	var (
 		err           error
 		signature     []byte

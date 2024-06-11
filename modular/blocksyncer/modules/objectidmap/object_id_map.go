@@ -11,13 +11,11 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
-var (
-	EventCreateObject = proto.MessageName(&storagetypes.EventCreateObject{})
-)
+var EventCreateObject = proto.MessageName(&storagetypes.EventCreateObject{})
 
 // buildPrefixTreeEvents maps event types that trigger the creation or deletion of prefix tree nodes.
 // If an event type is present and set to true in this map,

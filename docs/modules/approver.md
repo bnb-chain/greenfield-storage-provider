@@ -1,6 +1,6 @@
 # Approver
 
-Approver module is used to handle approval requests including `CreateBucketApproval`, `MigrateBucketApproval` and `CreateObjectApproval`. The workflow of Approver users can refer [GetApproval](../workflow/workflow.md#get-approval). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Approver module provides an abstract interface, which is called `Approver`, as follows:
+Approver module is used to handle approval requests including `MigrateBucketApproval` . The workflow of Approver users can refer [GetApproval](../introduction/workflow.md#get-approval). We currently abstract SP as the GfSp framework, which provides users with customizable capabilities to meet their specific requirements. Approver module provides an abstract interface, which is called `Approver`, as follows:
 
 Approver is an abstract interface to handle ask approval requests.
 
@@ -36,34 +36,28 @@ type Approver interface {
 
 Approver interface inherits [Modular interface](./common/lifecycle_modular.md#modular-interface), so Approver module can be managed by lifecycle and resource manager.
 
-In terms of the functions provided by Approver module, it can be divided into two parts: CreateBucketApproval and CreateObjectApproval. Both CreateBucketApproval and CreateObjectApproval have three methods: PreXXX, HanldeXXX and PostXXX. Therefore, if you can rewrite these methods to meet your own requirements.
+The functionality of the Approver module is primarily centered around the MigrateBucketApproval process. This process encompasses three distinct phases, each managed by a dedicated method: PreXXX for preliminary actions, HandleXXX for core processing, and PostXXX for follow-up operations. Users have the flexibility to customize these methods to align with their specific needs, enabling a tailored approach to the migration process.
 
-As we can see from the second parameter of the methods defined in `Approver` interface, bucketApproval is splitted into `ApprovalCreateBucketTask` and objectApproval is splitted into `ApprovalCreateObjectTask`. They are also defined as an interface.
+The second parameter in PreMigrateBucketApproval(ctx context.Context, task task.ApprovalMigrateBucketTask), which is ApprovalMigrateBucketTask, is also an interface. This design facilitates future customization by the user.
 
-We can query ApprovalCreateBucket and ApprovalCreateObject tasks that we care about by `QueryTasks` method through using subKey.
+We can query ApprovalMigrateBucket task that we care about by `QueryTasks` method through using subKey.
 
-## ApprovalCreateBucketTask and ApprovalCreateObjectTask
+## ApprovalMigrateBucketTask
 
-ApprovalTask is used to record approval information for users creating buckets and objects. Primary SP approval is required before serving the bucket and object. If the SP approves the message, it will sign the approval message. The greenfield will verify the signature of the approval message to determine whether the SP accepts the bucket and object. ApprovalTask includes `ApprovalCreateBucketTask` and `ApprovalCreateBucketTask`.
+ApprovalTask is used to record approval information for users creating buckets and objects. Primary SP approval is required before serving the bucket and object. If the SP approves the message, it will sign the approval message. The greenfield will verify the signature of the approval message to determine whether the SP accepts the bucket and object. ApprovalTask includes `ApprovalMigrateBucketTask`.
 
 The corresponding interfaces definition is shown below:
 
 - [ApprovalTask](./common/task.md#approvaltask)
-- [ApprovalCreateBucketTask](./common/task.md#approvalcreatebuckettask)
 - [ApprovalMigrateBucketTask](./common/task.md#approvalmigratebuckettask)
-- [ApprovalCreateObjectTask](./common/task.md#approvalcreateobjecttask)
 
 ApprovalTask interface inherits [Task interface](./common/task.md#task), it describes what operations does a Task have. You can overwrite all these methods in your own.
 
 The corresponding `protobuf` definition is shown below:
 
-- [GfSpCreateBucketApprovalTask](./common/proto.md#gfspcreatebucketapprovaltask-proto)
 - [GfSpMigrateBucketApprovalTask](./common/proto.md#gfspmigratebucketapprovaltask-proto)
-- [GfSpCreateObjectApprovalTask](./common/proto.md#gfspcreateobjectapprovaltask-proto)
-- [MsgCreateBucket](./common/proto.md#msgcreatebucket-proto)
 - [MsgMigrateBucket](./common/proto.md#msgmigratebucket-proto)
-- [MsgCreateObject](./common/proto.md#msgcreateobject-proto)
 
 ## GfSp Framework Approver Code
 
-Approver module code implementation: [Approver](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/modular/approver)
+Approver module code implementation: [Approver](https://github.com/zkMeLabs/mechain-storage-provider/tree/master/modular/approver)

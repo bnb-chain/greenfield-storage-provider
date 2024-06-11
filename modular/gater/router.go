@@ -6,9 +6,9 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	mwhttp "github.com/bnb-chain/greenfield-storage-provider/pkg/middleware/http"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	mwhttp "github.com/zkMeLabs/mechain-storage-provider/pkg/middleware/http"
 )
 
 const (
@@ -86,6 +86,7 @@ const (
 	getSPMigratingBucketNumberRouterName           = "GetSPMigratingBucketNumber"
 	verifyMigrateGVGPermissionRouterName           = "VerifyMigrateGVGPermission"
 	getBucketSizeRouterName                        = "GetBucketSize"
+	getRecommendedVGFRouterName                    = "GetRecommendedVGF"
 )
 
 const (
@@ -119,6 +120,9 @@ func (g *GateModular) RegisterHandler(router *mux.Router) {
 	// Get Approval
 	router.Path(GetApprovalPath).Name(approvalRouterName).Methods(http.MethodGet).HandlerFunc(g.getApprovalHandler).
 		Queries(ActionQuery, "{action}")
+
+	// Query recommended virtual group family for creating bucket
+	router.Path(GetRecommendedVirtualGroupFamilyPath).Name(getRecommendedVGFRouterName).Methods(http.MethodGet).HandlerFunc(g.getRecommendedVGFIDHandler)
 
 	// get challenge info
 	router.Path(GetChallengeInfoPath).Name(getChallengeInfoRouterName).Methods(http.MethodGet).HandlerFunc(g.getChallengeInfoHandler)

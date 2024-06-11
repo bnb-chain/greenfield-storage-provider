@@ -15,7 +15,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 const (
@@ -91,7 +91,7 @@ func MakeBootstrapMultiaddr(bootstrap []string) (peersIDs []peer.ID, addrs []ma.
 			log.Errorw("failed to make bootstrap multi addr", "bootstrap", boot, "error", err)
 			return nil, nil, err
 		}
-		//log.Infow("parse bootstrap node info", "id", bootID, "multiaddr", addr.String())
+		// log.Infow("parse bootstrap node info", "id", bootID, "multiaddr", addr.String())
 		peersIDs = append(peersIDs, bootID)
 		addrs = append(addrs, addr)
 	}
@@ -104,7 +104,7 @@ func VerifySignature(spOpAddr string, signBytes []byte, sig []byte) error {
 	if err != nil {
 		return err
 	}
-	sigHash := sdk.Keccak256(signBytes)
+	sigHash := ethcrypto.Keccak256(signBytes)
 
 	if len(sig) != ethcrypto.SignatureLength {
 		return errors.Wrapf(sdkerrors.ErrorInvalidSigner, "signature length (actual: %d) doesn't match typical [R||S||V] signature 65 bytes", len(sig))

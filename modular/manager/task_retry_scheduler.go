@@ -8,17 +8,16 @@ import (
 	"time"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspapp"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfsptqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/store/sqldb"
-	"github.com/bnb-chain/greenfield-storage-provider/util"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfsptqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/store/sqldb"
+	"github.com/zkMeLabs/mechain-storage-provider/util"
 )
 
 const (
@@ -212,26 +211,24 @@ func (s *TaskRetryScheduler) retryReplicateTask(meta *spdb.UploadObjectMeta) err
 	replicateTask.InitReplicatePieceTask(objectInfo, storageParams, s.manager.baseApp.TaskPriority(replicateTask),
 		s.manager.baseApp.TaskTimeout(replicateTask, objectInfo.GetPayloadSize()), s.manager.baseApp.TaskMaxRetry(replicateTask), meta.IsAgentUpload)
 
-	// for objects that have been uploaded but not starting the replication yet, it doesn't have the GVG info the UploadObjectMeta,
-	// so it needs to pick one to start the replicate task.
-	if meta.GlobalVirtualGroupID == 0 {
-		bucketInfo, err := s.manager.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
-		if err != nil || bucketInfo == nil {
-			log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)
-			return err
-		}
-		gvgMeta, err := s.manager.pickGlobalVirtualGroup(context.Background(), bucketInfo.BucketInfo.GlobalVirtualGroupFamilyId, storageParams)
-		log.Infow("pick global virtual group", "gvg_meta", gvgMeta, "error", err)
-		if err != nil {
-			return err
-		}
-		replicateTask.GlobalVirtualGroupId = gvgMeta.ID
-		replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
-	} else {
-		replicateTask.GlobalVirtualGroupId = meta.GlobalVirtualGroupID
-		replicateTask.SecondaryEndpoints = meta.SecondaryEndpoints
+	// retrieve objects from the database that have not completed the replicate piece, reselect gvg, and then add them to the replicate queue
+	bucketInfo, err := s.manager.baseApp.GfSpClient().GetBucketByBucketName(context.Background(), objectInfo.BucketName, true)
+	if err != nil || bucketInfo == nil {
+		log.Errorw("failed to get bucket by bucket name", "bucket", bucketInfo, "error", err)
+		return err
 	}
-
+	gvgMeta, err := s.manager.pickGlobalVirtualGroup(context.Background(), bucketInfo.BucketInfo.GlobalVirtualGroupFamilyId, storageParams)
+	log.Infow("pick global virtual group", "gvg_meta", gvgMeta, "error", err)
+	if err != nil {
+		return err
+	}
+	replicateTask.GlobalVirtualGroupId = gvgMeta.ID
+	replicateTask.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+	meta.GlobalVirtualGroupID = gvgMeta.ID
+	meta.SecondaryEndpoints = gvgMeta.SecondarySPEndpoints
+	if err = s.manager.baseApp.GfSpDB().UpdateUploadProgress(meta); err != nil {
+		log.Errorw("failed to update object task state", "task_info", replicateTask.Info(), "error", err)
+	}
 	err = s.manager.replicateQueue.Push(replicateTask)
 	if err != nil {
 		if errors.Is(err, gfsptqueue.ErrTaskQueueExceed) {

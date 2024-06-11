@@ -4,15 +4,15 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func TestGfSpTQueueWithLimit_Len(t *testing.T) {

@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	gfspserver "github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
+	gfspserver "github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
 	gomock "go.uber.org/mock/gomock"
 	metadata "google.golang.org/grpc/metadata"
 )

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
 )
 
 var _ gfspserver.GfSpReceiveServiceServer = &GfSpBaseApp{}
@@ -19,7 +19,8 @@ var (
 )
 
 func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.GfSpReplicatePieceRequest) (
-	resp *gfspserver.GfSpReplicatePieceResponse, err error) {
+	resp *gfspserver.GfSpReplicatePieceResponse, err error,
+) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {
@@ -53,7 +54,8 @@ func (g *GfSpBaseApp) GfSpReplicatePiece(ctx context.Context, req *gfspserver.Gf
 }
 
 func (g *GfSpBaseApp) GfSpDoneReplicatePiece(ctx context.Context, req *gfspserver.GfSpDoneReplicatePieceRequest) (
-	resp *gfspserver.GfSpDoneReplicatePieceResponse, err error) {
+	resp *gfspserver.GfSpDoneReplicatePieceResponse, err error,
+) {
 	startTime := time.Now()
 	defer func() {
 		if err != nil {

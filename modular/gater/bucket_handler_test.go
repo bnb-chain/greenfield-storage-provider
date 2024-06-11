@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
-	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
+	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/gorilla/mux"
@@ -17,12 +17,12 @@ import (
 	"go.uber.org/mock/gomock"
 
 	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
-	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
-	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
-	metadatatypes "github.com/bnb-chain/greenfield-storage-provider/modular/metadata/types"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver"
+	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
+	metadatatypes "github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
 )
 
 func mockGetBucketReadQuotaRoute(t *testing.T, g *GateModular) *mux.Router {
@@ -54,7 +54,8 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 2}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -105,7 +106,8 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -133,7 +135,8 @@ func TestGateModular_getBucketReadQuotaHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -190,7 +193,8 @@ func TestGateModular_listBucketReadRecordHandler(t *testing.T) {
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 2}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
@@ -240,7 +244,8 @@ func TestGateModular_listBucketReadRecordHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -266,7 +271,8 @@ func TestGateModular_listBucketReadRecordHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -292,7 +298,8 @@ func TestGateModular_listBucketReadRecordHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -320,7 +327,8 @@ func TestGateModular_listBucketReadRecordHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -354,7 +362,8 @@ func TestGateModular_listBucketReadRecordHandler(t *testing.T) {
 				g.baseApp.SetGfSpClient(clientMock)
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				consensusMock.EXPECT().QuerySP(gomock.Any(), gomock.Any()).Return(&sptypes.StorageProvider{Id: 1}, nil).Times(1)
 				consensusMock.EXPECT().QueryVirtualGroupFamily(gomock.Any(), gomock.Any()).Return(&virtualgrouptypes.GlobalVirtualGroupFamily{Id: 1, PrimarySpId: 1}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
@@ -512,7 +521,8 @@ func TestGateModular_queryBucketMigrationProgressHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},
@@ -542,7 +552,8 @@ func TestGateModular_queryBucketMigrationProgressHandler(t *testing.T) {
 
 				consensusMock := consensus.NewMockConsensus(ctrl)
 				consensusMock.EXPECT().QueryBucketInfo(gomock.Any(), gomock.Any()).Return(&storagetypes.BucketInfo{
-					BucketName: mockBucketName, Id: sdkmath.NewUint(1)}, nil).Times(1)
+					BucketName: mockBucketName, Id: sdkmath.NewUint(1),
+				}, nil).Times(1)
 				g.baseApp.SetConsensus(consensusMock)
 				return g
 			},

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func TestScanTQueueBySubKey(t *testing.T) {

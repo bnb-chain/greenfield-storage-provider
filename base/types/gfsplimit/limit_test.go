@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 func TestGfSpLimit_GetMemoryLimit(t *testing.T) {
@@ -508,7 +508,7 @@ func TestGfSpLimiter_GetTransientLimits(t *testing.T) {
 }
 
 func TestGfSpLimiter_GetServiceLimits1(t *testing.T) {
-	m := &GfSpLimiter{ServiceLimit: map[string]*GfSpLimit{"test": &GfSpLimit{Memory: 1}}}
+	m := &GfSpLimiter{ServiceLimit: map[string]*GfSpLimit{"test": {Memory: 1}}}
 	result := m.GetServiceLimits("test")
 	assert.NotNil(t, result)
 }

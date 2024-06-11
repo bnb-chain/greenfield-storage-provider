@@ -4,8 +4,8 @@ import (
 	"encoding/xml"
 	"net/http"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // ErrorResponse is used in gateway error response

@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 )
 
 func TestGfSpClient_UploadObject(t *testing.T) {
@@ -27,14 +27,16 @@ func TestGfSpClient_UploadObject(t *testing.T) {
 			name: "success",
 			task: &gfsptask.GfSpUploadObjectTask{
 				Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3}},
+				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3},
+			},
 			wantedIsErr: false,
 		},
 		{
 			name: "mock rpc error",
 			task: &gfsptask.GfSpUploadObjectTask{
 				Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName1}},
+				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName1},
+			},
 			wantedIsErr: true,
 			wantedErr:   mockRPCErr,
 		},
@@ -42,7 +44,8 @@ func TestGfSpClient_UploadObject(t *testing.T) {
 			name: "mock response returns error",
 			task: &gfsptask.GfSpUploadObjectTask{
 				Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName2}},
+				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName2},
+			},
 			wantedIsErr: true,
 			wantedErr:   ErrNoSuchObject,
 		},
@@ -70,7 +73,8 @@ func TestGfSpClient_UploadObjectSuccess(t *testing.T) {
 	s := mockBufClient()
 	ta := &gfsptask.GfSpUploadObjectTask{
 		Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3}}
+		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3},
+	}
 	err := s.UploadObject(context.TODO(), ta, m, grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.Nil(t, err)
@@ -94,7 +98,8 @@ func TestGfSpClient_UploadObjectFailure2(t *testing.T) {
 	s := mockBufClient()
 	ta := &gfsptask.GfSpUploadObjectTask{
 		Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3}}
+		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3},
+	}
 	err := s.UploadObject(context.TODO(), ta, m, grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.Equal(t, ErrExceptionsStream, err)
@@ -111,14 +116,16 @@ func TestGfSpClient_ResumableUploadObject(t *testing.T) {
 			name: "success",
 			task: &gfsptask.GfSpResumableUploadObjectTask{
 				Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3}},
+				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3},
+			},
 			wantedIsErr: false,
 		},
 		{
 			name: "mock rpc error",
 			task: &gfsptask.GfSpResumableUploadObjectTask{
 				Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName1}},
+				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName1},
+			},
 			wantedIsErr: true,
 			wantedErr:   mockRPCErr,
 		},
@@ -126,7 +133,8 @@ func TestGfSpClient_ResumableUploadObject(t *testing.T) {
 			name: "mock response returns error",
 			task: &gfsptask.GfSpResumableUploadObjectTask{
 				Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName2}},
+				ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName2},
+			},
 			wantedIsErr: true,
 			wantedErr:   ErrNoSuchObject,
 		},
@@ -154,7 +162,8 @@ func TestGfSpClient_ResumableUploadObjectSuccess(t *testing.T) {
 	s := mockBufClient()
 	ta := &gfsptask.GfSpResumableUploadObjectTask{
 		Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3}}
+		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3},
+	}
 	err := s.ResumableUploadObject(context.TODO(), ta, m, grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.Nil(t, err)
@@ -178,7 +187,8 @@ func TestGfSpClient_ResumableUploadObjectFailure2(t *testing.T) {
 	s := mockBufClient()
 	ta := &gfsptask.GfSpResumableUploadObjectTask{
 		Task:       &gfsptask.GfSpTask{TaskPriority: 1},
-		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3}}
+		ObjectInfo: &storagetypes.ObjectInfo{ObjectName: mockObjectName3},
+	}
 	err := s.ResumableUploadObject(context.TODO(), ta, m, grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.Equal(t, ErrExceptionsStream, err)

@@ -5,9 +5,9 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsplimit"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsplimit"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 // resources tracks the current state of resource consumption

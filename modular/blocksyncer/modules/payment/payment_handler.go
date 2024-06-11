@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	bucketmodule "github.com/bnb-chain/greenfield-storage-provider/modular/blocksyncer/modules/bucket"
-	paymenttypes "github.com/bnb-chain/greenfield/x/payment/types"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+	paymenttypes "github.com/evmos/evmos/v12/x/payment/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	bucketmodule "github.com/zkMeLabs/mechain-storage-provider/modular/blocksyncer/modules/bucket"
 	"gorm.io/gorm"
 
 	"github.com/forbole/juno/v4/common"

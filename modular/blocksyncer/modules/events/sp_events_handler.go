@@ -11,9 +11,9 @@ import (
 	"github.com/forbole/juno/v4/common"
 	"github.com/forbole/juno/v4/log"
 
-	"github.com/bnb-chain/greenfield-storage-provider/store/bsdb"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	vgtypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	vgtypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-storage-provider/store/bsdb"
 )
 
 var (
@@ -144,11 +144,9 @@ func (m *Module) handleMigrationBucket(ctx context.Context, block *tmctypes.Resu
 	return map[string][]interface{}{
 		k: v,
 	}
-
 }
 
 func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, completeMigrationBucket *storagetypes.EventCompleteMigrationBucket) map[string][]interface{} {
-
 	eventCompleteMigrateBucketItem := &bsdb.EventCompleteMigrationBucket{
 		BucketID:                   common.BigToHash(completeMigrationBucket.BucketId.BigInt()),
 		Operator:                   common.HexToAddress(completeMigrationBucket.Operator),
@@ -168,7 +166,6 @@ func (m *Module) handleCompleteMigrationBucket(ctx context.Context, block *tmcty
 }
 
 func (m *Module) handleSwapOut(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, swapOut *vgtypes.EventSwapOut) map[string][]interface{} {
-
 	eventSwapOut := &bsdb.EventSwapOut{
 		StorageProviderId:          swapOut.StorageProviderId,
 		GlobalVirtualGroupFamilyId: swapOut.GlobalVirtualGroupFamilyId,
@@ -187,7 +184,6 @@ func (m *Module) handleSwapOut(ctx context.Context, block *tmctypes.ResultBlock,
 }
 
 func (m *Module) handleCancelSwapOut(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelSwapOut *vgtypes.EventCancelSwapOut) map[string][]interface{} {
-
 	eventCancelSwapOut := &bsdb.EventCancelSwapOut{
 		StorageProviderId:          cancelSwapOut.StorageProviderId,
 		GlobalVirtualGroupFamilyId: cancelSwapOut.GlobalVirtualGroupFamilyId,
@@ -206,7 +202,6 @@ func (m *Module) handleCancelSwapOut(ctx context.Context, block *tmctypes.Result
 }
 
 func (m *Module) handleCompleteSwapOut(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, completeSwapOut *vgtypes.EventCompleteSwapOut) map[string][]interface{} {
-
 	eventCompleteSwapOut := &bsdb.EventCompleteSwapOut{
 		StorageProviderId:          completeSwapOut.StorageProviderId,
 		SrcStorageProviderId:       completeSwapOut.SrcStorageProviderId,
@@ -222,11 +217,9 @@ func (m *Module) handleCompleteSwapOut(ctx context.Context, block *tmctypes.Resu
 	return map[string][]interface{}{
 		k: v,
 	}
-
 }
 
 func (m *Module) handleStorageProviderExit(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, storageProviderExit *vgtypes.EventStorageProviderExit) map[string][]interface{} {
-
 	eventSPExit := &bsdb.EventStorageProviderExit{
 		StorageProviderId: storageProviderExit.StorageProviderId,
 		OperatorAddress:   common.HexToAddress(storageProviderExit.OperatorAddress),
@@ -243,7 +236,6 @@ func (m *Module) handleStorageProviderExit(ctx context.Context, block *tmctypes.
 }
 
 func (m *Module) handleCompleteStorageProviderExit(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, completeStorageProviderExit *vgtypes.EventCompleteStorageProviderExit) map[string][]interface{} {
-
 	eventSPCompleteExit := &bsdb.EventCompleteStorageProviderExit{
 		StorageProviderId: completeStorageProviderExit.StorageProviderId,
 		OperatorAddress:   common.HexToAddress(completeStorageProviderExit.OperatorAddress),
@@ -261,7 +253,6 @@ func (m *Module) handleCompleteStorageProviderExit(ctx context.Context, block *t
 }
 
 func (m *Module) handleCancelMigrationBucket(ctx context.Context, block *tmctypes.ResultBlock, txHash common.Hash, cancelMigrationBucket *storagetypes.EventCancelMigrationBucket) map[string][]interface{} {
-
 	eventCancelMigrationBucket := &bsdb.EventCancelMigrationBucket{
 		BucketID:   common.BigToHash(cancelMigrationBucket.BucketId.BigInt()),
 		Operator:   common.HexToAddress(cancelMigrationBucket.Operator),
@@ -293,5 +284,4 @@ func (m *Module) handleRejectMigrateBucket(ctx context.Context, block *tmctypes.
 	return map[string][]interface{}{
 		k: v,
 	}
-
 }

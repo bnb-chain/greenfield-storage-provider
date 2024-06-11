@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
 )
 
 func TestResourceManager_OpenService1(t *testing.T) {

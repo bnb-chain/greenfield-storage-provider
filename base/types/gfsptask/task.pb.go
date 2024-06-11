@@ -5,11 +5,11 @@ package gfsptask
 
 import (
 	fmt "fmt"
-	gfsperrors "github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	types2 "github.com/bnb-chain/greenfield/x/sp/types"
-	types "github.com/bnb-chain/greenfield/x/storage/types"
-	types1 "github.com/bnb-chain/greenfield/x/virtualgroup/types"
+	gfsperrors "github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	proto "github.com/cosmos/gogoproto/proto"
+	types2 "github.com/evmos/evmos/v12/x/sp/types"
+	types "github.com/evmos/evmos/v12/x/storage/types"
+	types1 "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"

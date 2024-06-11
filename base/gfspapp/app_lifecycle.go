@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/signal"
 
-	corelifecycle "github.com/bnb-chain/greenfield-storage-provider/core/lifecycle"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	corelifecycle "github.com/zkMeLabs/mechain-storage-provider/core/lifecycle"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 const (

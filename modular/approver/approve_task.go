@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
-	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
-	"github.com/bnb-chain/greenfield-storage-provider/core/module"
-	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
-	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
-	storetypes "github.com/bnb-chain/greenfield-storage-provider/store/types"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
+	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
+	"github.com/zkMeLabs/mechain-storage-provider/core/module"
+	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
+	"github.com/zkMeLabs/mechain-storage-provider/core/taskqueue"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/metrics"
+	storetypes "github.com/zkMeLabs/mechain-storage-provider/store/types"
 )
 
 var (
@@ -305,9 +305,7 @@ func (a *ApprovalModular) migrateBucketQuotaCheck(ctx context.Context, task core
 }
 
 func (a *ApprovalModular) HandleDelegateCreateObjectApprovalTask(ctx context.Context, task coretask.ApprovalDelegateCreateObjectTask) (bool, error) {
-	var (
-		err error
-	)
+	var err error
 	if task == nil || task.GetDelegateCreateObject() == nil {
 		log.CtxErrorw(ctx, "failed to create object approval due to pointer nil")
 		return false, ErrDanglingPointer

@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
-	corespdb "github.com/bnb-chain/greenfield-storage-provider/core/spdb"
+	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
+	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"
 )
 
 func TestSpDBImpl_GetObjectIntegritySuccess(t *testing.T) {
@@ -369,8 +369,10 @@ func TestSpDBImpl_GetReplicatePieceChecksumSuccess(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `piece_hash` WHERE object_id = ? and segment_index = ? and redundancy_index = ? ORDER BY `piece_hash`.`object_id` LIMIT 1").
-		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{"object_id", "segment_index",
-		"redundancy_index", "piece_checksum"}).AddRow(objectID, segmentIdx, redundancyIdx, pieceChecksum))
+		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{
+		"object_id", "segment_index",
+		"redundancy_index", "piece_checksum",
+	}).AddRow(objectID, segmentIdx, redundancyIdx, pieceChecksum))
 	result, err := s.GetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
@@ -400,8 +402,10 @@ func TestSpDBImpl_GetReplicatePieceChecksumFailure2(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `piece_hash` WHERE object_id = ? and segment_index = ? and redundancy_index = ? ORDER BY `piece_hash`.`object_id` LIMIT 1").
-		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{"object_id", "segment_index",
-		"redundancy_index", "piece_checksum"}).AddRow(objectID, segmentIdx, redundancyIdx, "test"))
+		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{
+		"object_id", "segment_index",
+		"redundancy_index", "piece_checksum",
+	}).AddRow(objectID, segmentIdx, redundancyIdx, "test"))
 	result, err := s.GetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx)
 	assert.Equal(t, hex.InvalidByteError(0x74), err)
 	assert.Nil(t, result)
@@ -417,7 +421,7 @@ func TestSpDBImpl_SetReplicatePieceChecksumSuccess(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`,`version`) VALUES (?,?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`,`version`) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE `piece_checksum`=VALUES(`piece_checksum`),`version`=VALUES(`version`)").
 		WithArgs(objectID, segmentIdx, redundancyIdx, hex.EncodeToString(pieceChecksum), version).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum, version)
@@ -435,7 +439,7 @@ func TestSpDBImpl_SetReplicatePieceChecksumFailure1(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`,`version`) VALUES (?,?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`,`version`) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE `piece_checksum`=VALUES(`piece_checksum`),`version`=VALUES(`version`)").
 		WithArgs(objectID, segmentIdx, redundancyIdx, hex.EncodeToString(pieceChecksum), version).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 	err := s.SetReplicatePieceChecksum(objectID, segmentIdx, redundancyIdx, pieceChecksum, version)
@@ -452,7 +456,7 @@ func TestSpDBImpl_SetReplicatePieceChecksumFailure2(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`) VALUES (?,?,?,?)").
+	mock.ExpectExec("INSERT INTO `piece_hash` (`object_id`,`segment_index`,`redundancy_index`,`piece_checksum`) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE `piece_checksum`=VALUES(`piece_checksum`),`version`=VALUES(`version`)").
 		WillReturnError(mockDBInternalError)
 	mock.ExpectRollback()
 	mock.ExpectCommit()
@@ -485,8 +489,10 @@ func TestSpDBImpl_GetAllReplicatePieceChecksumSuccess(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `piece_hash` WHERE object_id = ? and segment_index = ? and redundancy_index = ? ORDER BY `piece_hash`.`object_id` LIMIT 1").
-		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{"object_id", "segment_index",
-		"redundancy_index", "piece_checksum"}).AddRow(objectID, segmentIdx, redundancyIdx, pieceChecksum))
+		WithArgs(objectID, segmentIdx, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{
+		"object_id", "segment_index",
+		"redundancy_index", "piece_checksum",
+	}).AddRow(objectID, segmentIdx, redundancyIdx, pieceChecksum))
 	result, err := s.GetAllReplicatePieceChecksum(objectID, redundancyIdx, pieceCount)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result))
@@ -516,8 +522,10 @@ func TestSpDBImpl_GetAllReplicatePieceChecksumOptimizedSuccess(t *testing.T) {
 	)
 	s, mock := setupDB(t)
 	mock.ExpectQuery("SELECT * FROM `piece_hash` WHERE object_id = ? and redundancy_index = ? LIMIT 1").
-		WithArgs(objectID, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{"object_id", "segment_index",
-		"redundancy_index", "piece_checksum"}).AddRow(objectID, segmentIdx, redundancyIdx, pieceChecksum))
+		WithArgs(objectID, redundancyIdx).WillReturnRows(sqlmock.NewRows([]string{
+		"object_id", "segment_index",
+		"redundancy_index", "piece_checksum",
+	}).AddRow(objectID, segmentIdx, redundancyIdx, pieceChecksum))
 	result, err := s.GetAllReplicatePieceChecksumOptimized(objectID, redundancyIdx, pieceCount)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result))

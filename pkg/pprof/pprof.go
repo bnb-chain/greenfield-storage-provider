@@ -10,14 +10,12 @@ import (
 	"github.com/felixge/fgprof"
 	"github.com/gorilla/mux"
 
-	coremodule "github.com/bnb-chain/greenfield-storage-provider/core/module"
-	corercmgr "github.com/bnb-chain/greenfield-storage-provider/core/rcmgr"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
+	corercmgr "github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
-var (
-	PProfModularName = strings.ToLower("PProf")
-)
+var PProfModularName = strings.ToLower("PProf")
 var _ coremodule.Modular = &PProf{}
 
 // PProf is used to analyse the performance sp service

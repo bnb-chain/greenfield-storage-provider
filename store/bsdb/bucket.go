@@ -9,7 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/evmos/evmos/v12/x/storage/types"
 )
 
 // GetUserBuckets get buckets info by a user address

@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/sftp"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 
 var (
