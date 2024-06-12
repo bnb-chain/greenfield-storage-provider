@@ -583,7 +583,7 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error:" + err.Error())
+		err = ErrConsensusNotFoundWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error:" + err.Error())
 		return err
 	}
 
