@@ -32,8 +32,8 @@ const (
 	VirtualGroupManagerSpace            = "VirtualGroupManager"
 	RefreshMetaInterval                 = 5 * time.Second
 	MaxStorageUsageRatio                = 0.95
-	DefaultInitialGVGStakingStorageSize = uint64(2) * 1024 * 1024 * 1024 * 1024 // 2TB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
-	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 1024 // 1TB
+	DefaultInitialGVGStakingStorageSize = uint64(1) * 1024 * 1024 * 1024 * 256 // 256GB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
+	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 512 // 0.5TB
 
 	defaultSPCheckTimeout               = 1 * time.Minute
 	defaultSPHealthCheckerInterval      = 10 * time.Second
