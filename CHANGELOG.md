@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.8.0
+BUGFIXES
+* [#1404](https://github.com/bnb-chain/greenfield-storage-provider/pull/1404)  fix: use exponential backoff for task retry policy
+* [#1406](https://github.com/bnb-chain/greenfield-storage-provider/pull/1406)  fix: change replicate failure error code to 404 when object is not found
+* [#1407](https://github.com/bnb-chain/greenfield-storage-provider/pull/1407)  fix: refine error code for bucket migration
+* [#1409](https://github.com/bnb-chain/greenfield-storage-provider/pull/1409)  fix: avoid users to select network in universal endpoint page
+* [#1412](https://github.com/bnb-chain/greenfield-storage-provider/pull/1412)  fix: bs bucket migrate event bug
+* [#1414](https://github.com/bnb-chain/greenfield-storage-provider/pull/1414)  fix: metric check sp
+* [#1415](https://github.com/bnb-chain/greenfield-storage-provider/pull/1415)  fix: check sp health retry
+* [#1422](https://github.com/bnb-chain/greenfield-storage-provider/pull/1422)  fix: gvg staking storage size
+
+FEATURES
+* [#1405](https://github.com/bnb-chain/greenfield-storage-provider/pull/1405)  feat: bs add bucket status field
+* [#1408](https://github.com/bnb-chain/greenfield-storage-provider/pull/1408)  feat: add detailed logs for special customized logs
+* [#1416](https://github.com/bnb-chain/greenfield-storage-provider/pull/1416)  perf: logic
+
+DOCS
+* [#1402](https://github.com/bnb-chain/greenfield-storage-provider/pull/1402)  docs: move SP cmd/module/api docs docs.bnbchain.org to sp repo
+* [#1417](https://github.com/bnb-chain/greenfield-storage-provider/pull/1417)  fix:readme
+
 ## v1.7.0
 BUGFIXES
 * [#1394](https://github.com/bnb-chain/greenfield-storage-provider/pull/1394)  fix: pick new gvg when retry failed replicate piece task
