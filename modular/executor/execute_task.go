@@ -387,6 +387,7 @@ func (e *ExecuteModular) recoverByPrimarySP(ctx context.Context, task coretask.R
 		return err
 	}
 	if task.BySuccessorSP() {
+		log.CtxInfow(ctx, "DebugInfo setPieceMetadata", "object_id", objectId, "segment_index", segmentIdx)
 		err = e.setPieceMetadata(ctx, task, pieceData)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to set piece meta data to DB", "object_name:", task.GetObjectInfo().GetObjectName(), "segment_idx", task.GetSegmentIdx(), "redundancy_idx", task.GetEcIdx(), "error", err)
@@ -701,6 +702,7 @@ func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.Rec
 			"segment_index", segmentIdx, "error", err)
 		return err
 	}
+	log.CtxInfow(ctx, "DebugInfo", "pieceChecksums", pieceChecksums, "segmentCount", segmentCount)
 	if len(pieceChecksums) == int(segmentCount) {
 		integrityChecksum := hash.GenerateIntegrityHash(pieceChecksums)
 		integrityMeta := &spdb.IntegrityMeta{
@@ -709,6 +711,7 @@ func (e *ExecuteModular) setPieceMetadata(ctx context.Context, task coretask.Rec
 			IntegrityChecksum: integrityChecksum,
 			PieceChecksumList: pieceChecksums,
 		}
+		log.CtxInfow(ctx, "SetObjectIntegrity", "object_id", objectID, "segment_index", segmentIdx)
 		if err = e.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta); err != nil {
 			log.CtxErrorw(ctx, "failed to set object integrity", "object_id", objectID,
 				"segment_index", segmentIdx, "error", err)
