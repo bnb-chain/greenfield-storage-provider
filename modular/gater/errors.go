@@ -80,5 +80,5 @@ func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
 }
 
 func ErrConsensusNotFoundWithDetail(detail string) *gfsperrors.GfSpError {
-	return gfsperrors.Register(module.GateModularName, http.StatusNotFound, 55001, detail)
+	return gfsperrors.Register(module.GateModularName, http.StatusNotFound, 55002, detail)
 }
