@@ -170,8 +170,8 @@ function make_config() {
     sed -i -e "s/EnableGCStaleVersionObject = .*/EnableGCStaleVersionObject = true/g" config.toml
     sed -i -e "s/EnableGCExpiredOffChainAuthKeys = .*/EnableGCExpiredOffChainAuthKeys = true/g" config.toml
     sed -i -e "s/GCExpiredOffChainAuthKeysTimeInterval = .*/GCExpiredOffChainAuthKeysTimeInterval = 86400/g" config.toml
-    sed -i -e "s/SealGasLimit = 0/SealGasLimit = 30000/g" config.toml
-    sed -i -e "s/SealFeeAmount = 0/SealFeeAmount = 12000000/g" config.toml
+    sed -i -e "s/GasLimit = 0/GasLimit = 30000/g" config.toml
+    sed -i -e "s/FeeAmount = 0/FeeAmount = 12000000/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}
     cd - >/dev/null
