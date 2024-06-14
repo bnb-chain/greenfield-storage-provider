@@ -145,6 +145,8 @@ func (m *ManageModular) pickGVGAndReplicate(ctx context.Context, vgfID uint32, t
 	gvgMeta, err := m.pickGlobalVirtualGroup(ctx, vgfID, task.GetStorageParams())
 	log.CtxInfow(ctx, "pick global virtual group", "time_cost", time.Since(startPickGVGTime).Seconds(), "gvg_meta", gvgMeta, "error", err)
 	if err != nil {
+		// If there is no way to create a new GVG, release all sp from freeze Pool, better than not serving requests.
+		m.virtualGroupManager.ReleaseAllSP()
 		return err
 	}
 	replicateTask := &gfsptask.GfSpReplicatePieceTask{}

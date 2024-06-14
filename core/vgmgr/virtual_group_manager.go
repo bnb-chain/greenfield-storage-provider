@@ -144,6 +144,9 @@ type VirtualGroupManager interface {
 	// For those SPs which are in the pool will be skipped when creating a GVG, GVGs in the pool will not be chosen to seal Object
 	// until released
 	FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrouptypes.GlobalVirtualGroup)
+	// ReleaseAllSP release all sp and their related GVG, in case that there is no enough balance to create a new GVG.
+	// should use the exisiting GVG even it failed to serve previously.
+	ReleaseAllSP()
 }
 
 // NewVirtualGroupManager is the virtual group manager init api.
