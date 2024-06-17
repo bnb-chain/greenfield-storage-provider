@@ -228,7 +228,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	for i := 0; i < BroadcastTxRetry; i++ {
 		nonce = client.sealAccNonce
 		txOpt := &ctypes.TxOption{
-			NoSimulate: true,
+			NoSimulate: false,
 			Mode:       &mode,
 			GasLimit:   client.gasInfo[Seal].GasLimit,
 			FeeAmount:  client.gasInfo[Seal].FeeAmount,
@@ -292,7 +292,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context,
 	for i := 0; i < BroadcastTxRetry; i++ {
 		nonce = client.sealAccNonce
 		txOpt := &ctypes.TxOption{
-			NoSimulate: true,
+			NoSimulate: false,
 			Mode:       &mode,
 			GasLimit:   client.gasInfo[RejectSeal].GasLimit,
 			FeeAmount:  client.gasInfo[RejectSeal].FeeAmount,
@@ -1276,7 +1276,7 @@ func (client *GreenfieldChainSignClient) SealObjectV2(ctx context.Context, scope
 	for i := 0; i < BroadcastTxRetry; i++ {
 		nonce = client.sealAccNonce
 		txOpt := &ctypes.TxOption{
-			NoSimulate: true,
+			NoSimulate: false,
 			Mode:       &mode,
 			GasLimit:   client.gasInfo[Seal].GasLimit,
 			FeeAmount:  client.gasInfo[Seal].FeeAmount,
