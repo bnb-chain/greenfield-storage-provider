@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/bnb-chain/greenfield-storage-provider/core/consensus"
 	"github.com/bnb-chain/greenfield-storage-provider/core/vgmgr"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/metrics"
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	sptypes "github.com/bnb-chain/greenfield/x/sp/types"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
@@ -30,12 +32,14 @@ const (
 	VirtualGroupManagerSpace            = "VirtualGroupManager"
 	RefreshMetaInterval                 = 5 * time.Second
 	MaxStorageUsageRatio                = 0.95
-	DefaultInitialGVGStakingStorageSize = uint64(1) * 1024 * 1024 * 1024 * 1024 // 1TB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
-	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 512  // 0.5TB
+	DefaultInitialGVGStakingStorageSize = uint64(1) * 1024 * 1024 * 1024 * 256 // 256GB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
+	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 512 // 0.5TB
 
-	defaultSPCheckTimeout          = 3 * time.Second
-	defaultSPHealthCheckerInterval = 10 * time.Second
-	httpStatusPath                 = "/status"
+	defaultSPCheckTimeout               = 1 * time.Minute
+	defaultSPHealthCheckerInterval      = 10 * time.Second
+	defaultSPHealthCheckerRetryInterval = 1 * time.Second
+	defaultSPHealthCheckerMaxRetries    = 5
+	httpStatusPath                      = "/status"
 
 	emptyGVGSafeDeletePeriod = int64(60) * 60 * 24
 )
@@ -525,6 +529,10 @@ func (vgm *virtualGroupManager) FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrou
 	vgm.freezeSPPool.FreezeSPAndGVGs(spID, gvgs)
 }
 
+func (vgm *virtualGroupManager) ReleaseAllSP() {
+	vgm.freezeSPPool.ReleaseAllSP()
+}
+
 // releaseSPAndGVGLoop runs periodically to release SP from the freeze pool
 func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 	ticker := time.NewTicker(ReleaseSPJobInterval)
@@ -773,7 +781,7 @@ func (checker *HealthChecker) checkAllSPHealth() {
 
 func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
 	if !sp.IsInService() {
-		log.CtxInfow(context.Background(), "the sp is not in service,sp is treated as unhealthy", "sp", sp)
+		log.CtxInfow(context.Background(), "the sp is not in service, sp is treated as unhealthy", "sp", sp)
 		return false
 	}
 
@@ -785,30 +793,41 @@ func (checker *HealthChecker) checkSPHealth(sp *sptypes.StorageProvider) bool {
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 		},
-		Timeout: defaultSPCheckTimeout * time.Second,
+		Timeout: defaultSPCheckTimeout,
 	}
 
 	// Create an HTTP request to test the validity of the endpoint
 	urlToCheck := fmt.Sprintf("%s%s", endpoint, httpStatusPath)
-	req, err := http.NewRequestWithContext(ctxTimeout, http.MethodGet, urlToCheck, nil)
-	if err != nil {
-		return false
+	for attempt := 0; attempt < defaultSPHealthCheckerMaxRetries; attempt++ {
+		start := time.Now()
+		req, err := http.NewRequestWithContext(ctxTimeout, http.MethodGet, urlToCheck, nil)
+		if err != nil {
+			log.CtxErrorw(context.Background(), "failed to create request", "sp", sp, "error", err)
+			return false
+		}
+
+		resp, err := client.Do(req)
+		duration := time.Since(start)
+		metrics.SPHealthCheckerTime.WithLabelValues(strconv.Itoa(int(sp.Id))).Observe(duration.Seconds())
+		if err != nil {
+			log.CtxErrorw(context.Background(), "failed to connect to sp", "sp", sp, "error", err, "duration", duration)
+			time.Sleep(defaultSPHealthCheckerRetryInterval)
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			log.CtxInfow(context.Background(), "succeed to check the sp healthy", "sp", sp, "duration", duration)
+			return true
+		} else {
+			metrics.SPHealthCheckerFailureCounter.WithLabelValues(strconv.Itoa(int(sp.Id))).Inc()
+			log.CtxErrorw(context.Background(), "failed to check sp healthy", "sp", sp, "http_status_code", resp.StatusCode, "duration", duration)
+			time.Sleep(defaultSPHealthCheckerRetryInterval)
+		}
 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		log.CtxErrorw(context.Background(), "failed to connect to sp", "sp", sp, "error", err)
-		return false
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.CtxErrorw(context.Background(), "failed to check sp healthy", "sp", sp, "http_status_code", resp.StatusCode, "resp_body", resp.Body)
-		return false
-	}
-
-	log.CtxInfow(context.Background(), "succeed to check the sp healthy", "sp", sp)
-	return true
+	log.CtxErrorw(context.Background(), "failed to check sp healthy after retries", "sp", sp)
+	return false
 }
 
 func (checker *HealthChecker) Start() {
