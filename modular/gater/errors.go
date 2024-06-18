@@ -78,3 +78,7 @@ func ErrNotifySwapOutWithDetail(detail string) *gfsperrors.GfSpError {
 func ErrConsensusWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.GateModularName, http.StatusInternalServerError, 55001, detail)
 }
+
+func ErrConsensusNotFoundWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.GateModularName, http.StatusNotFound, 55002, detail)
+}
