@@ -666,19 +666,19 @@ Workers = 50
 
 ### Join Greenfield Testnet
 
-[Run Testnet SP Node](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node)
+[Run Testnet SP Node](https://docs.bnbchain.org/bnb-greenfield/storage-provider/run-book/run-SP-node)
 
 ## Document
 
 * [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): The official Greenfield Whitepaper.
-* [Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/overview): The Greenfield documents.
-* [Storage Module on Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/storage-module): The storage module on Greenfield Chain.
-* [Storage Provider on Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/storage-provider): The storage provider on Greenfield Chain.
-* [Data Availability Challenge](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/data-availability-challenge): The correctness of payload be stored in SP.
-* [SP Introduction](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/introduction/overview): The Greenfield Storage Provider documents.
-* [SP Compiling and Dependencies](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/compile-dependences): The detailed introduction to sp compiling and dependencies.
-* [Run Local SP Network](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-local-SP-network): The introduction to run local SP env for testing.
-* [Run Testnet SP Node](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node): The introduction to run testnet SP node.
+* [Greenfield](https://docs.bnbchain.org/bnb-greenfield): The Greenfield documents.
+* [Storage Module on Greenfield](https://github.com/bnb-chain/greenfield/tree/master/docs/modules): The storage module on Greenfield Chain.
+* [Storage Provider on Greenfield](https://github.com/bnb-chain/greenfield-storage-provider/tree/master/docs/modules): The storage provider on Greenfield Chain.
+* [Data Availability Challenge](https://github.com/bnb-chain/greenfield/blob/master/docs/modules/data-availability-challenge.md): The correctness of payload be stored in SP.
+* [SP Introduction](https://docs.bnbchain.org/bnb-greenfield/storage-provider/overview): The Greenfield Storage Provider documents.
+* [SP Compiling and Dependencies](https://docs.bnbchain.org/bnb-greenfield/storage-provider/run-book/compile-dependences): The detailed introduction to sp compiling and dependencies.
+* [Run Local SP Network](https://docs.bnbchain.org/bnb-greenfield/storage-provider/run-book/run-local-SP-network): The introduction to run local SP env for testing.
+* [Run Testnet SP Node](https://docs.bnbchain.org/bnb-greenfield/storage-provider/run-book/run-SP-node): The introduction to run testnet SP node.
 
 ## Related Projects
 

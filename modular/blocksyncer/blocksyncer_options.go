@@ -265,6 +265,7 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 			return
 		case <-ticker.C:
 			{
+				rpcStartTime := time.Now()
 				latestBlockHeight, err := b.parserCtx.Node.LatestHeight()
 				if err != nil {
 					log.Errorw("failed to get last block from RPCConfig client",
@@ -273,6 +274,7 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 					continue
 				}
 				metrics.ChainLatestHeight.Set(float64(latestBlockHeight))
+				metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
 				metrics.GoRoutineCount.Set(float64(runtime.NumGoroutine()))
 				Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
 			}
