@@ -32,7 +32,6 @@ const (
 	VirtualGroupManagerSpace            = "VirtualGroupManager"
 	RefreshMetaInterval                 = 5 * time.Second
 	MaxStorageUsageRatio                = 0.95
-
 	DefaultInitialGVGStakingStorageSize = uint64(1) * 1024 * 1024 * 1024 * 256 // 256GB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
 	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 512 // 0.5TB
 
