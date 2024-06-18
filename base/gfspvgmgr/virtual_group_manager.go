@@ -529,6 +529,10 @@ func (vgm *virtualGroupManager) FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrou
 	vgm.freezeSPPool.FreezeSPAndGVGs(spID, gvgs)
 }
 
+func (vgm *virtualGroupManager) ReleaseAllSP() {
+	vgm.freezeSPPool.ReleaseAllSP()
+}
+
 // releaseSPAndGVGLoop runs periodically to release SP from the freeze pool
 func (vgm *virtualGroupManager) releaseSPAndGVGLoop() {
 	ticker := time.NewTicker(ReleaseSPJobInterval)
