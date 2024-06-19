@@ -114,11 +114,13 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		log.CtxErrorw(ctx, "failed to get checksum from db", "task", task, "error", err)
 		return nil, ErrGfSpDBWithDetail("failed to get checksum from db, error: " + err.Error())
 	}
+	// // If it already have integrity data,Avoid repetitive writing db
 	skipInsertIntegrityMeta := false
 	if len(pieceChecksums) != int(segmentCount) {
-		// If it already have data, skip this check
+		// Interface idempotent processing. If it already have integrity data, can skip this check
 		integrityMeta, integrityErr := r.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx())
 		if integrityMeta != nil && integrityErr == nil {
+			// The checksum is obtained from integrityMeta
 			pieceChecksums = integrityMeta.PieceChecksumList
 			skipInsertIntegrityMeta = true
 		} else {
@@ -145,25 +147,27 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 
 	setIntegrityTime := time.Now()
-	if !skipInsertIntegrityMeta && task.GetObjectInfo().GetIsUpdating() {
-		integrityMeta := &corespdb.ShadowIntegrityMeta{
-			ObjectID:          task.GetObjectInfo().Id.Uint64(),
-			RedundancyIndex:   task.GetRedundancyIdx(),
-			IntegrityChecksum: integrityChecksum,
-			PieceChecksumList: pieceChecksums,
-			Version:           task.GetObjectInfo().GetVersion(),
-			ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
+	if !skipInsertIntegrityMeta {
+		if task.GetObjectInfo().GetIsUpdating() {
+			integrityMeta := &corespdb.ShadowIntegrityMeta{
+				ObjectID:          task.GetObjectInfo().Id.Uint64(),
+				RedundancyIndex:   task.GetRedundancyIdx(),
+				IntegrityChecksum: integrityChecksum,
+				PieceChecksumList: pieceChecksums,
+				Version:           task.GetObjectInfo().GetVersion(),
+				ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
+			}
+			err = r.baseApp.GfSpDB().SetShadowObjectIntegrity(integrityMeta)
+		} else {
+			integrityMeta := &corespdb.IntegrityMeta{
+				ObjectID:          task.GetObjectInfo().Id.Uint64(),
+				RedundancyIndex:   task.GetRedundancyIdx(),
+				IntegrityChecksum: integrityChecksum,
+				PieceChecksumList: pieceChecksums,
+				ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
+			}
+			err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 		}
-		err = r.baseApp.GfSpDB().SetShadowObjectIntegrity(integrityMeta)
-	} else if !skipInsertIntegrityMeta {
-		integrityMeta := &corespdb.IntegrityMeta{
-			ObjectID:          task.GetObjectInfo().Id.Uint64(),
-			RedundancyIndex:   task.GetRedundancyIdx(),
-			IntegrityChecksum: integrityChecksum,
-			PieceChecksumList: pieceChecksums,
-			ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
-		}
-		err = r.baseApp.GfSpDB().SetObjectIntegrity(integrityMeta)
 	}
 	metrics.PerfReceivePieceTimeHistogram.WithLabelValues("receive_piece_server_done_set_integrity_time").Observe(time.Since(setIntegrityTime).Seconds())
 	if err != nil {
