@@ -114,10 +114,18 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 		log.CtxErrorw(ctx, "failed to get checksum from db", "task", task, "error", err)
 		return nil, ErrGfSpDBWithDetail("failed to get checksum from db, error: " + err.Error())
 	}
+	skipInsertIntegrityMeta := false
 	if len(pieceChecksums) != int(segmentCount) {
-		log.CtxErrorw(ctx, "replicate piece unfinished", "task", task)
-		err = ErrUnfinishedTask
-		return nil, ErrUnfinishedTask
+		// If it already have data, skip this check
+		integrityMeta, integrityErr := r.baseApp.GfSpDB().GetObjectIntegrity(task.GetObjectInfo().Id.Uint64(), task.GetRedundancyIdx())
+		if integrityMeta != nil && integrityErr == nil {
+			pieceChecksums = integrityMeta.PieceChecksumList
+			skipInsertIntegrityMeta = true
+		} else {
+			log.CtxErrorw(ctx, "replicate piece unfinished", "task", task)
+			err = ErrUnfinishedTask
+			return nil, ErrUnfinishedTask
+		}
 	}
 
 	expectedIntegrityHash := task.GetObjectInfo().GetChecksums()[task.GetRedundancyIdx()+1]
@@ -137,7 +145,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 	}
 
 	setIntegrityTime := time.Now()
-	if task.GetObjectInfo().GetIsUpdating() {
+	if !skipInsertIntegrityMeta && task.GetObjectInfo().GetIsUpdating() {
 		integrityMeta := &corespdb.ShadowIntegrityMeta{
 			ObjectID:          task.GetObjectInfo().Id.Uint64(),
 			RedundancyIndex:   task.GetRedundancyIdx(),
@@ -147,7 +155,7 @@ func (r *ReceiveModular) HandleDoneReceivePieceTask(ctx context.Context, task ta
 			ObjectSize:        task.GetObjectInfo().GetPayloadSize(),
 		}
 		err = r.baseApp.GfSpDB().SetShadowObjectIntegrity(integrityMeta)
-	} else {
+	} else if !skipInsertIntegrityMeta {
 		integrityMeta := &corespdb.IntegrityMeta{
 			ObjectID:          task.GetObjectInfo().Id.Uint64(),
 			RedundancyIndex:   task.GetRedundancyIdx(),
