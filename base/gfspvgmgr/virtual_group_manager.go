@@ -32,8 +32,8 @@ const (
 	VirtualGroupManagerSpace            = "VirtualGroupManager"
 	RefreshMetaInterval                 = 5 * time.Second
 	MaxStorageUsageRatio                = 0.95
-	DefaultInitialGVGStakingStorageSize = uint64(2) * 1024 * 1024 * 1024 * 1024 // 2TB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
-	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 1024 // 1TB
+	DefaultInitialGVGStakingStorageSize = uint64(1) * 1024 * 1024 * 1024 * 256 // 256GB per GVG, chain side DefaultMaxStoreSizePerFamily is 64 TB
+	additionalGVGStakingStorageSize     = uint64(1) * 1024 * 1024 * 1024 * 512 // 0.5TB
 
 	defaultSPCheckTimeout               = 1 * time.Minute
 	defaultSPHealthCheckerInterval      = 10 * time.Second
@@ -527,6 +527,10 @@ func (vgm *virtualGroupManager) genVgfFilter() (*vgmgr.PickVGFFilter, error) {
 // FreezeSPAndGVGs freeze a secondary SP and its GVGs
 func (vgm *virtualGroupManager) FreezeSPAndGVGs(spID uint32, gvgs []*virtualgrouptypes.GlobalVirtualGroup) {
 	vgm.freezeSPPool.FreezeSPAndGVGs(spID, gvgs)
+}
+
+func (vgm *virtualGroupManager) ReleaseAllSP() {
+	vgm.freezeSPPool.ReleaseAllSP()
 }
 
 // releaseSPAndGVGLoop runs periodically to release SP from the freeze pool

@@ -874,7 +874,7 @@ func (g *Gnfd) ConfirmTransaction(ctx context.Context, txHash string) (*sdk.TxRe
 			if strings.Contains(err.Error(), "not found") {
 				// Tx not found, wait for next block and try again
 				if err = g.WaitForNextBlock(ctx); err != nil {
-					return nil, err
+					log.Warnf("failed to wait for next block err:%v", err)
 				}
 				continue
 			}

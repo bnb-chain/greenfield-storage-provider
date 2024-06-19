@@ -278,6 +278,18 @@ func (mr *MockVirtualGroupManagerMockRecorder) FreezeSPAndGVGs(spID, gvgs any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FreezeSPAndGVGs", reflect.TypeOf((*MockVirtualGroupManager)(nil).FreezeSPAndGVGs), spID, gvgs)
 }
 
+// ReleaseAllSP indicates an expected call of ReleaseAllSP.
+func (m *MockVirtualGroupManager) ReleaseAllSP() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ReleaseAllSP")
+}
+
+// FreezeSPAndGVGs indicates an expected call of FreezeSPAndGVGs.
+func (mr *MockVirtualGroupManagerMockRecorder) ReleaseAllSP(spID, gvgs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseAllSP", reflect.TypeOf((*MockVirtualGroupManager)(nil).ReleaseAllSP))
+}
+
 // GenerateGlobalVirtualGroupMeta mocks base method.
 func (m *MockVirtualGroupManager) GenerateGlobalVirtualGroupMeta(genPolicy GenerateGVGSecondarySPsPolicy, excludeSPsFilter ExcludeFilter) (*GlobalVirtualGroupMeta, error) {
 	m.ctrl.T.Helper()
