@@ -408,7 +408,7 @@ func (s *TaskRetryScheduler) retrySealTask(meta *spdb.UploadObjectMeta) error {
 	}
 }
 
-// retryRejectTask is used to send reject unseal tx to chain.
+// retryRejectUnsealTask is used to send reject unseal tx to chain.
 // This task is very lightweight and therefore executed directly inside the scheduler.
 func (s *TaskRetryScheduler) retryRejectUnsealTask(meta *spdb.UploadObjectMeta) error {
 	var (
