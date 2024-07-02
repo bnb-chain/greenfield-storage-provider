@@ -198,7 +198,7 @@ function start_sp() {
 # stop sps #
 ############
 function stop_sp() {
-  kill -9 $(pgrep -f ${sp_bin_name}) >/dev/null 2>&1
+  kill -9 $(LC_ALL=C pgrep -f ${sp_bin_name}) >/dev/null 2>&1
   echo "succeed to stop storage providers"
 }
 
