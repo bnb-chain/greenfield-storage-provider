@@ -1166,6 +1166,10 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 			if err != nil {
 				return
 			}
+			if visibilityInt < 0 || visibilityInt >= int64(len(storagetypes.VisibilityType_value)) {
+				err = ErrInvalidQuery
+				return
+			}
 			visibility = storagetypes.VisibilityType(visibilityInt)
 			if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
 				visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
@@ -1389,6 +1393,10 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		visibilityStr := queryParams.Get("visibility")
 		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
 		if err != nil {
+			return
+		}
+		if visibilityInt < 0 || visibilityInt >= int64(len(storagetypes.VisibilityType_value)) {
+			err = ErrInvalidQuery
 			return
 		}
 		visibility = storagetypes.VisibilityType(visibilityInt)
@@ -1615,6 +1623,10 @@ func (g *GateModular) delegateCreateFolderHandler(w http.ResponseWriter, r *http
 		visibilityStr := queryParams.Get("visibility")
 		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
 		if err != nil {
+			return
+		}
+		if visibilityInt < 0 || visibilityInt >= int64(len(storagetypes.VisibilityType_value)) {
+			err = ErrInvalidQuery
 			return
 		}
 		visibility = storagetypes.VisibilityType(visibilityInt)
