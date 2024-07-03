@@ -95,7 +95,7 @@ function make_config() {
     source db.info
     source sp.info
     # app
-    sed -i -e "s/GRPCAddress = '.*'/GRPCAddress = '127.0.0.1:${cur_port}'/g" config.toml
+    sed -i -e "s/GRPCAddress = '.*'/GRPCAddress = '0.0.0.0:${cur_port}'/g" config.toml
 
     # db
     sed -i -e "s/User = '.*'/User = '${USER}'/g" config.toml
@@ -126,12 +126,12 @@ function make_config() {
 
     # p2p
     if [ ${index} -eq 0 ]; then
-      sed -i -e "s/P2PAddress = '.*'/P2PAddress = '127.0.0.1:9633'/g" config.toml
+      sed -i -e "s/P2PAddress = '.*'/P2PAddress = '0.0.0.0:9633'/g" config.toml
       sed -i -e "s/P2PPrivateKey = '.*'/P2PPrivateKey = '${SP0_P2P_PRIVATE_KEY}'/g" config.toml
     else
-      p2p_port="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 1))
+      p2p_port="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 1))
       sed -i -e "s/P2PAddress = '.*'/P2PAddress = '${p2p_port}'/g" config.toml
-      sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\'\]/g" config.toml
+      sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@0.0.0.0:9633\'\]/g" config.toml
     fi
 
     sed -i -e "s/MaxExecuteNumber = .*/MaxExecuteNumber = 1/g" config.toml
@@ -140,11 +140,11 @@ function make_config() {
     #sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
     #sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
     #sed -i -e "s/DisableProbe = false/DisableProbe = true/" config.toml
-    metrics_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 367))
+    metrics_address="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 367))
     sed -i -e "s/MetricsHTTPAddress = '.*'/MetricsHTTPAddress = '${metrics_address}'/g" config.toml
-    pprof_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 368))
+    pprof_address="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 368))
     sed -i -e "s/PProfHTTPAddress = '.*'/PProfHTTPAddress = '${pprof_address}'/g" config.toml
-    probe_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 369))
+    probe_address="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 369))
     sed -i -e "s/ProbeHTTPAddress = '.*'/ProbeHTTPAddress = '${probe_address}'/g" config.toml
 
     # blocksyncer
