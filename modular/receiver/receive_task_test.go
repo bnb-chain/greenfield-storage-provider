@@ -7,15 +7,17 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/bnb-chain/greenfield-common/go/hash"
+	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfspclient"
 	"github.com/bnb-chain/greenfield-storage-provider/base/gfsppieceop"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	"github.com/bnb-chain/greenfield-storage-provider/core/piecestore"
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 	"github.com/bnb-chain/greenfield-storage-provider/core/taskqueue"
-	storagetypes "github.com/bnb-chain/greenfield/x/storage/types"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 )
 
 func TestErrPieceStoreWithDetail(t *testing.T) {
@@ -236,6 +238,7 @@ func TestHandleDoneReceivePieceTask_PieceCountMismatch(t *testing.T) {
 	mockSPDB := spdb.NewMockSPDB(ctrl)
 	r.baseApp.SetGfSpDB(mockSPDB)
 	mockSPDB.EXPECT().GetAllReplicatePieceChecksumOptimized(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
+	mockSPDB.EXPECT().GetObjectIntegrity(gomock.Any(), gomock.Any()).Return(nil, gorm.ErrRecordNotFound).AnyTimes()
 	_, err := r.HandleDoneReceivePieceTask(context.TODO(), mockTask)
 	assert.NotNil(t, err)
 }
