@@ -33,3 +33,4 @@ logs/
 deployment/localup/local_env/
 deployment/devnetup/local_env/
 greenfield/
+sp.json
