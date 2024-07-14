@@ -106,6 +106,7 @@ function make_config() {
     # chain
     sed -i -e "s/ChainID = '.*'/ChainID = '${CHAIN_ID}'/g" config.toml
     sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/${CHAIN_HTTP_ENDPOINT}'\]/g" config.toml
+    sed -i -e "s/RpcAddress = \[.*\]/RpcAddress = \['http:\/\/${CHAIN_EVM_ENDPOINT}'\]/g" config.toml
 
     # sp account
     sed -i -e "s/SpOperatorAddress = '.*'/SpOperatorAddress = '${OPERATOR_ADDRESS}'/g" config.toml
@@ -170,7 +171,7 @@ function make_config() {
     sed -i -e "s/EnableGCStaleVersionObject = .*/EnableGCStaleVersionObject = true/g" config.toml
     sed -i -e "s/EnableGCExpiredOffChainAuthKeys = .*/EnableGCExpiredOffChainAuthKeys = true/g" config.toml
     sed -i -e "s/GCExpiredOffChainAuthKeysTimeInterval = .*/GCExpiredOffChainAuthKeysTimeInterval = 86400/g" config.toml
-    sed -i -e "s/GasLimit = 0/GasLimit = 30000/g" config.toml
+    sed -i -e "s/GasLimit = 0/GasLimit = 180000/g" config.toml
     sed -i -e "s/FeeAmount = 0/FeeAmount = 12000000/g" config.toml
 
     echo "succeed to generate config.toml in "${sp_dir}

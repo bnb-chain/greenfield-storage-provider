@@ -2,7 +2,9 @@ package signer
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"math/big"
 	"strings"
 	"sync"
 
@@ -10,8 +12,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/grpc"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/evmos/evmos/v12/sdk/client"
 	"github.com/evmos/evmos/v12/sdk/keys"
@@ -73,6 +78,8 @@ type GreenfieldChainSignClient struct {
 
 	gasInfo           map[GasInfoType]GasInfo
 	greenfieldClients map[SignType]*client.GreenfieldClient
+	privateKeys       map[SignType]string
+	evmClient         *ethclient.Client
 	operatorAccNonce  uint64
 	sealAccNonce      uint64
 	gcAccNonce        uint64
@@ -80,7 +87,7 @@ type GreenfieldChainSignClient struct {
 }
 
 // NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
-func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
+func NewGreenfieldChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
 	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, blsPrivKey string,
 ) (*GreenfieldChainSignClient, error) {
 	// init clients
@@ -88,6 +95,13 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
 	if err != nil {
 		log.Errorw("failed to new operator private key manager", "error", err)
+		return nil, err
+	}
+
+	// creat chain client
+	evmClient, err := ethclient.Dial(evmRpcAddr)
+	if err != nil {
+		log.Errorw("failed to new a evm client", "error", err)
 		return nil, err
 	}
 
@@ -151,6 +165,13 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 		return nil, err
 	}
 
+	privateKeys := map[SignType]string{
+		SignOperator: operatorPrivateKey,
+		SignSeal:     sealPrivateKey,
+		SignApproval: approvalPrivateKey,
+		SignGc:       gcPrivateKey,
+	}
+
 	greenfieldClients := map[SignType]*client.GreenfieldClient{
 		SignOperator: operatorClient,
 		SignSeal:     sealClient,
@@ -161,10 +182,12 @@ func NewGreenfieldChainSignClient(rpcAddr, chainID string, gasInfo map[GasInfoTy
 	return &GreenfieldChainSignClient{
 		gasInfo:           gasInfo,
 		greenfieldClients: greenfieldClients,
+		privateKeys:       privateKeys,
 		sealAccNonce:      sealAccNonce,
 		gcAccNonce:        gcAccNonce,
 		operatorAccNonce:  operatorAccNonce,
 		blsKm:             blsKM,
+		evmClient:         evmClient,
 	}, nil
 }
 
@@ -254,6 +277,86 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 		client.sealAccNonce = nonce + 1
 		log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash, "seal_msg", msgSealObject)
 		return txHash, nil
+	}
+
+	// failed to broadcast tx
+	ErrSealObjectOnChain.SetError(fmt.Errorf("failed to broadcast seal object tx, error: %v", err))
+	return "", ErrSealObjectOnChain
+}
+
+// SealObjectEvm seal the object on the mechain by evm tx.
+func (client *GreenfieldChainSignClient) SealObjectEvm(ctx context.Context, scope SignType,
+	sealObject *storagetypes.MsgSealObject,
+) (string, error) {
+	if sealObject == nil {
+		log.CtxError(ctx, "failed to seal object due to pointer dangling")
+		return "", ErrDanglingPointer
+	}
+	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
+	ctx = log.WithValue(ctx, log.CtxKeyObjectName, sealObject.GetObjectName())
+	km, err := client.greenfieldClients[scope].GetKeyManager()
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to get private key", "error", err)
+		return "", ErrSignMsg
+	}
+
+	client.sealLock.Lock()
+	defer client.sealLock.Unlock()
+
+	msgSealObject := storagetypes.NewMsgSealObject(km.GetAddr(),
+		sealObject.GetBucketName(), sealObject.GetObjectName(), sealObject.GetGlobalVirtualGroupId(),
+		sealObject.GetSecondarySpBlsAggSignatures())
+
+	var (
+		txHash   string
+		nonce    uint64
+		nonceErr error
+	)
+	for i := 0; i < BroadcastTxRetry; i++ {
+		nonce = client.sealAccNonce
+
+		txOpts, err := CreateTxOpts(ctx, client.evmClient, client.privateKeys[SignSeal], big.NewInt(1000000), client.gasInfo[Seal].GasLimit, nonce)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to create tx opts", "error", err)
+			return "", err
+		}
+
+		session, err := CreateStorageSession(client.evmClient, *txOpts, types.StorageAddress)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to create session", "error", err)
+			return "", err
+		}
+
+		txRsp, err := session.SealObject(
+			ethcmn.BytesToAddress(km.GetAddr().Bytes()),
+			sealObject.GetBucketName(),
+			sealObject.GetObjectName(),
+			sealObject.GetGlobalVirtualGroupId(),
+			base64.StdEncoding.EncodeToString(sealObject.GetSecondarySpBlsAggSignatures()),
+		)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to seal object", "error", err)
+			return "", err
+		}
+
+		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
+			// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			if nonceErr != nil {
+				log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
+				ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
+				return "", ErrSealObjectOnChain
+			}
+			client.sealAccNonce = nonce
+		}
+
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "retry_number", i, "error", err)
+			continue
+		}
+		client.sealAccNonce = nonce + 1
+		log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash, "seal_msg", msgSealObject)
+		return txRsp.Hash().String(), nil
 	}
 
 	// failed to broadcast tx

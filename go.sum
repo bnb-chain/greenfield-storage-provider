@@ -391,8 +391,8 @@ github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021/go.
 github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1/go.mod h1:KJwIaB5Mv44NWtYuAOFCVOjcI94vtpEz2JU/D2v6IjE=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evanphx/json-patch v4.2.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
-github.com/evmos/go-ethereum v1.10.26 h1:7wlczxUWTwhzJJUyh3Kkqt3/5fdSJzh8c42boc9GuII=
-github.com/evmos/go-ethereum v1.10.26/go.mod h1:EYFyF19u3ezGLD4RqOkLq+ZCXzYbLoNDdZlMt7kyKFg=
+github.com/evmos/go-ethereum v1.10.26-evmos-rc2 h1:tYghk1ZZ8X4/OQ4YI9hvtm8aSN8OSqO0g9vo/sCMdBo=
+github.com/evmos/go-ethereum v1.10.26-evmos-rc2/go.mod h1:/6CsT5Ceen2WPLI/oCA3xMcZ5sWMF/D46SjM/ayY0Oo=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/felixge/fgprof v0.9.3 h1:VvyZxILNuCiUCSXtPtYmmtGvb65nqXh2QFWc0Wpf2/g=
@@ -1657,8 +1657,8 @@ github.com/zkMeLabs/mechain-ibc-go v0.0.0-20240606022514-cf557d479ee7/go.mod h1:
 github.com/zkMeLabs/mechain-juno/v4 v4.0.0-20240606031436-645e73171fcc h1:C9cLLCQ0GiELIrcUZYqUoAXTK3zbvAdunixDBbXon3k=
 github.com/zkMeLabs/mechain-juno/v4 v4.0.0-20240606031436-645e73171fcc/go.mod h1:dwczSVrXc9dEZPbTF4TCgBa/NzW6E+ejM1o8TCIJw2c=
 github.com/zkMeLabs/mechain-ledger-go v0.0.0-20240606024659-869ddf6430ad h1:ghpzjafxRdy/0/t1EXIkxKHX5RU/8vrQS9I7/WD4vYk=
-github.com/zkMeLabs/mechain/v12 v12.0.0-20240606030726-5b45216d5aff h1:08JDQxzEYfe0KZrGfoo57Bi4ZNiTU/UTU2LlvOZQ94c=
-github.com/zkMeLabs/mechain/v12 v12.0.0-20240606030726-5b45216d5aff/go.mod h1:EyFICSm+HfiXGRPnUXEOtB7UJsz2VAQwKfAqi7vZAaQ=
+github.com/zkMeLabs/mechain/v12 v12.1.7-0.20240712112309-309d7fc9c866 h1:UnYge2ZI6SRFIw1XPEjcO9Ei9FJPtE79wNc+j12kMG4=
+github.com/zkMeLabs/mechain/v12 v12.1.7-0.20240712112309-309d7fc9c866/go.mod h1:qtzcWsP3TwBDujJ8D11P63qwMk2025SmMetGUfsKOj8=
 github.com/zondax/hid v0.9.1 h1:gQe66rtmyZ8VeGFcOpbuH3r7erYtNEAezCAYu8LdkJo=
 github.com/zondax/hid v0.9.1/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
 github.com/zondax/ledger-go v0.14.1 h1:Pip65OOl4iJ84WTpA4BKChvOufMhhbxED3BaihoZN4c=

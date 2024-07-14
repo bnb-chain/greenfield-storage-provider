@@ -89,6 +89,7 @@ func (cfg *GfSpConfig) String() string {
 type ChainConfig struct {
 	ChainID                           string   `comment:"required"`
 	ChainAddress                      []string `comment:"required"`
+	RpcAddress                        []string `comment:"required"`
 	SealGasLimit                      uint64   `comment:"optional"`
 	SealFeeAmount                     uint64   `comment:"optional"`
 	RejectSealGasLimit                uint64   `comment:"optional"`
