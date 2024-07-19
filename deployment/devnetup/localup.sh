@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 basedir=$(
-  cd $(dirname $0)
+  cd $(dirname "$0") || exit
   pwd
 )
 workspace=${basedir}
-source ${workspace}/env.info
+source "${workspace}"/env.info
 sp_bin_name=mechain-sp
 sp_bin=${workspace}/../../build/${sp_bin_name}
 
@@ -35,39 +35,39 @@ function generate_sp_db_info() {
     echo "failed to generate sp.info and db.info, please check args by help info"
     exit 1
   fi
-  bash ${workspace}/../../build.sh
-  mkdir -p ${workspace}/${SP_DEPLOY_DIR}
+  bash "${workspace}"/../../build.sh
+  mkdir -p "${workspace}"/"${SP_DEPLOY_DIR}"
 
   sp_json_file=$1
   db_user=$2
   db_password=$3
   db_address=$4
   for ((i = 0; i < ${SP_NUM}; i++)); do
-    mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
-    cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
-    cd ${workspace}/${SP_DEPLOY_DIR}/sp${i}/ || exit 1
+    mkdir -p "${workspace}"/"${SP_DEPLOY_DIR}"/sp${i}
+    cp -rf "${sp_bin}" "${workspace}"/"${SP_DEPLOY_DIR}"/sp${i}/${sp_bin_name}${i}
+    cd "${workspace}"/"${SP_DEPLOY_DIR}"/sp${i}/ || exit 1
     ./${sp_bin_name}${i} config.dump
 
     # generate sp info
-    i_port=$(expr ${SP_START_ENDPOINT_PORT} + $i)
-    endpoint="127.0.0.1:${i_port}"
+    i_port=$(expr "${SP_START_ENDPOINT_PORT}" + $i)
+    endpoint="0.0.0.0:${i_port}"
     {
       echo "#!/usr/bin/env bash"
       echo "SP_ENDPOINT=\"${endpoint}\""
     } >sp.info
-    op_address=$(jq -r ".sp${i}.OperatorAddress" ${sp_json_file})
+    op_address=$(jq -r ".sp${i}.OperatorAddress" "${sp_json_file}")
     echo "OPERATOR_ADDRESS=\"${op_address}\"" >>sp.info
-    opk=$(jq -r ".sp${i}.OperatorPrivateKey" ${sp_json_file})
+    opk=$(jq -r ".sp${i}.OperatorPrivateKey" "${sp_json_file}")
     echo "OPERATOR_PRIVATE_KEY=\"${opk}\"" >>sp.info
-    fpk=$(jq -r ".sp${i}.FundingPrivateKey" ${sp_json_file})
+    fpk=$(jq -r ".sp${i}.FundingPrivateKey" "${sp_json_file}")
     echo "FUNDING_PRIVATE_KEY=\"${fpk}\"" >>sp.info
-    spk=$(jq -r ".sp${i}.SealPrivateKey" ${sp_json_file})
+    spk=$(jq -r ".sp${i}.SealPrivateKey" "${sp_json_file}")
     echo "SEAL_PRIVATE_KEY=\"${spk}\"" >>sp.info
-    apk=$(jq -r ".sp${i}.ApprovalPrivateKey" ${sp_json_file})
+    apk=$(jq -r ".sp${i}.ApprovalPrivateKey" "${sp_json_file}")
     echo "APPROVAL_PRIVATE_KEY=\"${apk}\"" >>sp.info
-    gpk=$(jq -r ".sp${i}.GcPrivateKey" ${sp_json_file})
+    gpk=$(jq -r ".sp${i}.GcPrivateKey" "${sp_json_file}")
     echo "GC_PRIVATE_KEY=\"${gpk}\"" >>sp.info
-    bpk=$(jq -r ".sp${i}.BlsPrivateKey" ${sp_json_file})
+    bpk=$(jq -r ".sp${i}.BlsPrivateKey" "${sp_json_file}")
     echo "BLS_PRIVATE_KEY=\"${bpk}\"" >>sp.info
 
     # generate db info
@@ -78,7 +78,7 @@ function generate_sp_db_info() {
       echo "ADDRESS=\"${db_address}\""
       echo "DATABASE=sp_${i}"
     } >db.info
-    cd - >/dev/null
+    cd - >/dev/null || exit
   done
   print_work_dir
   echo "succeed to generate sp.info and db.info"
@@ -91,11 +91,11 @@ function make_config() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
     cur_port=$((SP_START_PORT + 1000 * $index))
-    cd ${sp_dir} || exit 1
+    cd "${sp_dir}" || exit 1
     source db.info
     source sp.info
     # app
-    sed -i -e "s/GRPCAddress = '.*'/GRPCAddress = '127.0.0.1:${cur_port}'/g" config.toml
+    sed -i -e "s/GRPCAddress = '.*'/GRPCAddress = '0.0.0.0:${cur_port}'/g" config.toml
 
     # db
     sed -i -e "s/User = '.*'/User = '${USER}'/g" config.toml
@@ -106,7 +106,6 @@ function make_config() {
     # chain
     sed -i -e "s/ChainID = '.*'/ChainID = '${CHAIN_ID}'/g" config.toml
     sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/${CHAIN_HTTP_ENDPOINT}'\]/g" config.toml
-    sed -i -e "s/RpcAddress = \[.*\]/RpcAddress = \['http:\/\/${CHAIN_EVM_ENDPOINT}'\]/g" config.toml
 
     # sp account
     sed -i -e "s/SpOperatorAddress = '.*'/SpOperatorAddress = '${OPERATOR_ADDRESS}'/g" config.toml
@@ -127,12 +126,12 @@ function make_config() {
 
     # p2p
     if [ ${index} -eq 0 ]; then
-      sed -i -e "s/P2PAddress = '.*'/P2PAddress = '127.0.0.1:9633'/g" config.toml
+      sed -i -e "s/P2PAddress = '.*'/P2PAddress = '0.0.0.0:9633'/g" config.toml
       sed -i -e "s/P2PPrivateKey = '.*'/P2PPrivateKey = '${SP0_P2P_PRIVATE_KEY}'/g" config.toml
     else
-      p2p_port="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 1))
+      p2p_port="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 1))
       sed -i -e "s/P2PAddress = '.*'/P2PAddress = '${p2p_port}'/g" config.toml
-      sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@127.0.0.1:9633\'\]/g" config.toml
+      sed -i -e "s/Bootstrap = \[\]/Bootstrap = \[\'16Uiu2HAmG4KTyFsK71BVwjY4z6WwcNBVb6vAiuuL9ASWdqiTzNZH@0.0.0.0:9633\'\]/g" config.toml
     fi
 
     sed -i -e "s/MaxExecuteNumber = .*/MaxExecuteNumber = 1/g" config.toml
@@ -141,11 +140,11 @@ function make_config() {
     #sed -i -e "s/DisableMetrics = false/DisableMetrics = true/" config.toml
     #sed -i -e "s/DisablePProf = false/DisablePProf = true/" config.toml
     #sed -i -e "s/DisableProbe = false/DisableProbe = true/" config.toml
-    metrics_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 367))
+    metrics_address="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 367))
     sed -i -e "s/MetricsHTTPAddress = '.*'/MetricsHTTPAddress = '${metrics_address}'/g" config.toml
-    pprof_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 368))
+    pprof_address="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 368))
     sed -i -e "s/PProfHTTPAddress = '.*'/PProfHTTPAddress = '${pprof_address}'/g" config.toml
-    probe_address="127.0.0.1:"$((SP_START_PORT + 1000 * $index + 369))
+    probe_address="0.0.0.0:"$((SP_START_PORT + 1000 * $index + 369))
     sed -i -e "s/ProbeHTTPAddress = '.*'/ProbeHTTPAddress = '${probe_address}'/g" config.toml
 
     # blocksyncer
@@ -171,11 +170,11 @@ function make_config() {
     sed -i -e "s/EnableGCStaleVersionObject = .*/EnableGCStaleVersionObject = true/g" config.toml
     sed -i -e "s/EnableGCExpiredOffChainAuthKeys = .*/EnableGCExpiredOffChainAuthKeys = true/g" config.toml
     sed -i -e "s/GCExpiredOffChainAuthKeysTimeInterval = .*/GCExpiredOffChainAuthKeysTimeInterval = 86400/g" config.toml
-    sed -i -e "s/GasLimit = 0/GasLimit = 180000/g" config.toml
+    sed -i -e "s/GasLimit = 0/GasLimit = 30000/g" config.toml
     sed -i -e "s/FeeAmount = 0/FeeAmount = 12000000/g" config.toml
 
-    echo "succeed to generate config.toml in "${sp_dir}
-    cd - >/dev/null
+    echo "succeed to generate config.toml in ""${sp_dir}"
+    cd - >/dev/null || exit
     index=$(($index + 1))
   done
 }
@@ -186,10 +185,10 @@ function make_config() {
 function start_sp() {
   index=0
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
-    cd ${sp_dir} || exit 1
+    cd "${sp_dir}" || exit 1
     nohup ./${sp_bin_name}${index} --config config.toml </dev/null >log.txt 2>&1 &
-    echo "succeed to start sp in "${sp_dir}
-    cd - >/dev/null
+    echo "succeed to start sp in ""${sp_dir}"
+    cd - >/dev/null || exit
     index=$(($index + 1))
   done
   echo "succeed to start storage providers"
@@ -199,7 +198,7 @@ function start_sp() {
 # stop sps #
 ############
 function stop_sp() {
-  kill -9 $(LC_ALL=C pgrep -f ${sp_bin_name}) >/dev/null 2>&1
+  kill -9 $(LC_ALL=C pgrep -f ${sp_bin_name})
   echo "succeed to stop storage providers"
 }
 
@@ -208,14 +207,14 @@ function stop_sp() {
 #############################################
 function reset_sql_db() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
-    cd ${sp_dir} || exit 1
+    cd "${sp_dir}" || exit 1
     source db.info
-    hostname=$(echo ${ADDRESS} | cut -d : -f 1)
-    port=$(echo ${ADDRESS} | cut -d : -f 2)
-    mysql -u ${USER} -h ${hostname} -P ${port} -p${PWD} -e "drop database if exists ${DATABASE}"
-    mysql -u ${USER} -h ${hostname} -P ${port} -p${PWD} -e "create database ${DATABASE}"
-    echo "succeed to reset sql db in "${sp_dir}
-    cd - >/dev/null
+    hostname=$(echo "${ADDRESS}" | cut -d : -f 1)
+    port=$(echo "${ADDRESS}" | cut -d : -f 2)
+    mysql -u "${USER}" -h "${hostname}" -P "${port}" -p"${PWD}" -e "drop database if exists ${DATABASE}"
+    mysql -u "${USER}" -h "${hostname}" -P "${port}" -p"${PWD}" -e "create database ${DATABASE}"
+    echo "succeed to reset sql db in ""${sp_dir}"
+    cd - >/dev/null || exit
   done
 }
 
@@ -224,10 +223,10 @@ function reset_sql_db() {
 ##########################
 function reset_piece_store() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
-    cd ${sp_dir} || exit 1
+    cd "${sp_dir}" || exit 1
     rm -rf ./data
-    echo "succeed to reset piece store in "${sp_dir}
-    cd - >/dev/null
+    echo "succeed to reset piece store in ""${sp_dir}"
+    cd - >/dev/null || exit
   done
 }
 
@@ -236,7 +235,7 @@ function reset_piece_store() {
 ##################
 function print_work_dir() {
   for sp_dir in ${workspace}/${SP_DEPLOY_DIR}/*; do
-    echo "  "${sp_dir}
+    echo "  ""${sp_dir}"
   done
 }
 
@@ -244,11 +243,11 @@ function print_work_dir() {
 # rebuild sp #
 ##############
 function rebuild() {
-  bash ${workspace}/../../build.sh
-  mkdir -p ${workspace}/${SP_DEPLOY_DIR}
+  bash "${workspace}"/../../build.sh
+  mkdir -p "${workspace}"/"${SP_DEPLOY_DIR}"
   for ((i = 0; i < ${SP_NUM}; i++)); do
-    mkdir -p ${workspace}/${SP_DEPLOY_DIR}/sp${i}
-    cp -rf ${sp_bin} ${workspace}/${SP_DEPLOY_DIR}/sp${i}/${sp_bin_name}${i}
+    mkdir -p "${workspace}"/"${SP_DEPLOY_DIR}"/sp${i}
+    cp -rf "${sp_bin}" "${workspace}"/"${SP_DEPLOY_DIR}"/sp${i}/${sp_bin_name}${i}
   done
 }
 
@@ -256,7 +255,7 @@ function rebuild() {
 # clean local sp env #
 ######################
 function clean_local_sp_env() {
-  rm -rf ${workspace}/${SP_DEPLOY_DIR}
+  rm -rf "${workspace}"/"${SP_DEPLOY_DIR}"
 }
 
 #############
@@ -274,7 +273,7 @@ function main() {
   CMD=$1
   case ${CMD} in
   --generate)
-    generate_sp_db_info $2 $3 $4 $5
+    generate_sp_db_info "$2" "$3" "$4" "$5"
     ;;
   --reset)
     reset_sp
