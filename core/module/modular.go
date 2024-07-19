@@ -308,6 +308,8 @@ type Signer interface {
 	SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
 	// SealObject signs the MsgSealObject and broadcast the tx to greenfield.
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
+	// SealObjectEvm signs the MsgSealObject and broadcast the tx to mechain by evm tx.
+	SealObjectEvm(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
 	// SealObjectV2 signs the MsgSealObject and broadcast the tx to greenfield.
 	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
 	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.

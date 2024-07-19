@@ -337,6 +337,10 @@ func (*NilModular) SealObject(context.Context, *storagetypes.MsgSealObject) (str
 	return "", ErrNilModular
 }
 
+func (*NilModular) SealObjectEvm(context.Context, *storagetypes.MsgSealObject) (string, error) {
+	return "", ErrNilModular
+}
+
 func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSealObject) (string, error) {
 	return "", ErrNilModular
 }

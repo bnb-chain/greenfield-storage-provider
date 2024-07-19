@@ -15,6 +15,7 @@ BUGFIXES
 FEATURES
 
 * [#1392](https://github.com/zkMeLabs/mechain-storage-provider/pull/1392)  feat: provide recommended vgf
+* [#9](https://github.com/zkMeLabs/mechain-storage-provider/pull/8)  feat: use evm type tx call sealObject
 
 ## v1.6.0
 

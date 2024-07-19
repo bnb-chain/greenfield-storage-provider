@@ -160,6 +160,10 @@ func (s *SignModular) SealObject(ctx context.Context, object *storagetypes.MsgSe
 	return s.client.SealObject(ctx, SignSeal, object)
 }
 
+func (s *SignModular) SealObjectEvm(ctx context.Context, object *storagetypes.MsgSealObject) (string, error) {
+	return s.client.SealObjectEvm(ctx, SignSeal, object)
+}
+
 func (s *SignModular) RejectUnSealObject(ctx context.Context, rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
 	return s.client.RejectUnSealObject(ctx, SignSeal, rejectObject)
 }

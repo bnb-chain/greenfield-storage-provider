@@ -31,6 +31,7 @@ logs/
 
 # Local deployment
 deployment/localup/local_env/
+deployment/local
 deployment/devnetup/local_env/
 greenfield/
 sp.json
