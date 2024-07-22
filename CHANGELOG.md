@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.0
+BUGFIXES
+* [#1423](https://github.com/bnb-chain/greenfield-storage-provider/pull/1423) fix: no such object error code
+* [#1429](https://github.com/bnb-chain/greenfield-storage-provider/pull/1429)  fix: visibilityInt value check
+
+FEATURES
+* [#1428](https://github.com/bnb-chain/greenfield-storage-provider/pull/1428)  perf: receive done
+
 ## v1.8.0
 BUGFIXES
 * [#1404](https://github.com/bnb-chain/greenfield-storage-provider/pull/1404)  fix: use exponential backoff for task retry policy
