@@ -32,6 +32,13 @@ function make_config() {
   sed -i -e "s/Modules = \[\]/Modules = \[\'epoch\',\'bucket\',\'object\',\'payment\',\'group\',\'permission\',\'storage_provider\'\,\'prefix_tree\'\,\'virtual_group\'\,\'sp_exit_events\'\,\'object_id_map\'\,\'general\'\]/g" config.toml
   WORKERS=10
   sed -i -e "s/Workers = 0/Workers = ${WORKERS}/g" config.toml
+  sed -i -e "s/DataMonitor = .*/DataMonitor = true/g" config.toml
+  DURATION=5
+  sed -i -e "s/DataStatisticsDuration = 0/DataStatisticsDuration = ${DURATION}/g" config.toml
+  sed -i -e "s/EnableStorage = .*/EnableStorage = true/g" config.toml
+  sed -i -e "s/MaximumStorageCount = 0/MaximumStorageCount = 50/g" config.toml
+
+  sed -i -e "s/Server = \[.*\]/Server = \['BlockSyncer'\]/g" config.toml
 
   echo "succeed to make config"
 }

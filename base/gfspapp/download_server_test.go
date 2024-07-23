@@ -234,7 +234,7 @@ func TestGfSpBaseApp_GfSpGetChallengeInfoSuccess(t *testing.T) {
 	m1.EXPECT().Done().AnyTimes()
 	m.EXPECT().ReserveResource(gomock.Any(), gomock.Any()).Return(m1, nil).Times(1)
 	m.EXPECT().PreChallengePiece(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-	m.EXPECT().HandleChallengePiece(gomock.Any(), gomock.Any()).Return([]byte{1}, [][]byte{{2}}, []byte("mockData"),
+	m.EXPECT().HandleChallengePiece(gomock.Any(), gomock.Any()).Return([]byte{1}, [][]byte{[]byte{2}}, []byte("mockData"),
 		nil).Times(1)
 	m.EXPECT().PostChallengePiece(gomock.Any(), gomock.Any()).Return().Times(1)
 	req := &gfspserver.GfSpGetChallengeInfoRequest{ChallengePieceTask: &gfsptask.GfSpChallengePieceTask{

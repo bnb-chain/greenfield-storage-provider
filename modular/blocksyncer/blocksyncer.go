@@ -46,13 +46,17 @@ type MigrateDBKey struct{}
 
 // BlockSyncerModular synchronizes storage,payment,permission data to db by handling related events
 type BlockSyncerModular struct {
-	config    *config.TomlConfig
-	name      string
-	parserCtx *parser.Context
-	running   atomic.Value
-	context   context.Context
-	scope     rcmgr.ResourceScope
-	baseApp   *gfspapp.GfSpBaseApp
+	config                 *config.TomlConfig
+	name                   string
+	parserCtx              *parser.Context
+	running                atomic.Value
+	context                context.Context
+	scope                  rcmgr.ResourceScope
+	baseApp                *gfspapp.GfSpBaseApp
+	DataMonitorEnable      bool
+	DataStatisticsDuration int64
+	BlockResultStorage     bool
+	MaxBlockNum            int64
 }
 
 // Read concurrency required global variables

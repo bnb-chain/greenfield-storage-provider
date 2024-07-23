@@ -38,7 +38,7 @@ func Test_verifyPongMsgSignature(t *testing.T) {
 	assert.NoError(t, err)
 	pongMsg := &gfspp2p.GfSpPong{
 		Nodes: []*gfspp2p.GfSpNode{
-			{
+			&gfspp2p.GfSpNode{
 				NodeId:    "1234567890",
 				MultiAddr: []string{"/tcp/localhost:7133"},
 			},

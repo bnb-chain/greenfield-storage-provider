@@ -1238,6 +1238,20 @@ message GfSpGetBucketInfoByBucketNameResponse {
   Bucket bucket = 1;
 }
 
+// GfSpGetBsDBInfoRequest  is request type for the GfSpGetBsDBInfo RPC method
+message GfSpGetBsDBInfoRequest {
+  // block height
+  uint64 block_height = 1;
+}
+
+// GfSpGetBsDBInfoResponse  is response type for the GfSpGetBsDBInfo RPC method
+message GfSpGetBsDBInfoResponse {
+  // block height
+  uint64 block_height = 1;
+  string object_total_count = 2;
+  string object_seal_count = 3;
+}
+
 service GfSpMetadataService {
   rpc GfSpGetUserBuckets(GfSpGetUserBucketsRequest)
       returns (GfSpGetUserBucketsResponse) {}
@@ -1349,4 +1363,6 @@ service GfSpMetadataService {
       returns (GfSpSecondarySpIncomeDetailsResponse) {}
   rpc GfSpGetBucketInfoByBucketName(GfSpGetBucketInfoByBucketNameRequest)
       returns (GfSpGetBucketInfoByBucketNameResponse) {}
+  rpc GfSpGetBsDBInfo(GfSpGetBsDBInfoRequest)
+      returns (GfSpGetBsDBInfoResponse) {}
 }

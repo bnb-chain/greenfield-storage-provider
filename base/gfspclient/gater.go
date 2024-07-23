@@ -375,8 +375,9 @@ func (s *GfSpClient) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, 
 	if quotaResult.GetAllowMigrate() {
 		return nil
 	} else {
-		return fmt.Errorf("failed to check src sp has enough bucket quota, bucket(%d), status_code(%d), endpoint(%s), quota(%s)",
-			bucketID, resp.StatusCode, srcSPEndpoint, quotaResult.String())
+		log.CtxErrorw(ctx, "error", fmt.Errorf("failed to check src sp has enough bucket quota, bucket(%d), status_code(%d), endpoint(%s), quota(%s)",
+			bucketID, resp.StatusCode, srcSPEndpoint, quotaResult.String()))
+		return ErrNoEnoughQuota
 	}
 }
 

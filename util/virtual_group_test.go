@@ -189,7 +189,7 @@ func TestBlsAggregate(t *testing.T) {
 		},
 		{
 			name:          "Cannot aggregate bls signature",
-			secondarySigs: [][]byte{{1}},
+			secondarySigs: [][]byte{[]byte{1}},
 			wantedIsErr:   true,
 		},
 	}

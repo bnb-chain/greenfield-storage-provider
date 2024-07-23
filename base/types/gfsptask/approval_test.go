@@ -319,7 +319,7 @@ func TestGfSpCreateBucketApprovalTask_SetCreateBucketInfo(t *testing.T) {
 var mockMigrateBucketInfo = &storagetypes.MsgMigrateBucket{
 	Operator:             "mockOperator",
 	BucketName:           "mockBucketName",
-	DstPrimarySpId:       0o1,
+	DstPrimarySpId:       01,
 	DstPrimarySpApproval: &common.Approval{},
 }
 

@@ -72,6 +72,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
+	github.com/willf/bitset v1.1.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 )
 
@@ -298,9 +299,9 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/protobuf v1.33.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -314,22 +315,22 @@ require (
 )
 
 replace (
-	cosmossdk.io/api => github.com/zkMeLabs/mechain-cosmos-sdk/api v0.0.0-20240606021439-ba398d2ee6d5
-	cosmossdk.io/math => github.com/zkMeLabs/mechain-cosmos-sdk/math v0.0.0-20240606021439-ba398d2ee6d5
-	cosmossdk.io/simapp => github.com/zkMeLabs/mechain-cosmos-sdk/simapp v0.0.0-20240606021439-ba398d2ee6d5
-	github.com/bnb-chain/greenfield-common/go => github.com/zkMeLabs/mechain-common/go v0.0.0-20240606031857-995facf43b48
+	cosmossdk.io/api => github.com/zkMeLabs/mechain-cosmos-sdk/api v0.0.0-20240722072054-a692e90dceb7
+	cosmossdk.io/math => github.com/zkMeLabs/mechain-cosmos-sdk/math v0.0.0-20240722072054-a692e90dceb7
+	cosmossdk.io/simapp => github.com/zkMeLabs/mechain-cosmos-sdk/simapp v0.0.0-20240722072054-a692e90dceb7
+	github.com/bnb-chain/greenfield-common/go => github.com/zkMeLabs/mechain-common/go v0.0.0-20240722095111-376b7eb1879d
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.23.0
 	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v1.3.0
 	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/zkMeLabs/mechain-cosmos-sdk v0.0.0-20240606021439-ba398d2ee6d5
+	github.com/cosmos/cosmos-sdk => github.com/zkMeLabs/mechain-cosmos-sdk v0.0.0-20240722072054-a692e90dceb7
 	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1
-	github.com/cosmos/ibc-go/v7 => github.com/zkMeLabs/mechain-ibc-go v0.0.0-20240606022514-cf557d479ee7
+	github.com/cosmos/ibc-go/v7 => github.com/zkMeLabs/mechain-ibc-go v0.0.0-20240722073438-a0d1a6577104
 	// use Evmos geth fork
 	github.com/ethereum/go-ethereum => github.com/evmos/go-ethereum v1.10.26-evmos-rc2
-	github.com/evmos/evmos-ledger-go => github.com/zkMeLabs/mechain-ledger-go v0.0.0-20240606024659-869ddf6430ad
-	github.com/evmos/evmos/v12 => github.com/zkMeLabs/mechain/v12 v12.1.7-0.20240712112309-309d7fc9c866
-	github.com/forbole/juno/v4 => github.com/zkMeLabs/mechain-juno/v4 v4.0.0-20240606031436-645e73171fcc
+	github.com/evmos/evmos-ledger-go => github.com/zkMeLabs/mechain-ledger-go v0.0.0-20240722074101-8e30d73fd536
+	github.com/evmos/evmos/v12 => github.com/zkMeLabs/mechain/v12 v12.0.0-20240722093541-f933fc682876
+	github.com/forbole/juno/v4 => github.com/zkMeLabs/mechain-juno/v4 v4.0.0-20240722101404-5ade149bba89
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
