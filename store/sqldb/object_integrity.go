@@ -432,7 +432,7 @@ func (s *SpDBImpl) DeleteReplicatePieceChecksum(objectID uint64, segmentIdx uint
 		metrics.SPDBTime.WithLabelValues(SPDBSuccessDelReplicatePieceChecksum).Observe(
 			time.Since(startTime).Seconds())
 	}()
-	err = s.db.Where("object_id = ? and segment_idx = ? and redundancy_index = ? ", objectID, segmentIdx, redundancyIdx).Delete(PieceHashTable{}).Error
+	err = s.db.Where("object_id = ? and segment_index = ? and redundancy_index = ? ", objectID, segmentIdx, redundancyIdx).Delete(PieceHashTable{}).Error
 	return err
 }
 

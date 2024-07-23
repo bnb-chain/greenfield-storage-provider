@@ -50,3 +50,16 @@ func (r *MetadataModular) GfSpQueryResumableUploadSegment(ctx context.Context, r
 		SegmentCount: uint32(len(integrityMeta.PieceChecksumList)),
 	}, nil
 }
+
+func (r *MetadataModular) GfSpGetBsDBInfo(ctx context.Context, req *types.GfSpGetBsDBInfoRequest) (*types.GfSpGetBsDBInfoResponse, error) {
+	data, err := r.baseApp.GfBsDB().GetBsDBDataStatistics(req.GetBlockHeight())
+	if err != nil {
+		return &types.GfSpGetBsDBInfoResponse{}, err
+	}
+
+	return &types.GfSpGetBsDBInfoResponse{
+		BlockHeight:      req.GetBlockHeight(),
+		ObjectTotalCount: data.ObjectTotalCount,
+		ObjectSealCount:  data.ObjectSealCount,
+	}, nil
+}

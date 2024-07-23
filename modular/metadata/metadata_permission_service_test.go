@@ -67,7 +67,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyBucketPermission_Success(t *
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -188,7 +188,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyBucketPermission_Success3(t 
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -206,7 +206,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyBucketPermission_Success3(t 
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -228,7 +228,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyBucketPermission_Success3(t 
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -382,7 +382,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyObjectPermission_Success(t *
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -400,7 +400,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyObjectPermission_Success(t *
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -422,7 +422,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyObjectPermission_Success(t *
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -459,7 +459,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyObjectPermission_Success(t *
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -477,7 +477,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyObjectPermission_Success(t *
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -499,7 +499,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyObjectPermission_Success(t *
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -578,7 +578,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyBucketPermission_Failed(t *t
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -596,7 +596,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyBucketPermission_Failed(t *t
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -685,7 +685,7 @@ func TestMetadataModular_GfSpVerifyPermission_VerifyBucketPermission_Failed2(t *
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -1175,7 +1175,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyObjectPermission_Succ
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -1193,7 +1193,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyObjectPermission_Succ
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -1215,7 +1215,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyObjectPermission_Succ
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -1252,7 +1252,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyObjectPermission_Succ
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -1270,7 +1270,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyObjectPermission_Succ
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -1292,7 +1292,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyObjectPermission_Succ
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -1371,7 +1371,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyBucket_Success(t *tes
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -1389,7 +1389,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyBucket_Success(t *tes
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -1411,7 +1411,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyBucket_Success(t *tes
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -1483,7 +1483,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyGroup_Success(t *test
 	m.EXPECT().GetPermissionsByResourceAndPrincipleType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(string, string, common.Hash, bool) ([]*bsdb.Permission, error) {
 			return []*bsdb.Permission{
-				{
+				&bsdb.Permission{
 					ID:              2,
 					PrincipalType:   3,
 					PrincipalValue:  "3",
@@ -1501,7 +1501,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyGroup_Success(t *test
 	m.EXPECT().GetGroupsByGroupIDAndAccount(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, common.Address, bool) ([]*bsdb.Group, error) {
 			return []*bsdb.Group{
-				{
+				&bsdb.Group{
 					ID:             1,
 					Owner:          common.HexToAddress("0x84A0D38D64498414B14CD979159D57557345CD8B"),
 					GroupID:        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000003"),
@@ -1523,7 +1523,7 @@ func TestMetadataModularGfSpGfSpVerifyPermissionByID_VerifyGroup_Success(t *test
 	m.EXPECT().GetStatementsByPolicyID(gomock.Any(), gomock.Any()).DoAndReturn(
 		func([]common.Hash, bool) ([]*bsdb.Statement, error) {
 			return []*bsdb.Statement{
-				{
+				&bsdb.Statement{
 					ID:             1,
 					PolicyID:       common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000002"),
 					Effect:         "EFFECT_ALLOW",
@@ -1587,7 +1587,7 @@ func TestMetadataModularGfSpListObjectPolicies_Success(t *testing.T) {
 	m.EXPECT().ListObjectPolicies(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, permission_types.ActionType, common.Hash, int) ([]*bsdb.PermissionWithStatement, error) {
 			return []*bsdb.PermissionWithStatement{
-				{
+				&bsdb.PermissionWithStatement{
 					Permission: bsdb.Permission{
 						ID:              2,
 						PrincipalType:   2,
@@ -1666,7 +1666,7 @@ func TestMetadataModularGfSpListObjectPolicies_Success2(t *testing.T) {
 	m.EXPECT().ListObjectPolicies(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(common.Hash, permission_types.ActionType, common.Hash, int) ([]*bsdb.PermissionWithStatement, error) {
 			return []*bsdb.PermissionWithStatement{
-				{
+				&bsdb.PermissionWithStatement{
 					Permission: bsdb.Permission{
 						ID:              2,
 						PrincipalType:   2,

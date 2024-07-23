@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -43,9 +44,13 @@ func NewBlockSyncerModular(app *gfspapp.GfSpBaseApp, cfg *gfspconfig.GfSpConfig)
 	junoCfg := makeBlockSyncerConfig(cfg)
 
 	MainService = &BlockSyncerModular{
-		config:  junoCfg,
-		name:    coremodule.BlockSyncerModularName,
-		baseApp: app,
+		config:                 junoCfg,
+		name:                   coremodule.BlockSyncerModularName,
+		baseApp:                app,
+		DataMonitorEnable:      cfg.BlockSyncer.DataMonitor,
+		DataStatisticsDuration: cfg.BlockSyncer.DataStatisticsDuration,
+		BlockResultStorage:     cfg.BlockSyncer.ChainDataStorage.EnableStorage,
+		MaxBlockNum:            int64(cfg.BlockSyncer.ChainDataStorage.MaximumStorageCount),
 	}
 	blockMap = new(sync.Map)
 	eventMap = new(sync.Map)
@@ -133,7 +138,7 @@ func (b *BlockSyncerModular) initClient(cfg *gfspconfig.GfSpConfig) error {
 		ctx.Node,
 		ctx.Database,
 		ctx.Modules,
-		b.Name(), commitNumber)
+		b.Name(), commitNumber, b.BlockResultStorage)
 	return nil
 }
 
@@ -153,6 +158,18 @@ func (b *BlockSyncerModular) initDB(useMigrate bool) error {
 			}
 		}
 	}
+
+	err = db.Cast(b.parserCtx.Database).Database.PrepareTables(context.TODO(), []schema.Tabler{&models.BlockResult{}})
+	if err != nil {
+		log.Errorw("failed to PrepareTables/AutoMigrate tables", "error", err)
+		return err
+	}
+	err = db.Cast(b.parserCtx.Database).Database.PrepareTables(context.TODO(), []schema.Tabler{&models.DataStat{}})
+	if err != nil {
+		log.Errorw("failed to PrepareTables/AutoMigrate tables", "error", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -203,6 +220,12 @@ func (b *BlockSyncerModular) serve(ctx context.Context) {
 
 	// Start each blocking worker in a go-routine where the worker consumes jobs
 	go worker.Start(ctx)
+
+	// data statistics
+	if b.DataMonitorEnable {
+		b.baseApp.SetGfBsDB(b.baseApp.GfBsDBMaster())
+		go b.dbStatistics(ctx)
+	}
 }
 
 // enqueueNewBlocks enqueues new block heights onto the provided queue.
@@ -241,6 +264,7 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 			return
 		case <-ticker.C:
 			{
+				rpcStartTime := time.Now()
 				latestBlockHeight, err := b.parserCtx.Node.LatestHeight()
 				if err != nil {
 					log.Errorw("failed to get last block from RPCConfig client",
@@ -249,6 +273,7 @@ func (b *BlockSyncerModular) getLatestBlockHeight(ctx context.Context) {
 					continue
 				}
 				metrics.ChainLatestHeight.Set(float64(latestBlockHeight))
+				metrics.ChainRPCTime.Set(float64(time.Since(rpcStartTime).Milliseconds()))
 				metrics.GoRoutineCount.Set(float64(runtime.NumGoroutine()))
 				Cast(b.parserCtx.Indexer).GetLatestBlockHeight().Store(latestBlockHeight)
 			}
@@ -371,6 +396,74 @@ func (b *BlockSyncerModular) prepareMasterFlagTable() error {
 		}
 	}
 	return nil
+}
+
+func (b *BlockSyncerModular) dbStatistics(ctx context.Context) {
+	duration := b.DataStatisticsDuration
+	if duration == 0 {
+		duration = 2000
+	}
+	ticker := time.NewTicker(30 * time.Minute)
+	defer ticker.Stop()
+	var (
+		totalCount, sealCount, delCount []int64
+		preHeight                       int64
+	)
+	lastDbBlockHeight := int64(0)
+	preHeight = 0
+	for range ticker.C {
+		epoch, err := b.parserCtx.Database.GetEpoch(context.TODO())
+		if err != nil {
+			log.Errorw("failed to get last block height from database", "error", err)
+			continue
+		}
+		lastDbBlockHeight = epoch.BlockHeight
+		if lastDbBlockHeight < duration {
+			continue
+		}
+		if lastDbBlockHeight/duration == preHeight/duration {
+			log.Infow("The current height has been counted. Skip", "lastDbBlockHeight", lastDbBlockHeight, "preHeight", preHeight)
+			continue
+		}
+		//if duration = 2000 then 20001 -> 20000, 4050300 -> 4050000
+		latestBlockHeight := lastDbBlockHeight / duration * duration
+		if b.BlockResultStorage && lastDbBlockHeight-b.MaxBlockNum > 0 {
+			if delErr := db.Cast(b.parserCtx.Database).DeleteBlockResult(ctx, lastDbBlockHeight-b.MaxBlockNum); delErr != nil {
+				log.Errorw("failed to delete the expired block result", "error", delErr)
+				metrics.DataStatisticsErr.Inc()
+			}
+		}
+		totalCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "")
+		if err != nil {
+			metrics.DataStatisticsErr.Inc()
+			continue
+		}
+		sealCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "OBJECT_STATUS_SEALED")
+		if err != nil {
+			metrics.DataStatisticsErr.Inc()
+			continue
+		}
+		delCount, err = b.baseApp.GfBsDB().GetObjectCount(latestBlockHeight, "OBJECT_STATUS_DISCONTINUED")
+		if err != nil {
+			metrics.DataStatisticsErr.Inc()
+			continue
+		}
+		totalCountArr, _ := json.Marshal(totalCount)
+		sealCountArr, _ := json.Marshal(sealCount)
+		delCountArr, _ := json.Marshal(delCount)
+		err = db.Cast(b.parserCtx.Database).SaveStat(ctx, &models.DataStat{
+			BlockHeight:      latestBlockHeight,
+			ObjectSealCount:  string(sealCountArr),
+			ObjectTotalCount: string(totalCountArr),
+			ObjectDelCount:   string(delCountArr),
+			UpdateTime:       time.Now().Unix(),
+		})
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to save statistic data", "error", err)
+			metrics.DataStatisticsErr.Inc()
+		}
+		preHeight = latestBlockHeight
+	}
 }
 
 // makeBlockSyncerConfig make block syncer service config from StorageProviderConfig

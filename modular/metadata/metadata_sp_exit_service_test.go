@@ -22,7 +22,7 @@ func TestMetadataModularGfSpListVirtualGroupFamiliesBySpID_Success(t *testing.T)
 	m.EXPECT().ListVirtualGroupFamiliesBySpID(gomock.Any()).DoAndReturn(
 		func(uint32) ([]*bsdb.GlobalVirtualGroupFamily, error) {
 			return []*bsdb.GlobalVirtualGroupFamily{
-				{
+				&bsdb.GlobalVirtualGroupFamily{
 					ID:                         1,
 					GlobalVirtualGroupFamilyId: 1,
 					PrimarySpId:                1,
@@ -221,7 +221,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success(t *testing.T) {
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
-					{
+					&bsdb.EventMigrationBucket{
 						ID:             1,
 						BucketID:       common.HexToHash("1"),
 						Operator:       common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -233,7 +233,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventCompleteMigrationBucket{
-					{
+					&bsdb.EventCompleteMigrationBucket{
 						ID:                         0,
 						BucketID:                   common.HexToHash("1"),
 						Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -246,7 +246,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventCancelMigrationBucket{
-					{
+					&bsdb.EventCancelMigrationBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -257,7 +257,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventRejectMigrateBucket{
-					{
+					&bsdb.EventRejectMigrateBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -290,7 +290,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success2(t *testing.T) {
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
-					{
+					&bsdb.EventMigrationBucket{
 						ID:             1,
 						BucketID:       common.HexToHash("1"),
 						Operator:       common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -302,7 +302,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success2(t *testing.T) {
 					},
 				}, nil,
 				[]*bsdb.EventCancelMigrationBucket{
-					{
+					&bsdb.EventCancelMigrationBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -313,7 +313,7 @@ func TestMetadataModularGfSpListMigrateBucketEvents_Success2(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventRejectMigrateBucket{
-					{
+					&bsdb.EventRejectMigrateBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -397,7 +397,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success(t *testing.T) {
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
-					{
+					&bsdb.EventMigrationBucket{
 						ID:             1,
 						BucketID:       common.HexToHash("1"),
 						Operator:       common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -409,7 +409,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventCompleteMigrationBucket{
-					{
+					&bsdb.EventCompleteMigrationBucket{
 						ID:                         0,
 						BucketID:                   common.HexToHash("1"),
 						Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -422,7 +422,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventCancelMigrationBucket{
-					{
+					&bsdb.EventCancelMigrationBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -433,7 +433,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventRejectMigrateBucket{
-					{
+					&bsdb.EventRejectMigrateBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -460,7 +460,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success2(t *testing.T) {
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
-					{
+					&bsdb.EventMigrationBucket{
 						ID:             1,
 						BucketID:       common.HexToHash("1"),
 						Operator:       common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -472,7 +472,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success2(t *testing.T) {
 					},
 				}, nil,
 				[]*bsdb.EventCancelMigrationBucket{
-					{
+					&bsdb.EventCancelMigrationBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -483,7 +483,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success2(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventRejectMigrateBucket{
-					{
+					&bsdb.EventRejectMigrateBucket{
 						ID:           0,
 						BucketID:     common.HexToHash("1"),
 						Operator:     common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -510,7 +510,7 @@ func TestMetadataModularGfSpGetSPMigratingBucketNumber_Success3(t *testing.T) {
 	m.EXPECT().ListMigrateBucketEvents(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventMigrationBucket, []*bsdb.EventCompleteMigrationBucket, []*bsdb.EventCancelMigrationBucket, []*bsdb.EventRejectMigrateBucket, error) {
 			return []*bsdb.EventMigrationBucket{
-				{
+				&bsdb.EventMigrationBucket{
 					ID:             1,
 					BucketID:       common.HexToHash("1"),
 					Operator:       common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),
@@ -559,7 +559,7 @@ func TestMetadataModularGfSpListSwapOutEvents_Success(t *testing.T) {
 	m.EXPECT().ListSwapOutEvents(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(blockID uint64, spID uint32) ([]*bsdb.EventSwapOut, []*bsdb.EventCompleteSwapOut, []*bsdb.EventCancelSwapOut, error) {
 			return []*bsdb.EventSwapOut{
-					{
+					&bsdb.EventSwapOut{
 						ID:                         1,
 						StorageProviderId:          1,
 						GlobalVirtualGroupFamilyId: 1,
@@ -571,7 +571,7 @@ func TestMetadataModularGfSpListSwapOutEvents_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventCompleteSwapOut{
-					{
+					&bsdb.EventCompleteSwapOut{
 						ID:                         1,
 						StorageProviderId:          1,
 						SrcStorageProviderId:       1,
@@ -583,7 +583,7 @@ func TestMetadataModularGfSpListSwapOutEvents_Success(t *testing.T) {
 					},
 				},
 				[]*bsdb.EventCancelSwapOut{
-					{
+					&bsdb.EventCancelSwapOut{
 						ID:                         1,
 						StorageProviderId:          1,
 						SuccessorSpId:              1,
@@ -617,7 +617,7 @@ func TestMetadataModularGfSpGfSpListSwapOutEvents_Success2(t *testing.T) {
 	m.EXPECT().ListSwapOutEvents(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(blockID uint64, spID uint32) ([]*bsdb.EventSwapOut, []*bsdb.EventCompleteSwapOut, []*bsdb.EventCancelSwapOut, error) {
 			return []*bsdb.EventSwapOut{
-					{
+					&bsdb.EventSwapOut{
 						ID:                         1,
 						StorageProviderId:          1,
 						GlobalVirtualGroupFamilyId: 1,
@@ -629,7 +629,7 @@ func TestMetadataModularGfSpGfSpListSwapOutEvents_Success2(t *testing.T) {
 					},
 				}, nil,
 				[]*bsdb.EventCancelSwapOut{
-					{
+					&bsdb.EventCancelSwapOut{
 						ID:                         1,
 						StorageProviderId:          1,
 						SuccessorSpId:              1,
@@ -846,7 +846,7 @@ func TestMetadataModularGfSpListCompleteMigrationBucketEvents_Success(t *testing
 	m.EXPECT().ListCompleteMigrationBucket(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(spID uint32, filters ...func(*gorm.DB) *gorm.DB) ([]*bsdb.EventCompleteMigrationBucket, error) {
 			return []*bsdb.EventCompleteMigrationBucket{
-				{
+				&bsdb.EventCompleteMigrationBucket{
 					ID:                         0,
 					BucketID:                   common.HexToHash("1"),
 					Operator:                   common.HexToAddress("0x11E0A11A7A01E2E757447B52FBD7152004AC699D"),

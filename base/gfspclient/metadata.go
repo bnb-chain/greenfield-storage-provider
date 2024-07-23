@@ -1149,3 +1149,21 @@ func (s *GfSpClient) GetBucketReadQuotaCount(ctx context.Context, yearMonth stri
 	}
 	return resp.GetCount(), nil
 }
+
+func (s *GfSpClient) GetBsDBInfo(ctx context.Context, blockHeight uint64, opts ...grpc.DialOption) (*types.GfSpGetBsDBInfoResponse, error) {
+	conn, connErr := s.Connection(ctx, s.metadataEndpoint, opts...)
+	if connErr != nil {
+		log.CtxErrorw(ctx, "client failed to connect metadata", "error", connErr)
+		return nil, ErrRPCUnknownWithDetail("client failed to connect metadata, error: ", connErr)
+	}
+	defer conn.Close()
+	req := &types.GfSpGetBsDBInfoRequest{
+		BlockHeight: blockHeight,
+	}
+	resp, err := types.NewGfSpMetadataServiceClient(conn).GfSpGetBsDBInfo(ctx, req)
+	if err != nil {
+		log.CtxErrorw(ctx, "client failed to get bsDB data info", "error", err)
+		return nil, ErrRPCUnknownWithDetail("client failed to get get bsDB data info, error: ", err)
+	}
+	return resp, nil
+}

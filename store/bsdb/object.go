@@ -1,6 +1,7 @@
 package bsdb
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -499,4 +500,59 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 		allObjects = allObjects[:limit]
 	}
 	return allObjects, buckets, err
+}
+
+// GetBsDBDataStatistics get the record of BsDB data statistics
+func (b *BsDBImpl) GetBsDBDataStatistics(blockHeight uint64) (*DataStat, error) {
+	var (
+		dataRecord DataStat
+		err        error
+	)
+
+	startTime := time.Now()
+	methodName := currentFunction()
+	defer func() {
+		if err != nil {
+			MetadataDatabaseFailureMetrics(err, startTime, methodName)
+		} else {
+			MetadataDatabaseSuccessMetrics(startTime, methodName)
+		}
+	}()
+
+	err = b.db.Table((&DataStat{}).TableName()).Where("block_height = ?", blockHeight).Find(&dataRecord).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &dataRecord, err
+}
+
+func (b *BsDBImpl) GetObjectCount(blockHeight int64, objectStatus string) ([]int64, error) {
+	result := make([]int64, 0, ObjectsNumberOfShards)
+	step := int64(1000)
+	for i := 0; i < ObjectsNumberOfShards; i++ {
+		sum := int64(0)
+		primaryKey := int64(0)
+		count := int64(0)
+		for {
+			var err error
+			tmpDB := b.db.Table(GetObjectsTableNameByShardNumber(i))
+			if objectStatus != "" {
+				err = tmpDB.Where("id > ? and id <= ? and status = ? and update_at <= ?", primaryKey, primaryKey+step, objectStatus, blockHeight).Count(&count).Error
+			} else {
+				err = tmpDB.Where("id > ? and id <= ? and update_at <= ?", primaryKey, primaryKey+step, blockHeight).Count(&count).Error
+			}
+			if err == nil && count == 0 {
+				break
+			}
+			if err != nil {
+				log.Errorw("failed to get object count", "error", err, "left", primaryKey, "right", primaryKey+step)
+				return result, err
+			}
+			sum += count
+			primaryKey += step
+			time.Sleep(20 * time.Millisecond)
+		}
+		result = append(result, sum)
+	}
+	return result, nil
 }

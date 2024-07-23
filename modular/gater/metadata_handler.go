@@ -2,6 +2,7 @@ package gater
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/xml"
 	"net/http"
@@ -2770,6 +2771,49 @@ func (g *GateModular) getBucketSizeHandler(w http.ResponseWriter, r *http.Reques
 	grpcResponse := &types.GfSpGetBucketSizeResponse{BucketSize: size}
 
 	respBytes, err = xml.Marshal(grpcResponse)
+	if err != nil {
+		log.Errorf("failed to get bucket total object size", "error", err)
+		return
+	}
+
+	w.Header().Set(ContentTypeHeader, ContentTypeXMLHeaderValue)
+	w.Write(respBytes)
+}
+
+func (g *GateModular) getBsDBDataInfoHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		err          error
+		blockHeight  int64
+		metadataResp *types.GfSpGetBsDBInfoResponse
+		respBytes    []byte
+	)
+	startTime := time.Now()
+	defer func() {
+		if err != nil {
+			modelgateway.MakeErrorResponse(w, gfsperrors.MakeGfSpError(err))
+			metrics.ReqCounter.WithLabelValues(GatewayTotalFailure).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalFailure).Observe(time.Since(startTime).Seconds())
+		} else {
+			metrics.ReqCounter.WithLabelValues(GatewayTotalSuccess).Inc()
+			metrics.ReqTime.WithLabelValues(GatewayTotalSuccess).Observe(time.Since(startTime).Seconds())
+		}
+	}()
+
+	ctx := context.Background()
+	queryParams := r.URL.Query()
+	blockHeightStr := queryParams.Get("block_height")
+	blockHeight, err = util.StringToInt64(blockHeightStr)
+	if err != nil {
+		log.Errorw("failed parse block height", "error", err)
+		err = ErrInvalidQuery
+		return
+	}
+	metadataResp, err = g.baseApp.GfSpClient().GetBsDBInfo(ctx, uint64(blockHeight))
+	if err != nil {
+		log.Errorw("failed to Get BsDB Info", "error", err)
+		return
+	}
+	respBytes, err = xml.Marshal(metadataResp)
 	if err != nil {
 		log.Errorf("failed to get bucket total object size", "error", err)
 		return
