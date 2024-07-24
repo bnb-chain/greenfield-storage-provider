@@ -937,7 +937,7 @@ func (g *GateModular) getRecoverPiece(ctx context.Context, objectInfo *storagety
 				isSuccessorPrimary = true
 			}
 		} else {
-			swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, virtualgrouptypes.NoSpecifiedFamilyId, gvg.Id)
+			swapInInfo, err = g.baseApp.Consensus().QuerySwapInInfo(ctx, virtualgrouptypes.NoSpecifiedFamilyID, gvg.Id)
 			if err != nil {
 				return nil, ErrConsensusWithDetail("failed to query swapInInfo, gvg_id: " + fmt.Sprint(gvg.Id) + ", err: " + err.Error())
 			}
