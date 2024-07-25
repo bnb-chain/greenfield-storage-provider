@@ -50,7 +50,7 @@ const (
 	DefaultProbeAddress = "localhost:24369"
 
 	// DefaultChainID defines the default greenfield chainID.
-	DefaultChainID = "mechain_1000000-121"
+	DefaultChainID = "mechain_5252-1"
 	// DefaultChainAddress defines the default greenfield address.
 	DefaultChainAddress = "http://localhost:26750"
 

@@ -106,6 +106,7 @@ function make_config() {
     # chain
     sed -i -e "s/ChainID = '.*'/ChainID = '${CHAIN_ID}'/g" config.toml
     sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/${CHAIN_HTTP_ENDPOINT}'\]/g" config.toml
+    sed -i -e "s/RpcAddress = \[.*\]/RpcAddress = \['http:\/\/${CHAIN_EVM_ENDPOINT}'\]/g" config.toml
 
     # sp account
     sed -i -e "s/SpOperatorAddress = '.*'/SpOperatorAddress = '${OPERATOR_ADDRESS}'/g" config.toml
