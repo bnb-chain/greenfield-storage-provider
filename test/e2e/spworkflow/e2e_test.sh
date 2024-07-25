@@ -16,8 +16,8 @@ MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
 TEST_ACCOUNT_ADDRESS=${ACCOUNT_ADDR}
 TEST_ACCOUNT_PRIVATE_KEY=${PRIVATE_KEY}
-echo "TEST_ACCOUNT_ADDRESS is "$TEST_ACCOUNT_ADDRESS
-echo "TEST_ACCOUNT_PRIVATE_KEY is "$TEST_ACCOUNT_PRIVATE_KEY
+echo "TEST_ACCOUNT_ADDRESS is ""$TEST_ACCOUNT_ADDRESS"
+echo "TEST_ACCOUNT_PRIVATE_KEY is ""$TEST_ACCOUNT_PRIVATE_KEY"
 
 BUCKET_NAME="spbucket"
 
@@ -27,8 +27,8 @@ BUCKET_NAME="spbucket"
 function greenfield_chain() {
   set -e
   # build Greenfield chain
-  echo ${workspace}
-  cd ${workspace}
+  echo "${workspace}"
+  cd "${workspace}"
   git clone https://github.com/bnb-chain/greenfield.git
   cd greenfield/
   git checkout ${GREENFIELD_TAG}
@@ -48,10 +48,10 @@ function greenfield_chain() {
 #############################################
 function transfer_account() {
   set -e
-  cd ${workspace}/greenfield/
-  ./build/bin/gnfd tx bank send validator0 ${TEST_ACCOUNT_ADDRESS} 500000000000000000000BNB --home ${workspace}/greenfield/deployment/localup/.local/validator0 --keyring-backend test --node http://localhost:26750 -y
+  cd "${workspace}"/greenfield/
+  ./build/bin/gnfd tx bank send validator0 "${TEST_ACCOUNT_ADDRESS}" 500000000000000000000BNB --home "${workspace}"/greenfield/deployment/localup/.local/validator0 --keyring-backend test --node http://localhost:26750 -y
   sleep 2
-  ./build/bin/gnfd q bank balances ${TEST_ACCOUNT_ADDRESS} --node http://localhost:26750
+  ./build/bin/gnfd q bank balances "${TEST_ACCOUNT_ADDRESS}" --node http://localhost:26750
 }
 
 #################################
@@ -59,10 +59,10 @@ function transfer_account() {
 #################################
 function greenfield_sp() {
   set -e
-  cd ${workspace}
+  cd "${workspace}"
   make install-tools
   make build
-  bash ./deployment/localup/localup.sh --generate ${workspace}/greenfield/sp.json ${MYSQL_USER} ${MYSQL_PASSWORD} ${MYSQL_ADDRESS}
+  bash ./deployment/localup/localup.sh --generate "${workspace}"/greenfield/sp.json ${MYSQL_USER} ${MYSQL_PASSWORD} ${MYSQL_ADDRESS}
   bash ./deployment/localup/localup.sh --reset
   bash ./deployment/localup/localup.sh --start
   sleep 60
@@ -83,7 +83,7 @@ function greenfield_sp() {
 ############################################
 function build_cmd() {
   set -e
-  cd ${workspace}
+  cd "${workspace}"
   # build sp
   git clone https://github.com/bnb-chain/greenfield-cmd.git
   cd greenfield-cmd/
@@ -93,7 +93,7 @@ function build_cmd() {
 
   # generate a keystore file to manage private key information
   touch key.txt &
-  echo ${TEST_ACCOUNT_PRIVATE_KEY} >key.txt
+  echo "${TEST_ACCOUNT_PRIVATE_KEY}" >key.txt
   touch password.txt &
   echo "test_sp_function" >password.txt
   ./gnfd-cmd --home ./ --passwordfile password.txt account import key.txt
@@ -102,7 +102,7 @@ function build_cmd() {
   touch config.toml
   {
     echo rpcAddr = \"http://localhost:26750\"
-    echo chainId = \"mechain_1000000-121\"
+    echo chainId = \"mechain_5151-1\"
   } >config.toml
 }
 
@@ -111,7 +111,7 @@ function build_cmd() {
 ############################################
 function build_greenfield-go-sdk() {
   set -e
-  cd ${workspace}
+  cd "${workspace}"
   # build greenfield-go-sdk
   git clone https://github.com/bnb-chain/greenfield-go-sdk.git
   cd greenfield-go-sdk/
@@ -123,7 +123,7 @@ function build_greenfield-go-sdk() {
 ######################
 function test_create_bucket() {
   set -e
-  cd ${workspace}/greenfield-cmd/build/
+  cd "${workspace}"/greenfield-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
   sleep 5
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt bucket create gnfd://${BUCKET_NAME}
@@ -136,11 +136,11 @@ function test_create_bucket() {
 ###########################################################
 function test_file_size_less_than_16_mb() {
   set -e
-  cd ${workspace}/greenfield-cmd/build/
-  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://${BUCKET_NAME}
+  cd "${workspace}"/greenfield-cmd/build/
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" "${workspace}"/test/e2e/spworkflow/testdata/example.json gnfd://${BUCKET_NAME}
   sleep 32
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://${BUCKET_NAME}/example.json ./test_data.json
-  check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./test_data.json
+  check_md5 "${workspace}"/test/e2e/spworkflow/testdata/example.json ./test_data.json
   cat test_data.json
 }
 
@@ -149,7 +149,7 @@ function test_file_size_less_than_16_mb() {
 ##############################################################
 function test_file_size_greater_than_16_mb() {
   set -e
-  cd ${workspace}/greenfield-cmd/build/
+  cd "${workspace}"/greenfield-cmd/build/
   dd if=/dev/urandom of=./random_file bs=17M count=1
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/octet-stream" ./random_file gnfd://${BUCKET_NAME}/random_file
   sleep 32
@@ -164,16 +164,16 @@ function test_file_size_greater_than_16_mb() {
 function test_sp_exit() {
   set -xe
   # choose sp5
-  cd ${workspace}/deployment/localup/local_env/sp5
+  cd "${workspace}"/deployment/localup/local_env/sp5
   operator_address=$(echo "$(grep "SpOperatorAddress" ./config.toml)" | grep -o "0x[0-9a-zA-Z]*")
-  echo ${operator_address}
-  cd ${workspace}/greenfield-cmd/build/
+  echo "${operator_address}"
+  cd "${workspace}"/greenfield-cmd/build/
   ls
   dd if=/dev/urandom of=./random_file bs=17M count=1
-  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt bucket create --primarySP ${operator_address} gnfd://spexit
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt bucket create --primarySP "${operator_address}" gnfd://spexit
   ./gnfd-cmd -c ./config.toml --home ./ bucket head gnfd://spexit
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/octet-stream" ./random_file gnfd://spexit/random_file
-  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" ${workspace}/test/e2e/spworkflow/testdata/example.json gnfd://spexit/example.json
+  ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" "${workspace}"/test/e2e/spworkflow/testdata/example.json gnfd://spexit/example.json
   sleep 16
   ./gnfd-cmd -c ./config.toml --home ./ object head gnfd://spexit/random_file
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/random_file ./new_random_file
@@ -181,13 +181,13 @@ function test_sp_exit() {
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/example.json ./new.json
 
   sleep 10
-  check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new.json
+  check_md5 "${workspace}"/test/e2e/spworkflow/testdata/example.json ./new.json
   check_md5 ./random_file ./new_random_file
 
   # start exiting sp5
-  cd ${workspace}/deployment/localup/local_env/sp5
-  ./gnfd-sp5 -c ./config.toml sp.exit -operatorAddress ${operator_address}
-  cd ${workspace}/greenfield-cmd/build/
+  cd "${workspace}"/deployment/localup/local_env/sp5
+  ./gnfd-sp5 -c ./config.toml sp.exit -operatorAddress "${operator_address}"
+  cd "${workspace}"/greenfield-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
   sleep 180
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
@@ -196,7 +196,7 @@ function test_sp_exit() {
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/example.json ./new1.json
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://spexit/random_file ./new_random_file1
   sleep 10
-  check_md5 ${workspace}/test/e2e/spworkflow/testdata/example.json ./new1.json
+  check_md5 "${workspace}"/test/e2e/spworkflow/testdata/example.json ./new1.json
   check_md5 ./random_file ./new_random_file1
 }
 
@@ -211,10 +211,10 @@ function check_md5() {
   fi
   file1=$1
   file2=$2
-  md5_1=$(md5sum ${file1} | cut -d ' ' -f 1)
-  md5_2=$(md5sum ${file2} | cut -d ' ' -f 1)
-  echo ${md5_1}
-  echo ${md5_2}
+  md5_1=$(md5sum "${file1}" | cut -d ' ' -f 1)
+  md5_2=$(md5sum "${file2}" | cut -d ' ' -f 1)
+  echo "${md5_1}"
+  echo "${md5_2}"
 
   if [ "$md5_1" = "$md5_2" ]; then
     echo "The md5 values are the same."
@@ -252,21 +252,21 @@ function run_sp_exit_e2e() {
 ###################
 function run_go_sdk_e2e() {
   set +e
-  cd ${workspace}/greenfield-go-sdk/
+  cd "${workspace}"/greenfield-go-sdk/
   echo 'run greenfield go sdk e2e test'
   go test -v e2e/e2e_migrate_bucket_test.go
   exit_status_command=$?
   if [ $exit_status_command -eq 0 ]; then
     echo "make e2e_test successful."
   else
-    cat ${workspace}/deployment/localup/local_env/sp0/log.txt
-    cat ${workspace}/deployment/localup/local_env/sp1/log.txt
-    cat ${workspace}/deployment/localup/local_env/sp2/log.txt
-    cat ${workspace}/deployment/localup/local_env/sp3/log.txt
-    cat ${workspace}/deployment/localup/local_env/sp4/log.txt
-    cat ${workspace}/deployment/localup/local_env/sp5/log.txt
-    cat ${workspace}/deployment/localup/local_env/sp6/log.txt
-    cat ${workspace}/deployment/localup/local_env/sp7/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp0/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp1/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp2/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp3/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp4/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp5/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp6/log.txt
+    cat "${workspace}"/deployment/localup/local_env/sp7/log.txt
     exit $exit_status_command
   fi
 }
