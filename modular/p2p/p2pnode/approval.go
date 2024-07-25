@@ -156,7 +156,7 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.Key().String(), err)
 }
 
-// onGetApprovalRequest defines the get approval response protocol callback
+// onGetApprovalResponse defines the get approval response protocol callback
 func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 	resp := &gfsptask.GfSpReplicatePieceApprovalTask{}
 	buf, err := io.ReadAll(s)
