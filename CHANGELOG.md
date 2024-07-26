@@ -11,6 +11,7 @@ BUGFIXES
 * [#1387](https://github.com/zkMeLabs/mechain-storage-provider/pull/1387)  fix: upgrade deps for fixing vulnerabilities
 * [#1386](https://github.com/zkMeLabs/mechain-storage-provider/pull/1386)  fix: check if BucketExtraInfo is nil
 * [#1384](https://github.com/zkMeLabs/mechain-storage-provider/pull/1384)  fix: fix db override
+* [#14](https://github.com/zkMeLabs/mechain-storage-provider/pull/14)  fix: evm chain id read from the configuration file env.info
 
 FEATURES
 
