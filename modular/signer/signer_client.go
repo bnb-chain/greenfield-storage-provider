@@ -315,7 +315,7 @@ func (client *GreenfieldChainSignClient) SealObjectEvm(ctx context.Context, scop
 	for i := 0; i < BroadcastTxRetry; i++ {
 		nonce = client.sealAccNonce
 
-		txOpts, err := CreateTxOpts(ctx, client.evmClient, client.privateKeys[SignSeal], big.NewInt(1000000), client.gasInfo[Seal].GasLimit, nonce)
+		txOpts, err := CreateTxOpts(ctx, client.evmClient, client.privateKeys[SignSeal], big.NewInt(5151), client.gasInfo[Seal].GasLimit, nonce)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to create tx opts", "error", err)
 			return "", err
