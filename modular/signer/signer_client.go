@@ -343,26 +343,23 @@ func (client *GreenfieldChainSignClient) SealObjectEvm(ctx context.Context, scop
 			sealObject.GetGlobalVirtualGroupId(),
 			base64.StdEncoding.EncodeToString(sealObject.GetSecondarySpBlsAggSignatures()),
 		)
-		if err != nil {
-			log.CtxErrorw(ctx, "failed to seal object", "error", err)
-			return "", err
-		}
 
-		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
-			// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
-			if nonceErr != nil {
-				log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
-				ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
-				return "", ErrSealObjectOnChain
+		if err != nil {
+			if strings.Contains(err.Error(), "invalid nonce") {
+				// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				if nonceErr != nil {
+					log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
+					ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
+					return "", ErrSealObjectOnChain
+				}
+				client.sealAccNonce = nonce
 			}
-			client.sealAccNonce = nonce
-		}
 
-		if err != nil {
 			log.CtxErrorw(ctx, "failed to broadcast seal object tx", "retry_number", i, "error", err)
 			continue
 		}
+
 		client.sealAccNonce = nonce + 1
 		log.CtxDebugw(ctx, "succeed to broadcast seal object tx", "tx_hash", txHash, "seal_msg", msgSealObject)
 		return txRsp.Hash().String(), nil
