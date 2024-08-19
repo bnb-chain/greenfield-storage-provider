@@ -583,7 +583,11 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_get_object_info_time").Observe(time.Since(getObjectTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to get object info from consensus", "error", err)
-		err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error:" + err.Error())
+		if strings.Contains(err.Error(), "No such object") {
+			err = ErrConsensusNotFoundWithDetail("failed to get object info from consensus, the object may be deleted. object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error:" + err.Error())
+		} else {
+			err = ErrConsensusWithDetail("failed to get object info from consensus, object_name: " + reqCtx.objectName + ", bucket_name: " + reqCtx.bucketName + ", error:" + err.Error())
+		}
 		return err
 	}
 
@@ -1166,6 +1170,10 @@ func (g *GateModular) delegatePutObjectHandler(w http.ResponseWriter, r *http.Re
 			if err != nil {
 				return
 			}
+			if visibilityInt < 0 || visibilityInt >= int64(len(storagetypes.VisibilityType_value)) {
+				err = ErrInvalidQuery
+				return
+			}
 			visibility = storagetypes.VisibilityType(visibilityInt)
 			if visibility == storagetypes.VISIBILITY_TYPE_UNSPECIFIED {
 				visibility = storagetypes.VISIBILITY_TYPE_INHERIT // set default visibility type
@@ -1389,6 +1397,10 @@ func (g *GateModular) delegateResumablePutObjectHandler(w http.ResponseWriter, r
 		visibilityStr := queryParams.Get("visibility")
 		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
 		if err != nil {
+			return
+		}
+		if visibilityInt < 0 || visibilityInt >= int64(len(storagetypes.VisibilityType_value)) {
+			err = ErrInvalidQuery
 			return
 		}
 		visibility = storagetypes.VisibilityType(visibilityInt)
@@ -1615,6 +1627,10 @@ func (g *GateModular) delegateCreateFolderHandler(w http.ResponseWriter, r *http
 		visibilityStr := queryParams.Get("visibility")
 		visibilityInt, err = strconv.ParseInt(visibilityStr, 10, 32)
 		if err != nil {
+			return
+		}
+		if visibilityInt < 0 || visibilityInt >= int64(len(storagetypes.VisibilityType_value)) {
+			err = ErrInvalidQuery
 			return
 		}
 		visibility = storagetypes.VisibilityType(visibilityInt)
