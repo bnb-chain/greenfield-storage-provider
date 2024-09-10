@@ -1,0 +1,204 @@
+
+services:
+  mysql:
+    image: mysql:8
+    networks:
+      - mechain-network
+    container_name: sp-mysql
+    volumes:
+      - db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mechain
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  init:
+    container_name: init
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network    
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - "./sp.json:/workspace/sp.json:Z"
+      - "./deployment/dockerup:/workspace/deployment/dockerup:Z"
+      - "local-env:/workspace/deployment/dockerup/local_env"
+    working_dir: "/workspace/deployment/dockerup"
+    command: >
+      bash -c "
+      rm -f init_done &&
+      mkdir -p /workspace/build &&
+      cp /usr/bin/mechain-sp /workspace/build/mechain-sp &&
+      bash localup.sh --generate /workspace/sp.json root mechain mysql:3306 && 
+      bash localup.sh --reset &&
+      touch init_done && 
+      sleep infinity
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /workspace/deployment/dockerup/init_done && echo 'OK' || exit 1"]
+      interval: 10s
+      retries: 5
+    restart: "on-failure"
+  spnode-0:
+    container_name: mechain-sp-0
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9033:9033"
+      - "9063:9063"
+      - "9400:9400"
+      - "9401:9401"
+      - "9402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp0/"
+    command: >
+      ./mechain-sp0 --config config.toml </dev/null >log.txt 2>&1 &
+  spnode-1:
+    container_name: mechain-sp-1
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9034:9033"
+      - "9064:9063"
+      - "10400:9400"
+      - "10401:9401"
+      - "10402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp1/"
+    command: >
+      ./mechain-sp1 --config config.toml </dev/null >log.txt 2>&1 &
+  spnode-2:
+    container_name: mechain-sp-2
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9035:9033"
+      - "9065:9063"
+      - "11400:9400"
+      - "11401:9401"
+      - "11402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp2/"
+    command: >
+      ./mechain-sp2 --config config.toml </dev/null >log.txt 2>&1 &
+  spnode-3:
+    container_name: mechain-sp-3
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9036:9033"
+      - "9066:9063"
+      - "12400:9400"
+      - "12401:9401"
+      - "12402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp3/"
+    command: >
+      ./mechain-sp3 --config config.toml </dev/null >log.txt 2>&1 &
+  spnode-4:
+    container_name: mechain-sp-4
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9037:9033"
+      - "9067:9063"
+      - "13400:9400"
+      - "13401:9401"
+      - "13402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp4/"
+    command: >
+      ./mechain-sp4 --config config.toml </dev/null >log.txt 2>&1 &
+  spnode-5:
+    container_name: mechain-sp-5
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9038:9033"
+      - "9068:9063"
+      - "14400:9400"
+      - "14401:9401"
+      - "14402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp5/"
+    command: >
+      ./mechain-sp5 --config config.toml </dev/null >log.txt 2>&1 &
+  spnode-6:
+    container_name: mechain-sp-6
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9039:9033"
+      - "9069:9063"
+      - "15400:9400"
+      - "15401:9401"
+      - "15402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp6/"
+    command: >
+      ./mechain-sp6 --config config.toml </dev/null >log.txt 2>&1 &
+  spnode-7:
+    container_name: mechain-sp-7
+    depends_on:
+      init:
+        condition: service_healthy
+    image: "zkmelabs/mechain-storage-provider"
+    networks:
+      - mechain-network
+    ports:
+      - "9040:9033"
+      - "9070:9063"
+      - "16400:9400"
+      - "16401:9401"
+      - "16402:9402"
+    volumes:
+      - "local-env:/app"
+    working_dir: "/app/sp7/"
+    command: >
+      ./mechain-sp7 --config config.toml </dev/null >log.txt 2>&1 &
+volumes:
+  db-data:
+  local-env:
+networks:
+  mechain-network:
+    external: true

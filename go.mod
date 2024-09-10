@@ -297,9 +297,9 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80
+	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -328,7 +328,7 @@ replace (
 	// use Evmos geth fork
 	github.com/ethereum/go-ethereum => github.com/evmos/go-ethereum v1.10.26-evmos-rc2
 	github.com/evmos/evmos-ledger-go => github.com/zkMeLabs/mechain-ledger-go v0.0.0-20240823061402-ac77cd870592
-	github.com/evmos/evmos/v12 => github.com/zkMeLabs/mechain/v12 v12.0.0-20240823061619-d84f8416dfdf
+	github.com/evmos/evmos/v12 => github.com/zkMeLabs/mechain/v12 v12.0.2-0.20240906095047-3953de230951
 	github.com/forbole/juno/v4 => github.com/zkMeLabs/mechain-juno/v4 v4.0.0-20240823063642-e52a6ad50f9e
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/quic-go/quic-go => github.com/quic-go/quic-go v0.41.0

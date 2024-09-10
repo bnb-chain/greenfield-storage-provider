@@ -1,0 +1,11 @@
+# build
+build
+
+# deployment
+deployment
+
+# development
+.github
+.vscode
+.idea
+node_modules

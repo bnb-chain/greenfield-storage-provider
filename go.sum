@@ -2265,8 +2265,8 @@ github.com/zkMeLabs/mechain-juno/v4 v4.0.0-20240823063642-e52a6ad50f9e h1:EH2ZqN
 github.com/zkMeLabs/mechain-juno/v4 v4.0.0-20240823063642-e52a6ad50f9e/go.mod h1:o6rGDaApccqwFQ8i96bdKUiL9qfUDxU7zA1aRbd3bjE=
 github.com/zkMeLabs/mechain-ledger-go v0.0.0-20240823061402-ac77cd870592 h1:MCwGOJOhbkosyLdCqaPtAdCEK/HvwegTlAPbZy7xsWQ=
 github.com/zkMeLabs/mechain-ledger-go v0.0.0-20240823061402-ac77cd870592/go.mod h1:mWugNiDfEqaIKNKioMPlzPhsdzChf3zvKlzgv4WNeCY=
-github.com/zkMeLabs/mechain/v12 v12.0.0-20240823061619-d84f8416dfdf h1:EYZcFSLli/lbf8dXmuFoz1RCwzb8ftVU72qx2M4ENcU=
-github.com/zkMeLabs/mechain/v12 v12.0.0-20240823061619-d84f8416dfdf/go.mod h1:trw5HCvbYMIx0lPkto00xUoz2UTwSaIjw5SBJqzraqE=
+github.com/zkMeLabs/mechain/v12 v12.0.2-0.20240906095047-3953de230951 h1:Q80DcKRr3FE1TbOHCURU6MjfEu/MrO6WbAsg/RIctCA=
+github.com/zkMeLabs/mechain/v12 v12.0.2-0.20240906095047-3953de230951/go.mod h1:trw5HCvbYMIx0lPkto00xUoz2UTwSaIjw5SBJqzraqE=
 github.com/zondax/hid v0.9.1 h1:gQe66rtmyZ8VeGFcOpbuH3r7erYtNEAezCAYu8LdkJo=
 github.com/zondax/hid v0.9.1/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
 github.com/zondax/ledger-go v0.14.1 h1:Pip65OOl4iJ84WTpA4BKChvOufMhhbxED3BaihoZN4c=

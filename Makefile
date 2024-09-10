@@ -78,3 +78,32 @@ proto-format:
 
 proto-format-check:
 	buf format --diff --exit-code
+
+###############################################################################
+###                        Docker                                           ###
+###############################################################################
+DOCKER := $(shell which docker)
+DOCKER_IMAGE := zkmelabs/mechain-storage-provider
+COMMIT_HASH := $(shell git rev-parse --short=7 HEAD)
+DOCKER_TAG := $(COMMIT_HASH)
+
+build-docker:
+	$(DOCKER) build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+	$(DOCKER) tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+	$(DOCKER) tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:${COMMIT_HASH}
+
+.PHONY: build-docker
+###############################################################################
+###                        Docker Compose                                   ###
+###############################################################################
+build-dcf:
+	go run cmd/ci/main.go
+
+start-dc:
+	docker compose up -d
+	docker compose ps
+	
+stop-dc:
+	docker compose down --volumes
+
+.PHONY: build-dcf start-dc stop-dc
