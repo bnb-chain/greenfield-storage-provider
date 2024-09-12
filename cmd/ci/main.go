@@ -24,7 +24,7 @@ services:
       timeout: 5s
       retries: 5
   init:
-    container_name: init
+    container_name: init-sp
     image: "{{$.Image}}"
     networks:
       - mechain-network    
@@ -32,7 +32,7 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - "{{$.ProjectBasePath}}/sp.json:/workspace/sp.json:Z"
+      - "{{$.ProjectBasePath}}/deployment/dockerup/sp.json:/workspace/sp.json:Z"
       - "{{$.ProjectBasePath}}/deployment/dockerup:/workspace/deployment/dockerup:Z"
       - "local-env:/workspace/deployment/dockerup/local_env"
     working_dir: "/workspace/deployment/dockerup"

@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 5
   init:
-    container_name: init
+    container_name: init-sp
     image: "zkmelabs/mechain-storage-provider"
     networks:
       - mechain-network    
@@ -25,7 +25,7 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - "./sp.json:/workspace/sp.json:Z"
+      - "./deployment/dockerup/sp.json:/workspace/sp.json:Z"
       - "./deployment/dockerup:/workspace/deployment/dockerup:Z"
       - "local-env:/workspace/deployment/dockerup/local_env"
     working_dir: "/workspace/deployment/dockerup"
