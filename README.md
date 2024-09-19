@@ -1,6 +1,6 @@
-# Greenfield Storage Provider
+# Mechain Storage Provider
 
-Greenfield Storage Provider (abbreviated SP) is storage service infrastructure provider. It uses Greenfield as the ledger and the single source of truth. Each SP can and will respond to users' requests to write (upload) and read (download) data, and serve as the gatekeeper for user rights and authentications.
+Mechain Storage Provider (abbreviated SP) is storage service infrastructure provider. It uses Mechain as the ledger and the single source of truth. Each SP can and will respond to users' requests to write (upload) and read (download) data, and serve as the gatekeeper for user rights and authentications.
 
 ## Disclaimer
 
@@ -10,13 +10,13 @@ Greenfield Storage Provider (abbreviated SP) is storage service infrastructure p
 
 SPs store the objects' real data, i.e. the payload data. Each SP runs its own object storage system. Similar to Amazon S3 and other object store systems, the objects stored on SPs are immutable. The users may delete and re-create the object (under the different ID, or under the same ID after certain publicly declared settings), but they cannot modify it.
 
-SPs have to register themselves first by depositing on the Greenfield blockchain as their "Service Stake". Greenfield validators will go through a dedicated governance procedure to vote for the SPs of their election. SPs are encouraged to advertise their information and prove to the community their capability, as SPs have to provide a professional storage system with high-quality SLA.
+SPs have to register themselves first by depositing on the Mechain blockchain as their "Service Stake". Mechain validators will go through a dedicated governance procedure to vote for the SPs of their election. SPs are encouraged to advertise their information and prove to the community their capability, as SPs have to provide a professional storage system with high-quality SLA.
 
 SPs provide publicly accessible APIs for users to upload, download, and manage data. These APIs are very similar to Amazon S3 APIs so that existing developers may feel familiar enough to write code for it. Meanwhile, they provide each other REST APIs and form another white-listed P2P network to communicate with each other to ensure data availability and redundancy. There will also be a P2P-based upload/download network across SPs and user-end client software to facilitate easy connections and fast data download, which is similar to BitTorrent.
 
 Among the multiple SPs that one object is stored on, one SP will be the "Primary SP", while the others are "Secondary SP".
 
-When users want to write an object into Greenfield, they or the client software they use must specify the primary SP. Primary SP should be used as the only SP to download the data. Users can change the primary SP for their objects later if they are not satisfied with its service.
+When users want to write an object into Mechain, they or the client software they use must specify the primary SP. Primary SP should be used as the only SP to download the data. Users can change the primary SP for their objects later if they are not satisfied with its service.
 
 ## Quick Started
 
@@ -36,7 +36,7 @@ Compilation dependencies:
 # clone source code
 git clone https://github.com/zkMeLabs/mechain-storage-provider.git
 
-cd greenfield-storage-provider
+cd mechain-storage-provider
 
 # install dependent tools: buf, protoc-gen-gocosmos and mockgen
 make install-tools
@@ -51,7 +51,7 @@ cd build
 ./mechain-sp version
 
 # show the mechain-sp version information
-Greenfield Storage Provider
+Mechain Storage Provider
     __                                                       _     __
     _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
     / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
@@ -106,7 +106,7 @@ More types of database such as `PostgreSQL` or NewSQL will be supported in the f
 
 ### PieceStore
 
-Greenfield is a decentralized data storage system which uses object storage as the main data storage system. SP encapsulates data storage as [PieceStore](../modules/piece-store.md) which provides common interfaces to be compatible with multiple data storage systems. Therefore, if a user wants to join SP or test the function of SP, you must use a data storage system.
+Mechain is a decentralized data storage system which uses object storage as the main data storage system. SP encapsulates data storage as [PieceStore](../modules/piece-store.md) which provides common interfaces to be compatible with multiple data storage systems. Therefore, if a user wants to join SP or test the function of SP, you must use a data storage system.
 
 The following lists the supported data storage systems:
 
@@ -482,14 +482,14 @@ PathPattern = [
     {Key = "/auth/request_nonce", Method = "GET", Names = ["GetRequestNonce"]}, 
     {Key = "/auth/update_key", Method = "POST", Names = ["UpdateUserPublicKey"]}, 
     {Key = "/permission/.+/[^/]*/.+", Method = "GET", Names = ["VerifyPermission"]},
-    {Key = "/greenfield/admin/v1/get-approval", Method = "GET", Names = ["GetApproval"]},
-    {Key = "/greenfield/admin/v1/challenge", Method = "GET", Names = ["GetChallengeInfo"]},
-    {Key = "/greenfield/receiver/v1/replicate-piece", Method = "PUT", Names = ["ReplicateObjectPiece"]},
-    {Key = "/greenfield/recovery/v1/get-piece", Method = "GET", Names = ["RecoveryPiece"]},
-    {Key = "/greenfield/migrate/v1/notify-migrate-swap-out-task", Method = "POST", Names = ["NotifyMigrateSwapOut"]},
-    {Key = "/greenfield/migrate/v1/migrate-piece", Method = "GET", Names = ["MigratePiece"]},
-    {Key = "/greenfield/migrate/v1/migration-bucket-approval", Method = "GET", Names = ["MigrationBucketApproval"]},
-    {Key = "/greenfield/migrate/v1/get-swap-out-approval", Method = "GET", Names = ["SwapOutApproval"]},
+    {Key = "/Mechain/admin/v1/get-approval", Method = "GET", Names = ["GetApproval"]},
+    {Key = "/Mechain/admin/v1/challenge", Method = "GET", Names = ["GetChallengeInfo"]},
+    {Key = "/Mechain/receiver/v1/replicate-piece", Method = "PUT", Names = ["ReplicateObjectPiece"]},
+    {Key = "/Mechain/recovery/v1/get-piece", Method = "GET", Names = ["RecoveryPiece"]},
+    {Key = "/Mechain/migrate/v1/notify-migrate-swap-out-task", Method = "POST", Names = ["NotifyMigrateSwapOut"]},
+    {Key = "/Mechain/migrate/v1/migrate-piece", Method = "GET", Names = ["MigratePiece"]},
+    {Key = "/Mechain/migrate/v1/migration-bucket-approval", Method = "GET", Names = ["MigrationBucketApproval"]},
+    {Key = "/Mechain/migrate/v1/get-swap-out-approval", Method = "GET", Names = ["SwapOutApproval"]},
     {Key = "/download/[^/]*/.+", Method = "GET", Names = ["DownloadObjectByUniversalEndpoint"]},{Key = "/download", Method = "GET", Names = ["DownloadObjectByUniversalEndpoint"]},
     {Key = "/view/[^/]*/.+", Method = "GET", Names = ["ViewObjectByUniversalEndpoint"]},{Key = "/view", Method = "GET", Names = ["ViewObjectByUniversalEndpoint"]},
     {Key = "/status", Method = "GET", Names = ["GetStatus"]},
@@ -598,7 +598,7 @@ To config `[PieceStore]` and `[PieceStore.Store]`, you can read the details in t
 
 ## Chain info
 
-- `ChainID` of testnet is `greenfield_5600-1`.
+- `ChainID` of testnet is `mechain_5151-1`.
 - `ChainAddress` is RPC endpoint of testnet, you can find RPC info [here](../../../api/endpoints.md)
 
 ## SpAccount
@@ -674,37 +674,37 @@ Workers = 50
 ./mechain-sp --config ${config_file_path}
 ```
 
-### Join Greenfield Testnet
+### Join Mechain Testnet
 
-[Run Testnet SP Node](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node)
+[Run Testnet SP Node](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node)
 
 ## Document
 
-- [Greenfield Whitepaper](https://github.com/bnb-chain/greenfield-whitepaper): The official Greenfield Whitepaper.
-- [Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/overview): The Greenfield documents.
-- [Storage Module on Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/storage-module): The storage module on Greenfield Chain.
-- [Storage Provider on Greenfield](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/storage-provider): The storage provider on Greenfield Chain.
-- [Data Availability Challenge](https://docs.bnbchain.org/greenfield-docs/docs/guide/greenfield-blockchain/modules/data-availability-challenge): The correctness of payload be stored in SP.
-- [SP Introduction](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/introduction/overview): The Greenfield Storage Provider documents.
-- [SP Compiling and Dependencies](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/compile-dependences): The detailed introduction to sp compiling and dependencies.
-- [Run Local SP Network](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-local-SP-network): The introduction to run local SP env for testing.
-- [Run Testnet SP Node](https://docs.bnbchain.org/greenfield-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node): The introduction to run testnet SP node.
+- [Mechain Whitepaper](https://github.com/bnb-chain/Mechain-whitepaper): The official Mechain Whitepaper.
+- [Mechain](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/overview): The Mechain documents.
+- [Storage Module on Mechain](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/modules/storage-module): The storage module on Mechain Chain.
+- [Storage Provider on Mechain](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/modules/storage-provider): The storage provider on Mechain Chain.
+- [Data Availability Challenge](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/modules/data-availability-challenge): The correctness of payload be stored in SP.
+- [SP Introduction](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/introduction/overview): The Mechain Storage Provider documents.
+- [SP Compiling and Dependencies](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/compile-dependences): The detailed introduction to sp compiling and dependencies.
+- [Run Local SP Network](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/run-local-SP-network): The introduction to run local SP env for testing.
+- [Run Testnet SP Node](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node): The introduction to run testnet SP node.
 
 ## Related Projects
 
-- [Greenfield](https://github.com/bnb-chain/greenfield): The Golang implementation of the Greenfield Blockchain.
-- [Greenfield-Go-SDK](https://github.com/bnb-chain/greenfield-go-sdk): The Greenfield SDK, interact with SP, Greenfield and Tendermint.
-- [Greenfield Cmd](https://github.com/bnb-chain/greenfield-cmd): Greenfield client cmd tool, supporting commands to make requests to greenfield.
-- [Greenfield-Common](https://github.com/bnb-chain/greenfield-common): The Greenfield common package.
+- [Mechain](https://github.com/zkMeLabs/mechain): The Golang implementation of the Mechain Blockchain.
+- [Mechain-Go-SDK](https://github.com/zkMeLabs/mechain-go-sdk): The Mechain SDK, interact with SP, Mechain and Tendermint.
+- [Mechain Cmd](https://github.com/zkMeLabs/mechain-cmd): Mechain client cmd tool, supporting commands to make requests to Mechain.
+- [Mechain-Common](https://github.com/zkMeLabs/mechain-common): The Mechain common package.
 - [Reed-Solomon](https://github.com/klauspost/reedsolomon): The Reed-Solomon Erasure package in prue Go, with speeds exceeding 1GB/s/cpu core.
-- [Juno](https://github.com/bnb-chain/juno): The Cosmos Hub blockchain data aggregator and exporter package.
+- [Mechain-Juno](https://github.com/zkMeLabs/mechain-juno): The Cosmos Hub blockchain data aggregator and exporter package.
 
 ## Contribution
 
 Thank you for considering to help out with the source code! We welcome contributions from
 anyone on the internet, and are grateful for even the smallest of fixes!
 
-If you'd like to contribute to Greenfield Storage Provider, please fork, fix, commit and
+If you'd like to contribute to Mechain Storage Provider, please fork, fix, commit and
 send a pull request for the maintainers to review and merge into the main code base.
 If you wish to submit more complex changes though, please check up with the core devs first
 through github issue(going to have a discord channel soon) to ensure those changes are in
@@ -713,10 +713,14 @@ both your efforts much lighter as well as our review and merge procedures quick 
 
 ## License
 
-The greenfield storage provider library (i.e. all code outside the `cmd` directory) is licensed under the
+The Mechain storage provider library (i.e. all code outside the `cmd` directory) is licensed under the
 [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html),
 also included in our repository in the `COPYING.LESSER` file.
 
-The greenfield storage provider binaries (i.e. all code inside the `cmd` directory) is licensed under the
+The Mechain storage provider binaries (i.e. all code inside the `cmd` directory) is licensed under the
 [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), also
 included in our repository in the `COPYING` file.
+
+## Fork Information
+
+This project is forked from [greenfield-storage-provider](https://github.com/bnb-chain/greenfield-storage-provider). Significant changes have been made to adapt the project for specific use cases, but much of the core functionality comes from the original project.
