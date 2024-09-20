@@ -8,8 +8,9 @@ import (
 
 	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"
 
+	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/avast/retry-go/v4"
-	"github.com/prysmaticlabs/prysm/crypto/bls"
+	"github.com/cometbft/cometbft/votepool"
 
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
@@ -34,7 +35,7 @@ var (
 func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task coretask.ReplicatePieceTask) {
 	var (
 		err        error
-		blsSig     []bls.Signature
+		blsSig     bls.Signatures
 		objectInfo *storagetypes.ObjectInfo
 	)
 	startReplicateTime := time.Now()
@@ -68,18 +69,24 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 	}
 	log.CtxDebugw(ctx, "succeed to replicate all pieces", "task_info", task.Info())
 
-	if blsSig, err = bls.MultipleSignaturesFromBytes(task.GetSecondarySignatures()); err != nil {
-		log.CtxErrorw(ctx, "failed to generate multiple signatures",
-			"origin_signature", task.GetSecondarySignatures(), "error", err)
-		return
-	} else {
-		task.AppendLog("executor-end-replicate-object")
-		metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessReplicateAllPiece).Inc()
-		metrics.ExecutorTime.WithLabelValues(ExecutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
+	blsSigBts := task.GetSecondarySignatures()
+	for _, sigBts := range blsSigBts {
+		signature, err := bls.UnmarshalSignature(sigBts)
+		if err != nil {
+			log.CtxErrorw(ctx, "failed to generate multiple signatures",
+				"origin_signature", blsSigBts, "error", err)
+			return
+		}
+		blsSig = append(blsSig, signature)
 	}
+
+	task.AppendLog("executor-end-replicate-object")
+	metrics.ExecutorCounter.WithLabelValues(ExecutorSuccessReplicateAllPiece).Inc()
+	metrics.ExecutorTime.WithLabelValues(ExecutorSuccessReplicateAllPiece).Observe(time.Since(replicatePieceTotalTime).Seconds())
 
 	sealTime := time.Now()
 	var sealErr error
+	blsAggSigs, _ := blsSig.Aggregate().Marshal()
 	if task.GetIsAgentUpload() {
 		expectCheckSums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryEndpoints()), task.GetStorageParams())
 		if makeErr != nil {
@@ -92,7 +99,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 			BucketName:                  task.GetObjectInfo().GetBucketName(),
 			ObjectName:                  task.GetObjectInfo().GetObjectName(),
 			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
-			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			SecondarySpBlsAggSignatures: blsAggSigs,
 			ExpectChecksums:             expectCheckSums,
 		}
 		sealErr = e.sealObjectV2(ctx, task, sealMsgV2)
@@ -102,7 +109,7 @@ func (e *ExecuteModular) HandleReplicatePieceTask(ctx context.Context, task core
 			BucketName:                  task.GetObjectInfo().GetBucketName(),
 			ObjectName:                  task.GetObjectInfo().GetObjectName(),
 			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
-			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			SecondarySpBlsAggSignatures: blsAggSigs,
 		}
 		sealErr = e.sealObject(ctx, task, sealMsg)
 	}
@@ -402,15 +409,15 @@ func (e *ExecuteModular) doneReplicatePiece(ctx context.Context, rTask coretask.
 }
 
 func veritySecondarySpBlsSignature(secondarySp *sptypes.StorageProvider, signature, sigDoc []byte) error {
-	publicKey, err := bls.PublicKeyFromBytes(secondarySp.BlsKey)
+	publicKey, err := bls.UnmarshalPublicKey(secondarySp.BlsKey)
 	if err != nil {
 		return err
 	}
-	sig, err := bls.SignatureFromBytes(signature)
+	sig, err := bls.UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
-	if !sig.Verify(publicKey, sigDoc) {
+	if !sig.Verify(publicKey, sigDoc, votepool.DST) {
 		return fmt.Errorf("failed to verify SP[%d] bls signature", secondarySp.Id)
 	}
 	return nil
