@@ -10,10 +10,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
-	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"
@@ -65,10 +65,16 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 		task.SetError(ErrDanglingPointer)
 		return
 	}
-	blsSig, err := bls.MultipleSignaturesFromBytes(task.GetSecondarySignatures())
-	if err != nil {
-		return
+	var blsSig bls.Signatures
+	blsSigBts := task.GetSecondarySignatures()
+	for _, sigBts := range blsSigBts {
+		signature, err := bls.UnmarshalSignature(sigBts)
+		if err != nil {
+			return
+		}
+		blsSig = append(blsSig, signature)
 	}
+	blsAggSigs, _ := blsSig.Aggregate().Marshal()
 	task.AppendLog("executor-begin-handle-seal-task")
 	if task.GetIsAgentUpload() {
 		checksums, makeErr := e.makeCheckSumsForAgentUpload(ctx, task.GetObjectInfo(), len(task.GetSecondaryAddresses()), task.GetStorageParams())
@@ -81,7 +87,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 			BucketName:                  task.GetObjectInfo().GetBucketName(),
 			ObjectName:                  task.GetObjectInfo().GetObjectName(),
 			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
-			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			SecondarySpBlsAggSignatures: blsAggSigs,
 			ExpectChecksums:             checksums,
 		}
 		task.SetError(e.sealObjectV2(ctx, task, sealMsg))
@@ -91,7 +97,7 @@ func (e *ExecuteModular) HandleSealObjectTask(ctx context.Context, task coretask
 			BucketName:                  task.GetObjectInfo().GetBucketName(),
 			ObjectName:                  task.GetObjectInfo().GetObjectName(),
 			GlobalVirtualGroupId:        task.GetGlobalVirtualGroupId(),
-			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			SecondarySpBlsAggSignatures: blsAggSigs,
 		}
 		task.SetError(e.sealObject(ctx, task, sealMsg))
 	}

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/0xPolygon/polygon-edge/bls"
 	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
-	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfsptqueue"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
@@ -344,7 +344,7 @@ func (s *TaskRetryScheduler) retrySealTask(meta *spdb.UploadObjectMeta) error {
 	var (
 		err        error
 		objectInfo *storagetypes.ObjectInfo
-		blsSig     []bls.Signature
+		blsSig     bls.Signatures
 		sealMsg    *storagetypes.MsgSealObject
 	)
 
@@ -367,18 +367,22 @@ func (s *TaskRetryScheduler) retrySealTask(meta *spdb.UploadObjectMeta) error {
 		return fmt.Errorf("object is not in create status")
 	}
 
-	blsSig, err = bls.MultipleSignaturesFromBytes(meta.SecondarySignatures)
-	if err != nil {
-		log.Errorw("failed to get multiple signature", "object_id", meta.ObjectID, "error", err)
-		return err
+	for _, sigBts := range meta.SecondarySignatures {
+		signature, err := bls.UnmarshalSignature(sigBts)
+		if err != nil {
+			log.Errorw("failed to get multiple signature", "object_id", meta.ObjectID, "error", err)
+			return err
+		}
+		blsSig = append(blsSig, signature)
 	}
+	blsAggSigs, _ := blsSig.Aggregate().Marshal()
 	if !meta.IsAgentUpload {
 		sealMsg = &storagetypes.MsgSealObject{
 			Operator:                    s.manager.baseApp.OperatorAddress(),
 			BucketName:                  objectInfo.GetBucketName(),
 			ObjectName:                  objectInfo.GetObjectName(),
 			GlobalVirtualGroupId:        meta.GlobalVirtualGroupID,
-			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			SecondarySpBlsAggSignatures: blsAggSigs,
 		}
 		err = sendAndConfirmSealObjectTx(s.manager.baseApp, sealMsg)
 		if err == nil {
@@ -396,7 +400,7 @@ func (s *TaskRetryScheduler) retrySealTask(meta *spdb.UploadObjectMeta) error {
 			BucketName:                  objectInfo.GetBucketName(),
 			ObjectName:                  objectInfo.GetObjectName(),
 			GlobalVirtualGroupId:        meta.GlobalVirtualGroupID,
-			SecondarySpBlsAggSignatures: bls.AggregateSignatures(blsSig).Marshal(),
+			SecondarySpBlsAggSignatures: blsAggSigs,
 			ExpectChecksums:             checksums,
 		}
 		err = sendAndConfirmSealObjectTxV2(s.manager.baseApp, sealMsgV2)

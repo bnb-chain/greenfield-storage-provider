@@ -6,7 +6,7 @@ import (
 	"math"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/prysmaticlabs/prysm/crypto/bls"
+	"github.com/0xPolygon/polygon-edge/bls"
 
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
@@ -69,11 +69,15 @@ func ValidatePrimarySP(selfSpID, primarySpID uint32) bool {
 
 // BlsAggregate aggregate secondary sp bls signature
 func BlsAggregate(secondarySigs [][]byte) ([]byte, error) {
-	blsSigs, err := bls.MultipleSignaturesFromBytes(secondarySigs)
-	if err != nil {
-		return nil, err
+	var blsSig bls.Signatures
+	for _, sigBts := range secondarySigs {
+		signature, err := bls.UnmarshalSignature(sigBts)
+		if err != nil {
+			return nil, err
+		}
+		blsSig = append(blsSig, signature)
 	}
-	aggBlsSig := bls.AggregateSignatures(blsSigs).Marshal()
+	aggBlsSig, _ := blsSig.Aggregate().Marshal()
 	return aggBlsSig, nil
 }
 

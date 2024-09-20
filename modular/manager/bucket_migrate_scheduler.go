@@ -11,7 +11,8 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	"github.com/prysmaticlabs/prysm/crypto/bls"
+	"github.com/0xPolygon/polygon-edge/bls"
+	"github.com/cometbft/cometbft/votepool"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
@@ -1717,15 +1718,15 @@ func UpdateBucketMigrationProgress(baseApp *gfspapp.GfSpBaseApp, bucketID uint64
 }
 
 func verifySecondarySpBlsSignature(secondarySpBlsKey []byte, signature, sigDoc []byte, spID uint32) error {
-	publicKey, err := bls.PublicKeyFromBytes(secondarySpBlsKey)
+	publicKey, err := bls.UnmarshalPublicKey(secondarySpBlsKey)
 	if err != nil {
 		return err
 	}
-	sig, err := bls.SignatureFromBytes(signature)
+	sig, err := bls.UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
-	if !sig.Verify(publicKey, sigDoc) {
+	if !sig.Verify(publicKey, sigDoc, votepool.DST) {
 		return fmt.Errorf("failed to verify SP[%d] bls signature", spID)
 	}
 	return nil
