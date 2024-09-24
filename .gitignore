@@ -5,7 +5,7 @@
 *.so
 *.dylib
 build/
-.storage_provider_cli_history
+
 
 # OSX trash
 .DS_Store
@@ -41,3 +41,4 @@ deployment/dockerup/init_done
 
 sp.json
 
+dist
