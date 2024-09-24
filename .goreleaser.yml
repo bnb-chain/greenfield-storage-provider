@@ -65,7 +65,6 @@ builds:
     flags:
       - -tags=cgo
     ldflags:
-      - -extldflags=${EXT_LD_FLAGS}
       - -X main.Version={{.Version}}
       - -X main.CommitID={{.Commit}}
       - -X main.BranchName={{.Branch}}
