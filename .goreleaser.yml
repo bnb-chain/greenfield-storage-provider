@@ -5,51 +5,51 @@ before:
     - go mod download
 
 builds:
-  - id: "mechain-storage-provider-darwin"
-    main: ./cmd/storage_provider
-    binary: bin/mechain-sp
-    env:
-      - CGO_ENABLED=1
-      - CC=o64-clang
-      - CXX=o64-clang++
-    goos:
-      - darwin
-    goarch:
-      - amd64
-    flags:
-      - -tags=cgo
-    ldflags:
-      - -extldflags=${EXT_LD_FLAGS}
-      - -X main.Version={{.Version}}
-      - -X main.CommitID={{.Commit}}
-      - -X main.BranchName={{.Branch}}
-      - -X main.BuildTime={{.Date}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.AppVersion={{.Version}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommit={{.Commit}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommitDate={{.CommitDate}}
+  # - id: "mechain-storage-provider-darwin"
+  #   main: ./cmd/storage_provider
+  #   binary: bin/mechain-sp
+  #   env:
+  #     - CGO_ENABLED=1
+  #     - CC=o64-clang
+  #     - CXX=o64-clang++
+  #   goos:
+  #     - darwin
+  #   goarch:
+  #     - amd64
+  #   flags:
+  #     - -tags=cgo
+  #   ldflags:
+  #     - -extldflags=${EXT_LD_FLAGS}
+  #     - -X main.Version={{.Version}}
+  #     - -X main.CommitID={{.Commit}}
+  #     - -X main.BranchName={{.Branch}}
+  #     - -X main.BuildTime={{.Date}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.AppVersion={{.Version}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommit={{.Commit}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommitDate={{.CommitDate}}
 
-  - id: "mechain-storage-provider-darwin-arm64"
-    main: ./cmd/storage_provider
-    binary: bin/mechain-sp
-    env:
-      - CGO_ENABLED=1
-      - CC=oa64-clang
-      - CXX=oa64-clang++
-    goos:
-      - darwin
-    goarch:
-      - arm64
-    flags:
-      - -tags=cgo
-    ldflags:
-      - -extldflags=${EXT_LD_FLAGS}
-      - -X main.Version={{.Version}}
-      - -X main.CommitID={{.Commit}}
-      - -X main.BranchName={{.Branch}}
-      - -X main.BuildTime={{.Date}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.AppVersion={{.Version}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommit={{.Commit}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommitDate={{.CommitDate}}
+  # - id: "mechain-storage-provider-darwin-arm64"
+  #   main: ./cmd/storage_provider
+  #   binary: bin/mechain-sp
+  #   env:
+  #     - CGO_ENABLED=1
+  #     - CC=oa64-clang
+  #     - CXX=oa64-clang++
+  #   goos:
+  #     - darwin
+  #   goarch:
+  #     - arm64
+  #   flags:
+  #     - -tags=cgo
+  #   ldflags:
+  #     - -extldflags=${EXT_LD_FLAGS}
+  #     - -X main.Version={{.Version}}
+  #     - -X main.CommitID={{.Commit}}
+  #     - -X main.BranchName={{.Branch}}
+  #     - -X main.BuildTime={{.Date}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.AppVersion={{.Version}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommit={{.Commit}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommitDate={{.CommitDate}}
 
   - id: "mechain-storage-provider-linux"
     main: ./cmd/storage_provider
@@ -74,28 +74,28 @@ builds:
       - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommit={{.Commit}}
       - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommitDate={{.CommitDate}}
 
-  - id: "mechain-storage-provider-linux-arm64"
-    main: ./cmd/storage_provider
-    binary: bin/mechain-sp
-    env:
-      - CGO_ENABLED=1
-      - CC=aarch64-linux-gnu-gcc
-      - CXX=aarch64-linux-gnu-g++
-    goos:
-      - linux
-    goarch:
-      - arm64
-    flags:
-      - -tags=cgo
-    ldflags:
-      - -extldflags=${EXT_LD_FLAGS}
-      - -X main.Version={{.Version}}
-      - -X main.CommitID={{.Commit}}
-      - -X main.BranchName={{.Branch}}
-      - -X main.BuildTime={{.Date}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.AppVersion={{.Version}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommit={{.Commit}}
-      - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommitDate={{.CommitDate}}
+  # - id: "mechain-storage-provider-linux-arm64"
+  #   main: ./cmd/storage_provider
+  #   binary: bin/mechain-sp
+  #   env:
+  #     - CGO_ENABLED=1
+  #     - CC=aarch64-linux-gnu-gcc
+  #     - CXX=aarch64-linux-gnu-g++
+  #   goos:
+  #     - linux
+  #   goarch:
+  #     - arm64
+  #   flags:
+  #     - -tags=cgo
+  #   ldflags:
+  #     - -extldflags=${EXT_LD_FLAGS}
+  #     - -X main.Version={{.Version}}
+  #     - -X main.CommitID={{.Commit}}
+  #     - -X main.BranchName={{.Branch}}
+  #     - -X main.BuildTime={{.Date}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.AppVersion={{.Version}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommit={{.Commit}}
+  #     - -X github.com/zkMeLabs/mechain-storage-provider/store/bsdb.GitCommitDate={{.CommitDate}}
 
 archives:
   - format: tar.gz
