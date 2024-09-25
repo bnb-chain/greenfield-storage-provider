@@ -105,11 +105,6 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
-    files:
-      - src: asset/configs/mainnet_config
-        dst: mainnet_config
-      - src: asset/configs/testnet_config
-        dst: testnet_config
 
 changelog:
   sort: asc
