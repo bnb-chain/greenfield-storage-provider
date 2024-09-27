@@ -314,46 +314,80 @@ type Signer interface {
 	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
 	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
+	// RejectUnSealObjectEvm signs the MsgRejectSealObject and broadcast the tx to mechain by evm tx.
+	RejectUnSealObjectEvm(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
 	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
+	// DiscontinueBucketEvm signs the MsgDiscontinueBucket and broadcast the tx to mechain by evm tx.
+	DiscontinueBucketEvm(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
+	// CreateGlobalVirtualGroupEvm signs the MsgCreateGlobalVirtualGroup and broadcast the tx to mechain by evm tx.
+	CreateGlobalVirtualGroupEvm(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
 	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
 	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
+	// CompleteMigrateBucketEvm signs the MsgCompleteMigrateBucket and broadcast the tx to mechain by evm tx.
+	CompleteMigrateBucketEvm(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 	// SignSecondarySPMigrationBucket signs secondary sp bls for bucket migration
 	SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
 	// SwapOut signs the MsgSwapOut and broadcast the tx to greenfield.
 	SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
+	// SwapOutEvm signs the MsgSwapOut and broadcast the tx to mechain by evm tx.
+	SwapOutEvm(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
 	// SignSwapOut signs the MsgSwapOut for asking swap out approval.
 	SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error)
 	// CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to greenfield.
 	CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
+	// CompleteSwapOutEvm signs the MsgCompleteSwapOut and broadcast the tx to mechain by evm tx.
+	CompleteSwapOutEvm(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
 	// SPExit signs the MsgStorageProviderExit and broadcast the tx to greenfield.
 	SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
+	// SPExitEvm signs the MsgStorageProviderExit and broadcast the tx to mechain by evm tx.
+	SPExitEvm(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
 	// CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to greenfield.
 	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
+	// CompleteSPExitEvm signs the MsgCompleteStorageProviderExit and broadcast the tx to mechain by evm tx.
+	CompleteSPExitEvm(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
 	// UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to greenfield.
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
+	// UpdateSPPriceEvm signs the MsgUpdateSpStoragePrice and  broadcast the tx to mechain by evm tx.
+	UpdateSPPriceEvm(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 	// SignMigrateGVG signs the GfSpMigrateGVGTask for migrating piece auth.
 	SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error)
 	// SignBucketMigrationInfo signs the GfSpBucketMigrationInfo for migrating bucket communication auth.
 	SignBucketMigrationInfo(ctx context.Context, task *gfsptask.GfSpBucketMigrationInfo) ([]byte, error)
 	// RejectMigrateBucket rejects the bucket migration by dest SP.
 	RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
+	// RejectMigrateBucketEvm rejects the bucket migration by dest SP by evm tx.
+	RejectMigrateBucketEvm(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error)
 	// ReserveSwapIn reserve swapIn
 	ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
+	// ReserveSwapInEvm reserve swapIn by evm tx
+	ReserveSwapInEvm(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error)
 	// CompleteSwapIn complete swapIn
 	CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error)
+	// CompleteSwapInEvm complete swapIn by evm tx
+	CompleteSwapInEvm(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error)
 	// CancelSwapIn cancel swapIn
 	CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error)
+	// CancelSwapInEvm cancel swapIn by evm tx
+	CancelSwapInEvm(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error)
 	// Deposit into a Global virtual group for more store size
 	Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
+	// DepositEvm into a Global virtual group for more store size by evm tx
+	DepositEvm(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error)
 	// DeleteGlobalVirtualGroup rejects the bucket migration by dest SP.
 	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
+	// DeleteGlobalVirtualGroupEvm rejects the bucket migration by dest SP by evm tx.
+	DeleteGlobalVirtualGroupEvm(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
 	// DelegateCreateObject  broadcast the tx to greenfield.
 	DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)
+	// DelegateCreateObjectEvm  broadcast the tx to mechain by evm tx.
+	DelegateCreateObjectEvm(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)
 	// DelegateUpdateObjectContent  send the delegate update object content tx
 	DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
+	// DelegateUpdateObjectContentEvm  send the delegate update object content tx by evm tx
+	DelegateUpdateObjectContentEvm(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error)
 }
 
 // Uploader is an abstract interface to handle putting object requests from users' account and store

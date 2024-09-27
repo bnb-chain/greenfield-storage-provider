@@ -1882,8 +1882,8 @@ github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.1 h1:kUvdfGC6uTTPmErSGSlEhYAQ
 github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.1/go.mod h1:ehswydn7defP5cGNSwcPKkePiGV+uOJORIRVpZAJkcc=
 github.com/zkMeLabs/mechain-ledger-go v0.3.0-rc0-mocks-mechain.1 h1:LkCj7ObOfBpsfltq1dfvEP2BWs3kqXSshFut0IGri0E=
 github.com/zkMeLabs/mechain-ledger-go v0.3.0-rc0-mocks-mechain.1/go.mod h1:FA0pX0Q28DPWvfbaNmWfJNtEXTUmPOweGNvpG50Xk8o=
-github.com/zkMeLabs/mechain/v12 v12.2.0-alpha.1 h1:2rnmqr3Z7D4YdyccjuzkIn3ecOqzdO5drN1lYSTTTgw=
-github.com/zkMeLabs/mechain/v12 v12.2.0-alpha.1/go.mod h1:NqO5EX3ICO3Er6ijjwGsMZMOY7D0L9qzDTK+I68wzfA=
+github.com/zkMeLabs/mechain/v12 v12.0.0-20241009085240-90e560b09de0 h1:5jCOHm8V2kBnpswwqzg5vy8vF22Lh8DHlOk3s4ZWHGU=
+github.com/zkMeLabs/mechain/v12 v12.0.0-20241009085240-90e560b09de0/go.mod h1:NqO5EX3ICO3Er6ijjwGsMZMOY7D0L9qzDTK+I68wzfA=
 github.com/zkMeLabs/polygon-edge v1.3.3-mechain.1 h1:7oXZzLBo/V2/VvLONe0vyh3uwcMf9Znuz2cp77I1hAc=
 github.com/zkMeLabs/polygon-edge v1.3.3-mechain.1/go.mod h1:bDvHrg7QQKSx31K588TEWgHICl5dCPkotffzK9CE6IE=
 github.com/zondax/hid v0.9.1 h1:gQe66rtmyZ8VeGFcOpbuH3r7erYtNEAezCAYu8LdkJo=

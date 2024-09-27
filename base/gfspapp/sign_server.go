@@ -79,7 +79,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessSealObject).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_RejectObjectInfo:
-		txHash, err = g.signer.RejectUnSealObject(ctx, t.RejectObjectInfo)
+		txHash, err = g.signer.RejectUnSealObjectEvm(ctx, t.RejectObjectInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to reject unseal object", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureRejectUnSealObject).Inc()
@@ -89,7 +89,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessRejectUnSealObject).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_DiscontinueBucketInfo:
-		txHash, err = g.signer.DiscontinueBucket(ctx, t.DiscontinueBucketInfo)
+		txHash, err = g.signer.DiscontinueBucketEvm(ctx, t.DiscontinueBucketInfo)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to discontinue bucket", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureDiscontinueBucket).Inc()
@@ -152,7 +152,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessReplicateApproval).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CreateGlobalVirtualGroup:
-		txHash, err = g.signer.CreateGlobalVirtualGroup(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
+		txHash, err = g.signer.CreateGlobalVirtualGroupEvm(ctx, &virtualgrouptypes.MsgCreateGlobalVirtualGroup{
 			StorageProvider: g.operatorAddress,
 			FamilyId:        t.CreateGlobalVirtualGroup.GetVirtualGroupFamilyId(),
 			SecondarySpIds:  t.CreateGlobalVirtualGroup.GetSecondarySpIds(),
@@ -178,7 +178,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessRecoveryTask).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CompleteMigrateBucket:
-		txHash, err = g.signer.CompleteMigrateBucket(ctx, t.CompleteMigrateBucket)
+		txHash, err = g.signer.CompleteMigrateBucketEvm(ctx, t.CompleteMigrateBucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete migrate bucket", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteMigrateBucket).Inc()
@@ -198,7 +198,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessSecondarySPMigrationBucket).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SwapOut:
-		txHash, err = g.signer.SwapOut(ctx, t.SwapOut)
+		txHash, err = g.signer.SwapOutEvm(ctx, t.SwapOut)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign swap out", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureSwapOut).Inc()
@@ -218,7 +218,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessSignSwapOut).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CompleteSwapOut:
-		txHash, err = g.signer.CompleteSwapOut(ctx, t.CompleteSwapOut)
+		txHash, err = g.signer.CompleteSwapOutEvm(ctx, t.CompleteSwapOut)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete swap out", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteSwapOut).Inc()
@@ -228,7 +228,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteSwapOut).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SpExit:
-		txHash, err = g.signer.SPExit(ctx, t.SpExit)
+		txHash, err = g.signer.SPExitEvm(ctx, t.SpExit)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign sp exit", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureSPExit).Inc()
@@ -238,7 +238,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessSPExit).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CompleteSpExit:
-		txHash, err = g.signer.CompleteSPExit(ctx, t.CompleteSpExit)
+		txHash, err = g.signer.CompleteSPExitEvm(ctx, t.CompleteSpExit)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign complete sp exit", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteSPExit).Inc()
@@ -248,7 +248,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteSPExit).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_SpStoragePrice:
-		txHash, err = g.signer.UpdateSPPrice(ctx, t.SpStoragePrice)
+		txHash, err = g.signer.UpdateSPPriceEvm(ctx, t.SpStoragePrice)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to update sp price", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureSPStoragePrice).Inc()
@@ -280,7 +280,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessGfSpBucketMigrateInfo).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_RejectMigrateBucket:
-		txHash, err = g.signer.RejectMigrateBucket(ctx, t.RejectMigrateBucket)
+		txHash, err = g.signer.RejectMigrateBucketEvm(ctx, t.RejectMigrateBucket)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to sign reject migrate bucket", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureRejectMigrateBucket).Inc()
@@ -290,7 +290,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessRejectMigrateBucket).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_ReserveSwapIn:
-		txHash, err = g.signer.ReserveSwapIn(ctx, t.ReserveSwapIn)
+		txHash, err = g.signer.ReserveSwapInEvm(ctx, t.ReserveSwapIn)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to reserve swap in", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureSwapIn).Inc()
@@ -300,7 +300,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessSwapIn).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CompleteSwapIn:
-		txHash, err = g.signer.CompleteSwapIn(ctx, t.CompleteSwapIn)
+		txHash, err = g.signer.CompleteSwapInEvm(ctx, t.CompleteSwapIn)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to complete swap in", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureCompleteSwapIn).Inc()
@@ -310,7 +310,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessCompleteSwapIn).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_CancelSwapIn:
-		txHash, err = g.signer.CancelSwapIn(ctx, t.CancelSwapIn)
+		txHash, err = g.signer.CancelSwapInEvm(ctx, t.CancelSwapIn)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to cancel swap in", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureCancelSwapIn).Inc()
@@ -320,7 +320,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessCancelSwapIn).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_Deposit:
-		txHash, err = g.signer.Deposit(ctx, t.Deposit)
+		txHash, err = g.signer.DepositEvm(ctx, t.Deposit)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to deposit", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureDeposit).Inc()
@@ -330,7 +330,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessDeposit).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_DeleteGlobalVirtualGroup:
-		txHash, err = g.signer.DeleteGlobalVirtualGroup(ctx, t.DeleteGlobalVirtualGroup)
+		txHash, err = g.signer.DeleteGlobalVirtualGroupEvm(ctx, t.DeleteGlobalVirtualGroup)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delete global virtual group", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureDeleteGlobalVirtualGroup).Inc()
@@ -340,7 +340,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessDeleteGlobalVirtualGroup).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_DelegateCreateObject:
-		txHash, err = g.signer.DelegateCreateObject(ctx, t.DelegateCreateObject)
+		txHash, err = g.signer.DelegateCreateObjectEvm(ctx, t.DelegateCreateObject)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delegate create object", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerFailureDelegateCreateObject).Inc()
@@ -350,7 +350,7 @@ func (g *GfSpBaseApp) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRequ
 			metrics.ReqTime.WithLabelValues(SignerSuccessDelegateCreateObject).Observe(time.Since(startTime).Seconds())
 		}
 	case *gfspserver.GfSpSignRequest_DelegateUpdateObjectContent:
-		txHash, err = g.signer.DelegateUpdateObjectContent(ctx, t.DelegateUpdateObjectContent)
+		txHash, err = g.signer.DelegateUpdateObjectContentEvm(ctx, t.DelegateUpdateObjectContent)
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to delegate update object content", "error", err)
 			metrics.ReqCounter.WithLabelValues(SignerSuccessDelegateUpdateObjectContent).Inc()
