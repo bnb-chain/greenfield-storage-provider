@@ -1878,8 +1878,8 @@ github.com/zkMeLabs/mechain-cosmos-sdk/simapp v0.0.0-20240920090443-1ad031a3d3a4
 github.com/zkMeLabs/mechain-cosmos-sdk/simapp v0.0.0-20240920090443-1ad031a3d3a4/go.mod h1:l+Fp8D4CH9Za07Ucazl0Dfddbn4Mntve+BpF0p4v35s=
 github.com/zkMeLabs/mechain-ibc-go/v7 v7.2.0-mocks-mechain.1 h1:7h2FMA6QU/221e9rcyHB0Va//c3Ew7/3dvxW4f+KWlk=
 github.com/zkMeLabs/mechain-ibc-go/v7 v7.2.0-mocks-mechain.1/go.mod h1:e1DSpfzOuM/RFM1rjM/VFoRwWkXiBwMEed1Xgw8NGuI=
-github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.1 h1:kUvdfGC6uTTPmErSGSlEhYAQZB0qHIygj/03jj8hBj4=
-github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.1/go.mod h1:ehswydn7defP5cGNSwcPKkePiGV+uOJORIRVpZAJkcc=
+github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.1a h1:7oFHl6YOKuYBb7e/MfDtr+6THIvgJExX9kcntzR0uwg=
+github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.1a/go.mod h1:ehswydn7defP5cGNSwcPKkePiGV+uOJORIRVpZAJkcc=
 github.com/zkMeLabs/mechain-ledger-go v0.3.0-rc0-mocks-mechain.1 h1:LkCj7ObOfBpsfltq1dfvEP2BWs3kqXSshFut0IGri0E=
 github.com/zkMeLabs/mechain-ledger-go v0.3.0-rc0-mocks-mechain.1/go.mod h1:FA0pX0Q28DPWvfbaNmWfJNtEXTUmPOweGNvpG50Xk8o=
 github.com/zkMeLabs/mechain/v12 v12.0.0-20241009085240-90e560b09de0 h1:5jCOHm8V2kBnpswwqzg5vy8vF22Lh8DHlOk3s4ZWHGU=
