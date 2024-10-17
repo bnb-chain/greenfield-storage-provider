@@ -345,7 +345,15 @@ func (*NilModular) RejectUnSealObject(context.Context, *storagetypes.MsgRejectSe
 	return "", ErrNilModular
 }
 
+func (*NilModular) RejectUnSealObjectEvm(context.Context, *storagetypes.MsgRejectSealObject) (string, error) {
+	return "", ErrNilModular
+}
+
 func (*NilModular) DiscontinueBucket(context.Context, *storagetypes.MsgDiscontinueBucket) (string, error) {
+	return "", nil
+}
+
+func (*NilModular) DiscontinueBucketEvm(context.Context, *storagetypes.MsgDiscontinueBucket) (string, error) {
 	return "", nil
 }
 
@@ -353,7 +361,15 @@ func (*NilModular) CreateGlobalVirtualGroup(context.Context, *virtualgrouptypes.
 	return "", ErrNilModular
 }
 
+func (*NilModular) CreateGlobalVirtualGroupEvm(context.Context, *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
+	return "", ErrNilModular
+}
+
 func (*NilModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	return "", ErrNilModular
+}
+
+func (*NilModular) CompleteMigrateBucketEvm(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
 	return "", ErrNilModular
 }
 
@@ -361,11 +377,23 @@ func (m *NilModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucke
 	return "", ErrNilModular
 }
 
+func (m *NilModular) RejectMigrateBucketEvm(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	return "", ErrNilModular
+}
+
 func (m *NilModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
 	return "", ErrNilModular
 }
 
+func (m *NilModular) DepositEvm(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
+	return "", ErrNilModular
+}
+
 func (m *NilModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
+	return "", ErrNilModular
+}
+
+func (m *NilModular) DeleteGlobalVirtualGroupEvm(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
 	return "", ErrNilModular
 }
 
@@ -377,6 +405,10 @@ func (*NilModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSw
 	return "", ErrNilModular
 }
 
+func (*NilModular) SwapOutEvm(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	return "", ErrNilModular
+}
+
 func (*NilModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error) {
 	return nil, ErrNilModular
 }
@@ -385,7 +417,15 @@ func (*NilModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virtual
 	return "", ErrNilModular
 }
 
+func (*NilModular) CompleteSwapOutEvm(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
+	return "", ErrNilModular
+}
+
 func (*NilModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	return "", ErrNilModular
+}
+
+func (*NilModular) SPExitEvm(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
 	return "", ErrNilModular
 }
 
@@ -393,7 +433,15 @@ func (*NilModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgr
 	return "", ErrNilModular
 }
 
+func (*NilModular) CompleteSPExitEvm(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	return "", ErrNilModular
+}
+
 func (*NilModular) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
+	return "", ErrNilModular
+}
+
+func (*NilModular) UpdateSPPriceEvm(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
 	return "", ErrNilModular
 }
 
@@ -406,6 +454,10 @@ func (*NilModular) SignBucketMigrationInfo(ctx context.Context, task *gfsptask.G
 }
 
 func (m *NilModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	return "", ErrNilModular
+}
+
+func (m *NilModular) ReserveSwapInEvm(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
 	return "", ErrNilModular
 }
 
@@ -440,7 +492,15 @@ func (m *NilModular) CompleteSwapIn(ctx context.Context, reserveSwapIn *virtualg
 	return "nil", ErrNilModular
 }
 
+func (m *NilModular) CompleteSwapInEvm(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	return "nil", ErrNilModular
+}
+
 func (m *NilModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	return "nil", ErrNilModular
+}
+
+func (m *NilModular) CancelSwapInEvm(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
 	return "nil", ErrNilModular
 }
 
@@ -452,7 +512,15 @@ func (m *NilModular) DelegateCreateObject(ctx context.Context, msg *storagetypes
 	return "", nil
 }
 
+func (m *NilModular) DelegateCreateObjectEvm(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	return "", nil
+}
+
 func (m *NilModular) DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
+	return "", nil
+}
+
+func (m *NilModular) DelegateUpdateObjectContentEvm(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
 	return "", nil
 }
 

@@ -168,12 +168,24 @@ func (s *SignModular) RejectUnSealObject(ctx context.Context, rejectObject *stor
 	return s.client.RejectUnSealObject(ctx, SignSeal, rejectObject)
 }
 
+func (s *SignModular) RejectUnSealObjectEvm(ctx context.Context, rejectObject *storagetypes.MsgRejectSealObject) (string, error) {
+	return s.client.RejectUnSealObjectEvm(ctx, SignSeal, rejectObject)
+}
+
 func (s *SignModular) DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error) {
 	return s.client.DiscontinueBucket(ctx, SignGc, bucket)
 }
 
+func (s *SignModular) DiscontinueBucketEvm(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error) {
+	return s.client.DiscontinueBucketEvm(ctx, SignGc, bucket)
+}
+
 func (s *SignModular) CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
 	return s.client.CreateGlobalVirtualGroup(ctx, SignOperator, gvg)
+}
+
+func (s *SignModular) CreateGlobalVirtualGroupEvm(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error) {
+	return s.client.CreateGlobalVirtualGroupEvm(ctx, SignOperator, gvg)
 }
 
 func (s *SignModular) SignMigrateGVG(ctx context.Context, mp *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
@@ -198,8 +210,16 @@ func (s *SignModular) CompleteMigrateBucket(ctx context.Context, migrateBucket *
 	return s.client.CompleteMigrateBucket(ctx, SignOperator, migrateBucket)
 }
 
+func (s *SignModular) CompleteMigrateBucketEvm(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error) {
+	return s.client.CompleteMigrateBucketEvm(ctx, SignOperator, migrateBucket)
+}
+
 func (s *SignModular) UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
 	return s.client.UpdateSPPrice(ctx, SignOperator, price)
+}
+
+func (s *SignModular) UpdateSPPriceEvm(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error) {
+	return s.client.UpdateSPPriceEvm(ctx, SignOperator, price)
 }
 
 func (s *SignModular) SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
@@ -215,6 +235,10 @@ func (s *SignModular) SwapOut(ctx context.Context, swapOut *virtualgrouptypes.Ms
 	return s.client.SwapOut(ctx, SignOperator, swapOut)
 }
 
+func (s *SignModular) SwapOutEvm(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error) {
+	return s.client.SwapOutEvm(ctx, SignOperator, swapOut)
+}
+
 func (s *SignModular) SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error) {
 	msg := swapOut.GetApprovalBytes()
 	sig, err := s.client.Sign(SignApproval, msg)
@@ -228,44 +252,88 @@ func (s *SignModular) CompleteSwapOut(ctx context.Context, completeSwapOut *virt
 	return s.client.CompleteSwapOut(ctx, SignOperator, completeSwapOut)
 }
 
+func (s *SignModular) CompleteSwapOutEvm(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error) {
+	return s.client.CompleteSwapOutEvm(ctx, SignOperator, completeSwapOut)
+}
+
 func (s *SignModular) SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
 	return s.client.SPExit(ctx, SignOperator, spExit)
+}
+
+func (s *SignModular) SPExitEvm(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error) {
+	return s.client.SPExitEvm(ctx, SignOperator, spExit)
 }
 
 func (s *SignModular) CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
 	return s.client.CompleteSPExit(ctx, SignOperator, completeSPExit)
 }
 
+func (s *SignModular) CompleteSPExitEvm(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error) {
+	return s.client.CompleteSPExitEvm(ctx, SignOperator, completeSPExit)
+}
+
 func (s *SignModular) RejectMigrateBucket(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
 	return s.client.RejectMigrateBucket(ctx, SignOperator, rejectMigrateBucket)
+}
+
+func (s *SignModular) RejectMigrateBucketEvm(ctx context.Context, rejectMigrateBucket *storagetypes.MsgRejectMigrateBucket) (string, error) {
+	return s.client.RejectMigrateBucketEvm(ctx, SignOperator, rejectMigrateBucket)
 }
 
 func (s *SignModular) ReserveSwapIn(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
 	return s.client.ReserveSwapIn(ctx, SignOperator, reserveSwapIn)
 }
 
+func (s *SignModular) ReserveSwapInEvm(ctx context.Context, reserveSwapIn *virtualgrouptypes.MsgReserveSwapIn) (string, error) {
+	return s.client.ReserveSwapInEvm(ctx, SignOperator, reserveSwapIn)
+}
+
 func (s *SignModular) CompleteSwapIn(ctx context.Context, completeSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
 	return s.client.CompleteSwapIn(ctx, SignOperator, completeSwapIn)
+}
+
+func (s *SignModular) CompleteSwapInEvm(ctx context.Context, completeSwapIn *virtualgrouptypes.MsgCompleteSwapIn) (string, error) {
+	return s.client.CompleteSwapInEvm(ctx, SignOperator, completeSwapIn)
 }
 
 func (s *SignModular) CancelSwapIn(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
 	return s.client.CancelSwapIn(ctx, SignOperator, cancelSwapIn)
 }
 
+func (s *SignModular) CancelSwapInEvm(ctx context.Context, cancelSwapIn *virtualgrouptypes.MsgCancelSwapIn) (string, error) {
+	return s.client.CancelSwapInEvm(ctx, SignOperator, cancelSwapIn)
+}
+
 func (s *SignModular) Deposit(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
 	return s.client.Deposit(ctx, SignOperator, deposit)
+}
+
+func (s *SignModular) DepositEvm(ctx context.Context, deposit *virtualgrouptypes.MsgDeposit) (string, error) {
+	return s.client.DepositEvm(ctx, SignOperator, deposit)
 }
 
 func (s *SignModular) DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
 	return s.client.DeleteGlobalVirtualGroup(ctx, SignOperator, deleteGVG)
 }
 
+func (s *SignModular) DeleteGlobalVirtualGroupEvm(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error) {
+	return s.client.DeleteGlobalVirtualGroupEvm(ctx, SignOperator, deleteGVG)
+}
+
 func (s *SignModular) DelegateUpdateObjectContent(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
 	return s.client.DelegateUpdateObjectContent(ctx, SignOperator, msg)
 }
 
+func (s *SignModular) DelegateUpdateObjectContentEvm(ctx context.Context, msg *storagetypes.MsgDelegateUpdateObjectContent) (string, error) {
+	return s.client.DelegateUpdateObjectContentEvm(ctx, SignOperator, msg)
+}
+
 func (s *SignModular) DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
 	return s.client.DelegateCreateObject(ctx, SignOperator, msg)
+}
+
+func (s *SignModular) DelegateCreateObjectEvm(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error) {
+	return s.client.DelegateCreateObjectEvm(ctx, SignOperator, msg)
 }
 
 func (s *SignModular) SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error) {
