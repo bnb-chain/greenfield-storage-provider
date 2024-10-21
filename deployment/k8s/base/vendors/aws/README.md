@@ -4,7 +4,7 @@
 - storage_provider_db is created in MySql DB. (DB name is configurable in config.toml of mechain-sp)
 - block_syncer is created in Mysql DB. (can be in a different mysql to storage_provider_db one)
 - S3 bucket created(equivalent object storage on other supported Cloud provider).
-- AWS Secrets Manager store(equivalent Secret vault on other supported Cloud provider) for holding credentials, such as /dev/greenfield/gf-sp-devops/secrets
+- AWS Secrets Manager store(equivalent Secret vault on other supported Cloud provider) for holding credentials, such as /dev/mechain/gf-sp-devops/secrets
 - IAM role with permission to S3 bucket and secret valut, and binding the role to the ServiceAccount used by SP pods.
 - Put this as the content of the AWS Secrets Manager store with actual values:
 
@@ -20,9 +20,9 @@
     "BS_DB_PASSWORD":"xxx",
     "BS_DB_ADDRESS":"xxx:3306",
     "BS_DB_DATABASE":"block_syncer",
-    "BS_DB_SWITCHED_USER":"greenfield",
+    "BS_DB_SWITCHED_USER":"mechain",
     "BS_DB_SWITCHED_PASSWORD":"02aMU4miGcdGZRfb",
-    "BS_DB_SWITCHED_ADDRESS":"greenfield-sp-dev-metadata-instance-1.cnvhwydws6wc.ap-northeast-1.rds.amazonaws.com",
+    "BS_DB_SWITCHED_ADDRESS":"mechain-sp-dev-metadata-instance-1.cnvhwydws6wc.ap-northeast-1.rds.amazonaws.com",
     "BS_DB_SWITCHED_DATABASE":"block_syncer_backup",
     "SIGNER_OPERATOR_PRIV_KEY":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     "SIGNER_FUNDING_PRIV_KEY":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",

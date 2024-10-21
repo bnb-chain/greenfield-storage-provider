@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/0xPolygon/polygon-edge/bls"
-	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-common/go/hash"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfsptqueue"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"

@@ -18,7 +18,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
+	commonhttp "github.com/zkMeLabs/mechain-common/go/http"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
 	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
@@ -29,7 +29,7 @@ var Now = time.Now
 
 const (
 	TestSpAddress           string = "0x1c62EF97a13654A759C7E706Adf9EB3bAb0F807A"
-	UnsignedContentTemplate string = `%s wants you to sign in with your BNB Greenfield account:
+	UnsignedContentTemplate string = `%s wants you to sign in with your Mechain account:
 %s
 Register your identity public key %s
 
@@ -41,13 +41,13 @@ Expiration Time: %s
 Resources:
 - SP %s (name: SP_001) with nonce: %s`
 
-	SampleDAppDomain  = "https://greenfield.dapp.sample.io"
+	SampleDAppDomain  = "https://mechain.dapp.sample.io"
 	SamplePublicKey   = "9f708a5c45db9800d57bbdfae1202f31a7569290670609b0f38cab4ee62a12a8"
 	SampleUserAccount = "0xa64FdC3B4866CD2aC664998C7b180813fB9B06E6"
 	SampleNonce       = "123456"
 	SampleExpiryDate  = "test_expiry_date"
 
-	UnsignedContentTemplateV2 string = `%s wants you to sign in with your BNB Greenfield account:
+	UnsignedContentTemplateV2 string = `%s wants you to sign in with your Mechain account:
 %s
 Register your identity public key %s
 

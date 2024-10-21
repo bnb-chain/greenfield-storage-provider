@@ -10,18 +10,18 @@ This API is used to list bucket read records. And it supports both `virtual-host
 
 ## HTTP Request Format
 
-| Description                | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(virtual-hosted-style) | /                                         |
-| Method                     | GET                                       |
+| Description                | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(virtual-hosted-style) | /                                   |
+| Method                     | GET                                 |
 
 You should set `BucketName` in url host to determine which bucket do you want to query.
 
 ## HTTP Request Header
 
-| ParameterName                                                            | Type   | Required | Description                                  |
-| ------------------------------------------------------------------------ | ------ | -------- | -------------------------------------------- |
+| ParameterName                                    | Type   | Required | Description                                  |
+| ------------------------------------------------ | ------ | -------- | -------------------------------------------- |
 | [Authorization](/README.md#authorization-header) | string | yes      | The authorization string of the HTTP request |
 
 ## HTTP Request Parameter
@@ -47,7 +47,7 @@ The request does not have a request body.
 
 ```HTTP
 GET /?list-read-record&max-records=MaxRecord&start-timstamp=StartTimestamp&end-timestamp=End-Timestamp HTTP/1.1 
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 Authorization: Authorization
 ```
 
@@ -95,7 +95,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 GET /?list-read-record&max-records=2&start-timstamp=1680520105786&end-timestamp=1680520178958 HTTP/1.1
-Host: myBucket.gnfd.gnfd-testnet-sp1.bnbchain.org
+Host: myBucket.gnfd.testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string
 ```

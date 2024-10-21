@@ -10,11 +10,11 @@ This API is used to get bucket meta by bucket name. And it supports both `virtua
 
 ## HTTP Request Format
 
-| Description                | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(virtual-hosted-style) |                                           |
-| Method                     | GET                                       |
+| Description                | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(virtual-hosted-style) |                                     |
+| Method                     | GET                                 |
 
 ## HTTP Request Header
 
@@ -36,14 +36,14 @@ The request does not have a request body.
 
 ```HTTP
 GET /?bucket-meta HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 ```
 
 ## HTTP Response Header
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
@@ -54,21 +54,21 @@ Host: BucketName.gnfd-testnet-sp*.bnbchain.org
 
 ### Bucket
 
-| ParameterName    | Type                              | Description                                                                                                                                                                                                       |
-| ---------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Owner            | string                            | Owner is the object owner                                                                                                                                                                                         |
-| BucketName       | string                            | BucketName is the name of the bucket                                                                                                                                                                              |
-| Visibility       | [VisibilityType](#visibilitytype) | Visibility defines the highest permissions for bucket. When an bucket is public, everyone can access it                                                                                                           |
-| Id               | Uint                              | Id is the unique identification for bucket                                                                                                                                                                        |
-| SourceType       | [SourceType](#sourcetype)         | SourceType defines which chain the user should send the bucket management transactions to                                                                                                                         |
-| CreateAt         | int64                             | CreateAt define the block timestamp when the bucket created                                                                                                                                                       |
-| PrimarySPAddress | string                            | PrimarySPAddress is the unique address of the primary sp                                                                                                                                                          |
-| PaymentAddress   | string                            | payment_address is the address of the payment account                                                                                                                                                             |
-| ChargedReadQuota | uint64                            | ChargedReadQuota defines the traffic quota for read in bytes per month.                                                                                                                                           |
-| BucketStatus     | [BucketStatus](#bucketstatus)     | BucketStatus define the status of the bucket                                                                                                                                                                      |
-| Vgf              | [Vgf](#vgf)                       | Vgf define the global virtual group family info of bucket                                                                                                                                                         |
-| StorageSize      | string                            | StorageSize defines the storage size of bucket                                                                                                                                                                    |
-| OffChainStatus   | int32                             | OffChainStatus defines the status of a bucket in the off-chain storage.It is used to track the current state of the bucket with respect to off-chain operations,1 means 0001 -> OffChainStatusIsLimited is true.  |
+| ParameterName    | Type                              | Description                                                                                                                                                                                                      |
+| ---------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner            | string                            | Owner is the object owner                                                                                                                                                                                        |
+| BucketName       | string                            | BucketName is the name of the bucket                                                                                                                                                                             |
+| Visibility       | [VisibilityType](#visibilitytype) | Visibility defines the highest permissions for bucket. When an bucket is public, everyone can access it                                                                                                          |
+| Id               | Uint                              | Id is the unique identification for bucket                                                                                                                                                                       |
+| SourceType       | [SourceType](#sourcetype)         | SourceType defines which chain the user should send the bucket management transactions to                                                                                                                        |
+| CreateAt         | int64                             | CreateAt define the block timestamp when the bucket created                                                                                                                                                      |
+| PrimarySPAddress | string                            | PrimarySPAddress is the unique address of the primary sp                                                                                                                                                         |
+| PaymentAddress   | string                            | payment_address is the address of the payment account                                                                                                                                                            |
+| ChargedReadQuota | uint64                            | ChargedReadQuota defines the traffic quota for read in bytes per month.                                                                                                                                          |
+| BucketStatus     | [BucketStatus](#bucketstatus)     | BucketStatus define the status of the bucket                                                                                                                                                                     |
+| Vgf              | [Vgf](#vgf)                       | Vgf define the global virtual group family info of bucket                                                                                                                                                        |
+| StorageSize      | string                            | StorageSize defines the storage size of bucket                                                                                                                                                                   |
+| OffChainStatus   | int32                             | OffChainStatus defines the status of a bucket in the off-chain storage.It is used to track the current state of the bucket with respect to off-chain operations,1 means 0001 -> OffChainStatusIsLimited is true. |
 
 ### StreamRecord
 
@@ -117,7 +117,7 @@ Host: BucketName.gnfd-testnet-sp*.bnbchain.org
 | 2     | SOURCE_TYPE_MIRROR_PENDING  |
 
 ### Vgf
-| ParameterName         | Type                                        | Description                                                                                                             |
+| ParameterName         | Type   | Description                                                                                   |
 | --------------------- | ------ | --------------------------------------------------------------------------------------------- |
 | Id                    | uint32 | Id is the vgf id                                                                              |
 | PrimarySpId           | uint32 | PrimarySpId is the primary sp id of vgf                                                       |
@@ -146,7 +146,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 GET /?bucket-meta HTTP/1.1
-Host: j6it2.gnfd-testnet-sp1.bnbchain.org
+Host: j6it2.testnet-sp*.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 

@@ -13,7 +13,7 @@ import (
 )
 
 func setupKM() (keys.KeyManager, error) {
-	// the private key comes from greenfield/sdk/keys/ unit test
+	// the private key comes from mechain/sdk/keys/ unit test
 	privKey := "ab463aca3d2965233da3d1d6108aa521274c5ddc2369ff72970a52a451863fbf"
 	return keys.NewPrivateKeyManager(privKey)
 }

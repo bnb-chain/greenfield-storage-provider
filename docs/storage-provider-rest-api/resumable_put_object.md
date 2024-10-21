@@ -6,16 +6,16 @@ title: Resumable Put Object
 
 ## RESTful API Description
 
-This API is used to upload an object to Greenfield SP. It serves for two types of upload, either a new object which is just created or to update an existing object.
+This API is used to upload an object to Mechain SP. It serves for two types of upload, either a new object which is just created or to update an existing object.
 And it supports both `virtual-hosted-style` and `path-style` requests.
 
 ## HTTP Request Format
 
-| Desscription               | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style)           | /ObjectName                               |
-| Method                     | POST                                      |
+| Desscription               | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(path-style)           | /ObjectName                         |
+| Method                     | POST                                |
 
 ## HTTP Request Header
 
@@ -42,7 +42,7 @@ The request does not have a path parameter.
 
 ### Request Body
 
-The request body is a binary data that you want to store in Greenfield SP.
+The request body is a binary data that you want to store in Mechain SP.
 
 ## Request Syntax
 
@@ -89,7 +89,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 PUT /my-image.jpg HTTP/1.1
-Host: myBucket.gnfd-testnet-sp*.bnbchain.org
+Host: myBucket.testnet-sp*.mechain.tech
 url[/bucket/object?complete=false&offset=0]
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string
@@ -113,16 +113,16 @@ Content-Length: 11434
 
 ## RESTful API Description
 
-This API is used to delegate upload an object to Greenfield SP. It serves for two types of upload, either a new object which is just created or to update an existing object.
+This API is used to delegate upload an object to Mechain SP. It serves for two types of upload, either a new object which is just created or to update an existing object.
 And it supports both `virtual-hosted-style` and `path-style` requests.
 
 ## HTTP Request Format
 
-| Desscription               | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style)           | /ObjectName                               |
-| Method                     | POST                                      |
+| Desscription               | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(path-style)           | /ObjectName                         |
+| Method                     | POST                                |
 
 ## HTTP Request Header
 
@@ -143,7 +143,7 @@ The request does not have a path parameter.
 ### Query Parameter
 
 | ParameterName | Type   | Required | Description                                                                                                                  |
-| ------------- | ------ |----------|------------------------------------------------------------------------------------------------------------------------------|
+| ------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | offset        | long   | no       | The offset of the chunk in the entire file, if the breakpoint is resumed, you can use the query interface to get the offset. |
 | complete      | string | no       | True if the last piece, not false.                                                                                           |
 | delegate      | string | yes      | The identity of the delegate upload request                                                                                  |
@@ -153,7 +153,7 @@ The request does not have a path parameter.
 
 ### Request Body
 
-The request body is a binary data that you want to store in Greenfield SP.
+The request body is a binary data that you want to store in Mechain SP.
 
 ## Request Syntax
 
@@ -200,7 +200,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 PUT /my-image.jpg HTTP/1.1
-Host: myBucket.gnfd-testnet-sp*.bnbchain.org
+Host: myBucket.testnet-sp*.mechain.tech
 url[/bucket/object?delegate&is_update=false&payload_size=1&visibility=1&complete=false&offset=0]
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string

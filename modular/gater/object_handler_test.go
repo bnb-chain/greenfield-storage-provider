@@ -25,10 +25,10 @@ import (
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	metadatatypes "github.com/zkMeLabs/mechain-storage-provider/modular/metadata/types"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	commonhttp "github.com/zkMeLabs/mechain-common/go/http"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
 	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"
 	"github.com/zkMeLabs/mechain-storage-provider/core/piecestore"

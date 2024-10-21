@@ -363,7 +363,7 @@ func verify26(t *testing.T, db *gorm.DB) error {
 	if err := db.Table((&models.StorageProvider{}).TableName()).Where("sp_id = ?", 14).Find(&sp).Error; err != nil {
 		return err
 	}
-	if sp.Endpoint != "http://spxrmfl.greenfield.io" || sp.BlsKey != "b689357b256f8aabaf02fceb56a9a61c59b2d9b3cc78d4413fefd1e3bd902c90dcc7b346deb672d164c9ff832a8ee1d9" {
+	if sp.Endpoint != "http://spxrmfl.mechain.io" || sp.BlsKey != "b689357b256f8aabaf02fceb56a9a61c59b2d9b3cc78d4413fefd1e3bd902c90dcc7b346deb672d164c9ff832a8ee1d9" {
 		return fmt.Errorf("sp update failed endpoint: %s, blskey:%s", sp.Endpoint, sp.BlsKey)
 	}
 	return nil

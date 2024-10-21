@@ -20,13 +20,13 @@ const (
 	MinReplicateTime int64 = 90
 	// MaxReplicateTime defines the max timeout to replicate object.
 	MaxReplicateTime int64 = 500
-	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on greenfield.
+	// MinReceiveTime defines the min timeout to confirm the received piece whether is sealed on mechain.
 	MinReceiveTime int64 = 90
-	// MaxReceiveTime defines the max timeout to confirm the received piece whether is sealed on greenfield.
+	// MaxReceiveTime defines the max timeout to confirm the received piece whether is sealed on mechain.
 	MaxReceiveTime int64 = 300
-	// MinSealObjectTime defines the min timeout to seal object to greenfield.
+	// MinSealObjectTime defines the min timeout to seal object to mechain.
 	MinSealObjectTime int64 = 90
-	// MaxSealObjectTime defines the max timeout to seal object to greenfield.
+	// MaxSealObjectTime defines the max timeout to seal object to mechain.
 	MaxSealObjectTime int64 = 300
 	// MinDownloadTime defines the min timeout to download object.
 	MinDownloadTime int64 = 2
@@ -67,9 +67,9 @@ const (
 	MinReplicateRetry = 3
 	// MaxReplicateRetry defines the max retry number to replicate object.
 	MaxReplicateRetry = 6
-	// MinReceiveConfirmRetry defines the min retry number to confirm received piece is sealed on greenfield.
+	// MinReceiveConfirmRetry defines the min retry number to confirm received piece is sealed on mechain.
 	MinReceiveConfirmRetry = 1
-	// MaxReceiveConfirmRetry defines the max retry number to confirm received piece is sealed on greenfield.
+	// MaxReceiveConfirmRetry defines the max retry number to confirm received piece is sealed on mechain.
 	MaxReceiveConfirmRetry = 3
 	// MinSealObjectRetry defines the min retry number to seal object.
 	MinSealObjectRetry = 3

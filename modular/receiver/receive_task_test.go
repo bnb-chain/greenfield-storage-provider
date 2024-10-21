@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/zkMeLabs/mechain-common/go/hash"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfsppieceop"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"

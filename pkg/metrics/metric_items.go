@@ -160,12 +160,12 @@ var (
 
 	GnfdChainTime = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "gnfd_chain_time",
-		Help:    "Track the time of greenfield chain api costs.",
+		Help:    "Track the time of mechain chain api costs.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"gnfd_chain_time"})
 	GnfdChainCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "gnfd_chain_counter",
-		Help: "Track the counter of greenfield chain api.",
+		Help: "Track the counter of mechain chain api.",
 	}, []string{"gnfd_chain_counter"})
 	BlockHeightLagGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "block_syncer_height",

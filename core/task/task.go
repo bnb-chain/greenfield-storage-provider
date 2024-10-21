@@ -201,7 +201,7 @@ type ApprovalReplicatePieceTask interface {
 	// SetApprovedSpEndpoint sets the approved endpoint of SP.
 	SetApprovedSpEndpoint(string)
 	// GetApprovedSpApprovalAddress returns the approved approval address of SP. It is
-	// used to seal object on greenfield.
+	// used to seal object on mechain.
 	GetApprovedSpApprovalAddress() string
 	// SetApprovedSpApprovalAddress sets the approved approval address of SP.
 	SetApprovedSpApprovalAddress(string)
@@ -212,7 +212,7 @@ type ApprovalReplicatePieceTask interface {
 
 // ObjectTask associated with an object and storage params, and records the
 // information of different stages of the object. Considering the change of storage
-// params on the greenfield, the storage params of each object should be determined
+// params on the mechain, the storage params of each object should be determined
 // when it is created, and it should not be queried during the task flow, which is
 // inefficient and error-prone.
 type ObjectTask interface {
@@ -270,7 +270,7 @@ type ReplicatePieceTask interface {
 	// InitReplicatePieceTask inits the ReplicatePieceTask by ObjectInfo, params,
 	// task priority, timeout and max retry.
 	InitReplicatePieceTask(object *storagetypes.ObjectInfo, params *storagetypes.Params, priority TPriority, timeout int64, retry int64, isAgentUpload bool)
-	// GetSealed returns an indicator whether successful seal object on greenfield
+	// GetSealed returns an indicator whether successful seal object on mechain
 	// after replicate pieces, it is an optimization method. ReplicatePieceTask and
 	// SealObjectTask are combined. Otherwise, the two tasks will be completed in
 	// two stages. If the combination is successful and the seal object is successful,
@@ -335,7 +335,7 @@ type ReceivePieceTask interface {
 	// GetSignBytes returns the bytes from the task for primary SP to sign.
 	GetSignBytes() []byte
 	// GetSealed returns an indicator whether the object of receiving piece data is
-	// sealed on greenfield, the secondary SP has an incentive to confirm that otherwise
+	// sealed on mechain, the secondary SP has an incentive to confirm that otherwise
 	// it wastes its storage resources
 	GetSealed() bool
 	// SetSealed sets the object of receiving piece data whether is successfully sealed.
@@ -356,7 +356,7 @@ type ReceivePieceTask interface {
 	GetIsAgentUploadTask() bool
 }
 
-// SealObjectTask is an abstract interface to record the information for sealing object on Greenfield chain.
+// SealObjectTask is an abstract interface to record the information for sealing object on Mechain chain.
 type SealObjectTask interface {
 	ObjectTask
 	// InitSealObjectTask inits the SealObjectTask.
@@ -470,7 +470,7 @@ type GCTask interface {
 
 // GCObjectTask is an abstract interface to record the information for collecting the
 // piece store space by deleting object payload data that the object has been deleted
-// on Greenfield chain.
+// on Mechain chain.
 type GCObjectTask interface {
 	GCTask
 	// InitGCObjectTask inits InitGCObjectTask.

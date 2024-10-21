@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	GreenFieldChain = "GreenfieldChain"
+	MechainChain = "MechainChain"
 	// UpdateClientInternal defines the period of updating the best chain client
 	UpdateClientInternal = 60
 	// ExpectedOutputBlockInternal defines the time of estimating output block time
@@ -25,21 +25,21 @@ const (
 )
 
 var (
-	ErrNoSuchBucket        = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500001, "no such bucket")
-	ErrSealTimeout         = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500002, "seal failed")
-	ErrRejectUnSealTimeout = gfsperrors.Register(GreenFieldChain, http.StatusBadRequest, 500003, "reject unseal failed")
+	ErrNoSuchBucket        = gfsperrors.Register(MechainChain, http.StatusBadRequest, 500001, "no such bucket")
+	ErrSealTimeout         = gfsperrors.Register(MechainChain, http.StatusBadRequest, 500002, "seal failed")
+	ErrRejectUnSealTimeout = gfsperrors.Register(MechainChain, http.StatusBadRequest, 500003, "reject unseal failed")
 )
 
-// GreenfieldClient the greenfield chain client, only use to query.
-type GreenfieldClient struct {
-	chainClient   *chainClient.GreenfieldClient
+// MechainClient the mechain chain client, only use to query.
+type MechainClient struct {
+	chainClient   *chainClient.MechainClient
 	currentHeight int64
 	updatedAt     time.Time
 	Provider      string
 }
 
-// GnfdClient returns the greenfield chain client.
-func (client *GreenfieldClient) GnfdClient() *chainClient.GreenfieldClient {
+// GnfdClient returns the mechain chain client.
+func (client *MechainClient) GnfdClient() *chainClient.MechainClient {
 	return client.chainClient
 }
 
@@ -51,29 +51,29 @@ type GnfdChainConfig struct {
 }
 
 type Gnfd struct {
-	client          *GreenfieldClient
-	backUpClients   []*GreenfieldClient
+	client          *MechainClient
+	backUpClients   []*MechainClient
 	wsClient        *chttp.HTTP
 	backUpWsClients []*chttp.HTTP
 	stopCh          chan struct{}
 	mutex           sync.RWMutex
 }
 
-// NewGnfd returns the Greenfield instance.
+// NewGnfd returns the Mechain instance.
 func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
 	if len(cfg.ChainAddress) == 0 {
-		return nil, errors.New("greenfield nodes missing")
+		return nil, errors.New("mechain nodes missing")
 	}
 
-	var clients []*GreenfieldClient
+	var clients []*MechainClient
 	var wsClients []*chttp.HTTP
 	for _, address := range cfg.ChainAddress {
-		cc, err := chainClient.NewCustomGreenfieldClient(address, cfg.ChainID, jsonclient.DefaultHTTPClient)
+		cc, err := chainClient.NewCustomMechainClient(address, cfg.ChainID, jsonclient.DefaultHTTPClient)
 		if err != nil {
 			return nil, err
 		}
 
-		client := &GreenfieldClient{
+		client := &MechainClient{
 			Provider:    address,
 			chainClient: cc,
 		}
@@ -84,7 +84,7 @@ func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
 		}
 		wsClients = append(wsClients, wsClient)
 	}
-	greenfield := &Gnfd{
+	mechain := &Gnfd{
 		client:          clients[0],
 		backUpClients:   clients,
 		wsClient:        wsClients[0],
@@ -92,25 +92,25 @@ func NewGnfd(cfg *GnfdChainConfig) (*Gnfd, error) {
 		stopCh:          make(chan struct{}),
 	}
 
-	go greenfield.updateClient()
-	return greenfield, nil
+	go mechain.updateClient()
+	return mechain, nil
 }
 
-// Close the Greenfield instance.
+// Close the Mechain instance.
 func (g *Gnfd) Close() error {
 	close(g.stopCh)
 	return nil
 }
 
 // getCurrentClient returns the current client to use.
-func (g *Gnfd) getCurrentClient() *GreenfieldClient {
+func (g *Gnfd) getCurrentClient() *MechainClient {
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
 	return g.client
 }
 
 // setCurrentClient sets client to current client for using.
-func (g *Gnfd) setCurrentClient(client *GreenfieldClient) {
+func (g *Gnfd) setCurrentClient(client *MechainClient) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 	g.client = client

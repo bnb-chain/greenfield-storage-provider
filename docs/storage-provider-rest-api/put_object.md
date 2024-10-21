@@ -6,25 +6,25 @@ title: Put Object
 
 ## RESTful API Description
 
-This API is used to upload an object to Greenfield SP. It serves for two types of upload, either a new object which is just created or to update an existing object. 
+This API is used to upload an object to Mechain SP. It serves for two types of upload, either a new object which is just created or to update an existing object. 
 And it supports both `virtual-hosted-style` and `path-style` requests.
 
 ## HTTP Request Format
 
-| Desscription               | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style)           | /ObjectName                               |
-| Method                     | PUT                                       |
+| Desscription               | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(path-style)           | /ObjectName                         |
+| Method                     | PUT                                 |
 
 ## HTTP Request Header
 
-| ParameterName                                                            | Type   | Required | Description                                                                                        |
-| ------------------------------------------------------------------------ | ------ | -------- | -------------------------------------------------------------------------------------------------- |
+| ParameterName                                    | Type   | Required | Description                                                                                        |
+| ------------------------------------------------ | ------ | -------- | -------------------------------------------------------------------------------------------------- |
 | [Authorization](/README.md#authorization-header) | string | yes      | The authorization string of the HTTP request                                                       |
-| Content-Type                                                             | string | no       | The Content-Type representation header is used to indicate the original media type of the resource |
-| Content-Length                                                           | string | no       | The Content-Length header indicates the size of the message body, in bytes, sent to the recipient. |
-| ParameterName                                                            | Type   | Required | Description                                                                                        |
+| Content-Type                                     | string | no       | The Content-Type representation header is used to indicate the original media type of the resource |
+| Content-Length                                   | string | no       | The Content-Length header indicates the size of the message body, in bytes, sent to the recipient. |
+| ParameterName                                    | Type   | Required | Description                                                                                        |
 
 `Content-Type` is determined by specific object, such as the content type of image could be image/jpeg.
 
@@ -40,13 +40,13 @@ The request does not have a query parameter.
 
 ### Request Body
 
-The request body is a binary data that you want to store in Greenfield SP.
+The request body is a binary data that you want to store in Mechain SP.
 
 ## Request Syntax
 
 ```HTTP
 PUT /ObjectName HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 X-Gnfd-Txn-Hash: Txn-Hash
 Authorization: Authorization
 
@@ -86,7 +86,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 PUT /my-image.jpg HTTP/1.1
-Host: myBucket.gnfd-testnet-sp*.bnbchain.org
+Host: myBucket.testnet-sp*.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string
 Content-Type: image/jpeg
@@ -109,25 +109,25 @@ Content-Length: 11434
 
 ## RESTful API Description
 
-This API is used to delegate upload an object to Greenfield SP. It serves for two types of upload, either a new object which is just created or to update an existing object.
+This API is used to delegate upload an object to Mechain SP. It serves for two types of upload, either a new object which is just created or to update an existing object.
 And it supports both `virtual-hosted-style` and `path-style` requests.
 
 ## HTTP Request Format
 
-| Desscription               | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style)           | /ObjectName                               |
-| Method                     | PUT                                       |
+| Desscription               | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(path-style)           | /ObjectName                         |
+| Method                     | PUT                                 |
 
 ## HTTP Request Header
 
-| ParameterName                                                            | Type   | Required | Description                                                                                        |
-| ------------------------------------------------------------------------ | ------ | -------- | -------------------------------------------------------------------------------------------------- |
+| ParameterName                                    | Type   | Required | Description                                                                                        |
+| ------------------------------------------------ | ------ | -------- | -------------------------------------------------------------------------------------------------- |
 | [Authorization](/README.md#authorization-header) | string | yes      | The authorization string of the HTTP request                                                       |
-| Content-Type                                                             | string | no       | The Content-Type representation header is used to indicate the original media type of the resource |
-| Content-Length                                                           | string | no       | The Content-Length header indicates the size of the message body, in bytes, sent to the recipient. |
-| ParameterName                                                            | Type   | Required | Description                                                                                        |
+| Content-Type                                     | string | no       | The Content-Type representation header is used to indicate the original media type of the resource |
+| Content-Length                                   | string | no       | The Content-Length header indicates the size of the message body, in bytes, sent to the recipient. |
+| ParameterName                                    | Type   | Required | Description                                                                                        |
 
 `Content-Type` is determined by specific object, such as the content type of image could be image/jpeg.
 
@@ -139,12 +139,12 @@ The request does not have a path parameter.
 
 ### Query Parameter
 
-| ParameterName | Type     | Required | Description                                    |
-|---------------|----------|----------|------------------------------------------------|
-| delegate      | string   | yes      | The identity of the delegate upload request    |
-| is_update     | bool     | no       | Whether to delegate the request for the update |
-| payload_size  | uint64   | yes      | the payload size of object                     |
-| visibility    | int      | no       | the visibility  of object                      |
+| ParameterName | Type   | Required | Description                                    |
+| ------------- | ------ | -------- | ---------------------------------------------- |
+| delegate      | string | yes      | The identity of the delegate upload request    |
+| is_update     | bool   | no       | Whether to delegate the request for the update |
+| payload_size  | uint64 | yes      | the payload size of object                     |
+| visibility    | int    | no       | the visibility  of object                      |
 
 ### Request Body
 
@@ -154,7 +154,7 @@ The request does not have a query parameter.
 
 ```HTTP
 PUT /ObjectName?delegate&is_update=${is_update}&payload_size=${payload_size}&visibility=${visibility} HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 X-Gnfd-Txn-Hash: Txn-Hash
 Authorization: Authorization
 
@@ -194,7 +194,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 PUT /my-image.jpg HTTP/1.1
-Host: myBucket.gnfd-testnet-sp*.bnbchain.org
+Host: myBucket.testnet-sp*.mechain.tech
 url: [/bucket/object?delegate&is_update=false&payload_size=1&visibility=1]
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string
@@ -218,25 +218,25 @@ Content-Length: 11434
 
 ## RESTful API Description
 
-This API is used to create an folder to Greenfield SP. It serves for two types of upload.
+This API is used to create an folder to Mechain SP. It serves for two types of upload.
 And it supports both `virtual-hosted-style` and `path-style` requests.
 
 ## HTTP Request Format
 
-| Desscription               | Definition                               |
-| -------------------------- |------------------------------------------|
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style)           | /ObjectName                              |
-| Method                     | Post                                     |
+| Desscription               | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(path-style)           | /ObjectName                         |
+| Method                     | Post                                |
 
 ## HTTP Request Header
 
-| ParameterName                                                            | Type   | Required | Description                                                                                        |
-| ------------------------------------------------------------------------ | ------ | -------- | -------------------------------------------------------------------------------------------------- |
+| ParameterName                                    | Type   | Required | Description                                                                                        |
+| ------------------------------------------------ | ------ | -------- | -------------------------------------------------------------------------------------------------- |
 | [Authorization](/README.md#authorization-header) | string | yes      | The authorization string of the HTTP request                                                       |
-| Content-Type                                                             | string | no       | The Content-Type representation header is used to indicate the original media type of the resource |
-| Content-Length                                                           | string | no       | The Content-Length header indicates the size of the message body, in bytes, sent to the recipient. |
-| ParameterName                                                            | Type   | Required | Description                                                                                        |
+| Content-Type                                     | string | no       | The Content-Type representation header is used to indicate the original media type of the resource |
+| Content-Length                                   | string | no       | The Content-Length header indicates the size of the message body, in bytes, sent to the recipient. |
+| ParameterName                                    | Type   | Required | Description                                                                                        |
 
 `Content-Type` is determined by specific object, such as the content type of image could be image/jpeg.
 
@@ -248,10 +248,10 @@ The request does not have a path parameter.
 
 ### Query Parameter
 
-| ParameterName | Type     | Required | Description                                    |
-|---------------|----------|----------|------------------------------------------------|
-| create-folder | string   | yes      | The identity of the delegate upload request    |
-| visibility    | int      | no       | the visibility  of object                      |
+| ParameterName | Type   | Required | Description                                 |
+| ------------- | ------ | -------- | ------------------------------------------- |
+| create-folder | string | yes      | The identity of the delegate upload request |
+| visibility    | int    | no       | the visibility  of object                   |
 
 ### Request Body
 
@@ -261,7 +261,7 @@ The request does not have a query parameter.
 
 ```HTTP
 PUT /ObjectName?create-folder HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 X-Gnfd-Txn-Hash: Txn-Hash
 Authorization: Authorization
 
@@ -301,7 +301,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 PUT /my-image.jpg HTTP/1.1
-Host: myBucket.gnfd-testnet-sp*.bnbchain.org
+Host: myBucket.testnet-sp*.mechain.tech
 url: [/bucket/object?create-folder]
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string

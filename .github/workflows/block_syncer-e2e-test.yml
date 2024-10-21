@@ -23,8 +23,8 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
-      # Checkout Greenfield-SP
-      - name: Checkout Greenfield-SP
+      # Checkout Mechain-SP
+      - name: Checkout Mechain-SP
         uses: actions/checkout@v3
       # Run MySQL
       - name: Run MySQL

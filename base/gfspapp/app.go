@@ -125,12 +125,12 @@ func (g *GfSpBaseApp) SetPieceOp(pieceOp piecestore.PieceOp) {
 	g.pieceOp = pieceOp
 }
 
-// Consensus returns greenfield consensus query client.
+// Consensus returns mechain consensus query client.
 func (g *GfSpBaseApp) Consensus() consensus.Consensus {
 	return g.chain
 }
 
-// SetConsensus sets greenfield consensus query client.
+// SetConsensus sets mechain consensus query client.
 func (g *GfSpBaseApp) SetConsensus(chain consensus.Consensus) {
 	g.chain = chain
 }

@@ -676,19 +676,19 @@ Workers = 50
 
 ### Join Mechain Testnet
 
-[Run Testnet SP Node](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node)
+[Run Testnet SP Node](https://zk.me/Mechain-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node)
 
 ## Document
 
-- [Mechain Whitepaper](https://github.com/bnb-chain/Mechain-whitepaper): The official Mechain Whitepaper.
-- [Mechain](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/overview): The Mechain documents.
-- [Storage Module on Mechain](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/modules/storage-module): The storage module on Mechain Chain.
-- [Storage Provider on Mechain](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/modules/storage-provider): The storage provider on Mechain Chain.
-- [Data Availability Challenge](https://docs.bnbchain.org/Mechain-docs/docs/guide/Mechain-blockchain/modules/data-availability-challenge): The correctness of payload be stored in SP.
-- [SP Introduction](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/introduction/overview): The Mechain Storage Provider documents.
-- [SP Compiling and Dependencies](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/compile-dependences): The detailed introduction to sp compiling and dependencies.
-- [Run Local SP Network](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/run-local-SP-network): The introduction to run local SP env for testing.
-- [Run Testnet SP Node](https://docs.bnbchain.org/Mechain-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node): The introduction to run testnet SP node.
+- [Mechain Whitepaper](https://github.com/zkMeLabs/Mechain-whitepaper): The official Mechain Whitepaper.
+- [Mechain](https://zk.me/Mechain-docs/docs/guide/Mechain-blockchain/overview): The Mechain documents.
+- [Storage Module on Mechain](https://zk.me/Mechain-docs/docs/guide/Mechain-blockchain/modules/storage-module): The storage module on Mechain Chain.
+- [Storage Provider on Mechain](https://zk.me/Mechain-docs/docs/guide/Mechain-blockchain/modules/storage-provider): The storage provider on Mechain Chain.
+- [Data Availability Challenge](https://zk.me/Mechain-docs/docs/guide/Mechain-blockchain/modules/data-availability-challenge): The correctness of payload be stored in SP.
+- [SP Introduction](https://zk.me/Mechain-docs/docs/guide/storage-provider/introduction/overview): The Mechain Storage Provider documents.
+- [SP Compiling and Dependencies](https://zk.me/Mechain-docs/docs/guide/storage-provider/run-book/compile-dependences): The detailed introduction to sp compiling and dependencies.
+- [Run Local SP Network](https://zk.me/Mechain-docs/docs/guide/storage-provider/run-book/run-local-SP-network): The introduction to run local SP env for testing.
+- [Run Testnet SP Node](https://zk.me/Mechain-docs/docs/guide/storage-provider/run-book/run-testnet-SP-node): The introduction to run testnet SP node.
 
 ## Related Projects
 

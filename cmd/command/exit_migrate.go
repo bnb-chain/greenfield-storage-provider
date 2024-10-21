@@ -13,15 +13,15 @@ const migrateCommands = "MIGRATE COMMANDS"
 
 var spOperatorAddressFlag = &cli.StringFlag{
 	Name:     "operatorAddress",
-	Usage:    "The operator account address of the storage provider who want to exit from the greenfield storage network",
+	Usage:    "The operator account address of the storage provider who want to exit from the mechain storage network",
 	Required: true,
 }
 
 var SPExitCmd = &cli.Command{
 	Name:  "sp.exit",
-	Usage: "Used for sp exits from the Greenfield storage network",
-	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared ` +
-		`to exit from Greenfield storage network.`,
+	Usage: "Used for sp exits from the Mechain storage network",
+	Description: `Using this command, it will send an transaction to Mechain blockchain to tell this SP is prepared ` +
+		`to exit from Mechain storage network.`,
 	Category: migrateCommands,
 	Action:   CW.spExit,
 	Flags: []cli.Flag{
@@ -63,9 +63,9 @@ var swapOutGVGIDList = &cli.StringFlag{
 
 var CompleteSPExitCmd = &cli.Command{
 	Name:  "sp.complete.exit",
-	Usage: "Only used in debugging scenarios, online use not allowed. Used for sp complete exits from the Greenfield storage network.",
-	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared ` +
-		`to complete exit from Greenfield storage network.`,
+	Usage: "Only used in debugging scenarios, online use not allowed. Used for sp complete exits from the Mechain storage network.",
+	Description: `Using this command, it will send an transaction to Mechain blockchain to tell this SP is prepared ` +
+		`to complete exit from Mechain storage network.`,
 	Category: migrateCommands,
 	Action:   CW.completeSPExit,
 	Flags: []cli.Flag{
@@ -94,9 +94,9 @@ func (w *CMDWrapper) completeSPExit(ctx *cli.Context) error {
 
 var CompleteSwapOutCmd = &cli.Command{
 	Name:  "sp.complete.swapout",
-	Usage: "Only used in debugging scenarios, online use not allowed. Used for swap out from the Greenfield storage network.",
-	Description: `Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared ` +
-		`to swap out from Greenfield storage network.`,
+	Usage: "Only used in debugging scenarios, online use not allowed. Used for swap out from the Mechain storage network.",
+	Description: `Using this command, it will send an transaction to Mechain blockchain to tell this SP is prepared ` +
+		`to swap out from Mechain storage network.`,
 	Category: migrateCommands,
 	Action:   CW.completeSwapOut,
 	Flags: []cli.Flag{

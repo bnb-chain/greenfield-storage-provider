@@ -18,7 +18,7 @@ spec:
       serviceAccountName: sp-default
       containers:
       - name: p2p
-        image: ghcr.io/bnb-chain/greenfield-storage-provider:0.0.4-p2p
+        image: ghcr.io/zkMeLabs/mechain-storage-provider:0.0.4-p2p
         args: ["--log.std", "-c", "/config/config.toml", "-server", "p2p"]
         env:
           - name: P2P_PRIVATE_KEY

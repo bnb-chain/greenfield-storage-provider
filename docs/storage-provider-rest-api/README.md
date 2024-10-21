@@ -1,4 +1,4 @@
-# Greenfield SP RESTful APIs
+# Mechain SP RESTful APIs
 
 ## Authorization header
 
@@ -8,33 +8,33 @@
 
 Authentication type represents which authentication mode the users want to use. Now there are three supported authentication modes: `GNFD1-ECDSA`, `GNFD1-ETH-PERSONAL_SIGN`, `GNFD2-EDDSA`.
 
-`GNFD1-ECDSA` require users to use `private key` for authentication. This mode is used in `greenfield-go-sdk`. We recommend users using this mode when calling Greenfield SP RESTful APIs.
+`GNFD1-ECDSA` require users to use `private key` for authentication. This mode is used in `mechain-go-sdk`. We recommend users using this mode when calling Mechain SP RESTful APIs.
 
 `GNFD1-ETH-PERSONAL_SIGN` is used for verify wallet personal signature from a certain dapp website, which is not able to access users' `private key` but can interact with users by using wallets. This mode is currently only used to register the following `GNFD2-EDDSA` user public key, from web apps to SP servers.
 
 `GNFD2-EDDSA` Once the dapp and user set up the "off chain auth" user account key in SPs (see [details](../../guide/storage-provider/modules/authenticator.md)) , users can communicate with SP without needing to make any explicit signature for most interactions (e.g. download private files, get SP approvals when create objects/buckets)
 
 ### Encryption algorithm type
-For `GNFD1-ECDSA` auth type, Greenfield SP RESTful APIs use `ECDSA-secp256k1` to sign `SignedMsg` field to get `Signature` field. Users can refer the following library to generate `Signature` field:
+For `GNFD1-ECDSA` auth type, Mechain SP RESTful APIs use `ECDSA-secp256k1` to sign `SignedMsg` field to get `Signature` field. Users can refer the following library to generate `Signature` field:
 
 - [secp256k1](https://github.com/cosmos/cosmos-sdk/tree/main/crypto/keys/secp256k1)
 
-For `GNFD2-EDDSA` auth type, Greenfield SP RESTful APIs use `Edwards-curve Digital Signature Algorithm` to sign `SignedMsg` field to get `Signature` field.
+For `GNFD2-EDDSA` auth type, Mechain SP RESTful APIs use `Edwards-curve Digital Signature Algorithm` to sign `SignedMsg` field to get `Signature` field.
 The EdDSA elliptic curve is Ed25519. 
 Users can refer the following library to generate `Signature` field:
 
-- [greenfield go sdk] https://github.com/bnb-chain/greenfield-go-sdk/blob/a21d3b5eb75a211266105ea78ad1c76fcdc87c4d/client/api_off_chain_auth.go#L37-L41
-- [greenfield js sdk] https://github.com/bnb-chain/greenfield-js-sdk/blob/9d4463b2b0d845c56ce2093eab15c15fb2ba4787/packages/js-sdk/src/clients/spclient/auth.ts#L69-L70
+- [mechain go sdk] https://github.com/zkMeLabs/mechain-go-sdk/blob/a21d3b5eb75a211266105ea78ad1c76fcdc87c4d/client/api_off_chain_auth.go#L37-L41
+- [mechain js sdk] https://github.com/zkMeLabs/mechain-js-sdk/blob/9d4463b2b0d845c56ce2093eab15c15fb2ba4787/packages/js-sdk/src/clients/spclient/auth.ts#L69-L70
 
 ### The step of generating authorization header
 1. Add a `X-Gnfd-Expiry-Timestamp` header into request, to define the expiry timestamp for the generated signature in the authorization headers.
    It defines the Expiry-Date is the ISO 8601 datetime string (e.g. 2021-09-30T16:25:24Z), used to register the EDDSA public key. This expiry date should be future timestamp but within **7 days** since now.
 
    See example code at:
-   https://github.com/bnb-chain/greenfield-go-sdk/blob/e6b5db6bf98e6b9b6a7a20be39d6342381a9ccd4/client/api_client.go#L426-L430
+   https://github.com/zkMeLabs/mechain-go-sdk/blob/e6b5db6bf98e6b9b6a7a20be39d6342381a9ccd4/client/api_client.go#L426-L430
 
 2. Create a canonical request
-Create a canonical request by concatenating the following strings, separated by newline characters. This helps ensure that the signature that you calculate and the signature that Greenfield SP calculates can match.
+Create a canonical request by concatenating the following strings, separated by newline characters. This helps ensure that the signature that you calculate and the signature that Mechain SP calculates can match.
 
    ```shell
    HTTPMethod
@@ -50,13 +50,13 @@ Create a canonical request by concatenating the following strings, separated by 
    - SignedHeaders – The list of headers that you included in CanonicalHeaders, separated by semicolons `;`. This indicates which headers are part of the signing process. Header names must use lowercase characters and must appear in alphabetical order.
 
    See example code at:
-   https://github.com/bnb-chain/greenfield-common/blob/8bcfd1ccaf6a8ffc3404abc48260d1f4c7f436b2/go/http/gen_sign_str.go#L75-L86
+   https://github.com/zkMeLabs/mechain-common/blob/8bcfd1ccaf6a8ffc3404abc48260d1f4c7f436b2/go/http/gen_sign_str.go#L75-L86
 
 3. Create a hash of the canonical request
 The hash of the canonical request is a slice of byte. Second use `Keccak256` algorithm to get Keccak256 hash.
 
    See example code at:
-   https://github.com/bnb-chain/greenfield-common/blob/8bcfd1ccaf6a8ffc3404abc48260d1f4c7f436b2/go/http/gen_sign_str.go#L100-L102
+   https://github.com/zkMeLabs/mechain-common/blob/8bcfd1ccaf6a8ffc3404abc48260d1f4c7f436b2/go/http/gen_sign_str.go#L100-L102
 
 4. Calculate the signature
 After you create the string to sign, you are ready to calculate the signature for the authentication information that you'll add to your request. Use your private key, [secp256k1](https://github.com/cosmos/cosmos-sdk/tree/main/crypto/keys/secp256k1) to generate Signature.And you should convert this to lowercase hexadecimal characters.
@@ -88,17 +88,17 @@ X-Gnfd-Expiry-Timestamp: 2023-10-18T03:20:04Z
 ```
 
 
-### Code examples in Greenfield Go SDK
+### Code examples in Mechain Go SDK
 
-The Greenfield JS/Go SDK  includes source code on GitHub that shows how to sign Greenfield SP API requests.
+The Mechain JS/Go SDK  includes source code on GitHub that shows how to sign Mechain SP API requests.
 
 - JS SDK
-  - [MsgToSign](https://github.com/bnb-chain/greenfield-js-sdk/blob/9d4463b2b0d845c56ce2093eab15c15fb2ba4787/packages/js-sdk/src/clients/spclient/auth.ts#L63)
-  - [SignRequest](https://github.com/bnb-chain/greenfield-js-sdk/blob/9d4463b2b0d845c56ce2093eab15c15fb2ba4787/packages/js-sdk/src/clients/spclient/auth.ts#L69C1-L70C1)
+  - [MsgToSign](https://github.com/zkMeLabs/mechain-js-sdk/blob/9d4463b2b0d845c56ce2093eab15c15fb2ba4787/packages/js-sdk/src/clients/spclient/auth.ts#L63)
+  - [SignRequest](https://github.com/zkMeLabs/mechain-js-sdk/blob/9d4463b2b0d845c56ce2093eab15c15fb2ba4787/packages/js-sdk/src/clients/spclient/auth.ts#L69C1-L70C1)
 
 - GO SDK
-  - [MsgToSign](https://github.com/bnb-chain/greenfield-common/blob/eb2f0efea22882dee610bd3b06589ed0e50fb8ce/go/http/gen_sign_str.go#L91-L94)
-  - [SignRequest](https://github.com/bnb-chain/greenfield-go-sdk/blob/a21d3b5eb75a211266105ea78ad1c76fcdc87c4d/client/api_client.go#L676-L685)
+  - [MsgToSign](https://github.com/zkMeLabs/mechain-common/blob/eb2f0efea22882dee610bd3b06589ed0e50fb8ce/go/http/gen_sign_str.go#L91-L94)
+  - [SignRequest](https://github.com/zkMeLabs/mechain-go-sdk/blob/a21d3b5eb75a211266105ea78ad1c76fcdc87c4d/client/api_client.go#L676-L685)
   
 
 ## X-Gnfd-Unsigned-Msg header
@@ -138,17 +138,17 @@ chargedReadQuota = 64
 X-Gnfd-Unsigned-Msg: 7b226275636b65745f6e616d65223a22676e666431222c22636861726765645f726561645f71756f7461223a223634222c2263726561746f72223a22307831343533393334333431334542343738393942303933353238376162313131314466383931643034222c227061796d656e745f61646472657373223a22307838653432346336446234324164394135643931623234653230623566363033654337306162624133222c227072696d6172795f73705f61646472657373223a22307832316336666632314444373031324445314343663930353566326542323334413434613164336642222c227072696d6172795f73705f617070726f76616c223a7b22657870697265645f686569676874223a2230222c22736967223a6e756c6c7d2c227669736962696c697479223a225649534942494c4954595f545950455f50524956415445227d
 ```
 
-### CreateBucket code examples in Greenfield Go SDK
+### CreateBucket code examples in Mechain Go SDK
 
-- [CreateBucket](https://github.com/bnb-chain/greenfield-go-sdk/blob/develop/client/api_bucket.go#LL113)
-- [GetCreateBucketApproval](https://github.com/bnb-chain/greenfield-go-sdk/blob/develop/client/api_bucket.go#L64)
+- [CreateBucket](https://github.com/zkMeLabs/mechain-go-sdk/blob/develop/client/api_bucket.go#LL113)
+- [GetCreateBucketApproval](https://github.com/zkMeLabs/mechain-go-sdk/blob/develop/client/api_bucket.go#L64)
 
 ### CreateObject approval
 
 When users send a `CreateObject approval` request, the request data is encoded in X-Gnfd-Unsigned-Msg header. CreateObject approval contains [10 fields](./get_approval.md#msgcreateobject). Users should provide the creator address, bucketName, objectName and payload data. The other fields is optional. Users should verify the content of `CreateObject approval` request. MsgCreateObject encodes in protobuf json format and converts to lowercase hexadecimal characters.
 
-- [CreateObject](https://github.com/bnb-chain/greenfield-go-sdk/blob/develop/client/api_object.go#L98)
-- [GetCreateObjectApproval](https://github.com/bnb-chain/greenfield-go-sdk/blob/develop/client/api_object.go#L526)
+- [CreateObject](https://github.com/zkMeLabs/mechain-go-sdk/blob/develop/client/api_object.go#L98)
+- [GetCreateObjectApproval](https://github.com/zkMeLabs/mechain-go-sdk/blob/develop/client/api_object.go#L526)
 
 ### CreateObject approval unsigned msg example
 
@@ -187,7 +187,7 @@ X-Gnfd-Unsigned-Msg: 7b226275636b65745f6e616d65223a22676e666431222c22636f6e74656
 
 ## X-Gnfd-Signed-Msg
 
-X-Gnfd-Signed-Msg is a HTTP response header. SP server will add approval signature to data parsed from `X-Gnfd-Unsigned-Msg`. Users should use hex decode to decode it into byte array. Then use protobuf json unmarshal byte array. Finnaly broadcast txn to Greenfield chain.
+X-Gnfd-Signed-Msg is a HTTP response header. SP server will add approval signature to data parsed from `X-Gnfd-Unsigned-Msg`. Users should use hex decode to decode it into byte array. Then use protobuf json unmarshal byte array. Finnaly broadcast txn to Mechain chain.
 
 ### CreateBucket approval signed msg example
 
@@ -236,30 +236,30 @@ X-Gnfd-Signed-Msg: 7b226275636b65745f6e616d65223a22676e666431222c22636f6e74656e7
 
 ## Virtual-hosted-style requests
 
-Greenfield SP supports both virtual-hosted-style and path-style URI. It's like AWS S3 so you can easily use Greenfield SP RESTful APIs.
+Mechain SP supports both virtual-hosted-style and path-style URI. It's like AWS S3 so you can easily use Mechain SP RESTful APIs.
 
-In a virtual-hosted–style URI, the bucket name is part of the domain name in the URL. Greenfield SP virtual-hosted–style URLs use the following format:
+In a virtual-hosted–style URI, the bucket name is part of the domain name in the URL. Mechain SP virtual-hosted–style URLs use the following format:
 
 ```shell
-https://BucketName.gnfd-testnet-sp*.bnbchain.org/key-name
+https://BucketName.testnet-sp*.mechain.tech/key-name
 ```
 
 In this example, `EXAMPLE-BUCKET` is the bucket name and `sp.pdf` is the key name:
 
 ```shell
-https://EXAMPLE-BUCKET.gnfd-testnet-sp*.bnbchain.org/sp.pdf
+https://EXAMPLE-BUCKET.testnet-sp*.mechain.tech/sp.pdf
 ```
 
 ## Path-style requests
 
-In Greenfield SP, path-style URLs use the following format:
+In Mechain SP, path-style URLs use the following format:
 
 ```shell
-https://gnfd-testnet-sp*.bnbchain.org/bucket-name/key-name
+https://testnet-sp*.mechain.tech/bucket-name/key-name
 ```
 
 For example, if you create a bucket named `EXAMPLE-BUCKET`, and you want to access the `sp.pdf` object in that bucket, you can use the following path-style URL:
 
 ```shell
-https://gnfd-testnet-sp*.bnbchain.org/EXAMPLE-BUCKET/sp.pdf
+https://testnet-sp*.mechain.tech/EXAMPLE-BUCKET/sp.pdf
 ```

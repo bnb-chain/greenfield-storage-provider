@@ -37,7 +37,7 @@ TaskExecutor interface inherits [Modular interface](./common/lifecycle_modular.m
 
 ## GC
 
-Garbage Collection(GC) is the background service running in SP, which is used to recycle the storage space of those deleted objects on the Greenfield chain. GC service is running in background periodically. It comprises below steps:
+Garbage Collection(GC) is the background service running in SP, which is used to recycle the storage space of those deleted objects on the Mechain chain. GC service is running in background periodically. It comprises below steps:
 
 - When SP starting up, load the metadata "BlockNumberHandledByGC" stored in the local metadata database, which is used to record the block height handled by GC service;
 - Check if the previous background GC tasks have finished; if not, continue the tasks based on the contexts stored in the local metadata database;

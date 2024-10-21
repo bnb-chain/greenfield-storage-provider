@@ -10,11 +10,11 @@ This API is used to list user payment info. This API only supports `path-style` 
 
 ## HTTP Request Format
 
-| Description      | Definition                     |
-| ---------------- | ------------------------------ |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style) | /                              |
-| Method           | GET                            |
+| Description      | Definition               |
+| ---------------- | ------------------------ |
+| Host(path-style) | testnet-sp*.mechain.tech |
+| Path(path-style) | /                        |
+| Method           | GET                      |
 
 ## HTTP Request Header
 
@@ -30,9 +30,9 @@ The request does not have a path parameter.
 
 ### Query Parameter
 
-| ParameterName   | Type    | Required | Description                                                                             |
-| --------------- | ------- | -------- | --------------------------------------------------------------------------------------- |
-| user-payments   | string  | yes      | user-payments is only used for routing location, and it does not need to pass any value |
+| ParameterName | Type   | Required | Description                                                                             |
+| ------------- | ------ | -------- | --------------------------------------------------------------------------------------- |
+| user-payments | string | yes      | user-payments is only used for routing location, and it does not need to pass any value |
 
 ### Request Body
 
@@ -42,7 +42,7 @@ The request does not have a request body.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org/?user-payments
+Host: testnet-sp*.mechain.tech/?user-payments
 X-Gnfd-User-Address: Address
 ```
 
@@ -50,26 +50,26 @@ X-Gnfd-User-Address: Address
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
-| ParameterName   | Type                               | Description                                                     |
-| --------------- | ---------------------------------- | --------------------------------------------------------------- |
-| PaymentAccounts | [PaymentAccounts](#paymentaccounts)| payment account defines payment account info                    |
-| StreamRecord    | [StreamRecord](#streamrecord)      | stream record defines stream payment record of a stream account |
+| ParameterName   | Type                                | Description                                                     |
+| --------------- | ----------------------------------- | --------------------------------------------------------------- |
+| PaymentAccounts | [PaymentAccounts](#paymentaccounts) | payment account defines payment account info                    |
+| StreamRecord    | [StreamRecord](#streamrecord)       | stream record defines stream payment record of a stream account |
 
 ### PaymentAccounts
 
-| ParameterName  | Type                              | Description                                                                                                                        |
-| -------------- | -------| -----------------------------------------------------------------|
-| Owner          | string | Owner defines the owner of this payment account                  |
-| Address        | string | Address defines the address of payment account                   |
-| Refundable     | bool   | Refundable defines the payment account is refundable or not      |
-| UpdateAt       | int64  | UpdateAt defines the update block height of this payment account |
-| UpdateTime     | int64  | UpdateTime  defines the update time of this payment account      |
+| ParameterName | Type   | Description                                                      |
+| ------------- | ------ | ---------------------------------------------------------------- |
+| Owner         | string | Owner defines the owner of this payment account                  |
+| Address       | string | Address defines the address of payment account                   |
+| Refundable    | bool   | Refundable defines the payment account is refundable or not      |
+| UpdateAt      | int64  | UpdateAt defines the update block height of this payment account |
+| UpdateTime    | int64  | UpdateTime  defines the update time of this payment account      |
 
 ### StreamRecord
 
@@ -115,7 +115,7 @@ The examples given all use path-style.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org/?user-payments
+Host: testnet-sp1.mechain.tech/?user-payments
 Date: Fri, 31 March 2023 17:32:00 GMT
 X-Gnfd-User-Address: user address string
 ```

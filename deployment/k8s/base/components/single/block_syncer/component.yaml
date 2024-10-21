@@ -16,7 +16,7 @@ spec:
       serviceAccountName: sp-default
       containers:
       - name: block-syncer
-        image: ghcr.io/bnb-chain/greenfield-storage-provider:block-syncer-dev-env-latest
+        image: ghcr.io/zkMeLabs/mechain-storage-provider:block-syncer-dev-env-latest
         args: ["--log.std", "-c", "/config/config.toml", "-server", "blocksyncer"]
         env:
           - name: BLOCK_SYNCER_DSN

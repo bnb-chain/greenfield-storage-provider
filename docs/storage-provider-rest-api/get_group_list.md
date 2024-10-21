@@ -10,11 +10,11 @@ This API is used to query a list of group by given prefix/name/source-type. This
 
 ## HTTP Request Format
 
-| Description      | Definition                     |
-| ---------------- | ------------------------------ |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style) | /                              |
-| Method           | GET                            |
+| Description      | Definition               |
+| ---------------- | ------------------------ |
+| Host(path-style) | testnet-sp*.mechain.tech |
+| Path(path-style) | /                        |
+| Method           | GET                      |
 
 ## HTTP Request Header
 
@@ -43,16 +43,16 @@ The request does not have a request body.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org
+Host: testnet-sp*.mechain.tech
 ```
 
 ## HTTP Response Header
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
@@ -83,7 +83,7 @@ The examples given all use path-style.
 
 ```HTTP
 GET /?group-query&source-type=SOURCE_TYPE_ORIGIN&limit=10&offset=100&name=e&prefix=t HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org
+Host: testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 X-Gnfd-User-Address: user address string
 ```

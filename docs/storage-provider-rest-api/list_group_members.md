@@ -10,11 +10,11 @@ This API is used to query a list of group members by a given group id. This API 
 
 ## HTTP Request Format
 
-| Description      | Definition                     |
-| ---------------- | ------------------------------ |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style) | /                              |
-| Method           | GET                            |
+| Description      | Definition               |
+| ---------------- | ------------------------ |
+| Host(path-style) | testnet-sp*.mechain.tech |
+| Path(path-style) | /                        |
+| Method           | GET                      |
 
 ## HTTP Request Header
 
@@ -27,7 +27,7 @@ The request does not have a path parameter.
 ### Query Parameter
 
 | ParameterName | Type    | Required | Description                                                                                                  |
-|---------------|---------|----------|--------------------------------------------------------------------------------------------------------------|
+| ------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------ |
 | group-id      | integer | yes      | group-id defines the id of group                                                                             |
 | group-members | string  | yes      | group-members is only used for routing location, and it does not need to pass any value                      |
 | limit         | integer | no       | limit defines the maximum number of results that should be returned in response, default 50 and maximum 1000 |
@@ -42,16 +42,16 @@ The request does not have a request body.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org/?group-members&group-id=2&limit=10
+Host: testnet-sp*.mechain.tech/?group-members&group-id=2&limit=10
 ```
 
 ## HTTP Response Header
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
@@ -81,7 +81,7 @@ The examples given all use path-style.
 
 ```HTTP
 GET /?group-members&group-id=2&limit=10 HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org
+Host: testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 X-Gnfd-User-Address: user address string
 ```

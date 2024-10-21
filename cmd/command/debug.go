@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-common/go/hash"
 	"github.com/evmos/evmos/v12/types/common"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-common/go/hash"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 	"github.com/zkMeLabs/mechain-storage-provider/cmd/utils"
 	"github.com/zkMeLabs/mechain-storage-provider/core/spdb"

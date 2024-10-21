@@ -13,7 +13,6 @@ require (
 	github.com/aliyun/credentials-go v1.3.0
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.52.2
-	github.com/bnb-chain/greenfield-common/go v0.0.0-20240228080631-2683b0ee669a
 	github.com/bytedance/gopkg v0.0.0-20221122125632-68358b8ecec6
 	github.com/cometbft/cometbft v0.38.6
 	github.com/consensys/gnark-crypto v0.9.1-0.20230105202408-1a7a29904a7c
@@ -43,6 +42,7 @@ require (
 	github.com/ulule/limiter/v3 v3.11.1
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/viki-org/dnscache v0.0.0-20130720023526-c70c1f23c5d8
+	github.com/zkMeLabs/mechain-common/go v0.0.0-20241018054833-c5623adab872
 	go.opentelemetry.io/otel/trace v1.24.0
 	go.uber.org/mock v0.4.0
 	go.uber.org/multierr v1.11.0
@@ -310,24 +310,23 @@ require (
 )
 
 replace (
-	cosmossdk.io/api => github.com/zkMeLabs/mechain-cosmos-sdk/api v0.0.0-20240920090443-1ad031a3d3a4
-	cosmossdk.io/math => github.com/zkMeLabs/mechain-cosmos-sdk/math v0.0.0-20240920090443-1ad031a3d3a4
-	cosmossdk.io/simapp => github.com/zkMeLabs/mechain-cosmos-sdk/simapp v0.0.0-20240920090443-1ad031a3d3a4
+	cosmossdk.io/api => github.com/zkMeLabs/mechain-cosmos-sdk/api v0.0.0-20241017101002-ab985b5a45ec
+	cosmossdk.io/math => github.com/zkMeLabs/mechain-cosmos-sdk/math v0.0.0-20241017101002-ab985b5a45ec
+	cosmossdk.io/simapp => github.com/zkMeLabs/mechain-cosmos-sdk/simapp v0.0.0-20241017101002-ab985b5a45ec
 	github.com/0xPolygon/polygon-edge v1.3.3 => github.com/zkMeLabs/polygon-edge v1.3.3-mechain.1
-	github.com/bnb-chain/greenfield-common/go => github.com/zkMeLabs/mechain-common/go v0.0.0-20240920100031-2be8f0cf7a42
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.1
-	github.com/cometbft/cometbft => github.com/zkMeLabs/mechain-cometbft v1.3.0-mechain.1
-	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1
+	github.com/cometbft/cometbft => github.com/zkMeLabs/mechain-cometbft v1.3.0-mechain.2
+	github.com/cometbft/cometbft-db => github.com/zkMeLabs/mechain-cometbft-db v0.8.1-alpha.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/zkMeLabs/mechain-cosmos-sdk v0.2.0-alpha.1
+	github.com/cosmos/cosmos-sdk => github.com/zkMeLabs/mechain-cosmos-sdk v0.2.0-alpha.3
 	github.com/cosmos/gogoproto => github.com/zkMeLabs/gogoproto v1.4.10-mechain.1
-	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1
-	github.com/cosmos/ibc-go/v7 => github.com/zkMeLabs/mechain-ibc-go/v7 v7.2.0-mocks-mechain.1
+	github.com/cosmos/iavl => github.com/zkMeLabs/mechain-iavl v0.20.1
+	github.com/cosmos/ibc-go/v7 => github.com/zkMeLabs/mechain-ibc-go/v7 v7.2.0-mocks-mechain.2
 	// use Evmos geth fork
 	github.com/ethereum/go-ethereum => github.com/evmos/go-ethereum v1.10.26-evmos-rc2
-	github.com/evmos/evmos-ledger-go => github.com/zkMeLabs/mechain-ledger-go v0.3.0-rc0-mocks-mechain.1
-	github.com/evmos/evmos/v12 => github.com/zkMeLabs/mechain/v12 v12.0.0-20241009085240-90e560b09de0
-	github.com/forbole/juno/v4 => github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.1a
+	github.com/evmos/evmos-ledger-go => github.com/zkMeLabs/mechain-ledger-go v0.3.0-rc0-mocks-mechain.2
+	github.com/evmos/evmos/v12 => github.com/zkMeLabs/mechain/v12 v12.0.0-20241018030432-244c154b9b5f
+	github.com/forbole/juno/v4 => github.com/zkMeLabs/mechain-juno/v4 v4.0.0-mechain.2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/quic-go/quic-go => github.com/quic-go/quic-go v0.41.0
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

@@ -4,7 +4,7 @@ package base.types.gfspserver;
 import "base/types/gfsperrors/error.proto";
 import "base/types/gfsplimit/limit.proto";
 import "base/types/gfsptask/task.proto";
-import "greenfield/virtualgroup/tx.proto";
+import "mechain/virtualgroup/tx.proto";
 
 option go_package = "github.com/zkMeLabs/mechain-storage-provider/base/types/gfspserver";
 
@@ -71,7 +71,7 @@ message GfSpPickVirtualGroupFamilyResponse {
 }
 
 message GfSpNotifyMigrateSwapOutRequest {
-  greenfield.virtualgroup.MsgSwapOut swap_out = 1;
+  mechain.virtualgroup.MsgSwapOut swap_out = 1;
 }
 
 message GfSpNotifyMigrateSwapOutResponse {

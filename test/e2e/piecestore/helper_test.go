@@ -17,7 +17,7 @@ const (
 	pieceKey     = "hello.txt"
 	s3BucketURL  = "https://s3.us-east-1.amazonaws.com/test"
 	ossBucketURL = "https://example.oss-ap-northeast-1.aliyuncs.com/"
-	b2BucketURL  = "https://s3.us-east-005.backblazeb2.com/greenfieldsp"
+	b2BucketURL  = "https://s3.us-east-005.backblazeb2.com/mechainsp"
 	// virtualPath = "https://test.s3.us-east-1.amazonaws.com"
 )
 

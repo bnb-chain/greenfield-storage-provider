@@ -20,7 +20,7 @@ Block Syncer retrieves the historical data on the chain, optimizes the storage, 
 
 ### Object Table
 
-An object represents a fundamental unit of storage in Greenfield, BSDB object table consists of only associated metadata synced from chain side.
+An object represents a fundamental unit of storage in Mechain, BSDB object table consists of only associated metadata synced from chain side.
 
 Below is the schema of `Object`:
 
@@ -98,7 +98,7 @@ enum ObjectStatus {
   OBJECT_STATUS_SEALED = 1;
 }
 // SourceType represents the source of resource creation, which can
-// from Greenfield native or from a cross-chain transfer from BSC
+// from Mechain native or from a cross-chain transfer from BSC
 enum SourceType {
   SOURCE_TYPE_ORIGIN = 0;
   SOURCE_TYPE_BSC_CROSS_CHAIN = 1;
@@ -108,7 +108,7 @@ enum SourceType {
 
 ### Bucket Table
 
-A bucket serves as a logical container for storing objects in Greenfield.
+A bucket serves as a logical container for storing objects in Mechain.
 The Bucket table describes the db structure of bucket, and it provides additional storage information compared to the schema on the chain side. e.g. Removed defines the bucket is deleted or not
 
 Below is the schema of `Bucket`:

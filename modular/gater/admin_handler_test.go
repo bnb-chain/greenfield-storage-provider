@@ -16,10 +16,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	commonhttp "github.com/zkMeLabs/mechain-common/go/http"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspclient"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 	"github.com/zkMeLabs/mechain-storage-provider/core/consensus"

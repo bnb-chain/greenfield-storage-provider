@@ -4,7 +4,7 @@ title: Metadata
 
 # Metadata
 
-Metadata service is to supply better query service for the Greenfield network. Users can interact with SP for some complex query services.
+Metadata service is to supply better query service for the Mechain network. Users can interact with SP for some complex query services.
 Some interfaces can be costly to implement on the chain or can cause significant latency.
 Metadata service is designed to implement the corresponding interface under the chain and provide it to the SP to achieve high performance and low latency.
 The events' data are optimally stored by the block syncer and provided to the metadata.
@@ -12,9 +12,9 @@ Also, it provides additional extensions such as Pagination, Sort Key, and filter
 
 ## Role
 
-Sync all the Greenfield chain data to the distributed stores, and offers the read RPC
+Sync all the Mechain chain data to the distributed stores, and offers the read RPC
 requests for chain data(in addition to payload). SP service will query the info, E.g.
-permission, ListBucket, ListObject, etc. It will reduce the pressure on the Greenfield chain.
+permission, ListBucket, ListObject, etc. It will reduce the pressure on the Mechain chain.
 
 ## Scalability
 

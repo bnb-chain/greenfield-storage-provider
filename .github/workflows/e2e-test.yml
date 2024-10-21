@@ -23,8 +23,8 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
-      # Checkout Greenfield-SP
-      - name: Checkout Greenfield-SP
+      # Checkout Mechain-SP
+      - name: Checkout Mechain-SP
         uses: actions/checkout@v3
       # Run MySQL
       - name: Run MySQL
@@ -46,19 +46,19 @@ jobs:
           echo "Account address: ${{ steps.generate-private-key.outputs.account_address }}"
           echo "PRIVATE_KEY=${{ steps.generate-private-key.outputs.private_key }}" >> "$GITHUB_ENV"
           echo "ACCOUNT_ADDR=${{ steps.generate-private-key.outputs.account_address }}" >> "$GITHUB_ENV"
-      # Build and Start Greenfield Blockchain
-      - name: Build and Start Greenfield Blockchain
+      # Build and Start Mechain Blockchain
+      - name: Build and Start Mechain Blockchain
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --startChain
-      # Build and Start Greenfield SP
-      - name: Build and Start Greenfield SP
+      # Build and Start Mechain SP
+      - name: Build and Start Mechain SP
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --startSP
-      # Build Greenfield Cmd
-      - name: Build Greenfield Cmd
+      # Build Mechain Cmd
+      - name: Build Mechain Cmd
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --buildCmd
-      # Use Greenfield Cmd Running SP E2E Test
-      - name: Run Greenfield SP E2E Test
+      # Use Mechain Cmd Running SP E2E Test
+      - name: Run Mechain SP E2E Test
         run: |
           bash ./test/e2e/spworkflow/e2e_test.sh --runTest

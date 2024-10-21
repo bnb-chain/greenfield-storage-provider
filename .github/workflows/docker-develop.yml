@@ -5,7 +5,7 @@ on:
     branches: [develop, master]
 
 env:
-  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider-invisible
+  IMAGE_NAME: ghcr.io/zkMeLabs/mechain-storage-provider-invisible
   IMAGE_SOURCE: https://github.com/zkMeLabs/mechain-storage-provider
 
 jobs:

@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	commonhash "github.com/zkMeLabs/mechain-common/go/hash"
+	"github.com/zkMeLabs/mechain-common/go/redundancy"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
@@ -36,7 +36,7 @@ const (
 )
 
 // getApprovalHandler handles the get create bucket/object approval request.
-// Before create bucket/object to the greenfield, the user should the primary
+// Before create bucket/object to the mechain, the user should the primary
 // SP whether willing serve for the user to manage the bucket/object.
 // SP checks the user's account if it has the permission to operate, and send
 // the request to approver that running the SP approval's strategy.
@@ -262,10 +262,10 @@ func (g *GateModular) getApprovalHandler(w http.ResponseWriter, r *http.Request)
 	log.CtxDebugw(reqCtx.Context(), "succeed to ask approval")
 }
 
-// getChallengeInfoHandler handles get challenge piece info request. Current only greenfield
+// getChallengeInfoHandler handles get challenge piece info request. Current only mechain
 // validator can challenge piece is store correctly. The challenge piece info includes:
 // the challenged piece data, all piece hashes and the integrity hash. The challenger
-// can verify the info whether are correct by comparing with the greenfield info.
+// can verify the info whether are correct by comparing with the mechain info.
 func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err           error
@@ -401,9 +401,9 @@ func (g *GateModular) getChallengeInfoHandler(w http.ResponseWriter, r *http.Req
 }
 
 // getChallengeInfoV2Handler handles get challenge piece info request. Currently, only
-// greenfield validator can challenge piece whether is stored correctly. The challenge
+// mechain validator can challenge piece whether is stored correctly. The challenge
 // piece info includes: the challenged piece data, all piece hashes and the integrity hash.
-// The challenger can verify the info whether are correct by comparing with the greenfield info.
+// The challenger can verify the info whether are correct by comparing with the mechain info.
 // The difference between the v2 interface and the old interface(getChallengeInfoHandler) is the
 // format of the returned results, which is intended to avoid the limitation of http header size.
 func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.Request) {
@@ -565,7 +565,7 @@ func (g *GateModular) getChallengeInfoV2Handler(w http.ResponseWriter, r *http.R
 
 // replicateHandler handles the replicate piece from primary SP request. The Primary
 // replicates the piece data one by one, and will ask the integrity hash and the
-// signature to seal object on greenfield.
+// signature to seal object on mechain.
 func (g *GateModular) replicateHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err        error

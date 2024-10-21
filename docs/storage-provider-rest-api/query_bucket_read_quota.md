@@ -10,18 +10,18 @@ This API is used to query bucket read quota. And it supports both `virtual-hoste
 
 ## HTTP Request Format
 
-| Description                | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(virtual-hosted-style) | /                                         |
-| Method                     | GET                                       |
+| Description                | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(virtual-hosted-style) | /                                   |
+| Method                     | GET                                 |
 
 You should set `BucketName` in url host to determine which bucket do you want to query.
 
 ## HTTP Request Header
 
-| ParameterName                                                            | Type   | Required | Description                                  |
-| ------------------------------------------------------------------------ | ------ | -------- | -------------------------------------------- |
+| ParameterName                                    | Type   | Required | Description                                  |
+| ------------------------------------------------ | ------ | -------- | -------------------------------------------- |
 | [Authorization](/README.md#authorization-header) | string | yes      | The authorization string of the HTTP request |
 
 ## HTTP Request Parameter
@@ -45,7 +45,7 @@ None
 
 ```HTTP
 GET /?read-quota&year-month=YearMonth HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 Authorization: Authorization
 ```
 
@@ -64,16 +64,16 @@ The response returns the following HTTP headers.
 
 If the request is successful, the service sends back an HTTP 200 response.
 
-| ParameterName            | Type    | Description                                                         |
-|--------------------------|---------|---------------------------------------------------------------------|
-| BucketName               | string  | bucket name                                                         |
-| BucketID                 | string  | bucket id                                                           |
-| ReadQuotaSize            | integer | ReadQuotaSize is the greenfield chain bucket info's read quota size |
-| SPFreeReadQuotaSize      | integer | SPFreeReadQuotaSize is the sp default free quota                    |
-| ReadConsumedSize         | integer | ReadConsumedSize is currently consumed size                         |
-| FreeConsumedSize         | integer | ReadConsumedSize is the consumed free quota size                    |
-| MonthlyFreeQuota         | integer | MonthlyFreeQuota is the monthly free quota                          |
-| MonthlyQuotaConsumedSize | integer | MonthlyQuotaConsumedSize is the consumed monthly free quota size    |
+| ParameterName            | Type    | Description                                                      |
+| ------------------------ | ------- | ---------------------------------------------------------------- |
+| BucketName               | string  | bucket name                                                      |
+| BucketID                 | string  | bucket id                                                        |
+| ReadQuotaSize            | integer | ReadQuotaSize is the mechain chain bucket info's read quota size |
+| SPFreeReadQuotaSize      | integer | SPFreeReadQuotaSize is the sp default free quota                 |
+| ReadConsumedSize         | integer | ReadConsumedSize is currently consumed size                      |
+| FreeConsumedSize         | integer | ReadConsumedSize is the consumed free quota size                 |
+| MonthlyFreeQuota         | integer | MonthlyFreeQuota is the monthly free quota                       |
+| MonthlyQuotaConsumedSize | integer | MonthlyQuotaConsumedSize is the consumed monthly free quota size |
 
 
 If you failed to send request to get approval, you will get error response body in [XML](./sp_response.md#sp-error-response).
@@ -95,7 +95,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 GET /?read-quota&year-month=2023-03 HTTP/1.1
-Host: myBucket.gnfd-testnet-sp1.bnbchain.org
+Host: myBucket.testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string
 ```

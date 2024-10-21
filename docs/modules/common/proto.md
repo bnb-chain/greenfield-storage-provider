@@ -26,7 +26,7 @@ message GfSpTask {
 ```proto
 message GfSpCreateBucketApprovalTask {
   GfSpTask task = 1;
-  greenfield.storage.MsgCreateBucket create_bucket_info = 2;
+  mechain.storage.MsgCreateBucket create_bucket_info = 2;
 }
 ```
 
@@ -36,7 +36,7 @@ message GfSpCreateBucketApprovalTask {
 ```proto
 message GfSpMigrateBucketApprovalTask {
   GfSpTask task = 1;
-  greenfield.storage.MsgMigrateBucket migrate_bucket_info = 2;
+  mechain.storage.MsgMigrateBucket migrate_bucket_info = 2;
 }
 ```
 
@@ -45,7 +45,7 @@ message GfSpMigrateBucketApprovalTask {
 ```proto
 message GfSpCreateObjectApprovalTask {
   GfSpTask task = 1;
-  greenfield.storage.MsgCreateObject create_object_info = 2;
+  mechain.storage.MsgCreateObject create_object_info = 2;
 }
 ```
 
@@ -54,7 +54,7 @@ message GfSpCreateObjectApprovalTask {
 ```proto
 message GfSpDelegateCreateObjectApprovalTask {
   GfSpTask task = 1;
-  greenfield.storage.MsgDelegateCreateObject delegate_create_object = 2;
+  mechain.storage.MsgDelegateCreateObject delegate_create_object = 2;
   bytes fingerprint = 3;
 }
 ```
@@ -64,8 +64,8 @@ message GfSpDelegateCreateObjectApprovalTask {
 ```proto
 message GfSpReplicatePieceApprovalTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.Params storage_params = 3;
   string ask_sp_operator_address = 4;
   bytes ask_signature = 5;
   string approved_sp_endpoint = 6;
@@ -82,8 +82,8 @@ message GfSpReplicatePieceApprovalTask {
 message GfSpUploadObjectTask {
   GfSpTask task = 1;
   uint32 virtual_group_family_id = 2;
-  greenfield.storage.ObjectInfo object_info = 3;
-  greenfield.storage.Params storage_params = 4;
+  mechain.storage.ObjectInfo object_info = 3;
+  mechain.storage.Params storage_params = 4;
   bool is_agent_upload = 5;
 }
 ```
@@ -93,8 +93,8 @@ message GfSpUploadObjectTask {
 ```proto
 message GfSpResumableUploadObjectTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.Params storage_params = 3;
   uint64 offset = 4;
   uint64 length = 5;
   bool completed = 6;
@@ -108,8 +108,8 @@ message GfSpResumableUploadObjectTask {
 ```proto
 message GfSpReplicatePieceTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.Params storage_params = 3;
   repeated string secondary_addresses = 4;
   repeated bytes secondary_signatures = 5;
   bool sealed = 6;
@@ -125,8 +125,8 @@ message GfSpReplicatePieceTask {
 ```proto
 message GfSpRecoverPieceTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.Params storage_params = 3;
   uint32 segment_idx = 5;
   int32 ec_idx = 6;
   uint64 piece_size = 7;
@@ -144,8 +144,8 @@ message GfSpRecoverPieceTask {
 ```proto
 message GfSpReceivePieceTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.Params storage_params = 3;
   uint32 segment_idx = 4;
   int32 redundancy_idx = 5;
   int64 piece_size = 6;
@@ -163,8 +163,8 @@ message GfSpReceivePieceTask {
 ```proto
 message GfSpSealObjectTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.Params storage_params = 3;
   repeated string secondary_addresses = 4;
   repeated bytes secondary_signatures = 5;
   uint32 global_virtual_group_id = 6;
@@ -178,9 +178,9 @@ message GfSpSealObjectTask {
 ```proto
 message GfSpDownloadObjectTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.BucketInfo bucket_info = 3;
-  greenfield.storage.Params storage_params = 4;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.BucketInfo bucket_info = 3;
+  mechain.storage.Params storage_params = 4;
   int64 low = 5;
   int64 high = 6;
 }
@@ -191,9 +191,9 @@ message GfSpDownloadObjectTask {
 ```proto
 message GfSpDownloadPieceTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.BucketInfo bucket_info = 3;
-  greenfield.storage.Params storage_params = 4;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.BucketInfo bucket_info = 3;
+  mechain.storage.Params storage_params = 4;
   bool enable_check = 5; // check read quota, only in first piece
   uint64 total_size = 6;
   string piece_key = 7;
@@ -207,9 +207,9 @@ message GfSpDownloadPieceTask {
 ```proto
 message GfSpChallengePieceTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.BucketInfo bucket_info = 3;
-  greenfield.storage.Params storage_params = 4;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.BucketInfo bucket_info = 3;
+  mechain.storage.Params storage_params = 4;
   uint32 segment_idx = 5;
   int32 redundancy_idx = 6;
   bytes integrity_hash = 7;
@@ -259,10 +259,10 @@ message GfSpGCMetaTask {
 message GfSpMigrateGVGTask {
   GfSpTask task = 1;
   uint64 bucket_id = 2;
-  greenfield.virtualgroup.GlobalVirtualGroup src_gvg = 3;
-  greenfield.virtualgroup.GlobalVirtualGroup dest_gvg = 4;
+  mechain.virtualgroup.GlobalVirtualGroup src_gvg = 3;
+  mechain.virtualgroup.GlobalVirtualGroup dest_gvg = 4;
   int32 redundancy_idx = 5;
-  greenfield.sp.StorageProvider src_sp = 6;
+  mechain.sp.StorageProvider src_sp = 6;
   uint64 last_migrated_object_id = 7;
   bool finished = 8;
 }
@@ -273,8 +273,8 @@ message GfSpMigrateGVGTask {
 ```proto
 message GfSpMigratePieceTask {
   GfSpTask task = 1;
-  greenfield.storage.ObjectInfo object_info = 2;
-  greenfield.storage.Params storage_params = 3;
+  mechain.storage.ObjectInfo object_info = 2;
+  mechain.storage.Params storage_params = 3;
   string src_sp_endpoint = 4;
   uint32 segment_idx = 5;
   int32 redundancy_idx = 6;
@@ -282,9 +282,9 @@ message GfSpMigratePieceTask {
 }
 ```
 
-## Greenfield Proto
+## Mechain Proto
 
-Some structured data used in GfSp is deinfed in Greenfield chain repo, we display them as follows.
+Some structured data used in GfSp is deinfed in Mechain chain repo, we display them as follows.
 
 ### MsgCreateBucket Proto
 
@@ -299,7 +299,7 @@ message MsgCreateBucket {
   string bucket_name = 2;
 
   // visibility means the bucket is private or public. if private, only bucket owner or grantee can read it,
-  // otherwise every greenfield user can read it.
+  // otherwise every mechain user can read it.
   VisibilityType visibility = 3;
 
   // payment_address defines an account address specified by bucket owner to pay the read fee. Default: creator
@@ -354,7 +354,7 @@ message MsgCreateObject {
   uint64 payload_size = 4;
 
   // visibility means the object is private or public. if private, only object owner or grantee can access it,
-  // otherwise every greenfield user can access it.
+  // otherwise every mechain user can access it.
   VisibilityType visibility = 5;
 
   // content_type defines a standard MIME type describing the format of the object.
@@ -619,7 +619,7 @@ message MsgUpdateSpStoragePrice {
 
   // sp address
   string sp_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // read price, in bnb wei per charge byte
+  // read price, in azkme wei per charge byte
   string read_price = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -627,7 +627,7 @@ message MsgUpdateSpStoragePrice {
   ];
   // free read quota, in byte
   uint64 free_read_quota = 3;
-  // store price, in bnb wei per charge byte
+  // store price, in azkme wei per charge byte
   string store_price = 4 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -683,7 +683,7 @@ message MsgCompleteSwapOut {
 message MsgStorageProviderExit {
   option (cosmos.msg.v1.signer) = "storage_provider";
 
-  // storage_provider defines the operator account address of the storage provider who want to exit from the greenfield storage network.
+  // storage_provider defines the operator account address of the storage provider who want to exit from the mechain storage network.
   string storage_provider = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 ```
@@ -694,7 +694,7 @@ message MsgStorageProviderExit {
 message MsgCompleteStorageProviderExit {
   option (cosmos.msg.v1.signer) = "storage_provider";
 
-  // storage_provider defines the operator account address of the storage provider who want to exit from the greenfield storage network.
+  // storage_provider defines the operator account address of the storage provider who want to exit from the mechain storage network.
   string storage_provider = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 ```

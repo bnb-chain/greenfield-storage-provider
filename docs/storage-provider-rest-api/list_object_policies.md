@@ -10,11 +10,11 @@ This API is used to list object policies by specific action type. And it support
 
 ## HTTP Request Format
 
-| Description                | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(virtual-hosted-style) | /:object                                  |
-| Method                     | GET                                       |
+| Description                | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(virtual-hosted-style) | /:object                            |
+| Method                     | GET                                 |
 
 ## HTTP Request Header
 
@@ -22,18 +22,18 @@ This API is used to list object policies by specific action type. And it support
 
 ### Path Parameter
 
-| ParameterName | Type   | Description                       |
-| ------------- | ------ | --------------------------------- |
-| object        | string | object defines the name of object.|
+| ParameterName | Type   | Description                        |
+| ------------- | ------ | ---------------------------------- |
+| object        | string | object defines the name of object. |
 
 ### Query Parameter
 
-| ParameterName   | Type               | Required | Description                                                                                                                                                                          |
-| --------------- | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| object-policies | string             | yes      | object-policies is only used for routing location, and it does not need to pass any value.                                                                                           |
-| limit           | string             | no       | limit  determines the number of policies data records to be returned. If the limit is set to 0, it will default to 50. If the limit exceeds 1000, only 1000 records will be returned.|
-| start-after     | string             | no       | start-after is used to input the policy id for pagination purposes.                                                                                                                  |
-| action-type     | [ActionType](#actiontype)  | yes      | action-type defines the requested action type of permission.                                                                                                                         |
+| ParameterName   | Type                      | Required | Description                                                                                                                                                                           |
+| --------------- | ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| object-policies | string                    | yes      | object-policies is only used for routing location, and it does not need to pass any value.                                                                                            |
+| limit           | string                    | no       | limit  determines the number of policies data records to be returned. If the limit is set to 0, it will default to 50. If the limit exceeds 1000, only 1000 records will be returned. |
+| start-after     | string                    | no       | start-after is used to input the policy id for pagination purposes.                                                                                                                   |
+| action-type     | [ActionType](#actiontype) | yes      | action-type defines the requested action type of permission.                                                                                                                          |
 
 ### Request Body
 
@@ -43,22 +43,22 @@ The request does not have a request body.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org/?object-policies
+Host: testnet-sp*.mechain.tech/?object-policies
 ```
 
 ## HTTP Response Header
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
-| ParameterName   | Type                               | Description                                                     |
-| --------------- | ---------------------------------- | --------------------------------------------------------------- |
-| Policies        | [Policies](#policies)              | policies defines object policies info.                          |
+| ParameterName | Type                  | Description                            |
+| ------------- | --------------------- | -------------------------------------- |
+| Policies      | [Policies](#policies) | policies defines object policies info. |
 
 ### ActionType
 
@@ -81,32 +81,32 @@ The response returns the following HTTP headers.
 
 ### Policies
 
-| ParameterName  | Type                              | Description                                                                                                                    |
-| -------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| PrincipalType  | [PrincipalType](#principaltype)    | PrincipalType refers to the identity type of system users or entities.                                                         |
-| PrincipalValue | string                            | PrincipalValue defines the value of principal.                                                                                 |
-| ResourceType   | [ResourceType](#resourcetype)      | ResourceType defines the type of resource that grants permission for.                                                          |
-| ResourceId     | string                            | ResourceId defines the bucket/object/group id of the resource that grants permission for.                                      |
-| CreateTimestamp| uint64                            | CreateTimestamp defines the create time of permission.                                                                         |
-| UpdateTimestamp| uint64                            | UpdateTimestamp defines the update time of permission.                                                                         |
-| ExpirationTime | uint64                            | ExpirationTime defines the expiration time of permission. if it is 0, which means there is no expiration time for this policy. |
+| ParameterName   | Type                            | Description                                                                                                                    |
+| --------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| PrincipalType   | [PrincipalType](#principaltype) | PrincipalType refers to the identity type of system users or entities.                                                         |
+| PrincipalValue  | string                          | PrincipalValue defines the value of principal.                                                                                 |
+| ResourceType    | [ResourceType](#resourcetype)   | ResourceType defines the type of resource that grants permission for.                                                          |
+| ResourceId      | string                          | ResourceId defines the bucket/object/group id of the resource that grants permission for.                                      |
+| CreateTimestamp | uint64                          | CreateTimestamp defines the create time of permission.                                                                         |
+| UpdateTimestamp | uint64                          | UpdateTimestamp defines the update time of permission.                                                                         |
+| ExpirationTime  | uint64                          | ExpirationTime defines the expiration time of permission. if it is 0, which means there is no expiration time for this policy. |
 
 ### PrincipalType
 
-| Value | Description                |
-| ----- | -------------------------- |
-| 0     | PRINCIPAL_TYPE_UNSPECIFIED |
-| 1     | PRINCIPAL_TYPE_GNFD_ACCOUNT|
-| 2     | PRINCIPAL_TYPE_GNFD_GROUP  |
+| Value | Description                 |
+| ----- | --------------------------- |
+| 0     | PRINCIPAL_TYPE_UNSPECIFIED  |
+| 1     | PRINCIPAL_TYPE_GNFD_ACCOUNT |
+| 2     | PRINCIPAL_TYPE_GNFD_GROUP   |
 
 ### ResourceType
 
-| Value | Description                |
-| ----- | -------------------------- |
-| 0     | RESOURCE_TYPE_UNSPECIFIED  |
-| 1     | RESOURCE_TYPE_BUCKET       |
-| 2     | RESOURCE_TYPE_OBJECT       |
-| 3     | RESOURCE_TYPE_GROUP        |
+| Value | Description               |
+| ----- | ------------------------- |
+| 0     | RESOURCE_TYPE_UNSPECIFIED |
+| 1     | RESOURCE_TYPE_BUCKET      |
+| 2     | RESOURCE_TYPE_OBJECT      |
+| 3     | RESOURCE_TYPE_GROUP       |
 
 ### Response Body
 
@@ -128,7 +128,7 @@ XML Body
 
 ```HTTP
 GET / HTTP/1.1
-Host: rzigw.gnfd-testnet-sp1.bnbchain.org/2g36fzmd65?object-policies&limit=10&action-type=6
+Host: rzigw.testnet-sp1.mechain.tech/2g36fzmd65?object-policies&limit=10&action-type=6
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 

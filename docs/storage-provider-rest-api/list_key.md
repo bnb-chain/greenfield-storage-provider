@@ -12,20 +12,20 @@ See [off-chain authentication specification](../../guide/storage-provider/module
 
 ## HTTP Request Format
 
-| Description | Definition                    |
-| ----------- |-------------------------------|
-| Host        | gnfd-testnet-sp*.bnbchain.org |
-| Path        | /auth/keys_v2                 |
-| Method      | GET                           |
+| Description | Definition               |
+| ----------- | ------------------------ |
+| Host        | testnet-sp*.mechain.tech |
+| Path        | /auth/keys_v2            |
+| Method      | GET                      |
 
 
 ## HTTP Request Header
 
-| ParameterName           | Type   | Required | Description                                        |
-|-------------------------| ------ | -------- |----------------------------------------------------|
-| Origin                  | string | yes      | the origin value , which should be the same as app's domain |
-| X-Gnfd-App-Domain       | string | yes      | app domain for the account key                     |
-| X-Gnfd-User-Address     | string | yes      | the user address                                   |
+| ParameterName       | Type   | Required | Description                                                 |
+| ------------------- | ------ | -------- | ----------------------------------------------------------- |
+| Origin              | string | yes      | the origin value , which should be the same as app's domain |
+| X-Gnfd-App-Domain   | string | yes      | app domain for the account key                              |
+| X-Gnfd-User-Address | string | yes      | the user address                                            |
 
 ### Authorization Header
 No Authorization header is needed
@@ -44,7 +44,7 @@ X-Gnfd-App-Domain: AppDomain
 The response returns the following HTTP headers.
 
 | ParameterName | Type   | Description                |
-| ------------- | ------ |----------------------------|
+| ------------- | ------ | -------------------------- |
 | Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
@@ -56,7 +56,7 @@ If the request is successful, the service sends back an HTTP 200 response.
 The following data is returned in XML format by the service.
 
 | ParameterName           | Type  | Description                             |
-|-------------------------|-------|-----------------------------------------|
+| ----------------------- | ----- | --------------------------------------- |
 | ListUserPublicKeyV2Resp | array | the list of keys returned for the query |
 
 ## Response Syntax

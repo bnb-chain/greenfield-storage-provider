@@ -12,28 +12,28 @@ This API is used to sign an approval for migrating bucket action. And it only su
 
 This API only supports path-style requests.
 
-| Description      | Definition                        |
-| ---------------- | --------------------------------- |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org    |
-| Path(path-style) | /greenfield/admin/v1/get-approval |
-| Method           | GET                               |
+| Description      | Definition                     |
+| ---------------- | ------------------------------ |
+| Host(path-style) | testnet-sp*.mechain.tech       |
+| Path(path-style) | /mechain/admin/v1/get-approval |
+| Method           | GET                            |
 
 ## HTTP Request Header
 
-| ParameterName                                                            | Type   | Required | Description                                  |
-| ------------------------------------------------------------------------ | ------ | -------- | -------------------------------------------- |
-| X-Gnfd-Unsigned-Msg                                                      | string | yes      | defines unsigned msg                         |
+| ParameterName                                    | Type   | Required | Description                                  |
+| ------------------------------------------------ | ------ | -------- | -------------------------------------------- |
+| X-Gnfd-Unsigned-Msg                              | string | yes      | defines unsigned msg                         |
 | [Authorization](/README.md#authorization-header) | string | yes      | The authorization string of the HTTP request |
 
-X-Gnfd-Unsigned-Msg header consists of [MsgMigrateBucket](#msgmigratebucket). You can read [Greenfield headers](/README.md) to know how to marshal and unmarshal them.
+X-Gnfd-Unsigned-Msg header consists of [MsgMigrateBucket](#msgmigratebucket). You can read [Mechain headers](/README.md) to know how to marshal and unmarshal them.
 
 ### MsgMigrateBucket
-| ParameterName        | Type                              | Description                                                                                                                                                                                                         |
-| ---------------------| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Operator             | string                            | Operator defines the account address of the operator who initial the migrated bucket                                     |
-| BucketName           | string                            | BucketName is a globally unique name of bucket.                                                                         |
-| DstPrimarySpId       | uint32                            | DstPrimarySpId defines the destination SP for migration                                                                 |
-| DstPrimarySpApproval | [Approval](#approval)             | DstPrimarySpApproval is the approval info of the primary SP which indicates that primary sp confirm the user's request. |
+| ParameterName        | Type                  | Description                                                                                                             |
+| -------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Operator             | string                | Operator defines the account address of the operator who initial the migrated bucket                                    |
+| BucketName           | string                | BucketName is a globally unique name of bucket.                                                                         |
+| DstPrimarySpId       | uint32                | DstPrimarySpId defines the destination SP for migration                                                                 |
+| DstPrimarySpApproval | [Approval](#approval) | DstPrimarySpApproval is the approval info of the primary SP which indicates that primary sp confirm the user's request. |
 
 ### Approval
 
@@ -70,9 +70,9 @@ The request does not have a path parameter.
 
 ### Query Parameter
 
-| ParameterName | Type   | Required | Description                                             |
-| ------------- | ------ | -------- | ------------------------------------------------------- |
-| action        | string | yes      | The action of approval:`MigrateBucket`                  |
+| ParameterName | Type   | Required | Description                            |
+| ------------- | ------ | -------- | -------------------------------------- |
+| action        | string | yes      | The action of approval:`MigrateBucket` |
 
 ### Request Body
 
@@ -81,8 +81,8 @@ The request does not have a request body.
 ## Request Syntax
 
 ```HTTP
-GET /greenfield/admin/v1/get-approval?action=action HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org
+GET /mechain/admin/v1/get-approval?action=action HTTP/1.1
+Host: testnet-sp*.mechain.tech
 Content-Type: ContentType
 X-Gnfd-Unsigned-Msg: UnsignedMsg
 Authorization: Authorization
@@ -92,9 +92,9 @@ Authorization: Authorization
 
 The response returns the following HTTP headers.
 
-| ParameterName                                                             | Type   | Description                           |
-| ------------------------------------------------------------------------- | ------ | ------------------------------------- |
-| X-Gnfd-Request-ID                                                         | string | defines trace id, trace request in sp |
+| ParameterName                                     | Type   | Description                           |
+| ------------------------------------------------- | ------ | ------------------------------------- |
+| X-Gnfd-Request-ID                                 | string | defines trace id, trace request in sp |
 | [X-Gnfd-Signed-Msg](/README.md#x-gnfd-signed-msg) | string | defines signed msg                    |
 
 ## HTTP Response Parameter
@@ -122,8 +122,8 @@ The examples given all use path-style.
 The following request sends `MigrateBucket` action to get approval.
 
 ```HTTP
-GET /greenfield/admin/v1/get-approval?action=MigrateBucket HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org
+GET /mechain/admin/v1/get-approval?action=MigrateBucket HTTP/1.1
+Host: testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 X-Gnfd-Unsigned-Msg: unsigned msg string
 Authorization: authorization string
@@ -142,8 +142,8 @@ X-Gnfd-Signed-Msg: df5857b2ac67b491ba6d9c6632618be7fb22de13662356b593d74103408cf
 The following request sends `MigrateBucket` action to get approval.
 
 ```HTTP
-GET /greenfield/admin/v1/get-approval?action=MigrateBucket HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org
+GET /mechain/admin/v1/get-approval?action=MigrateBucket HTTP/1.1
+Host: testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 X-Gnfd-Unsigned-Msg: unsigned msg string
 Authorization: authorization string

@@ -7,7 +7,7 @@ on:
       - v*
 
 env:
-  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
+  IMAGE_NAME: ghcr.io/zkMeLabs/mechain-storage-provider
   IMAGE_SOURCE: https://github.com/zkMeLabs/mechain-storage-provider
 
 jobs:

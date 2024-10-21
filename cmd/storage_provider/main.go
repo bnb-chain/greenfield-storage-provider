@@ -49,7 +49,7 @@ func registerModular() {
 
 var (
 	appName  = "mechain-sp"
-	appUsage = "the Greenfield Storage Provider command line interface"
+	appUsage = "the Mechain Storage Provider command line interface"
 )
 
 var app *cli.App

@@ -25,7 +25,7 @@ var SetQuotaCmd = &cli.Command{
 		freeQuotaFlag,
 	},
 	Category: "QUOTA COMMANDS",
-	Description: `The update.quota command is used to update the free quota of the SP on greenfield chain, it will ` +
+	Description: `The update.quota command is used to update the free quota of the SP on mechain chain, it will ` +
 		`send a txn to the chain to finish the updating.`,
 }
 

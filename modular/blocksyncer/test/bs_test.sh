@@ -25,7 +25,7 @@ function make_config() {
   sed -i -e "s/Database = '.*'/Database = 'block_syncer'/g" config.toml
 
   # chain
-  sed -i -e "s/ChainID = '.*'/ChainID = 'greenfield_9000-1741'/g" config.toml
+  sed -i -e "s/ChainID = '.*'/ChainID = 'mechain_5151-1'/g" config.toml
   sed -i -e "s/ChainAddress = \[.*\]/ChainAddress = \['http:\/\/localhost:8080'\]/g" config.toml
 
   # blocksyncer

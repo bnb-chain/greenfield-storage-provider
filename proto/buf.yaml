@@ -1,8 +1,8 @@
 version: v1
-name: buf.build/bnb-chain/greenfield-storage-provider
+name: buf.build/zkMeLabs/mechain-storage-provider
 deps:
   - buf.build/cosmos/cosmos-proto
-  - buf.build/bnb-chain/greenfield
+  - buf.build/zkMeLabs/mechain
   - buf.build/cosmos/gogo-proto
 breaking:
   use:

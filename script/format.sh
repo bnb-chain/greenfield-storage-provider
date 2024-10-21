@@ -7,5 +7,5 @@ for entry in `find . -name "*.go" | grep -v '.pb.'`; do
     if grep -q "DO NOT EDIT" "$entry"; then
       continue
     fi
-    goimportssort -w -local github.com/bnb-chain/ $entry
+    goimportssort -w -local github.com/zkMeLabs/ $entry
 done

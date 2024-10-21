@@ -1,6 +1,6 @@
 ---
 name: Report a bug
-about: Something with greenfield-storage-provider is not working as expected
+about: Something with mechain-storage-provider is not working as expected
 title: ''
 labels: 'type:bug'
 assignees: ''

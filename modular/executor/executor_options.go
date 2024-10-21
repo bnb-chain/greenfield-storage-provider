@@ -22,8 +22,8 @@ const (
 	//  backups. So it is always bigger than 1.0.
 	DefaultExecutorAskReplicateApprovalExFactor float64 = 1.0
 	// DefaultExecutorListenSealTimeoutHeight defines the default listen seal object on
-	// greenfield timeout height, if after current block height + timeout height, the object
-	// is not sealed, it is judged failed to seal object on greenfield.
+	// mechain timeout height, if after current block height + timeout height, the object
+	// is not sealed, it is judged failed to seal object on mechain.
 	DefaultExecutorListenSealTimeoutHeight int = 10
 	// DefaultExecutorListenSealRetryTimeout defines the sleep time when listen seal object
 	// fail, until retry ExecutorMaxListenSealRetry times, the task is set error.

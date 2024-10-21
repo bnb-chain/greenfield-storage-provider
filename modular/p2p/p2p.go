@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/bnb-chain/greenfield-common/go/hash"
+	"github.com/zkMeLabs/mechain-common/go/hash"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
 	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 	"github.com/zkMeLabs/mechain-storage-provider/core/rcmgr"

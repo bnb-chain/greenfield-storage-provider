@@ -13,7 +13,7 @@ import (
 
 const (
 	mockUser      = "block_syncer"
-	mockPassword  = "greenfield"
+	mockPassword  = "mechain"
 	mockDBAddress = "127.0.0.1:3306"
 	mockDatabase  = "test_db"
 )

@@ -14,8 +14,8 @@ import (
 	"github.com/gorilla/mux"
 	"golang.org/x/exp/slices"
 
-	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
+	commonhash "github.com/zkMeLabs/mechain-common/go/hash"
+	commonhttp "github.com/zkMeLabs/mechain-common/go/http"
 	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
 )
 

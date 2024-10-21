@@ -354,7 +354,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_put_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			// refer to https://github.com/zkMeLabs/mechain/blob/master/x/storage/types/errors.go
 			if strings.Contains(err.Error(), "No such bucket") {
 				return false, ErrNoSuchBucket
 			}
@@ -407,7 +407,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_process_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			// refer to https://github.com/zkMeLabs/mechain/blob/master/x/storage/types/errors.go
 			if strings.Contains(err.Error(), "No such bucket") {
 				return false, ErrNoSuchBucket
 			}
@@ -436,7 +436,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_get_object_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get bucket and object info from consensus", "error", err)
-			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			// refer to https://github.com/zkMeLabs/mechain/blob/master/x/storage/types/errors.go
 			if strings.Contains(err.Error(), "No such bucket") {
 				return false, ErrNoSuchBucket
 			}
@@ -565,7 +565,7 @@ func (a *AuthenticationModular) VerifyAuthentication(
 		metrics.PerfAuthTimeHistogram.WithLabelValues("auth_server_challenge_query_bucket_object_time").Observe(time.Since(queryTime).Seconds())
 		if err != nil {
 			log.CtxErrorw(ctx, "failed to get object info from consensus", "error", err)
-			// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+			// refer to https://github.com/zkMeLabs/mechain/blob/master/x/storage/types/errors.go
 			if strings.Contains(err.Error(), "No such bucket") {
 				return false, ErrNoSuchBucket
 			}

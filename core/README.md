@@ -7,7 +7,7 @@ goals of community developers.
 # Concept
 
 ## GfSp Framework
-GfSp Framework(GfSp) is a base framework for greenfield storage provider. The GfSp
+GfSp Framework(GfSp) is a base framework for mechain storage provider. The GfSp
 implements the specification of SP. For example, user must ask create object approval 
 before uploading object, upload object to primary SP and replicate object to secondary 
 SPs are divided into two stages, etc. Under the specification, each process is 
@@ -24,7 +24,7 @@ Core directory defines three types interfaces for customization:
 
 ### Infrastructure interface
 Infrastructure interface includes:
-* [Consensus](./consensus/consensus.go): is the interface to query greenfield consensus 
+* [Consensus](./consensus/consensus.go): is the interface to query mechain consensus 
   data. the consensus data can come from validator, fullnode, or other off-chain data 
   service
 * [ResourManager](./rcmgr/README.md): ResourceManager is the interface to the resource 
@@ -36,7 +36,7 @@ Infrastructure interface includes:
 * [PieceOp](./piecestore/piecestore.go): PieceOp is the helper interface for piece key 
   operator and piece size calculate.
 * [SPDB](./spdb/spdb.go): SPDB is the interface to records the SP metadata.
-* [BSDB](./bsdb/bsdb.go): BSDB is the interface to records the greenfield chain metadata.
+* [BSDB](./bsdb/bsdb.go): BSDB is the interface to records the mechain chain metadata.
 * [TaskQueue](./taskqueue/README.md): Task is the interface to the smallest unit of 
   SP background service interaction. Task scheduling and execution are directly related 
   to the order of task arrival, so task queue is a relatively important basic interface 
@@ -60,8 +60,8 @@ Infrastructure interface includes:
   timeout, will return the approvals.
 * [Receiver](./module/README.md): Receiver is the modular to receive the piece data from 
   primary SP, calculates the integrity hash of the piece data and sign it, returns to the 
-  primary SP for sealing object on greenfield.
-* [Signer](./module/README.md): Signer is the modular to handle the SP's sign and on greenfield 
+  primary SP for sealing object on mechain.
+* [Signer](./module/README.md): Signer is the modular to handle the SP's sign and on mechain 
   chain operator. It holds SP all private key. Considering the sp account's sequence number, it
   must be a singleton.
 * [Uploader](./module/README.md): Uploader is the modular to handle put object request from user 

@@ -10,11 +10,11 @@ This API is used to get object meta by object and bucket name. And it supports b
 
 ## HTTP Request Format
 
-| Description                | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(virtual-hosted-style) | /:object                                  |
-| Method                     | GET                                       |
+| Description                | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(virtual-hosted-style) | /:object                            |
+| Method                     | GET                                 |
 
 ## HTTP Request Header
 
@@ -40,14 +40,14 @@ The request does not have a request body.
 
 ```HTTP
 GET /ObjectName?object-meta HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 ```
 
 ## HTTP Response Header
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
@@ -128,7 +128,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 GET /brwdhocykj?object-meta HTTP/1.1
-Host: rmr9e.gnfd-testnet-sp1.bnbchain.org
+Host: rmr9e.testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 

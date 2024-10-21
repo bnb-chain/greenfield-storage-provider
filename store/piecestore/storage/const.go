@@ -76,7 +76,7 @@ const (
 
 // define piece store constants.
 const (
-	UserAgent = "Greenfield-SP"
+	UserAgent = "Mechain-SP"
 	// BufPoolSize define buffer pool size
 	BufPoolSize = 32 << 10
 	// ChecksumAlgo define validation algorithm name

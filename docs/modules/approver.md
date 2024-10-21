@@ -44,7 +44,7 @@ We can query ApprovalMigrateBucket task that we care about by `QueryTasks` metho
 
 ## ApprovalMigrateBucketTask
 
-ApprovalTask is used to record approval information for users creating buckets and objects. Primary SP approval is required before serving the bucket and object. If the SP approves the message, it will sign the approval message. The greenfield will verify the signature of the approval message to determine whether the SP accepts the bucket and object. ApprovalTask includes `ApprovalMigrateBucketTask`.
+ApprovalTask is used to record approval information for users creating buckets and objects. Primary SP approval is required before serving the bucket and object. If the SP approves the message, it will sign the approval message. The mechain will verify the signature of the approval message to determine whether the SP accepts the bucket and object. ApprovalTask includes `ApprovalMigrateBucketTask`.
 
 The corresponding interfaces definition is shown below:
 

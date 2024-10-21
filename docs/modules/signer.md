@@ -4,9 +4,9 @@ title: Signer
 
 # Signer
 
-Signer uses the SP's private keys to sign the message, the messages to form a transaction and sign the transaction to broadcast it to Greenfield BlockChain, or the messages exchanged between SPs.
+Signer uses the SP's private keys to sign the message, the messages to form a transaction and sign the transaction to broadcast it to Mechain BlockChain, or the messages exchanged between SPs.
 
-Signer is an abstract interface to handle the signature of SP and on greenfield chain operator. It holds all private keys of one SP. Considering the SP account's sequence number, it must be a singleton.
+Signer is an abstract interface to handle the signature of SP and on mechain chain operator. It holds all private keys of one SP. Considering the SP account's sequence number, it must be a singleton.
 
 ```go
 type Signer interface {
@@ -29,31 +29,31 @@ type Signer interface {
     SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
     // SignP2PPongMsg signs the pong msg for p2p to response ping msg.
     SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
-    // SealObject signs the MsgSealObject and broadcast the tx to greenfield.
+    // SealObject signs the MsgSealObject and broadcast the tx to mechain.
     SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
-    // RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.
+    // RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to mechain.
     RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
-    // DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
+    // DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to mechain.
     DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
-    // CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
+    // CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to mechain.
     CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) error
     // SignMigratePiece signs the GfSpMigratePieceTask for migrating piece
     SignMigratePiece(ctx context.Context, task *gfsptask.GfSpMigratePieceTask) ([]byte, error)
-    // CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
+    // CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to mechain.
     CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
     // SignSecondarySPMigrationBucket signs secondary sp bls for bucket migration
     SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
-    // SwapOut signs the MsgSwapOut and broadcast the tx to greenfield.
+    // SwapOut signs the MsgSwapOut and broadcast the tx to mechain.
     SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
     // SignSwapOut signs the MsgSwapOut for asking swap out approval.
     SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error)
-    // CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to greenfield.
+    // CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to mechain.
     CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
-    // SPExit signs the MsgStorageProviderExit and broadcast the tx to greenfield.
+    // SPExit signs the MsgStorageProviderExit and broadcast the tx to mechain.
     SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
-    // CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to greenfield.
+    // CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to mechain.
     CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
-    // UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to greenfield.
+    // UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to mechain.
     UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 }
 ```

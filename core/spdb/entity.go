@@ -81,9 +81,9 @@ type ReadRecord struct {
 
 // BucketQuota defines read quota of a bucket.
 type BucketQuota struct {
-	ChargedQuotaSize     uint64 // the charged quota of bucket on greenfield chain meta
-	FreeQuotaSize        uint64 // the free quota of SP on greenfield chain
-	MonthlyFreeQuotaSize uint64 // the monthly free quota of SP on greenfield chain
+	ChargedQuotaSize     uint64 // the charged quota of bucket on mechain chain meta
+	FreeQuotaSize        uint64 // the free quota of SP on mechain chain
+	MonthlyFreeQuotaSize uint64 // the monthly free quota of SP on mechain chain
 }
 
 // BucketFreeQuota defines free quota of a bucket.

@@ -10,11 +10,11 @@ This API is used to query a list of objects metadata info by object ids. This AP
 
 ## HTTP Request Format
 
-| Description      | Definition                     |
-| ---------------- | ------------------------------ |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style) | /                              |
-| Method           | GET                            |
+| Description      | Definition               |
+| ---------------- | ------------------------ |
+| Host(path-style) | testnet-sp*.mechain.tech |
+| Path(path-style) | /                        |
+| Method           | GET                      |
 
 ## HTTP Request Header
 
@@ -35,7 +35,7 @@ The request does not have a path parameter.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org?objects-query&ids=1,2
+Host: testnet-sp*.mechain.tech?objects-query&ids=1,2
 Date: Fri, 31 March 2023 17:32:00 GMT
 Content-Type: application/xml
 Content-Length: length
@@ -45,8 +45,8 @@ Content-Length: length
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
 | Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
@@ -77,7 +77,7 @@ The examples given all use path-style.
 
 ```HTTP
 GET /?objects-query&ids=1,2,3,4,5,333 HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org
+Host: testnet-sp1.mechain.tech
 ```
 
 ### Sample Response: Query a list of objects by object ids successfully

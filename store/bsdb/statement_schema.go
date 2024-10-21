@@ -13,7 +13,7 @@ type Statement struct {
 	PolicyID common.Hash `gorm:"policy_id"`
 	// Effect define the impact of permissions, which is Allow/Deny
 	Effect string `gorm:"effect"`
-	// ActionValue define the operation type you can act. greenfield defines a set of permission
+	// ActionValue define the operation type you can act. mechain defines a set of permission
 	// that you can specify in a permissionInfo
 	ActionValue int `gorm:"action_value"`
 	// Resources CAN ONLY BE USED IN bucket level. Support fuzzy match and limit to 5

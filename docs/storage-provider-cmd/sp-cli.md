@@ -2,7 +2,7 @@
 title: Storage Provider Command Line Interface
 ---
 
-There is no set way to create a CLI, but Greenfield Storage Provider typically use the [urfave cli library v2](https://github.com/urfave/cli).
+There is no set way to create a CLI, but Mechain Storage Provider typically use the [urfave cli library v2](https://github.com/urfave/cli).
 Building a CLI with urfave cli entails defining commands, arguments, and flags. Commands understand the actions users wish to take, such as `config.dump` cmd dumps default configuration for editing and `config.upload` uploads the configuration to db, all service gets the configuration from db with `--config.remote` flag.
 Users also supply **Arguments**, such as the db address that uploading configuration and flags to modify various aspects of the commands, such `--server gateway, uploader, downaloader` starts the gateway, uploader and downloader services in one process, combines the required services arbitrarily.
 
@@ -11,7 +11,7 @@ Users also supply **Arguments**, such as the db address that uploading configura
 ```shell
 $ ./mechain-sp version
 
-Greenfield Storage Provider
+Mechain Storage Provider
     __                                                       _     __
     _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
     / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
@@ -29,7 +29,7 @@ Build   : go1.20.3 darwin arm64 2023-10-08 10:31
 $ ./mechain-sp --help
 
 NAME:
-   mechain-sp - the Greenfield Storage Provider command line interface
+   mechain-sp - the Mechain Storage Provider command line interface
 
 USAGE:
    mechain-sp [global options] command [command options] [arguments...]
@@ -39,14 +39,14 @@ COMMANDS:
    CONFIG COMMANDS:
      config.dump  Dump default configuration to the './config.toml' file for editing
    MIGRATE COMMANDS:
-     sp.exit              Used for sp exits from the Greenfield storage network
-     sp.complete.exit     Only used in debugging scenarios, online use not allowed. Used for sp complete exits from the Greenfield storage network.
-     sp.complete.swapout  Only used in debugging scenarios, online use not allowed. Used for swap out from the Greenfield storage network.
+     sp.exit              Used for sp exits from the Mechain storage network
+     sp.complete.exit     Only used in debugging scenarios, online use not allowed. Used for sp complete exits from the Mechain storage network.
+     sp.complete.swapout  Only used in debugging scenarios, online use not allowed. Used for swap out from the Mechain storage network.
    MISCELLANEOUS COMMANDS:
      version, v  Print version information
    QUERY COMMANDS:
-     list.modules          List the modules in greenfield storage provider
-     list.errors           List the predefine errors in greenfield storage provider
+     list.modules          List the modules in mechain storage provider
+     list.errors           List the predefine errors in mechain storage provider
      query.task            Query running tasks in modules by task sub key
      get.object            Get object payload data
      challenge.piece       Challenge piece integrity hash
@@ -78,7 +78,7 @@ SP exit and bucket migration functions are opened in `Testnet` and not opened in
 
 #### sp.exit
 
-Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared to exit from Greenfield storage network.
+Using this command, it will send an transaction to Mechain blockchain to tell this SP is prepared to exit from Mechain storage network.
 
 ```shell
 USAGE:
@@ -90,7 +90,7 @@ $ ./mechain-sp sp.exit --operatorAddress ${operator_address}
 
 #### sp.complete.exit
 
-Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared to complete exit from Greenfield storage network.
+Using this command, it will send an transaction to Mechain blockchain to tell this SP is prepared to complete exit from Mechain storage network.
 
 Only used in debugging scenarios, online use not allowed.
 
@@ -104,7 +104,7 @@ $ ./mechain-sp sp.complete.exit --operatorAddress {operator_address}
 
 #### sp.complete.swapout
 
-Using this command, it will send an transaction to Greenfield blockchain to tell this SP is prepared to swap out from Greenfield storage network.
+Using this command, it will send an transaction to Mechain blockchain to tell this SP is prepared to swap out from Mechain storage network.
 
 Only used in debugging scenarios, online use not allowed.
 
@@ -119,7 +119,7 @@ $ ./mechain-sp sp.complete.swapout --operatorAddress {openrator_address} --famil
 
 #### list.modules
 
-List the modules in greenfield storage provider.
+List the modules in mechain storage provider.
 
 ```shell
 USAGE:
@@ -145,7 +145,7 @@ uploader             Uploads object payload to primary SP.
 
 #### list.errors
 
-List the predefine errors in Greenfield storage provider.
+List the predefine errors in Mechain storage provider.
 
 ```shell
 USAGE:
@@ -212,7 +212,7 @@ $ ./mechain-sp query.bucket.migrate --config ./config.toml
 
 #### update.quota
 
-The update.quota command is used to update the free quota of the SP on greenfield chain, it will send a txn to the chain to finish the updating.
+The update.quota command is used to update the free quota of the SP on mechain chain, it will send a txn to the chain to finish the updating.
 
 ```shell
 USAGE:

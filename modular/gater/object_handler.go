@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
-	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
+	commonhash "github.com/zkMeLabs/mechain-common/go/hash"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
 	"github.com/evmos/evmos/v12/types/s3util"
 	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	commonhttp "github.com/zkMeLabs/mechain-common/go/http"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 	coremodule "github.com/zkMeLabs/mechain-storage-provider/core/module"
@@ -968,16 +968,16 @@ func (g *GateModular) getObjectByUniversalEndpointHandler(w http.ResponseWriter,
 			}
 			// if the request comes from browser, we will return a built-in dapp for users to make the signature
 			htmlConfigMap := map[string]string{
-				"greenfield_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - greenfield\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
-				"greenfield_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - greenfield\",\n  \"rpcUrls\": [\"https://gnfd.qa.bnbchain.world\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan-qanet.fe.nodereal.cc/\"]\n}\n",
-				"greenfield_5600-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"greenfield testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
-				"greenfield_920-1":     "{\n  \"envType\": \"pre-mainnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 920,\n  \"chainName\": \"greenfield pre-main-net\",\n  \"rpcUrls\": [\"https://greenfield-chain.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
-				"greenfield_1017-1":    "{\n  \"envType\": \"mainnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 1017,\n  \"chainName\": \"greenfield main-net\",\n  \"rpcUrls\": [\"https://greenfield-chain.bnbchain.org\"],\n  \"nativeCurrency\": { \"name\": \"BNB\", \"symbol\": \"BNB\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://greenfieldscan.com/\"]\n}\n",
+				"mechain_7971-1":    "{\n  \"envType\": \"dev\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 7971,\n  \"chainName\": \"dev - mechain\",\n  \"rpcUrls\": [\"https://gnfd-dev.qa.mechain.world\"],\n  \"nativeCurrency\": { \"name\": \"azkme\", \"symbol\": \"azkme\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://mechainscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"mechain_9000-1741": "{\n  \"envType\": \"qa\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 9000,\n  \"chainName\": \"qa - mechain\",\n  \"rpcUrls\": [\"https://gnfd.qa.mechain.world\"],\n  \"nativeCurrency\": { \"name\": \"azkme\", \"symbol\": \"azkme\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://mechainscan-qanet.fe.nodereal.cc/\"]\n}\n",
+				"mechain_5151-1":    "{\n  \"envType\": \"testnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 5600,\n  \"chainName\": \"mechain testnet\",\n  \"rpcUrls\": [\"https://gnfd-testnet-fullnode-tendermint-us.mechain.org\"],\n  \"nativeCurrency\": { \"name\": \"azkme\", \"symbol\": \"azkme\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://mechainscan.com/\"]\n}\n",
+				"mechain_920-1":     "{\n  \"envType\": \"pre-mainnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 920,\n  \"chainName\": \"mechain pre-main-net\",\n  \"rpcUrls\": [\"https://zk.me\"],\n  \"nativeCurrency\": { \"name\": \"azkme\", \"symbol\": \"azkme\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://mechainscan.com/\"]\n}\n",
+				"mechain_5252-1":    "{\n  \"envType\": \"mainnet\",\n  \"signedMsg\": \"Sign this message to access the file:\\n$1\\nThis signature will not cost you any fees.\\nExpiration Time: $2\",\n  \"chainId\": 1017,\n  \"chainName\": \"mechain main-net\",\n  \"rpcUrls\": [\"https://zk.me\"],\n  \"nativeCurrency\": { \"name\": \"azkme\", \"symbol\": \"azkme\", \"decimals\": 18 },\n  \"blockExplorerUrls\": [\"https://mechainscan.com/\"]\n}\n",
 			}
 
 			htmlConfig := htmlConfigMap[g.baseApp.ChainID()]
 			if htmlConfig == "" {
-				htmlConfig = htmlConfigMap["greenfield_5600-1"] // use testnet by default, actually, we only need the metamask sign function, regardless which greenfield network the metamask is going to connect.
+				htmlConfig = htmlConfigMap["mechain_5151-1"] // use testnet by default, actually, we only need the metamask sign function, regardless which mechain network the metamask is going to connect.
 			}
 			hc, _ := json.Marshal(htmlConfig)
 			html := strings.Replace(GnfdBuiltInUniversalEndpointDappHtml, "<% env %>", string(hc), 1)

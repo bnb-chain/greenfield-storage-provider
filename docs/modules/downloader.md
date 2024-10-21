@@ -46,7 +46,7 @@ Downloader interface inherits [Modular interface](./common/lifecycle_modular.md#
 
 ## ObjectTask
 
-DownloadObjectTask, DownloadPieceTask and ChallengePieceTask all inherits `ObjectTask` interface. ObjectTask associated with an object and storage params, and records the information of different stages of the object. Considering the change of storage params on the greenfield, the storage params of each object should be determined when it is created, and it should not be queried during the task flow, which is inefficient and error-prone.
+DownloadObjectTask, DownloadPieceTask and ChallengePieceTask all inherits `ObjectTask` interface. ObjectTask associated with an object and storage params, and records the information of different stages of the object. Considering the change of storage params on the mechain, the storage params of each object should be determined when it is created, and it should not be queried during the task flow, which is inefficient and error-prone.
 
 ObjectTask interfaces definition is shown below:
 
@@ -91,7 +91,7 @@ The corresponding protobuf definition is shown below:
 
 ## ChallengePieceTask
 
-It is always the first priority of any decentralized storage network to guarantee data integrity and availability. We use data challenge instead of storage proof to get better HA. There will be some data challenges to random pieces on greenfield chain continuously. And the SP, which stores the challenged piece, uses the challenge workflow to response. Each SP splits the object payload data to segments, and store segment data to piece store and store segment checksum to SP DB.
+It is always the first priority of any decentralized storage network to guarantee data integrity and availability. We use data challenge instead of storage proof to get better HA. There will be some data challenges to random pieces on mechain chain continuously. And the SP, which stores the challenged piece, uses the challenge workflow to response. Each SP splits the object payload data to segments, and store segment data to piece store and store segment checksum to SP DB.
 
 ChallengePieceTask is an abstract interface to record the information for get challenge piece info, the validator get challenge info to confirm whether the sp stores the user's data correctly.
 

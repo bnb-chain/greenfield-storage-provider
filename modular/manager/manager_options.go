@@ -10,7 +10,7 @@ import (
 const (
 	// DefaultGlobalMaxUploadingNumber defines the default max uploading object number
 	// in SP, include: uploading object to primary, replicate object to secondaries,
-	// and sealing object on greenfield.
+	// and sealing object on mechain.
 	DefaultGlobalMaxUploadingNumber int = 40960
 	// DefaultGlobalUploadObjectParallel defines the default max parallel uploading
 	// objects to primary in SP system.
@@ -19,10 +19,10 @@ const (
 	// objects to primary in SP system.
 	DefaultGlobalReplicatePieceParallel int = 10240
 	// DefaultGlobalSealObjectParallel defines the default max parallel sealing objects
-	// on greenfield in SP system.
+	// on mechain in SP system.
 	DefaultGlobalSealObjectParallel int = 10240
 	// DefaultGlobalReceiveObjectParallel defines the default max parallel confirming
-	// receive pieces on greenfield in SP system.
+	// receive pieces on mechain in SP system.
 	DefaultGlobalReceiveObjectParallel int = 10240 * 10
 	// DefaultGlobalBackupTaskParallel defines the default parallel backup tasks for
 	// dispatching to task executor
@@ -84,8 +84,8 @@ const (
 	// it is used to log and debug.
 	DefaultStatisticsOutputInterval int = 60
 	// DefaultListenRejectUnSealTimeoutHeight defines the default listen reject unseal object
-	// on greenfield timeout height, if after current block height + timeout height, the object
-	// is not rejected, it is judged failed to reject unseal object on greenfield.
+	// on mechain timeout height, if after current block height + timeout height, the object
+	// is not rejected, it is judged failed to reject unseal object on mechain.
 	DefaultListenRejectUnSealTimeoutHeight int = 10
 	// DefaultSyncAvailableVGFInterval defines the default interval for available global virtual group family info,
 	// it is used to log and debug.

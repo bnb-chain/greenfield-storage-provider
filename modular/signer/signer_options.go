@@ -112,7 +112,7 @@ func DefaultSignerOptions(signer *SignModular, cfg *gfspconfig.GfSpConfig) error
 		FeeAmount: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(int64(cfg.Chain.CreateGlobalVirtualGroupFeeAmount)))),
 	}
 
-	client, err := NewGreenfieldChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.RpcAddress[0], cfg.Chain.ChainID,
+	client, err := NewMechainChainSignClient(cfg.Chain.ChainAddress[0], cfg.Chain.RpcAddress[0], cfg.Chain.ChainID,
 		gasInfo, cfg.SpAccount.OperatorPrivateKey, cfg.SpAccount.FundingPrivateKey,
 		cfg.SpAccount.SealPrivateKey, cfg.SpAccount.ApprovalPrivateKey, cfg.SpAccount.GcPrivateKey, cfg.SpAccount.BlsPrivateKey)
 	if err != nil {

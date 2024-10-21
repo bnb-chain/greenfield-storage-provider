@@ -10,11 +10,11 @@ This API is used to query a bucket's all objects metadata info. And it supports 
 
 ## HTTP Request Format
 
-| Description                | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(virtual-hosted-style) | /                                         |
-| Method                     | GET                                       |
+| Description                | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(virtual-hosted-style) | /                                   |
+| Method                     | GET                                 |
 
 You should set `BucketName` in url host to list objects of the bucket.
 
@@ -44,16 +44,16 @@ The request does not have a request body.
 
 ```HTTP
 GET / HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 ```
 
 ## HTTP Response Header
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
@@ -92,7 +92,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 GET /?max-keys=5&continuation-token=Y2NjYy8=&prefix=t3&delimiter=/&include-removed=false HTTP/1.1
-Host: myBucket.gnfd-testnet-sp1.bnbchain.org
+Host: myBucket.testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 

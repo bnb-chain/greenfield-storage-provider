@@ -214,7 +214,7 @@ type Manager interface {
 	// HandleReplicatePieceTask handles the result of replicating piece data to secondary SPs,
 	// the request comes from TaskExecutor.
 	HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask) error
-	// HandleSealObjectTask handles the result of sealing object to the greenfield the request comes from TaskExecutor.
+	// HandleSealObjectTask handles the result of sealing object to the mechain the request comes from TaskExecutor.
 	HandleSealObjectTask(ctx context.Context, task task.SealObjectTask) error
 	// HandleReceivePieceTask handles the result of receiving piece task, the request comes from Receiver that
 	// reports have completed ReceivePieceTask to manager and TaskExecutor that the result of confirming whether
@@ -284,7 +284,7 @@ type Receiver interface {
 	QueryTasks(ctx context.Context, subKey task.TKey) ([]task.Task, error)
 }
 
-// Signer is an abstract interface to handle the signature of SP and on greenfield chain operator.
+// Signer is an abstract interface to handle the signature of SP and on mechain chain operator.
 // It holds all private keys of one SP. Considering the SP account's sequence number, it must be a singleton.
 type Signer interface {
 	Modular
@@ -306,49 +306,49 @@ type Signer interface {
 	SignP2PPingMsg(ctx context.Context, ping *gfspp2p.GfSpPing) ([]byte, error)
 	// SignP2PPongMsg signs the pong msg for p2p to response ping msg.
 	SignP2PPongMsg(ctx context.Context, pong *gfspp2p.GfSpPong) ([]byte, error)
-	// SealObject signs the MsgSealObject and broadcast the tx to greenfield.
+	// SealObject signs the MsgSealObject and broadcast the tx to mechain.
 	SealObject(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
 	// SealObjectEvm signs the MsgSealObject and broadcast the tx to mechain by evm tx.
 	SealObjectEvm(ctx context.Context, object *storagetypes.MsgSealObject) (string, error)
-	// SealObjectV2 signs the MsgSealObject and broadcast the tx to greenfield.
+	// SealObjectV2 signs the MsgSealObject and broadcast the tx to mechain.
 	SealObjectV2(ctx context.Context, object *storagetypes.MsgSealObjectV2) (string, error)
-	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to greenfield.
+	// RejectUnSealObject signs the MsgRejectSealObject and broadcast the tx to mechain.
 	RejectUnSealObject(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
 	// RejectUnSealObjectEvm signs the MsgRejectSealObject and broadcast the tx to mechain by evm tx.
 	RejectUnSealObjectEvm(ctx context.Context, object *storagetypes.MsgRejectSealObject) (string, error)
-	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to greenfield.
+	// DiscontinueBucket signs the MsgDiscontinueBucket and broadcast the tx to mechain.
 	DiscontinueBucket(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
 	// DiscontinueBucketEvm signs the MsgDiscontinueBucket and broadcast the tx to mechain by evm tx.
 	DiscontinueBucketEvm(ctx context.Context, bucket *storagetypes.MsgDiscontinueBucket) (string, error)
-	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to greenfield.
+	// CreateGlobalVirtualGroup signs the MsgCreateGlobalVirtualGroup and broadcast the tx to mechain.
 	CreateGlobalVirtualGroup(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
 	// CreateGlobalVirtualGroupEvm signs the MsgCreateGlobalVirtualGroup and broadcast the tx to mechain by evm tx.
 	CreateGlobalVirtualGroupEvm(ctx context.Context, gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup) (string, error)
-	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to greenfield.
+	// CompleteMigrateBucket signs the MsgCompleteMigrateBucket and broadcast the tx to mechain.
 	CompleteMigrateBucket(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 	// CompleteMigrateBucketEvm signs the MsgCompleteMigrateBucket and broadcast the tx to mechain by evm tx.
 	CompleteMigrateBucketEvm(ctx context.Context, migrateBucket *storagetypes.MsgCompleteMigrateBucket) (string, error)
 	// SignSecondarySPMigrationBucket signs secondary sp bls for bucket migration
 	SignSecondarySPMigrationBucket(ctx context.Context, signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error)
-	// SwapOut signs the MsgSwapOut and broadcast the tx to greenfield.
+	// SwapOut signs the MsgSwapOut and broadcast the tx to mechain.
 	SwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
 	// SwapOutEvm signs the MsgSwapOut and broadcast the tx to mechain by evm tx.
 	SwapOutEvm(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) (string, error)
 	// SignSwapOut signs the MsgSwapOut for asking swap out approval.
 	SignSwapOut(ctx context.Context, swapOut *virtualgrouptypes.MsgSwapOut) ([]byte, error)
-	// CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to greenfield.
+	// CompleteSwapOut signs the MsgCompleteSwapOut and broadcast the tx to mechain.
 	CompleteSwapOut(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
 	// CompleteSwapOutEvm signs the MsgCompleteSwapOut and broadcast the tx to mechain by evm tx.
 	CompleteSwapOutEvm(ctx context.Context, completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut) (string, error)
-	// SPExit signs the MsgStorageProviderExit and broadcast the tx to greenfield.
+	// SPExit signs the MsgStorageProviderExit and broadcast the tx to mechain.
 	SPExit(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
 	// SPExitEvm signs the MsgStorageProviderExit and broadcast the tx to mechain by evm tx.
 	SPExitEvm(ctx context.Context, spExit *virtualgrouptypes.MsgStorageProviderExit) (string, error)
-	// CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to greenfield.
+	// CompleteSPExit signs the MsgCompleteStorageProviderExit and broadcast the tx to mechain.
 	CompleteSPExit(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
 	// CompleteSPExitEvm signs the MsgCompleteStorageProviderExit and broadcast the tx to mechain by evm tx.
 	CompleteSPExitEvm(ctx context.Context, completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit) (string, error)
-	// UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to greenfield.
+	// UpdateSPPrice signs the MsgUpdateSpStoragePrice and  broadcast the tx to mechain.
 	UpdateSPPrice(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
 	// UpdateSPPriceEvm signs the MsgUpdateSpStoragePrice and  broadcast the tx to mechain by evm tx.
 	UpdateSPPriceEvm(ctx context.Context, price *sptypes.MsgUpdateSpStoragePrice) (string, error)
@@ -380,7 +380,7 @@ type Signer interface {
 	DeleteGlobalVirtualGroup(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
 	// DeleteGlobalVirtualGroupEvm rejects the bucket migration by dest SP by evm tx.
 	DeleteGlobalVirtualGroupEvm(ctx context.Context, deleteGVG *virtualgrouptypes.MsgDeleteGlobalVirtualGroup) (string, error)
-	// DelegateCreateObject  broadcast the tx to greenfield.
+	// DelegateCreateObject  broadcast the tx to mechain.
 	DelegateCreateObject(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)
 	// DelegateCreateObjectEvm  broadcast the tx to mechain by evm tx.
 	DelegateCreateObjectEvm(ctx context.Context, msg *storagetypes.MsgDelegateCreateObject) (string, error)

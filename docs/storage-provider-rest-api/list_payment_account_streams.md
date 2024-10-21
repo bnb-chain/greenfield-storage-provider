@@ -10,11 +10,11 @@ This API is used to list user bucket info by given payment account. This API onl
 
 ## HTTP Request Format
 
-| Description      | Definition                     |
-| ---------------- | ------------------------------ |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style) | /                              |
-| Method           | GET                            |
+| Description      | Definition               |
+| ---------------- | ------------------------ |
+| Host(path-style) | testnet-sp*.mechain.tech |
+| Path(path-style) | /                        |
+| Method           | GET                      |
 
 ## HTTP Request Header
 
@@ -26,10 +26,10 @@ The request does not have a path parameter.
 
 ### Query Parameter
 
-| ParameterName   | Type    | Required | Description                                                                               |
-| --------------- | ------- | -------- | ----------------------------------------------------------------------------------------- |
-| payment-buckets | string  | yes      | payment-buckets is only used for routing location, and it does not need to pass any value |
-| payment-account | string  | yes      | payment-account defines the payment account address                                       |
+| ParameterName   | Type   | Required | Description                                                                               |
+| --------------- | ------ | -------- | ----------------------------------------------------------------------------------------- |
+| payment-buckets | string | yes      | payment-buckets is only used for routing location, and it does not need to pass any value |
+| payment-account | string | yes      | payment-account defines the payment account address                                       |
 
 ### Request Body
 
@@ -39,37 +39,37 @@ The request does not have a request body.
 
 ```HTTP
 GET /?payment-buckets&payment-account=xxxx
-Host: gnfd-testnet-sp*.bnbchain.org
+Host: testnet-sp*.mechain.tech
 ```
 
 ## HTTP Response Header
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
-| ParameterName  | Type                          | Description                                                   |
-| -------------  | ----------------------------- | ------------------------------------------------------------- |
-| Buckets        | [Buckets](#buckets)           | Buckets defines a list of buckets.                            |
+| ParameterName | Type                | Description                        |
+| ------------- | ------------------- | ---------------------------------- |
+| Buckets       | [Buckets](#buckets) | Buckets defines a list of buckets. |
 
 ### Buckets
 
-| ParameterName  | Type                          | Description                                                   |
-| -------------  | ----------------------------- | ------------------------------------------------------------- |
-| BucketInfo     | [BucketInfo](#bucketinfo)     | BucketInfo defines the information of bucket                  |
-| Removed        | bool                          | Removed defines the bucket is deleted or not.                 |
-| DeleteAt       | int64                         | DeleteAt defines the block number when the bucket deleted.    |
-| DeleteReason   | string                        | DeleteReason defines the deleted reason of bucket.            |
-| Operator       | string                        | Operator defines the operator address of bucket.              |
-| CreateTxHash   | string                        | CreateTxHash defines the creation transaction hash of bucket. |
-| UpdateTxHash   | string                        | UpdateTxHash defines the update transaction hash of bucket.   |
-| UpdateAt       | int64                         | UpdateAt defines the block number when the bucket update.     |
-| UpdateTime     | int64                         | UpdateTime defines the timestamp when the bucket update.      |
-| StorageSize    | uint64                        | StorageSize storage size of bucket.                           |
+| ParameterName | Type                      | Description                                                   |
+| ------------- | ------------------------- | ------------------------------------------------------------- |
+| BucketInfo    | [BucketInfo](#bucketinfo) | BucketInfo defines the information of bucket                  |
+| Removed       | bool                      | Removed defines the bucket is deleted or not.                 |
+| DeleteAt      | int64                     | DeleteAt defines the block number when the bucket deleted.    |
+| DeleteReason  | string                    | DeleteReason defines the deleted reason of bucket.            |
+| Operator      | string                    | Operator defines the operator address of bucket.              |
+| CreateTxHash  | string                    | CreateTxHash defines the creation transaction hash of bucket. |
+| UpdateTxHash  | string                    | UpdateTxHash defines the update transaction hash of bucket.   |
+| UpdateAt      | int64                     | UpdateAt defines the block number when the bucket update.     |
+| UpdateTime    | int64                     | UpdateTime defines the timestamp when the bucket update.      |
+| StorageSize   | uint64                    | StorageSize storage size of bucket.                           |
 
 
 ### BucketInfo
@@ -133,13 +133,13 @@ The examples given all use path-style.
 ### Example 1: List user payment streams
 
 GET /?read-quota&year-month=2023-03 HTTP/1.1
-Host: myBucket.gnfd-testnet-sp1.bnbchain.org
+Host: myBucket.testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string
 
 ```HTTP
 GET /?payment-buckets&payment-account=0xed7a8ebf8458980a62bb49f41a699d67bbab7dc3
-Host: gnfd-testnet-sp1.bnbchain.org
+Host: testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 

@@ -15,8 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	commonhash "github.com/bnb-chain/greenfield-common/go/hash"
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
+	commonhash "github.com/zkMeLabs/mechain-common/go/hash"
+	commonhttp "github.com/zkMeLabs/mechain-common/go/http"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	modelgateway "github.com/zkMeLabs/mechain-storage-provider/model/gateway"
 	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"
@@ -28,7 +28,7 @@ const (
 	MaxExpiryAgeInSec         int32  = commonhttp.MaxExpiryAgeInSec // 7 days
 	ExpiryDateFormat          string = time.RFC3339
 	ExpectedEddsaPubKeyLength int    = 64
-	SignedContentV2Pattern           = `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)`
+	SignedContentV2Pattern           = `(.+) wants you to sign in with your Mechain account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)`
 )
 
 type RequestNonceResp struct {
@@ -539,7 +539,7 @@ func VerifyPersonalSignature(signedMsg string, sigString string) (sdk.AccAddress
 }
 
 func (g *GateModular) verifySignedContent(signedContent string, expectedDomain string, expectedNonce string, expectedPublicKey string, expectedExpiryDate string) error {
-	pattern := `(.+) wants you to sign in with your BNB Greenfield account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)\n*Resources:((?:\n- SP .+ \(name:.+\) with nonce: \d+)+)`
+	pattern := `(.+) wants you to sign in with your Mechain account:\n*(.+)\n*Register your identity public key (.+)\n*URI: (.+)\n*Version: (.+)\n*Chain ID: (.+)\n*Issued At: (.+)\n*Expiration Time: (.+)\n*Resources:((?:\n- SP .+ \(name:.+\) with nonce: \d+)+)`
 
 	re := regexp.MustCompile(pattern)
 	patternMatches := re.FindStringSubmatch(signedContent)

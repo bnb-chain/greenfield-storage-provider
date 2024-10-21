@@ -6,9 +6,9 @@ The events' data are optimally stored by the block syncer and provided to the me
 Also, it provides additional extensions such as Pagination, Sort Key, and filtering. etc.
 
 ## Role
-Sync all the Greenfield chain data to the distributed stores, and offers the read RPC
+Sync all the Mechain chain data to the distributed stores, and offers the read RPC
 requests for chain data(in addition to payload). SP service will query the info, E.g.
-permission, ListBucket, ListObject, etc. It will reduce the pressure on the Greenfield chain.
+permission, ListBucket, ListObject, etc. It will reduce the pressure on the Mechain chain.
 
 ## Scalability
 At present, the main role of metadata is to provide better scalability, and two main points are considered in the process of interface development:

@@ -11,7 +11,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/bnb-chain/greenfield-common/go/hash"
+	"github.com/zkMeLabs/mechain-common/go/hash"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspapp"
 	"github.com/zkMeLabs/mechain-storage-provider/base/gfspconfig"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
@@ -68,17 +68,17 @@ var segmentIdxFlag = &cli.Uint64Flag{
 var ListModulesCmd = &cli.Command{
 	Action:      listModulesAction,
 	Name:        "list.modules",
-	Usage:       "List the modules in greenfield storage provider",
+	Usage:       "List the modules in mechain storage provider",
 	Category:    queryCommands,
-	Description: `The list command output the services in greenfield storage provider.`,
+	Description: `The list command output the services in mechain storage provider.`,
 }
 
 var ListErrorsCmd = &cli.Command{
 	Action:      listErrorsAction,
 	Name:        "list.errors",
-	Usage:       "List the predefine errors in greenfield storage provider",
+	Usage:       "List the predefine errors in mechain storage provider",
 	Category:    queryCommands,
-	Description: `The list command output the services in greenfield storage provider.`,
+	Description: `The list command output the services in mechain storage provider.`,
 }
 
 var GetObjectCmd = &cli.Command{

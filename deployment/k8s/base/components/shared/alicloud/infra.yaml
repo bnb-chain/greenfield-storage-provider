@@ -18,6 +18,6 @@ spec:
     - null
   selector:
     matchLabels:
-      team: greenfield
+      team: mechain
       biz: storage-provider
 

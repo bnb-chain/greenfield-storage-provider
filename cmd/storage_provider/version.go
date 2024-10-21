@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	StorageProviderLogo = `Greenfield Storage Provider
+	StorageProviderLogo = `Mechain Storage Provider
     __                                                       _     __
     _____/ /_____  _________ _____ ____     ____  _________ _   __(_)___/ /__  _____
     / ___/ __/ __ \/ ___/ __  / __  / _ \   / __ \/ ___/ __ \ | / / / __  / _ \/ ___/
@@ -18,7 +18,7 @@ const (
     `
 )
 
-// DumpLogo output greenfield storage provider logo
+// DumpLogo output mechain storage provider logo
 func DumpLogo() string {
 	return StorageProviderLogo
 }

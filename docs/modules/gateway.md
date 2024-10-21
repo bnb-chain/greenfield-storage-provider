@@ -9,7 +9,7 @@ If you are interested in the HTTP Restful API, we invite you to the [following p
 
 ## Overview
 
-<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/06-gateway.jpg" width="500" height="100" /></div>
+<div align="center"><img src="https://raw.githubusercontent.com/zkMeLabs/mechain-docs/main/static/asset/06-gateway.jpg" width="500" height="100" /></div>
 
 <div style={{textAlign:'center'}}><i>Gateway Architecture</i></div>
 
@@ -39,7 +39,7 @@ SP Gateway uses middleware to collect metrics, logging, register metadata and so
 
 ### Universal Endpoint
 
-We implement the Universal Endpoint according to [Greenfield Whitepaper Universal Endpoint](https://github.com/bnb-chain/greenfield-whitepaper/blob/main/part3.md#231-universal-endpoint).
+We implement the Universal Endpoint according to [Mechain Whitepaper Universal Endpoint](https://github.com/zkMeLabs/mechain-whitepaper/blob/main/part3.md#231-universal-endpoint).
 
 All objects can be identified and accessed via a universal path: gnfd://<bucket_name><object_name>?[parameter]*
 
@@ -50,20 +50,20 @@ Explanation:
 - `object_name` is the name of the object and is mandatory.
 - The parameter is an optional list of key-value pairs that provide additional information for the URI.
 
-Each SP will register multiple endpoints to access their services, e.g. "SP1" may ask their users to download objects via `https://gnfd-testnet-sp-1.bnbchain.org/download`.
-And the full download RESTful API would be like: `https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg`.
+Each SP will register multiple endpoints to access their services, e.g. "SP1" may ask their users to download objects via `https://testnet-sp1.mechain.tech/download`.
+And the full download RESTful API would be like: `https://testnet-sp1.mechain.tech/download/mybucket/myobject.jpg`.
 
 Universal Endpoint supports using any valid endpoint for any SP, and automatically redirects to the correct endpoint containing the object for downloading.
 
-For instance, when users access a testnet endpoint `gnfd-testnet-sp-1.bnbchain.org` of SP1, the request URL will be: `https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg`. Universal Endpoint will find the correct endpoint for myobject.jpg, here SP3, and redirect the user to: `https://gnfd-testnet-sp-3.bnbchain.org/download/mybucket/myobject.jpg` and download the file.
+For instance, when users access a testnet endpoint `testnet-sp1.mechain.tech` of SP1, the request URL will be: `https://testnet-sp1.mechain.tech/download/mybucket/myobject.jpg`. Universal Endpoint will find the correct endpoint for myobject.jpg, here SP3, and redirect the user to: `https://testnet-sp3.mechain.tech/download/mybucket/myobject.jpg` and download the file.
 
-<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/501-SP-Gateway-Universal-Endpoint.png" width="500" height="100" /></div>
+<div align="center"><img src="https://raw.githubusercontent.com/zkMeLabs/mechain-docs/main/static/asset/501-SP-Gateway-Universal-Endpoint.png" width="500" height="100" /></div>
 
 <div style={{textAlign:'center'}}><i>Universal Endpoint Logic Flow</i></div>
 
 #### Download File
 
-If you want to download a file using Universal Endpoint, downloading URL is like: `https://gnfd-testnet-sp-1.bnbchain.org/download/mybucket/myobject.jpg`. This is enforced by adding this Content-Type to HTTP headers:
+If you want to download a file using Universal Endpoint, downloading URL is like: `https://testnet-sp1.mechain.tech/download/mybucket/myobject.jpg`. This is enforced by adding this Content-Type to HTTP headers:
 
 ```text
 Content-Disposition=attachment
@@ -71,7 +71,7 @@ Content-Disposition=attachment
 
 #### View File
 
-If you want to view a file using Universal Endpoint, viewing url is like: `https://gnfd-testnet-sp-1.bnbchain.org/view/mybucket/myobject.jpg`. This is enforced by adding this Content-Type to HTTP headers:
+If you want to view a file using Universal Endpoint, viewing url is like: `https://testnet-sp1.mechain.tech/view/mybucket/myobject.jpg`. This is enforced by adding this Content-Type to HTTP headers:
 
 ```text
 Content-Disposition=inline

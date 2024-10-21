@@ -8,7 +8,7 @@ There are three main types of task: ApprovalTask, ObjectTask and GCTask.
 
 ApprovalTask is used to record approval information for users creating buckets and objects. Primary SP approval is
 required before serving the bucket and object. If SP approves the message, it will sign the approval message. The
-greenfield will verify the signature of the approval message to determine whether the SP accepts the bucket and object.
+mechain will verify the signature of the approval message to determine whether the SP accepts the bucket and object.
 When primary replicating pieces to secondary SPs, the approval message is broadcast to other SPs. If they approve the
 message, the primary SP will select some of them to replicate the pieces to. Before receiving the pieces, the selected SPs
 will verify the signature of the approval message. ApprovalTask includes ApprovalCreateBucketTask, ApprovalCreateBucketTask
@@ -18,15 +18,15 @@ ObjectTask is associated with an object and records information about its differ
 UploadObjectTask, which uploads the object payload data to the primary SP, ReplicatePieceTask, which replicates the 
 object pieces to the secondary SPs, and the ReceivePieceTask, which is exclusive to the secondary SP and records 
 information about receiving the piece. The secondary SP uses this information to confirm whether the object was 
-successfully sealed on the greenfield, ensuring a return of the secondary SP. SealObjectTask seals the object on Greenfield,
+successfully sealed on the mechain, ensuring a return of the secondary SP. SealObjectTask seals the object on Mechain,
 while the DownloadObjectTask allows the user to download part or all of the object payload data. ChallengePieceTask 
 provides the validator with challenge piece information, which they can use to challenge the SP if they suspect that 
 the user's payload data was not stored correctly.
 
 GCTask is an abstract interface that records information about garbage collection. This includes GCObjectTask, 
-which collects piece store space by deleting payload data that has been deleted on the greenfield, GCZombiePieceTask,
+which collects piece store space by deleting payload data that has been deleted on the mechain, GCZombiePieceTask,
 which collects piece store space by deleting zombie piece data that resulted from any exception where the piece data 
-meta is not on Greenfield chain, and GCMetaTask, which collects the SP meta store space by deleting expired data.
+meta is not on Mechain chain, and GCMetaTask, which collects the SP meta store space by deleting expired data.
 
 ### Approval Task
 
@@ -55,7 +55,7 @@ SetExpiredHeight and signs the ApprovalReplicatePieceTask.
 ### Object Task
 
 The ObjectTask associated with an object and storage params, and records the information of different stages of the object.
-Considering the change of storage params on the greenfield, the storage params of each object should be determined when
+Considering the change of storage params on the mechain, the storage params of each object should be determined when
 it is created, and it should not be queried during the task flow, which is inefficient and error-prone.
 
 #### UploadObjectTask
@@ -73,7 +73,7 @@ SP, it exists only in secondary SP.
 
 #### SealObjectTask
 
-The SealObjectTask is an abstract interface to  record the information for sealing object to the Greenfield chain.
+The SealObjectTask is an abstract interface to  record the information for sealing object to the Mechain chain.
 
 #### DownloadObjectTask
 
@@ -89,7 +89,7 @@ info to confirm whether the sp stores the user's data correctly.
 #### GCObjectTask
 
 The GCObjectTask is an abstract interface to record the information for collecting the piece store space by deleting object payload
-data that the object has been deleted on Greenfield chain.
+data that the object has been deleted on Mechain chain.
 
 #### GCZombiePieceTask
 

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bnb-chain/greenfield-common/go/hash"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	"github.com/zkMeLabs/mechain-common/go/hash"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 	corespdb "github.com/zkMeLabs/mechain-storage-provider/core/spdb"

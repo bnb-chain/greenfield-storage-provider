@@ -77,28 +77,28 @@ type GasInfo struct {
 	FeeAmount sdk.Coins
 }
 
-// GreenfieldChainSignClient the greenfield chain client
-type GreenfieldChainSignClient struct {
+// MechainChainSignClient the mechain chain client
+type MechainChainSignClient struct {
 	signer *SignModular
 
 	opLock   sync.Mutex
 	sealLock sync.Mutex
 	gcLock   sync.Mutex
 
-	gasInfo           map[GasInfoType]GasInfo
-	greenfieldClients map[SignType]*client.GreenfieldClient
-	privateKeys       map[SignType]string
-	evmClient         *ethclient.Client
-	operatorAccNonce  uint64
-	sealAccNonce      uint64
-	gcAccNonce        uint64
-	blsKm             keys.KeyManager
+	gasInfo          map[GasInfoType]GasInfo
+	mechainClients   map[SignType]*client.MechainClient
+	privateKeys      map[SignType]string
+	evmClient        *ethclient.Client
+	operatorAccNonce uint64
+	sealAccNonce     uint64
+	gcAccNonce       uint64
+	blsKm            keys.KeyManager
 }
 
-// NewGreenfieldChainSignClient return the GreenfieldChainSignClient instance
-func NewGreenfieldChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
+// NewMechainChainSignClient return the MechainChainSignClient instance
+func NewMechainChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo map[GasInfoType]GasInfo, operatorPrivateKey, fundingPrivateKey,
 	sealPrivateKey, approvalPrivateKey, gcPrivateKey string, blsPrivKey string,
-) (*GreenfieldChainSignClient, error) {
+) (*MechainChainSignClient, error) {
 	// init clients
 	// TODO: Get private key from KMS(AWS, GCP, Azure, Aliyun)
 	operatorKM, err := keys.NewPrivateKeyManager(operatorPrivateKey)
@@ -114,9 +114,9 @@ func NewGreenfieldChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo m
 		return nil, err
 	}
 
-	operatorClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(operatorKM))
+	operatorClient, err := client.NewMechainClient(rpcAddr, chainID, client.WithKeyManager(operatorKM))
 	if err != nil {
-		log.Errorw("failed to new operator greenfield client", "error", err)
+		log.Errorw("failed to new operator mechain client", "error", err)
 		return nil, err
 	}
 	operatorAccNonce, err := operatorClient.GetNonce(context.Background())
@@ -136,9 +136,9 @@ func NewGreenfieldChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo m
 		log.Errorw("failed to new seal private key manager", "error", err)
 		return nil, err
 	}
-	sealClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(sealKM))
+	sealClient, err := client.NewMechainClient(rpcAddr, chainID, client.WithKeyManager(sealKM))
 	if err != nil {
-		log.Errorw("failed to new seal greenfield client", "error", err)
+		log.Errorw("failed to new seal mechain client", "error", err)
 		return nil, err
 	}
 	sealAccNonce, err := sealClient.GetNonce(context.Background())
@@ -152,9 +152,9 @@ func NewGreenfieldChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo m
 		log.Errorw("failed to new approval private key manager", "error", err)
 		return nil, err
 	}
-	approvalClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(approvalKM))
+	approvalClient, err := client.NewMechainClient(rpcAddr, chainID, client.WithKeyManager(approvalKM))
 	if err != nil {
-		log.Errorw("failed to new approval greenfield client", "error", err)
+		log.Errorw("failed to new approval mechain client", "error", err)
 		return nil, err
 	}
 
@@ -163,9 +163,9 @@ func NewGreenfieldChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo m
 		log.Errorw("failed to new gc private key manager", "error", err)
 		return nil, err
 	}
-	gcClient, err := client.NewGreenfieldClient(rpcAddr, chainID, client.WithKeyManager(gcKM))
+	gcClient, err := client.NewMechainClient(rpcAddr, chainID, client.WithKeyManager(gcKM))
 	if err != nil {
-		log.Errorw("failed to new gc greenfield client", "error", err)
+		log.Errorw("failed to new gc mechain client", "error", err)
 		return nil, err
 	}
 	gcAccNonce, err := gcClient.GetNonce(context.Background())
@@ -181,28 +181,28 @@ func NewGreenfieldChainSignClient(rpcAddr, evmRpcAddr, chainID string, gasInfo m
 		SignGc:       gcPrivateKey,
 	}
 
-	greenfieldClients := map[SignType]*client.GreenfieldClient{
+	mechainClients := map[SignType]*client.MechainClient{
 		SignOperator: operatorClient,
 		SignSeal:     sealClient,
 		SignApproval: approvalClient,
 		SignGc:       gcClient,
 	}
 
-	return &GreenfieldChainSignClient{
-		gasInfo:           gasInfo,
-		greenfieldClients: greenfieldClients,
-		privateKeys:       privateKeys,
-		sealAccNonce:      sealAccNonce,
-		gcAccNonce:        gcAccNonce,
-		operatorAccNonce:  operatorAccNonce,
-		blsKm:             blsKM,
-		evmClient:         evmClient,
+	return &MechainChainSignClient{
+		gasInfo:          gasInfo,
+		mechainClients:   mechainClients,
+		privateKeys:      privateKeys,
+		sealAccNonce:     sealAccNonce,
+		gcAccNonce:       gcAccNonce,
+		operatorAccNonce: operatorAccNonce,
+		blsKm:            blsKM,
+		evmClient:        evmClient,
 	}, nil
 }
 
 // GetAddr returns the public address of the private key.
-func (client *GreenfieldChainSignClient) GetAddr(scope SignType) (sdk.AccAddress, error) {
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+func (client *MechainChainSignClient) GetAddr(scope SignType) (sdk.AccAddress, error) {
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		return nil, err
 	}
@@ -210,8 +210,8 @@ func (client *GreenfieldChainSignClient) GetAddr(scope SignType) (sdk.AccAddress
 }
 
 // Sign returns a msg signature signed by private key.
-func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byte, error) {
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+func (client *MechainChainSignClient) Sign(scope SignType, msg []byte) ([]byte, error) {
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		return nil, err
 	}
@@ -219,16 +219,16 @@ func (client *GreenfieldChainSignClient) Sign(scope SignType, msg []byte) ([]byt
 }
 
 // VerifySignature verifies the signature.
-func (client *GreenfieldChainSignClient) VerifySignature(scope SignType, msg, sig []byte) bool {
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+func (client *MechainChainSignClient) VerifySignature(scope SignType, msg, sig []byte) bool {
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		return false
 	}
 	return types.VerifySignature(km.GetAddr(), crypto.Keccak256(msg), sig) == nil
 }
 
-// SealObject seal the object on the greenfield chain.
-func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope SignType,
+// SealObject seal the object on the mechain chain.
+func (client *MechainChainSignClient) SealObject(ctx context.Context, scope SignType,
 	sealObject *storagetypes.MsgSealObject,
 ) (string, error) {
 	if sealObject == nil {
@@ -237,7 +237,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, sealObject.GetObjectName())
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -267,10 +267,10 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 			Nonce:      nonce,
 		}
 
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSealObject}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgSealObject}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
 				ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
@@ -294,7 +294,7 @@ func (client *GreenfieldChainSignClient) SealObject(ctx context.Context, scope S
 }
 
 // SealObjectEvm seal the object on the mechain by evm tx.
-func (client *GreenfieldChainSignClient) SealObjectEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) SealObjectEvm(ctx context.Context, scope SignType,
 	sealObject *storagetypes.MsgSealObject,
 ) (string, error) {
 	if sealObject == nil {
@@ -303,13 +303,13 @@ func (client *GreenfieldChainSignClient) SealObjectEvm(ctx context.Context, scop
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, sealObject.GetObjectName())
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
 
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -357,7 +357,7 @@ func (client *GreenfieldChainSignClient) SealObjectEvm(ctx context.Context, scop
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
 					ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
@@ -380,8 +380,8 @@ func (client *GreenfieldChainSignClient) SealObjectEvm(ctx context.Context, scop
 	return "", ErrSealObjectOnChain
 }
 
-// RejectUnSealObject reject seal object on the greenfield chain.
-func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context, scope SignType,
+// RejectUnSealObject reject seal object on the mechain chain.
+func (client *MechainChainSignClient) RejectUnSealObject(ctx context.Context, scope SignType,
 	rejectObject *storagetypes.MsgRejectSealObject,
 ) (string, error) {
 	if rejectObject == nil {
@@ -390,7 +390,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context,
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, rejectObject.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, rejectObject.GetObjectName())
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -417,10 +417,10 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context,
 			FeeAmount:  client.gasInfo[RejectSeal].FeeAmount,
 			Nonce:      nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgRejectUnSealObject}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgRejectUnSealObject}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
 				ErrRejectUnSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
@@ -443,7 +443,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObject(ctx context.Context,
 	return "", ErrRejectUnSealObjectOnChain
 }
 
-func (client *GreenfieldChainSignClient) RejectUnSealObjectEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) RejectUnSealObjectEvm(ctx context.Context, scope SignType,
 	rejectObject *storagetypes.MsgRejectSealObject,
 ) (string, error) {
 	if rejectObject == nil {
@@ -452,13 +452,13 @@ func (client *GreenfieldChainSignClient) RejectUnSealObjectEvm(ctx context.Conte
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, rejectObject.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, rejectObject.GetObjectName())
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
 
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -500,7 +500,7 @@ func (client *GreenfieldChainSignClient) RejectUnSealObjectEvm(ctx context.Conte
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
 					ErrRejectUnSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))
@@ -522,10 +522,10 @@ func (client *GreenfieldChainSignClient) RejectUnSealObjectEvm(ctx context.Conte
 	return "", ErrRejectUnSealObjectOnChain
 }
 
-// DiscontinueBucket stops serving the bucket on the greenfield chain.
-func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, scope SignType, discontinueBucket *storagetypes.MsgDiscontinueBucket) (string, error) {
+// DiscontinueBucket stops serving the bucket on the mechain chain.
+func (client *MechainChainSignClient) DiscontinueBucket(ctx context.Context, scope SignType, discontinueBucket *storagetypes.MsgDiscontinueBucket) (string, error) {
 	log.Infow("signer start to discontinue bucket", "scope", scope)
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
 		return "", ErrSignMsg
@@ -543,10 +543,10 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 		Nonce: nonce,
 	}
 
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgDiscontinueBucket}, txOpt)
+	txHash, err := client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgDiscontinueBucket}, txOpt)
 	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 		// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.mechainClients[scope])
 		if nonceErr != nil {
 			log.CtxErrorw(ctx, "failed to get gc account nonce", "error", nonceErr)
 			ErrDiscontinueBucketOnChain.SetError(fmt.Errorf("failed to get gc account nonce, error: %v", nonceErr))
@@ -566,14 +566,14 @@ func (client *GreenfieldChainSignClient) DiscontinueBucket(ctx context.Context, 
 	return txHash, nil
 }
 
-func (client *GreenfieldChainSignClient) DiscontinueBucketEvm(ctx context.Context, scope SignType, discontinueBucket *storagetypes.MsgDiscontinueBucket) (string, error) {
+func (client *MechainChainSignClient) DiscontinueBucketEvm(ctx context.Context, scope SignType, discontinueBucket *storagetypes.MsgDiscontinueBucket) (string, error) {
 	log.Infow("signer start to discontinue bucket", "scope", scope)
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "err", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -610,7 +610,7 @@ func (client *GreenfieldChainSignClient) DiscontinueBucketEvm(ctx context.Contex
 	if err != nil {
 		if strings.Contains(err.Error(), "invalid nonce") {
 			// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr := client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get gc account nonce", "error", nonceErr)
 				ErrDiscontinueBucketOnChain.SetError(fmt.Errorf("failed to get gc account nonce, error: %v", nonceErr))
@@ -627,7 +627,7 @@ func (client *GreenfieldChainSignClient) DiscontinueBucketEvm(ctx context.Contex
 	return txRsp.Hash().String(), nil
 }
 
-func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CreateGlobalVirtualGroup(ctx context.Context, scope SignType,
 	gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup,
 ) (string, error) {
 	log.Infow("signer starts to create a new global virtual group", "scope", scope)
@@ -635,7 +635,7 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 		log.CtxError(ctx, "failed to create virtual group due to pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -661,10 +661,10 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 			FeeAmount: client.gasInfo[CreateGlobalVirtualGroup].FeeAmount,
 			Nonce:     nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgCreateGlobalVirtualGroup}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 				ErrCreateGVGOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
@@ -689,7 +689,7 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroup(ctx context.Co
 	return "", ErrCreateGVGOnChain
 }
 
-func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroupEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CreateGlobalVirtualGroupEvm(ctx context.Context, scope SignType,
 	gvg *virtualgrouptypes.MsgCreateGlobalVirtualGroup,
 ) (string, error) {
 	log.Infow("signer starts to create a new global virtual group", "scope", scope)
@@ -697,12 +697,12 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroupEvm(ctx context
 		log.CtxError(ctx, "failed to create virtual group due to pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -750,7 +750,7 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroupEvm(ctx context
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 					ErrCreateGVGOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
@@ -774,7 +774,7 @@ func (client *GreenfieldChainSignClient) CreateGlobalVirtualGroupEvm(ctx context
 	return "", ErrCreateGVGOnChain
 }
 
-func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteMigrateBucket(ctx context.Context, scope SignType,
 	migrateBucket *storagetypes.MsgCompleteMigrateBucket,
 ) (string, error) {
 	log.Infow("signer starts to complete migrate bucket", "scope", scope)
@@ -782,7 +782,7 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -807,10 +807,10 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 			Mode:  &mode,
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteMigrateBucket}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgCompleteMigrateBucket}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -832,7 +832,7 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucket(ctx context.Conte
 	return "", ErrCompleteMigrateBucketOnChain
 }
 
-func (client *GreenfieldChainSignClient) CompleteMigrateBucketEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteMigrateBucketEvm(ctx context.Context, scope SignType,
 	migrateBucket *storagetypes.MsgCompleteMigrateBucket,
 ) (string, error) {
 	log.Infow("signer starts to complete migrate bucket", "scope", scope)
@@ -840,12 +840,12 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucketEvm(ctx context.Co
 		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -901,7 +901,7 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucketEvm(ctx context.Co
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrCompleteMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -923,7 +923,7 @@ func (client *GreenfieldChainSignClient) CompleteMigrateBucketEvm(ctx context.Co
 	return "", ErrCompleteMigrateBucketOnChain
 }
 
-func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) UpdateSPPrice(ctx context.Context, scope SignType,
 	priceInfo *sptypes.MsgUpdateSpStoragePrice,
 ) (string, error) {
 	log.Infow("signer starts to complete update SP price info", "scope", scope)
@@ -931,7 +931,7 @@ func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scop
 		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -955,10 +955,10 @@ func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scop
 		Nonce:     nonce,
 	}
 
-	txHash, err := client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgUpdateStorageSPPrice}, txOpt)
+	txHash, err := client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgUpdateStorageSPPrice}, txOpt)
 	if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 		// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-		nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+		nonce, nonceErr := client.getNonceOnChain(ctx, client.mechainClients[scope])
 		if nonceErr != nil {
 			log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
 			ErrUpdateSPPriceOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
@@ -979,7 +979,7 @@ func (client *GreenfieldChainSignClient) UpdateSPPrice(ctx context.Context, scop
 	return txHash, nil
 }
 
-func (client *GreenfieldChainSignClient) UpdateSPPriceEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) UpdateSPPriceEvm(ctx context.Context, scope SignType,
 	priceInfo *sptypes.MsgUpdateSpStoragePrice,
 ) (string, error) {
 	log.Infow("signer starts to complete update SP price info", "scope", scope)
@@ -987,12 +987,12 @@ func (client *GreenfieldChainSignClient) UpdateSPPriceEvm(ctx context.Context, s
 		log.CtxError(ctx, "complete migrate bucket msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1033,7 +1033,7 @@ func (client *GreenfieldChainSignClient) UpdateSPPriceEvm(ctx context.Context, s
 	if err != nil {
 		if strings.Contains(err.Error(), "invalid nonce") {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr := client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr := client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get approval account nonce", "error", err)
 				ErrUpdateSPPriceOnChain.SetError(fmt.Errorf("failed to get approval account nonce, error: %v", err))
@@ -1053,7 +1053,7 @@ func (client *GreenfieldChainSignClient) UpdateSPPriceEvm(ctx context.Context, s
 	return txRsp.Hash().String(), nil
 }
 
-func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) SwapOut(ctx context.Context, scope SignType,
 	swapOut *virtualgrouptypes.MsgSwapOut,
 ) (string, error) {
 	log.Infow("signer starts to swap out", "scope", scope)
@@ -1061,7 +1061,7 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 		log.CtxError(ctx, "failed to swap out due to pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -1092,10 +1092,10 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 			FeeAmount: client.gasInfo[SwapOut].FeeAmount,
 			Nonce:     nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSwapOut}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgSwapOut}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 				ErrSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -1118,7 +1118,7 @@ func (client *GreenfieldChainSignClient) SwapOut(ctx context.Context, scope Sign
 	return "", ErrSwapOutOnChain
 }
 
-func (client *GreenfieldChainSignClient) SwapOutEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) SwapOutEvm(ctx context.Context, scope SignType,
 	swapOut *virtualgrouptypes.MsgSwapOut,
 ) (string, error) {
 	log.Infow("signer starts to swap out", "scope", scope)
@@ -1126,12 +1126,12 @@ func (client *GreenfieldChainSignClient) SwapOutEvm(ctx context.Context, scope S
 		log.CtxError(ctx, "failed to swap out due to pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1186,7 +1186,7 @@ func (client *GreenfieldChainSignClient) SwapOutEvm(ctx context.Context, scope S
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 					ErrSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -1208,7 +1208,7 @@ func (client *GreenfieldChainSignClient) SwapOutEvm(ctx context.Context, scope S
 	return "", ErrSwapOutOnChain
 }
 
-func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteSwapOut(ctx context.Context, scope SignType,
 	completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut,
 ) (string, error) {
 	log.Infow("signer starts to complete swap out", "scope", scope)
@@ -1216,7 +1216,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 		log.CtxError(ctx, "complete swap out msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -1243,10 +1243,10 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 			FeeAmount: client.gasInfo[CompleteSwapOut].FeeAmount,
 			Nonce:     nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSwapOut}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgCompleteSwapOut}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 				ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
@@ -1267,7 +1267,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapOut(ctx context.Context, sc
 	return "", ErrCompleteSwapOutOnChain
 }
 
-func (client *GreenfieldChainSignClient) CompleteSwapOutEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteSwapOutEvm(ctx context.Context, scope SignType,
 	completeSwapOut *virtualgrouptypes.MsgCompleteSwapOut,
 ) (string, error) {
 	log.Infow("signer starts to complete swap out", "scope", scope)
@@ -1275,12 +1275,12 @@ func (client *GreenfieldChainSignClient) CompleteSwapOutEvm(ctx context.Context,
 		log.CtxError(ctx, "complete swap out msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1324,7 +1324,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapOutEvm(ctx context.Context,
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 					ErrCompleteSwapOutOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
@@ -1345,7 +1345,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapOutEvm(ctx context.Context,
 	return "", ErrCompleteSwapOutOnChain
 }
 
-func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) SPExit(ctx context.Context, scope SignType,
 	spExit *virtualgrouptypes.MsgStorageProviderExit,
 ) (string, error) {
 	log.Infow("signer starts to sp exit", "scope", scope)
@@ -1353,7 +1353,7 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 		log.CtxError(ctx, "sp exit msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -1379,10 +1379,10 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 			FeeAmount: client.gasInfo[SPExit].FeeAmount,
 			Nonce:     nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSPExit}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgSPExit}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 				ErrSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
@@ -1403,7 +1403,7 @@ func (client *GreenfieldChainSignClient) SPExit(ctx context.Context, scope SignT
 	return "", ErrSPExitOnChain
 }
 
-func (client *GreenfieldChainSignClient) SPExitEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) SPExitEvm(ctx context.Context, scope SignType,
 	spExit *virtualgrouptypes.MsgStorageProviderExit,
 ) (string, error) {
 	log.Infow("signer starts to sp exit", "scope", scope)
@@ -1411,12 +1411,12 @@ func (client *GreenfieldChainSignClient) SPExitEvm(ctx context.Context, scope Si
 		log.CtxError(ctx, "sp exit msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1456,7 +1456,7 @@ func (client *GreenfieldChainSignClient) SPExitEvm(ctx context.Context, scope Si
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 					ErrSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
@@ -1477,7 +1477,7 @@ func (client *GreenfieldChainSignClient) SPExitEvm(ctx context.Context, scope Si
 	return "", ErrSPExitOnChain
 }
 
-func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteSPExit(ctx context.Context, scope SignType,
 	completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit,
 ) (string, error) {
 	log.Infow("signer starts to complete sp exit", "scope", scope)
@@ -1509,10 +1509,10 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 			FeeAmount: client.gasInfo[CompleteSPExit].FeeAmount,
 			Nonce:     nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSPExit}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgCompleteSPExit}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 				ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
@@ -1533,7 +1533,7 @@ func (client *GreenfieldChainSignClient) CompleteSPExit(ctx context.Context, sco
 	return "", ErrCompleteSPExitOnChain
 }
 
-func (client *GreenfieldChainSignClient) CompleteSPExitEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteSPExitEvm(ctx context.Context, scope SignType,
 	completeSPExit *virtualgrouptypes.MsgCompleteStorageProviderExit,
 ) (string, error) {
 	log.Infow("signer starts to complete sp exit", "scope", scope)
@@ -1541,7 +1541,7 @@ func (client *GreenfieldChainSignClient) CompleteSPExitEvm(ctx context.Context, 
 		log.CtxError(ctx, "complete sp exit msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1586,7 +1586,7 @@ func (client *GreenfieldChainSignClient) CompleteSPExitEvm(ctx context.Context, 
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", nonceErr)
 					ErrCompleteSPExitOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", nonceErr))
@@ -1607,7 +1607,7 @@ func (client *GreenfieldChainSignClient) CompleteSPExitEvm(ctx context.Context, 
 	return "", ErrCompleteSPExitOnChain
 }
 
-func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) RejectMigrateBucket(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgRejectMigrateBucket,
 ) (string, error) {
 	log.Infow("signer starts to reject migrate bucket", "scope", scope)
@@ -1615,7 +1615,7 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context
 		log.CtxError(ctx, "reject migrate bucket msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -1636,10 +1636,10 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgRejectMigrateBucket}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgRejectMigrateBucket}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -1661,7 +1661,7 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucket(ctx context.Context
 	return "", ErrRejectMigrateBucketOnChain
 }
 
-func (client *GreenfieldChainSignClient) RejectMigrateBucketEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) RejectMigrateBucketEvm(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgRejectMigrateBucket,
 ) (string, error) {
 	log.Infow("signer starts to reject migrate bucket", "scope", scope)
@@ -1669,12 +1669,12 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucketEvm(ctx context.Cont
 		log.CtxError(ctx, "reject migrate bucket msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1715,7 +1715,7 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucketEvm(ctx context.Cont
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrRejectMigrateBucketOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -1737,7 +1737,7 @@ func (client *GreenfieldChainSignClient) RejectMigrateBucketEvm(ctx context.Cont
 	return "", ErrRejectMigrateBucketOnChain
 }
 
-func (client *GreenfieldChainSignClient) Deposit(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) Deposit(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgDeposit,
 ) (string, error) {
 	log.Infow("signer starts to make deposit into GVG", "scope", scope)
@@ -1745,7 +1745,7 @@ func (client *GreenfieldChainSignClient) Deposit(ctx context.Context, scope Sign
 		log.CtxError(ctx, "deposit msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -1766,10 +1766,10 @@ func (client *GreenfieldChainSignClient) Deposit(ctx context.Context, scope Sign
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgDeposit}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgDeposit}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrDepositOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -1791,7 +1791,7 @@ func (client *GreenfieldChainSignClient) Deposit(ctx context.Context, scope Sign
 	return "", ErrDepositOnChain
 }
 
-func (client *GreenfieldChainSignClient) DepositEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) DepositEvm(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgDeposit,
 ) (string, error) {
 	log.Infow("signer starts to make deposit into GVG", "scope", scope)
@@ -1799,12 +1799,12 @@ func (client *GreenfieldChainSignClient) DepositEvm(ctx context.Context, scope S
 		log.CtxError(ctx, "deposit msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1850,7 +1850,7 @@ func (client *GreenfieldChainSignClient) DepositEvm(ctx context.Context, scope S
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrDepositOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -1872,7 +1872,7 @@ func (client *GreenfieldChainSignClient) DepositEvm(ctx context.Context, scope S
 	return "", ErrDepositOnChain
 }
 
-func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) DeleteGlobalVirtualGroup(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgDeleteGlobalVirtualGroup,
 ) (string, error) {
 	log.Infow("signer starts to delete GVG", "scope", scope)
@@ -1880,7 +1880,7 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 		log.CtxError(ctx, "delete GVG msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -1901,10 +1901,10 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgDeleteGlobalVirtualGroup}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgDeleteGlobalVirtualGroup}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -1926,7 +1926,7 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroup(ctx context.Co
 	return "", ErrDeleteGVGOnChain
 }
 
-func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroupEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) DeleteGlobalVirtualGroupEvm(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgDeleteGlobalVirtualGroup,
 ) (string, error) {
 	log.Infow("signer starts to delete GVG", "scope", scope)
@@ -1934,12 +1934,12 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroupEvm(ctx context
 		log.CtxError(ctx, "delete GVG msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -1980,7 +1980,7 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroupEvm(ctx context
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrDeleteGVGOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2002,14 +2002,14 @@ func (client *GreenfieldChainSignClient) DeleteGlobalVirtualGroupEvm(ctx context
 	return "", ErrDeleteGVGOnChain
 }
 
-func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) DelegateCreateObject(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateCreateObject,
 ) (string, error) {
 	if msg == nil {
 		log.CtxError(ctx, "delegate create object msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -2029,10 +2029,10 @@ func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Contex
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msg}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msg}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrDelegateCreateObjectOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2054,19 +2054,19 @@ func (client *GreenfieldChainSignClient) DelegateCreateObject(ctx context.Contex
 	return "", ErrDelegateCreateObjectOnChain
 }
 
-func (client *GreenfieldChainSignClient) DelegateCreateObjectEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) DelegateCreateObjectEvm(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateCreateObject,
 ) (string, error) {
 	if msg == nil {
 		log.CtxError(ctx, "delegate create object msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -2119,7 +2119,7 @@ func (client *GreenfieldChainSignClient) DelegateCreateObjectEvm(ctx context.Con
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrDelegateCreateObjectOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2141,14 +2141,14 @@ func (client *GreenfieldChainSignClient) DelegateCreateObjectEvm(ctx context.Con
 	return "", ErrDelegateCreateObjectOnChain
 }
 
-func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) DelegateUpdateObjectContent(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateUpdateObjectContent,
 ) (string, error) {
 	if msg == nil {
 		log.CtxError(ctx, "delegate update object content msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -2168,10 +2168,10 @@ func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msg}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msg}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrDelegateUpdateObjectContentOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2193,19 +2193,19 @@ func (client *GreenfieldChainSignClient) DelegateUpdateObjectContent(ctx context
 	return "", ErrDelegateUpdateObjectContentOnChain
 }
 
-func (client *GreenfieldChainSignClient) DelegateUpdateObjectContentEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) DelegateUpdateObjectContentEvm(ctx context.Context, scope SignType,
 	msg *storagetypes.MsgDelegateUpdateObjectContent,
 ) (string, error) {
 	if msg == nil {
 		log.CtxError(ctx, "delegate update object content msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -2256,7 +2256,7 @@ func (client *GreenfieldChainSignClient) DelegateUpdateObjectContentEvm(ctx cont
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrDelegateUpdateObjectContentOnChain.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2278,7 +2278,7 @@ func (client *GreenfieldChainSignClient) DelegateUpdateObjectContentEvm(ctx cont
 	return "", ErrDelegateUpdateObjectContentOnChain
 }
 
-func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.GreenfieldClient) (uint64, error) {
+func (client *MechainChainSignClient) getNonceOnChain(ctx context.Context, gnfdClient *client.MechainClient) (uint64, error) {
 	err := client.signer.baseApp.Consensus().WaitForNextBlock(ctx)
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to wait next block", "error", err)
@@ -2292,7 +2292,7 @@ func (client *GreenfieldChainSignClient) getNonceOnChain(ctx context.Context, gn
 	return nonce, nil
 }
 
-func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdClient *client.GreenfieldClient,
+func (client *MechainChainSignClient) broadcastTx(ctx context.Context, gnfdClient *client.MechainClient,
 	msgs []sdk.Msg, txOpt *ctypes.TxOption, opts ...grpc.CallOption,
 ) (string, error) {
 	resp, err := gnfdClient.BroadcastTx(ctx, msgs, txOpt, opts...)
@@ -2300,7 +2300,7 @@ func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdCl
 		if strings.Contains(err.Error(), "account sequence mismatch") {
 			return "", sdkErrors.ErrWrongSequence
 		}
-		return "", errors.Wrap(err, "failed to broadcast tx with greenfield client")
+		return "", errors.Wrap(err, "failed to broadcast tx with mechain client")
 	}
 	if resp.TxResponse.Code == sdkErrors.ErrWrongSequence.ABCICode() {
 		return "", sdkErrors.ErrWrongSequence
@@ -2311,7 +2311,7 @@ func (client *GreenfieldChainSignClient) broadcastTx(ctx context.Context, gnfdCl
 	return resp.TxResponse.TxHash, nil
 }
 
-func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) ReserveSwapIn(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgReserveSwapIn,
 ) (string, error) {
 	log.Infow("signer starts to reserve swap in", "scope", scope)
@@ -2319,7 +2319,7 @@ func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scop
 		log.CtxError(ctx, "reserve swap in msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -2340,10 +2340,10 @@ func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scop
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgReserveSwapIn}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgReserveSwapIn}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrReserveSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2365,7 +2365,7 @@ func (client *GreenfieldChainSignClient) ReserveSwapIn(ctx context.Context, scop
 	return "", ErrReserveSwapIn
 }
 
-func (client *GreenfieldChainSignClient) ReserveSwapInEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) ReserveSwapInEvm(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgReserveSwapIn,
 ) (string, error) {
 	log.Infow("signer starts to reserve swap in", "scope", scope)
@@ -2373,12 +2373,12 @@ func (client *GreenfieldChainSignClient) ReserveSwapInEvm(ctx context.Context, s
 		log.CtxError(ctx, "reserve swap in msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -2421,7 +2421,7 @@ func (client *GreenfieldChainSignClient) ReserveSwapInEvm(ctx context.Context, s
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrReserveSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2443,7 +2443,7 @@ func (client *GreenfieldChainSignClient) ReserveSwapInEvm(ctx context.Context, s
 	return "", ErrReserveSwapIn
 }
 
-func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteSwapIn(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgCompleteSwapIn,
 ) (string, error) {
 	log.Infow("signer starts to complete swap in", "scope", scope)
@@ -2451,7 +2451,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, sco
 		log.CtxError(ctx, "complete swap in msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -2472,10 +2472,10 @@ func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, sco
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCompleteSwapIn}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgCompleteSwapIn}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrCompleteSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2497,7 +2497,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapIn(ctx context.Context, sco
 	return "", ErrCompleteSwapIn
 }
 
-func (client *GreenfieldChainSignClient) CompleteSwapInEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CompleteSwapInEvm(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgCompleteSwapIn,
 ) (string, error) {
 	log.Infow("signer starts to complete swap in", "scope", scope)
@@ -2505,12 +2505,12 @@ func (client *GreenfieldChainSignClient) CompleteSwapInEvm(ctx context.Context, 
 		log.CtxError(ctx, "complete swap in msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -2552,7 +2552,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapInEvm(ctx context.Context, 
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrCompleteSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2574,7 +2574,7 @@ func (client *GreenfieldChainSignClient) CompleteSwapInEvm(ctx context.Context, 
 	return "", ErrCompleteSwapIn
 }
 
-func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CancelSwapIn(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgCancelSwapIn,
 ) (string, error) {
 	log.Infow("signer starts to cancel swap in", "scope", scope)
@@ -2582,7 +2582,7 @@ func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope
 		log.CtxError(ctx, "cancel swap in msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -2603,10 +2603,10 @@ func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope
 		txOpt := &ctypes.TxOption{
 			Nonce: nonce,
 		}
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgCancelSwapIn}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgCancelSwapIn}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 				ErrCompleteSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2628,7 +2628,7 @@ func (client *GreenfieldChainSignClient) CancelSwapIn(ctx context.Context, scope
 	return "", ErrCancelSwapIn
 }
 
-func (client *GreenfieldChainSignClient) CancelSwapInEvm(ctx context.Context, scope SignType,
+func (client *MechainChainSignClient) CancelSwapInEvm(ctx context.Context, scope SignType,
 	msg *virtualgrouptypes.MsgCancelSwapIn,
 ) (string, error) {
 	log.Infow("signer starts to cancel swap in", "scope", scope)
@@ -2636,12 +2636,12 @@ func (client *GreenfieldChainSignClient) CancelSwapInEvm(ctx context.Context, sc
 		log.CtxError(ctx, "cancel swap in msg pointer dangling")
 		return "", ErrDanglingPointer
 	}
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
 	}
-	cosmosChainId, err := client.greenfieldClients[scope].GetChainID()
+	cosmosChainId, err := client.mechainClients[scope].GetChainID()
 	if err != nil {
 		return "", err
 	}
@@ -2683,7 +2683,7 @@ func (client *GreenfieldChainSignClient) CancelSwapInEvm(ctx context.Context, sc
 		if err != nil {
 			if strings.Contains(err.Error(), "invalid nonce") {
 				// if nonce mismatches, waiting for next block, reset nonce by querying the nonce on chain
-				nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+				nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 				if nonceErr != nil {
 					log.CtxErrorw(ctx, "failed to get operator account nonce", "error", err)
 					ErrCompleteSwapIn.SetError(fmt.Errorf("failed to get operator account nonce, error: %v", err))
@@ -2705,8 +2705,8 @@ func (client *GreenfieldChainSignClient) CancelSwapInEvm(ctx context.Context, sc
 	return "", ErrCancelSwapIn
 }
 
-// SealObjectV2 seal the object on the greenfield chain.
-func (client *GreenfieldChainSignClient) SealObjectV2(ctx context.Context, scope SignType,
+// SealObjectV2 seal the object on the mechain chain.
+func (client *MechainChainSignClient) SealObjectV2(ctx context.Context, scope SignType,
 	sealObject *storagetypes.MsgSealObjectV2,
 ) (string, error) {
 	if sealObject == nil {
@@ -2715,7 +2715,7 @@ func (client *GreenfieldChainSignClient) SealObjectV2(ctx context.Context, scope
 	}
 	ctx = log.WithValue(ctx, log.CtxKeyBucketName, sealObject.GetBucketName())
 	ctx = log.WithValue(ctx, log.CtxKeyObjectName, sealObject.GetObjectName())
-	km, err := client.greenfieldClients[scope].GetKeyManager()
+	km, err := client.mechainClients[scope].GetKeyManager()
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get private key", "error", err)
 		return "", ErrSignMsg
@@ -2745,10 +2745,10 @@ func (client *GreenfieldChainSignClient) SealObjectV2(ctx context.Context, scope
 			Nonce:      nonce,
 		}
 
-		txHash, err = client.broadcastTx(ctx, client.greenfieldClients[scope], []sdk.Msg{msgSealObject}, txOpt)
+		txHash, err = client.broadcastTx(ctx, client.mechainClients[scope], []sdk.Msg{msgSealObject}, txOpt)
 		if errors.IsOf(err, sdkErrors.ErrWrongSequence) {
 			// if nonce mismatch, wait for next block, reset nonce by querying the nonce on chain
-			nonce, nonceErr = client.getNonceOnChain(ctx, client.greenfieldClients[scope])
+			nonce, nonceErr = client.getNonceOnChain(ctx, client.mechainClients[scope])
 			if nonceErr != nil {
 				log.CtxErrorw(ctx, "failed to get seal account nonce", "error", nonceErr)
 				ErrSealObjectOnChain.SetError(fmt.Errorf("failed to get seal account nonce, error: %v", nonceErr))

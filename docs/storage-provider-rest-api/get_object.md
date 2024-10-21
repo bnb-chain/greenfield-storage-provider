@@ -6,22 +6,22 @@ title: Get Object
 
 ## RESTful API Description
 
-This API is used to download an object from Greenfield SP. And it supports both `virtual-hosted-style` and `path-style` requests.
+This API is used to download an object from Mechain SP. And it supports both `virtual-hosted-style` and `path-style` requests.
 
 ## HTTP Request Format
 
-| Description                | Definition                                |
-| -------------------------- | ----------------------------------------- |
-| Host(virtual-hosted-style) | BucketName.gnfd-testnet-sp*.bnbchain.org |
-| Path(virtual-hosted-style) | /ObjectName                               |
-| Method                     | GET                                       |
+| Description                | Definition                          |
+| -------------------------- | ----------------------------------- |
+| Host(virtual-hosted-style) | BucketName.testnet-sp*.mechain.tech |
+| Path(virtual-hosted-style) | /ObjectName                         |
+| Method                     | GET                                 |
 
 ## HTTP Request Header
 
-| ParameterName                                                            | Type   | Required | Description                                                                                   |
-| ------------------------------------------------------------------------ | ------ | -------- | --------------------------------------------------------------------------------------------- |
+| ParameterName                                    | Type   | Required | Description                                                                                   |
+| ------------------------------------------------ | ------ | -------- | --------------------------------------------------------------------------------------------- |
 | [Authorization](/README.md#authorization-header) | string | yes      | The authorization string of the HTTP request.                                                 |
-| Range                                                                    | string | no       | The Range HTTP request header indicates the part of a document that the server should return. |
+| Range                                            | string | no       | The Range HTTP request header indicates the part of a document that the server should return. |
 
 ## HTTP Request Parameter
 
@@ -41,7 +41,7 @@ The request does not have a request body.
 
 ```HTTP
 GET /ObjectName HTTP/1.1
-Host: BucketName.gnfd-testnet-sp*.bnbchain.org
+Host: BucketName.testnet-sp*.mechain.tech
 Authorization: Authorization
 Range: Range
 ```
@@ -77,7 +77,7 @@ The examples given all use virtual-hosted-style.
 
 ```HTTP
 GET /my-image.jpg HTTP/1.1
-Host: myBucket.gnfd-testnet-sp1.bnbchain.org
+Host: myBucket.testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 Authorization: authorization string
 ```

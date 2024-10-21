@@ -12,7 +12,7 @@ This API is used to Verify the input account’s permission to input items. This
 
 | Description      | Definition                            |
 | ---------------- | ------------------------------------- |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org        |
+| Host(path-style) | testnet-sp*.mechain.tech              |
 | Path(path-style) | /permission/:operator/:bucket/:action |
 | Method           | GET                                   |
 
@@ -22,11 +22,11 @@ This API is used to Verify the input account’s permission to input items. This
 
 ### Path Parameter
 
-| ParameterName | Type              | Required | Description                                                                 |
-| ------------- | ----------------- | -------- | --------------------------------------------------------------------------- |
-| operator      | string            | yes      | operator defines the address of operator                                    |
-| bucket        | string            | yes      | bucket defines the name of bucket                                           |
-| action        | [Action](#action) | yes      | action defines the operations you can execute in greenfield storage network |
+| ParameterName | Type              | Required | Description                                                              |
+| ------------- | ----------------- | -------- | ------------------------------------------------------------------------ |
+| operator      | string            | yes      | operator defines the address of operator                                 |
+| bucket        | string            | yes      | bucket defines the name of bucket                                        |
+| action        | [Action](#action) | yes      | action defines the operations you can execute in mechain storage network |
 
 ### Query Parameter
 
@@ -42,16 +42,16 @@ The request does not have a request body.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org/permission/:operator/:bucket/:action?object=object
+Host: testnet-sp*.mechain.tech/permission/:operator/:bucket/:action?object=object
 ```
 
 ## HTTP Response Header
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
@@ -108,7 +108,7 @@ The examples given all use path-style.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org/permission/0x9d90A123c3A559a295fa99cCbC82b5ad2C33196B/asnnv/6?object=obgeio5g3y
+Host: testnet-sp1.mechain.tech/permission/0x9d90A123c3A559a295fa99cCbC82b5ad2C33196B/asnnv/6?object=obgeio5g3y
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 

@@ -6,11 +6,11 @@ export CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
 workspace=${GITHUB_WORKSPACE}
 
 # some constants
-GREENFIELD_TAG="master"
-# greenfield cmd tag name: v0.1.0
-GREENFIELD_CMD_TAG="feat-adapt-tags"
-# greenfield go sdk tag name: v1.0.0
-GREENFIELD_GO_SDK_TAG="feat-adapt-tags"
+MECHAIN_TAG="master"
+# mechain cmd tag name: v0.1.0
+MECHAIN_CMD_TAG="feat-adapt-tags"
+# mechain go sdk tag name: v1.0.0
+MECHAIN_GO_SDK_TAG="feat-adapt-tags"
 MYSQL_USER="root"
 MYSQL_PASSWORD="root"
 MYSQL_ADDRESS="127.0.0.1:3306"
@@ -22,47 +22,47 @@ echo "TEST_ACCOUNT_PRIVATE_KEY is ""$TEST_ACCOUNT_PRIVATE_KEY"
 BUCKET_NAME="spbucket"
 
 #########################################
-# build and start Greenfield blockchain #
+# build and start Mechain blockchain #
 #########################################
-function greenfield_chain() {
+function mechain_chain() {
   set -e
-  # build Greenfield chain
+  # build Mechain chain
   echo "${workspace}"
   cd "${workspace}"
-  git clone https://github.com/bnb-chain/greenfield.git
-  cd greenfield/
-  git checkout ${GREENFIELD_TAG}
+  git clone https://github.com/zkMeLabs/mechain.git
+  cd mechain/
+  git checkout ${MECHAIN_TAG}
   make proto-gen &
   make build
 
-  # start Greenfield chain
+  # start Mechain chain
   bash ./deployment/localup/localup.sh all 1 8
   bash ./deployment/localup/localup.sh export_sps 1 8 >sp.json
 
-  # transfer some BNB tokens
+  # transfer some azkme tokens
   transfer_account
 }
 
 #############################################
-# transfer some BNB tokens to test accounts #
+# transfer some azkme tokens to test accounts #
 #############################################
 function transfer_account() {
   set -e
-  cd "${workspace}"/greenfield/
-  ./build/bin/gnfd tx bank send validator0 "${TEST_ACCOUNT_ADDRESS}" 500000000000000000000BNB --home "${workspace}"/greenfield/deployment/localup/.local/validator0 --keyring-backend test --node http://localhost:26750 -y
+  cd "${workspace}"/mechain/
+  ./build/bin/gnfd tx bank send validator0 "${TEST_ACCOUNT_ADDRESS}" 500000000000000000000azkme --home "${workspace}"/mechain/deployment/localup/.local/validator0 --keyring-backend test --node http://localhost:26750 -y
   sleep 2
   ./build/bin/gnfd q bank balances "${TEST_ACCOUNT_ADDRESS}" --node http://localhost:26750
 }
 
 #################################
-# build and start Greenfield SP #
+# build and start Mechain SP #
 #################################
-function greenfield_sp() {
+function mechain_sp() {
   set -e
   cd "${workspace}"
   make install-tools
   make build
-  bash ./deployment/localup/localup.sh --generate "${workspace}"/greenfield/sp.json ${MYSQL_USER} ${MYSQL_PASSWORD} ${MYSQL_ADDRESS}
+  bash ./deployment/localup/localup.sh --generate "${workspace}"/mechain/sp.json ${MYSQL_USER} ${MYSQL_PASSWORD} ${MYSQL_ADDRESS}
   bash ./deployment/localup/localup.sh --reset
   bash ./deployment/localup/localup.sh --start
   sleep 60
@@ -79,15 +79,15 @@ function greenfield_sp() {
 }
 
 ############################################
-# build Greenfield cmd and set cmd config  #
+# build Mechain cmd and set cmd config  #
 ############################################
 function build_cmd() {
   set -e
   cd "${workspace}"
   # build sp
-  git clone https://github.com/bnb-chain/greenfield-cmd.git
-  cd greenfield-cmd/
-  git checkout ${GREENFIELD_CMD_TAG}
+  git clone https://github.com/zkMeLabs/mechain-cmd.git
+  cd mechain-cmd/
+  git checkout ${MECHAIN_CMD_TAG}
   make build
   cd build/
 
@@ -107,15 +107,15 @@ function build_cmd() {
 }
 
 ############################################
-# build Greenfield go-sdk                  #
+# build Mechain go-sdk                  #
 ############################################
-function build_greenfield-go-sdk() {
+function build_mechain-go-sdk() {
   set -e
   cd "${workspace}"
-  # build greenfield-go-sdk
-  git clone https://github.com/bnb-chain/greenfield-go-sdk.git
-  cd greenfield-go-sdk/
-  git checkout ${GREENFIELD_GO_SDK_TAG}
+  # build mechain-go-sdk
+  git clone https://github.com/zkMeLabs/mechain-go-sdk.git
+  cd mechain-go-sdk/
+  git checkout ${MECHAIN_GO_SDK_TAG}
 }
 
 ######################
@@ -123,7 +123,7 @@ function build_greenfield-go-sdk() {
 ######################
 function test_create_bucket() {
   set -e
-  cd "${workspace}"/greenfield-cmd/build/
+  cd "${workspace}"/mechain-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
   sleep 5
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt bucket create gnfd://${BUCKET_NAME}
@@ -136,7 +136,7 @@ function test_create_bucket() {
 ###########################################################
 function test_file_size_less_than_16_mb() {
   set -e
-  cd "${workspace}"/greenfield-cmd/build/
+  cd "${workspace}"/mechain-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/json" "${workspace}"/test/e2e/spworkflow/testdata/example.json gnfd://${BUCKET_NAME}
   sleep 32
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object get gnfd://${BUCKET_NAME}/example.json ./test_data.json
@@ -149,7 +149,7 @@ function test_file_size_less_than_16_mb() {
 ##############################################################
 function test_file_size_greater_than_16_mb() {
   set -e
-  cd "${workspace}"/greenfield-cmd/build/
+  cd "${workspace}"/mechain-cmd/build/
   dd if=/dev/urandom of=./random_file bs=17M count=1
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt object put --contentType "application/octet-stream" ./random_file gnfd://${BUCKET_NAME}/random_file
   sleep 32
@@ -167,7 +167,7 @@ function test_sp_exit() {
   cd "${workspace}"/deployment/localup/local_env/sp5
   operator_address=$(echo "$(grep "SpOperatorAddress" ./config.toml)" | grep -o "0x[0-9a-zA-Z]*")
   echo "${operator_address}"
-  cd "${workspace}"/greenfield-cmd/build/
+  cd "${workspace}"/mechain-cmd/build/
   ls
   dd if=/dev/urandom of=./random_file bs=17M count=1
   ./gnfd-cmd -c ./config.toml --home ./ --passwordfile password.txt bucket create --primarySP "${operator_address}" gnfd://spexit
@@ -187,7 +187,7 @@ function test_sp_exit() {
   # start exiting sp5
   cd "${workspace}"/deployment/localup/local_env/sp5
   ./gnfd-sp5 -c ./config.toml sp.exit -operatorAddress "${operator_address}"
-  cd "${workspace}"/greenfield-cmd/build/
+  cd "${workspace}"/mechain-cmd/build/
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
   sleep 180
   ./gnfd-cmd -c ./config.toml --home ./ sp ls
@@ -252,8 +252,8 @@ function run_sp_exit_e2e() {
 ###################
 function run_go_sdk_e2e() {
   set +e
-  cd "${workspace}"/greenfield-go-sdk/
-  echo 'run greenfield go sdk e2e test'
+  cd "${workspace}"/mechain-go-sdk/
+  echo 'run mechain go sdk e2e test'
   go test -v e2e/e2e_migrate_bucket_test.go
   exit_status_command=$?
   if [ $exit_status_command -eq 0 ]; then
@@ -275,10 +275,10 @@ function main() {
   CMD=$1
   case ${CMD} in
   --startChain)
-    greenfield_chain
+    mechain_chain
     ;;
   --startSP)
-    greenfield_sp
+    mechain_sp
     ;;
   --buildCmd)
     build_cmd
@@ -290,7 +290,7 @@ function main() {
     #    run_sp_exit_e2e
     ;;
   --runSDKE2E)
-    build_greenfield-go-sdk
+    build_mechain-go-sdk
     run_go_sdk_e2e
     ;;
   esac

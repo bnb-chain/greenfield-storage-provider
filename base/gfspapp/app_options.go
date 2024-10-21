@@ -49,9 +49,9 @@ const (
 	// DefaultProbeAddress defines the default probe service address.
 	DefaultProbeAddress = "localhost:24369"
 
-	// DefaultChainID defines the default greenfield chainID.
+	// DefaultChainID defines the default mechain chainID.
 	DefaultChainID = "mechain_5252-1"
-	// DefaultChainAddress defines the default greenfield address.
+	// DefaultChainAddress defines the default mechain address.
 	DefaultChainAddress = "http://localhost:26750"
 
 	// DefaultMemoryLimit defines the default memory limit for resource manager.

@@ -24,7 +24,7 @@ type PaymentResult struct {
 func FixPayment(endpoint string, db *gorm.DB) error {
 	log.Infof("job start")
 
-	url := endpoint + "/greenfield/payment/payment_account/%s"
+	url := endpoint + "/mechain/payment/payment_account/%s"
 	client := http.Client{}
 
 	var results []*models.PaymentAccount

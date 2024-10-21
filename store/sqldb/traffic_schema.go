@@ -13,7 +13,7 @@ type BucketTrafficTable struct {
 	FreeQuotaConsumedSize        uint64 // indicates the consumed free quota size of this month
 	MonthlyFreeQuotaConsumedSize uint64 // indicates the consumed monthly free quota size of this month
 	FreeQuotaSize                uint64 // indicate the remained free quota
-	ChargedQuotaSize             uint64 // indicate the greenfield chain bucket charged quota
+	ChargedQuotaSize             uint64 // indicate the mechain chain bucket charged quota
 	MonthlyQuotaSize             uint64 // indicate the remained monthly free quota
 	ModifiedTime                 time.Time
 }

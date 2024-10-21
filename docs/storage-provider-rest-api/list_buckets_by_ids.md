@@ -10,11 +10,11 @@ This API is used to query a list of buckets metadata info by buckets ids. This A
 
 ## HTTP Request Format
 
-| Description      | Definition                     |
-| ---------------- | ------------------------------ |
-| Host(path-style) | gnfd-testnet-sp*.bnbchain.org |
-| Path(path-style) | /                              |
-| Method           | GET                            |
+| Description      | Definition               |
+| ---------------- | ------------------------ |
+| Host(path-style) | testnet-sp*.mechain.tech |
+| Path(path-style) | /                        |
+| Method           | GET                      |
 
 ## HTTP Request Header
 
@@ -35,7 +35,7 @@ The request does not have a path parameter.
 
 ```HTTP
 GET / HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org?buckets-query&ids=1,2
+Host: testnet-sp*.mechain.tech?buckets-query&ids=1,2
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 
@@ -43,9 +43,9 @@ Date: Fri, 31 March 2023 17:32:00 GMT
 
 The response returns the following HTTP headers.
 
-| ParameterName | Type   | Description                 |
-| ------------- | ------ | --------------------------- |
-| Content-Type  | string | value is `application/xml`  |
+| ParameterName | Type   | Description                |
+| ------------- | ------ | -------------------------- |
+| Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
 
@@ -74,7 +74,7 @@ The examples given all use path-style.
 
 ```HTTP
 GET /?buckets-query&ids=1,2,333 HTTP/1.1
-Host: gnfd-testnet-sp1.bnbchain.org
+Host: testnet-sp1.mechain.tech
 Date: Fri, 31 March 2023 17:32:00 GMT
 ```
 

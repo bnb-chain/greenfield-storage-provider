@@ -12,11 +12,11 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/cometbft/cometbft/votepool"
 
-	"github.com/bnb-chain/greenfield-common/go/hash"
-	"github.com/bnb-chain/greenfield-common/go/redundancy"
 	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
+	"github.com/zkMeLabs/mechain-common/go/hash"
+	"github.com/zkMeLabs/mechain-common/go/redundancy"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsptask"
 	coretask "github.com/zkMeLabs/mechain-storage-provider/core/task"
 	"github.com/zkMeLabs/mechain-storage-provider/pkg/log"

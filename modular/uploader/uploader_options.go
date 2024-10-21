@@ -14,7 +14,7 @@ const (
 	RejectUnSealObjectRetry = 3
 	// RejectUnSealObjectTimeout defines the timeout of sending reject unseal object tx.
 	RejectUnSealObjectTimeout = 3
-	// is not rejected, it is judged failed to reject unseal object on greenfield.
+	// is not rejected, it is judged failed to reject unseal object on mechain.
 	DefaultListenRejectUnSealTimeoutHeight int = 10
 )
 

@@ -47,7 +47,7 @@ Uploader module handles the put object requests from user accounts and stores pa
 ### Downloader
 
 Downloader module is responsible for handling get object request from user account and get challenge info request from
-other components in the Greenfield system.
+other components in the Mechain system.
 
 ### TaskExecutor
 
@@ -68,9 +68,9 @@ minimum or maximum approved number is reached before the timeout.
 ### Receiver
 
 Receiver module receives data from the primary SP, calculates the integrity hash of the data, signs it, and returns it
-to the primary SP for sealing on a greenfield.
+to the primary SP for sealing on a mechain.
 
 ### Signer
 
-Signer module handles the signing of the SP data on the Greenfield chain operator and holds all of the SP's private keys.
+Signer module handles the signing of the SP data on the Mechain chain operator and holds all of the SP's private keys.
 Due to the sequence number of the SP account, it must be a singleton.

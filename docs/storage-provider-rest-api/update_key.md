@@ -12,16 +12,16 @@ See [off-chain authentication specification](../../guide/storage-provider/module
 
 ## HTTP Request Format
 
-| Description | Definition                    |
-| ----------- |-------------------------------|
-| Host        | gnfd-testnet-sp*.bnbchain.org |
-| Path        | /auth/update_key_v2           |
-| Method      | POST                          |
+| Description | Definition               |
+| ----------- | ------------------------ |
+| Host        | testnet-sp*.mechain.tech |
+| Path        | /auth/update_key_v2      |
+| Method      | POST                     |
 
 ## HTTP Request Header
 
 | ParameterName             | Type   | Required | Description                                                                                                                                                                                                 |
-|---------------------------| ------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ------------------------- | ------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Origin                    | string | yes      | the origin value , which should be the same as app's domain                                                                                                                                                 |
 | X-Gnfd-App-Domain         | string | yes      | app domain for the account key                                                                                                                                                                              |
 | X-Gnfd-App-Reg-Public-Key | string | yes      | the account key needed to update                                                                                                                                                                            |
@@ -43,19 +43,19 @@ Application needs to popup wallet to let users sign for a text, which includes u
 The text message to be signed by users can be formalized by following template:
 
 ```js
-var app_domain = "https://greenfield.dapp.cc"
+var app_domain = "https://mechain.dapp.cc"
 var account_address = "0x3d0a49B091ABF8940AD742c0139416cEB30CdEe0"
 var public_key = "4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083"
 var issue_time = "2023-04-28T16:25:24Z"
 var expiry_time = "2023-04-28T16:25:24Z"
 var sp_addr1 = "0x70d1983A9A76C8d5d80c4cC13A801dc570890819"   // SP operator address
-var sp_name1 = "SP_001" // SP name, can be found in https://greenfieldscan.com
+var sp_name1 = "SP_001" // SP name, can be found in https://mechainscan.com
 
 var sp_addr2 = "0x20Bb76D063a6d2B18B6DaBb2aC985234a4B9eDe0"   // SP operator address
-var sp_name2 = "SP_002" // SP name, can be found in https://greenfieldscan.com
+var sp_name2 = "SP_002" // SP name, can be found in https://mechainscan.com
 
 var unSignedMsgTemplate = 
-`${app_domain} wants you to sign in with your BNB Greenfield account:
+`${app_domain} wants you to sign in with your Mechain account:
 ${account_address}
 
 Register your identity public key ${public_key}
@@ -80,7 +80,7 @@ e.g. `0x8663c48cfecb611d64540d3b653f51ef226f3f674e2c390ea9ca45746b22a4f839a15576
 Below is an example:
 
 ```HTTP
-Authorization: GNFD1-ETH-PERSONAL_SIGN,SignedMsg=https://greenfield.dapp.cc wants you to sign in with your BNB Greenfield account:\n0x3d0a49B091ABF8940AD742c0139416cEB30CdEe0\n\nRegister your identity public key 4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083\n\nURI: https://greenfield.dapp.cc\nVersion: 1\nChain ID: 5600\nIssued At: 2023-04-24T16:25:24Z\nExpiration Time: 2023-04-28T16:25:24Z
+Authorization: GNFD1-ETH-PERSONAL_SIGN,SignedMsg=https://mechain.dapp.cc wants you to sign in with your Mechain account:\n0x3d0a49B091ABF8940AD742c0139416cEB30CdEe0\n\nRegister your identity public key 4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083\n\nURI: https://mechain.dapp.cc\nVersion: 1\nChain ID: 5600\nIssued At: 2023-04-24T16:25:24Z\nExpiration Time: 2023-04-28T16:25:24Z
 ```
 
 ## HTTP Request Parameter
@@ -100,7 +100,7 @@ The request does not have a request body.
 
 ```HTTP
 POST /auth/update_key HTTP/1.1
-Host: gnfd-testnet-sp*.bnbchain.org
+Host: testnet-sp*.mechain.tech
 Origin: Origin
 x-Gnfd-User-Address: UserAddress
 X-Gnfd-App-Domain: AppDomain
@@ -114,7 +114,7 @@ Authorization: AuthorizationString
 The response returns the following HTTP headers.
 
 | ParameterName | Type   | Description                |
-| ------------- | ------ |----------------------------|
+| ------------- | ------ | -------------------------- |
 | Content-Type  | string | value is `application/xml` |
 
 ## HTTP Response Parameter
@@ -126,7 +126,7 @@ If the request is successful, the service sends back an HTTP 200 response.
 The following data is returned in XML format by the service.
 
 | ParameterName | Type    | Description                                                   |
-| ------------- | ------- |---------------------------------------------------------------|
+| ------------- | ------- | ------------------------------------------------------------- |
 | Result        | boolean | indicate if the user public key is successfully updated in SP |
 
 ## Response Syntax
@@ -147,12 +147,12 @@ XML Body
 ```HTTP
 POST /auth/update_key HTTP/1.1
 Host: gf-stagenet-sp-e.bk.nodereal.cc
-Origin: https://greenfield.dapp.cc
-X-Gnfd-App-Domain: https://greenfield.dapp.cc
+Origin: https://mechain.dapp.cc
+X-Gnfd-App-Domain: https://mechain.dapp.cc
 x-Gnfd-User-Address: 0x3d0a49B091ABF8940AD742c0139416cEB30CdEe0
 X-Gnfd-App-Reg-Public-Key: 4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083
 X-Gnfd-Expiry-Timestamp: 2023-04-28T16:25:24Z
-Authorization: GNFD1-ETH-PERSONAL_SIGN,SignedMsg=https://greenfield.dapp.cc wants you to sign in with your BNB Greenfield account:\n0x3d0a49B091ABF8940AD742c0139416cEB30CdEe0\n\nRegister your identity public key 4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083\n\nURI: https://greenfield.dapp.cc\nVersion: 1\nChain ID: 5600\nIssued At: 2023-04-24T16:25:24Z\nExpiration Time: 2023-04-28T16:25:24Z
+Authorization: GNFD1-ETH-PERSONAL_SIGN,SignedMsg=https://mechain.dapp.cc wants you to sign in with your Mechain account:\n0x3d0a49B091ABF8940AD742c0139416cEB30CdEe0\n\nRegister your identity public key 4db642fe6bc2ceda2e002feb8d78dfbcb2879d8fe28e84e02b7a940bc0440083\n\nURI: https://mechain.dapp.cc\nVersion: 1\nChain ID: 5600\nIssued At: 2023-04-24T16:25:24Z\nExpiration Time: 2023-04-28T16:25:24Z
 ```
 
 #### response

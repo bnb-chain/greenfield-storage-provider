@@ -47,7 +47,7 @@ var _ module.Signer = &SignModular{}
 
 type SignModular struct {
 	baseApp *gfspapp.GfSpBaseApp
-	client  *GreenfieldChainSignClient
+	client  *MechainChainSignClient
 }
 
 func (s *SignModular) Name() string {

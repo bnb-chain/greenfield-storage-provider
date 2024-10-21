@@ -21,7 +21,7 @@ import (
 // TODO:: extract the common parts of http to the gfsp app layer
 const (
 	// ReplicateObjectPiecePath defines replicate-object path style
-	ReplicateObjectPiecePath = "/greenfield/receiver/v1/replicate-piece"
+	ReplicateObjectPiecePath = "/mechain/receiver/v1/replicate-piece"
 	// GnfdReplicatePieceApprovalHeader defines secondary approved msg for replicating piece
 	GnfdReplicatePieceApprovalHeader = "X-Gnfd-Replicate-Piece-Approval-Msg"
 	// GnfdReceiveMsgHeader defines receive piece data meta
@@ -31,36 +31,36 @@ const (
 	// GnfdIntegrityHashSignatureHeader defines integrity hash signature, which is used by receiver
 	GnfdIntegrityHashSignatureHeader = "X-Gnfd-Integrity-Hash-Signature"
 	// RecoveryObjectPiecePath defines recovery-object path style
-	RecoveryObjectPiecePath = "/greenfield/recovery/v1/get-piece"
+	RecoveryObjectPiecePath = "/mechain/recovery/v1/get-piece"
 	// GnfdRecoveryMsgHeader defines receive piece data meta
 	GnfdRecoveryMsgHeader = "X-Gnfd-Recovery-Msg"
 
 	// MigratePiecePath defines migrate piece path which is used in SP exiting case
-	MigratePiecePath = "/greenfield/migrate/v1/migrate-piece"
+	MigratePiecePath = "/mechain/migrate/v1/migrate-piece"
 	// GnfdMigratePieceMsgHeader defines migrate piece msg header
 	GnfdMigratePieceMsgHeader = "X-Gnfd-Migrate-Piece-Msg"
 	// GnfdMigrateGVGMsgHeader defines migrate gvg msg header
 	GnfdMigrateGVGMsgHeader = "X-Gnfd-Migrate-GVG-Msg"
 	// NotifyMigrateSwapOutTaskPath defines dispatch migrate gvg task from src sp to dest sp.
-	NotifyMigrateSwapOutTaskPath = "/greenfield/migrate/v1/notify-migrate-swap-out-task"
+	NotifyMigrateSwapOutTaskPath = "/mechain/migrate/v1/notify-migrate-swap-out-task"
 	// GnfdMigrateSwapOutMsgHeader defines migrate swap out msg header
 	GnfdMigrateSwapOutMsgHeader = "X-Gnfd-Migrate-Swap-Out-Msg"
 	// SecondarySPMigrationBucketApprovalPath defines secondary sp sign migration bucket approval
-	SecondarySPMigrationBucketApprovalPath = "/greenfield/migrate/v1/migration-bucket-approval"
+	SecondarySPMigrationBucketApprovalPath = "/mechain/migrate/v1/migration-bucket-approval"
 	// SwapOutApprovalPath defines get swap out approval path
-	SwapOutApprovalPath = "/greenfield/migrate/v1/get-swap-out-approval"
+	SwapOutApprovalPath = "/mechain/migrate/v1/get-swap-out-approval"
 	// GnfdSecondarySPMigrationBucketMsgHeader defines secondary sp migration bucket sign doc header.
 	GnfdSecondarySPMigrationBucketMsgHeader = "X-Gnfd-Secondary-Migration-Bucket-Msg"
 	// GnfdSecondarySPMigrationBucketApprovalHeader defines secondary sp migration bucket bls approval header.
 	GnfdSecondarySPMigrationBucketApprovalHeader = "X-Gnfd-Secondary-Migration-Bucket-Approval"
 	// MigrateQueryBucketQuotaPath defines query bucket quota from src sp
-	MigrateQueryBucketQuotaPath = "/greenfield/migrate/v1/migrate-query-bucket-quota"
+	MigrateQueryBucketQuotaPath = "/mechain/migrate/v1/migrate-query-bucket-quota"
 	// MigrateQueryBucketQuotaHasEnoughQuotaPath defines query bucket quota from src sp
-	MigrateQueryBucketQuotaHasEnoughQuotaPath = "/greenfield/migrate/v1/migrate-query-bucket-has-enough-quota"
+	MigrateQueryBucketQuotaHasEnoughQuotaPath = "/mechain/migrate/v1/migrate-query-bucket-has-enough-quota"
 	// PreMigrateBucketPath defines pre migrate bucket, can lock quota for migrate bucket
-	PreMigrateBucketPath = "/greenfield/migrate/v1/pre-migrate-bucket"
+	PreMigrateBucketPath = "/mechain/migrate/v1/pre-migrate-bucket"
 	// PostMigrateBucketPath defines notifying the source sp about the completion of migration bucket
-	PostMigrateBucketPath = "/greenfield/migrate/v1/post-migrate-bucket"
+	PostMigrateBucketPath = "/mechain/migrate/v1/post-migrate-bucket"
 	// GnfdMigrateBucketMsgHeader defines migrate bucket msg header
 	GnfdMigrateBucketMsgHeader = "X-Gnfd-Migrate-Bucket-Msg"
 	// GnfdUnsignedApprovalMsgHeader defines unsigned msg, which is used by get-approval

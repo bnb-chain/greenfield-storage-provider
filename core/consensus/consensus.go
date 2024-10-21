@@ -12,12 +12,12 @@ import (
 	virtualgrouptypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 )
 
-// Consensus is the interface to query greenfield consensus data. the consensus
+// Consensus is the interface to query mechain consensus data. the consensus
 // data can come from validator, full-node, or other off-chain data service
 //
 //go:generate mockgen -source=./consensus.go -destination=./consensus_mock.go -package=consensus
 type Consensus interface {
-	// CurrentHeight returns the current greenfield height - 1,
+	// CurrentHeight returns the current mechain height - 1,
 	CurrentHeight(ctx context.Context) (uint64, error)
 	// HasAccount returns an indicator whether the account has been created.
 	HasAccount(ctx context.Context, account string) (bool, error)

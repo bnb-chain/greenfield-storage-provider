@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	commonhttp "github.com/bnb-chain/greenfield-common/go/http"
+	commonhttp "github.com/zkMeLabs/mechain-common/go/http"
 	"github.com/zkMeLabs/mechain-storage-provider/base/types/gfsperrors"
 	"github.com/zkMeLabs/mechain-storage-provider/core/module"
 )

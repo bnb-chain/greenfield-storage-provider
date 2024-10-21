@@ -10,7 +10,7 @@ Manager is an abstract interface to do some internal service management, it is r
 
 ## Overview
 
-<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/07-manager.jpg" width="500" height="100" /></div>
+<div align="center"><img src="https://raw.githubusercontent.com/zkMeLabs/mechain-docs/main/static/asset/07-manager.jpg" width="500" height="100" /></div>
 
 <div style={{textAlign:'center'}}><i>Manager Architecture</i></div>
 
@@ -48,7 +48,7 @@ type Manager interface {
     // HandleReplicatePieceTask handles the result of replicating piece data to secondary SPs,
     // the request comes from TaskExecutor.
     HandleReplicatePieceTask(ctx context.Context, task task.ReplicatePieceTask) error
-    // HandleSealObjectTask handles the result of sealing object to the greenfield the request comes from TaskExecutor.
+    // HandleSealObjectTask handles the result of sealing object to the mechain the request comes from TaskExecutor.
     HandleSealObjectTask(ctx context.Context, task task.SealObjectTask) error
     // HandleReceivePieceTask handles the result of receiving piece task, the request comes from Receiver that
     // reports have completed ReceivePieceTask to manager and TaskExecutor that the result of confirming whether
@@ -105,7 +105,7 @@ Stop Serving is the background service running in primary SP, which is used to a
 
 **It only runs in testnet environment for remove historical data, and it will NOT run in mainnet.**
 
-<div align="center"><img src="https://raw.githubusercontent.com/bnb-chain/greenfield-docs/main/static/asset/502-Stop-Serving-Workflow.png" width="1000" height="100" /></div>
+<div align="center"><img src="https://raw.githubusercontent.com/zkMeLabs/mechain-docs/main/static/asset/502-Stop-Serving-Workflow.png" width="1000" height="100" /></div>
 
 <div style={{textAlign:'center'}}><i>Stop Serving Main Workflows</i></div>
 
@@ -113,7 +113,7 @@ Stop Serving is running in background periodically. The main workflows are as fo
 
 - When the SP starts up, it loads the "BucketKeepAliveDays" config to indicate how long a bucket will remain alive (7 days on testnet);
 - Then it calls the metadata service to retrieve buckets created earlier than the specified number of days;
-- Then it sends discontinue bucket transactions to the Greenfield chain, and the blockchain will emit discontinue bucket events;
+- Then it sends discontinue bucket transactions to the Mechain chain, and the blockchain will emit discontinue bucket events;
 - After a set amount of time (7 days on testnet), the discontinued buckets are deleted on the chain, and delete object and delete bucket events are emitted;
 - Finally, the GC service recycles the storage space of the deleted objects and buckets.
 
