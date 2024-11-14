@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"net"
 	"net/http"
@@ -138,6 +139,41 @@ func (s *s3Store) DeleteObject(ctx context.Context, key string) error {
 		err = nil
 	}
 	return err
+}
+
+func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
+	objs, err := s.ListObjects(ctx, key, "", "", math.MaxUint64)
+	if err != nil {
+		log.Errorw("DeleteObjectsByPrefix list objects error", "error", err)
+		return 0, err
+	}
+
+	var (
+		objectIdentifiers []*s3.ObjectIdentifier
+		objectKeySizeMap  map[string]uint64
+		size              uint64
+	)
+	for _, obj := range objs {
+		objKey := obj.Key()
+		objectIdentifiers = append(objectIdentifiers, &s3.ObjectIdentifier{Key: &objKey})
+		objectKeySizeMap[obj.Key()] = uint64(obj.Size())
+	}
+
+	deleteParams := s3.Delete{Objects: make([]*s3.ObjectIdentifier, 0)}
+	param := &s3.DeleteObjectsInput{
+		Bucket: aws.String(s.bucketName),
+		Delete: &deleteParams,
+	}
+	deleteObjectsOutput, err := s.api.DeleteObjectsWithContext(ctx, param)
+	if err != nil {
+		log.Errorw("DeleteObjectsByPrefix delete objects with context error", "error", err)
+	}
+	if deleteObjectsOutput != nil {
+		for _, deletedObj := range deleteObjectsOutput.Deleted {
+			size += objectKeySizeMap[*deletedObj.Key]
+		}
+	}
+	return size, err
 }
 
 func (s *s3Store) HeadBucket(ctx context.Context) error {

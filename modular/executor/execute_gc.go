@@ -3,6 +3,8 @@ package executor
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -288,21 +290,33 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 		}
 
 		var redundancyIndex int32 = -1
-		for rIdx, sspId := range gvg.GetSecondarySpIds() {
-			if spId == sspId {
-				redundancyIndex = int32(rIdx)
-				for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
-					pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx), objectVersion)
-					if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
-						pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx, objectVersion)
+		if len(gvg.GetSecondarySpIds()) != 0 {
+			for rIdx, sspId := range gvg.GetSecondarySpIds() {
+				if spId == sspId {
+					redundancyIndex = int32(rIdx)
+					for segIdx := uint32(0); segIdx < segmentCount; segIdx++ {
+						pieceKey := e.baseApp.PieceOp().ECPieceKey(currentGCObjectID, segIdx, uint32(rIdx), objectVersion)
+						if objectInfo.GetRedundancyType() == storagetypes.REDUNDANCY_REPLICA_TYPE {
+							pieceKey = e.baseApp.PieceOp().SegmentPieceKey(objectInfo.Id.Uint64(), segIdx, objectVersion)
+						}
+						// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
+						deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
+						log.CtxDebugw(ctx, "delete the secondary sp pieces",
+							"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 					}
-					// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-					deleteErr := e.baseApp.PieceStore().DeletePiece(ctx, pieceKey)
-					log.CtxDebugw(ctx, "delete the secondary sp pieces",
-						"object_info", objectInfo, "piece_key", pieceKey, "error", deleteErr)
 				}
 			}
+		} else {
+			// if failed to get secondary sps, iterate through all files with key prefix to delete possible files in storage and metadata in sp
+			pieceKeyPrefix := fmt.Sprintf("e%d_", currentGCObjectID)
+			deleteErr := e.baseApp.PieceStore().DeletePiecesByPrefix(ctx, pieceKeyPrefix)
+			log.CtxDebugw(ctx, "delete the secondary sp pieces by prefix",
+				"object_info", objectInfo, "piece_key_prefix", pieceKeyPrefix, "error", deleteErr)
+
+			// signal as delete any integrity meta related with the object
+			redundancyIndex = math.MaxInt32
 		}
+
 		// ignore this delete api error, TODO: refine gc workflow by enrich metadata index
 		deleteErr := e.baseApp.GfSpDB().DeleteObjectIntegrity(objectInfo.Id.Uint64(), redundancyIndex)
 		log.CtxDebugw(ctx, "delete the object integrity meta", "object_info", objectInfo, "error", deleteErr)

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"sort"
 	"strings"
@@ -83,6 +84,27 @@ func (m *memoryStore) DeleteObject(ctx context.Context, key string) error {
 	defer m.Unlock()
 	delete(m.objects, key)
 	return nil
+}
+
+func (m *memoryStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
+	objs, err := m.ListObjects(ctx, key, "", "", math.MaxUint64)
+	if err != nil {
+		log.Errorw("DeleteObjectsByPrefix read directory error", "error", err)
+		return 0, err
+	}
+
+	var size uint64
+
+	for _, obj := range objs {
+		deleteErr := m.DeleteObject(ctx, obj.Key())
+		if deleteErr != nil {
+			log.Errorw("remove single file by prefix error", "error", err)
+		} else {
+			size += uint64(obj.Size())
+		}
+	}
+
+	return size, nil
 }
 
 func (m *memoryStore) HeadBucket(ctx context.Context) error {

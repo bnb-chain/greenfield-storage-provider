@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -71,6 +72,31 @@ func (o *ossStore) PutObject(ctx context.Context, key string, in io.Reader) erro
 func (o *ossStore) DeleteObject(ctx context.Context, key string) error {
 	var respHeader http.Header
 	return o.bucket.DeleteObject(key, oss.GetResponseHeader(&respHeader))
+}
+
+func (o *ossStore) DeleteObjectsByPrefix(ctx context.Context, prefix string) (uint64, error) {
+	objs, err := o.ListObjects(ctx, prefix, "", "", math.MaxUint64)
+	if err != nil {
+		log.Errorw("DeleteObjectsByPrefix list objects error", "error", err)
+		return 0, err
+	}
+	var (
+		objectKeys       []string
+		objectKeySizeMap map[string]uint64
+		size             uint64
+	)
+	for _, obj := range objs {
+		objectKeys = append(objectKeys, obj.Key())
+		objectKeySizeMap[obj.Key()] = uint64(obj.Size())
+	}
+	deletedObjResults, err := o.bucket.DeleteObjects(objectKeys)
+	if err != nil {
+		log.Errorw("DeleteObjectsByPrefix delete objects error", "error", err)
+	}
+	for _, deletedObjKey := range deletedObjResults.DeletedObjects {
+		size += objectKeySizeMap[deletedObjKey]
+	}
+	return size, nil
 }
 
 func (o *ossStore) HeadBucket(ctx context.Context) error {
