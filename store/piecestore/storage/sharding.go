@@ -3,11 +3,11 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"hash/fnv"
 	"io"
-	"math"
 	"strings"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 type sharded struct {
@@ -66,19 +66,32 @@ func (s *sharded) DeleteObject(ctx context.Context, key string) error {
 }
 
 func (s *sharded) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
-	objs, err := s.pick(key).ListObjects(ctx, key, "", "", math.MaxUint64)
-	if err != nil {
-		log.Errorw("DeleteObjectsByPrefix list objects error", "error", err)
-		return 0, err
-	}
+	var (
+		continueDeleteObject = true
+		batchSize            = int64(1000)
+		size                 uint64
+	)
 
-	var size uint64
-	for _, obj := range objs {
-		err = s.pick(obj.Key()).DeleteObject(ctx, obj.Key())
+	for continueDeleteObject {
+		// batch list and delete objects
+		objs, err := s.pick(key).ListObjects(ctx, key, "", "", batchSize)
 		if err != nil {
-			log.Errorw("remove single file by prefix error", "error", err)
-		} else {
-			size += uint64(obj.Size())
+			log.Errorw("DeleteObjectsByPrefix list objects error", "error", err)
+			return size, err
+		}
+
+		// if the object listed here is less than required batch size, meaning it is the last page
+		if int64(len(objs)) < batchSize {
+			continueDeleteObject = false
+		}
+
+		for _, obj := range objs {
+			err = s.pick(obj.Key()).DeleteObject(ctx, obj.Key())
+			if err != nil {
+				log.Errorw("remove single file by prefix error", "error", err)
+			} else {
+				size += uint64(obj.Size())
+			}
 		}
 	}
 	return size, nil

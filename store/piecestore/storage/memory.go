@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"sort"
 	"strings"
@@ -87,20 +86,32 @@ func (m *memoryStore) DeleteObject(ctx context.Context, key string) error {
 }
 
 func (m *memoryStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
-	objs, err := m.ListObjects(ctx, key, "", "", math.MaxUint64)
-	if err != nil {
-		log.Errorw("DeleteObjectsByPrefix read directory error", "error", err)
-		return 0, err
-	}
+	var (
+		continueDeleteObject = true
+		batchSize            = int64(1000)
+		size                 uint64
+	)
 
-	var size uint64
+	for continueDeleteObject {
+		// batch list and delete objects
+		objs, err := m.ListObjects(ctx, key, "", "", batchSize)
+		if err != nil {
+			log.Errorw("DeleteObjectsByPrefix read directory error", "error", err)
+			return size, err
+		}
 
-	for _, obj := range objs {
-		deleteErr := m.DeleteObject(ctx, obj.Key())
-		if deleteErr != nil {
-			log.Errorw("remove single file by prefix error", "error", err)
-		} else {
-			size += uint64(obj.Size())
+		// if the object listed here is less than required batch size, meaning it is the last page
+		if int64(len(objs)) < batchSize {
+			continueDeleteObject = false
+		}
+
+		for _, obj := range objs {
+			deleteErr := m.DeleteObject(ctx, obj.Key())
+			if deleteErr != nil {
+				log.Errorw("remove single file by prefix error", "error", err)
+			} else {
+				size += uint64(obj.Size())
+			}
 		}
 	}
 
