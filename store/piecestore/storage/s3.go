@@ -177,7 +177,7 @@ func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64
 		}
 		if deleteObjectsOutput != nil {
 			for _, deletedObj := range deleteObjectsOutput.Deleted {
-				size += objectKeySizeMap[*deletedObj.Key]
+				size += objectKeySizeMap[*(deletedObj).Key]
 			}
 		}
 	}

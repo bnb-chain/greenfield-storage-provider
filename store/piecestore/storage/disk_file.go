@@ -151,21 +151,29 @@ func (d *diskFileStore) DeleteObjectsByPrefix(ctx context.Context, key string) (
 	}
 
 	var (
-		size uint64
-		info fs.FileInfo
+		size      uint64
+		entryInfo fs.FileInfo
 	)
 
 	for _, dirEntry := range dirEntries {
-		if strings.HasPrefix(dirEntry.Name(), key) {
-			err = d.DeleteObject(ctx, dirEntry.Name())
+		entryName := dirEntry.Name()
+		if strings.HasPrefix(entryName, key) {
+			var curInfoSize int64
+			// need to extract entry info and size first, otherwise when the object is deleted, the info can not be found
+			entryInfo, err = dirEntry.Info()
+			if entryInfo != nil {
+				curInfoSize = entryInfo.Size()
+			}
+			if err != nil {
+				log.Errorw("get dirEntry info error", "error", err)
+			}
+			err = d.DeleteObject(ctx, entryName)
 			if err != nil {
 				log.Errorw("remove single file by prefix error", "error", err)
 			} else {
-				info, err = dirEntry.Info()
-				if err != nil {
-					log.Errorw("get dirEntry info error", "error", err)
+				if entryInfo != nil {
+					size += uint64(curInfoSize)
 				}
-				size += uint64(info.Size())
 			}
 		}
 	}
