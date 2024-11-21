@@ -76,7 +76,7 @@ func (o *ossStore) DeleteObject(ctx context.Context, key string) error {
 func (o *ossStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
 	var (
 		objectKeys           []string
-		objectKeySizeMap     map[string]uint64
+		objectKeySizeMap     = make(map[string]uint64)
 		continueDeleteObject = true
 		batchSize            = int64(1000)
 		size                 uint64
