@@ -549,7 +549,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
-				m3.EXPECT().DeletePiecesByPrefix(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				m3.EXPECT().DeletePiecesByPrefix(gomock.Any(), gomock.Any()).Return(uint64(0), nil).Times(1)
 				e.baseApp.SetPieceStore(m3)
 				return e
 			},
@@ -585,7 +585,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
-				m3.EXPECT().DeletePiecesByPrefix(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				m3.EXPECT().DeletePiecesByPrefix(gomock.Any(), gomock.Any()).Return(uint64(0), nil).Times(1)
 				e.baseApp.SetPieceStore(m3)
 				return e
 			},
@@ -649,7 +649,7 @@ func TestExecuteModular_HandleGCObjectTask(t *testing.T) {
 				e.baseApp.SetPieceOp(m2)
 
 				m3 := piecestore.NewMockPieceStore(ctrl)
-				m3.EXPECT().DeletePiecesByPrefix(gomock.Any(), gomock.Any()).Return(nil).Times(2)
+				m3.EXPECT().DeletePiecesByPrefix(gomock.Any(), gomock.Any()).Return(uint64(0), nil).Times(2)
 				e.baseApp.SetPieceStore(m3)
 
 				m4 := corespdb.NewMockSPDB(ctrl)

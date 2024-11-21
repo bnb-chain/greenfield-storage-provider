@@ -162,11 +162,11 @@ func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64
 
 		for _, obj := range objs {
 			objKey := obj.Key()
-			objectIdentifiers = append(objectIdentifiers, &s3.ObjectIdentifier{Key: &objKey})
+			objectIdentifiers = append(objectIdentifiers, &s3.ObjectIdentifier{Key: aws.String(objKey)})
 			objectKeySizeMap[obj.Key()] = uint64(obj.Size())
 		}
 
-		deleteParams := s3.Delete{Objects: make([]*s3.ObjectIdentifier, 0)}
+		deleteParams := s3.Delete{Objects: objectIdentifiers}
 		param := &s3.DeleteObjectsInput{
 			Bucket: aws.String(s.bucketName),
 			Delete: &deleteParams,
@@ -177,7 +177,7 @@ func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64
 		}
 		if deleteObjectsOutput != nil {
 			for _, deletedObj := range deleteObjectsOutput.Deleted {
-				size += objectKeySizeMap[*(deletedObj.Key)]
+				size += objectKeySizeMap[aws.StringValue(deletedObj.Key)]
 			}
 		}
 	}

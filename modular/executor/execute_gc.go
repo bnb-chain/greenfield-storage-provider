@@ -262,9 +262,9 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 			continue
 		}
 		segmentPieceKeyPrefix := fmt.Sprintf("s%d_", currentGCObjectID)
-		deleteErr := e.baseApp.PieceStore().DeletePiecesByPrefix(ctx, segmentPieceKeyPrefix)
+		deletedSize, deleteErr := e.baseApp.PieceStore().DeletePiecesByPrefix(ctx, segmentPieceKeyPrefix)
 		log.CtxDebugw(ctx, "delete the primary sp pieces", "object_info", objectInfo,
-			"piece_key_prefix", segmentPieceKeyPrefix, "error", deleteErr)
+			"piece_key_prefix", segmentPieceKeyPrefix, "deletedSize", deletedSize, "error", deleteErr)
 		bucketInfo, err := e.baseApp.GfSpClient().GetBucketInfoByBucketName(ctx, objectInfo.BucketName)
 		if err != nil || bucketInfo == nil {
 			log.Errorw("failed to get bucket by bucket name", "bucket_name", objectInfo.BucketName, "error", err)
@@ -284,16 +284,16 @@ func (e *ExecuteModular) HandleGCObjectTask(ctx context.Context, task coretask.G
 				if spId == sspId {
 					redundancyIndex = int32(rIdx)
 					// ignore this delete api error, TODO: refine gc workflow by enrich metadata index.
-					deleteErr := e.baseApp.PieceStore().DeletePiecesByPrefix(ctx, ECPieceKeyPrefix)
+					deletedSize, deleteErr = e.baseApp.PieceStore().DeletePiecesByPrefix(ctx, ECPieceKeyPrefix)
 					log.CtxDebugw(ctx, "delete the secondary sp pieces by prefix",
-						"object_info", objectInfo, "piece_key_prefix", ECPieceKeyPrefix, "error", deleteErr)
+						"object_info", objectInfo, "piece_key_prefix", ECPieceKeyPrefix, "deletedSize", deletedSize, "error", deleteErr)
 				}
 			}
 		} else {
 			// if failed to get secondary sps, check the current sp
-			deleteErr := e.baseApp.PieceStore().DeletePiecesByPrefix(ctx, ECPieceKeyPrefix)
+			deletedSize, deleteErr = e.baseApp.PieceStore().DeletePiecesByPrefix(ctx, ECPieceKeyPrefix)
 			log.CtxDebugw(ctx, "delete the sp pieces by prefix in current sp when secondary sp not found",
-				"object_info", objectInfo, "piece_key_prefix", ECPieceKeyPrefix, "error", deleteErr)
+				"object_info", objectInfo, "piece_key_prefix", ECPieceKeyPrefix, "deletedSize", deletedSize, "error", deleteErr)
 
 			// signal as delete any integrity meta related with the object
 			redundancyIndex = math.MaxInt32
