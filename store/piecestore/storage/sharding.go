@@ -6,6 +6,8 @@ import (
 	"hash/fnv"
 	"io"
 	"strings"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 type sharded struct {
@@ -61,6 +63,38 @@ func (s *sharded) PutObject(ctx context.Context, key string, body io.Reader) err
 
 func (s *sharded) DeleteObject(ctx context.Context, key string) error {
 	return s.pick(key).DeleteObject(ctx, key)
+}
+
+func (s *sharded) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
+	var (
+		continueDeleteObject = true
+		batchSize            = int64(1000)
+		size                 uint64
+	)
+
+	for continueDeleteObject {
+		// batch list and delete objects
+		objs, err := s.pick(key).ListObjects(ctx, key, "", "", batchSize)
+		if err != nil {
+			log.Errorw("DeleteObjectsByPrefix list objects error", "error", err)
+			return size, err
+		}
+
+		// if the object listed here is less than required batch size, meaning it is the last page
+		if int64(len(objs)) < batchSize {
+			continueDeleteObject = false
+		}
+
+		for _, obj := range objs {
+			err = s.pick(obj.Key()).DeleteObject(ctx, obj.Key())
+			if err != nil {
+				log.Errorw("remove single file by prefix error", "error", err)
+			} else {
+				size += uint64(obj.Size())
+			}
+		}
+	}
+	return size, nil
 }
 
 func (s *sharded) HeadBucket(ctx context.Context) error {
