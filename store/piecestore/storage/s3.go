@@ -143,7 +143,7 @@ func (s *s3Store) DeleteObject(ctx context.Context, key string) error {
 func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
 	var (
 		objectIdentifiers    []*s3.ObjectIdentifier
-		objectKeySizeMap     map[string]uint64
+		objectKeySizeMap     = make(map[string]uint64)
 		continueDeleteObject = true
 		batchSize            = int64(1000)
 		size                 uint64
@@ -163,7 +163,7 @@ func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64
 		for _, obj := range objs {
 			objKey := obj.Key()
 			objectIdentifiers = append(objectIdentifiers, &s3.ObjectIdentifier{Key: &objKey})
-			objectKeySizeMap[obj.Key()] = uint64(obj.Size())
+			objectKeySizeMap[objKey] = uint64(obj.Size())
 		}
 
 		deleteParams := s3.Delete{Objects: make([]*s3.ObjectIdentifier, 0)}
