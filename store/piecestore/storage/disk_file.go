@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -140,6 +141,44 @@ func (d *diskFileStore) DeleteObject(ctx context.Context, key string) error {
 		err = nil
 	}
 	return err
+}
+
+func (d *diskFileStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
+	dirEntries, err := os.ReadDir(d.root)
+	if err != nil {
+		log.Errorw("DeleteObjectsByPrefix read directory error", "error", err)
+		return 0, err
+	}
+
+	var (
+		size      uint64
+		entryInfo fs.FileInfo
+	)
+
+	for _, dirEntry := range dirEntries {
+		entryName := dirEntry.Name()
+		if strings.HasPrefix(entryName, key) {
+			var curInfoSize int64
+			// need to extract entry info and size first, otherwise when the object is deleted, the info can not be found
+			entryInfo, err = dirEntry.Info()
+			if entryInfo != nil {
+				curInfoSize = entryInfo.Size()
+			}
+			if err != nil {
+				log.Errorw("get dirEntry info error", "error", err)
+			}
+			err = d.DeleteObject(ctx, entryName)
+			if err != nil {
+				log.Errorw("remove single file by prefix error", "error", err)
+			} else {
+				if entryInfo != nil {
+					size += uint64(curInfoSize)
+				}
+			}
+		}
+	}
+
+	return size, nil
 }
 
 func (d *diskFileStore) HeadBucket(ctx context.Context) error {

@@ -140,6 +140,55 @@ func (s *s3Store) DeleteObject(ctx context.Context, key string) error {
 	return err
 }
 
+func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
+	var (
+		objectIdentifiers    []*s3.ObjectIdentifier
+		objectKeySizeMap     = make(map[string]uint64)
+		continueDeleteObject = true
+		batchSize            = int64(1000)
+		size                 uint64
+	)
+
+	for continueDeleteObject {
+		objs, err := s.ListObjects(ctx, key, "", "", batchSize)
+		if err != nil {
+			log.Errorw("DeleteObjectsByPrefix list objects error", "error", err)
+			return size, err
+		}
+
+		if len(objs) == 0 {
+			log.CtxDebugw(ctx, "No object is listed in s3 by prefix", "prefix", key)
+			return 0, nil
+		}
+
+		if int64(len(objs)) < batchSize {
+			continueDeleteObject = false
+		}
+
+		for _, obj := range objs {
+			objKey := obj.Key()
+			objectIdentifiers = append(objectIdentifiers, &s3.ObjectIdentifier{Key: aws.String(objKey)})
+			objectKeySizeMap[obj.Key()] = uint64(obj.Size())
+		}
+
+		deleteParams := s3.Delete{Objects: objectIdentifiers}
+		param := &s3.DeleteObjectsInput{
+			Bucket: aws.String(s.bucketName),
+			Delete: &deleteParams,
+		}
+		deleteObjectsOutput, err := s.api.DeleteObjectsWithContext(ctx, param)
+		if err != nil {
+			log.Errorw("DeleteObjectsByPrefix delete objects with context error", "error", err)
+		}
+		if deleteObjectsOutput != nil {
+			for _, deletedObj := range deleteObjectsOutput.Deleted {
+				size += objectKeySizeMap[aws.StringValue(deletedObj.Key)]
+			}
+		}
+	}
+	return size, nil
+}
+
 func (s *s3Store) HeadBucket(ctx context.Context) error {
 	if _, err := s.api.HeadBucketWithContext(ctx, &s3.HeadBucketInput{
 		Bucket: aws.String(s.bucketName),
