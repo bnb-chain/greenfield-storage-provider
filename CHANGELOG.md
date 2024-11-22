@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.10.0
+BUGFIXES
+* [#1435](https://github.com/bnb-chain/greenfield-storage-provider/pull/1435) fix: gc objects
+
 ## v1.9.0
 BUGFIXES
 * [#1423](https://github.com/bnb-chain/greenfield-storage-provider/pull/1423) fix: no such object error code
