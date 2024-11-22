@@ -156,6 +156,11 @@ func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64
 			return size, err
 		}
 
+		if len(objs) == 0 {
+			log.CtxDebugw(ctx, "No object is listed in s3 by prefix", "prefix", key)
+			return 0, nil
+		}
+
 		if int64(len(objs)) < batchSize {
 			continueDeleteObject = false
 		}

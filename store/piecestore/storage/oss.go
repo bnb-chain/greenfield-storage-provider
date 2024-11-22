@@ -89,6 +89,11 @@ func (o *ossStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint6
 			return size, err
 		}
 
+		if len(objs) == 0 {
+			log.CtxDebugw(ctx, "No object is listed in oss by prefix", "prefix", key)
+			return 0, nil
+		}
+
 		// if the object listed here is less than required batch size, meaning it is the last page
 		if int64(len(objs)) < batchSize {
 			continueDeleteObject = false
