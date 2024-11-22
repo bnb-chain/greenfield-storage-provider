@@ -143,7 +143,7 @@ func (s *s3Store) DeleteObject(ctx context.Context, key string) error {
 func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
 	var (
 		objectIdentifiers    []*s3.ObjectIdentifier
-		objectKeySizeMap     map[string]uint64
+		objectKeySizeMap     = make(map[string]uint64)
 		continueDeleteObject = true
 		batchSize            = int64(1000)
 		size                 uint64
@@ -156,17 +156,22 @@ func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64
 			return size, err
 		}
 
+		if len(objs) == 0 {
+			log.CtxDebugw(ctx, "No object is listed in s3 by prefix", "prefix", key)
+			return 0, nil
+		}
+
 		if int64(len(objs)) < batchSize {
 			continueDeleteObject = false
 		}
 
 		for _, obj := range objs {
 			objKey := obj.Key()
-			objectIdentifiers = append(objectIdentifiers, &s3.ObjectIdentifier{Key: &objKey})
+			objectIdentifiers = append(objectIdentifiers, &s3.ObjectIdentifier{Key: aws.String(objKey)})
 			objectKeySizeMap[obj.Key()] = uint64(obj.Size())
 		}
 
-		deleteParams := s3.Delete{Objects: make([]*s3.ObjectIdentifier, 0)}
+		deleteParams := s3.Delete{Objects: objectIdentifiers}
 		param := &s3.DeleteObjectsInput{
 			Bucket: aws.String(s.bucketName),
 			Delete: &deleteParams,
@@ -177,7 +182,7 @@ func (s *s3Store) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64
 		}
 		if deleteObjectsOutput != nil {
 			for _, deletedObj := range deleteObjectsOutput.Deleted {
-				size += objectKeySizeMap[*(deletedObj.Key)]
+				size += objectKeySizeMap[aws.StringValue(deletedObj.Key)]
 			}
 		}
 	}

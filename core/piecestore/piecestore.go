@@ -50,5 +50,5 @@ type PieceStore interface {
 	DeletePiece(ctx context.Context, key string) error
 	// DeletePiecesByPrefix deletes pieces data from piece store, it can delete
 	// segment or ec piece data.
-	DeletePiecesByPrefix(ctx context.Context, key string) error
+	DeletePiecesByPrefix(ctx context.Context, key string) (uint64, error)
 }

@@ -206,11 +206,12 @@ func (mr *MockPieceStoreMockRecorder) DeletePiece(ctx, key any) *gomock.Call {
 }
 
 // DeletePiecesByPrefix mocks base method.
-func (m *MockPieceStore) DeletePiecesByPrefix(ctx context.Context, key string) error {
+func (m *MockPieceStore) DeletePiecesByPrefix(ctx context.Context, key string) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePiecesByPrefix", ctx, key)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeletePiecesByPrefix indicates an expected call of DeletePiecesByPrefix.

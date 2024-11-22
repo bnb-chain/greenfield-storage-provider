@@ -134,7 +134,7 @@ func (client *StoreClient) DeletePiece(ctx context.Context, key string) error {
 }
 
 // DeletePiecesByPrefix deletes pieces by prefix from piece store.
-func (client *StoreClient) DeletePiecesByPrefix(ctx context.Context, key string) error {
+func (client *StoreClient) DeletePiecesByPrefix(ctx context.Context, key string) (uint64, error) {
 	var (
 		startTime = time.Now()
 		err       error
@@ -154,5 +154,6 @@ func (client *StoreClient) DeletePiecesByPrefix(ctx context.Context, key string)
 	}()
 
 	valSize, err = client.ps.DeleteByPrefix(ctx, key)
-	return err
+
+	return valSize, err
 }
