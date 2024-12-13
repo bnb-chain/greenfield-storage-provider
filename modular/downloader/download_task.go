@@ -3,7 +3,9 @@ package downloader
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -37,6 +39,10 @@ var (
 
 func ErrPieceStoreWithDetail(detail string) *gfsperrors.GfSpError {
 	return gfsperrors.Register(module.ReceiveModularName, http.StatusInternalServerError, 85101, detail)
+}
+
+func ErrPieceStoreNoSuchKeyWithDetail(detail string) *gfsperrors.GfSpError {
+	return gfsperrors.Register(module.ReceiveModularName, http.StatusNotFound, 85102, detail)
 }
 
 func ErrGfSpDBWithDetail(detail string) *gfsperrors.GfSpError {
@@ -175,8 +181,12 @@ func (d *DownloadModular) HandleDownloadObjectTask(ctx context.Context, download
 			int64(pInfo.Offset), int64(pInfo.Length))
 		if getPieceErr != nil {
 			log.CtxErrorw(ctx, "failed to get piece data from piece store", "task_info", downloadObjectTask.Info(), "piece_info", pInfo, "error", getPieceErr)
-			err = ErrPieceStoreWithDetail("failed to get piece data from piece store, error: " + getPieceErr.Error())
-			return nil, err
+			pieceStoreErrDetail := "failed to get piece data from piece store, task_info: " + downloadObjectTask.Info() + ", error: " + err.Error()
+			if isErrNoSuchKey(err) {
+				return nil, ErrPieceStoreNoSuchKeyWithDetail(pieceStoreErrDetail)
+			} else {
+				return nil, ErrPieceStoreWithDetail(pieceStoreErrDetail)
+			}
 		}
 		d.pieceCache.Add(key, piece)
 		data = append(data, piece...)
@@ -389,7 +399,11 @@ func (d *DownloadModular) HandleDownloadPieceTask(ctx context.Context, downloadP
 		int64(downloadPieceTask.GetPieceOffset()), int64(downloadPieceTask.GetPieceLength())); err != nil {
 		metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_put_piece_time").Observe(time.Since(putPieceTime).Seconds())
 		log.CtxErrorw(ctx, "failed to get piece data from piece store", "task_info", downloadPieceTask.Info(), "error", err)
-		return nil, ErrPieceStoreWithDetail("failed to get piece data from piece store, task_info: " + downloadPieceTask.Info() + ", error: " + err.Error())
+		pieceStoreErrDetail := "failed to get piece data from piece store, task_info: " + downloadPieceTask.Info() + ", error: " + err.Error()
+		if isErrNoSuchKey(err) {
+			return nil, ErrPieceStoreNoSuchKeyWithDetail(pieceStoreErrDetail)
+		}
+		return nil, ErrPieceStoreWithDetail(pieceStoreErrDetail)
 	}
 	metrics.PerfGetObjectTimeHistogram.WithLabelValues("get_object_put_piece_time").Observe(time.Since(putPieceTime).Seconds())
 	return pieceData, nil
@@ -462,7 +476,12 @@ func (d *DownloadModular) HandleChallengePiece(ctx context.Context, challengePie
 	metrics.PerfChallengeTimeHistogram.WithLabelValues("challenge_get_piece_time").Observe(time.Since(getPieceTime).Seconds())
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to get piece data", "task", challengePieceTask, "error", err)
-		return nil, nil, nil, ErrPieceStoreWithDetail("failed to get piece data, error: " + err.Error())
+		pieceStoreErrDetail := "failed to get piece data, task: " + challengePieceTask.Info() + ", error: " + err.Error()
+		if isErrNoSuchKey(err) {
+			return nil, nil, nil, ErrPieceStoreNoSuchKeyWithDetail(pieceStoreErrDetail)
+		} else {
+			return nil, nil, nil, ErrPieceStoreWithDetail(pieceStoreErrDetail)
+		}
 	}
 
 	return integrity.IntegrityChecksum, integrity.PieceChecksumList, data, nil
@@ -473,4 +492,9 @@ func (d *DownloadModular) PostChallengePiece(context.Context, task.ChallengePiec
 
 func (d *DownloadModular) QueryTasks(context.Context, task.TKey) ([]task.Task, error) {
 	return nil, nil
+}
+
+func isErrNoSuchKey(err error) bool {
+	msg := err.Error()
+	return strings.Contains(msg, s3.ErrCodeNoSuchKey)
 }
