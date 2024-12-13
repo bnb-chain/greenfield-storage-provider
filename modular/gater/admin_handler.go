@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/s3"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	commonhash "github.com/bnb-chain/greenfield-common/go/hash"

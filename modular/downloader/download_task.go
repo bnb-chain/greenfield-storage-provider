@@ -3,12 +3,12 @@ package downloader
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"net/http"
 	"strings"
 	"sync/atomic"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/s3"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsperrors"
