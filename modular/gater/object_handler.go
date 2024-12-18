@@ -663,7 +663,7 @@ func (g *GateModular) downloadObject(w http.ResponseWriter, reqCtx *RequestConte
 			log.CtxErrorw(reqCtx.Context(), "failed to download piece", "error", err)
 			downloaderErr := gfsperrors.MakeGfSpError(err)
 			// if it is the first piece and the quota db is not updated, no extra data need to updated
-			if idx >= 1 || (idx == 0 && downloaderErr.GetInnerCode() == 85101) {
+			if idx >= 1 || (idx == 0 && (downloaderErr.GetInnerCode() == 85101 || downloaderErr.GetInnerCode() == 85102)) {
 				extraQuota = downloadSize - consumedQuota
 			}
 			return err
