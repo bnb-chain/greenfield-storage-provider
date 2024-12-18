@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.10.1
+FEATURES
+* [#1440](https://github.com/bnb-chain/greenfield-storage-provider/pull/1440) feat: add index to permission table and add piece store no such key error as 404 code
+
 ## v1.10.0
 BUGFIXES
 * [#1435](https://github.com/bnb-chain/greenfield-storage-provider/pull/1435) fix: gc objects
