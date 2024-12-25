@@ -813,6 +813,13 @@ func (g *Gnfd) VerifyGetObjectPermission(ctx context.Context, account, bucket, o
 	})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify get object permission", "account", account, "error", err)
+		// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+		if strings.Contains(err.Error(), "No such bucket") {
+			return false, ErrNoSuchBucket
+		}
+		if strings.Contains(err.Error(), "No such object") {
+			return false, ErrNoSuchObject
+		}
 		return false, err
 	}
 	if resp.GetEffect() == permissiontypes.EFFECT_ALLOW {
@@ -1028,6 +1035,13 @@ func (g *Gnfd) VerifyUpdateObjectPermission(ctx context.Context, account, bucket
 	})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify update object content permission", "account", account, "bucket_name", bucket, "object_name", object, "error", err)
+		// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+		if strings.Contains(err.Error(), "No such bucket") {
+			return false, ErrNoSuchBucket
+		}
+		if strings.Contains(err.Error(), "No such object") {
+			return false, ErrNoSuchObject
+		}
 		return false, err
 	}
 	return resp.GetEffect() == permissiontypes.EFFECT_ALLOW, err
