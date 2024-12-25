@@ -853,6 +853,10 @@ func (g *Gnfd) VerifyPutObjectPermission(ctx context.Context, account, bucket, o
 	})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to verify put object permission", "account", account, "error", err)
+		// refer to https://github.com/bnb-chain/greenfield/blob/master/x/storage/types/errors.go
+		if strings.Contains(err.Error(), "No such bucket") {
+			return false, ErrNoSuchBucket
+		}
 		return false, err
 	}
 	if resp.GetEffect() == permissiontypes.EFFECT_ALLOW {
