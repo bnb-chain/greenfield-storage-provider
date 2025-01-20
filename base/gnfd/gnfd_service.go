@@ -504,6 +504,9 @@ func (g *Gnfd) QueryBucketInfo(ctx context.Context, bucket string) (bucketInfo *
 	resp, err := client.HeadBucket(ctx, &storagetypes.QueryHeadBucketRequest{BucketName: bucket})
 	if err != nil {
 		log.CtxErrorw(ctx, "failed to query bucket", "bucket_name", bucket, "error", err)
+		if strings.Contains(err.Error(), "No such bucket") {
+			return nil, ErrNoSuchBucket
+		}
 		return nil, err
 	}
 	return resp.GetBucketInfo(), nil
