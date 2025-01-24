@@ -16,6 +16,8 @@ const (
 	LdfsStore = "ldfs"
 	// MemoryStore defines storage type for memory
 	MemoryStore = "memory"
+	// WeavevmStore defines storage type for weavevm
+	WeavevmStore = "weavevm"
 )
 
 // piece store storage config and environment constants

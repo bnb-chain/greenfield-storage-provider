@@ -2,8 +2,6 @@ package types
 
 import (
 	"time"
-
-	uretry "github.com/dymensionxyz/dymint/utils/retry"
 )
 
 const (
@@ -23,11 +21,6 @@ type Config struct {
 	Web3SignerTLSCertFile   string `json:"web3_signer_tls_cert_file,omitempty"`
 	Web3SignerTLSKeyFile    string `json:"web3_signer_tls_key_file,omitempty"`
 	Web3SignerTLSCACertFile string `json:"web3_signer_tls_ca_cert_file,omitempty"`
-
-	// Retry config
-	Backoff       uretry.BackoffConfig `json:"backoff,omitempty"`
-	RetryAttempts *int                 `json:"retry_attempts,omitempty"`
-	RetryDelay    time.Duration        `json:"retry_delay,omitempty"`
 }
 
 type RetrieverResponse struct {
@@ -37,10 +30,15 @@ type RetrieverResponse struct {
 	WvmBlockHash       string `json:"wvm_block_hash"`
 }
 
-type WvmDymintBlob struct {
+type WvmGatewayData struct {
 	ArweaveBlockHash string
 	WvmBlockHash     string
 	WvmTxHash        string
 	WvmBlockNumber   uint64
 	Blob             []byte
+}
+
+type PutObjectInput struct {
+	Body     []byte
+	Metadata map[string]*string
 }

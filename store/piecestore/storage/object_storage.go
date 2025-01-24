@@ -28,6 +28,7 @@ var storageMap = map[string]StorageFn{
 	LdfsStore:     newLdfsStore,
 	DiskFileStore: newDiskFileStore,
 	MemoryStore:   newMemoryStore,
+	WeavevmStore:  newWeaveVMmStore,
 }
 
 type DefaultObjectStorage struct{}

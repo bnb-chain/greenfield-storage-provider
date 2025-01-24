@@ -38,28 +38,12 @@ type Gateway interface {
 	RetrieveFromGateway(ctx context.Context, txHash string) (*weaveVMtypes.WvmDymintBlob, error)
 }
 
-// TODO: adjust
-const (
-	defaultRpcRetryDelay    = 3 * time.Second
-	defaultRpcTimeout       = 5 * time.Second
-	defaultRpcRetryAttempts = 5
-)
-
-var defaultSubmitBackoff = uretry.NewBackoffConfig(
-	uretry.WithInitialDelay(time.Second*6),
-	uretry.WithMaxDelay(time.Second*6),
-)
-
 // DataAvailabilityLayerClient use celestia-node public API.
 type DataAvailabilityLayerClient struct {
-	client       WeaveVM
-	gateway      Gateway
-	pubsubServer *pubsub.Server
-	config       *weaveVMtypes.Config
-	logger       types.Logger
-	ctx          context.Context
-	cancel       context.CancelFunc
-	synced       chan struct{}
+	client  WeaveVM
+	gateway Gateway
+	config  *weaveVMtypes.Config
+	logger  types.Logger
 }
 
 var (
@@ -176,29 +160,6 @@ func (c *DataAvailabilityLayerClient) Init(config []byte, pubsubServer *pubsub.S
 	}
 
 	return nil
-}
-
-// Start starts DataAvailabilityLayerClient instance.
-func (c *DataAvailabilityLayerClient) Start() error {
-	c.synced <- struct{}{}
-	return nil
-}
-
-// Stop stops DataAvailabilityLayerClient instance.
-func (c *DataAvailabilityLayerClient) Stop() error {
-	c.cancel()
-	close(c.synced)
-	return nil
-}
-
-// WaitForSyncing is used to check when the DA light client finished syncing
-func (m *DataAvailabilityLayerClient) WaitForSyncing() {
-	<-m.synced
-}
-
-// GetClientType returns client type.
-func (c *DataAvailabilityLayerClient) GetClientType() da.Client {
-	return da.WeaveVM
 }
 
 // SubmitBatch submits a batch to the DA layer.
