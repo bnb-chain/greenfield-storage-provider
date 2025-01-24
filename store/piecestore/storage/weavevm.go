@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
@@ -42,8 +43,7 @@ func (s *weavevmStore) String() string {
 
 // TODO: 	return nil, ErrUnsupportedMethod ?
 func (s *weavevmStore) CreateBucket(ctx context.Context) error {
-	log.Debugw("create bucket operation on WeaveVM store - non supported")
-	return nil
+	return ErrUnsupportedMethod
 }
 
 func (s *weavevmStore) GetObject(ctx context.Context, key string, offset, limit int64) (io.ReadCloser, error) {
@@ -62,15 +62,16 @@ func (s *weavevmStore) GetObject(ctx context.Context, key string, offset, limit 
 		return nil, err
 	}
 
-	if cs := objData.Metadata[ChecksumAlgo]; cs != nil {
-		return verifyChecksum(io.NopCloser(bytes.NewReader(objData.Body)), aws.StringValue(cs)), nil
+	if offset == 0 && limit == -1 {
+		if cs := objData.Metadata[ChecksumAlgo]; cs != nil {
+			return verifyChecksum(io.NopCloser(bytes.NewReader(objData.Body)), aws.StringValue(cs)), nil
+		}
 	}
 
 	if offset > int64(len(objData.Body)) {
 		offset = int64(len(objData.Body))
 	}
 	data := objData.Body[offset:]
-	log.Infow("uu", "limit", limit, "length", len(data))
 	if limit > 0 && limit < int64(len(data)) {
 		data = data[:limit]
 	}
@@ -166,13 +167,13 @@ func (s *weavevmStore) waitForTxReceipt(ctx context.Context, txHash string) (*et
 
 // TODO: 	return nil, ErrUnsupportedMethod ?
 func (s *weavevmStore) DeleteObject(ctx context.Context, key string) error {
-	log.Debugw("delete operation on WeaveVM store - data remains permanently available", "key", key)
+	log.Debugw("DeleteObject on WeaveVM store - data remains permanently available", "key", key)
 	return nil
 }
 
 // TODO: 	return nil, ErrUnsupportedMethod ?
 func (s *weavevmStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
-	log.Debugw("bulk delete operation on WeaveVM store - data remains permanently available", "key", key)
+	log.Debugw("DeleteObjectsByPrefix on WeaveVM store - data remains permanently available", "key", key)
 	return 0, nil
 }
 
@@ -181,7 +182,26 @@ func (s *weavevmStore) HeadBucket(ctx context.Context) error {
 }
 
 func (s *weavevmStore) HeadObject(ctx context.Context, key string) (Object, error) {
-	return nil, nil
+	if key == "" {
+		return nil, ErrInvalidObjectKey
+	}
+
+	resp, err := s.gateway.RetrieveFromGatewayByTag(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var objData weaveVMtypes.PutObjectInput
+	if err := json.Unmarshal(resp.Blob, &objData); err != nil {
+		return nil, err
+	}
+
+	return &object{
+		key:  key,
+		size: int64(len(objData.Body)),
+		// modTime: resp.Timestamp,
+		isDir: strings.HasSuffix(key, "/"),
+	}, nil
 }
 
 func (s *weavevmStore) ListObjects(ctx context.Context, prefix, marker, delimiter string, limit int64) ([]Object, error) {
