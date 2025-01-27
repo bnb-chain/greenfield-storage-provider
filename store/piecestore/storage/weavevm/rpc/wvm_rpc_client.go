@@ -9,13 +9,15 @@ import (
 	"strconv"
 	"strings"
 
-	weaveVMtypes "github.com/dymensionxyz/dymint/da/weavevm/types"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
 )
 
 type Signer interface {
@@ -23,28 +25,20 @@ type Signer interface {
 	SignTransaction(ctx context.Context, signData *weaveVMtypes.SignData) (string, error)
 }
 
-type Logger interface {
-	Debug(msg string, keyvals ...interface{})
-	Info(msg string, keyvals ...interface{})
-	Error(msg string, keyvals ...interface{})
-}
-
 // WeaveVM RPC client
 type RPCClient struct {
-	log     Logger
 	client  *ethclient.Client
 	chainID int64
 	signer  Signer
 }
 
-func NewWvmRPCClient(log Logger, cfg *weaveVMtypes.Config, signer Signer) (*RPCClient, error) {
+func NewWvmRPCClient(cfg *weaveVMtypes.Config, signer Signer) (*RPCClient, error) {
 	client, err := ethclient.Dial(cfg.Endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to the WeaveVM client: %w", err)
 	}
 
 	ethRPCClient := &RPCClient{
-		log:     log,
 		client:  client,
 		chainID: cfg.ChainID,
 		signer:  signer,
@@ -109,7 +103,7 @@ func (rpc *RPCClient) estimateGas(ctx context.Context, to string, data []byte) (
 		return 0, err
 	}
 
-	rpc.log.Debug("weaveVM: estimated tx gas price", "price", gas)
+	log.Debugw("weaveVM: estimated tx gas price", "price", gas)
 
 	return gas, nil
 }
@@ -164,11 +158,11 @@ func (rpc *RPCClient) sendRawTransaction(ctx context.Context, signedTxHex string
 		return "", err
 	}
 
-	rpc.log.Info("weaveVM: successfully sent transaction", "tx hash", tx.Hash().String())
+	log.Infow("weaveVM: successfully sent transaction", "tx hash", tx.Hash().String())
 
 	err = rpc.logReceipt(tx)
 	if err != nil {
-		rpc.log.Error("failed to log sent transaction receipt", "error", err)
+		log.Errorw("failed to log sent transaction receipt", "error", err)
 	}
 
 	return tx.Hash().String(), nil
@@ -217,7 +211,7 @@ func (rpc *RPCClient) logReceipt(tx *ethtypes.Transaction) error {
 		return err
 	}
 
-	rpc.log.Debug("weaveVM: transaction receipt", "tx receipt", string(txJSON))
+	log.Debugw("weaveVM: transaction receipt", "tx receipt", string(txJSON))
 	return nil
 }
 

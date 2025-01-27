@@ -14,19 +14,20 @@ import (
 	"os"
 	"strings"
 
-	weaveVMtypes "github.com/dymensionxyz/dymint/da/weavevm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
 )
 
 type Web3SignerClient struct {
 	chainID  int64
 	endpoint string
-	log      Logger
 	client   *http.Client
 }
 
-func NewWeb3SignerClient(cfg *weaveVMtypes.Config, log Logger) (*Web3SignerClient, error) {
+func NewWeb3SignerClient(cfg *weaveVMtypes.Config) (*Web3SignerClient, error) {
 	transport := &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout: cfg.Timeout,
@@ -36,7 +37,7 @@ func NewWeb3SignerClient(cfg *weaveVMtypes.Config, log Logger) (*Web3SignerClien
 
 	// Configure TLS if cert and key files are provided
 	if cfg.Web3SignerTLSCertFile != "" && cfg.Web3SignerTLSKeyFile != "" {
-		err := configureTransportTLS(transport, cfg, log)
+		err := configureTransportTLS(transport, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -49,13 +50,12 @@ func NewWeb3SignerClient(cfg *weaveVMtypes.Config, log Logger) (*Web3SignerClien
 
 	return &Web3SignerClient{
 		endpoint: cfg.Web3SignerEndpoint,
-		log:      log,
 		client:   client,
 		chainID:  cfg.ChainID,
 	}, nil
 }
 
-func configureTransportTLS(transport *http.Transport, cfg *weaveVMtypes.Config, log Logger) error {
+func configureTransportTLS(transport *http.Transport, cfg *weaveVMtypes.Config) error {
 	tlsConfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}
@@ -81,13 +81,13 @@ func configureTransportTLS(transport *http.Transport, cfg *weaveVMtypes.Config, 
 		tlsConfig.RootCAs = caCertPool
 	} else {
 		// If no CA cert provided, skip verification
-		log.Info("No CA certificate provided, TLS verification will be skipped",
+		log.Infow("No CA certificate provided, TLS verification will be skipped",
 			"endpoint", cfg.Web3SignerEndpoint)
 		tlsConfig.InsecureSkipVerify = true
 	}
 
 	transport.TLSClientConfig = tlsConfig
-	log.Info("TLS configuration enabled for Web3Signer client",
+	log.Infow("TLS configuration enabled for Web3Signer client",
 		"cert_file", cfg.Web3SignerTLSCertFile,
 		"key_file", cfg.Web3SignerTLSKeyFile,
 		"ca_file", cfg.Web3SignerTLSCACertFile)
@@ -100,7 +100,7 @@ func (web3s *Web3SignerClient) SignTransaction(ctx context.Context, signData *we
 }
 
 func (web3s *Web3SignerClient) signTxWithWeb3Signer(ctx context.Context, to string, data string, gasFeeCap *big.Int, gasLimit, nonce uint64) (string, error) {
-	web3s.log.Info("sign transaction using web3signer")
+	log.Infow("sign transaction using web3signer")
 
 	fromAddress, err := web3s.GetAccount(ctx)
 	if err != nil {

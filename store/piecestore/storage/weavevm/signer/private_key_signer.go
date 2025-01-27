@@ -9,28 +9,22 @@ import (
 	"math/big"
 	"strings"
 
-	weaveVMtypes "github.com/dymensionxyz/dymint/da/weavevm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-)
 
-type Logger interface {
-	Debug(msg string, keyvals ...interface{})
-	Info(msg string, keyvals ...interface{})
-	Error(msg string, keyvals ...interface{})
-}
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
+)
 
 type PrivateKeySigner struct {
 	privateKey string
 	chainID    int64
-
-	log Logger
 }
 
-func NewPrivateKeySigner(privateKey string, log Logger, chainID int64) *PrivateKeySigner {
-	return &PrivateKeySigner{privateKey: privateKey, log: log, chainID: chainID}
+func NewPrivateKeySigner(privateKey string, chainID int64) *PrivateKeySigner {
+	return &PrivateKeySigner{privateKey: privateKey, chainID: chainID}
 }
 
 func (pks *PrivateKeySigner) SignTransaction(_ context.Context, signData *weaveVMtypes.SignData) (string, error) {
@@ -38,7 +32,7 @@ func (pks *PrivateKeySigner) SignTransaction(_ context.Context, signData *weaveV
 }
 
 func (pks *PrivateKeySigner) signTxWithPrivateKey(to string, data string, gasFeeCap *big.Int, gasLimit uint64, nonce uint64) (string, error) {
-	pks.log.Info("sign transaction using private key")
+	log.Infow("sign transaction using private key")
 
 	// Prepare data payload.
 	var hexData string

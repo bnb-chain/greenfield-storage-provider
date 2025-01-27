@@ -9,14 +9,13 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
-
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 type WeaveVM interface {
-	SendTransaction(ctx context.Context, to string, data []byte) (string, error)
 	SendWeaveTransaction(ctx context.Context, to string, data []byte, tag string) (string, error)
 	GetTransactionReceipt(ctx context.Context, txHash string) (*ethtypes.Receipt, error)
 	GetTransactionByHash(ctx context.Context, txHash string) (*ethtypes.Transaction, bool, error)
@@ -165,13 +164,11 @@ func (s *weavevmStore) waitForTxReceipt(ctx context.Context, txHash string) (*et
 	return receipt, nil
 }
 
-// TODO: 	return nil, ErrUnsupportedMethod ?
 func (s *weavevmStore) DeleteObject(ctx context.Context, key string) error {
 	log.Debugw("DeleteObject on WeaveVM store - data remains permanently available", "key", key)
 	return nil
 }
 
-// TODO: 	return nil, ErrUnsupportedMethod ?
 func (s *weavevmStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
 	log.Debugw("DeleteObjectsByPrefix on WeaveVM store - data remains permanently available", "key", key)
 	return 0, nil
