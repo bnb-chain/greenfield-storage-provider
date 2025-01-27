@@ -25,7 +25,7 @@ func NewGatewayClient(config *weaveVMtypes.Config) *Gateway {
 const weaveVMGatewayURL = "https://gateway.wvm.dev/v1/calldata/%s"
 
 // Modified get function with improved error handling
-func (g *Gateway) RetrieveFromGateway(ctx context.Context, txHash string) (*weaveVMtypes.WvmGatewayData, error) {
+func (g *Gateway) RetrieveFromGatewayByTag(ctx context.Context, txHash string) (*weaveVMtypes.WvmGatewayData, error) {
 	type WvmRetrieverResponse struct {
 		ArweaveBlockHash   string `json:"arweave_block_hash"`
 		Calldata           string `json:"calldata"`

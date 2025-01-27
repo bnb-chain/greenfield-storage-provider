@@ -66,6 +66,65 @@ func (rpc *RPCClient) SendTransaction(ctx context.Context, to string, data []byt
 	return weaveVMTxHash, nil
 }
 
+func (rpc *RPCClient) SendWeaveTransaction(ctx context.Context, to string, data []byte, tag string) (string, error) {
+	gas, err := rpc.estimateGas(ctx, to, data)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed estimate gas: %w", err)
+	}
+
+	weaveVMRawTx, err := rpc.createRawTransaction(ctx, to, string(data), gas)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed create transaction: %w", err)
+	}
+
+	weaveVMTxHash, err := rpc.sendWeaveTransaction(ctx, weaveVMRawTx, tag)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed to send transaction: %w", err)
+	}
+
+	return weaveVMTxHash, nil
+}
+
+func (rpc *RPCClient) sendWeaveTransaction(ctx context.Context, signedTxHex string, tag string) (string, error) {
+	var err error
+	var signedTxBytes []byte
+
+	if strings.HasPrefix(signedTxHex, "0x") {
+		signedTxBytes, err = hexutil.Decode(signedTxHex)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode signed transaction: %w", err)
+		}
+	} else {
+		signedTxBytes, err = hex.DecodeString(signedTxHex)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode signed transaction: %w", err)
+		}
+	}
+
+	tx := new(ethtypes.Transaction)
+	err = tx.UnmarshalBinary(signedTxBytes)
+	if err != nil {
+		err = rlp.DecodeBytes(signedTxBytes, tx)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse signed transaction: %w", err)
+		}
+	}
+
+	err = rpc.client.SendTransaction(ctx, tx)
+	if err != nil {
+		return "", err
+	}
+
+	log.Infow("weaveVM: successfully sent transaction", "tx hash", tx.Hash().String())
+
+	err = rpc.logReceipt(tx)
+	if err != nil {
+		log.Errorw("failed to log sent transaction receipt", "error", err)
+	}
+
+	return tx.Hash().String(), nil
+}
+
 // estimateGas tries estimates the suggested amount of gas that required to execute a given transaction.
 func (rpc *RPCClient) estimateGas(ctx context.Context, to string, data []byte) (uint64, error) {
 	var (
