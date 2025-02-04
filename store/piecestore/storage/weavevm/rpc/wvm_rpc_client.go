@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"reflect"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
@@ -25,23 +27,42 @@ type Signer interface {
 	SignTransaction(ctx context.Context, signData *weaveVMtypes.SignData) (string, error)
 }
 
+type RpcCaller interface {
+	EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64, error)
+	SuggestGasPrice(ctx context.Context) (*big.Int, error)
+	PendingNonceAt(ctx context.Context, account common.Address) (uint64, error)
+	SendTransaction(ctx context.Context, tx *ethtypes.Transaction) error
+	TransactionReceipt(ctx context.Context, txHash common.Hash) (*ethtypes.Receipt, error)
+}
+
+// ExtendedRpcCaller abstracts the subset of ethrpc.Client methods used in our RPCClient.
+type ExtendedRpcCaller interface {
+	CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error
+}
+
 // WeaveVM RPC client
 type RPCClient struct {
-	client  *ethclient.Client
-	chainID int64
-	signer  Signer
+	client         RpcCaller
+	clientExtended ExtendedRpcCaller
+	chainID        int64
+	signer         Signer
 }
 
 func NewWvmRPCClient(cfg *weaveVMtypes.Config, signer Signer) (*RPCClient, error) {
+	clientExtended, err := ethrpc.Dial(cfg.Endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to the WeaveVM rpc: %w", err)
+	}
 	client, err := ethclient.Dial(cfg.Endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to the WeaveVM client: %w", err)
+		return nil, fmt.Errorf("failed to connect to the WeaveVM rpc: %w", err)
 	}
 
 	ethRPCClient := &RPCClient{
-		client:  client,
-		chainID: cfg.ChainID,
-		signer:  signer,
+		client:         client,
+		clientExtended: clientExtended,
+		chainID:        cfg.ChainID,
+		signer:         signer,
 	}
 
 	return ethRPCClient, nil
@@ -225,15 +246,6 @@ func (rpc *RPCClient) sendRawTransaction(ctx context.Context, signedTxHex string
 	}
 
 	return tx.Hash().String(), nil
-}
-
-func (rpc *RPCClient) GetTransactionByHash(ctx context.Context, txHash string) (*ethtypes.Transaction, bool, error) {
-	hash := common.HexToHash(txHash)
-	tx, isPending, err := rpc.client.TransactionByHash(ctx, hash)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to get transaction by hash: %w", err)
-	}
-	return tx, isPending, nil
 }
 
 func (rpc *RPCClient) GetTransactionReceipt(ctx context.Context, txHash string) (*ethtypes.Receipt, error) {

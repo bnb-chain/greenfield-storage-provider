@@ -18,11 +18,9 @@ import (
 type WeaveVM interface {
 	SendWeaveTransaction(ctx context.Context, to string, data []byte, tag string) (string, error)
 	GetTransactionReceipt(ctx context.Context, txHash string) (*ethtypes.Receipt, error)
-	GetTransactionByHash(ctx context.Context, txHash string) (*ethtypes.Transaction, bool, error)
 }
 
 type WeaveGateway interface {
-	RetrieveFromGateway(ctx context.Context, txHash string) (interface{}, error)
 	RetrieveFromGatewayByTag(ctx context.Context, tag string) (*weaveVMtypes.WvmGatewayData, error)
 }
 
