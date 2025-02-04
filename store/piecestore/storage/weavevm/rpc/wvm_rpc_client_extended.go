@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
 
 // WvmTransactionRequest represents the payload for the custom method "eth_sendWvmTransaction".
