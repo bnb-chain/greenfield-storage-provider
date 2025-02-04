@@ -52,7 +52,10 @@ require (
 	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
 )
 
-require github.com/jackc/puddle/v2 v2.2.1 // indirect
+require (
+	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+)
 
 require (
 	cosmossdk.io/api v0.4.0 // indirect
@@ -286,7 +289,7 @@ require (
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b // indirect
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
