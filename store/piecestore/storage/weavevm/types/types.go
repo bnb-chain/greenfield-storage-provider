@@ -21,6 +21,9 @@ type Config struct {
 	Web3SignerTLSCertFile   string `json:"web3_signer_tls_cert_file,omitempty"`
 	Web3SignerTLSKeyFile    string `json:"web3_signer_tls_key_file,omitempty"`
 	Web3SignerTLSCACertFile string `json:"web3_signer_tls_ca_cert_file,omitempty"`
+
+	RetryAttempts int
+	RetryDelay    time.Duration
 }
 
 type RetrieverResponse struct {

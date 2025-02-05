@@ -1,5 +1,9 @@
 package storage
 
+import (
+	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
+)
+
 // PieceStoreConfig contains some parameters which are used to run PieceStore
 type PieceStoreConfig struct {
 	// Shards store the blocks into N buckets by hash of key
@@ -22,4 +26,7 @@ type ObjectStorageConfig struct {
 	TLSInsecureSkipVerify bool `comment:"optional"`
 	// IAMType is identity and access management type which contains two types: AKSKIAMType/SAIAMType
 	IAMType string `comment:"required"`
+
+	// WeaveVM config
+	WeavevmConfig weaveVMtypes.Config `comment:"optional"`
 }

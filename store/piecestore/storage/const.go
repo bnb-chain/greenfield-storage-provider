@@ -74,6 +74,38 @@ const (
 
 	// OctetStream is used to indicate the binary files
 	OctetStream = "application/octet-stream"
+
+	// WeaveVM Environment Variables
+
+	// WeaveVMEndpoint defines WeaveVM RPC node endpoint
+	WeaveVMEndpoint = "WEAVEVM_ENDPOINT"
+
+	// WeaveVMPrivateKey defines private key in hex format for direct transaction signing
+	WeaveVMPrivateKey = "WEAVEVM_PRIVATE_KEY"
+
+	// WeaveVMChainID defines WeaveVM chain ID for transaction signing
+	WeaveVMChainID = "WEAVEVM_CHAIN_ID"
+
+	// WeaveVMWeb3Endpoint defines Web3Signer endpoint URL
+	WeaveVMWeb3Endpoint = "WEAVEVM_WEB3_ENDPOINT"
+
+	// WeaveVMWeb3TLSCert defines path to Web3Signer TLS certificate file
+	WeaveVMWeb3TLSCert = "WEAVEVM_WEB3_TLS_CERT"
+
+	// WeaveVMWeb3TLSKey defines path to Web3Signer TLS key file
+	WeaveVMWeb3TLSKey = "WEAVEVM_WEB3_TLS_KEY"
+
+	// WeaveVMWeb3TLSCACert defines path to Web3Signer TLS CA certificate file
+	WeaveVMWeb3TLSCACert = "WEAVEVM_WEB3_TLS_CA_CERT"
+
+	// WeaveVMTimeout defines timeout duration for RPC calls in seconds
+	WeaveVMTimeout = "WEAVEVM_TIMEOUT"
+
+	// WeaveVMRetryAttempts defines maximum number of retry attempts
+	WeaveVMRetryAttempts = "WEAVEVM_RETRY_ATTEMPTS"
+
+	// WeaveVMRetryDelay defines delay between retry attempts in milliseconds
+	WeaveVMRetryDelay = "WEAVEVM_RETRY_DELAY"
 )
 
 // define piece store constants.

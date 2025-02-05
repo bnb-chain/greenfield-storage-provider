@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -54,12 +56,31 @@ func (rpc *RPCClient) SendWvmTransaction(ctx context.Context, to string, data []
 	return txHash, nil
 }
 
+// GetWvmTransactionByTag retrieves a transaction by tag and returns it as a typed Transaction
+func (rpc *RPCClient) GetWvmTransactionByTag(ctx context.Context, tag [2]string) (*ethtypes.Transaction, error) {
+	rawTx, err := rpc.GetWvmTransactionByTagRaw(ctx, tag)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rawTx) == 0 {
+		return nil, nil
+	}
+
+	var tx ethtypes.Transaction
+	if err := rlp.DecodeBytes(rawTx, &tx); err != nil {
+		return nil, fmt.Errorf("failed to decode transaction: %w", err)
+	}
+
+	return &tx, nil
+}
+
 // GetWvmTransactionByTag retrieves a transaction by tag using the custom RPC method "eth_getWvmTransactionByTag".
-func (rpc *RPCClient) GetWvmTransactionByTag(ctx context.Context, tag [2]string) ([]byte, error) {
+func (rpc *RPCClient) GetWvmTransactionByTagRaw(ctx context.Context, tag [2]string) ([]byte, error) {
 	req := &GetWvmTransactionByTagRequest{Tag: tag}
 
 	var result hexutil.Bytes
-	if err := rpc.clientExtended.CallContext(ctx, &result, "eth_getWvmTransactionByTag", req); err != nil {
+	if err := rpc.clientExtended.CallContext(ctx, &result, "eth_getWvmTransactionByTagRaw", req); err != nil {
 		return nil, fmt.Errorf("failed to get transaction by tag: %w", err)
 	}
 
