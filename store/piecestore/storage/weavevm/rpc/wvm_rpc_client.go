@@ -1,0 +1,328 @@
+package rpc
+
+import (
+	"context"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"math/big"
+	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rlp"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
+
+	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
+	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
+)
+
+type Signer interface {
+	GetAccount(ctx context.Context) (common.Address, error)
+	SignTransaction(ctx context.Context, signData *weaveVMtypes.SignData) (string, error)
+}
+
+type RpcCaller interface {
+	EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64, error)
+	SuggestGasPrice(ctx context.Context) (*big.Int, error)
+	PendingNonceAt(ctx context.Context, account common.Address) (uint64, error)
+	SendTransaction(ctx context.Context, tx *ethtypes.Transaction) error
+	TransactionReceipt(ctx context.Context, txHash common.Hash) (*ethtypes.Receipt, error)
+}
+
+// ExtendedRpcCaller abstracts the subset of ethrpc.Client methods used in our RPCClient.
+type ExtendedRpcCaller interface {
+	CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error
+}
+
+// WeaveVM RPC client
+type RPCClient struct {
+	client         RpcCaller
+	clientExtended ExtendedRpcCaller
+	chainID        int64
+	signer         Signer
+}
+
+func NewWvmRPCClient(cfg *weaveVMtypes.Config, signer Signer) (*RPCClient, error) {
+	clientExtended, err := ethrpc.Dial(cfg.Endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to the WeaveVM rpc: %w", err)
+	}
+	client, err := ethclient.Dial(cfg.Endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to the WeaveVM rpc: %w", err)
+	}
+
+	ethRPCClient := &RPCClient{
+		client:         client,
+		clientExtended: clientExtended,
+		chainID:        cfg.ChainID,
+		signer:         signer,
+	}
+
+	return ethRPCClient, nil
+}
+
+func (rpc *RPCClient) SendTransaction(ctx context.Context, to string, data []byte) (string, error) {
+	gas, err := rpc.estimateGas(ctx, to, data)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed estimate gas: %w", err)
+	}
+
+	weaveVMRawTx, err := rpc.createRawTransaction(ctx, to, string(data), gas)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed create transaction: %w", err)
+	}
+
+	weaveVMTxHash, err := rpc.sendRawTransaction(ctx, weaveVMRawTx)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed to send transaction: %w", err)
+	}
+
+	return weaveVMTxHash, nil
+}
+
+func (rpc *RPCClient) SendWeaveTransaction(ctx context.Context, to string, data []byte, tag string) (string, error) {
+	gas, err := rpc.estimateGas(ctx, to, data)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed estimate gas: %w", err)
+	}
+
+	weaveVMRawTx, err := rpc.createRawTransaction(ctx, to, string(data), gas)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed create transaction: %w", err)
+	}
+
+	weaveVMTxHash, err := rpc.sendWeaveTransaction(ctx, weaveVMRawTx, tag)
+	if err != nil {
+		return "", fmt.Errorf("failed to store data in weaveVM: failed to send transaction: %w", err)
+	}
+
+	return weaveVMTxHash, nil
+}
+
+func (rpc *RPCClient) sendWeaveTransaction(ctx context.Context, signedTxHex string, tag string) (string, error) {
+	var err error
+	var signedTxBytes []byte
+
+	if strings.HasPrefix(signedTxHex, "0x") {
+		signedTxBytes, err = hexutil.Decode(signedTxHex)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode signed transaction: %w", err)
+		}
+	} else {
+		signedTxBytes, err = hex.DecodeString(signedTxHex)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode signed transaction: %w", err)
+		}
+	}
+
+	tx := new(ethtypes.Transaction)
+	err = tx.UnmarshalBinary(signedTxBytes)
+	if err != nil {
+		err = rlp.DecodeBytes(signedTxBytes, tx)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse signed transaction: %w", err)
+		}
+	}
+
+	err = rpc.client.SendTransaction(ctx, tx)
+	if err != nil {
+		return "", err
+	}
+
+	log.Infow("weaveVM: successfully sent transaction", "tx hash", tx.Hash().String())
+
+	err = rpc.logReceipt(tx)
+	if err != nil {
+		log.Errorw("failed to log sent transaction receipt", "error", err)
+	}
+
+	return tx.Hash().String(), nil
+}
+
+// estimateGas tries estimates the suggested amount of gas that required to execute a given transaction.
+func (rpc *RPCClient) estimateGas(ctx context.Context, to string, data []byte) (uint64, error) {
+	var (
+		toAddr    = common.HexToAddress(to)
+		bytesData []byte
+		err       error
+	)
+
+	fromAddress, err := rpc.signer.GetAccount(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to estimate gas, no signer: %w", err)
+	}
+
+	var encoded string
+	if string(data) != "" {
+		if ok := strings.HasPrefix(string(data), "0x"); !ok {
+			encoded = hexutil.Encode(data)
+		}
+
+		bytesData, err = hexutil.Decode(encoded)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	msg := ethereum.CallMsg{
+		From: fromAddress,
+		To:   &toAddr,
+		Gas:  0x00,
+		Data: bytesData,
+	}
+
+	gas, err := rpc.client.EstimateGas(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+
+	log.Debugw("weaveVM: estimated tx gas price", "price", gas)
+
+	return gas, nil
+}
+
+// createRawTransaction creates a raw EIP-1559 transaction and returns it as a hex string.
+func (rpc *RPCClient) createRawTransaction(ctx context.Context, to string, data string, gasLimit uint64) (string, error) {
+	baseFee, err := rpc.client.SuggestGasPrice(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	fromAddress, err := rpc.signer.GetAccount(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get an account from signer: %w", err)
+	}
+	nonce, err := rpc.client.PendingNonceAt(ctx, fromAddress)
+	if err != nil {
+		return "", err
+	}
+
+	signData := weaveVMtypes.SignData{To: to, Data: data, GasLimit: gasLimit, GasFeeCap: baseFee, Nonce: nonce}
+	return rpc.signer.SignTransaction(ctx, &signData)
+}
+
+func (rpc *RPCClient) sendRawTransaction(ctx context.Context, signedTxHex string) (string, error) {
+	var err error
+	var signedTxBytes []byte
+
+	if strings.HasPrefix(signedTxHex, "0x") {
+		signedTxBytes, err = hexutil.Decode(signedTxHex)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode signed transaction: %w", err)
+		}
+	} else {
+		signedTxBytes, err = hex.DecodeString(signedTxHex)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode signed transaction: %w", err)
+		}
+	}
+
+	tx := new(ethtypes.Transaction)
+	err = tx.UnmarshalBinary(signedTxBytes)
+	if err != nil {
+		err = rlp.DecodeBytes(signedTxBytes, tx)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse signed transaction: %w", err)
+		}
+	}
+
+	err = rpc.client.SendTransaction(ctx, tx)
+	if err != nil {
+		return "", err
+	}
+
+	log.Infow("weaveVM: successfully sent transaction", "tx hash", tx.Hash().String())
+
+	err = rpc.logReceipt(tx)
+	if err != nil {
+		log.Errorw("failed to log sent transaction receipt", "error", err)
+	}
+
+	return tx.Hash().String(), nil
+}
+
+func (rpc *RPCClient) GetTransactionReceipt(ctx context.Context, txHash string) (*ethtypes.Receipt, error) {
+	hash := common.HexToHash(txHash)
+
+	receipt, err := rpc.client.TransactionReceipt(ctx, hash)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get transaction receipt: %w", err)
+	}
+	return receipt, nil
+}
+
+func (rpc *RPCClient) logReceipt(tx *ethtypes.Transaction) error {
+	var txDetails Transaction
+	txBytes, err := tx.MarshalJSON()
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(txBytes, &txDetails); err != nil {
+		return err
+	}
+
+	txDetails.TransactionCost = tx.Cost().String()
+
+	convertFields := []string{"Nonce", "MaxPriorityFeePerGas", "MaxFeePerGas", "Value", "Type", "Gas"}
+	for _, field := range convertFields {
+		if err := convertHexField(&txDetails, field); err != nil {
+			return err
+		}
+	}
+
+	txJSON, err := json.MarshalIndent(txDetails, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	log.Debugw("weaveVM: transaction receipt", "tx receipt", string(txJSON))
+	return nil
+}
+
+// Transaction represents the structure of the transaction JSON.
+type Transaction struct {
+	Type                 string   `json:"type"`
+	ChainID              string   `json:"chainId"`
+	Nonce                string   `json:"nonce"`
+	To                   string   `json:"to"`
+	Gas                  string   `json:"gas"`
+	GasPrice             string   `json:"gasPrice,omitempty"`
+	MaxPriorityFeePerGas string   `json:"maxPriorityFeePerGas"`
+	MaxFeePerGas         string   `json:"maxFeePerGas"`
+	Value                string   `json:"value"`
+	Input                string   `json:"input"`
+	AccessList           []string `json:"accessList"`
+	V                    string   `json:"v"`
+	R                    string   `json:"r"`
+	S                    string   `json:"s"`
+	YParity              string   `json:"yParity"`
+	Hash                 string   `json:"hash"`
+	TransactionTime      string   `json:"transactionTime,omitempty"`
+	TransactionCost      string   `json:"transactionCost,omitempty"`
+}
+
+func convertHexField(tx *Transaction, field string) error {
+	typeOfTx := reflect.TypeOf(*tx)
+	txValue := reflect.ValueOf(tx).Elem()
+	hexStr := txValue.FieldByName(field).String()
+	intValue, err := strconv.ParseUint(hexStr[2:], 16, 64)
+	if err != nil {
+		return err
+	}
+
+	decimalStr := strconv.FormatUint(intValue, 10)
+	_, ok := typeOfTx.FieldByName(field)
+	if !ok {
+		return fmt.Errorf("field %s does not exist in Transaction struct", field)
+	}
+	txValue.FieldByName(field).SetString(decimalStr)
+
+	return nil
+}

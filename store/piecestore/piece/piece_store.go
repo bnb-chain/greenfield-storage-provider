@@ -8,9 +8,12 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
+	"time"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 	"github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage"
+	weaveVMtypes "github.com/bnb-chain/greenfield-storage-provider/store/piecestore/storage/weavevm/types"
 )
 
 // NewPieceStore returns an instance of PieceStore
@@ -57,6 +60,14 @@ func checkConfig(cfg *storage.PieceStoreConfig) error {
 		cfg.Store.BucketURL = p
 		cfg.Store.BucketURL += "/"
 	}
+
+	if cfg.Store.Storage == storage.WeavevmStore {
+		weavevmConfig, err := getWeaveVMConfigFromEnv()
+		if err != nil {
+			return fmt.Errorf("failed to get weavevm config from env vars: %w", err)
+		}
+		cfg.Store.WeavevmConfig = *weavevmConfig
+	}
 	return nil
 }
 
@@ -64,6 +75,93 @@ func overrideConfigFromEnv(cfg *storage.PieceStoreConfig) {
 	if val, ok := os.LookupEnv(storage.BucketURL); ok {
 		cfg.Store.BucketURL = val
 	}
+}
+
+func getWeaveVMConfigFromEnv() (*weaveVMtypes.Config, error) {
+	cfg := &weaveVMtypes.Config{
+		// Set defaults
+		RetryAttempts: 3,
+		RetryDelay:    time.Millisecond * 100,
+		Timeout:       time.Second * 3,
+	}
+
+	// Required: Endpoint
+	endpoint := os.Getenv(storage.WeaveVMEndpoint)
+	if endpoint == "" {
+		return nil, fmt.Errorf("%s environment variable is required", storage.WeaveVMEndpoint)
+	}
+	cfg.Endpoint = endpoint
+
+	// Required: ChainID
+	chainID := os.Getenv(storage.WeaveVMChainID)
+	if chainID == "" {
+		return nil, fmt.Errorf("%s environment variable is required", storage.WeaveVMChainID)
+	}
+	id, err := strconv.ParseInt(chainID, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid %s: %w", storage.WeaveVMChainID, err)
+	}
+	cfg.ChainID = id
+
+	// Authentication method
+	web3Endpoint := os.Getenv(storage.WeaveVMWeb3Endpoint)
+	privateKey := os.Getenv(storage.WeaveVMPrivateKey)
+
+	if web3Endpoint != "" {
+		cfg.Web3SignerEndpoint = web3Endpoint
+
+		// Web3Signer TLS config - all files must be provided if using TLS
+		tlsCert := os.Getenv(storage.WeaveVMWeb3TLSCert)
+		tlsKey := os.Getenv(storage.WeaveVMWeb3TLSKey)
+		tlsCACert := os.Getenv(storage.WeaveVMWeb3TLSCACert)
+
+		if tlsCert != "" || tlsKey != "" || tlsCACert != "" {
+			// If any TLS env var is set, all must be set
+			if tlsCert == "" || tlsKey == "" || tlsCACert == "" {
+				return nil, fmt.Errorf("all TLS files must be provided when using Web3Signer with TLS: cert, key and CA cert")
+			}
+			cfg.Web3SignerTLSCertFile = tlsCert
+			cfg.Web3SignerTLSKeyFile = tlsKey
+			cfg.Web3SignerTLSCACertFile = tlsCACert
+		}
+	} else if privateKey != "" {
+		cfg.PrivateKeyHex = privateKey
+	} else {
+		return nil, fmt.Errorf("either %s or %s must be provided", storage.WeaveVMWeb3Endpoint, storage.WeaveVMPrivateKey)
+	}
+
+	// Optional params
+	if timeoutStr := os.Getenv(storage.WeaveVMTimeout); timeoutStr != "" {
+		timeout, err := strconv.ParseInt(timeoutStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid %s: %w", storage.WeaveVMTimeout, err)
+		}
+		cfg.Timeout = time.Second * time.Duration(timeout)
+	}
+
+	if attemptsStr := os.Getenv(storage.WeaveVMRetryAttempts); attemptsStr != "" {
+		attempts, err := strconv.Atoi(attemptsStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid %s: %w", storage.WeaveVMRetryAttempts, err)
+		}
+		if attempts < 0 {
+			return nil, fmt.Errorf("%s must be non-negative", storage.WeaveVMRetryAttempts)
+		}
+		cfg.RetryAttempts = attempts
+	}
+
+	if delayStr := os.Getenv(storage.WeaveVMRetryDelay); delayStr != "" {
+		delay, err := strconv.ParseInt(delayStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid %s: %w", storage.WeaveVMRetryDelay, err)
+		}
+		if delay < 0 {
+			return nil, fmt.Errorf("%s must be non-negative", storage.WeaveVMRetryDelay)
+		}
+		cfg.RetryDelay = time.Millisecond * time.Duration(delay)
+	}
+
+	return cfg, nil
 }
 
 func createStorage(cfg storage.PieceStoreConfig) (storage.ObjectStorage, error) {
@@ -108,7 +206,7 @@ func checkBucket(ctx context.Context, store storage.ObjectStorage) error {
 }
 
 func setDefaultFileStorePath() string {
-	var defaultBucket = "/var/piecestore"
+	defaultBucket := "/var/piecestore"
 	switch runtime.GOOS {
 	case "linux":
 		if os.Getuid() == 0 {
