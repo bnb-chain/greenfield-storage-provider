@@ -24,7 +24,7 @@ import (
 
 const (
 	recoverBatchSize = 50
-	maxRecoveryRetry = 5
+	maxRecoveryRetry = 20
 	MaxRecoveryTime  = 50
 
 	recoverInterval     = 10 * time.Second
