@@ -14,6 +14,9 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
+    permissions: 
+      contents: read
+      packages: write
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push'
 
@@ -48,9 +51,6 @@ jobs:
           --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
           --label "org.opencontainers.image.licenses=LGPL-3.0,GPL-3.0" \
           -f ./Dockerfile.distroless -t "${IMAGE_NAME}:distroless"
-
-      - name: Log into registry
-        run: echo "${{ secrets.GH_SECRET }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push image
         run: |
