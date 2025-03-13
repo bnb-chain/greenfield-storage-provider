@@ -43,7 +43,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${IMAGE_NAME}
+          tags: ${{ env.IMAGE_NAME }}
           file: ./Dockerfile
           labels: |
             org.opencontainers.image.source=${IMAGE_SOURCE}
@@ -53,7 +53,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${IMAGE_NAME}:distroless
+          tags: ${{ env.IMAGE_NAME }}:distroless
           file: Dockerfile.distroless
           labels: |
             org.opencontainers.image.source=${IMAGE_SOURCE}
