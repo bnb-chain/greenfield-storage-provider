@@ -64,7 +64,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ env.IMAGE_NAME }}:distroless:${{ github.sha }}
+          tags: ${{ env.IMAGE_NAME }}:distroless-${{ github.sha }}
           file: Dockerfile.distroless
           labels: |
             org.opencontainers.image.source=${IMAGE_SOURCE}
