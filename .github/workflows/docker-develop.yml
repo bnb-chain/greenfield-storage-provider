@@ -5,7 +5,7 @@ on:
     branches: [ develop, master, ci-*]
 
 env:
-  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider-invisible
+  IMAGE_NAME: ghcr.io/bnb-chain/greenfield-storage-provider
   IMAGE_SOURCE: https://github.com/bnb-chain/greenfield-storage-provider
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ env.IMAGE_NAME }}:invisible-${{ github.sha }}
 
           file: ./Dockerfile
           labels: |
@@ -64,7 +64,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ env.IMAGE_NAME }}:distroless-${{ github.sha }}
+          tags: ${{ env.IMAGE_NAME }}:invisible-distroless-${{ github.sha }}
           file: Dockerfile.distroless
           labels: |
             org.opencontainers.image.source=${IMAGE_SOURCE}
