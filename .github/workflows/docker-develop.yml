@@ -53,9 +53,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ｜
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
           file: ./Dockerfile
           labels: |
