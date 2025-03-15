@@ -255,7 +255,7 @@ func (s *SpDBImpl) GetSpByEndpoint(endpoint string) (*sptypes.StorageProvider, e
 	}, nil
 }
 
-// GetSpById query sp info by id
+// GetSpByID query sp info by id
 func (s *SpDBImpl) GetSpByID(id uint32) (*sptypes.StorageProvider, error) {
 	queryReturn := &SpInfoTable{}
 	result := s.db.First(queryReturn, "id = ? and is_own = false", id)

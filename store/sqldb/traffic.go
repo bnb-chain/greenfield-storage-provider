@@ -82,7 +82,7 @@ func (s *SpDBImpl) CheckQuotaAndAddReadRecord(record *corespdb.ReadRecord, quota
 	return nil
 }
 
-// getUpdatedConsumedQuota compute the updated quota of traffic table by the incoming read cost and the newest record.
+// getUpdatedConsumedQuotaV2 compute the updated quota of traffic table by the incoming read cost and the newest record.
 // it returns the updated consumed free quota,consumed charged quota and remained free quota
 func getUpdatedConsumedQuotaV2(recordQuotaCost, freeQuotaRemain, consumeFreeQuota, consumeChargedQuota, chargedQuota, monthlyFreeQuotaRemain, consumeMonthlyFreeQuota uint64) (uint64, uint64, uint64, uint64, uint64, error) {
 	log.Infow("quota info", "freeQuotaRemain", freeQuotaRemain, "consumeFreeQuota", consumeFreeQuota, "consumeChargedQuota", consumeChargedQuota, "chargedQuota", chargedQuota, "monthlyFreeQuotaRemain", monthlyFreeQuotaRemain, "consumeMonthlyFreeQuota", consumeMonthlyFreeQuota)
