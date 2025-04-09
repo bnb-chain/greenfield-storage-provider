@@ -2,6 +2,7 @@ package sqldb
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-storage-provider/core/spdb"
 )
@@ -74,13 +75,25 @@ func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 }
 
 func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error) {
-	result := s.db.Table(RecoverGVGStatsTableName).Where("virtual_group_id = ?", stats.VirtualGroupID).
-		Updates(&RecoverGVGStatsTable{
-			Status:         int(stats.Status),
-			StartAfter:     stats.StartAfter,
-			NextStartAfter: stats.NextStartAfter,
-			ObjectCount:    stats.ObjectCount,
-		})
+	var result *gorm.DB
+	if stats.Limit != 0 {
+		result = s.db.Table(RecoverGVGStatsTableName).Where("virtual_group_id = ?", stats.VirtualGroupID).
+			Updates(&RecoverGVGStatsTable{
+				Status:         int(stats.Status),
+				StartAfter:     stats.StartAfter,
+				NextStartAfter: stats.NextStartAfter,
+				ObjectCount:    stats.ObjectCount,
+				Limit:          uint32(stats.Limit),
+			})
+	} else {
+		result = s.db.Table(RecoverGVGStatsTableName).Where("virtual_group_id = ?", stats.VirtualGroupID).
+			Updates(&RecoverGVGStatsTable{
+				Status:         int(stats.Status),
+				StartAfter:     stats.StartAfter,
+				NextStartAfter: stats.NextStartAfter,
+				ObjectCount:    stats.ObjectCount,
+			})
+	}
 	if result.Error != nil {
 		return fmt.Errorf("failed to update the GVG status for recover_stats table: %s", result.Error)
 	}

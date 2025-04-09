@@ -291,6 +291,9 @@ func (s *RecoverGVGScheduler) Start() {
 		lastObjectID := objects[len(objects)-1].Object.ObjectInfo.Id.Uint64()
 		if lastObjectID != gvgStats.NextStartAfter {
 			gvgStats.NextStartAfter = lastObjectID
+			if gvgStats.Limit != recoverBatchSize {
+				gvgStats.Limit = recoverBatchSize
+			}
 			err = s.manager.baseApp.GfSpDB().UpdateRecoverGVGStats(gvgStats)
 			if err != nil {
 				log.Error("failed to update GVG stats", "lastObjectID", lastObjectID)
