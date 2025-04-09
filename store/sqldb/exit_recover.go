@@ -76,7 +76,7 @@ func (s *SpDBImpl) SetRecoverGVGStats(stats []*spdb.RecoverGVGStats) error {
 
 func (s *SpDBImpl) UpdateRecoverGVGStats(stats *spdb.RecoverGVGStats) (err error) {
 	var result *gorm.DB
-	if stats.Limit != 0 {
+	if stats.Limit == 200 {
 		result = s.db.Table(RecoverGVGStatsTableName).Where("virtual_group_id = ?", stats.VirtualGroupID).
 			Updates(&RecoverGVGStatsTable{
 				Status:         int(stats.Status),
