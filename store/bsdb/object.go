@@ -481,7 +481,7 @@ func (b *BsDBImpl) ListObjectsInGVG(gvgID uint32, startAfter common.Hash, limit 
 
 		// Apply the filter
 		query += fmt.Sprintf(filterQuery, startAfter)
-		finalQuery := fmt.Sprintf("select /*+ MAX_EXECUTION_TIME(10000) */ * from( %s", query)
+		finalQuery := fmt.Sprintf("select /*+ MAX_EXECUTION_TIME(30000) */ * from( %s", query)
 		err = b.db.Table((&Object{}).TableName()).Raw(finalQuery).Find(&objects).Error
 		if err != nil {
 			// Handle error
