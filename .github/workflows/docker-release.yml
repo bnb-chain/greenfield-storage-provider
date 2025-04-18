@@ -21,6 +21,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Dummy artifact upload to enforce v4
+        uses: actions/upload-artifact@v4
+        with:
+          name: noop
+          path: /dev/null
 
       - uses: bufbuild/buf-setup-action@v1.50.0
         with:
