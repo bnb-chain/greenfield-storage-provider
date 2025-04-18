@@ -29,7 +29,7 @@ jobs:
           buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
       
       - name: Install Protoc
-        uses: arduino/setup-protoc@v1
+        uses: arduino/setup-protoc@v3
 
       - run: |
           make install-tools
