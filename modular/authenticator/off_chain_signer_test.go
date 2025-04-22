@@ -255,7 +255,7 @@ func GenerateKey(r io.Reader) (*PrivateKey, error) {
 
 	var bscalar big.Int
 	bscalar.SetBytes(scalar[:])
-	pub.A.ScalarMul(&c.Base, &bscalar)
+	pub.A.ScalarMultiplication(&c.Base, &bscalar)
 
 	var res [sizeFr * 3]byte
 	pubkBin := pub.A.Bytes()
