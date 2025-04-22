@@ -84,7 +84,7 @@ Failure: plugin gocosmos: could not find protoc plugin for name gocosmos - pleas
 GO111MODULE=on GOBIN=/usr/local/go/bin go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
 
 # if you want to execute unit test of sp, you should execute the following command, assumed that you installed golang in /usr/local/go/bin. Other OS are similar.
-GO111MODULE=on GOBIN=/usr/local/go/bin go install go.uber.org/mock/mockgen@latest
+GO111MODULE=on GOBIN=/usr/local/go/bin go install go.uber.org/mock/mockgen@v0.1.0
 ```
 
 Above error messages are due to users don't set go env correctly. More info users can search `GOROOT`, `GOPATH` and `GOBIN`.

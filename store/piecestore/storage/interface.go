@@ -21,6 +21,8 @@ type ObjectStorage interface {
 	PutObject(ctx context.Context, key string, reader io.Reader) error
 	// DeleteObject deletes an object
 	DeleteObject(ctx context.Context, key string) error
+	// DeleteObjectsByPrefix deletes objects by prefix
+	DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error)
 
 	// HeadBucket determines if a bucket exists and have permission to access it
 	HeadBucket(ctx context.Context) error

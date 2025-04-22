@@ -40,7 +40,7 @@ install-go-test-coverage:
 	go install github.com/vladopajic/go-test-coverage/v2@latest
 
 install-tools:
-	go install go.uber.org/mock/mockgen@latest
+	go install go.uber.org/mock/mockgen@v0.1.0
 	go install github.com/bufbuild/buf/cmd/buf@v1.28.0
 	go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
 

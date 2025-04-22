@@ -54,6 +54,21 @@ func (mr *MockPieceAPIMockRecorder) Delete(ctx, key any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPieceAPI)(nil).Delete), ctx, key)
 }
 
+// DeleteByPrefix mocks base method.
+func (m *MockPieceAPI) DeleteByPrefix(ctx context.Context, key string) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteByPrefix", ctx, key)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteByPrefix indicates an expected call of DeleteByPrefix.
+func (mr *MockPieceAPIMockRecorder) DeleteByPrefix(ctx, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByPrefix", reflect.TypeOf((*MockPieceAPI)(nil).DeleteByPrefix), ctx, key)
+}
+
 // Get mocks base method.
 func (m *MockPieceAPI) Get(ctx context.Context, key string, offset, limit int64) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()

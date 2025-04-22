@@ -63,5 +63,5 @@ func (m *Module) PrepareTables() error {
 
 // AutoMigrate implements
 func (m *Module) AutoMigrate() error {
-	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{&models.Statements{}})
+	return m.db.AutoMigrate(context.TODO(), []schema.Tabler{&models.Permission{}, &models.Statements{}})
 }

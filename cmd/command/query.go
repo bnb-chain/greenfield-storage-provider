@@ -218,7 +218,7 @@ func (w *CMDWrapper) queryTasksAction(ctx *cli.Context) error {
 		fmt.Printf("failed to query task due to no task, endpoint:%v, key:%v\n", endpoint, key)
 	}
 	for _, info := range infos {
-		fmt.Printf(info + "\n")
+		fmt.Printf("%s"+"\n", info)
 	}
 	return nil
 }

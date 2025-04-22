@@ -205,6 +205,21 @@ func (mr *MockPieceStoreMockRecorder) DeletePiece(ctx, key any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePiece", reflect.TypeOf((*MockPieceStore)(nil).DeletePiece), ctx, key)
 }
 
+// DeletePiecesByPrefix mocks base method.
+func (m *MockPieceStore) DeletePiecesByPrefix(ctx context.Context, key string) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePiecesByPrefix", ctx, key)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeletePiecesByPrefix indicates an expected call of DeletePiecesByPrefix.
+func (mr *MockPieceStoreMockRecorder) DeletePiecesByPrefix(ctx, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePiecesByPrefix", reflect.TypeOf((*MockPieceStore)(nil).DeletePiecesByPrefix), ctx, key)
+}
+
 // GetPiece mocks base method.
 func (m *MockPieceStore) GetPiece(ctx context.Context, key string, offset, limit int64) ([]byte, error) {
 	m.ctrl.T.Helper()

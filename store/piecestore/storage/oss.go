@@ -73,6 +73,47 @@ func (o *ossStore) DeleteObject(ctx context.Context, key string) error {
 	return o.bucket.DeleteObject(key, oss.GetResponseHeader(&respHeader))
 }
 
+func (o *ossStore) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
+	var (
+		objectKeys           []string
+		objectKeySizeMap     = make(map[string]uint64)
+		continueDeleteObject = true
+		batchSize            = int64(1000)
+		size                 uint64
+	)
+
+	for continueDeleteObject {
+		objs, err := o.ListObjects(ctx, key, "", "", batchSize)
+		if err != nil {
+			log.Errorw("DeleteObjectsByPrefix list objects error", "error", err)
+			return size, err
+		}
+
+		if len(objs) == 0 {
+			log.CtxDebugw(ctx, "No object is listed in oss by prefix", "prefix", key)
+			return 0, nil
+		}
+
+		// if the object listed here is less than required batch size, meaning it is the last page
+		if int64(len(objs)) < batchSize {
+			continueDeleteObject = false
+		}
+
+		for _, obj := range objs {
+			objectKeys = append(objectKeys, obj.Key())
+			objectKeySizeMap[obj.Key()] = uint64(obj.Size())
+		}
+		deletedObjResults, err := o.bucket.DeleteObjects(objectKeys)
+		if err != nil {
+			log.Errorw("DeleteObjectsByPrefix delete objects error", "error", err)
+		}
+		for _, deletedObjKey := range deletedObjResults.DeletedObjects {
+			size += objectKeySizeMap[deletedObjKey]
+		}
+	}
+	return size, nil
+}
+
 func (o *ossStore) HeadBucket(ctx context.Context) error {
 	ok, err := o.client.IsBucketExist(o.bucket.BucketName)
 	if !ok {

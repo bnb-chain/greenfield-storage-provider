@@ -14,6 +14,7 @@ type PieceAPI interface {
 	Get(ctx context.Context, key string, offset, limit int64) (io.ReadCloser, error)
 	Put(ctx context.Context, key string, reader io.Reader) error
 	Delete(ctx context.Context, key string) error
+	DeleteByPrefix(ctx context.Context, key string) (uint64, error)
 }
 
 type PieceStore struct {
@@ -33,6 +34,11 @@ func (p *PieceStore) Put(ctx context.Context, key string, reader io.Reader) erro
 // Delete one piece in PieceStore
 func (p *PieceStore) Delete(ctx context.Context, key string) error {
 	return p.storeAPI.DeleteObject(ctx, key)
+}
+
+// DeleteByPrefix deletes several pieces in PieceStore and returns deleted size
+func (p *PieceStore) DeleteByPrefix(ctx context.Context, key string) (uint64, error) {
+	return p.storeAPI.DeleteObjectsByPrefix(ctx, key)
 }
 
 // Head returns piece info in PieceStore

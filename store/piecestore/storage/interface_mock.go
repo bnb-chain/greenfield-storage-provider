@@ -69,6 +69,21 @@ func (mr *MockObjectStorageMockRecorder) DeleteObject(ctx, key any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObject", reflect.TypeOf((*MockObjectStorage)(nil).DeleteObject), ctx, key)
 }
 
+// DeleteObjectsByPrefix mocks base method.
+func (m *MockObjectStorage) DeleteObjectsByPrefix(ctx context.Context, key string) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObjectsByPrefix", ctx, key)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteObjectsByPrefix indicates an expected call of DeleteObjectsByPrefix.
+func (mr *MockObjectStorageMockRecorder) DeleteObjectsByPrefix(ctx, key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectsByPrefix", reflect.TypeOf((*MockObjectStorage)(nil).DeleteObjectsByPrefix), ctx, key)
+}
+
 // GetObject mocks base method.
 func (m *MockObjectStorage) GetObject(ctx context.Context, key string, offset, limit int64) (io.ReadCloser, error) {
 	m.ctrl.T.Helper()

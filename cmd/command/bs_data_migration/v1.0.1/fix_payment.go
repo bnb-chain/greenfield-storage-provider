@@ -42,7 +42,7 @@ func FixPayment(endpoint string, db *gorm.DB) error {
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != 200 {
-				httpErr = fmt.Errorf(resp.Status)
+				httpErr = fmt.Errorf("%s", resp.Status)
 				return
 			}
 			err := json.NewDecoder(resp.Body).Decode(&paymentResult)
