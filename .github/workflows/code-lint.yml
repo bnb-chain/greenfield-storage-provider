@@ -33,7 +33,7 @@ jobs:
           version: 1.14.0
           buf_user: "${{ secrets.BUF_REGISTRY_USER }}"
           buf_api_token: "${{ secrets.BUF_REGISTRY_SECRET }}"
-      
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
 
@@ -56,7 +56,7 @@ jobs:
           # Required: the version of golangci-lint is required and
           # must be specified without patch version: we always use the
           # latest patch version.
-          version: latest
+          version: v1.54
           skip-pkg-cache: true
           skip-cache: true
           skip-build-cache: true

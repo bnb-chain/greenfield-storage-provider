@@ -24,14 +24,14 @@ import (
 
 const (
 	recoverBatchSize = 50
-	maxRecoveryRetry = 5
+	maxRecoveryRetry = 20
 	MaxRecoveryTime  = 50
 
 	recoverInterval     = 10 * time.Second
 	verifyInterval      = 3 * time.Second
 	verifyGVGQueryLimit = uint32(50)
 
-	recoverFailedObjectInterval = 20 * time.Second
+	recoverFailedObjectInterval = 5 * time.Minute
 
 	monitorRecoverTimeOut = float64(2) // 2 minute
 )
