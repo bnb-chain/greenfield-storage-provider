@@ -364,6 +364,7 @@ func _GfSpResourceService_GfSpQueryResourceLimit_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpResourceService_serviceDesc = _GfSpResourceService_serviceDesc
 var _GfSpResourceService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpResourceService",
 	HandlerType: (*GfSpResourceServiceServer)(nil),

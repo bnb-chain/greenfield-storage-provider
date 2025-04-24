@@ -431,6 +431,7 @@ func (x *gfSpUploadServiceGfSpResumableUploadObjectServer) Recv() (*GfSpResumabl
 	return m, nil
 }
 
+var GfSpUploadService_serviceDesc = _GfSpUploadService_serviceDesc
 var _GfSpUploadService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpUploadService",
 	HandlerType: (*GfSpUploadServiceServer)(nil),

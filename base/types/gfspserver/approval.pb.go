@@ -377,6 +377,7 @@ func _GfSpApprovalService_GfSpAskApproval_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpApprovalService_serviceDesc = _GfSpApprovalService_serviceDesc
 var _GfSpApprovalService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpApprovalService",
 	HandlerType: (*GfSpApprovalServiceServer)(nil),

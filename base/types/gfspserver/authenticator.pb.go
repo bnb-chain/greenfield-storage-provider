@@ -1601,6 +1601,7 @@ func _GfSpAuthenticationService_VerifyGNFD2EddsaSignature_Handler(srv interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpAuthenticationService_serviceDesc = _GfSpAuthenticationService_serviceDesc
 var _GfSpAuthenticationService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpAuthenticationService",
 	HandlerType: (*GfSpAuthenticationServiceServer)(nil),

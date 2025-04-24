@@ -743,6 +743,7 @@ func _GfSpQueryTaskService_GfSpQuerySpExit_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpQueryTaskService_serviceDesc = _GfSpQueryTaskService_serviceDesc
 var _GfSpQueryTaskService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpQueryTaskService",
 	HandlerType: (*GfSpQueryTaskServiceServer)(nil),
