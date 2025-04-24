@@ -12,7 +12,9 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"
+	"github.com/consensys/gnark-crypto/hash"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -190,7 +192,11 @@ func TestAuthModular_VerifyGNFD1EddsaSignature(t *testing.T) {
 	// get the EDDSA private and public key
 	userEddsaPrivateKey, _ := GenerateEddsaPrivateKey(userEddsaSeed)
 
-	sig, _ := userEddsaPrivateKey.Sign([]byte(TestUnsignedMsg), mimc.NewMiMC())
+	var frMsg fr.Element
+	frMsg.SetBytes([]byte(TestUnsignedMsg))
+	msgBin := frMsg.Bytes()
+
+	sig, _ := userEddsaPrivateKey.Sign(msgBin[:], hash.MIMC_BN254.New())
 	userEddsaPublicKeyStr := GetEddsaCompressedPublicKey(userEddsaSeed)
 
 	userAddress := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
