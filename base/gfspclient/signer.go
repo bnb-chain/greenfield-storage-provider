@@ -2,6 +2,7 @@ package gfspclient
 
 import (
 	"context"
+	"google.golang.org/grpc"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspp2p"
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfspserver"
@@ -281,8 +282,8 @@ func (s *GfSpClient) SignReceiveTask(ctx context.Context, receiveTask coretask.R
 	return resp.GetSignature(), nil
 }
 
-func (s *GfSpClient) SignRecoveryTask(ctx context.Context, recoveryTask coretask.RecoveryPieceTask) ([]byte, error) {
-	conn, connErr := s.SignerConn(ctx)
+func (s *GfSpClient) SignRecoveryTask(ctx context.Context, recoveryTask coretask.RecoveryPieceTask, option ...grpc.DialOption) ([]byte, error) {
+	conn, connErr := s.SignerConn(ctx, option...)
 	if connErr != nil {
 		log.CtxErrorw(ctx, "client failed to connect to signer", "error", connErr)
 		return nil, ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", connErr)
@@ -501,8 +502,8 @@ func (s *GfSpClient) CompleteSPExit(ctx context.Context, completeSPExit *virtual
 	return resp.GetTxHash(), nil
 }
 
-func (s *GfSpClient) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask) ([]byte, error) {
-	conn, err := s.SignerConn(ctx)
+func (s *GfSpClient) SignMigrateGVG(ctx context.Context, task *gfsptask.GfSpMigrateGVGTask, option ...grpc.DialOption) ([]byte, error) {
+	conn, err := s.SignerConn(ctx, option...)
 	if err != nil {
 		log.Errorw("client failed to connect to signer", "error", err)
 		return nil, ErrRPCUnknownWithDetail("client failed to connect to signer, error: ", err)

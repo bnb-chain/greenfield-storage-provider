@@ -2,6 +2,7 @@ package gfspclient
 
 import (
 	"context"
+	"google.golang.org/grpc"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -640,7 +641,7 @@ func TestGfSpClient_SignRecoveryTaskFailure(t *testing.T) {
 	s := mockBufClient()
 	defer s.Close()
 	cancel()
-	result, err := s.SignRecoveryTask(ctx, &gfsptask.GfSpRecoverPieceTask{})
+	result, err := s.SignRecoveryTask(ctx, &gfsptask.GfSpRecoverPieceTask{}, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 	assert.Nil(t, result)
 }
@@ -1160,7 +1161,7 @@ func TestGfSpClient_SignMigratePieceFailure(t *testing.T) {
 	s := mockBufClient()
 	defer s.Close()
 	cancel()
-	result, err := s.SignMigrateGVG(ctx, &gfsptask.GfSpMigrateGVGTask{})
+	result, err := s.SignMigrateGVG(ctx, &gfsptask.GfSpMigrateGVGTask{}, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 	assert.Nil(t, result)
 }

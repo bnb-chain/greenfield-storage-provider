@@ -82,7 +82,7 @@ func TestGfSpClient_UploadObjectFailure1(t *testing.T) {
 	s := mockBufClient()
 	defer s.Close()
 	cancel()
-	err := s.UploadObject(ctx, &gfsptask.GfSpUploadObjectTask{}, nil)
+	err := s.UploadObject(ctx, &gfsptask.GfSpUploadObjectTask{}, nil, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 }
 
@@ -166,7 +166,7 @@ func TestGfSpClient_ResumableUploadObjectFailure1(t *testing.T) {
 	s := mockBufClient()
 	defer s.Close()
 	cancel()
-	err := s.ResumableUploadObject(ctx, &gfsptask.GfSpResumableUploadObjectTask{}, nil)
+	err := s.ResumableUploadObject(ctx, &gfsptask.GfSpResumableUploadObjectTask{}, nil, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 }
 
