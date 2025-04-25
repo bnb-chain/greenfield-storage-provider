@@ -5,8 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"
+	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark-crypto/ecc/bn254/twistededwards/eddsa"
+	"github.com/consensys/gnark-crypto/hash"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -35,8 +36,11 @@ func ParsePk(pkStr string) (pk *PublicKey, err error) {
 
 // Verify will Verify signature of a message with MiMC hash function
 func Verify(pk *PublicKey, signature, msg []byte) (bool, error) {
-	hasher := mimc.NewMiMC()
-	return pk.Verify(signature, msg, hasher)
+	hasher := hash.MIMC_BN254.New()
+	var frMsg fr.Element
+	frMsg.SetBytes(msg)
+	msgBin := frMsg.Bytes()
+	return pk.Verify(signature, msgBin[:], hasher)
 }
 
 // VerifyEddsaSignature  EDDSA sig verification
@@ -46,6 +50,7 @@ func VerifyEddsaSignature(pubKey string, sig, message []byte) error {
 		log.Errorf("failed to parse public key, pubKey=%s, err=%s", pubKey, err.Error())
 		return err
 	}
+
 	valid, err := Verify(pk, sig, message)
 	if err != nil {
 		log.Errorf("failed to verify signature, sig=%s, message=%s, err=%s", sig, message, err.Error())

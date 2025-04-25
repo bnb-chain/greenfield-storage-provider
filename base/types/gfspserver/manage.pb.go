@@ -2536,6 +2536,7 @@ func _GfSpManageService_GfSpQueryRecoverProcess_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpManageService_serviceDesc = _GfSpManageService_serviceDesc
 var _GfSpManageService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpManageService",
 	HandlerType: (*GfSpManageServiceServer)(nil),

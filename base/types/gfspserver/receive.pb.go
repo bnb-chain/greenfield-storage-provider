@@ -370,6 +370,7 @@ func _GfSpReceiveService_GfSpDoneReplicatePiece_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpReceiveService_serviceDesc = _GfSpReceiveService_serviceDesc
 var _GfSpReceiveService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpReceiveService",
 	HandlerType: (*GfSpReceiveServiceServer)(nil),

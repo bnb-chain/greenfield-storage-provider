@@ -3,7 +3,6 @@ package authenticator
 import (
 	"bytes"
 	"crypto/ed25519"
-	"crypto/subtle"
 	"encoding/hex"
 	"io"
 	"math/big"
@@ -11,13 +10,12 @@ import (
 
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"
-	"github.com/consensys/gnark-crypto/ecc/bn254/twistededwards"
 	"github.com/consensys/gnark-crypto/ecc/bn254/twistededwards/eddsa"
+	"github.com/consensys/gnark-crypto/hash"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/blake2b"
 
 	"github.com/bnb-chain/greenfield-storage-provider/pkg/log"
 )
@@ -46,17 +44,60 @@ func TestGenerateEddsaPrivateKey(t *testing.T) {
 	log.Info(new(big.Int).SetBytes(sk.Bytes()[32:64]).BitLen())
 	hFunc := mimc.NewMiMC()
 	msg := "use seed to sign this message"
-	signMsg, err := sk.Sign([]byte(msg), hFunc)
+	var frMsg fr.Element
+	frMsg.SetBytes([]byte(msg))
+	msgBin := frMsg.Bytes()
+	signMsg, err := sk.Sign(msgBin[:], hFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
 	hFunc.Reset()
-	isValid, err := sk.PublicKey.Verify(signMsg, []byte(msg), hFunc)
+	isValid, err := sk.PublicKey.Verify(signMsg, msgBin[:], hFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
 	log.Info(isValid)
 	assert.Equal(t, true, isValid)
+}
+
+func TestEddsaMIMC(t *testing.T) {
+
+	privKey, err := GenerateEddsaPrivateKey("testeeetgcxsaahsadcastzxbmjhgmgjhcarwewfseasdasdavacsafaeweasdfasdfasdfasdfasdfasdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pubKey := privKey.PublicKey
+	hFunc := hash.MIMC_BN254.New()
+
+	var msg = "I want to get approval from sp before creating the bucket"
+	var frMsg fr.Element
+	frMsg.SetBytes([]byte(msg))
+	msgBin := frMsg.Bytes()
+	signature, err := privKey.Sign(msgBin[:], hFunc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// verifies correct msg
+	res, err := pubKey.Verify(signature, msgBin[:], hFunc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res {
+		t.Fatal("Verify correct signature should return true")
+	}
+
+	// verifies wrong msg
+	frMsg.SetBytes([]byte("I don't want to get approval from sp before creating the bucket"))
+	msgBin = frMsg.Bytes()
+	res, err = pubKey.Verify(signature, msgBin[:], hash.MIMC_BN254.New())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res {
+		t.Fatal("Verify wrong signature should be false")
+	}
+
 }
 
 // TestUserOffChainAuthSignature
@@ -79,9 +120,12 @@ func TestUserOffChainAuthSignature(t *testing.T) {
 	// userEddsaPublickKey, _ := ParsePk(userEddsaPublicKeyStr)
 
 	// 3. use EDDSA private key to sign, as the off chain auth sig.
-	hFunc := mimc.NewMiMC()
+	hFunc := hash.MIMC_BN254.New()
 	msg := "I want to get approval from sp before creating the bucket."
-	sig, err := userEddsaPrivateKey.Sign([]byte(msg), hFunc)
+	var frMsg fr.Element
+	frMsg.SetBytes([]byte(msg))
+	msgBin := frMsg.Bytes()
+	sig, err := userEddsaPrivateKey.Sign(msgBin[:], hFunc)
 	require.NoError(t, err)
 	// 4. use public key to verify
 	err = VerifyEddsaSignature(userEddsaPublicKeyStr, sig, []byte(msg))
@@ -112,9 +156,12 @@ func TestUseUserPublicKeyToVerifyUserOffChainAuthSignature(t *testing.T) {
 	// userEddsaPublickKey, _ := ParsePk(userEddsaPublicKeyStr)
 
 	// 3. use EDDSA private key to sign, as the off chain auth sig.
-	hFunc := mimc.NewMiMC()
+	hFunc := hash.MIMC_BN254.New()
 	msg := "I want to get approval from sp before creating the bucket."
-	sig, err := userEddsaPrivateKey.Sign([]byte(msg), hFunc)
+	var frMsg fr.Element
+	frMsg.SetBytes([]byte(msg))
+	msgBin := frMsg.Bytes()
+	sig, err := userEddsaPrivateKey.Sign(msgBin[:], hFunc)
 	require.NoError(t, err)
 	// 4. use public key to verify
 	err = VerifyEddsaSignature(userEddsaPublicKeyStr, sig, []byte(msg))
@@ -143,16 +190,22 @@ func TestParsePK(t *testing.T) {
 		t.Fatal(err)
 	}
 	correctPK, _ := ParsePk(GetEddsaCompressedPublicKey("testeeetgcxsaahsadcastzxbmjhgmgj"))
+	assert.Equal(t, sk.PublicKey.Bytes(), correctPK.Bytes())
+
 	wrongPK, _ := ParsePk(GetEddsaCompressedPublicKey("wrongSeed"))
 
 	hFunc := mimc.NewMiMC()
 	msg := "use seed to sign this message"
-	sig, err := sk.Sign([]byte(msg), hFunc)
+	var frMsg fr.Element
+	frMsg.SetString(msg)
+	msgBin := frMsg.Bytes()
+
+	sig, err := sk.Sign(msgBin[:], hFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
 	hFunc.Reset()
-	isValid, err := correctPK.Verify(sig, []byte(msg), hFunc)
+	isValid, err := correctPK.Verify(sig, msgBin[:], hFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +213,7 @@ func TestParsePK(t *testing.T) {
 	assert.Equal(t, true, isValid)
 
 	hFunc.Reset()
-	isValid, err = wrongPK.Verify(sig, []byte(msg), hFunc)
+	isValid, err = wrongPK.Verify(sig, msgBin[:], hFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,77 +249,13 @@ type (
 
 // GenerateEddsaPrivateKey: generate eddsa private key
 func GenerateEddsaPrivateKey(seed string) (sk *PrivateKey, err error) {
-	buf := make([]byte, 32)
-	copy(buf, seed)
-	reader := bytes.NewReader(buf)
+	//buf := make([]byte, 32)
+	//copy(buf, seed)
+	reader := bytes.NewReader([]byte(seed))
 	sk, err = GenerateKey(reader)
 	return sk, err
 }
 
-const (
-	sizeFr = fr.Bytes
-)
-
 func GenerateKey(r io.Reader) (*PrivateKey, error) {
-
-	c := twistededwards.GetEdwardsCurve()
-
-	var (
-		randSrc = make([]byte, 32)
-		scalar  = make([]byte, 32)
-		pub     PublicKey
-	)
-
-	// hash(h) = private_key || random_source, on 32 bytes each
-	seed := make([]byte, 32)
-	_, err := r.Read(seed)
-	if err != nil {
-		return nil, err
-	}
-	h := blake2b.Sum512(seed[:])
-	for i := 0; i < 32; i++ {
-		randSrc[i] = h[i+32]
-	}
-
-	// prune the key
-	// https://tools.ietf.org/html/rfc8032#section-5.1.5, key generation
-
-	h[0] &= 0xF8
-	h[31] &= 0x7F
-	h[31] |= 0x40
-
-	// 0xFC = 1111 1100
-	// convert 256 bits to 254 bits supporting bn254 curve
-
-	h[31] &= 0xFC
-
-	// reverse first bytes because setBytes interpret stream as big endian
-	// but in eddsa specs s is the first 32 bytes in little endian
-	for i, j := 0, sizeFr-1; i < sizeFr; i, j = i+1, j-1 {
-		scalar[i] = h[j]
-	}
-
-	a := new(big.Int).SetBytes(scalar[:])
-	for i := 253; i < 256; i++ {
-		a.SetBit(a, i, 0)
-	}
-
-	copy(scalar[:], a.FillBytes(make([]byte, 32)))
-
-	var bscalar big.Int
-	bscalar.SetBytes(scalar[:])
-	pub.A.ScalarMul(&c.Base, &bscalar)
-
-	var res [sizeFr * 3]byte
-	pubkBin := pub.A.Bytes()
-	subtle.ConstantTimeCopy(1, res[:sizeFr], pubkBin[:])
-	subtle.ConstantTimeCopy(1, res[sizeFr:2*sizeFr], scalar[:])
-	subtle.ConstantTimeCopy(1, res[2*sizeFr:], randSrc[:])
-
-	var sk = &PrivateKey{}
-	// make sure sk is not nil
-
-	_, err = sk.SetBytes(res[:])
-
-	return sk, err
+	return eddsa.GenerateKey(r)
 }

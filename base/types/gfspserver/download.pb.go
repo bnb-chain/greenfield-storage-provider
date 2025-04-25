@@ -806,6 +806,7 @@ func _GfSpDownloadService_GfSpDeductQuotaForBucketMigrate_Handler(srv interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpDownloadService_serviceDesc = _GfSpDownloadService_serviceDesc
 var _GfSpDownloadService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpDownloadService",
 	HandlerType: (*GfSpDownloadServiceServer)(nil),

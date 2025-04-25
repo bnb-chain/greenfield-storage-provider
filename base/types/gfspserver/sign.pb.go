@@ -882,6 +882,7 @@ func _GfSpSignService_GfSpSign_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpSignService_serviceDesc = _GfSpSignService_serviceDesc
 var _GfSpSignService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpSignService",
 	HandlerType: (*GfSpSignServiceServer)(nil),
