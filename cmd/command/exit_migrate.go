@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/util"
 	virtualgrouptypes "github.com/bnb-chain/greenfield/x/virtualgroup/types"
