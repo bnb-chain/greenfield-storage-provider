@@ -83,7 +83,7 @@ func (w *CMDWrapper) completeSPExit(ctx *cli.Context) error {
 	//	fmt.Printf("failed to check operator address, actual=%v, expected=%v\n", operatorAddress, w.config.SpAccount.SpOperatorAddress)
 	//	return fmt.Errorf("invalid operator address")
 	//}
-	txHash, err := w.grpcAPI.CompleteSPExit(ctx.Context, &virtualgrouptypes.MsgCompleteStorageProviderExit{StorageProvider: storagePrivider, OperatorAddress: operatorAddress})
+	txHash, err := w.grpcAPI.CompleteSPExit(ctx.Context, &virtualgrouptypes.MsgCompleteStorageProviderExit{StorageProvider: storagePrivider, Operator: operatorAddress})
 	if err != nil {
 		fmt.Printf("failed to send complete sp exit tx, operatorAddress: %s, error:%s\n", operatorAddress, err)
 		return err
