@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/bnb-chain/greenfield-storage-provider/cmd/utils"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bnb-chain/greenfield-storage-provider/util"
@@ -68,22 +69,32 @@ var CompleteSPExitCmd = &cli.Command{
 	Category: migrateCommands,
 	Action:   CW.completeSPExit,
 	Flags: []cli.Flag{
+		utils.ConfigFileFlag,
 		spOperatorAddressFlag,
 	},
 }
 
 func (w *CMDWrapper) completeSPExit(ctx *cli.Context) error {
-	err := w.init(ctx)
+
+	cfg, err := utils.MakeConfig(ctx)
 	if err != nil {
+		println(err.Error())
 		return err
 	}
-	operatorAddress := w.config.SpAccount.SpOperatorAddress
+
+	spClient := utils.MakeGfSpClient(cfg)
+
+	//err := w.init(ctx)
+	//if err != nil {
+	//	return err
+	//}
+	operatorAddress := cfg.SpAccount.SpOperatorAddress
 	storagePrivider := "0x22f7ff19b09363977003de9e29995f295291ec93"
 	//if operatorAddress != w.config.SpAccount.SpOperatorAddress {
 	//	fmt.Printf("failed to check operator address, actual=%v, expected=%v\n", operatorAddress, w.config.SpAccount.SpOperatorAddress)
 	//	return fmt.Errorf("invalid operator address")
 	//}
-	txHash, err := w.grpcAPI.CompleteSPExit(ctx.Context, &virtualgrouptypes.MsgCompleteStorageProviderExit{StorageProvider: storagePrivider, Operator: operatorAddress})
+	txHash, err := spClient.CompleteSPExit(ctx.Context, &virtualgrouptypes.MsgCompleteStorageProviderExit{StorageProvider: storagePrivider, Operator: operatorAddress})
 	if err != nil {
 		fmt.Printf("failed to send complete sp exit tx, operatorAddress: %s, error:%s\n", operatorAddress, err)
 		return err
