@@ -11,8 +11,6 @@ ENV GO111MODULE=on
 FROM debian:12 AS certs
 RUN apt-get update && apt-get install -y ca-certificates
 
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
 # For Private REPO
 ARG GH_TOKEN=""
 RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
@@ -48,4 +46,5 @@ COPY --from=builder /greenfield-storage-provider/build/* ${WORKDIR}/
 RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT ["/app/gnfd-sp"]

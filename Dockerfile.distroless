@@ -12,8 +12,6 @@ ENV EXT_LD_FLAGS=-static
 FROM debian:12 AS certs
 RUN apt-get update && apt-get install -y ca-certificates
 
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
 # For Private REPO
 ARG GH_TOKEN=""
 RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
@@ -30,4 +28,5 @@ FROM gcr.io/distroless/base-debian11
 USER nonroot:nonroot
 WORKDIR /home/nonroot
 COPY --from=builder --chown=nonroot:nonroot /greenfield-storage-provider/build/gnfd-sp $WORKDIR
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT ["./gnfd-sp"]
