@@ -7,10 +7,6 @@ ADD . /greenfield-storage-provider
 ENV CGO_ENABLED=1
 ENV GO111MODULE=on
 
-# For update to latest CA
-FROM debian:12 AS certs
-RUN apt-get update && apt-get install -y ca-certificates
-
 # For Private REPO
 ARG GH_TOKEN=""
 RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
@@ -20,6 +16,10 @@ RUN apk add --no-cache build-base libc-dev
 
 RUN cd /greenfield-storage-provider \
     && make build
+
+# For update to latest CA
+FROM debian:12 AS certs
+RUN apt-get update && apt-get install -y ca-certificates
 
 # Pull greenfield into a second stage deploy alpine container
 FROM alpine:3.17
