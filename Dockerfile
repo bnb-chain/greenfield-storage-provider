@@ -17,6 +17,10 @@ RUN apk add --no-cache build-base libc-dev
 RUN cd /greenfield-storage-provider \
     && make build
 
+# For update to latest CA
+FROM debian:12 AS certs
+RUN apt-get update && apt-get install -y ca-certificates
+
 # Pull greenfield into a second stage deploy alpine container
 FROM alpine:3.17
 
@@ -42,4 +46,5 @@ COPY --from=builder /greenfield-storage-provider/build/* ${WORKDIR}/
 RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT ["/app/gnfd-sp"]

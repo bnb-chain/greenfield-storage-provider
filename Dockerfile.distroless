@@ -18,10 +18,15 @@ RUN apk add --no-cache gcc libstdc++-dev libc-dev
 RUN cd /greenfield-storage-provider \
     && make build
 
+# For update to latest CA
+FROM debian:12 AS certs
+RUN apt-get update && apt-get install -y ca-certificates
+
 # https://github.com/GoogleContainerTools/distroless/blob/main/base/README.md
 FROM gcr.io/distroless/base-debian11
 
 USER nonroot:nonroot
 WORKDIR /home/nonroot
 COPY --from=builder --chown=nonroot:nonroot /greenfield-storage-provider/build/gnfd-sp $WORKDIR
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT ["./gnfd-sp"]
