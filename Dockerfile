@@ -7,6 +7,12 @@ ADD . /greenfield-storage-provider
 ENV CGO_ENABLED=1
 ENV GO111MODULE=on
 
+# For update to latest CA
+FROM debian:12 AS certs
+RUN apt-get update && apt-get install -y ca-certificates
+
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 # For Private REPO
 ARG GH_TOKEN=""
 RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
