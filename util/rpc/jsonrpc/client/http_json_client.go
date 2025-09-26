@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
@@ -123,6 +124,7 @@ func DefaultHTTPClient(remoteAddr string) (*http.Client, error) {
 		MaxIdleConnsPerHost: 1000,
 		MaxConnsPerHost:     1000,
 		IdleConnTimeout:     90 * time.Second,
+		TLSClientConfig:     &tls.Config{MinVersion: tls.VersionTLS12},
 	}
 
 	client := &http.Client{
