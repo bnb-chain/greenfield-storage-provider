@@ -18,7 +18,7 @@ RUN cd /greenfield-storage-provider \
     && make build
 
 # For update to latest CA
-FROM debian:12 AS certs
+FROM debian:11 AS certs
 RUN apt-get update && apt-get install -y ca-certificates
 
 # Pull greenfield into a second stage deploy alpine container
@@ -47,4 +47,7 @@ RUN chown -R ${USER_UID}:${USER_GID} ${WORKDIR}
 USER ${USER_UID}:${USER_GID}
 
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=certs /etc/ssl/certs /etc/ssl/certs
+COPY --from=certs /usr/share/ca-certificates /usr/share/ca-certificates
+COPY --from=certs /etc/ca-certificates.conf /etc/ca-certificates.conf
 ENTRYPOINT ["/app/gnfd-sp"]
