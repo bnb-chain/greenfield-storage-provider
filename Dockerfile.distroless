@@ -19,8 +19,10 @@ RUN cd /greenfield-storage-provider \
     && make build
 
 # For update to latest CA
-FROM debian:11 AS certs
-RUN apt-get update && apt-get install -y ca-certificates
+FROM debian:12 AS certs
+RUN apt-get update && apt-get install -y ca-certificates && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Update CA certificates to latest version
+RUN update-ca-certificates
 
 # https://github.com/GoogleContainerTools/distroless/blob/main/base/README.md
 FROM gcr.io/distroless/base-debian11
