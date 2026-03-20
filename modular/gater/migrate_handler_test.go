@@ -534,6 +534,20 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 		wantedResult string
 	}{
 		{
+			name: "unauthenticated request must be rejected",
+			fn: func() *GateModular {
+				g := setup(t)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, "7b22636861696e5f6964223a2231222c226473745f7072696d6172795f73705f6964223a312c227372635f676c6f62616c5f7669727475616c5f67726f75705f6964223a322c226473745f676c6f62616c5f7669727475616c5f67726f75705f6964223a332c226275636b65745f6964223a2231227d")
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
 			name: "failed to parse secondary migration bucket approval header",
 			fn: func() *GateModular {
 				g := setup(t)
@@ -648,6 +662,20 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 		request      func() *http.Request
 		wantedResult string
 	}{
+		{
+			name: "unauthenticated request must be rejected",
+			fn: func() *GateModular {
+				g := setup(t)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "7b2273746f726167655f70726f7669646572223a22307831433743384136363865323361454432393166373866433266336231383635416363383762364636222c22676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a322c22676c6f62616c5f7669727475616c5f67726f75705f696473223a5b5d2c22737563636573736f725f73705f6964223a312c22737563636573736f725f73705f617070726f76616c223a6e756c6c7d")
+				return req
+			},
+			wantedResult: "no permission",
+		},
 		{
 			name: "failed to parse swap out approval header",
 			fn: func() *GateModular {
