@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -1163,4 +1164,99 @@ func TestListUserPublicKeyV2Handler(t *testing.T) {
 
 		})
 	}
+}
+
+// TestDeleteUserPublicKeyV2Handler_AccountMismatchBlocked verifies that a
+// request whose ECDSA-recovered signer differs from X-Gnfd-User-Address is
+// rejected and no keys are deleted.
+func TestDeleteUserPublicKeyV2Handler_AccountMismatchBlocked(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	signerKey, err := crypto.GenerateKey()
+	assert.NoError(t, err)
+
+	targetAddr := "0x1234567890AbcdEF1234567890aBcdef12345678"
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/delete_keys_v2",
+		strings.NewReader("pubkey1,pubkey2"))
+	req.Header.Set(GnfdUserAddressHeader, targetAddr)
+	req.Header.Set(GnfdOffChainAuthAppDomainHeader, "https://test.com")
+	validExpiry := time.Now().Add(time.Hour).Format(ExpiryDateFormat)
+	req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiry)
+
+	msgHash := commonhttp.GetMsgToSignInGNFD1Auth(req)
+	sig, err := crypto.Sign(msgHash, signerKey)
+	assert.NoError(t, err)
+	authHeader := fmt.Sprintf("%s,Signature=%s",
+		commonhttp.Gnfd1Ecdsa, hex.EncodeToString(sig))
+	req.Header.Set(GnfdAuthorizationHeader, authHeader)
+
+	mockedClient := gfspclient.NewMockGfSpClientAPI(ctrl)
+	mockedClient.EXPECT().DeleteAuthKeysV2(gomock.Any(), gomock.Any(),
+		gomock.Any(), gomock.Any()).Times(0)
+
+	gateway := &GateModular{
+		env:    gfspapp.EnvLocal,
+		domain: testDomain,
+	}
+	gateway.baseApp = &gfspapp.GfSpBaseApp{}
+	gateway.baseApp.SetGfSpClient(mockedClient)
+	gateway.baseApp.SetOperatorAddress(TestSpAddress)
+
+	w := httptest.NewRecorder()
+	gateway.deleteUserPublicKeyV2Handler(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+	data, _ := io.ReadAll(res.Body)
+
+	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	assert.Contains(t, string(data), "no permission")
+}
+
+// TestDeleteUserPublicKeyV2Handler_SameAccountSuccess verifies that a request
+// whose signer matches X-Gnfd-User-Address succeeds normally.
+func TestDeleteUserPublicKeyV2Handler_SameAccountSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	userKey, err := crypto.GenerateKey()
+	assert.NoError(t, err)
+	userAddr := crypto.PubkeyToAddress(userKey.PublicKey)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/delete_keys_v2",
+		strings.NewReader("pubkey1,pubkey2"))
+	req.Header.Set(GnfdUserAddressHeader, userAddr.Hex())
+	req.Header.Set(GnfdOffChainAuthAppDomainHeader, "https://test.com")
+	validExpiry := time.Now().Add(time.Hour).Format(ExpiryDateFormat)
+	req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiry)
+
+	msgHash := commonhttp.GetMsgToSignInGNFD1Auth(req)
+	sig, err := crypto.Sign(msgHash, userKey)
+	assert.NoError(t, err)
+	authHeader := fmt.Sprintf("%s,Signature=%s",
+		commonhttp.Gnfd1Ecdsa, hex.EncodeToString(sig))
+	req.Header.Set(GnfdAuthorizationHeader, authHeader)
+
+	mockedClient := gfspclient.NewMockGfSpClientAPI(ctrl)
+	mockedClient.EXPECT().DeleteAuthKeysV2(gomock.Any(), userAddr.Hex(),
+		"https://test.com", []string{"pubkey1", "pubkey2"}).
+		Return(true, nil).Times(1)
+
+	gateway := &GateModular{
+		env:    gfspapp.EnvLocal,
+		domain: testDomain,
+	}
+	gateway.baseApp = &gfspapp.GfSpBaseApp{}
+	gateway.baseApp.SetGfSpClient(mockedClient)
+	gateway.baseApp.SetOperatorAddress(TestSpAddress)
+
+	w := httptest.NewRecorder()
+	gateway.deleteUserPublicKeyV2Handler(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
