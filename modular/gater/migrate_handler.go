@@ -283,7 +283,12 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, _ = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to authenticate migration bucket approval request", "error", err)
+		err = ErrNoPermission
+		return
+	}
 	migrationBucketApprovalHeader := r.Header.Get(GnfdSecondarySPMigrationBucketMsgHeader)
 	migrationBucketApprovalMsg, err = hex.DecodeString(migrationBucketApprovalHeader)
 	if err != nil {
@@ -327,7 +332,12 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, _ = NewRequestContext(r, g)
+	reqCtx, err = NewRequestContext(r, g)
+	if err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to authenticate swap out approval request", "error", err)
+		err = ErrNoPermission
+		return
+	}
 	swapOutApprovalHeader := r.Header.Get(GnfdUnsignedApprovalMsgHeader)
 	swapOutApprovalMsg, err = hex.DecodeString(swapOutApprovalHeader)
 	if err != nil {
