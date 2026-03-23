@@ -74,16 +74,40 @@ func (cfg *GfSpConfig) Apply(opts ...Option) error {
 	return nil
 }
 
-// String returns the detail GfSp configuration.
+const redactedPlaceholder = "[REDACTED]"
+
+// String returns the detail GfSp configuration with secrets redacted.
 func (cfg *GfSpConfig) String() string {
-	customize := cfg.Customize
-	cfg.Customize = nil
-	bz, err := toml.Marshal(cfg)
+	redacted := *cfg
+	redacted.Customize = nil
+
+	redacted.SpAccount = SpAccountConfig{
+		SpOperatorAddress:  cfg.SpAccount.SpOperatorAddress,
+		OperatorPrivateKey: redactIfSet(cfg.SpAccount.OperatorPrivateKey),
+		FundingPrivateKey:  redactIfSet(cfg.SpAccount.FundingPrivateKey),
+		SealPrivateKey:     redactIfSet(cfg.SpAccount.SealPrivateKey),
+		ApprovalPrivateKey: redactIfSet(cfg.SpAccount.ApprovalPrivateKey),
+		GcPrivateKey:       redactIfSet(cfg.SpAccount.GcPrivateKey),
+		BlsPrivateKey:      redactIfSet(cfg.SpAccount.BlsPrivateKey),
+	}
+
+	redacted.P2P.P2PPrivateKey = redactIfSet(cfg.P2P.P2PPrivateKey)
+
+	redacted.SpDB.Passwd = redactIfSet(cfg.SpDB.Passwd)
+	redacted.BsDB.Passwd = redactIfSet(cfg.BsDB.Passwd)
+
+	bz, err := toml.Marshal(&redacted)
 	if err != nil {
 		return ""
 	}
-	cfg.Customize = customize
 	return string(bz)
+}
+
+func redactIfSet(v string) string {
+	if v != "" {
+		return redactedPlaceholder
+	}
+	return ""
 }
 
 type ChainConfig struct {
