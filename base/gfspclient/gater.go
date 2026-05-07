@@ -3,13 +3,16 @@ package gfspclient
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/bnb-chain/greenfield-storage-provider/base/types/gfsptask"
 	coretask "github.com/bnb-chain/greenfield-storage-provider/core/task"
@@ -66,6 +69,8 @@ const (
 	GnfdMigrateBucketMsgHeader = "X-Gnfd-Migrate-Bucket-Msg"
 	// GnfdUnsignedApprovalMsgHeader defines unsigned msg, which is used by get-approval
 	GnfdUnsignedApprovalMsgHeader = "X-Gnfd-Unsigned-Msg"
+	// GnfdSPOperatorAuthHeader defines SP operator auth for SP-to-SP communication
+	GnfdSPOperatorAuthHeader = "X-Gnfd-SP-Operator-Auth"
 	// GnfdSignedApprovalMsgHeader defines signed msg, which is used by get-approval
 	GnfdSignedApprovalMsgHeader = "X-Gnfd-Signed-Msg"
 	// GnfdQuotaInfoHeader defines quota info, which is used by sp
@@ -209,6 +214,11 @@ func (s *GfSpClient) NotifyDestSPMigrateSwapOut(ctx context.Context, destEndpoin
 		return err
 	}
 	req.Header.Add(GnfdMigrateSwapOutMsgHeader, hex.EncodeToString(marshalSwapOut))
+	authHeader, err := s.makeSPOperatorAuthHeader(ctx, marshalSwapOut)
+	if err != nil {
+		return err
+	}
+	req.Header.Add(GnfdSPOperatorAuthHeader, authHeader)
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to notify migrate swap out msg", "error", err)
@@ -380,6 +390,27 @@ func (s *GfSpClient) QuerySPHasEnoughQuotaForMigrateBucket(ctx context.Context, 
 	}
 }
 
+const spOperatorAuthExpirySec = 3600
+
+func (s *GfSpClient) makeSPOperatorAuthHeader(ctx context.Context, payloadForBinding []byte) (string, error) {
+	bindingHash := binary.BigEndian.Uint64(crypto.Keccak256(payloadForBinding)[:8])
+	authMsg := &gfsptask.GfSpBucketMigrationInfo{
+		BucketId:   bindingHash,
+		ExpireTime: time.Now().Unix() + spOperatorAuthExpirySec,
+	}
+	sig, err := s.SignBucketMigrationInfo(ctx, authMsg)
+	if err != nil {
+		log.CtxErrorw(ctx, "failed to sign SP operator auth", "error", err)
+		return "", err
+	}
+	authMsg.SetSignature(sig)
+	authBytes, err := json.Marshal(authMsg)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(authBytes), nil
+}
+
 func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, secondarySPEndpoint string,
 	signDoc *storagetypes.SecondarySpMigrationBucketSignDoc) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, secondarySPEndpoint+SecondarySPMigrationBucketApprovalPath, nil)
@@ -392,6 +423,11 @@ func (s *GfSpClient) GetSecondarySPMigrationBucketApproval(ctx context.Context, 
 		return nil, err
 	}
 	req.Header.Add(GnfdSecondarySPMigrationBucketMsgHeader, hex.EncodeToString(msg))
+	authHeader, err := s.makeSPOperatorAuthHeader(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add(GnfdSPOperatorAuthHeader, authHeader)
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to send requests to get secondary sp migration bucket approval", "secondary_sp_endpoint",
@@ -422,6 +458,11 @@ func (s *GfSpClient) GetSwapOutApproval(ctx context.Context, destSPEndpoint stri
 		return nil, err
 	}
 	req.Header.Add(GnfdUnsignedApprovalMsgHeader, hex.EncodeToString(msg))
+	authHeader, err := s.makeSPOperatorAuthHeader(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add(GnfdSPOperatorAuthHeader, authHeader)
 	resp, err := s.HTTPClient(ctx).Do(req)
 	if err != nil {
 		log.Errorw("failed to send requests to get swap out approval", "dest_sp_endpoint",

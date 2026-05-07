@@ -678,6 +678,8 @@ func (mockSignerServer) GfSpSign(ctx context.Context, req *gfspserver.GfSpSignRe
 		} else {
 			return &gfspserver.GfSpSignResponse{Signature: mockSignature}, nil
 		}
+	case *gfspserver.GfSpSignRequest_GfspBucketMigrateInfo:
+		return &gfspserver.GfSpSignResponse{Signature: mockSignature}, nil
 	case *gfspserver.GfSpSignRequest_CompleteMigrateBucket:
 		if req.GetCompleteMigrateBucket().GetBucketName() == mockBucketName1 {
 			return nil, mockRPCErr

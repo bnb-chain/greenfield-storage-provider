@@ -261,8 +261,17 @@ func TestGfSpClient_NotifyDestSPMigrateSwapOut(t *testing.T) {
 		wantedErrStr string
 	}{
 		{
-			name:        "success",
-			server:      httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})),
+			name: "success with auth header",
+			server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get(GnfdSPOperatorAuthHeader) == "" {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				if r.Header.Get(GnfdMigrateSwapOutMsgHeader) == "" {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+			})),
 			wantedIsErr: false,
 		},
 		{
@@ -290,17 +299,18 @@ func TestGfSpClient_NotifyDestSPMigrateSwapOut(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := mockBufClient()
+			ctx := context.TODO()
+			s := setup(t, ctx)
 			if tt.server != nil {
 				defer tt.server.Close()
-				err := s.NotifyDestSPMigrateSwapOut(context.TODO(), tt.server.URL, &virtualgrouptypes.MsgSwapOut{})
+				err := s.NotifyDestSPMigrateSwapOut(ctx, tt.server.URL, &virtualgrouptypes.MsgSwapOut{})
 				if tt.wantedIsErr {
 					assert.Contains(t, err.Error(), tt.wantedErrStr)
 				} else {
 					assert.Nil(t, err)
 				}
 			} else {
-				err := s.NotifyDestSPMigrateSwapOut(context.TODO(), tt.endpoint, &virtualgrouptypes.MsgSwapOut{})
+				err := s.NotifyDestSPMigrateSwapOut(ctx, tt.endpoint, &virtualgrouptypes.MsgSwapOut{})
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 			}
 		})
@@ -316,8 +326,17 @@ func TestGfSpClient_GetSecondarySPMigrationBucketApproval(t *testing.T) {
 		wantedErrStr string
 	}{
 		{
-			name:        "success",
-			server:      httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})),
+			name: "success with auth header",
+			server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get(GnfdSPOperatorAuthHeader) == "" {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				if r.Header.Get(GnfdSecondarySPMigrationBucketMsgHeader) == "" {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+			})),
 			wantedIsErr: false,
 		},
 		{
@@ -353,10 +372,11 @@ func TestGfSpClient_GetSecondarySPMigrationBucketApproval(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := mockBufClient()
+			ctx := context.TODO()
+			s := setup(t, ctx)
 			if tt.server != nil {
 				defer tt.server.Close()
-				result, err := s.GetSecondarySPMigrationBucketApproval(context.TODO(), tt.server.URL, &storagetypes.SecondarySpMigrationBucketSignDoc{})
+				result, err := s.GetSecondarySPMigrationBucketApproval(ctx, tt.server.URL, &storagetypes.SecondarySpMigrationBucketSignDoc{})
 				if tt.wantedIsErr {
 					assert.Contains(t, err.Error(), tt.wantedErrStr)
 					assert.Nil(t, result)
@@ -364,7 +384,7 @@ func TestGfSpClient_GetSecondarySPMigrationBucketApproval(t *testing.T) {
 					assert.Nil(t, err)
 				}
 			} else {
-				result, err := s.GetSecondarySPMigrationBucketApproval(context.TODO(), tt.endpoint, &storagetypes.SecondarySpMigrationBucketSignDoc{})
+				result, err := s.GetSecondarySPMigrationBucketApproval(ctx, tt.endpoint, &storagetypes.SecondarySpMigrationBucketSignDoc{})
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 				assert.Nil(t, result)
 			}
@@ -381,8 +401,16 @@ func TestGfSpClient_GetSwapOutApproval(t *testing.T) {
 		wantedErrStr string
 	}{
 		{
-			name: "success",
+			name: "success with auth header",
 			server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get(GnfdSPOperatorAuthHeader) == "" {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				if r.Header.Get(GnfdUnsignedApprovalMsgHeader) == "" {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
 				w.Header().Set(GnfdSignedApprovalMsgHeader, "7b2273746f726167655f70726f7669646572223a226d6f636b547848617368222c22676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a302c22676c6f62616c5f7669727475616c5f67726f75705f696473223a5b5d2c22737563636573736f725f73705f6964223a302c22737563636573736f725f73705f617070726f76616c223a6e756c6c7d")
 			})),
 			wantedIsErr: false,
@@ -428,10 +456,11 @@ func TestGfSpClient_GetSwapOutApproval(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := mockBufClient()
+			ctx := context.TODO()
+			s := setup(t, ctx)
 			if tt.server != nil {
 				defer tt.server.Close()
-				result, err := s.GetSwapOutApproval(context.TODO(), tt.server.URL, &virtualgrouptypes.MsgSwapOut{})
+				result, err := s.GetSwapOutApproval(ctx, tt.server.URL, &virtualgrouptypes.MsgSwapOut{})
 				if tt.wantedIsErr {
 					assert.Contains(t, err.Error(), tt.wantedErrStr)
 					assert.Nil(t, result)
@@ -440,7 +469,7 @@ func TestGfSpClient_GetSwapOutApproval(t *testing.T) {
 					assert.NotNil(t, result)
 				}
 			} else {
-				result, err := s.GetSwapOutApproval(context.TODO(), tt.endpoint, &virtualgrouptypes.MsgSwapOut{})
+				result, err := s.GetSwapOutApproval(ctx, tt.endpoint, &virtualgrouptypes.MsgSwapOut{})
 				assert.Contains(t, err.Error(), tt.wantedErrStr)
 				assert.Nil(t, result)
 			}
