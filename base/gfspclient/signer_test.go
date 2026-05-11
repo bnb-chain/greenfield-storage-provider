@@ -2,8 +2,9 @@ package gfspclient
 
 import (
 	"context"
-	"google.golang.org/grpc"
 	"testing"
+
+	"google.golang.org/grpc"
 
 	"github.com/stretchr/testify/assert"
 

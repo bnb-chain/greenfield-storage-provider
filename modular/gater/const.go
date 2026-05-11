@@ -315,6 +315,8 @@ const (
 	PostMigrateBucketPath = "/greenfield/migrate/v1/post-migrate-bucket"
 	// GnfdMigrateBucketMsgHeader defines migrate bucket msg header
 	GnfdMigrateBucketMsgHeader = "X-Gnfd-Migrate-Bucket-Msg"
+	// GnfdSPOperatorAuthHeader defines SP operator auth for SP-to-SP communication.
+	GnfdSPOperatorAuthHeader = "X-Gnfd-SP-Operator-Auth"
 	// ObjectXmlSuffix defines the object has xml suffix
 	ObjectXmlSuffix = "xml"
 	// ObjectPdfSuffix defines the object has pdf suffix

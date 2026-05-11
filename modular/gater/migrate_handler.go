@@ -43,12 +43,20 @@ func (g *GateModular) notifyMigrateSwapOutHandler(w http.ResponseWriter, r *http
 	}()
 
 	reqCtx, _ = NewRequestContext(r, g)
+
 	migrateSwapOutHeader := r.Header.Get(GnfdMigrateSwapOutMsgHeader)
 	if swapOutMsg, err = hex.DecodeString(migrateSwapOutHeader); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse migrate swap out header", "error", err)
 		err = ErrDecodeMsg
 		return
 	}
+
+	if _, err = g.ParseAndVerifySPAuth(reqCtx, r, swapOutMsg); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify SP operator auth for notify migrate swap out", "error", err)
+		err = ErrNoPermission
+		return
+	}
+
 	swapOut := virtualgrouptypes.MsgSwapOut{}
 	if err = json.Unmarshal(swapOutMsg, &swapOut); err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to unmarshal migrate swap out msg", "error", err)
@@ -283,17 +291,19 @@ func (g *GateModular) getSecondaryBlsMigrationBucketApprovalHandler(w http.Respo
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to authenticate migration bucket approval request", "error", err)
-		err = ErrNoPermission
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
+
 	migrationBucketApprovalHeader := r.Header.Get(GnfdSecondarySPMigrationBucketMsgHeader)
 	migrationBucketApprovalMsg, err = hex.DecodeString(migrationBucketApprovalHeader)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse secondary migration bucket approval header", "error", err)
 		err = ErrDecodeMsg
+		return
+	}
+
+	if _, err = g.ParseAndVerifySPAuth(reqCtx, r, migrationBucketApprovalMsg); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify SP operator auth for migration bucket approval", "error", err)
+		err = ErrNoPermission
 		return
 	}
 
@@ -332,17 +342,19 @@ func (g *GateModular) getSwapOutApproval(w http.ResponseWriter, r *http.Request)
 		log.CtxDebugw(reqCtx.Context(), reqCtx.String())
 	}()
 
-	reqCtx, err = NewRequestContext(r, g)
-	if err != nil {
-		log.CtxErrorw(reqCtx.Context(), "failed to authenticate swap out approval request", "error", err)
-		err = ErrNoPermission
-		return
-	}
+	reqCtx, _ = NewRequestContext(r, g)
+
 	swapOutApprovalHeader := r.Header.Get(GnfdUnsignedApprovalMsgHeader)
 	swapOutApprovalMsg, err = hex.DecodeString(swapOutApprovalHeader)
 	if err != nil {
 		log.CtxErrorw(reqCtx.Context(), "failed to parse swap out approval header", "error", err)
 		err = ErrDecodeMsg
+		return
+	}
+
+	if _, err = g.ParseAndVerifySPAuth(reqCtx, r, swapOutApprovalMsg); err != nil {
+		log.CtxErrorw(reqCtx.Context(), "failed to verify SP operator auth for swap out approval", "error", err)
+		err = ErrNoPermission
 		return
 	}
 
