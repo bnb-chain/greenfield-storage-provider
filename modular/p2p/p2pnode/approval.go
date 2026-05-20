@@ -111,6 +111,11 @@ func (a *ApprovalProtocol) onGetApprovalRequest(s network.Stream) {
 		log.Errorw("failed to unmarshal replicate piece approval request msg", "error", err)
 		return
 	}
+	if req.GetObjectInfo() == nil || req.GetObjectInfo().Id.IsNil() {
+		log.Warnw("ignore invalid replicate piece approval request: missing object info",
+			"remote", s.Conn().RemotePeer())
+		return
+	}
 	ctx := log.WithValue(context.Background(), log.CtxKeyTask, req.Key().String())
 	log.Debugf("%s received replicate piece approval request from %s, object_id: %d",
 		s.Conn().LocalPeer(), s.Conn().RemotePeer(), req.GetObjectInfo().Id.Uint64())
@@ -169,6 +174,11 @@ func (a *ApprovalProtocol) onGetApprovalResponse(s network.Stream) {
 	err = proto.Unmarshal(buf, resp)
 	if err != nil {
 		log.Errorw("failed to unmarshal replicate piece approval response msg", "error", err)
+		return
+	}
+	if resp.GetObjectInfo() == nil || resp.GetObjectInfo().Id.IsNil() {
+		log.Warnw("ignore invalid replicate piece approval response: missing object info",
+			"remote", s.Conn().RemotePeer())
 		return
 	}
 	ctx := log.WithValue(context.Background(), log.CtxKeyTask, resp.Key().String())

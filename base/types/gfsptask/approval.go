@@ -477,6 +477,9 @@ func (m *GfSpReplicatePieceApprovalTask) GetSignBytes() []byte {
 }
 
 func (m *GfSpReplicatePieceApprovalTask) Key() coretask.TKey {
+	if m.GetObjectInfo() == nil || m.GetObjectInfo().Id.IsNil() {
+		return GfSpReplicatePieceApprovalTaskKey("", "", "")
+	}
 	return GfSpReplicatePieceApprovalTaskKey(
 		m.GetObjectInfo().GetBucketName(),
 		m.GetObjectInfo().GetObjectName(),
