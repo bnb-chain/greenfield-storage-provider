@@ -206,7 +206,9 @@ func (m *GfSpRecoverPieceTask) GetSignBytes() []byte {
 		PieceSize:     m.GetPieceSize(),
 		SegmentIdx:    m.GetSegmentIdx(),
 		// TODO rename EcIdx to ReplicateIdx
-		EcIdx: m.GetEcIdx(),
+		EcIdx:         m.GetEcIdx(),
+		BySuccessorSp: m.GetBySuccessorSp(),
+		GvgId:         m.GetGVGID(),
 	}
 	bz := ModuleCdc.MustMarshalJSON(fakeMsg)
 	return sdk.MustSortJSON(bz)

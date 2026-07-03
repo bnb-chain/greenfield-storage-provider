@@ -191,10 +191,11 @@ func (m *GfSpMigrateGVGTask) SetFinished(finished bool) {
 
 func (m *GfSpMigrateGVGTask) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&GfSpMigrateGVGTask{
-		BucketId:      m.GetBucketID(),
-		SrcGvg:        m.GetSrcGvg(),
-		RedundancyIdx: m.GetRedundancyIdx(),
-		ExpireTime:    m.GetExpireTime(),
+		BucketId:             m.GetBucketID(),
+		SrcGvg:               m.GetSrcGvg(),
+		RedundancyIdx:        m.GetRedundancyIdx(),
+		LastMigratedObjectId: m.GetLastMigratedObjectID(),
+		ExpireTime:           m.GetExpireTime(),
 	}))
 }
 

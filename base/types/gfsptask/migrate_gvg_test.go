@@ -460,13 +460,16 @@ func TestGfSpMigrateGVGTask_SetFinished(t *testing.T) {
 
 func TestGfSpMigrateGVGTask_GetSignBytes(t *testing.T) {
 	m := &GfSpMigrateGVGTask{
-		Task:     &GfSpTask{},
-		BucketId: 1,
-		SrcGvg:   mockGVG,
-		DestGvg:  mockGVG,
-		SrcSp:    mockSP,
+		Task:                 &GfSpTask{},
+		BucketId:             1,
+		SrcGvg:               mockGVG,
+		DestGvg:              mockGVG,
+		SrcSp:                mockSP,
+		LastMigratedObjectId: 1,
 	}
-	m.GetSignBytes()
+	signBytes := m.GetSignBytes()
+	m.SetLastMigratedObjectID(2)
+	assert.NotEqual(t, signBytes, m.GetSignBytes())
 }
 
 func TestGfSpMigratePieceTask_Key(t *testing.T) {

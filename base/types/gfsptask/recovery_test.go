@@ -325,6 +325,14 @@ func TestGfSpRecoverPieceTask_GetSignBytes(t *testing.T) {
 		Task:          &GfSpTask{},
 		ObjectInfo:    mockObjectInfo,
 		StorageParams: mockStorageParams,
+		BySuccessorSp: false,
+		GvgId:         1,
 	}
-	m.GetSignBytes()
+	signBytes := m.GetSignBytes()
+	m.SetBySuccessorSP(true)
+	assert.NotEqual(t, signBytes, m.GetSignBytes())
+
+	signBytes = m.GetSignBytes()
+	m.SetGVGID(2)
+	assert.NotEqual(t, signBytes, m.GetSignBytes())
 }
