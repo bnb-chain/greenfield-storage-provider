@@ -35,6 +35,9 @@ func mockNotifyMigrateSwapOutHandlerRoute(t *testing.T, g *GateModular) *mux.Rou
 }
 
 func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
+	validSwapOutPayload := "7b2273746f726167655f70726f7669646572223a226d6f636b53746f7261676550726f7669646572227d"
+	validSwapOutPayloadBytes, _ := hex.DecodeString(validSwapOutPayload)
+
 	cases := []struct {
 		name         string
 		fn           func() *GateModular
@@ -44,43 +47,59 @@ func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
 		{
 			name: "failed to parse migrate swap out header",
 			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
+				g := setupGateWithSPCachePool(t)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, NotifyMigrateSwapOutTaskPath)
 				req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
 				req.Header.Set(GnfdMigrateSwapOutMsgHeader, "48656c6c6f20476f706865722")
 				return req
 			},
 			wantedResult: "gnfd msg decoding error",
 		},
 		{
-			name: "failed to unmarshal migrate swap out msg",
+			name: "missing SP operator auth header must be rejected",
 			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
+				g := setupGateWithSPCachePool(t)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, NotifyMigrateSwapOutTaskPath)
 				req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdMigrateSwapOutMsgHeader, "48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdMigrateSwapOutMsgHeader, validSwapOutPayload)
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "expired SP auth must be rejected",
+			fn: func() *GateModular {
+				g := setupGateWithSPCachePool(t)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, NotifyMigrateSwapOutTaskPath)
+				req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
+				req.Header.Set(GnfdMigrateSwapOutMsgHeader, validSwapOutPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validSwapOutPayloadBytes, true))
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to unmarshal migrate swap out msg",
+			fn: func() *GateModular {
+				g := setupGateWithSPCachePool(t)
+				return g
+			},
+			request: func() *http.Request {
+				invalidPayloadHex := "48656c6c6f20476f7068657221"
+				invalidPayloadBytes, _ := hex.DecodeString(invalidPayloadHex)
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, NotifyMigrateSwapOutTaskPath)
+				req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
+				req.Header.Set(GnfdMigrateSwapOutMsgHeader, invalidPayloadHex)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, invalidPayloadBytes, false))
 				return req
 			},
 			wantedResult: "gnfd msg decoding error",
@@ -88,11 +107,9 @@ func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
 		{
 			name: "failed to notify migrate swap out",
 			fn: func() *GateModular {
-				g := setup(t)
+				g := setupGateWithSPCachePool(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().NotifyMigrateSwapOut(gomock.Any(), gomock.Any()).Return(mockErr).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
@@ -100,10 +117,8 @@ func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, NotifyMigrateSwapOutTaskPath)
 				req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdMigrateSwapOutMsgHeader, "7b2273746f726167655f70726f7669646572223a226d6f636b53746f7261676550726f7669646572227d")
+				req.Header.Set(GnfdMigrateSwapOutMsgHeader, validSwapOutPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validSwapOutPayloadBytes, false))
 				return req
 			},
 			wantedResult: "failed to notify migrate swap out",
@@ -111,11 +126,9 @@ func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
 		{
 			name: "success",
 			fn: func() *GateModular {
-				g := setup(t)
+				g := setupGateWithSPCachePool(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().NotifyMigrateSwapOut(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
@@ -123,10 +136,8 @@ func TestGateModular_notifyMigrateSwapOutHandler(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, NotifyMigrateSwapOutTaskPath)
 				req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdMigrateSwapOutMsgHeader, "7b2273746f726167655f70726f7669646572223a226d6f636b53746f7261676550726f7669646572227d")
+				req.Header.Set(GnfdMigrateSwapOutMsgHeader, validSwapOutPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validSwapOutPayloadBytes, false))
 				return req
 			},
 			wantedResult: "",
@@ -527,6 +538,9 @@ func mockGetSecondaryBlsMigrationBucketApprovalHandlerRoute(t *testing.T, g *Gat
 }
 
 func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T) {
+	validPayload := "7b22636861696e5f6964223a2231222c226473745f7072696d6172795f73705f6964223a312c227372635f676c6f62616c5f7669727475616c5f67726f75705f6964223a322c226473745f676c6f62616c5f7669727475616c5f67726f75705f6964223a332c226275636b65745f6964223a2231227d"
+	validPayloadBytes, _ := hex.DecodeString(validPayload)
+
 	cases := []struct {
 		name         string
 		fn           func() *GateModular
@@ -534,23 +548,30 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 		wantedResult string
 	}{
 		{
-			name: "failed to parse secondary migration bucket approval header",
+			name: "missing SP operator auth header must be rejected",
 			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
+				g := setupGateWithSPCachePool(t)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, validPayload)
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to parse secondary migration bucket approval header",
+			fn: func() *GateModular {
+				g := setupGateWithSPCachePool(t)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, "48656c6c6f20476f706865722")
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, []byte("dummy"), false))
 				return req
 			},
 			wantedResult: "gnfd msg decoding error",
@@ -558,33 +579,61 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 		{
 			name: "failed to unmarshal migration bucket approval msg",
 			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
+				g := setupGateWithSPCachePool(t)
 				return g
 			},
 			request: func() *http.Request {
+				invalidPayloadHex := "48656c6c6f20476f7068657221"
+				invalidPayloadBytes, _ := hex.DecodeString(invalidPayloadHex)
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, "48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, invalidPayloadHex)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, invalidPayloadBytes, false))
 				return req
 			},
 			wantedResult: "gnfd msg decoding error",
 		},
 		{
-			name: "failed to sign secondary sp migration bucket",
+			name: "expired SP auth must be rejected",
+			fn: func() *GateModular {
+				g := setupGateWithSPCachePool(t)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, validPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validPayloadBytes, true))
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "unregistered SP must be rejected",
 			fn: func() *GateModular {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
+				mockConsensus := consensus.NewMockConsensus(ctrl)
+				mockConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).
+					Return(nil, fmt.Errorf("storage provider not found")).AnyTimes()
+				g.spCachePool = NewSPCachePool(mockConsensus)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, validPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validPayloadBytes, false))
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to sign secondary sp migration bucket",
+			fn: func() *GateModular {
+				g := setupGateWithSPCachePool(t)
+				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().SignSecondarySPMigrationBucket(gomock.Any(), gomock.Any()).Return(nil, mockErr).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
@@ -592,10 +641,8 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, "7b22636861696e5f6964223a2231222c226473745f7072696d6172795f73705f6964223a312c227372635f676c6f62616c5f7669727475616c5f67726f75705f6964223a322c226473745f676c6f62616c5f7669727475616c5f67726f75705f6964223a332c226275636b65745f6964223a2231227d")
+				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, validPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validPayloadBytes, false))
 				return req
 			},
 			wantedResult: "failed to sign secondary sp migration bucket",
@@ -603,11 +650,9 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 		{
 			name: "success",
 			fn: func() *GateModular {
-				g := setup(t)
+				g := setupGateWithSPCachePool(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().SignSecondarySPMigrationBucket(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
@@ -615,10 +660,8 @@ func TestGateModular_getSecondaryBlsMigrationBucketApprovalHandler(t *testing.T)
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SecondarySPMigrationBucketApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, "7b22636861696e5f6964223a2231222c226473745f7072696d6172795f73705f6964223a312c227372635f676c6f62616c5f7669727475616c5f67726f75705f6964223a322c226473745f676c6f62616c5f7669727475616c5f67726f75705f6964223a332c226275636b65745f6964223a2231227d")
+				req.Header.Set(GnfdSecondarySPMigrationBucketMsgHeader, validPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validPayloadBytes, false))
 				return req
 			},
 			wantedResult: "",
@@ -642,6 +685,11 @@ func mockGetSwapOutApprovalRoute(t *testing.T, g *GateModular) *mux.Router {
 }
 
 func TestGateModular_getSwapOutApproval(t *testing.T) {
+	validSwapOutPayload := "7b2273746f726167655f70726f7669646572223a22307831433743384136363865323361454432393166373866433266336231383635416363383762364636222c22676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a322c22676c6f62616c5f7669727475616c5f67726f75705f696473223a5b5d2c22737563636573736f725f73705f6964223a312c22737563636573736f725f73705f617070726f76616c223a6e756c6c7d"
+	validSwapOutPayloadBytes, _ := hex.DecodeString(validSwapOutPayload)
+	invalidSuccessorPayload := "7b2273746f726167655f70726f7669646572223a22307831433743384136363865323361454432393166373866433266336231383635416363383762364636222c22676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a322c22676c6f62616c5f7669727475616c5f67726f75705f696473223a5b5d2c22737563636573736f725f73705f6964223a302c22737563636573736f725f73705f617070726f76616c223a6e756c6c7d"
+	invalidSuccessorPayloadBytes, _ := hex.DecodeString(invalidSuccessorPayload)
+
 	cases := []struct {
 		name         string
 		fn           func() *GateModular
@@ -649,23 +697,30 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 		wantedResult string
 	}{
 		{
-			name: "failed to parse swap out approval header",
+			name: "missing SP operator auth header must be rejected",
 			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
+				g := setupGateWithSPCachePool(t)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, validSwapOutPayload)
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to parse swap out approval header",
+			fn: func() *GateModular {
+				g := setupGateWithSPCachePool(t)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
 				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f706865722")
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, []byte("dummy"), false))
 				return req
 			},
 			wantedResult: "gnfd msg decoding error",
@@ -673,43 +728,51 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 		{
 			name: "failed to unmarshal swap out approval msg",
 			fn: func() *GateModular {
-				g := setup(t)
-				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
+				g := setupGateWithSPCachePool(t)
 				return g
 			},
 			request: func() *http.Request {
+				invalidPayloadHex := "48656c6c6f20476f7068657221"
+				invalidPayloadBytes, _ := hex.DecodeString(invalidPayloadHex)
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "48656c6c6f20476f7068657221")
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, invalidPayloadHex)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, invalidPayloadBytes, false))
 				return req
 			},
 			wantedResult: "gnfd msg decoding error",
 		},
 		{
-			name: "failed to basic check approval msg",
+			name: "unregistered SP must be rejected",
 			fn: func() *GateModular {
 				g := setup(t)
 				ctrl := gomock.NewController(t)
-				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
-				g.baseApp.SetGfSpClient(clientMock)
+				mockConsensus := consensus.NewMockConsensus(ctrl)
+				mockConsensus.EXPECT().QuerySP(gomock.Any(), gomock.Any()).
+					Return(nil, fmt.Errorf("storage provider not found")).AnyTimes()
+				g.spCachePool = NewSPCachePool(mockConsensus)
 				return g
 			},
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "7b2273746f726167655f70726f7669646572223a22307831433743384136363865323361454432393166373866433266336231383635416363383762364636222c22676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a322c22676c6f62616c5f7669727475616c5f67726f75705f696473223a5b5d2c22737563636573736f725f73705f6964223a302c22737563636573736f725f73705f617070726f76616c223a6e756c6c7d")
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, validSwapOutPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validSwapOutPayloadBytes, false))
+				return req
+			},
+			wantedResult: "no permission",
+		},
+		{
+			name: "failed to basic check approval msg",
+			fn: func() *GateModular {
+				g := setupGateWithSPCachePool(t)
+				return g
+			},
+			request: func() *http.Request {
+				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
+				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, invalidSuccessorPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, invalidSuccessorPayloadBytes, false))
 				return req
 			},
 			wantedResult: "gnfd msg validate error",
@@ -717,11 +780,9 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 		{
 			name: "failed to sign swap out",
 			fn: func() *GateModular {
-				g := setup(t)
+				g := setupGateWithSPCachePool(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().SignSwapOut(gomock.Any(), gomock.Any()).Return(nil, mockErr)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
@@ -729,10 +790,8 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "7b2273746f726167655f70726f7669646572223a22307831433743384136363865323361454432393166373866433266336231383635416363383762364636222c22676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a322c22676c6f62616c5f7669727475616c5f67726f75705f696473223a5b5d2c22737563636573736f725f73705f6964223a312c22737563636573736f725f73705f617070726f76616c223a6e756c6c7d")
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, validSwapOutPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validSwapOutPayloadBytes, false))
 				return req
 			},
 			wantedResult: "failed to sign swap out",
@@ -740,11 +799,9 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 		{
 			name: "success",
 			fn: func() *GateModular {
-				g := setup(t)
+				g := setupGateWithSPCachePool(t)
 				ctrl := gomock.NewController(t)
 				clientMock := gfspclient.NewMockGfSpClientAPI(ctrl)
-				clientMock.EXPECT().VerifyGNFD1EddsaSignature(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-					gomock.Any()).Return(false, nil).Times(1)
 				clientMock.EXPECT().SignSwapOut(gomock.Any(), gomock.Any()).Return([]byte("mockSig"), nil).Times(1)
 				g.baseApp.SetGfSpClient(clientMock)
 				return g
@@ -752,10 +809,8 @@ func TestGateModular_getSwapOutApproval(t *testing.T) {
 			request: func() *http.Request {
 				path := fmt.Sprintf("%s%s%s", scheme, testDomain, SwapOutApprovalPath)
 				req := httptest.NewRequest(http.MethodGet, path, strings.NewReader(""))
-				validExpiryDateStr := time.Now().Add(time.Hour * 60).Format(ExpiryDateFormat)
-				req.Header.Set(commonhttp.HTTPHeaderExpiryTimestamp, validExpiryDateStr)
-				req.Header.Set(GnfdAuthorizationHeader, "GNFD1-EDDSA,Signature=48656c6c6f20476f7068657221")
-				req.Header.Set(GnfdUnsignedApprovalMsgHeader, "7b2273746f726167655f70726f7669646572223a22307831433743384136363865323361454432393166373866433266336231383635416363383762364636222c22676c6f62616c5f7669727475616c5f67726f75705f66616d696c795f6964223a322c22676c6f62616c5f7669727475616c5f67726f75705f696473223a5b5d2c22737563636573736f725f73705f6964223a312c22737563636573736f725f73705f617070726f76616c223a6e756c6c7d")
+				req.Header.Set(GnfdUnsignedApprovalMsgHeader, validSwapOutPayload)
+				req.Header.Set(GnfdSPOperatorAuthHeader, makeMockSPOperatorAuthHeader(t, validSwapOutPayloadBytes, false))
 				return req
 			},
 			wantedResult: "",

@@ -165,7 +165,7 @@ func (m *GfSpRecoverPieceTask) SetError(err error) {
 }
 
 func (m *GfSpRecoverPieceTask) EstimateLimit() corercmgr.Limit {
-	l := &gfsplimit.GfSpLimit{Memory: 2 * int64(m.GetObjectInfo().PayloadSize)}
+	l := &gfsplimit.GfSpLimit{Memory: 2 * int64(m.GetPieceSize())}
 	l.Add(LimitEstimateByPriority(m.GetPriority()))
 	return l
 }

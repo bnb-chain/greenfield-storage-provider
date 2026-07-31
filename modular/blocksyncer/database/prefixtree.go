@@ -95,11 +95,27 @@ func (db *DB) GetPrefixTreeObject(ctx context.Context, objectID common.Hash, buc
 	return prefixTreeNode, nil
 }
 
-// GetPrefixTreeCount get prefix tree nodes count by path and bucket name
+// GetPrefixTreeCount get prefix tree nodes count by path and bucket name.
+//
+// Why capping is safe:
+// The returned count is stored in a per-block context cache (cleared every
+// block by ClearCtx) and used as a running counter: +1 on CreateObject,
+// -1 on DeleteObject. The only numeric check is `count <= 1` in
+// deleteObject() (prefix_tree.go:268), which decides whether a parent
+// folder should be cascade-deleted.
+// A wrong deletion can only happen if net-deletes within a single block
+// exhaust the cap down to <= 1. Greenfield blocks have a 300M gas limit;
+// each MsgDeleteObject costs ~1.2M gas, so a single block can hold at
+// most ~250 deletes for one path. A cap of 10,000 provides ~40x safety
+// margin over that worst case.
 func (db *DB) GetPrefixTreeCount(ctx context.Context, pathName, bucketName string) (int64, error) {
+	const countCap = 10000 // ~40x single-block max deletes; see comment above
 	var count int64
 	shardTableName := bsdb.GetPrefixesTableName(bucketName)
-	err := db.Db.WithContext(ctx).Table(shardTableName).Where("bucket_name = ? AND path_name = ?", bucketName, pathName).Count(&count).Error
+	err := db.Db.WithContext(ctx).
+		Raw("SELECT /*+ MAX_EXECUTION_TIME(10000) */ COUNT(*) FROM (SELECT 1 FROM `"+shardTableName+"` FORCE INDEX(idx_bucket_path) WHERE bucket_name = ? AND path_name = ? LIMIT ?) sub",
+			bucketName, pathName, countCap).
+		Scan(&count).Error
 	if err != nil {
 		return 0, err
 	}

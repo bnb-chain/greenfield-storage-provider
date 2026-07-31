@@ -108,7 +108,7 @@ func (db *DB) UpdateDataMigrationRecord(ctx context.Context, processKey string, 
 
 func (db *DB) UpdateStorageSizeToSQL(ctx context.Context, objectID common.Hash, bucketName, operation string) (string, []interface{}) {
 	tableName := bsdb.GetObjectsTableName(bucketName)
-	sql := `UPDATE buckets SET storage_size = storage_size %s CONVERT((SELECT payload_size FROM %s WHERE object_id = ?), DECIMAL(65,0)) WHERE bucket_name = ?`
+	sql := `UPDATE buckets SET storage_size = storage_size %s IFNULL(CONVERT((SELECT payload_size FROM %s WHERE object_id = ?), DECIMAL(65,0)), 0) WHERE bucket_name = ?`
 	vars := []interface{}{objectID, bucketName}
 	finalSQL := fmt.Sprintf(sql, operation, tableName)
 	return finalSQL, vars
@@ -116,7 +116,7 @@ func (db *DB) UpdateStorageSizeToSQL(ctx context.Context, objectID common.Hash, 
 
 func (db *DB) UpdateChargeSizeToSQL(ctx context.Context, objectID common.Hash, bucketName, operation string) (string, []interface{}) {
 	tableName := bsdb.GetObjectsTableName(bucketName)
-	sql := `UPDATE buckets SET charge_size = charge_size %s CASE WHEN (CAST((SELECT payload_size FROM %s WHERE object_id = ?)AS DECIMAL(65,0)) < 128000) THEN CAST(128000 AS DECIMAL(65,0)) ELSE CAST((SELECT payload_size FROM %s WHERE object_id = ?) AS DECIMAL(65,0)) END WHERE bucket_name = ?`
+	sql := `UPDATE buckets SET charge_size = charge_size %s CASE WHEN (CAST(IFNULL((SELECT payload_size FROM %s WHERE object_id = ?), 0) AS DECIMAL(65,0)) < 128000) THEN CAST(128000 AS DECIMAL(65,0)) ELSE CAST(IFNULL((SELECT payload_size FROM %s WHERE object_id = ?), 0) AS DECIMAL(65,0)) END WHERE bucket_name = ?`
 	vars := []interface{}{objectID, objectID, bucketName}
 	finalSql := fmt.Sprintf(sql, operation, tableName, tableName)
 	return finalSql, vars

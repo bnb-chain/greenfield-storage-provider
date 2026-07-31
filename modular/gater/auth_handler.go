@@ -442,6 +442,7 @@ func (g *GateModular) deleteUserPublicKeyV2Handler(w http.ResponseWriter, r *htt
 	}
 	if account != reqCtx.account {
 		err = ErrNoPermission
+		return
 	}
 
 	data, err := io.ReadAll(r.Body)

@@ -51,6 +51,8 @@ var skipAuthRouterNames = []string{
 	getBucketMetaRouterName,
 	listBucketsByIDsRouterName,
 	listObjectsByIDsRouterName,
+	listUserPaymentAccountsRouterName,
+	listPaymentAccountStreamsRouterName,
 }
 
 // NewRequestContext returns an instance of RequestContext, and verify the
@@ -123,7 +125,7 @@ func (r *RequestContext) String() string {
 		var sb = strings.Builder{}
 		for k := range header {
 			if k == GnfdUnsignedApprovalMsgHeader || k == GnfdReplicatePieceApprovalHeader || k == GnfdReceiveMsgHeader ||
-				k == GnfdRecoveryMsgHeader || k == GnfdMigratePieceMsgHeader || k == commonhttp.HTTPHeaderAuthorization {
+				k == GnfdRecoveryMsgHeader || k == GnfdMigratePieceMsgHeader || k == GnfdSPOperatorAuthHeader || k == commonhttp.HTTPHeaderAuthorization {
 				continue
 			}
 			if sb.Len() != 0 {

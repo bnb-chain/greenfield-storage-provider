@@ -387,6 +387,7 @@ func _GfSpP2PService_GfSpQueryP2PBootstrap_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+var GfSpP2PService_serviceDesc = _GfSpP2PService_serviceDesc
 var _GfSpP2PService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "base.types.gfspserver.GfSpP2PService",
 	HandlerType: (*GfSpP2PServiceServer)(nil),

@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
+
+	"google.golang.org/grpc"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -33,8 +36,11 @@ func TestGfSpClient_ManagerConnSuccess(t *testing.T) {
 func TestGfSpClient_ManagerConnFailure(t *testing.T) {
 	s := mockBufClient()
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err := s.ManagerConn(ctx)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		cancel()
+	}()
+	_, err := s.ManagerConn(ctx, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 }
 
@@ -49,8 +55,11 @@ func TestGfSpClient_ApproverConnSuccess(t *testing.T) {
 func TestGfSpClient_ApproverConnFailure(t *testing.T) {
 	s := mockBufClient()
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err := s.ApproverConn(ctx)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		cancel()
+	}()
+	_, err := s.ApproverConn(ctx, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 }
 
@@ -65,8 +74,11 @@ func TestGfSpClient_P2PConnSuccess(t *testing.T) {
 func TestGfSpClient_P2PConnFailure(t *testing.T) {
 	s := mockBufClient()
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err := s.P2PConn(ctx)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		cancel()
+	}()
+	_, err := s.P2PConn(ctx, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 }
 
@@ -81,8 +93,11 @@ func TestGfSpClient_SignerConnSuccess(t *testing.T) {
 func TestGfSpClient_SignerConnFailure(t *testing.T) {
 	s := mockBufClient()
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err := s.SignerConn(ctx)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		cancel()
+	}()
+	_, err := s.SignerConn(ctx, grpc.WithBlock())
 	assert.Contains(t, err.Error(), context.Canceled.Error())
 }
 
