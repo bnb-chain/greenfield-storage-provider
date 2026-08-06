@@ -91,6 +91,10 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 					"current_migrated_object_number", migratedObjectNumberInGVG,
 					"last_migrated_object_id", object.GetObject().GetObjectInfo().Id.Uint64())
 				gvgTask.SetLastMigratedObjectID(object.GetObject().GetObjectInfo().Id.Uint64())
+				if err = e.signMigrateGVGTask(ctx, gvgTask); err != nil {
+					log.CtxErrorw(ctx, "failed to sign migrate gvg task progress", "task_info", gvgTask, "error", err)
+					return
+				}
 				if err = e.ReportTask(ctx, gvgTask); err != nil { // report task is already automatically triggered.
 					log.CtxErrorw(ctx, "failed to report migrate gvg task progress", "task_info", gvgTask, "error", err)
 					return
@@ -106,6 +110,19 @@ func (e *ExecuteModular) HandleMigrateGVGTask(ctx context.Context, gvgTask coret
 			return
 		}
 	}
+}
+
+func (e *ExecuteModular) signMigrateGVGTask(ctx context.Context, gvgTask coretask.MigrateGVGTask) error {
+	task, ok := gvgTask.(*gfsptask.GfSpMigrateGVGTask)
+	if !ok {
+		return fmt.Errorf("invalid migrate gvg task type")
+	}
+	signature, err := e.baseApp.GfSpClient().SignMigrateGVG(ctx, task)
+	if err != nil {
+		return err
+	}
+	task.SetSignature(signature)
+	return nil
 }
 
 func (e *ExecuteModular) checkAndTryRenewSig(gvgTask *gfsptask.GfSpMigrateGVGTask) error {

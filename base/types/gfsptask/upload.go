@@ -698,13 +698,14 @@ func (m *GfSpReceivePieceTask) InitReceivePieceTask(gvgID uint32, object *storag
 
 func (m *GfSpReceivePieceTask) GetSignBytes() []byte {
 	fakeMsg := &GfSpReceivePieceTask{
-		ObjectInfo:    m.GetObjectInfo(),
-		StorageParams: m.GetStorageParams(),
-		Task:          &GfSpTask{CreateTime: m.GetCreateTime(), UpdateTime: m.GetUpdateTime()},
-		SegmentIdx:    m.GetSegmentIdx(),
-		RedundancyIdx: m.GetRedundancyIdx(),
-		PieceSize:     m.GetPieceSize(),
-		PieceChecksum: m.GetPieceChecksum(),
+		ObjectInfo:           m.GetObjectInfo(),
+		StorageParams:        m.GetStorageParams(),
+		Task:                 &GfSpTask{CreateTime: m.GetCreateTime(), UpdateTime: m.GetUpdateTime()},
+		SegmentIdx:           m.GetSegmentIdx(),
+		RedundancyIdx:        m.GetRedundancyIdx(),
+		PieceSize:            m.GetPieceSize(),
+		PieceChecksum:        m.GetPieceChecksum(),
+		GlobalVirtualGroupId: m.GetGlobalVirtualGroupId(),
 	}
 	bz := ModuleCdc.MustMarshalJSON(fakeMsg)
 	return sdk.MustSortJSON(bz)

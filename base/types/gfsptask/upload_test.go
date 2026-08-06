@@ -1295,11 +1295,14 @@ func TestInitReceivePieceTask(t *testing.T) {
 
 func TestGfSpReceivePieceTask_GetSignBytes(t *testing.T) {
 	m := &GfSpReceivePieceTask{
-		Task:          &GfSpTask{},
-		ObjectInfo:    mockObjectInfo,
-		StorageParams: mockStorageParams,
+		Task:                 &GfSpTask{},
+		ObjectInfo:           mockObjectInfo,
+		StorageParams:        mockStorageParams,
+		GlobalVirtualGroupId: 1,
 	}
-	m.GetSignBytes()
+	signBytes := m.GetSignBytes()
+	m.SetGlobalVirtualGroupID(2)
+	assert.NotEqual(t, signBytes, m.GetSignBytes())
 }
 
 func TestGfSpReceivePieceTask_Key(t *testing.T) {
